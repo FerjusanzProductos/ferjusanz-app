@@ -104,6 +104,25 @@ label.campo{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(
 .copia.ticket .num{text-align:left}
 .copia.ticket .oc-ticket{display:none}
 .copia table.iva{width:100%;margin:6px 0 0;font-size:13px}.copia table.iva td{border:0;padding:2px 4px}.copia .totiva{text-align:right;font-size:16px;margin:4px 0 8px}
+.av{border-radius:50%;object-fit:cover;background:#cfe3d4;color:#14532d;display:inline-flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+header .quien{background:transparent;color:#fff;min-height:40px;padding:0 2px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;max-width:38%}
+header .quien span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.insig{background:#c0392b;color:#fff;border-radius:999px;font-size:11px;padding:1px 6px;margin-left:3px}
+.insig:empty{display:none}
+.chatlista{display:flex;flex-direction:column;gap:6px;padding-bottom:84px}
+.msg{display:flex;gap:6px;align-items:flex-end;max-width:88%}
+.msg.mio{align-self:flex-end;flex-direction:row-reverse}
+.burbuja{background:#fff;border:1px solid var(--borde);border-radius:14px 14px 14px 4px;padding:7px 11px;white-space:pre-wrap;word-break:break-word}
+.msg.mio .burbuja{background:var(--verde-cl);border-color:#bfe0c8;border-radius:14px 14px 4px 14px}
+.burbuja .quien2{font-size:12px;font-weight:700;color:var(--verde-osc);display:block}
+.burbuja .hora{font-size:11px;color:var(--txt2);float:right;margin:4px 0 0 10px}
+.diachat{align-self:center;font-size:12px;color:var(--txt2);background:#e7e9e4;border-radius:999px;padding:2px 10px;margin:6px 0}
+.compositor{position:fixed;left:0;right:0;bottom:calc(74px + env(safe-area-inset-bottom));background:#f2f3ef;border-top:1px solid var(--borde);padding:8px 10px;display:flex;gap:8px;z-index:5}
+.compositor textarea{min-height:48px;max-height:120px;resize:none;flex:1}
+.compositor button{min-width:76px}
+.fichar-btn{width:100%;min-height:84px;font-size:24px;font-weight:800;border-radius:18px}
+.fichar-btn.sal{background:#b45309}
+.perfil-cab{display:flex;flex-direction:column;align-items:center;gap:6px;margin:8px 0 14px}
 .letra{font-weight:800;color:var(--verde-osc);margin:12px 4px 6px}
 .hoja{background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;font-size:12px}
 .hoja h1{font-size:18px;margin:0 0 8px}
@@ -146,7 +165,7 @@ const EMPRESA = {
 };
 const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 const $app = document.getElementById('app');
-const state = { user: null, perfil: null, view: 'lista', params: {}, fecha: hoy(), filtro: 'todos', sheetAbierta: false, ped: null, pedidos: [], carga: null, cargaModo: 'clientes' };
+const state = { user: null, perfil: null, view: 'lista', params: {}, fecha: hoy(), filtro: 'todos', sheetAbierta: false, ped: null, pedidos: [], carga: null, cargaModo: 'clientes', gente: {}, chatNoLeidos: 0, chatTimer: null };
 
 /* =====================  UTILIDADES  ===================== */
 function hoy(d) { d = d || new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
@@ -199,6 +218,43 @@ const CLASE_ESTADO = { pendiente: 'pend', en_preparacion: 'prep', terminado: 'fi
 const UNIDADES = ['kg', 'pieza', 'caja', 'saco', 'bolsa', 'bandeja', 'manojo'];
 const limpiaBusqueda = s => String(s).replace(/[,()%*\\]/g, ' ').trim();
 
+/* =====================  GENTE, FOTOS Y HORAS  ===================== */
+state.gente = (function () { try { return JSON.parse(localStorage.getItem('fj_gente') || '{}'); } catch (e) { return {}; } })();
+async function cargarGente() {
+  if (!navigator.onLine || !sb) return;
+  try {
+    const [p, f] = await Promise.all([sb.from('perfiles').select('id,nombre,rol').eq('activo', true), sb.from('fotos_perfil').select('usuario_id,foto')]);
+    if (p.error || f.error) return;
+    const g = {}; p.data.forEach(x => { g[x.id] = { nombre: x.nombre, rol: x.rol, foto: null }; });
+    f.data.forEach(x => { if (g[x.usuario_id]) g[x.usuario_id].foto = x.foto; });
+    state.gente = g; LS.set('fj_gente', g);
+  } catch (e) { }
+}
+function avatar(id, nombre, px) {
+  const g = state.gente[id] || {}; const n = nombre || g.nombre || '?'; px = px || 36;
+  const st = 'width:' + px + 'px;height:' + px + 'px;font-size:' + Math.round(px * 0.4) + 'px';
+  if (g.foto) return h('img', { class: 'av', src: g.foto, style: st, alt: n });
+  const ini = n.split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0].toUpperCase()).join('');
+  return h('span', { class: 'av', style: st }, ini || '?');
+}
+function reducirFoto(file) {
+  return new Promise((res, rej) => {
+    const img = new Image(); const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const S = 192, c = document.createElement('canvas'); c.width = c.height = S;
+      const m = Math.min(img.width, img.height);
+      c.getContext('2d').drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, S, S);
+      URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', 0.8));
+    };
+    img.onerror = () => rej(new Error('No se pudo leer la imagen'));
+    img.src = url;
+  });
+}
+const fmtHora = iso => new Date(iso).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+const fmtDiaLargo = iso => new Date(iso).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+const fmtDur = ms => { const m = Math.max(0, Math.round(ms / 60000)); return Math.floor(m / 60) + ' h ' + String(m % 60).padStart(2, '0') + ' min'; };
+const aLocalInput = iso => { const d = new Date(iso); return hoy(d) + 'T' + d.toTimeString().slice(0, 5); };
+
 /* =====================  COLA SIN CONEXIÓN  ===================== */
 const getCola = () => LS.get('fj_cola', []);
 function setCola(c) { LS.set('fj_cola', c); renderBanner(); }
@@ -241,7 +297,7 @@ function refrescarVista() {
 }
 function renderBanner() {
   const b = document.getElementById('banner'); if (!b) return;
-  const n = getCola().length + getColaC().length; const p = [];
+  const n = getCola().length + getColaC().length + getColaF().length; const p = [];
   if (!navigator.onLine) p.push('Sin conexión');
   if (n) p.push(n + (n > 1 ? ' cambios pendientes' : ' cambio pendiente') + ' de enviar');
   b.className = p.length ? (navigator.onLine ? 'banner aviso' : 'banner off') : 'banner';
@@ -254,19 +310,19 @@ function shell(titulo, contenido, opts) {
   opts = opts || {};
   const tabs = [['lista', 'Preparar'], ['carga', 'Carga']];
   if (esOficina()) tabs.push(['nuevo', 'Nuevo pedido'], ['clientes', 'Clientes'], ['catalogo', 'Catálogo']);
+  tabs.push(['chat', 'Chat']);
   const nav = h('nav', { class: 'tabs' },
-    tabs.map(([v, t]) => h('button', { class: state.view === v || (v === 'lista' && ['pedido', 'albaran'].includes(state.view)) || (v === 'clientes' && state.view === 'cliente') ? 'on' : '', onclick: () => go(v) }, t)),
-    h('button', { onclick: salir }, 'Salir'));
+    tabs.map(([v, t]) => h('button', { class: state.view === v || (v === 'lista' && ['pedido', 'albaran'].includes(state.view)) || (v === 'clientes' && state.view === 'cliente') ? 'on' : '', onclick: () => go(v) }, t, v === 'chat' ? h('span', { id: 'chatBadge', class: 'insig' }, state.chatNoLeidos ? String(state.chatNoLeidos) : '') : null)));
   return h('div', { class: 'shell' },
     h('header', {},
       opts.volver ? h('button', { class: 'back', onclick: opts.volver }, '← Volver') : h('span', { class: 'logo' }, 'Ferjusanz'),
       h('span', { class: 'tit' }, titulo || ''),
-      h('span', { class: 'who' }, state.perfil ? state.perfil.nombre : '')),
+      h('button', { class: 'quien', onclick: () => go('perfil') }, avatar(state.user && state.user.id, state.perfil && state.perfil.nombre, 30), h('span', {}, state.perfil ? state.perfil.nombre.split(' ')[0] : ''))),
     h('div', { id: 'banner', class: 'banner' }),
     h('main', {}, contenido), nav);
 }
 async function salir() {
-  if (getCola().length || getColaC().length) { toast('Hay cambios sin enviar. Conéctate y espera a que se envíen antes de salir.', 'err'); return; }
+  if (getCola().length || getColaC().length || getColaF().length) { toast('Hay cambios sin enviar. Conéctate y espera a que se envíen antes de salir.', 'err'); return; }
   await sb.auth.signOut(); state.user = null; state.perfil = null; LS.set('fj_perfil', null); render();
 }
 
@@ -938,6 +994,252 @@ function vistaCliente() {
   if (id) cargar(); else { c = { activo: true, forma_pago: 'credito' }; pintar(); }
 }
 
+/* =====================  CHAT  ===================== */
+const claveVisto = () => 'fj_chat_visto_' + (state.user ? state.user.id : '');
+async function contarChat() {
+  if (!state.user || !navigator.onLine) return;
+  try {
+    let visto = LS.get(claveVisto(), null);
+    if (!visto) { visto = new Date().toISOString(); LS.set(claveVisto(), visto); }
+    const r = await sb.from('mensajes').select('id', { count: 'exact', head: true }).gt('creado', visto).neq('autor', state.user.id);
+    if (r.error) return;
+    state.chatNoLeidos = r.count || 0;
+    const b = document.getElementById('chatBadge'); if (b) b.textContent = state.chatNoLeidos ? String(state.chatNoLeidos) : '';
+  } catch (e) { }
+}
+function vistaChat() {
+  state.view = 'chat';
+  let msgs = [], hayMas = false;
+  const lista = h('div', { class: 'chatlista' }, h('p', { class: 'vacio' }, 'Cargando…'));
+  const txt = h('textarea', { rows: 1, placeholder: 'Escribe un mensaje…', onkeydown: e => { if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); enviar(); } } });
+  const btn = h('button', { onclick: enviar }, 'Enviar');
+  const mio = state.user.id;
+  const cerca = () => (document.documentElement.scrollHeight - window.scrollY - window.innerHeight) < 260;
+  const abajo = () => window.scrollTo(0, document.documentElement.scrollHeight);
+  function burbuja(m) {
+    const g = state.gente[m.autor] || {}; const es = m.autor === mio;
+    return h('div', { class: 'msg' + (es ? ' mio' : ''), 'data-id': m.id, onclick: es || state.perfil.rol === 'admin' ? () => borrar(m) : null },
+      es ? null : avatar(m.autor, g.nombre, 30),
+      h('div', { class: 'burbuja' }, es ? null : h('span', { class: 'quien2' }, g.nombre || 'Alguien'), m.texto, h('span', { class: 'hora' }, fmtHora(m.creado))));
+  }
+  function pintar(bajar) {
+    const kids = []; let dia = '';
+    if (hayMas) kids.push(h('button', { class: 'ghost small', style: 'align-self:center', onclick: anteriores }, 'Ver mensajes anteriores'));
+    if (!msgs.length) kids.push(h('p', { class: 'vacio' }, 'Aún no hay mensajes. Escribe el primero.'));
+    for (const m of msgs) {
+      const d = hoy(new Date(m.creado));
+      if (d !== dia) { dia = d; kids.push(h('div', { class: 'diachat' }, d === hoy() ? 'Hoy' : fmtDiaLargo(m.creado))); }
+      kids.push(burbuja(m));
+    }
+    lista.replaceChildren(...kids);
+    if (msgs.length) { LS.set(claveVisto(), msgs[msgs.length - 1].creado); state.chatNoLeidos = 0; const b = document.getElementById('chatBadge'); if (b) b.textContent = ''; }
+    if (bajar) abajo();
+  }
+  async function cargar() {
+    try {
+      await cargarGente();
+      const r = await sb.from('mensajes').select('id,autor,texto,creado').order('creado', { ascending: false }).limit(60);
+      if (r.error) throw r.error;
+      msgs = r.data.slice().reverse(); hayMas = r.data.length >= 60; pintar(true);
+    } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver el chat.' : msgErr(e))); }
+  }
+  async function anteriores() {
+    const r = await sb.from('mensajes').select('id,autor,texto,creado').lt('creado', msgs[0].creado).order('creado', { ascending: false }).limit(60);
+    if (r.error) { toast(msgErr(r.error), 'err'); return; }
+    msgs = r.data.slice().reverse().concat(msgs); hayMas = r.data.length >= 60; pintar(false);
+  }
+  async function sondear() {
+    if (!navigator.onLine || document.hidden || !msgs.length && lista.querySelector('.err')) return;
+    const ult = msgs.length ? msgs[msgs.length - 1].creado : '1970-01-01T00:00:00Z';
+    const r = await sb.from('mensajes').select('id,autor,texto,creado').gt('creado', ult).order('creado', { ascending: true });
+    if (r.error || !r.data.length) return;
+    const nuevos = r.data.filter(m => !msgs.some(x => x.id === m.id)); if (!nuevos.length) return;
+    const baja = cerca(); msgs = msgs.concat(nuevos); pintar(baja);
+  }
+  async function enviar() {
+    const t = txt.value.trim(); if (!t) return;
+    if (!navigator.onLine) { toast('Sin conexión: el mensaje no se ha enviado.', 'err'); return; }
+    btn.disabled = true;
+    const r = await sb.from('mensajes').insert({ autor: mio, texto: t }).select().single();
+    btn.disabled = false;
+    if (r.error) { toast(msgErr(r.error), 'err'); return; }
+    txt.value = ''; if (!msgs.some(x => x.id === r.data.id)) msgs.push(r.data); pintar(true); txt.focus();
+  }
+  async function borrar(m) {
+    if (!confirm('¿Borrar este mensaje para todos?')) return;
+    const r = await sb.from('mensajes').delete().eq('id', m.id);
+    if (r.error) { toast(msgErr(r.error), 'err'); return; }
+    msgs = msgs.filter(x => x.id !== m.id); pintar(false);
+  }
+  $app.replaceChildren(shell('Chat del equipo', h('div', {}, lista, h('div', { class: 'compositor' }, txt, btn))));
+  renderBanner(); cargar();
+  state.chatTimer = setInterval(sondear, 3000);
+}
+
+/* =====================  PERFIL Y FICHAJE  ===================== */
+const getColaF = () => LS.get('fj_cola_fichaje', []);
+function setColaF(c) { LS.set('fj_cola_fichaje', c); renderBanner(); }
+let syncingF = false;
+async function sincronizarFichaje() {
+  if (!navigator.onLine || !getColaF().length || syncingF) return;
+  syncingF = true; let hizo = false;
+  try {
+    let c = getColaF();
+    while (c.length) {
+      const it = c[0];
+      const { error } = await sb.rpc('fichar', { p_accion: it.accion, p_cuando: it.cuando });
+      if (error) {
+        if (isNetErr(error)) return;
+        toast('Fichaje: ' + (String(error.message).includes('SIN_ENTRADA') ? 'había una salida sin entrada.' : msgErr(error)), 'err');
+      }
+      setColaF(getColaF().filter(x => x.id !== it.id)); hizo = true; c = getColaF();
+    }
+  } finally { syncingF = false; if (hizo && state.view === 'perfil') vistaPerfil(); }
+}
+function fichajeAbierto(filas) {
+  let abierto = filas.find(f => !f.salida) || null; let pend = false;
+  for (const q of getColaF()) {
+    if (q.accion === 'entrada' && !abierto) { abierto = { entrada: q.cuando, salida: null, pendiente: true }; pend = true; }
+    else if (q.accion === 'salida' && abierto) { abierto = null; pend = true; }
+  }
+  return { abierto, pend };
+}
+function vistaPerfil() {
+  state.view = 'perfil';
+  const me = state.user.id; const cont = h('div', {});
+  $app.replaceChildren(shell('Mi perfil', cont, { volver: () => go('lista') })); renderBanner();
+  let filas = LS.get('fj_fichajes_' + me, []);
+  const inputFoto = h('input', { type: 'file', accept: 'image/*', style: 'display:none', onchange: async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      if (!navigator.onLine) throw new Error('Necesitas conexión para cambiar la foto.');
+      const foto = await reducirFoto(f);
+      const r = await sb.rpc('guardar_foto', { p_foto: foto }); if (r.error) throw r.error;
+      state.gente[me] = Object.assign(state.gente[me] || { nombre: state.perfil.nombre, rol: state.perfil.rol }, { foto }); LS.set('fj_gente', state.gente);
+      toast('Foto guardada', 'ok'); vistaPerfil();
+    } catch (err) { toast(msgErr(err), 'err'); }
+  } });
+  async function quitarFoto() {
+    if (!navigator.onLine) { toast('Necesitas conexión.', 'err'); return; }
+    const r = await sb.rpc('guardar_foto', { p_foto: null }); if (r.error) { toast(msgErr(r.error), 'err'); return; }
+    if (state.gente[me]) state.gente[me].foto = null; LS.set('fj_gente', state.gente); vistaPerfil();
+  }
+  async function fichar() {
+    const { abierto } = fichajeAbierto(filas); const accion = abierto ? 'salida' : 'entrada';
+    if (accion === 'salida' && abierto && Date.now() - new Date(abierto.entrada).getTime() > 16 * 3600000 &&
+      !confirm('La entrada es de hace más de 16 horas. ¿Fichar la salida ahora? Avisa a administración para corregirla.')) return;
+    const cuando = new Date().toISOString();
+    if (navigator.onLine) {
+      const r = await sb.rpc('fichar', { p_accion: accion });
+      if (!r.error) { toast(accion === 'entrada' ? 'Entrada fichada' : 'Salida fichada', 'ok'); await cargarFichajes(); return; }
+      if (!isNetErr(r.error)) { toast(msgErr(r.error), 'err'); return; }
+    }
+    const c = getColaF(); c.push({ id: Date.now() + '' + Math.random().toString(36).slice(2, 6), accion, cuando }); setColaF(c);
+    toast('Sin conexión: el fichaje se enviará solo al volver la red (hora ' + fmtHora(cuando) + ').', 'ok'); pintar();
+  }
+  async function cargarFichajes() {
+    try {
+      const desde = new Date(Date.now() - 45 * 86400000).toISOString();
+      const r = await sb.from('fichajes').select('id,entrada,salida,sin_conexion,nota').eq('usuario_id', me).gte('entrada', desde).order('entrada', { ascending: false }).limit(60);
+      if (r.error) throw r.error; filas = r.data; LS.set('fj_fichajes_' + me, filas);
+    } catch (e) { /* se usa lo guardado */ }
+    pintar();
+  }
+  function pintar() {
+    const { abierto } = fichajeAbierto(filas); const rol = state.perfil.rol;
+    const lista = filas.map(f => h('div', { class: 'fila', style: 'padding:6px 0;border-bottom:1px solid var(--borde)' },
+      h('div', {}, h('div', { class: 'nombre' }, fmtDiaLargo(f.entrada)), f.nota ? h('div', { class: 'sub' }, f.nota) : null),
+      h('div', { style: 'text-align:right' }, h('div', {}, fmtHora(f.entrada) + ' – ' + (f.salida ? fmtHora(f.salida) : '…')),
+        h('div', { class: 'sub' }, f.salida ? fmtDur(new Date(f.salida) - new Date(f.entrada)) : (Date.now() - new Date(f.entrada) > 16 * 3600000 ? '⚠ sin salida' : 'en curso')))));
+    cont.replaceChildren(
+      h('div', { class: 'perfil-cab' }, avatar(me, state.perfil.nombre, 96),
+        h('div', { class: 'nombre', style: 'font-size:20px' }, state.perfil.nombre), h('div', { class: 'sub' }, { admin: 'Administración', oficina: 'Oficina', preparador: 'Preparación y reparto', compras: 'Compras' }[rol] || rol),
+        h('div', { style: 'display:flex;gap:8px' }, h('button', { class: 'ghost small', onclick: () => inputFoto.click() }, 'Cambiar foto'),
+          state.gente[me] && state.gente[me].foto ? h('button', { class: 'ghost small', onclick: quitarFoto }, 'Quitar') : null), inputFoto),
+      h('div', { class: 'card' },
+        h('div', { class: 'nombre', style: 'margin-bottom:6px' }, 'Fichaje'),
+        abierto ? h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Entrada hoy a las ' + fmtHora(abierto.entrada) + (abierto.pendiente ? ' (pendiente de enviar)' : '')) : h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Todavía no has fichado la entrada.'),
+        h('button', { class: 'fichar-btn' + (abierto ? ' sal' : ''), onclick: fichar }, abierto ? 'Fichar SALIDA' : 'Fichar ENTRADA'),
+        filas.length ? h('div', { style: 'margin-top:12px' }, h('div', { class: 'sub', style: 'margin-bottom:4px' }, 'Mis últimos fichajes'), ...lista) : null),
+      esOficina() ? h('button', { class: 'ghost', style: 'width:100%;margin-bottom:10px', onclick: () => go('fichajes') }, 'Fichajes del equipo') : null,
+      h('button', { class: 'peligro', style: 'width:100%', onclick: salir }, 'Cerrar sesión'));
+  }
+  pintar(); cargarGente().then(() => { if (state.view === 'perfil') pintar(); }); cargarFichajes();
+}
+
+/* =====================  FICHAJES DEL EQUIPO (oficina)  ===================== */
+function vistaFichajes() {
+  state.view = 'fichajes';
+  if (!esOficina()) { go('lista'); return; }
+  const esAdmin = state.perfil.rol === 'admin';
+  let mes = LS.get('fj_mes_fichajes', hoy().slice(0, 7)), filas = [];
+  const cont = h('div', {});
+  const inpMes = h('input', { type: 'month', value: mes, onchange: e => { mes = e.target.value || hoy().slice(0, 7); LS.set('fj_mes_fichajes', mes); cargar(); } });
+  $app.replaceChildren(shell('Fichajes del equipo', h('div', {}, h('div', { class: 'barra' }, inpMes), cont), { volver: () => go('perfil') })); renderBanner();
+  const rango = () => { const [y, m] = mes.split('-').map(Number); return [new Date(y, m - 1, 1).toISOString(), new Date(y, m, 1).toISOString()]; };
+  async function cargar() {
+    cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+    try {
+      await cargarGente(); const [a, b] = rango();
+      const r = await sb.from('fichajes').select('id,usuario_id,entrada,salida,sin_conexion,nota').gte('entrada', a).lt('entrada', b).order('entrada', { ascending: true });
+      if (r.error) throw r.error; filas = r.data; pintar();
+    } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver los fichajes.' : msgErr(e))); }
+  }
+  const nom = id => (state.gente[id] && state.gente[id].nombre) || 'Usuario';
+  function pintar() {
+    const por = {}; filas.forEach(f => { (por[f.usuario_id] = por[f.usuario_id] || []).push(f); });
+    const ids = Object.keys(por).sort((x, y) => nom(x).localeCompare(nom(y), 'es'));
+    const kids = [h('div', { style: 'display:flex;gap:8px;margin-bottom:10px' },
+      h('button', { class: 'ghost small', style: 'flex:1', onclick: exportar }, 'Descargar Excel (CSV)'),
+      esAdmin ? h('button', { class: 'small', style: 'flex:1', onclick: () => editar(null) }, '+ Añadir fichaje') : null)];
+    if (!ids.length) kids.push(h('p', { class: 'vacio' }, 'No hay fichajes en este mes.'));
+    for (const id of ids) {
+      const tot = por[id].reduce((s, f) => s + (f.salida ? new Date(f.salida) - new Date(f.entrada) : 0), 0);
+      kids.push(h('div', { class: 'card' },
+        h('div', { class: 'fila', style: 'margin-bottom:6px' }, h('div', { style: 'display:flex;gap:8px;align-items:center' }, avatar(id, nom(id), 34), h('div', { class: 'nombre' }, nom(id))), h('b', {}, fmtDur(tot))),
+        ...por[id].map(f => h('div', { class: 'fila', style: 'padding:5px 0;border-top:1px solid var(--borde)', onclick: esAdmin ? () => editar(f) : null },
+          h('div', {}, h('div', {}, fmtDiaLargo(f.entrada)), f.nota || f.sin_conexion ? h('div', { class: 'sub' }, [f.sin_conexion ? 'sin conexión' : '', f.nota || ''].filter(Boolean).join(' · ')) : null),
+          h('div', { style: 'text-align:right' }, h('div', {}, fmtHora(f.entrada) + ' – ' + (f.salida ? fmtHora(f.salida) : '…')),
+            h('div', { class: 'sub' }, f.salida ? fmtDur(new Date(f.salida) - new Date(f.entrada)) : '⚠ sin salida'))))));
+    }
+    cont.replaceChildren(...kids);
+  }
+  function exportar() {
+    const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const ls = [['Trabajador', 'Fecha', 'Entrada', 'Salida', 'Horas', 'Sin conexión', 'Nota'].map(q).join(';')];
+    for (const f of filas) {
+      const hrs = f.salida ? ((new Date(f.salida) - new Date(f.entrada)) / 3600000).toFixed(2).replace('.', ',') : '';
+      ls.push([nom(f.usuario_id), hoy(new Date(f.entrada)).split('-').reverse().join('/'), fmtHora(f.entrada), f.salida ? fmtHora(f.salida) : '', hrs, f.sin_conexion ? 'Sí' : '', f.nota || ''].map(q).join(';'));
+    }
+    const blob = new Blob(['﻿' + ls.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = h('a', { href: URL.createObjectURL(blob), download: 'fichajes_' + mes + '.csv' }); document.body.append(a); a.click(); a.remove();
+  }
+  function editar(f) {
+    state.sheetAbierta = true; const cerrar = () => { ov.remove(); state.sheetAbierta = false; };
+    const ids = Object.keys(state.gente).sort((x, y) => nom(x).localeCompare(nom(y), 'es'));
+    const quien = h('select', {}, ids.map(id => h('option', { value: id, selected: f && f.usuario_id === id }, nom(id))));
+    const ent = h('input', { type: 'datetime-local', value: f ? aLocalInput(f.entrada) : '' });
+    const sal = h('input', { type: 'datetime-local', value: f && f.salida ? aLocalInput(f.salida) : '' });
+    const nota = h('input', { placeholder: 'Motivo (obligatorio)', value: f && f.nota ? f.nota : '' });
+    async function guardar() {
+      if (!ent.value) { toast('Pon la hora de entrada', 'err'); return; }
+      if (!nota.value.trim()) { toast('Escribe el motivo de la corrección', 'err'); return; }
+      const fila = { entrada: new Date(ent.value).toISOString(), salida: sal.value ? new Date(sal.value).toISOString() : null, nota: nota.value.trim() };
+      if (fila.salida && fila.salida < fila.entrada) { toast('La salida es anterior a la entrada', 'err'); return; }
+      const r = f ? await sb.from('fichajes').update(fila).eq('id', f.id) : await sb.from('fichajes').insert(Object.assign({ usuario_id: quien.value }, fila));
+      if (r.error) { toast(msgErr(r.error), 'err'); return; }
+      cerrar(); toast('Fichaje guardado', 'ok'); cargar();
+    }
+    const ov = h('div', { class: 'overlay', onclick: e => { if (e.target === ov) cerrar(); } },
+      h('div', { class: 'sheet' }, h('h2', {}, f ? 'Corregir fichaje' : 'Añadir fichaje'),
+        f ? h('div', { class: 'nombre' }, nom(f.usuario_id)) : quien,
+        h('label', { class: 'campo' }, 'Entrada', ent), h('label', { class: 'campo' }, 'Salida (vacía = sigue abierto)', sal), nota,
+        h('button', { class: 'guardar', onclick: guardar }, 'Guardar'), h('div', { class: 'acciones' }, h('button', { class: 'ghost', onclick: cerrar }, 'Cancelar'))));
+    document.body.append(ov);
+  }
+  cargar();
+}
+
 /* =====================  NUEVO PEDIDO (oficina)  ===================== */
 async function buscar(tabla, texto, soloActivos, limite) {
   let q = sb.from(tabla).select('*').limit(limite || 15);
@@ -1064,9 +1366,10 @@ function vistaCatalogo() {
 
 /* =====================  ARRANQUE  ===================== */
 function render() {
+  clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente }[state.view] || vistaLista;
+  const v = { lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes }[state.view] || vistaLista;
   if ((state.view === 'nuevo' || state.view === 'catalogo') && !esOficina()) return vistaLista();
   v();
 }
@@ -1074,7 +1377,7 @@ function tick() {
   if (!state.user || !state.perfil) return;
   renderBanner();
   if (!navigator.onLine) return;
-  sincronizar(); sincronizarCarga();
+  sincronizar(); sincronizarCarga(); sincronizarFichaje(); if (state.view !== 'chat') contarChat();
   if (!document.hidden && !state.sheetAbierta) refrescarVista();
 }
 async function init() {
@@ -1085,9 +1388,9 @@ async function init() {
     return;
   }
   try { const { data } = await sb.auth.getSession(); if (data && data.session) await cargarPerfil(data.session.user); } catch (e) { }
-  render();
+  render(); cargarGente();
   sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') { state.user = null; state.perfil = null; render(); } });
-  window.addEventListener('online', () => { renderBanner(); sincronizar(); sincronizarCarga(); refrescarVista(); });
+  window.addEventListener('online', () => { renderBanner(); sincronizar(); sincronizarCarga(); sincronizarFichaje(); refrescarVista(); });
   window.addEventListener('offline', renderBanner);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
   setInterval(tick, 8000);
