@@ -103,6 +103,7 @@ label.campo{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(
 .copia.ticket .cab{flex-direction:column}
 .copia.ticket .num{text-align:left}
 .copia.ticket .oc-ticket{display:none}
+.copia table.iva{width:100%;margin:6px 0 0;font-size:13px}.copia table.iva td{border:0;padding:2px 4px}.copia .totiva{text-align:right;font-size:16px;margin:4px 0 8px}
 .hoja{background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;font-size:12px}
 .hoja h1{font-size:18px;margin:0 0 8px}
 .hoja h2{font-size:14px;margin:12px 0 4px}
@@ -363,7 +364,7 @@ async function cargarPedido(id) {
   if (navigator.onLine) {
     const [p, l, a] = await Promise.all([
       sb.from('pedidos').select('id,estado,fecha_entrega,notas,preparador_id,clientes(codigo,nombre,nombre_comercial,forma_pago,direccion,localidad)').eq('id', id).single(),
-      sb.from('lineas_pedido').select('id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,version,notas,productos(codigo,nombre)').eq('pedido_id', id),
+      sb.from('lineas_pedido').select('id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,iva,version,notas,productos(codigo,nombre,iva)').eq('pedido_id', id),
       sb.from('albaranes').select('serie,numero,fecha,estado').eq('pedido_id', id).maybeSingle()]);
     const err = p.error || l.error || a.error;
     if (!err) { const d = { pedido: p.data, lineas: l.data, albaran: a.data }; LS.set(key, d); return d; }
@@ -510,17 +511,28 @@ async function vistaAlbaran() {
 function htmlAlbaran(d, formato) {
   const p = d.pedido, cli = p.clientes || {}, a = d.albaran;
   const lineas = d.lineas.slice().sort((x, y) => (x.productos ? x.productos.nombre : '').localeCompare(y.productos ? y.productos.nombre : '', 'es'));
-  let total = 0, hayPrecio = false;
+  let total = 0, hayPrecio = false; const bases = {};
   const filas = lineas.map(l => {
     const u = l.unidad_precio === 'kg' ? 'kg' : 'ud';
     const imp = l.precio != null && l.peso_real != null ? Math.round(l.peso_real * l.precio * 100) / 100 : null;
-    if (imp != null) { total = Math.round((total + imp) * 100) / 100; hayPrecio = true; }
+    if (imp != null) {
+      total = Math.round((total + imp) * 100) / 100; hayPrecio = true;
+      const t = l.iva != null ? Number(l.iva) : (l.productos && l.productos.iva != null ? Number(l.productos.iva) : 4);
+      bases[t] = Math.round(((bases[t] || 0) + imp) * 100) / 100;
+    }
     return '<tr><td>' + esc(l.productos ? l.productos.nombre : '') + '</td>' +
       '<td class="d oc-ticket">' + esc(num(l.cantidad_pedida) + ' ' + l.unidad_pedida) + '</td>' +
       '<td class="d"><b>' + esc(l.peso_real != null ? num(l.peso_real) + ' ' + u : '—') + '</b></td>' +
       '<td class="d">' + esc(l.precio != null ? eur(l.precio) : '') + '</td>' +
       '<td class="d">' + esc(imp != null ? eur(imp) : '') + '</td></tr>';
   }).join('');
+  const tipos = Object.keys(bases).map(Number).sort((x, y) => x - y);
+  let sumaIva = 0;
+  const filasIva = tipos.map(t => { const c = Math.round(bases[t] * t) / 100; sumaIva = Math.round((sumaIva + c) * 100) / 100; return { t, base: bases[t], cuota: c }; });
+  const totalIva = Math.round((total + sumaIva) * 100) / 100;
+  const desgloseIva = '<table class="iva"><tbody>' +
+    filasIva.map(f => '<tr><td>Base imponible ' + esc(num(f.t)) + ' %</td><td class="d">' + esc(eur(f.base)) + ' €</td><td>IVA ' + esc(num(f.t)) + ' %</td><td class="d">' + esc(eur(f.cuota)) + ' €</td></tr>').join('') +
+    '</tbody></table><div class="totiva">TOTAL' + (cli.forma_pago === 'contado' ? ' A COBRAR' : '') + ': <b>' + esc(eur(totalIva)) + ' €</b> <span style="font-size:11px">(IVA incluido)</span></div>';
   const contado = cli.forma_pago === 'contado';
   const num7 = a.serie + ' ' + String(a.numero).padStart(7, '0');
   const copia = tipo => {
@@ -535,7 +547,7 @@ function htmlAlbaran(d, formato) {
       '<div class="cli"><b>' + esc(nombreCli(cli)) + '</b>' + (cli.nombre_comercial && cli.nombre ? '<br>' + esc(cli.nombre) : '') +
       '<br>' + esc([cli.direccion, cli.localidad].filter(Boolean).join(' · ')) + (cli.nif ? '<br>NIF: ' + esc(cli.nif) : '') + '</div>' +
       '<table><thead><tr><th>Artículo</th><th class="d oc-ticket">Pedido</th><th class="d">Cantidad</th><th class="d">Precio</th><th class="d">Importe</th></tr></thead><tbody>' + filas + '</tbody></table>' +
-      (hayPrecio ? '<div class="tot">Total mercancía: <b>' + esc(eur(total)) + ' €</b> <span style="font-size:11px">(IVA no incluido)</span></div>' : '') +
+      (hayPrecio ? '<div class="tot">' + desgloseIva + '</div>' : '') +
       '<div class="cond">' + (contado ? 'PAGO AL CONTADO' : 'PENDIENTE DE FACTURA') + '</div>' + pie + '</div>';
   };
   return copia('CLIENTE') + copia('REPARTO');
@@ -899,6 +911,7 @@ function vistaCatalogo() {
         if (tabla === 'productos') {
           ctl.push(h('select', { onchange: e => guardarCampo(f, { unidad_venta: e.target.value }) }, UNIDADES.map(u => h('option', { value: u, selected: u === f.unidad_venta }, 'Se vende en ' + u))));
           ctl.push(h('select', { onchange: e => guardarCampo(f, { unidad_precio: e.target.value }) }, ['kg', 'unidad'].map(u => h('option', { value: u, selected: u === f.unidad_precio }, 'Precio por ' + u))));
+          ctl.push(h('select', { onchange: e => guardarCampo(f, { iva: Number(e.target.value) }) }, [4, 10, 21, 0].map(v => h('option', { value: v, selected: v === Number(f.iva != null ? f.iva : 4) }, 'IVA ' + v + ' %'))));
         } else {
           ctl.push(h('select', { onchange: e => guardarCampo(f, { forma_pago: e.target.value }) }, [['credito', 'Crédito'], ['contado', 'Contado']].map(([v, n]) => h('option', { value: v, selected: v === f.forma_pago }, n))));
           ctl.push(h('input', { placeholder: 'Ruta (ej. R1)', value: f.ruta || '', style: 'width:130px;min-height:42px', onchange: e => guardarCampo(f, { ruta: e.target.value.trim() || null }) }));
