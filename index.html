@@ -135,6 +135,12 @@ header .quien span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hoja .caja{display:inline-block;width:12px;height:12px;border:1.5px solid #000;vertical-align:middle;margin-right:6px}
 .hoja .caja.on{background:#000}
 .tot-num{font-size:20px;font-weight:800;white-space:nowrap;text-align:right}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:10px}
+.cal-h{text-align:center;font-size:12px;color:var(--txt2);font-weight:700}
+.cal-d{min-height:54px;background:#fff;color:var(--txt);border:1px solid var(--borde);padding:2px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.cal-d i{font-style:normal;font-size:11px;background:var(--verde);color:#fff;border-radius:999px;padding:0 6px}
+.cal-d.sel{outline:3px solid var(--verde)}
+.cal-d.hoy{border-color:var(--ambar);border-width:2px}
 #printArea{display:none}
 @media print{
   body.imprimiendo{background:#fff}
@@ -204,7 +210,8 @@ const ERR = {
   LINEA_NO_EXISTE: 'La línea ya no existe.',
   YA_ASIGNADO: 'Este pedido ya lo está preparando otra persona.',
   PEDIDO_NO_EXISTE: 'El pedido no existe.',
-  PEDIDO_ANULADO: 'El pedido está anulado.'
+  PEDIDO_ANULADO: 'El pedido está anulado.',
+  PEDIDO_NO_TERMINADO: 'El pedido aún no está terminado.'
 };
 function msgErr(e) { const m = (e && e.message) || ''; if (e && (e.code === '23505' || m.includes('duplicate key'))) return ERR.CLIENTE_DUPLICADO; for (const k in ERR) if (m.includes(k)) return ERR[k]; return m || 'Error desconocido'; }
 function isNetErr(e) {
@@ -215,7 +222,7 @@ function isNetErr(e) {
 const esOficina = () => !!state.perfil && ['oficina', 'admin'].includes(state.perfil.rol);
 const ESTADO = { pendiente: 'Pendiente', en_preparacion: 'En preparación', terminado: 'Terminado', anulado: 'Anulado' };
 const CLASE_ESTADO = { pendiente: 'pend', en_preparacion: 'prep', terminado: 'fin', anulado: 'pend' };
-const VISTAS_MAS = ['mas', 'clientes', 'cliente', 'catalogo', 'compras', 'traza', 'perfil', 'fichajes'];
+const VISTAS_MAS = ['mas', 'clientes', 'cliente', 'catalogo', 'compras', 'traza', 'perfil', 'fichajes', 'entregas', 'calendario', 'incidencias', 'precios', 'facturas', 'resumen'];
 const puedeCompras = () => !!state.perfil && ['compras', 'oficina', 'admin'].includes(state.perfil.rol);
 const UNIDADES = ['kg', 'pieza', 'caja', 'saco', 'bolsa', 'bandeja', 'manojo'];
 const limpiaBusqueda = s => String(s).replace(/[,()%*\\]/g, ' ').trim();
@@ -297,10 +304,11 @@ function refrescarVista() {
   else if (state.view === 'pedido') actualizarPedido();
   else if (state.view === 'carga') actualizarCarga();
   else if (state.view === 'cobros' && !state.sheetAbierta && state.refrescarCobros) state.refrescarCobros();
+  else if (state.view === 'entregas' && !state.sheetAbierta && state.refrescarEntregas) state.refrescarEntregas();
 }
 function renderBanner() {
   const b = document.getElementById('banner'); if (!b) return;
-  const n = getCola().length + getColaC().length + getColaF().length + getColaK().length; const p = [];
+  const n = totalPendiente(); const p = [];
   if (!navigator.onLine) p.push('Sin conexión');
   if (n) p.push(n + (n > 1 ? ' cambios pendientes' : ' cambio pendiente') + ' de enviar');
   b.className = p.length ? (navigator.onLine ? 'banner aviso' : 'banner off') : 'banner';
@@ -325,7 +333,7 @@ function shell(titulo, contenido, opts) {
     h('main', {}, contenido), nav);
 }
 async function salir() {
-  if (getCola().length || getColaC().length || getColaF().length || getColaK().length) { toast('Hay cambios sin enviar. Conéctate y espera a que se envíen antes de salir.', 'err'); return; }
+  if (totalPendiente()) { toast('Hay cambios sin enviar. Conéctate y espera a que se envíen antes de salir.', 'err'); return; }
   await sb.auth.signOut(); state.user = null; state.perfil = null; LS.set('fj_perfil', null); render();
 }
 
@@ -373,7 +381,7 @@ async function cargarPedidos(fecha) {
   if (navigator.onLine) {
     const { data, error } = await sb.from('pedidos')
       .select('id,estado,fecha_entrega,notas,preparador_id,clientes(codigo,nombre,nombre_comercial,forma_pago),lineas_pedido(id,estado)')
-      .eq('fecha_entrega', fecha).neq('estado', 'anulado');
+      .eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true);
     if (!error) { LS.set(key, data); return { datos: data, cache: false }; }
     if (!isNetErr(error)) throw error;
   }
@@ -385,7 +393,7 @@ function vistaLista() {
   const nombres = { todos: 'Todos', pendiente: 'Pendientes', en_preparacion: 'En preparación', terminado: 'Terminados' };
   const chips = Object.keys(nombres).map(f => h('button', { class: 'chip' + (state.filtro === f ? ' on' : ''), onclick: () => { state.filtro = f; vistaLista(); } }, nombres[f]));
   $app.replaceChildren(shell('Pedidos', h('div', {},
-    h('div', { class: 'barra' }, fechaInp, h('button', { class: 'ghost', onclick: () => actualizarLista() }, '↻')),
+    h('div', { class: 'barra' }, fechaInp, h('button', { class: 'ghost', onclick: () => actualizarLista() }, '↻'), h('button', { class: 'ghost', onclick: () => go('calendario') }, '📅')),
     h('div', { class: 'chips' }, chips),
     h('div', { id: 'lista' }, h('p', { class: 'vacio' }, 'Cargando…')))));
   renderBanner();
@@ -423,12 +431,13 @@ function pintarLista(cache) {
 async function cargarPedido(id) {
   const key = 'fj_pedido_' + id;
   if (navigator.onLine) {
-    const [p, l, a] = await Promise.all([
-      sb.from('pedidos').select('id,estado,fecha_entrega,notas,preparador_id,clientes(codigo,nombre,nombre_comercial,forma_pago,direccion,localidad,recargo_equivalencia)').eq('id', id).single(),
-      sb.from('lineas_pedido').select('id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,iva,version,notas,productos(codigo,nombre,iva)').eq('pedido_id', id),
-      sb.from('albaranes').select('serie,numero,fecha,estado').eq('pedido_id', id).maybeSingle()]);
+    const [p, l, a, en] = await Promise.all([
+      sb.from('pedidos').select('id,cliente_id,estado,fecha_entrega,notas,preparador_id,clientes(codigo,nombre,nombre_comercial,forma_pago,direccion,localidad,recargo_equivalencia)').eq('id', id).single(),
+      sb.from('lineas_pedido').select('id,producto_id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,iva,version,notas,productos(codigo,nombre,iva)').eq('pedido_id', id),
+      sb.from('albaranes').select('serie,numero,fecha,estado').eq('pedido_id', id).maybeSingle(),
+      sb.from('entregas').select('entregado_at,entregado_por').eq('pedido_id', id).maybeSingle()]);
     const err = p.error || l.error || a.error;
-    if (!err) { const d = { pedido: p.data, lineas: l.data, albaran: a.data }; LS.set(key, d); return d; }
+    if (!err) { const d = { pedido: p.data, lineas: l.data, albaran: a.data, entrega: en.error ? null : en.data }; LS.set(key, d); return d; }
     if (!isNetErr(err)) throw err;
   }
   const d = LS.get(key, null);
@@ -491,6 +500,9 @@ function pintarPedido() {
   }
   const acciones = [];
   if (estado === 'terminado') {
+    const enCola = colaE.get().find(x => x.pedido === d.pedido.id);
+    if (d.entrega || enCola) acciones.push(h('div', { class: 'aviso-card' }, '✔ Entregado a las ' + fmtHora(d.entrega ? d.entrega.entregado_at : enCola.at) + (enCola && !d.entrega ? ' (pendiente de enviar)' : '')));
+    else acciones.push(h('button', { class: 'guardar', onclick: async () => { await marcarEntregado(d.pedido.id); pintarPedido(); actualizarPedido(); } }, 'Marcar como ENTREGADO'));
     acciones.push(h('button', { onclick: () => go('albaran', { id: d.pedido.id }) }, 'Ver / imprimir albarán' + (d.albaran ? ' nº ' + d.albaran.numero : '')));
   } else if (estado !== 'anulado') {
     const faltan = ls.length - hechas;
@@ -498,6 +510,7 @@ function pintarPedido() {
       faltan > 0 ? 'Faltan ' + faltan + ' líneas' : 'Terminar pedido y crear albarán'));
     if (esOficina()) acciones.push(h('button', { class: 'peligro', onclick: () => anularPedido(d.pedido.id) }, 'Anular pedido'));
   }
+  if (esOficina()) acciones.push(h('button', { class: 'ghost', onclick: async () => { if (!await confirmar('¿Archivar este pedido? Dejará de verse en las listas.')) return; const r = await sb.from('pedidos').update({ archivado: true }).eq('id', d.pedido.id); if (r.error) toast(msgErr(r.error), 'err'); else { toast('Pedido archivado', 'ok'); go('lista'); } } }, 'Archivar pedido'));
   kids.push(h('div', { style: 'display:flex;flex-direction:column;gap:10px;margin-top:14px' }, acciones));
   cont.replaceChildren(...kids);
 }
@@ -529,6 +542,7 @@ function abrirLinea(l) {
       h('button', { class: 'guardar', onclick: guardar }, 'Guardar'),
       h('div', { class: 'acciones' },
         h('button', { class: 'ghost', onclick: () => { input.value = '0'; guardar(); } }, 'No hay (0)'),
+        h('button', { class: 'ghost', onclick: () => { cerrar(); const d = state.ped; abrirIncidencia({ cliente: d.pedido.cliente_id ? Object.assign({ id: d.pedido.cliente_id }, d.pedido.clientes) : null, producto: l.producto_id ? { id: l.producto_id, nombre: l.productos ? l.productos.nombre : '' } : null, pedido_id: d.pedido.id, linea_id: l.id }); } }, '⚠ Problema'),
         h('button', { class: 'ghost', onclick: cerrar }, 'Cancelar'))));
   document.body.append(ov);
   setTimeout(() => { input.focus(); input.select(); }, 50);
@@ -958,8 +972,9 @@ function vistaCliente() {
     if (id) kids.push(h('div', { class: 'chips' },
       h('button', { class: 'chip' + (pestana === 'datos' ? ' on' : ''), onclick: () => { pestana = 'datos'; pintar(); } }, 'Datos'),
       h('button', { class: 'chip' + (pestana === 'precios' ? ' on' : ''), onclick: () => { pestana = 'precios'; pintar(); } }, 'Precios'),
-      h('button', { class: 'chip' + (pestana === 'pedidos' ? ' on' : ''), onclick: () => { pestana = 'pedidos'; pintar(); } }, 'Últimos pedidos')));
-    kids.push(pestana === 'pedidos' && id ? panelPedidos() : pestana === 'precios' && id ? panelPrecios() : formulario());
+      h('button', { class: 'chip' + (pestana === 'pedidos' ? ' on' : ''), onclick: () => { pestana = 'pedidos'; pintar(); } }, 'Últimos pedidos'),
+      h('button', { class: 'chip' + (pestana === 'inc' ? ' on' : ''), onclick: () => { pestana = 'inc'; pintar(); } }, 'Incidencias')));
+    kids.push(pestana === 'inc' && id ? panelIncidencias({ cliente: c }) : pestana === 'pedidos' && id ? panelPedidos() : pestana === 'precios' && id ? panelPrecios() : formulario());
     cont.replaceChildren(...kids);
   }
   function formulario() {
@@ -1068,7 +1083,12 @@ async function contarChat() {
     if (!visto) { visto = new Date().toISOString(); LS.set(claveVisto(), visto); }
     const r = await sb.from('mensajes').select('id', { count: 'exact', head: true }).gt('creado', visto).neq('autor', state.user.id);
     if (r.error) return;
-    state.chatNoLeidos = r.count || 0;
+    const antes = state.chatNoLeidos; state.chatNoLeidos = r.count || 0;
+    if (state.chatNoLeidos && AV().chat) {
+      const u = await sb.from('mensajes').select('autor,texto,creado').neq('autor', state.user.id).order('creado', { ascending: false }).limit(1);
+      const m = u.data && u.data[0]; const kA = 'fj_av_chat_' + state.user.id; const ya = LS.get(kA, null);
+      if (m && m.creado !== ya) { LS.set(kA, m.creado); if (ya) avisar('Chat · ' + (quienEs(m.autor) || 'Mensaje nuevo'), m.texto, 'chat'); }
+    }
     const b = document.getElementById('chatBadge'); if (b) b.textContent = state.chatNoLeidos ? String(state.chatNoLeidos) : '';
   } catch (e) { }
 }
@@ -1226,6 +1246,7 @@ function vistaPerfil() {
         abierto ? h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Entrada hoy a las ' + fmtHora(abierto.entrada) + (abierto.pendiente ? ' (pendiente de enviar)' : '')) : h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Todavía no has fichado la entrada.'),
         h('button', { class: 'fichar-btn' + (abierto ? ' sal' : ''), onclick: fichar }, abierto ? 'Fichar SALIDA' : 'Fichar ENTRADA'),
         filas.length ? h('div', { style: 'margin-top:12px' }, h('div', { class: 'sub', style: 'margin-bottom:4px' }, 'Mis últimos fichajes'), ...lista) : null),
+      panelAvisos(),
       esOficina() ? h('button', { class: 'ghost', style: 'width:100%;margin-bottom:10px', onclick: () => go('fichajes') }, 'Fichajes del equipo') : null,
       h('button', { class: 'peligro', style: 'width:100%', onclick: salir }, 'Cerrar sesión'));
   }
@@ -1311,6 +1332,8 @@ function vistaMas() {
   const b = (t, sub, f) => h('div', { class: 'card tap', onclick: f }, h('div', { class: 'nombre' }, t), h('div', { class: 'sub' }, sub));
   const k = [b('Mi perfil y fichaje', 'Foto, fichar entrada y salida', () => go('perfil'))];
   if (esOficina()) k.push(b('Clientes', 'Lista de A a Z, datos, precios y últimos pedidos', () => go('clientes')), b('Catálogo', 'Productos: activos, unidades, IVA y precio general', () => go('catalogo')));
+  k.push(b('Entregas', 'Pedidos entregados y a qué hora', () => go('entregas')), b('Calendario', 'Ver y añadir pedidos por día', () => go('calendario')), b('Incidencias', 'Quejas y productos en mal estado, por cliente y producto', () => go('incidencias')), b('Precios de compra', 'Cuánto costó cada producto y a quién se compró', () => go('precios')), b('Facturas de compra', 'Fotos y PDF de facturas y hojas, ordenadas por día', () => go('facturas')));
+  if (esOficina()) k.push(b('Resumen del día', 'Ventas, cobros, lo comprado e incidencias', () => go('resumen')));
   if (puedeCompras()) k.push(b('Compras y lista de la compra', 'Qué comprar hoy, registrar compras y lotes', () => go('compras')));
   if (puedeCompras()) k.push(b('Trazabilidad', 'De qué lote sale cada producto y a quién se entregó', () => go('traza')));
   if (esOficina()) k.push(b('Fichajes del equipo', 'Horas de cada trabajador por mes', () => go('fichajes')));
@@ -1508,7 +1531,8 @@ function vistaCompras() {
           h('label', { class: 'campo' }, 'Cantidad recibida', h('input', { type: 'text', inputmode: 'decimal', value: l.cantidad, oninput: e => l.cantidad = e.target.value })),
           h('label', { class: 'campo' }, 'Unidad', h('select', { onchange: e => l.unidad = e.target.value }, UNIDADES.map(u => h('option', { value: u, selected: u === l.unidad }, u)))),
           h('label', { class: 'campo' }, 'Origen', h('input', { value: l.origen, placeholder: 'Ej. Almería', oninput: e => l.origen = e.target.value })),
-          h('label', { class: 'campo' }, 'Código de lote', h('input', { value: l.lote, oninput: e => l.lote = e.target.value }))))));
+          h('label', { class: 'campo' }, 'Código de lote', h('input', { value: l.lote, oninput: e => l.lote = e.target.value })),
+          h('label', { class: 'campo' }, 'Precio de compra € por ' + l.unidad, h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Opcional', value: l.precio || '', oninput: e => l.precio = e.target.value }))))));
     }
     function buscadorProd() {
       const res = h('div', {});
@@ -1527,7 +1551,7 @@ function vistaCompras() {
         const c = parseNum(l.cantidad); if (c === null || c <= 0) { toast('Falta la cantidad de ' + l.producto.nombre, 'err'); return; }
         if (!l.origen.trim()) { toast('Falta el origen de ' + l.producto.nombre, 'err'); return; }
         if (!l.lote.trim()) { toast('Falta el código de lote de ' + l.producto.nombre, 'err'); return; }
-        filas.push({ producto_id: l.producto.id, origen: l.origen.trim(), codigo_lote: l.lote.trim(), cantidad_recibida: c, unidad: l.unidad });
+        filas.push({ producto_id: l.producto.id, origen: l.origen.trim(), codigo_lote: l.lote.trim(), cantidad_recibida: c, unidad: l.unidad, precio_compra: l.precio && l.precio.trim() ? parseNum(l.precio) : null });
       }
       btn.disabled = true;
       const c = await sb.from('compras').insert({ proveedor_id: st.prov, fecha: st.fecha, numero_documento: st.doc.trim() || null }).select('id').single();
@@ -1555,12 +1579,13 @@ function vistaCompras() {
         const ent = (l.asignaciones_lote || []).reduce((a, x) => a + Number(x.cantidad), 0);
         return h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, l.productos ? l.productos.nombre : ''),
           h('div', { class: 'sub' }, [l.codigo_lote, pv && pv.nombre, l.origen, c.fecha && fechaES(c.fecha)].filter(Boolean).join(' · '))),
-          h('div', { style: 'text-align:right' }, h('b', {}, num(l.cantidad_recibida) + ' ' + l.unidad), h('div', { class: 'sub' }, 'entregado ' + num(ent) + ' · queda ' + num(Math.round((l.cantidad_recibida - ent) * 1000) / 1000)))));
+          h('div', { style: 'text-align:right' }, h('b', {}, num(l.cantidad_recibida) + ' ' + l.unidad), h('div', { class: 'sub' }, 'entregado ' + num(ent) + ' · queda ' + num(Math.round((l.cantidad_recibida - ent) * 1000) / 1000)))),
+          esOficina() ? h('button', { class: 'ghost small', style: 'margin-top:8px', onclick: async () => { if (!confirm('¿Archivar este lote? Dejará de verse en la lista.')) return; const x = await sb.from('lotes').update({ archivado: true }).eq('id', l.id); if (x.error) toast(msgErr(x.error), 'err'); else { l.archivado = true; datos = datos.filter(z => z !== l); pintarL(); } } }, 'Archivar lote') : null);
       }) : [h('p', { class: 'vacio' }, 'No hay lotes.')]));
     }
     try {
       const d = new Date(Date.now() - 60 * 86400000).toISOString();
-      const r = await sb.from('lotes').select('id,codigo_lote,origen,cantidad_recibida,unidad,created_at,productos(codigo,nombre),compras(fecha,numero_documento,proveedores(nombre)),asignaciones_lote(cantidad)').gte('created_at', d).order('created_at', { ascending: false }).limit(150);
+      const r = await sb.from('lotes').select('id,codigo_lote,origen,cantidad_recibida,unidad,created_at,productos(codigo,nombre),compras(fecha,numero_documento,proveedores(nombre)),asignaciones_lote(cantidad)').gte('created_at', d).neq('archivado', true).order('created_at', { ascending: false }).limit(150);
       if (r.error) throw r.error; datos = r.data; pintarL();
     } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver los lotes.' : msgErr(e))); }
   }
@@ -1659,7 +1684,7 @@ async function buscar(tabla, texto, soloActivos, limite) {
 function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
 function vistaNuevo() {
   state.view = 'nuevo';
-  const nuevo = { cliente: null, fecha: hoy(), lineas: [], notas: '' };
+  const nuevo = { cliente: null, fecha: state.params.fecha || hoy(), lineas: [], notas: '' };
   const raiz = h('div', {});
   $app.replaceChildren(shell('Nuevo pedido', raiz)); renderBanner();
 
@@ -1759,6 +1784,7 @@ function vistaCatalogo() {
           ctl.push(h('select', { onchange: e => guardarCampo(f, { unidad_venta: e.target.value }) }, UNIDADES.map(u => h('option', { value: u, selected: u === f.unidad_venta }, 'Se vende en ' + u))));
           ctl.push(h('select', { onchange: e => guardarCampo(f, { unidad_precio: e.target.value }) }, ['kg', 'unidad'].map(u => h('option', { value: u, selected: u === f.unidad_precio }, 'Precio por ' + u))));
           ctl.push(h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Precio general €', value: gen[f.id] != null ? String(gen[f.id]).replace('.', ',') : '', style: 'width:130px;min-height:42px', onchange: async e => { const n = parseNum(e.target.value); if (n === null || n < 0) { toast('Precio no válido', 'err'); return; } if (await guardarTarifa(f.id, null, n)) toast('Precio general guardado', 'ok'); } }));
+          ctl.push(h('button', { class: 'ghost small', onclick: () => hoja('Incidencias · ' + f.nombre, panelIncidencias({ producto: f })) }, 'Incidencias'));
           ctl.push(h('select', { onchange: e => guardarCampo(f, { iva: Number(e.target.value) }) }, [4, 10, 21, 0].map(v => h('option', { value: v, selected: v === Number(f.iva != null ? f.iva : 4) }, 'IVA ' + v + ' %'))));
         } else {
           ctl.push(h('select', { onchange: e => guardarCampo(f, { forma_pago: e.target.value }) }, [['credito', 'Crédito'], ['contado', 'Contado']].map(([v, n]) => h('option', { value: v, selected: v === f.forma_pago }, n))));
@@ -1772,12 +1798,402 @@ function vistaCatalogo() {
   renderBanner(); cargar();
 }
 
+/* =====================  NUEVAS FUNCIONES (entregas, calendario, incidencias, precios, facturas, avisos)  ===================== */
+const uuid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); });
+const crearCola = k => ({ get: () => LS.get(k, []), set: c => { LS.set(k, c); renderBanner(); } });
+const colaE = crearCola('fj_cola_entregas'), colaI = crearCola('fj_cola_inc');
+const totalPendiente = () => getCola().length + getColaC().length + getColaF().length + getColaK().length + colaE.get().length + colaI.get().length;
+const TIPOS_INC = { queja: 'Queja de un cliente', calidad: 'Producto en mal estado', devolucion: 'Devolución', merma: 'Merma / se estropeó', falta: 'Faltó género', otra: 'Otra' };
+const quienEs = id => (state.gente[id] && state.gente[id].nombre) || '';
+
+function hoja(titulo, contenido) {
+  state.sheetAbierta = true;
+  const cerrar = () => { ov.remove(); state.sheetAbierta = false; };
+  const ov = h('div', { class: 'overlay', onclick: e => { if (e.target === ov) cerrar(); } },
+    h('div', { class: 'sheet', style: 'max-height:88vh;overflow-y:auto' }, h('h2', {}, titulo), contenido, h('button', { class: 'ghost', onclick: cerrar }, 'Cerrar')));
+  document.body.append(ov); return cerrar;
+}
+async function confirmar(msg) { return window.confirm(msg); }
+
+/* ---------- Avisos (notificaciones) ---------- */
+const AV = () => Object.assign({ chat: false, entregas: false }, LS.get('fj_avisos', {}));
+function avisar(titulo, cuerpo, tag) {
+  if (!document.hidden) { toast(titulo + (cuerpo ? ': ' + cuerpo : ''), 'ok'); return; }
+  try {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const op = { body: cuerpo || '', tag: tag || 'fj', icon: 'icon-192.png' };
+    if (navigator.serviceWorker && navigator.serviceWorker.ready) navigator.serviceWorker.ready.then(reg => reg.showNotification(titulo, op)).catch(() => { try { new Notification(titulo, op); } catch (e) { } });
+    else new Notification(titulo, op);
+  } catch (e) { }
+}
+function panelAvisos() {
+  const av = AV(); const soporta = 'Notification' in window;
+  const tog = (k, t) => h('label', { class: 'interruptor', style: 'margin-bottom:8px' }, h('input', { type: 'checkbox', checked: !!av[k], onchange: async e => {
+    if (e.target.checked && soporta && Notification.permission === 'default') { try { await Notification.requestPermission(); } catch (x) { } }
+    if (e.target.checked && soporta && Notification.permission === 'denied') toast('Tienes los avisos bloqueados para esta app en los ajustes del móvil.', 'err');
+    const n = AV(); n[k] = e.target.checked; LS.set('fj_avisos', n);
+  } }), t);
+  return h('div', { class: 'card' }, h('div', { class: 'nombre', style: 'margin-bottom:6px' }, 'Avisos'),
+    tog('chat', 'Avisarme de mensajes nuevos del chat'), tog('entregas', 'Avisarme cuando se entregue un pedido'),
+    h('div', { class: 'sub' }, soporta ? 'Los avisos llegan mientras la app está abierta o en segundo plano. Con la app cerrada del todo todavía no llegan.' : 'Este móvil no permite avisos del sistema; se verán dentro de la app.'));
+}
+async function comprobarEntregas() {
+  if (!AV().entregas || !state.user) return;
+  try {
+    const k = 'fj_av_ent_' + state.user.id; const visto = LS.get(k, null);
+    if (!visto) { LS.set(k, new Date().toISOString()); return; }
+    const r = await sb.from('entregas').select('created_at,entregado_at,entregado_por,pedidos(clientes(nombre,nombre_comercial))').gt('created_at', visto).neq('entregado_por', state.user.id).order('created_at');
+    if (r.error || !r.data.length) return;
+    LS.set(k, r.data[r.data.length - 1].created_at);
+    r.data.forEach(e => { const p = uno(e.pedidos); avisar('Pedido entregado', 'El pedido de ' + nombreCli(p ? uno(p.clientes) : null) + ' ya está entregado (' + fmtHora(e.entregado_at) + ')', 'ent' + e.created_at); });
+  } catch (e) { }
+}
+
+/* ---------- Entregas ---------- */
+let sincE = false;
+async function sincronizarEntregas() {
+  if (sincE || !navigator.onLine) return; if (!colaE.get().length) return; sincE = true;
+  try {
+    for (const it of colaE.get().slice()) {
+      const r = await sb.rpc('marcar_entregado', { p_pedido: it.pedido, p_at: it.at, p_nota: it.nota || null });
+      if (r.error) { if (isNetErr(r.error)) break; toast(msgErr(r.error), 'err'); }
+      colaE.set(colaE.get().filter(x => x.pedido !== it.pedido));
+    }
+  } finally { sincE = false; }
+}
+async function marcarEntregado(pedidoId) {
+  if (!colaE.get().some(x => x.pedido === pedidoId)) colaE.set(colaE.get().concat([{ pedido: pedidoId, at: new Date().toISOString() }]));
+  toast('Entrega registrada', 'ok'); await sincronizarEntregas();
+}
+function vistaEntregas() {
+  state.view = 'entregas';
+  let fecha = state.fecha, datos = [], cache = false;
+  const cont = h('div', {});
+  const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); state.fecha = fecha; cargar(); } });
+  $app.replaceChildren(shell('Entregas', h('div', {}, h('div', { class: 'barra' }, inp, h('button', { class: 'ghost', onclick: () => cargar() }, '↻')), cont), { volver: () => go('mas') }));
+  renderBanner(); state.refrescarEntregas = () => cargar(true);
+  async function cargar(suave) {
+    const key = 'fj_entregas_' + fecha;
+    if (!suave) cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+    try {
+      if (!navigator.onLine) throw new TypeError('network');
+      const r = await sb.from('pedidos').select('id,estado,clientes(codigo,nombre,nombre_comercial),entregas(entregado_at,entregado_por)').eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true);
+      if (r.error) throw r.error; datos = r.data; cache = false; LS.set(key, datos);
+    } catch (e) { if (!isNetErr(e)) { cont.replaceChildren(h('p', { class: 'err' }, msgErr(e))); return; } datos = LS.get(key, []); cache = true; }
+    pintar();
+  }
+  function pintar() {
+    const q = colaE.get(); const kids = [];
+    const info = p => { const e = uno(p.entregas); const l = q.find(x => x.pedido === p.id); return e ? { at: e.entregado_at, por: e.entregado_por, pend: false } : l ? { at: l.at, por: state.user.id, pend: true } : null; };
+    const term = datos.filter(p => p.estado === 'terminado'); const ent = term.filter(p => info(p)).sort((a, b) => String(info(a).at).localeCompare(String(info(b).at)));
+    const falta = term.filter(p => !info(p)); const sin = datos.length - term.length;
+    if (cache) kids.push(h('div', { class: 'aviso-card' }, 'Mostrando los últimos datos guardados en este móvil.'));
+    kids.push(h('div', { class: 'card' }, h('div', { class: 'nombre' }, ent.length + ' entregados de ' + datos.length + ' pedidos'),
+      h('div', { class: 'sub' }, falta.length + ' terminados por entregar' + (sin ? ' · ' + sin + ' sin terminar de preparar' : ''))));
+    if (falta.length) kids.push(h('div', { class: 'letra' }, 'Por entregar'));
+    falta.forEach(p => kids.push(h('div', { class: 'card fila' }, h('div', { class: 'nombre' }, nombreCli(uno(p.clientes))),
+      h('button', { class: 'guardar small', onclick: async () => { await marcarEntregado(p.id); pintar(); cargar(true); } }, 'Entregado'))));
+    if (ent.length) kids.push(h('div', { class: 'letra' }, 'Entregados'));
+    ent.forEach(p => { const i = info(p); kids.push(h('div', { class: 'card fila' },
+      h('div', {}, h('div', { class: 'nombre' }, '✔ ' + nombreCli(uno(p.clientes))), h('div', { class: 'sub' }, 'El pedido de ' + nombreCli(uno(p.clientes)) + ' ya ha sido entregado' + (quienEs(i.por) ? ' · ' + quienEs(i.por) : '') + (i.pend ? ' · pendiente de enviar' : ''))),
+      h('div', { style: 'text-align:right' }, h('b', { style: 'font-size:20px' }, fmtHora(i.at)),
+        esOficina() && !i.pend ? h('div', {}, h('button', { class: 'ghost small', onclick: async () => { if (!await confirmar('¿Deshacer la entrega de ' + nombreCli(uno(p.clientes)) + '?')) return; const r = await sb.from('entregas').delete().eq('pedido_id', p.id); if (r.error) toast(msgErr(r.error), 'err'); else cargar(); } }, 'Deshacer')) : null))); });
+    if (!datos.length) kids.push(h('p', { class: 'vacio' }, 'No hay pedidos para este día.'));
+    cont.replaceChildren(...kids);
+  }
+  cargar();
+}
+
+/* ---------- Calendario ---------- */
+function vistaCalendario() {
+  state.view = 'calendario';
+  let mes = (state.params.mes || state.fecha).slice(0, 7), sel = state.params.dia || state.fecha, datos = [];
+  const cont = h('div', {});
+  $app.replaceChildren(shell('Calendario', cont, { volver: () => go('lista') })); renderBanner();
+  const mover = (m, d) => { const [y, mm] = m.split('-').map(Number); const dt = new Date(y, mm - 1 + d, 1); return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0'); };
+  async function cargar() {
+    datos = LS.get('fj_cal_' + mes, []); pintar();
+    try {
+      const r = await sb.from('pedidos').select('id,estado,fecha_entrega,clientes(codigo,nombre,nombre_comercial),entregas(entregado_at)').gte('fecha_entrega', mes + '-01').lt('fecha_entrega', mover(mes, 1) + '-01').neq('estado', 'anulado').neq('archivado', true).range(0, 4999);
+      if (r.error) throw r.error; datos = r.data; LS.set('fj_cal_' + mes, datos);
+    } catch (e) { if (!isNetErr(e)) toast(msgErr(e), 'err'); }
+    pintar();
+  }
+  function pintar() {
+    const [y, m] = mes.split('-').map(Number); const primero = (new Date(y, m - 1, 1).getDay() + 6) % 7; const nd = new Date(y, m, 0).getDate();
+    const por = {}; datos.forEach(p => (por[p.fecha_entrega] = por[p.fecha_entrega] || []).push(p));
+    const cel = ['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(x => h('div', { class: 'cal-h' }, x));
+    for (let i = 0; i < primero; i++) cel.push(h('div', {}));
+    for (let d = 1; d <= nd; d++) {
+      const iso = mes + '-' + String(d).padStart(2, '0'); const n = (por[iso] || []).length;
+      cel.push(h('button', { class: 'cal-d' + (iso === sel ? ' sel' : '') + (iso === hoy() ? ' hoy' : ''), onclick: () => { sel = iso; pintar(); } }, String(d), n ? h('i', {}, String(n)) : null));
+    }
+    const titulo = new Date(y, m - 1, 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+    const dia = sel.startsWith(mes) ? (por[sel] || []) : [];
+    const kids = [h('div', { class: 'fila', style: 'margin-bottom:8px' },
+      h('button', { class: 'ghost small', onclick: () => { mes = mover(mes, -1); sel = mes + '-01'; cargar(); } }, '←'),
+      h('b', { style: 'text-transform:capitalize;font-size:18px' }, titulo),
+      h('button', { class: 'ghost small', onclick: () => { mes = mover(mes, 1); sel = mes + '-01'; cargar(); } }, '→')),
+      h('div', { class: 'cal' }, ...cel),
+      h('div', { class: 'letra', style: 'text-transform:capitalize' }, fmtDiaLargo(sel + 'T12:00:00') + ' · ' + dia.length + ' pedidos')];
+    dia.forEach(p => { const e = uno(p.entregas); kids.push(h('div', { class: 'card tap fila', onclick: () => go('pedido', { id: p.id }) },
+      h('div', {}, h('div', { class: 'nombre' }, nombreCli(uno(p.clientes))), e ? h('div', { class: 'sub' }, '✔ Entregado a las ' + fmtHora(e.entregado_at)) : null),
+      h('span', { class: 'badge ' + CLASE_ESTADO[p.estado] }, ESTADO[p.estado]))); });
+    if (!dia.length) kids.push(h('p', { class: 'vacio' }, 'No hay pedidos este día.'));
+    const bs = [h('button', { class: 'ghost', style: 'flex:1', onclick: () => { state.fecha = sel; go('lista'); } }, 'Abrir en Preparar')];
+    if (esOficina()) bs.unshift(h('button', { style: 'flex:1', onclick: () => go('nuevo', { fecha: sel }) }, '+ Añadir pedido'));
+    kids.push(h('div', { style: 'display:flex;gap:8px' }, ...bs));
+    cont.replaceChildren(...kids);
+  }
+  cargar();
+}
+
+/* ---------- Incidencias ---------- */
+let sincI = false;
+async function sincronizarInc() {
+  if (sincI || !navigator.onLine) return; if (!colaI.get().length) return; sincI = true;
+  try {
+    for (const it of colaI.get().slice()) {
+      const r = await sb.from('incidencias').upsert(it, { onConflict: 'id', ignoreDuplicates: true });
+      if (r.error) { if (isNetErr(r.error)) break; toast(msgErr(r.error), 'err'); }
+      colaI.set(colaI.get().filter(x => x.id !== it.id));
+    }
+  } finally { sincI = false; }
+}
+function selectorEntidad(tabla, etiqueta, ini) {
+  let sel = ini || null; const box = h('div', { style: 'margin-bottom:10px' });
+  const nombre = r => tabla === 'clientes' ? nombreCli(r) : r.nombre;
+  function pintar() {
+    if (sel) { box.replaceChildren(h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'sub' }, etiqueta), h('b', {}, nombre(sel))), h('button', { class: 'ghost small', onclick: () => { sel = null; pintar(); } }, 'Quitar'))); return; }
+    const res = h('div', {});
+    const inp = h('input', { placeholder: etiqueta + ' (opcional): escribe para buscar…', oninput: debounce(async () => {
+      if (!inp.value.trim()) { res.replaceChildren(); return; }
+      try { const r = await buscar(tabla, inp.value, false, 8); res.replaceChildren(h('div', { class: 'res' }, r.map(x => h('button', { onclick: () => { sel = x; pintar(); } }, nombre(x))))); } catch (e) { }
+    }, 250) });
+    box.replaceChildren(inp, res);
+  }
+  pintar(); return { node: box, get: () => sel };
+}
+function abrirIncidencia(pref, alGuardar) {
+  pref = pref || {};
+  const tipo = h('select', {}, Object.keys(TIPOS_INC).map(k => h('option', { value: k }, TIPOS_INC[k])));
+  const cli = selectorEntidad('clientes', 'Cliente', pref.cliente), pro = selectorEntidad('productos', 'Producto', pref.producto);
+  const nota = h('textarea', { rows: 3, placeholder: 'Qué ha pasado. Ej.: «Los tomates llegaron malos» o «Florencio se queja de estos tomates»' });
+  let cerrar;
+  const guardar = async () => {
+    const c = cli.get(), p = pro.get();
+    if (!nota.value.trim()) { toast('Escribe qué ha pasado', 'err'); return; }
+    if (!c && !p) { toast('Elige al menos un cliente o un producto', 'err'); return; }
+    colaI.set(colaI.get().concat([{ id: uuid(), tipo: tipo.value, nota: nota.value.trim(), cliente_id: c ? c.id : null, producto_id: p ? p.id : null, pedido_id: pref.pedido_id || null, linea_id: pref.linea_id || null, created_at: new Date().toISOString() }]));
+    cerrar(); toast('Incidencia anotada', 'ok'); await sincronizarInc(); if (alGuardar) alGuardar();
+  };
+  cerrar = hoja('Nueva incidencia', h('div', {}, h('label', { class: 'campo' }, 'Tipo', tipo), cli.node, pro.node, h('label', { class: 'campo' }, 'Detalle', nota), h('button', { class: 'guardar', style: 'width:100%', onclick: guardar }, 'Guardar incidencia')));
+}
+function panelIncidencias(pref, opc) {
+  pref = pref || {}; opc = opc || {}; let filtro = opc.filtros ? 'abiertas' : 'todas';
+  const lista = h('div', {}), chips = h('div', { class: 'chips' });
+  const pintarChips = () => chips.replaceChildren(...[['abiertas', 'Abiertas'], ['resueltas', 'Resueltas'], ['todas', 'Todas']].map(([f, n]) => h('button', { class: 'chip' + (filtro === f ? ' on' : ''), onclick: () => { filtro = f; pintarChips(); cargar(); } }, n)));
+  async function cargar() {
+    lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+    try {
+      let q = sb.from('incidencias').select('id,tipo,nota,resuelta,created_at,creado_por,cliente_id,producto_id,clientes(nombre,nombre_comercial),productos(nombre)').neq('archivado', true).order('created_at', { ascending: false }).limit(100);
+      if (pref.cliente) q = q.eq('cliente_id', pref.cliente.id);
+      if (pref.producto) q = q.eq('producto_id', pref.producto.id);
+      if (filtro === 'abiertas') q = q.eq('resuelta', false); else if (filtro === 'resueltas') q = q.eq('resuelta', true);
+      const r = await q; if (r.error) throw r.error;
+      const pend = colaI.get().filter(x => (!pref.cliente || x.cliente_id === pref.cliente.id) && (!pref.producto || x.producto_id === pref.producto.id));
+      const kids = pend.map(x => h('div', { class: 'card', style: 'border-style:dashed' }, h('div', { class: 'sub' }, TIPOS_INC[x.tipo] + ' · pendiente de enviar'), h('div', {}, x.nota)));
+      r.data.forEach(i => kids.push(h('div', { class: 'card' + (i.resuelta ? ' hecha' : '') },
+        h('div', { class: 'fila' }, h('span', { class: 'badge ' + (i.resuelta ? 'fin' : 'prep') }, (i.resuelta ? '✔ ' : '') + TIPOS_INC[i.tipo]), h('span', { class: 'sub' }, fechaES(i.created_at) + ' ' + fmtHora(i.created_at))),
+        h('div', { style: 'margin:6px 0' }, i.nota),
+        h('div', { class: 'sub' }, [i.clientes ? 'Cliente: ' + nombreCli(uno(i.clientes)) : '', i.productos ? 'Producto: ' + uno(i.productos).nombre : '', quienEs(i.creado_por) ? 'Anotó: ' + quienEs(i.creado_por) : ''].filter(Boolean).join(' · ')),
+        esOficina() ? h('div', { style: 'display:flex;gap:8px;margin-top:8px' },
+          h('button', { class: 'ghost small', onclick: async () => { const x = await sb.from('incidencias').update({ resuelta: !i.resuelta }).eq('id', i.id); if (x.error) toast(msgErr(x.error), 'err'); else cargar(); } }, i.resuelta ? 'Reabrir' : 'Marcar resuelta'),
+          h('button', { class: 'ghost small', onclick: async () => { if (!await confirmar('¿Archivar esta incidencia? Dejará de verse.')) return; const x = await sb.from('incidencias').update({ archivado: true }).eq('id', i.id); if (x.error) toast(msgErr(x.error), 'err'); else cargar(); } }, 'Archivar')) : null)));
+      if (!kids.length) kids.push(h('p', { class: 'vacio' }, 'No hay incidencias.'));
+      lista.replaceChildren(...kids);
+    } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver las incidencias.' : msgErr(e))); }
+  }
+  pintarChips(); cargar();
+  return h('div', {}, h('button', { style: 'width:100%;margin-bottom:10px', onclick: () => abrirIncidencia(pref, cargar) }, '+ Nueva incidencia'), opc.filtros ? chips : null, lista);
+}
+function vistaIncidencias() {
+  state.view = 'incidencias';
+  $app.replaceChildren(shell('Incidencias', panelIncidencias({}, { filtros: true }), { volver: () => go('mas') })); renderBanner();
+}
+
+/* ---------- Precios de compra ---------- */
+function vistaPrecios() {
+  state.view = 'precios';
+  let modo = LS.get('fj_precios_modo', 'dia'), fecha = hoy();
+  const cont = h('div', {}), chips = h('div', { class: 'chips' });
+  const pintarChips = () => chips.replaceChildren(...[['dia', 'Por día'], ['producto', 'Por producto']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_precios_modo', m); pintarChips(); pintar(); } }, n)));
+  $app.replaceChildren(shell('Precios de compra', h('div', {}, chips, cont), { volver: () => go('mas') })); renderBanner(); pintarChips();
+  const pintar = () => modo === 'dia' ? pDia() : pProducto();
+  async function editarPrecio(l) {
+    if (!puedeCompras()) return;
+    const v = prompt('Precio de compra por ' + l.unidad + ' (€)', l.precio_compra != null ? String(l.precio_compra).replace('.', ',') : ''); if (v === null) return;
+    const n = parseNum(v); if (n === null || n < 0) { toast('Precio no válido', 'err'); return; }
+    const r = await sb.from('lotes').update({ precio_compra: n }).eq('id', l.id); if (r.error) toast(msgErr(r.error), 'err'); else { toast('Precio guardado', 'ok'); pintar(); }
+  }
+  async function pDia() {
+    const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); pDia(); } });
+    const lista = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); cont.replaceChildren(h('div', { class: 'barra' }, inp), lista);
+    try {
+      const c = await sb.from('compras').select('id,numero_documento,proveedores(nombre)').eq('fecha', fecha); if (c.error) throw c.error;
+      const ls = c.data.length ? await sb.from('lotes').select('id,cantidad_recibida,unidad,precio_compra,compra_id,productos(nombre)').in('compra_id', c.data.map(x => x.id)) : { data: [] };
+      if (ls.error) throw ls.error;
+      const kids = []; let total = 0;
+      c.data.forEach(co => {
+        const mios = ls.data.filter(l => l.compra_id === co.id); if (!mios.length) return;
+        const pv = uno(co.proveedores); let sub = 0;
+        const filas = mios.map(l => { const imp = l.precio_compra != null ? Math.round(l.cantidad_recibida * l.precio_compra * 100) / 100 : null; if (imp != null) sub += imp;
+          return h('div', { class: 'fila tap', style: 'padding:6px 0;border-bottom:1px solid var(--borde)', onclick: () => editarPrecio(l) }, h('div', {}, h('div', {}, uno(l.productos).nombre), h('div', { class: 'sub' }, num(l.cantidad_recibida) + ' ' + l.unidad)),
+            h('div', { style: 'text-align:right' }, h('b', {}, l.precio_compra != null ? eur(l.precio_compra) + '/' + l.unidad : 'sin precio'), imp != null ? h('div', { class: 'sub' }, eur(imp)) : null)); });
+        total += sub; kids.push(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', { class: 'nombre' }, pv ? pv.nombre : 'Proveedor'), h('b', {}, eur(sub))), co.numero_documento ? h('div', { class: 'sub' }, 'Doc. ' + co.numero_documento) : null, ...filas));
+      });
+      kids.unshift(h('div', { class: 'card fila' }, h('div', { class: 'sub' }, 'Total comprado el ' + fechaES(fecha)), h('b', { style: 'font-size:20px' }, eur(total))));
+      if (kids.length === 1) kids.push(h('p', { class: 'vacio' }, 'No hay compras registradas este día.'));
+      lista.replaceChildren(...kids);
+    } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+  }
+  function pProducto() {
+    const res = h('div', {}), hist = h('div', {});
+    const inp = h('input', { placeholder: 'Buscar producto…', oninput: debounce(async () => {
+      if (!inp.value.trim()) { res.replaceChildren(); return; }
+      try { const r = await buscar('productos', inp.value, false, 8); res.replaceChildren(h('div', { class: 'res' }, r.map(p => h('button', { onclick: () => { res.replaceChildren(); inp.value = p.nombre; historial(p); } }, p.nombre + ' · ' + p.codigo)))); } catch (e) { }
+    }, 250) });
+    cont.replaceChildren(inp, res, hist);
+    async function historial(p) {
+      hist.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+      try {
+        const r = await sb.from('lotes').select('id,cantidad_recibida,unidad,precio_compra,origen,compras(fecha,proveedores(nombre))').eq('producto_id', p.id).order('created_at', { ascending: false }).limit(80); if (r.error) throw r.error;
+        const filas = r.data.map(l => ({ l, co: uno(l.compras) || {} })).sort((a, b) => String(b.co.fecha).localeCompare(String(a.co.fecha)));
+        const con = filas.filter(x => x.l.precio_compra != null); const kids = [];
+        if (con.length) {
+          const u = con[0].l.unidad; const mismos = con.filter(x => x.l.unidad === u).map(x => Number(x.l.precio_compra));
+          const med = mismos.reduce((a, b) => a + b, 0) / mismos.length;
+          kids.push(h('div', { class: 'card' }, h('div', { class: 'nombre' }, 'Último: ' + eur(con[0].l.precio_compra) + ' / ' + u), h('div', { class: 'sub' }, 'Mínimo ' + eur(Math.min(...mismos)) + ' · Máximo ' + eur(Math.max(...mismos)) + ' · Media ' + eur(med) + ' (' + mismos.length + ' compras)')));
+        }
+        filas.forEach(({ l, co }) => { const pv = co.proveedores ? uno(co.proveedores) : null; kids.push(h('div', { class: 'card tap fila', onclick: () => editarPrecio(l) },
+          h('div', {}, h('div', { class: 'nombre' }, co.fecha ? fechaES(co.fecha) : ''), h('div', { class: 'sub' }, [pv && pv.nombre, l.origen, num(l.cantidad_recibida) + ' ' + l.unidad].filter(Boolean).join(' · '))),
+          h('b', { style: 'font-size:18px' }, l.precio_compra != null ? eur(l.precio_compra) + '/' + l.unidad : 'sin precio'))); });
+        if (!filas.length) kids.push(h('p', { class: 'vacio' }, 'Todavía no se ha comprado este producto.'));
+        hist.replaceChildren(...kids);
+      } catch (e) { hist.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+    }
+  }
+  pintar();
+}
+
+/* ---------- Facturas y hojas de compra ---------- */
+function reducirImagen(file, max, q) {
+  return new Promise((res, rej) => {
+    const img = new Image(); const u = URL.createObjectURL(file);
+    img.onload = () => { const k = Math.min(1, max / Math.max(img.width, img.height)); const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(u); c.toBlob(b => b ? res(b) : rej(new Error('No se pudo leer la foto')), 'image/jpeg', q); };
+    img.onerror = () => rej(new Error('No se pudo leer la foto')); img.src = u;
+  });
+}
+async function subirDoc(file, meta) {
+  let blob = file, ext = (file.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5) || 'bin', ct = file.type || 'application/octet-stream';
+  if ((file.type || '').startsWith('image/')) { blob = await reducirImagen(file, 1800, 0.75); ext = 'jpg'; ct = 'image/jpeg'; }
+  else if (file.size > 15e6) throw new Error('El archivo pesa demasiado (máximo 15 MB).');
+  const ruta = meta.fecha.slice(0, 4) + '/' + meta.fecha.slice(5, 7) + '/' + meta.fecha + '/' + uuid() + '.' + ext;
+  const up = await sb.storage.from('facturas').upload(ruta, blob, { contentType: ct }); if (up.error) throw up.error;
+  const r = await sb.from('documentos_compra').insert({ fecha: meta.fecha, proveedor_id: meta.prov || null, tipo: meta.tipo, importe: meta.importe, nota: meta.nota || null, ruta, nombre: file.name });
+  if (r.error) { await sb.storage.from('facturas').remove([ruta]); throw r.error; }
+}
+const TIPOS_DOC = { factura: 'Factura', albaran: 'Albarán del proveedor', hoja: 'Hoja de compra', otro: 'Otro' };
+function vistaFacturas() {
+  state.view = 'facturas';
+  let mes = hoy().slice(0, 7), provs = [], docs = [];
+  const cont = h('div', {}), lista = h('div', {});
+  const f = { tipo: h('select', {}, Object.keys(TIPOS_DOC).map(k => h('option', { value: k }, TIPOS_DOC[k]))), prov: h('select', {}), fecha: h('input', { type: 'date', value: hoy() }), importe: h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Opcional' }), nota: h('input', { placeholder: 'Opcional' }) };
+  const foto = h('input', { type: 'file', accept: 'image/*', capture: 'environment', style: 'display:none', onchange: e => subir(e.target.files) });
+  const arch = h('input', { type: 'file', accept: 'image/*,application/pdf', multiple: true, style: 'display:none', onchange: e => subir(e.target.files) });
+  async function subir(files) {
+    files = Array.from(files || []); if (!files.length) return;
+    if (!navigator.onLine) { toast('Necesitas conexión para subir archivos.', 'err'); return; }
+    const imp = f.importe.value.trim() ? parseNum(f.importe.value) : null; let ok = 0;
+    for (const fi of files) { try { await subirDoc(fi, { fecha: f.fecha.value || hoy(), prov: f.prov.value, tipo: f.tipo.value, importe: imp, nota: f.nota.value.trim() }); ok++; } catch (e) { toast(fi.name + ': ' + msgErr(e), 'err'); } }
+    foto.value = ''; arch.value = ''; if (ok) { toast(ok + ' archivo(s) subido(s)', 'ok'); f.nota.value = ''; f.importe.value = ''; mes = (f.fecha.value || hoy()).slice(0, 7); cargar(); }
+  }
+  const sig = (m) => { const [y, mm] = m.split('-').map(Number); const d = new Date(y, mm, 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
+  async function cargar() {
+    lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+    try {
+      const r = await sb.from('documentos_compra').select('id,fecha,tipo,ruta,nombre,importe,nota,subido_por,created_at,proveedores(nombre)').gte('fecha', mes + '-01').lt('fecha', sig(mes) + '-01').neq('archivado', true).order('fecha', { ascending: false }); if (r.error) throw r.error;
+      docs = r.data; const kids = []; let dia = '';
+      const tot = {}; docs.forEach(d => { if (d.importe != null) tot[d.fecha] = (tot[d.fecha] || 0) + Number(d.importe); });
+      docs.forEach(d => {
+        if (d.fecha !== dia) { dia = d.fecha; kids.push(h('div', { class: 'letra', style: 'text-transform:capitalize' }, fmtDiaLargo(d.fecha + 'T12:00:00') + (tot[d.fecha] ? ' · ' + eur(tot[d.fecha]) : ''))); }
+        const pv = d.proveedores ? uno(d.proveedores) : null;
+        kids.push(h('div', { class: 'card tap fila', onclick: () => ver(d) }, h('div', {}, h('div', { class: 'nombre' }, (d.ruta.endsWith('.pdf') ? '📄 ' : '🧾 ') + (pv ? pv.nombre : 'Sin proveedor')),
+          h('div', { class: 'sub' }, [TIPOS_DOC[d.tipo], d.nota, quienEs(d.subido_por) && 'Subió ' + quienEs(d.subido_por)].filter(Boolean).join(' · '))), d.importe != null ? h('b', {}, eur(d.importe)) : null));
+      });
+      if (!docs.length) kids.push(h('p', { class: 'vacio' }, 'No hay documentos este mes.'));
+      lista.replaceChildren(...kids);
+    } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver los documentos.' : msgErr(e))); }
+  }
+  async function ver(d) {
+    const r = await sb.storage.from('facturas').createSignedUrl(d.ruta, 900); if (r.error) { toast(msgErr(r.error), 'err'); return; }
+    const url = r.data.signedUrl; const esPdf = d.ruta.endsWith('.pdf'); let cerrar;
+    const acc = [h('a', { href: url, target: '_blank', rel: 'noopener', style: 'display:block;text-align:center;padding:12px;border:1px solid var(--borde);border-radius:12px;text-decoration:none;color:var(--verde-osc);font-weight:700' }, esPdf ? 'Abrir PDF' : 'Abrir en grande')];
+    if (esOficina()) acc.push(h('button', { class: 'ghost', onclick: async () => { if (!await confirmar('¿Archivar este documento? Dejará de verse en la lista (no se borra).')) return; const x = await sb.from('documentos_compra').update({ archivado: true }).eq('id', d.id); if (x.error) toast(msgErr(x.error), 'err'); else { cerrar(); cargar(); } } }, 'Archivar documento'));
+    cerrar = hoja(fechaES(d.fecha) + ' · ' + TIPOS_DOC[d.tipo], h('div', { style: 'display:flex;flex-direction:column;gap:10px' }, esPdf ? null : h('img', { src: url, style: 'width:100%;border-radius:10px' }), ...acc));
+  }
+  const mesInp = h('input', { type: 'month', value: mes, onchange: e => { mes = e.target.value || hoy().slice(0, 7); cargar(); } });
+  cont.append(h('div', { class: 'card' }, h('div', { class: 'nombre', style: 'margin-bottom:8px' }, 'Subir factura u hoja de compra'),
+    h('label', { class: 'campo' }, 'Tipo', f.tipo), h('label', { class: 'campo' }, 'Proveedor (puesto de Mercamadrid)', f.prov), h('label', { class: 'campo' }, 'Fecha', f.fecha),
+    h('label', { class: 'campo' }, 'Importe total €', f.importe), h('label', { class: 'campo' }, 'Nota', f.nota),
+    h('div', { style: 'display:flex;gap:8px' }, h('button', { style: 'flex:1', onclick: () => foto.click() }, '📷 Hacer foto'), h('button', { class: 'ghost', style: 'flex:1', onclick: () => arch.click() }, '📎 Elegir archivos')), foto, arch),
+    h('div', { class: 'barra' }, mesInp), lista);
+  $app.replaceChildren(shell('Facturas de compra', cont, { volver: () => go('mas') })); renderBanner();
+  sb.from('proveedores').select('id,nombre').eq('activo', true).order('nombre').then(r => { provs = r.data || []; f.prov.replaceChildren(h('option', { value: '' }, '— sin elegir —'), ...provs.map(p => h('option', { value: p.id }, p.nombre))); });
+  cargar();
+}
+
+/* ---------- Resumen del día (oficina) ---------- */
+function vistaResumen() {
+  state.view = 'resumen'; if (!esOficina()) { go('mas'); return; }
+  let fecha = hoy(); const cont = h('div', {});
+  $app.replaceChildren(shell('Resumen del día', cont, { volver: () => go('mas') })); renderBanner();
+  async function cargar() {
+    const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); cargar(); } });
+    const caja = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); cont.replaceChildren(h('div', { class: 'barra' }, inp), caja);
+    try {
+      const d0 = new Date(fecha + 'T00:00:00'), d1 = new Date(d0.getTime() + 86400000);
+      const [pe, im, en, co, cm, ic] = await Promise.all([
+        sb.from('pedidos').select('id,estado').eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true),
+        sb.from('v_pedidos_importe').select('total,cobrado,pendiente,estado').eq('fecha_entrega', fecha),
+        sb.from('entregas').select('pedido_id').gte('entregado_at', d0.toISOString()).lt('entregado_at', d1.toISOString()),
+        sb.from('cobros').select('importe,forma').gte('created_at', d0.toISOString()).lt('created_at', d1.toISOString()),
+        sb.from('compras').select('id').eq('fecha', fecha),
+        sb.from('incidencias').select('id', { count: 'exact', head: true }).eq('resuelta', false).neq('archivado', true)]);
+      const err = [pe, im, en, co, cm, ic].find(x => x.error); if (err) throw err.error;
+      const ls = cm.data.length ? await sb.from('lotes').select('cantidad_recibida,precio_compra').in('compra_id', cm.data.map(x => x.id)) : { data: [] };
+      const suma = (a, k) => Math.round(a.reduce((s, x) => s + Number(x[k] || 0), 0) * 100) / 100;
+      const coste = Math.round(ls.data.reduce((s, l) => s + (l.precio_compra != null ? l.cantidad_recibida * l.precio_compra : 0), 0) * 100) / 100;
+      const formas = {}; co.data.forEach(c => formas[c.forma] = (formas[c.forma] || 0) + Number(c.importe));
+      const fila = (t, v, s) => h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'nombre' }, t), s ? h('div', { class: 'sub' }, s) : null), h('b', { style: 'font-size:20px' }, v));
+      caja.replaceChildren(
+        fila('Pedidos', String(pe.data.length), pe.data.filter(p => p.estado === 'terminado').length + ' terminados · ' + en.data.length + ' entregados hoy'),
+        fila('Vendido (con IVA)', eur(suma(im.data, 'total')), 'De los pedidos con peso ya anotado'),
+        fila('Cobrado en el día', eur(suma(co.data, 'importe')), Object.keys(formas).map(k => k + ' ' + eur(formas[k])).join(' · ') || 'Sin cobros'),
+        fila('Pendiente de cobro', eur(suma(im.data, 'pendiente')), 'De estos pedidos'),
+        fila('Comprado (coste)', eur(coste), cm.data.length + ' compras con precio anotado'),
+        fila('Incidencias abiertas', String(ic.count || 0), 'En total'));
+    } catch (e) { caja.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+  }
+  cargar();
+}
+
 /* =====================  ARRANQUE  ===================== */
 function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza }[state.view] || vistaLista;
+  const v = { lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, resumen: vistaResumen }[state.view] || vistaLista;
   if ((state.view === 'nuevo' || state.view === 'catalogo') && !esOficina()) return vistaLista();
   v();
 }
@@ -1785,7 +2201,7 @@ function tick() {
   if (!state.user || !state.perfil) return;
   renderBanner();
   if (!navigator.onLine) return;
-  sincronizar(); sincronizarCarga(); sincronizarFichaje(); sincronizarCobros(); if (state.view !== 'chat') contarChat();
+  sincronizar(); sincronizarCarga(); sincronizarFichaje(); sincronizarCobros(); sincronizarEntregas(); sincronizarInc(); comprobarEntregas(); if (state.view !== 'chat') contarChat();
   if (!document.hidden && !state.sheetAbierta) refrescarVista();
 }
 async function init() {
@@ -1798,7 +2214,7 @@ async function init() {
   try { const { data } = await sb.auth.getSession(); if (data && data.session) await cargarPerfil(data.session.user); } catch (e) { }
   render(); cargarGente();
   sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') { state.user = null; state.perfil = null; render(); } });
-  window.addEventListener('online', () => { renderBanner(); sincronizar(); sincronizarCarga(); sincronizarFichaje(); sincronizarCobros(); refrescarVista(); });
+  window.addEventListener('online', () => { renderBanner(); sincronizar(); sincronizarCarga(); sincronizarFichaje(); sincronizarCobros(); sincronizarEntregas(); sincronizarInc(); refrescarVista(); });
   window.addEventListener('offline', renderBanner);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
   setInterval(tick, 8000);
