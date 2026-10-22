@@ -104,6 +104,7 @@ label.campo{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(
 .copia.ticket .num{text-align:left}
 .copia.ticket .oc-ticket{display:none}
 .copia table.iva{width:100%;margin:6px 0 0;font-size:13px}.copia table.iva td{border:0;padding:2px 4px}.copia .totiva{text-align:right;font-size:16px;margin:4px 0 8px}
+.letra{font-weight:800;color:var(--verde-osc);margin:12px 4px 6px}
 .hoja{background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;font-size:12px}
 .hoja h1{font-size:18px;margin:0 0 8px}
 .hoja h2{font-size:14px;margin:12px 0 4px}
@@ -175,6 +176,7 @@ function toast(msg, tipo) {
   t.append(d); setTimeout(() => d.remove(), tipo === 'err' ? 6000 : 3000);
 }
 const ERR = {
+  CLIENTE_DUPLICADO: 'Ya existe un cliente con ese código. Cambia el código.',
   CONFLICTO: 'Otra persona ha cambiado esta línea. Se ha recargado.',
   PEDIDO_CERRADO: 'El pedido ya está cerrado.',
   SIN_PERMISO: 'No tienes permiso para hacer esto.',
@@ -185,7 +187,7 @@ const ERR = {
   PEDIDO_NO_EXISTE: 'El pedido no existe.',
   PEDIDO_ANULADO: 'El pedido está anulado.'
 };
-function msgErr(e) { const m = (e && e.message) || ''; for (const k in ERR) if (m.includes(k)) return ERR[k]; return m || 'Error desconocido'; }
+function msgErr(e) { const m = (e && e.message) || ''; if (e && (e.code === '23505' || m.includes('duplicate key'))) return ERR.CLIENTE_DUPLICADO; for (const k in ERR) if (m.includes(k)) return ERR[k]; return m || 'Error desconocido'; }
 function isNetErr(e) {
   if (!e) return false;
   const m = String(e.message || '').toLowerCase();
@@ -251,9 +253,9 @@ function go(view, params) { state.view = view; state.params = params || {}; rend
 function shell(titulo, contenido, opts) {
   opts = opts || {};
   const tabs = [['lista', 'Preparar'], ['carga', 'Carga']];
-  if (esOficina()) tabs.push(['nuevo', 'Nuevo pedido'], ['catalogo', 'Catálogo']);
+  if (esOficina()) tabs.push(['nuevo', 'Nuevo pedido'], ['clientes', 'Clientes'], ['catalogo', 'Catálogo']);
   const nav = h('nav', { class: 'tabs' },
-    tabs.map(([v, t]) => h('button', { class: state.view === v || (v === 'lista' && ['pedido', 'albaran'].includes(state.view)) ? 'on' : '', onclick: () => go(v) }, t)),
+    tabs.map(([v, t]) => h('button', { class: state.view === v || (v === 'lista' && ['pedido', 'albaran'].includes(state.view)) || (v === 'clientes' && state.view === 'cliente') ? 'on' : '', onclick: () => go(v) }, t)),
     h('button', { onclick: salir }, 'Salir'));
   return h('div', { class: 'shell' },
     h('header', {},
@@ -800,6 +802,142 @@ function htmlHoja(datos) {
   return out;
 }
 
+/* =====================  CLIENTES (oficina)  ===================== */
+let clientesCache = null;
+const sinTilde = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+function vistaClientes() {
+  state.view = 'clientes';
+  if (!esOficina()) { go('lista'); return; }
+  let soloActivos = LS.get('fj_cli_activos', true), tope = 80;
+  const lista = h('div', {}); const info = h('p', { class: 'sub' });
+  const inp = h('input', { placeholder: 'Buscar por nombre, código, NIF o teléfono…', oninput: debounce(() => { tope = 80; pintar(); }, 200) });
+  const bAct = h('button', { class: 'chip', onclick: () => { soloActivos = true; LS.set('fj_cli_activos', true); marca(); pintar(); } }, 'Activos');
+  const bTod = h('button', { class: 'chip', onclick: () => { soloActivos = false; LS.set('fj_cli_activos', false); marca(); pintar(); } }, 'Todos');
+  function marca() { bAct.className = 'chip' + (soloActivos ? ' on' : ''); bTod.className = 'chip' + (!soloActivos ? ' on' : ''); }
+  function pintar() {
+    marca();
+    if (!clientesCache) { lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); return; }
+    const t = sinTilde(limpiaBusqueda(inp.value));
+    let r = clientesCache.filter(c => !soloActivos || c.activo);
+    if (t) r = r.filter(c => sinTilde([c.nombre, c.nombre_comercial, c.codigo, c.nif, c.telefono, c.localidad].join(' ')).includes(t));
+    info.textContent = r.length + (r.length === 1 ? ' cliente' : ' clientes') + ' · de la A a la Z';
+    const kids = []; let letra = '';
+    for (const c of r.slice(0, tope)) {
+      const n = nombreCli(c); const l = (sinTilde(n).charAt(0) || '#').toUpperCase(); const L = /[A-Z]/.test(l) ? l : '#';
+      if (L !== letra) { letra = L; kids.push(h('div', { class: 'letra' }, L)); }
+      kids.push(h('div', { class: 'card tap', onclick: () => go('cliente', { id: c.id }) },
+        h('div', { class: 'fila' },
+          h('div', {}, h('div', { class: 'nombre' }, n), h('div', { class: 'sub' }, [c.codigo, c.localidad, c.telefono].filter(Boolean).join(' · '))),
+          h('div', { style: 'text-align:right' }, c.activo ? null : h('span', { class: 'badge' }, 'Inactivo'), c.forma_pago === 'contado' ? [' ', h('span', { class: 'badge cont' }, 'Contado')] : null))));
+    }
+    if (!r.length) kids.push(h('p', { class: 'vacio' }, 'No hay clientes con esa búsqueda.'));
+    if (r.length > tope) kids.push(h('button', { class: 'ghost', style: 'width:100%', onclick: () => { tope += 120; pintar(); } }, 'Mostrar más (' + (r.length - tope) + ' restantes)'));
+    lista.replaceChildren(...kids);
+  }
+  async function cargar() {
+    try {
+      const { data, error } = await sb.from('clientes').select('id,codigo,nombre,nombre_comercial,nif,telefono,email,localidad,forma_pago,activo').range(0, 4999);
+      if (error) throw error;
+      clientesCache = data.sort((a, b) => nombreCli(a).localeCompare(nombreCli(b), 'es')); pintar();
+    } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver los clientes.' : msgErr(e))); }
+  }
+  $app.replaceChildren(shell('Clientes', h('div', {},
+    h('button', { style: 'width:100%;margin-bottom:10px', onclick: () => go('cliente', { id: null }) }, '+ Añadir cliente'),
+    h('div', { class: 'chips' }, bAct, bTod), inp, info, lista)));
+  renderBanner(); pintar(); cargar();
+}
+function vistaCliente() {
+  state.view = 'cliente';
+  if (!esOficina()) { go('lista'); return; }
+  let id = state.params.id || null, pestana = state.params.tab || 'datos', c = null;
+  const cont = h('div', {});
+  const volver = () => { clientesCache = null; go('clientes'); };
+  $app.replaceChildren(shell(id ? 'Cliente' : 'Nuevo cliente', cont, { volver }));
+  renderBanner();
+  async function cargar() {
+    if (!id) { c = { activo: true, forma_pago: 'credito' }; pintar(); return; }
+    cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+    try {
+      const r = await sb.from('clientes').select('*').eq('id', id).single();
+      if (r.error) throw r.error; c = r.data; pintar();
+    } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver el cliente.' : msgErr(e))); }
+  }
+  function pintar() {
+    const kids = [];
+    if (id) kids.push(h('div', { class: 'chips' },
+      h('button', { class: 'chip' + (pestana === 'datos' ? ' on' : ''), onclick: () => { pestana = 'datos'; pintar(); } }, 'Datos'),
+      h('button', { class: 'chip' + (pestana === 'pedidos' ? ' on' : ''), onclick: () => { pestana = 'pedidos'; pintar(); } }, 'Últimos pedidos')));
+    kids.push(pestana === 'pedidos' && id ? panelPedidos() : formulario());
+    cont.replaceChildren(...kids);
+  }
+  function formulario() {
+    const f = {};
+    const campo = (k, etiqueta, extra) => { f[k] = h('input', Object.assign({ value: c[k] || '' }, extra || {})); return h('label', { class: 'campo' }, etiqueta, f[k]); };
+    f.forma_pago = h('select', {}, [['credito', 'Crédito (se factura después)'], ['contado', 'Contado (paga al momento)']].map(([v, n]) => h('option', { value: v, selected: v === c.forma_pago }, n)));
+    f.activo = h('input', { type: 'checkbox', checked: c.activo !== false });
+    f.notas = h('textarea', { rows: 3 }); f.notas.value = c.notas || '';
+    async function guardar(btn) {
+      const nombre = f.nombre.value.trim();
+      if (!nombre) { toast('Escribe el nombre del cliente', 'err'); return; }
+      if (!navigator.onLine) { toast('Necesitas conexión para guardar el cliente.', 'err'); return; }
+      let codigo = f.codigo.value.trim();
+      if (!codigo) codigo = sinTilde(f.nombre_comercial.value.trim() || nombre).replace(/[^a-z0-9]/g, '').toUpperCase().slice(0, 10);
+      const fila = {
+        codigo, nombre, nombre_comercial: f.nombre_comercial.value.trim() || null, nif: f.nif.value.trim().toUpperCase() || null,
+        email: f.email.value.trim() || null, telefono: f.telefono.value.trim() || null, direccion: f.direccion.value.trim() || null,
+        codigo_postal: f.codigo_postal.value.trim() || null, localidad: f.localidad.value.trim() || null, ruta: f.ruta.value.trim() || null,
+        forma_pago: f.forma_pago.value, activo: f.activo.checked, notas: f.notas.value.trim() || null };
+      if (fila.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fila.email)) { toast('El correo no parece válido', 'err'); return; }
+      btn.disabled = true;
+      const r = id ? await sb.from('clientes').update(fila).eq('id', id).select().single() : await sb.from('clientes').insert(fila).select().single();
+      btn.disabled = false;
+      if (r.error) { toast(msgErr(r.error), 'err'); return; }
+      c = r.data; id = c.id; clientesCache = null; toast('Cliente guardado', 'ok'); state.params = { id, tab: 'datos' }; pintar();
+    }
+    const btn = h('button', { class: 'guardar', style: 'width:100%', onclick: () => guardar(btn) }, id ? 'Guardar cambios' : 'Crear cliente');
+    return h('div', {},
+      campo('nombre', 'Nombre o razón social *'), campo('nombre_comercial', 'Nombre comercial (opcional)'),
+      campo('nif', 'NIF / CIF', { autocapitalize: 'characters' }), campo('email', 'Correo electrónico', { type: 'email', inputmode: 'email' }),
+      campo('telefono', 'Teléfono', { type: 'tel', inputmode: 'tel' }), campo('direccion', 'Dirección'),
+      h('div', { style: 'display:grid;grid-template-columns:1fr 2fr;gap:10px' }, campo('codigo_postal', 'C. postal', { inputmode: 'numeric' }), campo('localidad', 'Localidad')),
+      h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:10px' }, campo('codigo', 'Código (si lo dejas vacío se crea solo)'), campo('ruta', 'Ruta (ej. R1)')),
+      h('label', { class: 'campo' }, 'Forma de pago', f.forma_pago),
+      h('label', { class: 'campo' }, 'Notas', f.notas),
+      h('label', { class: 'interruptor', style: 'margin-bottom:12px' }, f.activo, 'Cliente activo'),
+      btn);
+  }
+  function panelPedidos() {
+    const caja = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
+    (async () => {
+      try {
+        const r = await sb.from('pedidos').select('id,estado,fecha_entrega,albaranes(serie,numero,estado),lineas_pedido(estado,peso_real,precio,iva,productos(iva))')
+          .eq('cliente_id', id).order('fecha_entrega', { ascending: false }).limit(40);
+        if (r.error) throw r.error;
+        if (!r.data.length) { caja.replaceChildren(h('p', { class: 'vacio' }, 'Este cliente todavía no tiene pedidos.')); return; }
+        caja.replaceChildren(h('p', { class: 'sub' }, 'Últimos ' + r.data.length + ' pedidos · toca uno para abrirlo'), ...r.data.map(p => {
+          const alb = uno(p.albaranes); let base = 0, iva = 0, completo = p.lineas_pedido.length > 0;
+          const bases = {};
+          for (const l of p.lineas_pedido) {
+            if (l.peso_real == null || l.precio == null) { if (l.estado !== 'no_disponible') completo = false; continue; }
+            const t = l.iva != null ? Number(l.iva) : (l.productos && l.productos.iva != null ? Number(l.productos.iva) : 4);
+            bases[t] = Math.round(((bases[t] || 0) + l.peso_real * l.precio) * 100) / 100;
+          }
+          for (const t in bases) { base += bases[t]; iva += Math.round(bases[t] * Number(t)) / 100; }
+          const total = Math.round((base + iva) * 100) / 100;
+          return h('div', { class: 'card tap', onclick: () => go('pedido', { id: p.id }) },
+            h('div', { class: 'fila' },
+              h('div', {}, h('div', { class: 'nombre' }, fechaES(p.fecha_entrega)),
+                h('div', { class: 'sub' }, alb && alb.estado !== 'anulado' ? 'Albarán ' + alb.serie + ' ' + alb.numero : 'Sin albarán')),
+              h('div', { style: 'text-align:right' }, h('span', { class: 'badge ' + (CLASE_ESTADO[p.estado] || 'pend') }, ESTADO[p.estado] || p.estado),
+                h('div', { class: 'sub', style: 'margin-top:4px' }, completo && total ? eur(total) + ' € con IVA' : ''))));
+        }));
+      } catch (e) { caja.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver los pedidos.' : msgErr(e))); }
+    })();
+    return caja;
+  }
+  if (id) cargar(); else { c = { activo: true, forma_pago: 'credito' }; pintar(); }
+}
+
 /* =====================  NUEVO PEDIDO (oficina)  ===================== */
 async function buscar(tabla, texto, soloActivos, limite) {
   let q = sb.from(tabla).select('*').limit(limite || 15);
@@ -928,7 +1066,7 @@ function vistaCatalogo() {
 function render() {
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga }[state.view] || vistaLista;
+  const v = { lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente }[state.view] || vistaLista;
   if ((state.view === 'nuevo' || state.view === 'catalogo') && !esOficina()) return vistaLista();
   v();
 }
