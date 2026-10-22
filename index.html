@@ -215,6 +215,8 @@ function isNetErr(e) {
 const esOficina = () => !!state.perfil && ['oficina', 'admin'].includes(state.perfil.rol);
 const ESTADO = { pendiente: 'Pendiente', en_preparacion: 'En preparación', terminado: 'Terminado', anulado: 'Anulado' };
 const CLASE_ESTADO = { pendiente: 'pend', en_preparacion: 'prep', terminado: 'fin', anulado: 'pend' };
+const VISTAS_MAS = ['mas', 'clientes', 'cliente', 'catalogo', 'compras', 'traza', 'perfil', 'fichajes'];
+const puedeCompras = () => !!state.perfil && ['compras', 'oficina', 'admin'].includes(state.perfil.rol);
 const UNIDADES = ['kg', 'pieza', 'caja', 'saco', 'bolsa', 'bandeja', 'manojo'];
 const limpiaBusqueda = s => String(s).replace(/[,()%*\\]/g, ' ').trim();
 
@@ -294,10 +296,11 @@ function refrescarVista() {
   if (state.view === 'lista') actualizarLista();
   else if (state.view === 'pedido') actualizarPedido();
   else if (state.view === 'carga') actualizarCarga();
+  else if (state.view === 'cobros' && !state.sheetAbierta && state.refrescarCobros) state.refrescarCobros();
 }
 function renderBanner() {
   const b = document.getElementById('banner'); if (!b) return;
-  const n = getCola().length + getColaC().length + getColaF().length; const p = [];
+  const n = getCola().length + getColaC().length + getColaF().length + getColaK().length; const p = [];
   if (!navigator.onLine) p.push('Sin conexión');
   if (n) p.push(n + (n > 1 ? ' cambios pendientes' : ' cambio pendiente') + ' de enviar');
   b.className = p.length ? (navigator.onLine ? 'banner aviso' : 'banner off') : 'banner';
@@ -309,10 +312,10 @@ function go(view, params) { state.view = view; state.params = params || {}; rend
 function shell(titulo, contenido, opts) {
   opts = opts || {};
   const tabs = [['lista', 'Preparar'], ['carga', 'Carga']];
-  if (esOficina()) tabs.push(['nuevo', 'Nuevo pedido'], ['clientes', 'Clientes'], ['catalogo', 'Catálogo']);
-  tabs.push(['chat', 'Chat']);
+  if (esOficina()) tabs.push(['nuevo', 'Nuevo pedido']);
+  tabs.push(['cobros', 'Cobros'], ['chat', 'Chat'], ['mas', 'Más']);
   const nav = h('nav', { class: 'tabs' },
-    tabs.map(([v, t]) => h('button', { class: state.view === v || (v === 'lista' && ['pedido', 'albaran'].includes(state.view)) || (v === 'clientes' && state.view === 'cliente') ? 'on' : '', onclick: () => go(v) }, t, v === 'chat' ? h('span', { id: 'chatBadge', class: 'insig' }, state.chatNoLeidos ? String(state.chatNoLeidos) : '') : null)));
+    tabs.map(([v, t]) => h('button', { class: state.view === v || (v === 'lista' && ['pedido', 'albaran'].includes(state.view)) || (v === 'mas' && VISTAS_MAS.includes(state.view)) ? 'on' : '', onclick: () => go(v) }, t, v === 'chat' ? h('span', { id: 'chatBadge', class: 'insig' }, state.chatNoLeidos ? String(state.chatNoLeidos) : '') : null)));
   return h('div', { class: 'shell' },
     h('header', {},
       opts.volver ? h('button', { class: 'back', onclick: opts.volver }, '← Volver') : h('span', { class: 'logo' }, 'Ferjusanz'),
@@ -322,7 +325,7 @@ function shell(titulo, contenido, opts) {
     h('main', {}, contenido), nav);
 }
 async function salir() {
-  if (getCola().length || getColaC().length || getColaF().length) { toast('Hay cambios sin enviar. Conéctate y espera a que se envíen antes de salir.', 'err'); return; }
+  if (getCola().length || getColaC().length || getColaF().length || getColaK().length) { toast('Hay cambios sin enviar. Conéctate y espera a que se envíen antes de salir.', 'err'); return; }
   await sb.auth.signOut(); state.user = null; state.perfil = null; LS.set('fj_perfil', null); render();
 }
 
@@ -421,7 +424,7 @@ async function cargarPedido(id) {
   const key = 'fj_pedido_' + id;
   if (navigator.onLine) {
     const [p, l, a] = await Promise.all([
-      sb.from('pedidos').select('id,estado,fecha_entrega,notas,preparador_id,clientes(codigo,nombre,nombre_comercial,forma_pago,direccion,localidad)').eq('id', id).single(),
+      sb.from('pedidos').select('id,estado,fecha_entrega,notas,preparador_id,clientes(codigo,nombre,nombre_comercial,forma_pago,direccion,localidad,recargo_equivalencia)').eq('id', id).single(),
       sb.from('lineas_pedido').select('id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,iva,version,notas,productos(codigo,nombre,iva)').eq('pedido_id', id),
       sb.from('albaranes').select('serie,numero,fecha,estado').eq('pedido_id', id).maybeSingle()]);
     const err = p.error || l.error || a.error;
@@ -560,11 +563,27 @@ async function vistaAlbaran() {
     const wrap = h('div', { class: 'alb-wrap' });
     const pintar = () => { LS.set('fj_formato', formato.value); wrap.innerHTML = htmlAlbaran(d, formato.value); };
     pintar();
+    const cobroBox = h('div', {});
     cont.replaceChildren(
+      cobroBox,
       h('label', { class: 'campo' }, 'Formato de impresión', formato),
       h('button', { style: 'width:100%;margin-bottom:12px', onclick: () => imprimir(wrap.innerHTML) }, 'Imprimir (2 copias)'),
       wrap);
+    cargarCobroAlbaran(d.pedido.id, cobroBox);
   } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, msgErr(e))); }
+}
+async function cargarCobroAlbaran(pedidoId, caja) {
+  try {
+    const [r, c] = await Promise.all([sb.from('v_pedidos_importe').select('*').eq('pedido_id', pedidoId).maybeSingle(), sb.from('cobros').select('id,importe,forma,created_at,cobrado_por').eq('pedido_id', pedidoId).order('created_at', { ascending: true })]);
+    if (r.error || c.error || !r.data) return;
+    const v = r.data; const pend = pendienteLocal(pedidoId, v.pendiente); const nf = Object.fromEntries(FORMAS_COBRO);
+    caja.replaceChildren(h('div', { class: 'card' },
+      h('div', { class: 'fila' }, h('div', { class: 'nombre' }, pend <= 0.009 ? '✔ Cobrado' : 'Pendiente de cobro'), h('div', { class: 'tot-num', style: 'font-size:20px' }, eur(pend <= 0.009 ? v.total : pend) + ' €')),
+      h('div', { class: 'sub' }, 'Total con IVA ' + eur(v.total) + ' €' + (Number(v.recargo) > 0 ? ' (incluye recargo de equivalencia)' : '') + ' · cobrado ' + eur(Math.max(0, Number(v.total) - pend)) + ' €'),
+      ...c.data.map(x => h('div', { class: 'sub' }, fmtHora(x.created_at) + ' · ' + (nf[x.forma] || x.forma) + ' · ' + eur(x.importe) + ' €')),
+      getColaK().some(x => x.pedido === pedidoId) ? h('div', { class: 'sub', style: 'color:var(--ambar)' }, 'Hay un cobro pendiente de enviar') : null,
+      pend > 0.009 ? h('button', { style: 'width:100%;margin-top:8px', onclick: () => abrirCobro('Cobrar albarán', [{ pedido_id: pedidoId, pendiente: pend }], () => cargarCobroAlbaran(pedidoId, caja)) }, 'Cobrar') : null));
+  } catch (e) { }
 }
 function htmlAlbaran(d, formato) {
   const p = d.pedido, cli = p.clientes || {}, a = d.albaran;
@@ -585,11 +604,16 @@ function htmlAlbaran(d, formato) {
       '<td class="d">' + esc(imp != null ? eur(imp) : '') + '</td></tr>';
   }).join('');
   const tipos = Object.keys(bases).map(Number).sort((x, y) => x - y);
-  let sumaIva = 0;
-  const filasIva = tipos.map(t => { const c = Math.round(bases[t] * t) / 100; sumaIva = Math.round((sumaIva + c) * 100) / 100; return { t, base: bases[t], cuota: c }; });
-  const totalIva = Math.round((total + sumaIva) * 100) / 100;
+  let sumaIva = 0, sumaRe = 0; const RE = { 4: 0.5, 10: 1.4, 21: 5.2 };
+  const filasIva = tipos.map(t => {
+    const c = Math.round(bases[t] * t) / 100; sumaIva = Math.round((sumaIva + c) * 100) / 100;
+    const re = cli.recargo_equivalencia && RE[t] ? Math.round(bases[t] * RE[t]) / 100 : 0; sumaRe = Math.round((sumaRe + re) * 100) / 100;
+    return { t, base: bases[t], cuota: c, re };
+  });
+  const totalIva = Math.round((total + sumaIva + sumaRe) * 100) / 100;
   const desgloseIva = '<table class="iva"><tbody>' +
-    filasIva.map(f => '<tr><td>Base imponible ' + esc(num(f.t)) + ' %</td><td class="d">' + esc(eur(f.base)) + ' €</td><td>IVA ' + esc(num(f.t)) + ' %</td><td class="d">' + esc(eur(f.cuota)) + ' €</td></tr>').join('') +
+    filasIva.map(f => '<tr><td>Base imponible ' + esc(num(f.t)) + ' %</td><td class="d">' + esc(eur(f.base)) + ' €</td><td>IVA ' + esc(num(f.t)) + ' %</td><td class="d">' + esc(eur(f.cuota)) + ' €</td></tr>' +
+      (f.re ? '<tr><td></td><td></td><td>Rec. equiv. ' + esc(num(RE[f.t])) + ' %</td><td class="d">' + esc(eur(f.re)) + ' €</td></tr>' : '')).join('') +
     '</tbody></table><div class="totiva">TOTAL' + (cli.forma_pago === 'contado' ? ' A COBRAR' : '') + ': <b>' + esc(eur(totalIva)) + ' €</b> <span style="font-size:11px">(IVA incluido)</span></div>';
   const contado = cli.forma_pago === 'contado';
   const num7 = a.serie + ' ' + String(a.numero).padStart(7, '0');
@@ -858,6 +882,17 @@ function htmlHoja(datos) {
   return out;
 }
 
+async function guardarTarifa(productoId, clienteId, precio) {
+  try {
+    let q = sb.from('tarifas').select('id').eq('producto_id', productoId).eq('desde', hoy());
+    q = clienteId ? q.eq('cliente_id', clienteId) : q.is('cliente_id', null);
+    const ex = await q.limit(1); if (ex.error) throw ex.error;
+    const r = ex.data.length ? await sb.from('tarifas').update({ precio }).eq('id', ex.data[0].id)
+      : await sb.from('tarifas').insert({ producto_id: productoId, cliente_id: clienteId || null, precio, desde: hoy() });
+    if (r.error) throw r.error; return true;
+  } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión para guardar el precio.' : msgErr(e), 'err'); return false; }
+}
+
 /* =====================  CLIENTES (oficina)  ===================== */
 let clientesCache = null;
 const sinTilde = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -922,8 +957,9 @@ function vistaCliente() {
     const kids = [];
     if (id) kids.push(h('div', { class: 'chips' },
       h('button', { class: 'chip' + (pestana === 'datos' ? ' on' : ''), onclick: () => { pestana = 'datos'; pintar(); } }, 'Datos'),
+      h('button', { class: 'chip' + (pestana === 'precios' ? ' on' : ''), onclick: () => { pestana = 'precios'; pintar(); } }, 'Precios'),
       h('button', { class: 'chip' + (pestana === 'pedidos' ? ' on' : ''), onclick: () => { pestana = 'pedidos'; pintar(); } }, 'Últimos pedidos')));
-    kids.push(pestana === 'pedidos' && id ? panelPedidos() : formulario());
+    kids.push(pestana === 'pedidos' && id ? panelPedidos() : pestana === 'precios' && id ? panelPrecios() : formulario());
     cont.replaceChildren(...kids);
   }
   function formulario() {
@@ -931,6 +967,7 @@ function vistaCliente() {
     const campo = (k, etiqueta, extra) => { f[k] = h('input', Object.assign({ value: c[k] || '' }, extra || {})); return h('label', { class: 'campo' }, etiqueta, f[k]); };
     f.forma_pago = h('select', {}, [['credito', 'Crédito (se factura después)'], ['contado', 'Contado (paga al momento)']].map(([v, n]) => h('option', { value: v, selected: v === c.forma_pago }, n)));
     f.activo = h('input', { type: 'checkbox', checked: c.activo !== false });
+    f.recargo = h('input', { type: 'checkbox', checked: !!c.recargo_equivalencia });
     f.notas = h('textarea', { rows: 3 }); f.notas.value = c.notas || '';
     async function guardar(btn) {
       const nombre = f.nombre.value.trim();
@@ -942,7 +979,7 @@ function vistaCliente() {
         codigo, nombre, nombre_comercial: f.nombre_comercial.value.trim() || null, nif: f.nif.value.trim().toUpperCase() || null,
         email: f.email.value.trim() || null, telefono: f.telefono.value.trim() || null, direccion: f.direccion.value.trim() || null,
         codigo_postal: f.codigo_postal.value.trim() || null, localidad: f.localidad.value.trim() || null, ruta: f.ruta.value.trim() || null,
-        forma_pago: f.forma_pago.value, activo: f.activo.checked, notas: f.notas.value.trim() || null };
+        forma_pago: f.forma_pago.value, activo: f.activo.checked, recargo_equivalencia: f.recargo.checked, notas: f.notas.value.trim() || null };
       if (fila.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fila.email)) { toast('El correo no parece válido', 'err'); return; }
       btn.disabled = true;
       const r = id ? await sb.from('clientes').update(fila).eq('id', id).select().single() : await sb.from('clientes').insert(fila).select().single();
@@ -959,8 +996,36 @@ function vistaCliente() {
       h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:10px' }, campo('codigo', 'Código (si lo dejas vacío se crea solo)'), campo('ruta', 'Ruta (ej. R1)')),
       h('label', { class: 'campo' }, 'Forma de pago', f.forma_pago),
       h('label', { class: 'campo' }, 'Notas', f.notas),
+      h('label', { class: 'interruptor', style: 'margin-bottom:8px' }, f.recargo, 'Recargo de equivalencia (se suma al IVA en el albarán)'),
       h('label', { class: 'interruptor', style: 'margin-bottom:12px' }, f.activo, 'Cliente activo'),
       btn);
+  }
+  function panelPrecios() {
+    const caja = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
+    async function cargarP() {
+      try {
+        const r = await sb.from('tarifas').select('id,precio,desde,producto_id,productos(codigo,nombre,unidad_precio)').eq('cliente_id', id).order('desde', { ascending: false }).limit(300);
+        if (r.error) throw r.error;
+        const vistos = {}; const actuales = []; r.data.forEach(t => { if (!vistos[t.producto_id]) { vistos[t.producto_id] = 1; actuales.push(t); } });
+        let gen = {};
+        if (actuales.length) { const g = await sb.from('tarifas').select('producto_id,precio,desde').is('cliente_id', null).in('producto_id', actuales.map(t => t.producto_id)).order('desde', { ascending: false }); (g.data || []).forEach(x => { if (gen[x.producto_id] == null) gen[x.producto_id] = x.precio; }); }
+        const buscador = h('div', {}); const res = h('div', {});
+        const inp = h('input', { placeholder: 'Añadir precio especial: buscar producto…', oninput: debounce(async () => {
+          if (!inp.value.trim()) { res.replaceChildren(); return; }
+          const b = await buscar('productos', inp.value, true, 8);
+          res.replaceChildren(h('div', { class: 'res' }, b.map(pr => h('button', { onclick: async () => { const v = prompt('Precio de ' + pr.nombre + ' para este cliente (€ por ' + pr.unidad_precio + ')'); const n = v === null ? null : parseNum(v); if (n === null || n < 0) return; if (await guardarTarifa(pr.id, id, n)) cargarP(); } }, pr.nombre + '  ·  ' + pr.codigo))));
+        }, 250) });
+        buscador.append(inp, res);
+        caja.replaceChildren(h('p', { class: 'sub' }, 'Precios especiales de este cliente. Al hacer un pedido se aplican solos; si no hay, se usa el precio general.'), buscador,
+          ...(actuales.length ? actuales.map(t => h('div', { class: 'card' }, h('div', { class: 'fila' },
+            h('div', {}, h('div', { class: 'nombre' }, t.productos ? t.productos.nombre : ''), h('div', { class: 'sub' }, (gen[t.producto_id] != null ? 'Precio general: ' + eur(gen[t.producto_id]) + ' € · ' : '') + 'desde ' + fechaES(t.desde))),
+            h('div', { style: 'display:flex;gap:6px;align-items:center' },
+              h('input', { type: 'text', inputmode: 'decimal', value: String(t.precio).replace('.', ','), style: 'width:90px;min-height:44px;text-align:right', onchange: async e => { const n = parseNum(e.target.value); if (n === null || n < 0) { toast('Precio no válido', 'err'); return; } if (await guardarTarifa(t.producto_id, id, n)) toast('Precio guardado', 'ok'); } }),
+              h('button', { class: 'peligro small', onclick: async () => { if (!confirm('¿Quitar el precio especial?')) return; const d = await sb.from('tarifas').delete().eq('cliente_id', id).eq('producto_id', t.producto_id); if (d.error) { toast(msgErr(d.error), 'err'); return; } cargarP(); } }, 'Quitar')))))
+            : [h('p', { class: 'vacio' }, 'Este cliente no tiene precios especiales.')]));
+      } catch (e) { caja.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver los precios.' : msgErr(e))); }
+    }
+    cargarP(); return caja;
   }
   function panelPedidos() {
     const caja = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
@@ -1240,6 +1305,346 @@ function vistaFichajes() {
   cargar();
 }
 
+/* =====================  MÁS (menú)  ===================== */
+function vistaMas() {
+  state.view = 'mas';
+  const b = (t, sub, f) => h('div', { class: 'card tap', onclick: f }, h('div', { class: 'nombre' }, t), h('div', { class: 'sub' }, sub));
+  const k = [b('Mi perfil y fichaje', 'Foto, fichar entrada y salida', () => go('perfil'))];
+  if (esOficina()) k.push(b('Clientes', 'Lista de A a Z, datos, precios y últimos pedidos', () => go('clientes')), b('Catálogo', 'Productos: activos, unidades, IVA y precio general', () => go('catalogo')));
+  if (puedeCompras()) k.push(b('Compras y lista de la compra', 'Qué comprar hoy, registrar compras y lotes', () => go('compras')));
+  if (puedeCompras()) k.push(b('Trazabilidad', 'De qué lote sale cada producto y a quién se entregó', () => go('traza')));
+  if (esOficina()) k.push(b('Fichajes del equipo', 'Horas de cada trabajador por mes', () => go('fichajes')));
+  k.push(h('button', { class: 'peligro', style: 'width:100%;margin-top:8px', onclick: salir }, 'Cerrar sesión'));
+  $app.replaceChildren(shell('Más', h('div', {}, ...k))); renderBanner();
+}
+
+/* =====================  COBROS  ===================== */
+const getColaK = () => LS.get('fj_cola_cobros', []);
+function setColaK(c) { LS.set('fj_cola_cobros', c); renderBanner(); }
+let syncingK = false;
+async function sincronizarCobros() {
+  if (!navigator.onLine || !getColaK().length || syncingK) return;
+  syncingK = true; let hizo = false;
+  try {
+    let c = getColaK();
+    while (c.length) {
+      const it = c[0];
+      const { error } = await sb.rpc('cobrar', { p_pedido: it.pedido, p_importe: it.importe, p_forma: it.forma, p_nota: it.nota || null, p_clave: it.clave });
+      if (error) { if (isNetErr(error)) return; toast('Un cobro no se pudo registrar: ' + msgErr(error), 'err'); }
+      setColaK(getColaK().filter(x => x.clave !== it.clave)); hizo = true; c = getColaK();
+    }
+  } finally { syncingK = false; if (hizo && ['cobros', 'albaran'].includes(state.view)) refrescarVista(); }
+}
+const FORMAS_COBRO = [['efectivo', 'Efectivo'], ['tarjeta', 'Tarjeta'], ['bizum', 'Bizum'], ['transferencia', 'Transferencia']];
+async function enviarCobro(pedido, importe, forma, nota) {
+  const clave = (state.user ? state.user.id.slice(0, 8) : 'x') + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+  if (navigator.onLine) {
+    const r = await sb.rpc('cobrar', { p_pedido: pedido, p_importe: importe, p_forma: forma, p_nota: nota || null, p_clave: clave });
+    if (!r.error) return null;
+    if (!isNetErr(r.error)) return msgErr(r.error);
+  }
+  const c = getColaK(); c.push({ clave, pedido, importe, forma, nota: nota || null, ts: Date.now() }); setColaK(c); return 'cola';
+}
+const pendienteLocal = (pedidoId, pend) => Math.round((Number(pend) - getColaK().filter(x => x.pedido === pedidoId).reduce((a, x) => a + x.importe, 0)) * 100) / 100;
+function abrirCobro(titulo, items, alTerminar) {
+  state.sheetAbierta = true;
+  const total = Math.round(items.reduce((a, x) => a + x.pendiente, 0) * 100) / 100;
+  let forma = LS.get('fj_forma_cobro', 'efectivo');
+  const imp = h('input', { type: 'text', inputmode: 'decimal', class: 'big', value: String(total).replace('.', ',') });
+  const nota = h('input', { placeholder: 'Nota (opcional)' });
+  const botones = h('div', { class: 'chips' });
+  const pintarF = () => botones.replaceChildren(...FORMAS_COBRO.map(([v, n]) => h('button', { class: 'chip' + (forma === v ? ' on' : ''), onclick: () => { forma = v; LS.set('fj_forma_cobro', v); pintarF(); } }, n)));
+  const cerrar = () => { ov.remove(); state.sheetAbierta = false; };
+  async function guardar(btn) {
+    const n = parseNum(imp.value); if (n === null || n <= 0) { toast('Escribe un importe válido', 'err'); return; }
+    if (n > total + 0.01) { toast('El importe es mayor que lo pendiente (' + eur(total) + ' €)', 'err'); return; }
+    btn.disabled = true; let resto = Math.round(n * 100) / 100; let cola = false;
+    for (const it of items) {
+      if (resto <= 0.004) break;
+      const pago = Math.min(resto, it.pendiente); if (pago <= 0.004) continue;
+      const e = await enviarCobro(it.pedido_id, Math.round(pago * 100) / 100, forma, nota.value.trim());
+      if (e === 'cola') cola = true; else if (e) { btn.disabled = false; toast(e, 'err'); return; }
+      resto = Math.round((resto - pago) * 100) / 100;
+    }
+    cerrar(); toast(cola ? 'Sin conexión: el cobro se enviará solo al volver la red.' : 'Cobro registrado', 'ok'); if (alTerminar) alTerminar();
+  }
+  const btn = h('button', { class: 'guardar', onclick: () => guardar(btn) }, 'Registrar cobro');
+  const ov = h('div', { class: 'overlay', onclick: e => { if (e.target === ov) cerrar(); } },
+    h('div', { class: 'sheet' }, h('h2', {}, titulo), h('div', { class: 'sub' }, 'Pendiente: ' + eur(total) + ' € (IVA incluido)'), imp, botones, nota, btn,
+      h('div', { class: 'acciones' }, h('button', { class: 'ghost', onclick: cerrar }, 'Cancelar'))));
+  document.body.append(ov); pintarF();
+}
+function vistaCobros() {
+  state.view = 'cobros';
+  let modo = LS.get('fj_cobros_modo', 'pend'), filtro = LS.get('fj_cobros_filtro', 'todos'), fecha = hoy(), filas = null, cache = false;
+  const cont = h('div', {}); const buscar2 = h('input', { placeholder: 'Buscar cliente…', oninput: debounce(() => pintar(), 200) });
+  const chipsModo = h('div', { class: 'chips' }); const chipsFiltro = h('div', { class: 'chips' });
+  const inpFecha = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); cargar(); } });
+  function pintarChips() {
+    chipsModo.replaceChildren(...[['pend', 'Pendientes de cobro'], ['caja', 'Caja del día']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_cobros_modo', m); filas = null; pintarChips(); cargar(); } }, n)));
+    chipsFiltro.replaceChildren(...[['todos', 'Todos'], ['contado', 'Contado'], ['credito', 'Crédito']].map(([m, n]) => h('button', { class: 'chip' + (filtro === m ? ' on' : ''), onclick: () => { filtro = m; LS.set('fj_cobros_filtro', m); pintarChips(); pintar(); } }, n)));
+  }
+  async function cargar() {
+    if (modo === 'pend') {
+      try {
+        if (!navigator.onLine) throw Object.assign(new TypeError('Failed to fetch'));
+        const r = await sb.from('v_pedidos_importe').select('*').eq('estado', 'terminado').gt('pendiente', 0.009).order('fecha_entrega', { ascending: false }).limit(400);
+        if (r.error) throw r.error; filas = r.data; cache = false; LS.set('fj_cobros_pend', filas);
+      } catch (e) { if (!isNetErr(e)) { cont.replaceChildren(h('p', { class: 'err' }, msgErr(e))); return; } filas = LS.get('fj_cobros_pend', []); cache = true; }
+    } else {
+      try {
+        const a = new Date(fecha + 'T00:00:00'), b = new Date(a.getTime() + 86400000);
+        const r = await sb.from('cobros').select('id,importe,forma,nota,created_at,cobrado_por,clientes(codigo,nombre,nombre_comercial)').gte('created_at', a.toISOString()).lt('created_at', b.toISOString()).order('created_at', { ascending: true });
+        if (r.error) throw r.error; filas = r.data; cache = false;
+      } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver la caja.' : msgErr(e))); return; }
+    }
+    pintar();
+  }
+  function pintar() {
+    if (filas === null) return;
+    if (modo === 'caja') return pintarCaja();
+    const t = sinTilde(buscar2.value);
+    const ps = filas.map(f => Object.assign({}, f, { pend: pendienteLocal(f.pedido_id, f.pendiente) })).filter(f => f.pend > 0.009)
+      .filter(f => filtro === 'todos' || f.forma_pago === filtro).filter(f => !t || sinTilde(f.cliente_nombre + ' ' + f.cliente_codigo).includes(t));
+    const por = {}; ps.forEach(f => { (por[f.cliente_id] = por[f.cliente_id] || []).push(f); });
+    const ids = Object.keys(por).sort((x, y) => por[x][0].cliente_nombre.localeCompare(por[y][0].cliente_nombre, 'es'));
+    const suma = Math.round(ps.reduce((a, f) => a + f.pend, 0) * 100) / 100;
+    const kids = [];
+    if (cache) kids.push(h('div', { class: 'aviso-card' }, 'Mostrando los últimos datos guardados en este móvil.'));
+    if (getColaK().length) kids.push(h('div', { class: 'aviso-card' }, getColaK().length + ' cobro(s) pendientes de enviar; ya están descontados aquí.'));
+    kids.push(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', { class: 'nombre' }, 'Pendiente de cobrar'), h('div', { class: 'tot-num' }, eur(suma) + ' €')), h('div', { class: 'sub' }, ps.length + (ps.length === 1 ? ' albarán' : ' albaranes') + ' · ' + ids.length + (ids.length === 1 ? ' cliente' : ' clientes') + ' · IVA incluido')));
+    if (!ids.length) kids.push(h('p', { class: 'vacio' }, 'No hay nada pendiente de cobro.'));
+    for (const id of ids) {
+      const l = por[id].slice().sort((x, y) => x.fecha_entrega.localeCompare(y.fecha_entrega));
+      const tot = Math.round(l.reduce((a, f) => a + f.pend, 0) * 100) / 100;
+      kids.push(h('div', { class: 'card' },
+        h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, l[0].cliente_nombre), h('div', { class: 'sub' }, l[0].cliente_codigo)),
+          h('div', { style: 'text-align:right' }, h('div', { class: 'tot-num', style: 'font-size:18px' }, eur(tot) + ' €'), l[0].forma_pago === 'contado' ? h('span', { class: 'badge cont' }, 'Contado') : null)),
+        ...l.map(f => h('div', { class: 'fila', style: 'padding:6px 0;border-top:1px solid var(--borde)' },
+          h('div', { onclick: () => go('albaran', { id: f.pedido_id }) }, h('div', {}, fechaES(f.fecha_entrega) + (f.numero_albaran ? ' · Albarán ' + f.serie + ' ' + f.numero_albaran : '')),
+            h('div', { class: 'sub' }, 'Total ' + eur(f.total) + ' €' + (Number(f.cobrado) > 0 ? ' · cobrado ' + eur(f.cobrado) + ' €' : ''))),
+          h('div', { style: 'display:flex;gap:8px;align-items:center' }, h('b', {}, eur(f.pend) + ' €'),
+            h('button', { class: 'small', onclick: () => abrirCobro('Cobrar albarán ' + (f.numero_albaran || ''), [{ pedido_id: f.pedido_id, pendiente: f.pend }], cargar) }, 'Cobrar')))),
+        l.length > 1 ? h('button', { class: 'ghost small', style: 'width:100%;margin-top:8px', onclick: () => abrirCobro('Cobrar a ' + l[0].cliente_nombre, l.map(f => ({ pedido_id: f.pedido_id, pendiente: f.pend })), cargar) }, 'Cobrar todo lo pendiente (' + eur(tot) + ' €)') : null));
+    }
+    cont.replaceChildren(...kids);
+  }
+  function pintarCaja() {
+    const tot = Math.round(filas.reduce((a, c) => a + Number(c.importe), 0) * 100) / 100;
+    const porForma = {}; const porPers = {};
+    filas.forEach(c => { porForma[c.forma] = (porForma[c.forma] || 0) + Number(c.importe); const n = (state.gente[c.cobrado_por] || {}).nombre || 'Otro'; porPers[n] = (porPers[n] || 0) + Number(c.importe); });
+    const nombreForma = Object.fromEntries(FORMAS_COBRO);
+    const lin = (t, v) => h('div', { class: 'fila', style: 'padding:3px 0' }, h('span', {}, t), h('b', {}, eur(v) + ' €'));
+    const kids = [h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', { class: 'nombre' }, 'Total cobrado'), h('div', { class: 'tot-num' }, eur(tot) + ' €')),
+      Object.keys(porForma).map(k => lin(nombreForma[k] || k, porForma[k])), Object.keys(porPers).length ? h('div', { class: 'sub', style: 'margin:8px 0 2px' }, 'Por persona') : null, Object.keys(porPers).sort().map(k => lin(k, porPers[k])))];
+    if (!filas.length) kids.push(h('p', { class: 'vacio' }, 'No hay cobros este día.'));
+    filas.forEach(c => { const cl = c.clientes ? (Array.isArray(c.clientes) ? c.clientes[0] : c.clientes) : null;
+      kids.push(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, nombreCli(cl)), h('div', { class: 'sub' }, fmtHora(c.created_at) + ' · ' + (nombreForma[c.forma] || c.forma) + ' · ' + (((state.gente[c.cobrado_por] || {}).nombre) || '') + (c.nota ? ' · ' + c.nota : ''))), h('b', {}, eur(c.importe) + ' €')))); });
+    cont.replaceChildren(...kids);
+  }
+  $app.replaceChildren(shell('Cobros', h('div', {}, chipsModo, h('div', { id: 'barraCobros' }), cont))); renderBanner(); pintarChips();
+  const barra = document.getElementById('barraCobros');
+  const montar = () => barra.replaceChildren(...(modo === 'pend' ? [chipsFiltro, buscar2] : [inpFecha]));
+  const _pc = pintarChips; pintarChips = () => { _pc(); montar(); };
+  state.refrescarCobros = cargar; montar(); cargar(); cargarGente().then(() => { if (state.view === 'cobros' && filas && modo === 'caja') pintar(); });
+}
+
+/* =====================  COMPRAS Y LISTA DE LA COMPRA  ===================== */
+function descargarCSV(nombre, filas) {
+  const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const blob = new Blob(['﻿' + filas.map(f => f.map(q).join(';')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const a = h('a', { href: URL.createObjectURL(blob), download: nombre }); document.body.append(a); a.click(); a.remove();
+}
+function vistaCompras() {
+  state.view = 'compras';
+  if (!puedeCompras()) { go('lista'); return; }
+  let modo = LS.get('fj_compras_modo', 'lista'), fecha = hoy();
+  const cont = h('div', {}); const chips = h('div', { class: 'chips' });
+  const pintarChips = () => chips.replaceChildren(...[['lista', 'Qué comprar'], ['registrar', 'Registrar compra'], ['lotes', 'Lotes']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_compras_modo', m); pintarChips(); pintar(); } }, n)));
+  $app.replaceChildren(shell('Compras', h('div', {}, chips, cont), { volver: () => go('mas') })); renderBanner(); pintarChips();
+  function pintar() { (modo === 'lista' ? pLista : modo === 'registrar' ? pRegistrar : pLotes)(); }
+
+  async function pLista() {
+    const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); pLista(); } });
+    const lista = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
+    cont.replaceChildren(h('div', { class: 'barra' }, inp), lista);
+    try {
+      const r = await cargarCarga(fecha); const t = totalesCarga(r.datos).filter(x => x.total > 0 || x.pedido > 0);
+      const claveLS = 'fj_comprado_' + fecha; let hechos = LS.get(claveLS, {});
+      const texto = () => 'LISTA DE LA COMPRA ' + fechaES(fecha) + '\n' + t.map(x => '- ' + x.producto + ': ' + num(x.total) + ' ' + x.unidad).join('\n');
+      const kids = [];
+      if (r.cache) kids.push(h('div', { class: 'aviso-card' }, 'Mostrando los últimos datos guardados en este móvil.'));
+      kids.push(h('div', { class: 'aviso-card' }, 'A comprar = lo pedido por los clientes − el sobrante que quedó el último día con sobrante' + (r.datos.previoFecha ? ' (' + fechaES(r.datos.previoFecha) + ')' : '') + '.'));
+      if (!t.length) kids.push(h('p', { class: 'vacio' }, 'No hay pedidos para esta fecha.'));
+      t.forEach(x => { const k = x.producto + '|' + x.unidad; kids.push(h('div', { class: 'card tap' + (hechos[k] ? ' hecha' : ''), onclick: () => { hechos[k] = !hechos[k]; LS.set(claveLS, hechos); pLista(); } },
+        h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, (hechos[k] ? '✔ ' : '') + x.producto), h('div', { class: 'sub' }, 'Pedido ' + num(x.pedido) + ' ' + x.unidad + (x.sobrante ? ' · sobrante ' + num(x.sobrante) : ''))), h('div', { class: 'tot-num' }, num(x.total) + ' ' + x.unidad)))); });
+      if (t.length) kids.push(h('div', { style: 'display:flex;gap:8px' },
+        h('button', { class: 'ghost', style: 'flex:1', onclick: async () => { const tx = texto(); try { if (navigator.share) await navigator.share({ text: tx }); else { await navigator.clipboard.writeText(tx); toast('Lista copiada', 'ok'); } } catch (e) { } } }, 'Compartir lista'),
+        h('button', { class: 'ghost', style: 'flex:1', onclick: () => imprimir('<div class="hoja"><h1>LISTA DE LA COMPRA · ' + esc(fechaES(fecha)) + '</h1><table>' + t.map(x => '<tr><td><span class="caja"></span>' + esc(x.producto) + '</td><td class="d"><b>' + esc(num(x.total) + ' ' + x.unidad) + '</b></td></tr>').join('') + '</table></div>') }, 'Imprimir')));
+      lista.replaceChildren(...kids);
+    } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, msgErr(e))); }
+  }
+
+  async function pRegistrar() {
+    const caja = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); cont.replaceChildren(caja);
+    let provs = [];
+    try { const r = await sb.from('proveedores').select('id,codigo,nombre').eq('activo', true).order('nombre'); if (r.error) throw r.error; provs = r.data; }
+    catch (e) { caja.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para registrar compras.' : msgErr(e))); return; }
+    const st = { prov: provs[0] ? provs[0].id : '', fecha: hoy(), doc: '', lineas: [] };
+    const lineasBox = h('div', {}), prodBox = h('div', {}), provBox = h('div', {});
+    function pintarProv() {
+      const sel = h('select', { onchange: e => st.prov = e.target.value }, provs.map(p => h('option', { value: p.id, selected: p.id === st.prov }, p.nombre)));
+      provBox.replaceChildren(h('label', { class: 'campo' }, 'Proveedor', sel), h('button', { class: 'ghost small', style: 'margin-bottom:10px', onclick: async () => {
+        const n = prompt('Nombre del nuevo proveedor'); if (!n || !n.trim()) return;
+        const r = await sb.from('proveedores').insert({ nombre: n.trim(), codigo: sinTilde(n).replace(/[^a-z0-9]/g, '').toUpperCase().slice(0, 10) || null }).select().single();
+        if (r.error) { toast(msgErr(r.error), 'err'); return; } provs.push(r.data); st.prov = r.data.id; pintarProv();
+      } }, '+ Nuevo proveedor'));
+    }
+    const codigoLote = pr => hoy().slice(2).replace(/-/g, '') + '-' + pr.codigo;
+    function pintarLineas() {
+      lineasBox.replaceChildren(...st.lineas.map((l, i) => h('div', { class: 'card' },
+        h('div', { class: 'fila' }, h('div', { class: 'nombre' }, l.producto.nombre), h('button', { class: 'peligro small', onclick: () => { st.lineas.splice(i, 1); pintarLineas(); } }, 'Quitar')),
+        h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px' },
+          h('label', { class: 'campo' }, 'Cantidad recibida', h('input', { type: 'text', inputmode: 'decimal', value: l.cantidad, oninput: e => l.cantidad = e.target.value })),
+          h('label', { class: 'campo' }, 'Unidad', h('select', { onchange: e => l.unidad = e.target.value }, UNIDADES.map(u => h('option', { value: u, selected: u === l.unidad }, u)))),
+          h('label', { class: 'campo' }, 'Origen', h('input', { value: l.origen, placeholder: 'Ej. Almería', oninput: e => l.origen = e.target.value })),
+          h('label', { class: 'campo' }, 'Código de lote', h('input', { value: l.lote, oninput: e => l.lote = e.target.value }))))));
+    }
+    function buscadorProd() {
+      const res = h('div', {});
+      const inp = h('input', { placeholder: 'Añadir producto comprado…', oninput: debounce(async () => {
+        if (!inp.value.trim()) { res.replaceChildren(); return; }
+        const r = await buscar('productos', inp.value, true, 10);
+        res.replaceChildren(h('div', { class: 'res' }, r.map(pr => h('button', { onclick: () => { st.lineas.push({ producto: pr, cantidad: '', unidad: pr.unidad_venta, origen: '', lote: codigoLote(pr) }); pintarLineas(); inp.value = ''; res.replaceChildren(); } }, pr.nombre + '  ·  ' + pr.codigo))));
+      }, 250) });
+      prodBox.replaceChildren(inp, res);
+    }
+    async function guardar(btn) {
+      if (!st.prov) { toast('Elige un proveedor', 'err'); return; }
+      if (!st.lineas.length) { toast('Añade al menos un producto', 'err'); return; }
+      const filas = [];
+      for (const l of st.lineas) {
+        const c = parseNum(l.cantidad); if (c === null || c <= 0) { toast('Falta la cantidad de ' + l.producto.nombre, 'err'); return; }
+        if (!l.origen.trim()) { toast('Falta el origen de ' + l.producto.nombre, 'err'); return; }
+        if (!l.lote.trim()) { toast('Falta el código de lote de ' + l.producto.nombre, 'err'); return; }
+        filas.push({ producto_id: l.producto.id, origen: l.origen.trim(), codigo_lote: l.lote.trim(), cantidad_recibida: c, unidad: l.unidad });
+      }
+      btn.disabled = true;
+      const c = await sb.from('compras').insert({ proveedor_id: st.prov, fecha: st.fecha, numero_documento: st.doc.trim() || null }).select('id').single();
+      if (c.error) { btn.disabled = false; toast(msgErr(c.error), 'err'); return; }
+      const lo = await sb.from('lotes').insert(filas.map(f => Object.assign({ compra_id: c.data.id }, f)));
+      if (lo.error) { await sb.from('compras').delete().eq('id', c.data.id); btn.disabled = false; toast(msgErr(lo.error), 'err'); return; }
+      toast('Compra registrada con ' + filas.length + ' lote(s)', 'ok'); modo = 'lotes'; LS.set('fj_compras_modo', modo); pintarChips(); pintar();
+    }
+    const btn = h('button', { class: 'guardar', style: 'width:100%;margin-top:8px', onclick: () => guardar(btn) }, 'Guardar compra');
+    caja.replaceChildren(provBox, h('label', { class: 'campo' }, 'Fecha de la compra', h('input', { type: 'date', value: st.fecha, onchange: e => st.fecha = e.target.value })),
+      h('label', { class: 'campo' }, 'Nº de albarán o factura del proveedor', h('input', { placeholder: 'Opcional', oninput: e => st.doc = e.target.value })),
+      h('label', { class: 'campo' }, 'Productos comprados'), lineasBox, prodBox, btn);
+    pintarProv(); pintarLineas(); buscadorProd();
+  }
+
+  async function pLotes() {
+    const lista = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
+    const inp = h('input', { placeholder: 'Buscar por producto, lote o proveedor…', oninput: debounce(() => pintarL(), 200) });
+    cont.replaceChildren(inp, lista); let datos = [];
+    function pintarL() {
+      const t = sinTilde(inp.value);
+      const r = datos.filter(l => !t || sinTilde([(l.productos || {}).nombre, l.codigo_lote, l.origen, (uno(l.compras) || {}).proveedores ? uno(uno(l.compras).proveedores).nombre : ''].join(' ')).includes(t));
+      lista.replaceChildren(...(r.length ? r.map(l => {
+        const c = uno(l.compras) || {}; const pv = c.proveedores ? uno(c.proveedores) : null;
+        const ent = (l.asignaciones_lote || []).reduce((a, x) => a + Number(x.cantidad), 0);
+        return h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, l.productos ? l.productos.nombre : ''),
+          h('div', { class: 'sub' }, [l.codigo_lote, pv && pv.nombre, l.origen, c.fecha && fechaES(c.fecha)].filter(Boolean).join(' · '))),
+          h('div', { style: 'text-align:right' }, h('b', {}, num(l.cantidad_recibida) + ' ' + l.unidad), h('div', { class: 'sub' }, 'entregado ' + num(ent) + ' · queda ' + num(Math.round((l.cantidad_recibida - ent) * 1000) / 1000)))));
+      }) : [h('p', { class: 'vacio' }, 'No hay lotes.')]));
+    }
+    try {
+      const d = new Date(Date.now() - 60 * 86400000).toISOString();
+      const r = await sb.from('lotes').select('id,codigo_lote,origen,cantidad_recibida,unidad,created_at,productos(codigo,nombre),compras(fecha,numero_documento,proveedores(nombre)),asignaciones_lote(cantidad)').gte('created_at', d).order('created_at', { ascending: false }).limit(150);
+      if (r.error) throw r.error; datos = r.data; pintarL();
+    } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver los lotes.' : msgErr(e))); }
+  }
+  pintar();
+}
+
+/* =====================  TRAZABILIDAD  ===================== */
+function vistaTraza() {
+  state.view = 'traza';
+  if (!puedeCompras()) { go('lista'); return; }
+  let modo = LS.get('fj_traza_modo', 'pend'), fecha = hoy();
+  const cont = h('div', {}); const chips = h('div', { class: 'chips' });
+  const pintarChips = () => chips.replaceChildren(...[['pend', 'Pendientes de lote'], ['lote', 'Por lote'], ['cliente', 'Por cliente']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_traza_modo', m); pintarChips(); pintar(); } }, n)));
+  $app.replaceChildren(shell('Trazabilidad', h('div', {}, chips, cont), { volver: () => go('mas') })); renderBanner(); pintarChips();
+  function pintar() { (modo === 'pend' ? pPend : modo === 'lote' ? pLote : pCliente)(); }
+  const filasTz = rows => rows.map(r => h('div', { class: 'fila', style: 'padding:5px 0;border-top:1px solid var(--borde)' },
+    h('div', {}, h('div', {}, fechaES(r.fecha_entrega) + ' · ' + (r.cliente || r.producto)), h('div', { class: 'sub' }, [r.numero_albaran ? 'Albarán ' + r.serie + ' ' + r.numero_albaran : '', r.codigo_lote, r.proveedor, r.origen].filter(Boolean).join(' · '))),
+    h('b', {}, num(r.cantidad_entregada))));
+  const csvTz = (nombre, rows) => h('button', { class: 'ghost small', style: 'width:100%;margin-bottom:8px', onclick: () => descargarCSV(nombre, [['Fecha entrega', 'Cliente', 'Producto', 'Lote', 'Proveedor', 'Origen', 'Albarán', 'Cantidad']].concat(rows.map(r => [fechaES(r.fecha_entrega), r.cliente, r.producto, r.codigo_lote, r.proveedor, r.origen, r.numero_albaran ? r.serie + ' ' + r.numero_albaran : '', r.cantidad_entregada]))) }, 'Descargar Excel (CSV)');
+
+  async function pPend() {
+    const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); pPend(); } });
+    const lista = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); cont.replaceChildren(h('div', { class: 'barra' }, inp), lista);
+    try {
+      const r = await sb.from('pedidos').select('id,lineas_pedido(id,estado,peso_real,cantidad_pedida,unidad_precio,producto_id,productos(codigo,nombre),asignaciones_lote(id))').eq('fecha_entrega', fecha).eq('estado', 'terminado');
+      if (r.error) throw r.error;
+      const por = {};
+      r.data.forEach(p => (p.lineas_pedido || []).forEach(l => { if (!['hecha', 'parcial'].includes(l.estado) || (l.asignaciones_lote || []).length) return; (por[l.producto_id] = por[l.producto_id] || { nombre: l.productos.nombre, lineas: [] }).lineas.push(l); }));
+      const ids = Object.keys(por).sort((a, b) => por[a].nombre.localeCompare(por[b].nombre, 'es'));
+      const kids = [h('div', { class: 'aviso-card' }, 'Cada producto preparado debe tener su lote. Elige el lote y se asigna a todas las líneas de ese producto del día.')];
+      if (!ids.length) kids.push(h('p', { class: 'vacio' }, '✔ Todos los productos preparados este día tienen lote.'));
+      ids.forEach(id => { const g = por[id]; const kg = g.lineas.reduce((a, l) => a + Number(l.unidad_precio === 'kg' ? l.peso_real : l.cantidad_pedida), 0);
+        kids.push(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, g.nombre), h('div', { class: 'sub' }, g.lineas.length + ' líneas · ' + num(Math.round(kg * 1000) / 1000) + ' en total')),
+          state.perfil.rol === 'compras' ? null : h('button', { class: 'small', onclick: () => elegirLote(id, g, pPend) }, 'Asignar lote')))); });
+      lista.replaceChildren(...kids);
+    } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+  }
+  async function elegirLote(productoId, g, alTerminar) {
+    const r = await sb.from('lotes').select('id,codigo_lote,origen,cantidad_recibida,unidad,compras(fecha,proveedores(nombre)),asignaciones_lote(cantidad)').eq('producto_id', productoId).order('created_at', { ascending: false }).limit(30);
+    if (r.error) { toast(msgErr(r.error), 'err'); return; }
+    state.sheetAbierta = true; const cerrar = () => { ov.remove(); state.sheetAbierta = false; };
+    const cuerpo = r.data.length ? r.data.map(l => { const c = uno(l.compras) || {}; const pv = c.proveedores ? uno(c.proveedores) : null; const ent = (l.asignaciones_lote || []).reduce((a, x) => a + Number(x.cantidad), 0);
+      return h('button', { class: 'ghost', style: 'text-align:left;width:100%', onclick: async () => {
+        const filas = g.lineas.map(l2 => ({ linea_id: l2.id, lote_id: l.id, cantidad: Number(l2.unidad_precio === 'kg' ? l2.peso_real : l2.cantidad_pedida) }));
+        const ins = await sb.from('asignaciones_lote').insert(filas); if (ins.error) { toast(msgErr(ins.error), 'err'); return; }
+        cerrar(); toast('Lote asignado a ' + filas.length + (filas.length === 1 ? ' línea' : ' líneas'), 'ok'); alTerminar();
+      } }, h('div', { class: 'nombre' }, l.codigo_lote || 'sin código'), h('div', { class: 'sub' }, [pv && pv.nombre, l.origen, c.fecha && fechaES(c.fecha), 'queda ' + num(Math.round((l.cantidad_recibida - ent) * 1000) / 1000) + ' ' + l.unidad].filter(Boolean).join(' · '))); })
+      : [h('p', { class: 'vacio' }, 'No hay lotes de este producto. Regístralos en Más → Compras → Registrar compra.')];
+    const ov = h('div', { class: 'overlay', onclick: e => { if (e.target === ov) cerrar(); } }, h('div', { class: 'sheet' }, h('h2', {}, 'Lote de ' + g.nombre), ...cuerpo, h('div', { class: 'acciones' }, h('button', { class: 'ghost', onclick: cerrar }, 'Cancelar'))));
+    document.body.append(ov);
+  }
+  async function pLote() {
+    const lista = h('div', {}); const inp = h('input', { placeholder: 'Buscar por código de lote o producto…', oninput: debounce(buscarT, 300) });
+    cont.replaceChildren(inp, lista);
+    async function buscarT() {
+      const t = limpiaBusqueda(inp.value); if (!t) { lista.replaceChildren(h('p', { class: 'vacio' }, 'Escribe un lote o un producto para ver a qué clientes se entregó.')); return; }
+      const r = await sb.from('v_trazabilidad').select('*').or('codigo_lote.ilike.%' + t + '%,producto.ilike.%' + t + '%').order('fecha_entrega', { ascending: false }).limit(300);
+      if (r.error) { lista.replaceChildren(h('p', { class: 'err' }, msgErr(r.error))); return; }
+      if (!r.data.length) { lista.replaceChildren(h('p', { class: 'vacio' }, 'No hay entregas con ese lote o producto.')); return; }
+      const por = {}; r.data.forEach(x => (por[x.lote_id] = por[x.lote_id] || []).push(x));
+      lista.replaceChildren(csvTz('trazabilidad_lote.csv', r.data), ...Object.values(por).map(rows => h('div', { class: 'card' },
+        h('div', { class: 'nombre' }, rows[0].producto + ' · ' + (rows[0].codigo_lote || 'sin código')), h('div', { class: 'sub', style: 'margin-bottom:4px' }, [rows[0].proveedor, rows[0].origen, 'compra ' + fechaES(rows[0].fecha_compra)].filter(Boolean).join(' · ')), ...filasTz(rows.map(x => Object.assign({}, x, { producto: x.cliente }))))));
+    }
+    buscarT();
+  }
+  async function pCliente() {
+    let cli = null, mes = hoy().slice(0, 7); const lista = h('div', {}); const caja = h('div', {});
+    function pintarSel() {
+      if (cli) { caja.replaceChildren(h('div', { class: 'card fila' }, h('div', { class: 'nombre' }, nombreCli(cli)), h('button', { class: 'ghost small', onclick: () => { cli = null; pintarSel(); lista.replaceChildren(); } }, 'Cambiar')),
+        h('input', { type: 'month', value: mes, onchange: e => { mes = e.target.value || mes; cargarC(); } })); cargarC(); return; }
+      const res = h('div', {}); const inp = h('input', { placeholder: 'Buscar cliente…', oninput: debounce(async () => { const r = await buscar('clientes', inp.value, false, 10); res.replaceChildren(h('div', { class: 'res' }, r.map(c => h('button', { onclick: () => { cli = c; pintarSel(); } }, nombreCli(c) + '  ·  ' + c.codigo)))); }, 250) });
+      caja.replaceChildren(inp, res);
+    }
+    async function cargarC() {
+      const [y, m] = mes.split('-').map(Number); const a = mes + '-01'; const b = hoy(new Date(y, m, 1));
+      const r = await sb.from('v_trazabilidad').select('*').eq('cliente', cli.nombre).gte('fecha_entrega', a).lt('fecha_entrega', b).order('fecha_entrega', { ascending: true }).limit(500);
+      if (r.error) { lista.replaceChildren(h('p', { class: 'err' }, msgErr(r.error))); return; }
+      lista.replaceChildren(...(r.data.length ? [csvTz('trazabilidad_' + cli.codigo + '_' + mes + '.csv', r.data), ...filasTz(r.data.map(x => Object.assign({}, x, { cliente: x.producto })))] : [h('p', { class: 'vacio' }, 'Sin entregas con lote en ese mes.')]));
+    }
+    cont.replaceChildren(caja, lista); pintarSel();
+  }
+  pintar();
+}
+
 /* =====================  NUEVO PEDIDO (oficina)  ===================== */
 async function buscar(tabla, texto, soloActivos, limite) {
   let q = sb.from(tabla).select('*').limit(limite || 15);
@@ -1344,6 +1749,8 @@ function vistaCatalogo() {
     const t = inp.value.trim();
     try {
       const r = await buscar(tabla, t, !t, t ? 40 : 100);
+      let gen = {};
+      if (tabla === 'productos' && r.length) { const g = await sb.from('tarifas').select('producto_id,precio,desde').is('cliente_id', null).in('producto_id', r.map(x => x.id)).order('desde', { ascending: false }); (g.data || []).forEach(x => { if (gen[x.producto_id] == null) gen[x.producto_id] = x.precio; }); }
       info.textContent = t ? r.length + ' resultados (máximo 40)' : r.length + ' ' + tabla + ' activos (escribe para buscar entre todos)';
       lista.replaceChildren(...(r.length ? r.map(f => {
         const check = h('input', { type: 'checkbox', checked: f.activo, onchange: e => guardarCampo(f, { activo: e.target.checked }) });
@@ -1351,6 +1758,7 @@ function vistaCatalogo() {
         if (tabla === 'productos') {
           ctl.push(h('select', { onchange: e => guardarCampo(f, { unidad_venta: e.target.value }) }, UNIDADES.map(u => h('option', { value: u, selected: u === f.unidad_venta }, 'Se vende en ' + u))));
           ctl.push(h('select', { onchange: e => guardarCampo(f, { unidad_precio: e.target.value }) }, ['kg', 'unidad'].map(u => h('option', { value: u, selected: u === f.unidad_precio }, 'Precio por ' + u))));
+          ctl.push(h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Precio general €', value: gen[f.id] != null ? String(gen[f.id]).replace('.', ',') : '', style: 'width:130px;min-height:42px', onchange: async e => { const n = parseNum(e.target.value); if (n === null || n < 0) { toast('Precio no válido', 'err'); return; } if (await guardarTarifa(f.id, null, n)) toast('Precio general guardado', 'ok'); } }));
           ctl.push(h('select', { onchange: e => guardarCampo(f, { iva: Number(e.target.value) }) }, [4, 10, 21, 0].map(v => h('option', { value: v, selected: v === Number(f.iva != null ? f.iva : 4) }, 'IVA ' + v + ' %'))));
         } else {
           ctl.push(h('select', { onchange: e => guardarCampo(f, { forma_pago: e.target.value }) }, [['credito', 'Crédito'], ['contado', 'Contado']].map(([v, n]) => h('option', { value: v, selected: v === f.forma_pago }, n))));
@@ -1369,7 +1777,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes }[state.view] || vistaLista;
+  const v = { lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza }[state.view] || vistaLista;
   if ((state.view === 'nuevo' || state.view === 'catalogo') && !esOficina()) return vistaLista();
   v();
 }
@@ -1377,7 +1785,7 @@ function tick() {
   if (!state.user || !state.perfil) return;
   renderBanner();
   if (!navigator.onLine) return;
-  sincronizar(); sincronizarCarga(); sincronizarFichaje(); if (state.view !== 'chat') contarChat();
+  sincronizar(); sincronizarCarga(); sincronizarFichaje(); sincronizarCobros(); if (state.view !== 'chat') contarChat();
   if (!document.hidden && !state.sheetAbierta) refrescarVista();
 }
 async function init() {
@@ -1390,7 +1798,7 @@ async function init() {
   try { const { data } = await sb.auth.getSession(); if (data && data.session) await cargarPerfil(data.session.user); } catch (e) { }
   render(); cargarGente();
   sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') { state.user = null; state.perfil = null; render(); } });
-  window.addEventListener('online', () => { renderBanner(); sincronizar(); sincronizarCarga(); sincronizarFichaje(); refrescarVista(); });
+  window.addEventListener('online', () => { renderBanner(); sincronizar(); sincronizarCarga(); sincronizarFichaje(); sincronizarCobros(); refrescarVista(); });
   window.addEventListener('offline', renderBanner);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
   setInterval(tick, 8000);
