@@ -27,8 +27,8 @@ header .tit{flex:1;font-weight:600;opacity:.95;text-align:center}
 header .who{font-size:13px;opacity:.85;max-width:35%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 header .back{background:rgba(255,255,255,.18);min-height:40px;padding:0 12px}
 main{padding:12px 12px 24px;max-width:760px;width:100%;margin:0 auto}
-nav.tabs{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--borde);display:flex;gap:6px;padding:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom));z-index:6}
-nav.tabs button{flex:1;background:#fff;color:var(--txt2);border:1px solid transparent;min-height:56px;font-size:15px}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--borde);display:flex;gap:3px;padding:8px 4px;padding-bottom:calc(8px + env(safe-area-inset-bottom));z-index:6}
+nav.tabs button{flex:1;min-width:0;padding:6px 2px;background:#fff;color:var(--txt2);border:1px solid transparent;min-height:56px;font-size:14px}
 nav.tabs button.on{background:var(--verde-cl);color:var(--verde-osc);border-color:var(--verde)}
 .banner{display:none;padding:8px 14px;font-weight:600;font-size:15px;text-align:center}
 .banner.aviso{display:block;background:var(--ambar-cl);color:var(--ambar)}
@@ -103,6 +103,17 @@ label.campo{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(
 .copia.ticket .cab{flex-direction:column}
 .copia.ticket .num{text-align:left}
 .copia.ticket .oc-ticket{display:none}
+.hoja{background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;font-size:12px}
+.hoja h1{font-size:18px;margin:0 0 8px}
+.hoja h2{font-size:14px;margin:12px 0 4px}
+.hoja .blq{border:1px solid #000;margin-bottom:8px;break-inside:avoid;page-break-inside:avoid}
+.hoja .cb{display:flex;justify-content:space-between;gap:8px;padding:4px 6px;background:#eee;font-weight:700;border-bottom:1px solid #000}
+.hoja table{width:100%;border-collapse:collapse}
+.hoja td,.hoja th{padding:3px 6px;border-bottom:1px solid #bbb;text-align:left;vertical-align:top}
+.hoja td.d,.hoja th.d{text-align:right;white-space:nowrap}
+.hoja .caja{display:inline-block;width:12px;height:12px;border:1.5px solid #000;vertical-align:middle;margin-right:6px}
+.hoja .caja.on{background:#000}
+.tot-num{font-size:20px;font-weight:800;white-space:nowrap;text-align:right}
 #printArea{display:none}
 @media print{
   body.imprimiendo{background:#fff}
@@ -133,7 +144,7 @@ const EMPRESA = {
 };
 const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 const $app = document.getElementById('app');
-const state = { user: null, perfil: null, view: 'lista', params: {}, fecha: hoy(), filtro: 'todos', sheetAbierta: false, ped: null, pedidos: [] };
+const state = { user: null, perfil: null, view: 'lista', params: {}, fecha: hoy(), filtro: 'todos', sheetAbierta: false, ped: null, pedidos: [], carga: null, cargaModo: 'clientes' };
 
 /* =====================  UTILIDADES  ===================== */
 function hoy(d) { d = d || new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
@@ -223,10 +234,11 @@ async function sincronizar() {
 function refrescarVista() {
   if (state.view === 'lista') actualizarLista();
   else if (state.view === 'pedido') actualizarPedido();
+  else if (state.view === 'carga') actualizarCarga();
 }
 function renderBanner() {
   const b = document.getElementById('banner'); if (!b) return;
-  const n = getCola().length; const p = [];
+  const n = getCola().length + getColaC().length; const p = [];
   if (!navigator.onLine) p.push('Sin conexión');
   if (n) p.push(n + (n > 1 ? ' cambios pendientes' : ' cambio pendiente') + ' de enviar');
   b.className = p.length ? (navigator.onLine ? 'banner aviso' : 'banner off') : 'banner';
@@ -237,7 +249,7 @@ function renderBanner() {
 function go(view, params) { state.view = view; state.params = params || {}; render(); window.scrollTo(0, 0); }
 function shell(titulo, contenido, opts) {
   opts = opts || {};
-  const tabs = [['lista', 'Preparar']];
+  const tabs = [['lista', 'Preparar'], ['carga', 'Carga']];
   if (esOficina()) tabs.push(['nuevo', 'Nuevo pedido'], ['catalogo', 'Catálogo']);
   const nav = h('nav', { class: 'tabs' },
     tabs.map(([v, t]) => h('button', { class: state.view === v || (v === 'lista' && ['pedido', 'albaran'].includes(state.view)) ? 'on' : '', onclick: () => go(v) }, t)),
@@ -251,7 +263,7 @@ function shell(titulo, contenido, opts) {
     h('main', {}, contenido), nav);
 }
 async function salir() {
-  if (getCola().length) { toast('Hay cambios sin enviar. Conéctate y espera a que se envíen antes de salir.', 'err'); return; }
+  if (getCola().length || getColaC().length) { toast('Hay cambios sin enviar. Conéctate y espera a que se envíen antes de salir.', 'err'); return; }
   await sb.auth.signOut(); state.user = null; state.perfil = null; LS.set('fj_perfil', null); render();
 }
 
@@ -266,6 +278,7 @@ async function cargarPerfil(user) {
 function vistaLogin() {
   const email = h('input', { type: 'email', placeholder: 'Correo', autocomplete: 'username', required: true });
   const pass = h('input', { type: 'password', placeholder: 'Contraseña', autocomplete: 'current-password', required: true });
+  const ver = h('label', { class: 'interruptor' }, h('input', { type: 'checkbox', onchange: e => { pass.type = e.target.checked ? 'text' : 'password'; } }), 'Mostrar contraseña');
   const err = h('p', { class: 'err' });
   const btn = h('button', { type: 'submit' }, 'Entrar');
   const form = h('form', {
@@ -273,10 +286,17 @@ function vistaLogin() {
       ev.preventDefault(); err.textContent = ''; btn.disabled = true;
       const { data, error } = await sb.auth.signInWithPassword({ email: email.value.trim(), password: pass.value });
       btn.disabled = false;
-      if (error) { err.textContent = isNetErr(error) ? 'No hay conexión.' : 'Correo o contraseña incorrectos.'; return; }
+      if (error) {
+        const m = String(error.message || '');
+        err.textContent = isNetErr(error) ? 'No hay conexión.'
+          : /invalid login/i.test(m) ? 'Correo o contraseña incorrectos.'
+          : /confirm/i.test(m) ? 'El correo todavía no está confirmado en Supabase.'
+          : 'No se pudo entrar: ' + m;
+        return;
+      }
       await cargarPerfil(data.user); state.view = 'lista'; render();
     }
-  }, h('h1', {}, 'Ferjusanz'), h('p', { class: 'sub' }, 'Entra con tu usuario'), email, pass, btn, err);
+  }, h('h1', {}, 'Ferjusanz'), h('p', { class: 'sub' }, 'Entra con tu usuario'), email, pass, ver, btn, err);
   $app.replaceChildren(form);
 }
 function vistaSinPerfil() {
@@ -528,6 +548,246 @@ function imprimir(html) {
   setTimeout(() => window.print(), 80);
 }
 
+/* =====================  HOJA DE CARGA Y SOBRANTE  ===================== */
+const getColaC = () => LS.get('fj_cola_carga', []);
+function setColaC(c) { LS.set('fj_cola_carga', c); renderBanner(); }
+function encolarCarga(id, v) {
+  const c = getColaC(); const ex = c.find(x => x.linea_id === id);
+  if (ex) { ex.cargado = v; ex.ts = Date.now(); } else c.push({ linea_id: id, cargado: v, ts: Date.now() });
+  setColaC(c);
+}
+let syncingC = false;
+async function sincronizarCarga() {
+  if (!navigator.onLine || !getColaC().length || syncingC) return;
+  syncingC = true; let hizo = false;
+  try {
+    let c = getColaC();
+    while (c.length) {
+      const it = c[0];
+      const { error } = await sb.rpc('marcar_cargado', { p_linea: it.linea_id, p_cargado: it.cargado });
+      if (error) {
+        if (isNetErr(error)) return;
+        toast(msgErr(error), 'err');
+        setColaC(getColaC().filter(x => x.linea_id !== it.linea_id)); hizo = true;
+      } else {
+        const cur = getColaC(); const i = cur.findIndex(x => x.linea_id === it.linea_id);
+        if (i >= 0 && cur[i].ts === it.ts) cur.splice(i, 1);
+        setColaC(cur); hizo = true;
+      }
+      c = getColaC();
+    }
+  } finally { syncingC = false; if (hizo) refrescarVista(); }
+}
+const uno = x => Array.isArray(x) ? (x.find(a => a.estado !== 'anulado') || x[0] || null) : (x || null);
+const nomProd = l => (l.productos ? l.productos.nombre : '');
+async function cargarCarga(fecha) {
+  const key = 'fj_carga_' + fecha;
+  if (navigator.onLine) {
+    const d0 = new Date(fecha + 'T12:00:00'); const ant = x => { const d = new Date(d0.getTime() - x * 86400000); return hoy(d); };
+    const [p, s, pv, rp] = await Promise.all([
+      sb.from('pedidos').select('id,estado,notas,clientes(codigo,nombre,nombre_comercial,forma_pago,ruta,direccion,localidad),albaranes(serie,numero,estado),lineas_pedido(id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,productos(id,codigo,nombre),carga_lineas(cargado))')
+        .eq('fecha_entrega', fecha).neq('estado', 'anulado'),
+      sb.from('sobrante').select('id,producto_id,cantidad,unidad,nota,repartidor_id,productos(codigo,nombre),perfiles(nombre)').eq('fecha', fecha),
+      sb.from('sobrante').select('fecha,producto_id,cantidad,unidad,productos(codigo,nombre)').gte('fecha', ant(6)).lt('fecha', fecha),
+      sb.from('perfiles').select('id,nombre,rol').eq('activo', true)]);
+    const err = p.error || s.error || pv.error || rp.error;
+    if (!err) {
+      let previo = pv.data || []; const mx = previo.reduce((m, x) => x.fecha > m ? x.fecha : m, ''); previo = previo.filter(x => x.fecha === mx);
+      const d = { pedidos: p.data || [], sobrante: s.data || [], previo, previoFecha: mx, repartidores: (rp.data || []).filter(x => x.rol === 'preparador' || x.rol === 'admin').sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')) }; LS.set(key, d); return { datos: d, cache: false }; }
+    if (!isNetErr(err)) throw err;
+  }
+  return { datos: LS.get(key, { pedidos: [], sobrante: [], previo: [], previoFecha: '', repartidores: [] }), cache: true };
+}
+function lineasCarga(p) {
+  const q = getColaC();
+  return (p.lineas_pedido || []).map(l => {
+    const pend = q.find(x => x.linea_id === l.id); const c = uno(l.carga_lineas);
+    return Object.assign({}, l, { _cargado: pend ? pend.cargado : !!(c && c.cargado), _pend: !!pend });
+  }).sort((a, b) => nomProd(a).localeCompare(nomProd(b), 'es'));
+}
+function pedidosOrdenados(datos) {
+  const ruta = p => (p.clientes && p.clientes.ruta) || '￿';
+  return datos.pedidos.slice().sort((a, b) => ruta(a).localeCompare(ruta(b), 'es') || nombreCli(a.clientes).localeCompare(nombreCli(b.clientes), 'es'));
+}
+function totalesCarga(datos) {
+  const m = new Map();
+  const get = (pid, nombre, u) => { const k = pid + '|' + u; if (!m.has(k)) m.set(k, { producto: nombre, unidad: u, pedido: 0, kg: 0, sobrante: 0, lineas: 0, cargadas: 0 }); return m.get(k); };
+  for (const p of datos.pedidos) for (const l of lineasCarga(p)) {
+    const t = get((l.productos && l.productos.id) || l.id, nomProd(l), l.unidad_pedida);
+    t.pedido += Number(l.cantidad_pedida) || 0; t.lineas++; if (l._cargado) t.cargadas++;
+    if (l.peso_real != null && l.unidad_precio === 'kg') t.kg += Number(l.peso_real);
+  }
+  for (const s of (datos.previo || [])) get(s.producto_id, s.productos ? s.productos.nombre : '', s.unidad).sobrante += Number(s.cantidad) || 0;
+  const r3 = x => Math.round(x * 1000) / 1000;
+  return [...m.values()].map(t => Object.assign(t, { pedido: r3(t.pedido), kg: r3(t.kg), sobrante: r3(t.sobrante), total: Math.max(0, r3(t.pedido - t.sobrante)) }))
+    .sort((a, b) => a.producto.localeCompare(b.producto, 'es'));
+}
+function vistaCarga() {
+  state.view = 'carga';
+  const fechaInp = h('input', { type: 'date', value: state.fecha, onchange: e => { state.fecha = e.target.value || hoy(); state.carga = null; actualizarCarga(true); } });
+  const modos = [['clientes', 'Por cliente'], ['totales', 'Totales'], ['sobrante', 'Sobrante']];
+  const chips = modos.map(([m, n]) => h('button', { class: 'chip' + (state.cargaModo === m ? ' on' : ''), onclick: () => { state.cargaModo = m; vistaCarga(); } }, n));
+  $app.replaceChildren(shell('Hoja de carga', h('div', {},
+    h('div', { class: 'barra' }, fechaInp, h('button', { class: 'ghost', onclick: () => actualizarCarga(true) }, '↻')),
+    h('div', { class: 'chips' }, chips),
+    h('div', { id: 'carga' }, h('p', { class: 'vacio' }, 'Cargando…')))));
+  renderBanner();
+  if (state.carga) pintarCarga();
+  actualizarCarga(true);
+}
+async function actualizarCarga(forzar) {
+  const cont = document.getElementById('carga'); if (!cont) return;
+  if (!forzar && (syncingC || getColaC().length || state.sheetAbierta)) return;
+  try {
+    const r = await cargarCarga(state.fecha);
+    if (!forzar && (syncingC || getColaC().length)) return;
+    state.carga = r; pintarCarga();
+  } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, msgErr(e))); }
+}
+function pintarCarga() {
+  const cont = document.getElementById('carga'); if (!cont || !state.carga) return;
+  const { datos, cache } = state.carga; const kids = [];
+  if (cache) kids.push(h('div', { class: 'aviso-card' }, 'Mostrando los últimos datos guardados en este móvil.'));
+  if (state.cargaModo === 'clientes') pintarCargaClientes(datos, kids);
+  else if (state.cargaModo === 'totales') pintarCargaTotales(datos, kids);
+  else pintarSobrante(datos, kids);
+  kids.push(h('button', { class: 'ghost', style: 'width:100%;margin-top:6px', onclick: () => imprimir(htmlHoja(datos)) }, 'Imprimir hoja de carga (A4)'));
+  cont.replaceChildren(...kids);
+}
+function alternarCarga(l) {
+  encolarCarga(l.id, !l._cargado); pintarCarga();
+  sincronizarCarga().then(() => actualizarCarga());
+}
+function marcarTodo(p) {
+  for (const l of lineasCarga(p)) if (!l._cargado) encolarCarga(l.id, true);
+  pintarCarga(); sincronizarCarga().then(() => actualizarCarga());
+}
+function pintarCargaClientes(datos, kids) {
+  const ps = pedidosOrdenados(datos);
+  if (!ps.length) { kids.push(h('p', { class: 'vacio' }, 'No hay pedidos para esta fecha.')); return; }
+  let tl = 0, tc = 0;
+  const bloques = ps.map(p => {
+    const ls = lineasCarga(p); const nc = ls.filter(l => l._cargado).length; tl += ls.length; tc += nc;
+    const cli = p.clientes || {}; const alb = uno(p.albaranes);
+    return h('div', { style: 'margin-bottom:14px' },
+      h('div', { class: 'card', style: 'margin-bottom:8px' },
+        h('div', { class: 'fila' },
+          h('div', {}, h('div', { class: 'nombre' }, nombreCli(cli)), h('div', { class: 'sub' }, [cli.codigo, cli.ruta ? 'Ruta ' + cli.ruta : null, cli.localidad].filter(Boolean).join(' · '))),
+          h('div', { style: 'text-align:right' },
+            alb && alb.estado !== 'anulado' ? h('span', { class: 'badge fin' }, 'Albarán ' + alb.numero) : h('span', { class: 'badge pend' }, 'Sin albarán'),
+            cli.forma_pago === 'contado' ? [' ', h('span', { class: 'badge cont' }, 'Contado')] : null)),
+        p.estado !== 'terminado' ? h('div', { class: 'sub', style: 'margin-top:6px;color:var(--ambar)' }, 'Aún se está preparando') : null,
+        h('div', { class: 'sub', style: 'margin-top:6px' }, nc + ' de ' + ls.length + ' líneas cargadas'),
+        h('div', { class: 'progreso' }, h('i', { style: 'width:' + (ls.length ? Math.round(nc * 100 / ls.length) : 0) + '%' }))),
+      ls.map(l => h('div', { class: 'linea' + (l._cargado ? ' hecha' : '') + (l._pend ? ' pendiente-envio' : ''), onclick: () => alternarCarga(l) },
+        h('div', {}, h('div', { class: 'nombre' }, nomProd(l)),
+          h('div', { class: 'sub' }, 'Pedido: ' + num(l.cantidad_pedida) + ' ' + l.unidad_pedida +
+            (l.peso_real != null ? ' · Preparado: ' + num(l.peso_real) + ' ' + (l.unidad_precio === 'kg' ? 'kg' : 'ud') : ' · sin preparar'))),
+        h('div', { class: 'peso' + (l._cargado ? '' : ' vacio') }, l._cargado ? '✔ Cargado' : 'Cargar'))),
+      nc < ls.length ? h('button', { class: 'ghost small', style: 'width:100%', onclick: () => marcarTodo(p) }, 'Marcar todo como cargado') : null);
+  });
+  kids.push(h('div', { class: 'card' },
+    h('div', { class: 'nombre' }, tc + ' de ' + tl + ' líneas cargadas'),
+    h('div', { class: 'sub' }, ps.length + (ps.length === 1 ? ' pedido' : ' pedidos') + ' · ordenados por ruta'),
+    h('div', { class: 'progreso' }, h('i', { style: 'width:' + (tl ? Math.round(tc * 100 / tl) : 0) + '%' }))));
+  kids.push(...bloques);
+}
+function pintarCargaTotales(datos, kids) {
+  const t = totalesCarga(datos);
+  if (!t.length) { kids.push(h('p', { class: 'vacio' }, 'No hay pedidos para esta fecha.')); return; }
+  kids.push(h('div', { class: 'aviso-card' }, (datos.previoFecha ? 'Sobrante del ' + fechaES(datos.previoFecha) + ' (lo que quedó en los repartos) ya restado. ' : 'No hay sobrante anotado de días anteriores. ') + 'A cargar = pedido − sobrante.'));
+  for (const x of t) {
+    kids.push(h('div', { class: 'card' },
+      h('div', { class: 'fila' },
+        h('div', {}, h('div', { class: 'nombre' }, x.producto),
+          h('div', { class: 'sub' }, 'Pedido ' + num(x.pedido) + ' ' + x.unidad + ' · Sobrante anterior ' + num(x.sobrante) + ' ' + x.unidad +
+            (x.kg ? ' · Peso real ' + num(x.kg) + ' kg' : '') + (x.lineas ? ' · cargadas ' + x.cargadas + '/' + x.lineas : ''))),
+        h('div', { class: 'tot-num' }, num(x.total) + ' ' + x.unidad))));
+  }
+}
+function pintarSobrante(datos, kids) {
+  kids.push(h('div', { class: 'aviso-card' }, 'Sobrante: lo que le sobra a cada repartidor al acabar el día. Anótalo aquí; al día siguiente se descuenta de lo que hay que cargar.'));
+  kids.push(h('button', { style: 'width:100%;margin-bottom:10px', onclick: () => abrirSobrante(null) }, '+ Añadir sobrante'));
+  if (!datos.sobrante.length) kids.push(h('p', { class: 'vacio' }, 'No hay sobrante anotado para esta fecha.'));
+  const nomRep = s => { const r = uno(s.perfiles); return r ? r.nombre : 'Sin repartidor'; };
+  const orden = datos.sobrante.slice().sort((a, b) => nomRep(a).localeCompare(nomRep(b), 'es') || (a.productos ? a.productos.nombre : '').localeCompare(b.productos ? b.productos.nombre : '', 'es'));
+  let ult = null;
+  for (const s of orden) {
+    if (nomRep(s) !== ult) { ult = nomRep(s); kids.push(h('h3', { style: 'margin:12px 2px 6px' }, ult)); }
+    kids.push(h('div', { class: 'card tap', onclick: () => abrirSobrante(s) },
+      h('div', { class: 'fila' },
+        h('div', {}, h('div', { class: 'nombre' }, s.productos ? s.productos.nombre : ''), s.nota ? h('div', { class: 'sub' }, s.nota) : null),
+        h('div', { class: 'tot-num' }, num(s.cantidad) + ' ' + s.unidad))));
+  }
+}
+function abrirSobrante(s) {
+  state.sheetAbierta = true;
+  let prod = s ? { id: s.producto_id, nombre: s.productos ? s.productos.nombre : '' } : null;
+  const reps = (state.carga && state.carga.datos.repartidores) || [];
+  const miRep = s ? s.repartidor_id : ((reps.find(r => state.user && r.id === state.user.id) || {}).id || '');
+  const rsel = h('select', {}, [h('option', { value: '' }, 'Repartidor…')].concat(reps.map(r => h('option', { value: r.id, selected: r.id === miRep }, r.nombre))));
+  const cerrar = () => { ov.remove(); state.sheetAbierta = false; };
+  const prodBox = h('div', {});
+  const cant = h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Cantidad', value: s ? String(s.cantidad).replace('.', ',') : '' });
+  const uni = h('select', {}, UNIDADES.map(u => h('option', { value: u, selected: !!s && s.unidad === u }, u)));
+  const nota = h('input', { placeholder: 'Nota (opcional)', value: s && s.nota ? s.nota : '' });
+  function pintarProd() {
+    if (prod) { prodBox.replaceChildren(h('div', { class: 'fila' }, h('div', { class: 'nombre' }, prod.nombre), s ? null : h('button', { class: 'ghost small', onclick: () => { prod = null; pintarProd(); } }, 'Cambiar'))); return; }
+    const res = h('div', {});
+    const inp = h('input', { placeholder: 'Buscar producto…', oninput: debounce(async () => {
+      if (!inp.value.trim()) { res.replaceChildren(); return; }
+      try {
+        const r = await buscar('productos', inp.value, true, 10);
+        res.replaceChildren(r.length ? h('div', { class: 'res' }, r.map(p => h('button', { onclick: () => { prod = p; uni.value = p.unidad_venta; pintarProd(); } }, p.nombre + '  ·  ' + p.codigo))) : h('p', { class: 'sub' }, 'Sin resultados entre los productos activos.'));
+      } catch (e) { res.replaceChildren(h('p', { class: 'err' }, msgErr(e))); }
+    }, 250) });
+    prodBox.replaceChildren(inp, res);
+  }
+  async function guardar() {
+    if (!navigator.onLine) { toast('Necesitas conexión para anotar el sobrante.', 'err'); return; }
+    if (!prod) { toast('Elige un producto', 'err'); return; }
+    const c = parseNum(cant.value); if (c === null || c <= 0) { toast('Escribe una cantidad válida', 'err'); return; }
+    if (!rsel.value) { toast('Elige el repartidor', 'err'); return; }
+    const fila = { cantidad: c, unidad: uni.value, nota: nota.value.trim() || null, repartidor_id: rsel.value };
+    const r = s ? await sb.from('sobrante').update(fila).eq('id', s.id) : await sb.from('sobrante').insert(Object.assign({ fecha: state.fecha, producto_id: prod.id }, fila));
+    if (r.error) { toast(msgErr(r.error), 'err'); return; }
+    cerrar(); toast('Sobrante guardado', 'ok'); actualizarCarga(true);
+  }
+  async function quitar() {
+    if (!confirm('¿Quitar este sobrante?')) return;
+    if (!navigator.onLine) { toast('Necesitas conexión para quitar el sobrante.', 'err'); return; }
+    const r = await sb.from('sobrante').delete().eq('id', s.id);
+    if (r.error) { toast(msgErr(r.error), 'err'); return; }
+    cerrar(); toast('Sobrante quitado', 'ok'); actualizarCarga(true);
+  }
+  const ov = h('div', { class: 'overlay', onclick: e => { if (e.target === ov) cerrar(); } },
+    h('div', { class: 'sheet' },
+      h('h2', {}, s ? 'Editar sobrante' : 'Añadir sobrante'),
+      rsel,
+      prodBox,
+      h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px' }, cant, uni),
+      nota,
+      h('button', { class: 'guardar', onclick: guardar }, 'Guardar'),
+      h('div', { class: 'acciones' },
+        s ? h('button', { class: 'peligro', onclick: quitar }, 'Quitar') : null,
+        h('button', { class: 'ghost', onclick: cerrar }, 'Cancelar'))));
+  document.body.append(ov); pintarProd();
+}
+function htmlHoja(datos) {
+  let out = '<div class="hoja"><h1>HOJA DE CARGA · ' + esc(fechaES(state.fecha)) + '</h1>';
+  for (const p of pedidosOrdenados(datos)) {
+    const cli = p.clientes || {}; const alb = uno(p.albaranes);
+    out += '<div class="blq"><div class="cb"><span>' + esc(nombreCli(cli)) + (cli.ruta ? ' · Ruta ' + esc(cli.ruta) : '') + '</span><span>' +
+      (alb && alb.estado !== 'anulado' ? 'Albarán ' + esc(alb.serie + ' ' + alb.numero) : 'Sin albarán') + (cli.forma_pago === 'contado' ? ' · CONTADO' : '') + '</span></div><table>' +
+      lineasCarga(p).map(l => '<tr><td><span class="caja' + (l._cargado ? ' on' : '') + '"></span>' + esc(nomProd(l)) + '</td><td class="d">' + esc(num(l.cantidad_pedida) + ' ' + l.unidad_pedida) +
+        '</td><td class="d">' + (l.peso_real != null ? esc(num(l.peso_real) + ' ' + (l.unidad_precio === 'kg' ? 'kg' : 'ud')) : '') + '</td></tr>').join('') + '</table></div>';
+  }
+  out += '<h2>Totales por producto</h2><table><tr><th>Producto</th><th class="d">Pedido</th><th class="d">Sobrante anterior</th><th class="d">A cargar</th></tr>' +
+    totalesCarga(datos).map(t => '<tr><td>' + esc(t.producto) + '</td><td class="d">' + esc(num(t.pedido) + ' ' + t.unidad) + '</td><td class="d">' + (t.sobrante ? esc(num(t.sobrante) + ' ' + t.unidad) : '') +
+      '</td><td class="d"><b>' + esc(num(t.total) + ' ' + t.unidad) + '</b></td></tr>').join('') + '</table></div>';
+  return out;
+}
+
 /* =====================  NUEVO PEDIDO (oficina)  ===================== */
 async function buscar(tabla, texto, soloActivos, limite) {
   let q = sb.from(tabla).select('*').limit(limite || 15);
@@ -641,6 +901,7 @@ function vistaCatalogo() {
           ctl.push(h('select', { onchange: e => guardarCampo(f, { unidad_precio: e.target.value }) }, ['kg', 'unidad'].map(u => h('option', { value: u, selected: u === f.unidad_precio }, 'Precio por ' + u))));
         } else {
           ctl.push(h('select', { onchange: e => guardarCampo(f, { forma_pago: e.target.value }) }, [['credito', 'Crédito'], ['contado', 'Contado']].map(([v, n]) => h('option', { value: v, selected: v === f.forma_pago }, n))));
+          ctl.push(h('input', { placeholder: 'Ruta (ej. R1)', value: f.ruta || '', style: 'width:130px;min-height:42px', onchange: e => guardarCampo(f, { ruta: e.target.value.trim() || null }) }));
         }
         return h('div', { class: 'card rowcat' }, h('div', {}, h('div', { class: 'nombre' }, tabla === 'clientes' ? nombreCli(f) : f.nombre), h('div', { class: 'sub' }, f.codigo)), h('div', {}), h('div', { class: 'controles' }, ctl));
       }) : [h('p', { class: 'vacio' }, 'Nada que mostrar.')]));
@@ -654,7 +915,7 @@ function vistaCatalogo() {
 function render() {
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran }[state.view] || vistaLista;
+  const v = { lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga }[state.view] || vistaLista;
   if ((state.view === 'nuevo' || state.view === 'catalogo') && !esOficina()) return vistaLista();
   v();
 }
@@ -662,7 +923,7 @@ function tick() {
   if (!state.user || !state.perfil) return;
   renderBanner();
   if (!navigator.onLine) return;
-  sincronizar();
+  sincronizar(); sincronizarCarga();
   if (!document.hidden && !state.sheetAbierta) refrescarVista();
 }
 async function init() {
@@ -675,7 +936,7 @@ async function init() {
   try { const { data } = await sb.auth.getSession(); if (data && data.session) await cargarPerfil(data.session.user); } catch (e) { }
   render();
   sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') { state.user = null; state.perfil = null; render(); } });
-  window.addEventListener('online', () => { renderBanner(); sincronizar(); refrescarVista(); });
+  window.addEventListener('online', () => { renderBanner(); sincronizar(); sincronizarCarga(); refrescarVista(); });
   window.addEventListener('offline', renderBanner);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
   setInterval(tick, 8000);
