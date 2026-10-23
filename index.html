@@ -741,7 +741,7 @@ async function terminarPedido(id) {
 /* =====================  ASIGNAR TRAZABILIDAD (al terminar el albarán)  ===================== */
 async function abrirTrazabilidad(pedidoId, opt) {
   opt = opt || {}; const corregir = !!opt.corregir; const oficina = esOficina();
-  const r = await sb.from('lineas_pedido').select('id,estado,peso_real,cantidad_pedida,unidad_pedida,unidad_precio,producto_id,productos(codigo,nombre),asignaciones_lote(lote_id,cantidad)').eq('pedido_id', pedidoId);
+  const r = await sb.from('lineas_pedido').select('id,estado,peso_real,cantidad_pedida,unidad_pedida,unidad_precio,producto_id,productos(codigo,nombre,unidad_venta),asignaciones_lote(lote_id,cantidad)').eq('pedido_id', pedidoId);
   if (r.error) { toast(msgErr(r.error), 'err'); return; }
   const lineas = r.data.filter(l => ['hecha', 'parcial'].includes(l.estado)).map(l => Object.assign({}, l, {
     need: Math.round((Number(l.unidad_precio === 'kg' ? l.peso_real : l.cantidad_pedida) || 0) * 1000) / 1000,
@@ -768,9 +768,53 @@ async function abrirTrazabilidad(pedidoId, opt) {
       if (ok.length === 1 && todos.length === 1) { asig[l.id][ok[0].id] = l.need; propuesta.add(l.id); }
     }
   });
+  if (opt.keep) lineas.forEach(l => { if (opt.keep[l.id]) { asig[l.id] = Object.assign({}, opt.keep[l.id]); propuesta.delete(l.id); } });
   const usoLote = lid => lineas.reduce((t, l) => t + (Number(asig[l.id][lid]) || 0), 0);
   const sumaLinea = l => Object.values(asig[l.id]).reduce((t, v) => t + (Number(v) || 0), 0);
   const refs = [];
+  const puedeAnadir = puedeCompras();
+  async function anadirLote(l) {
+    let provs = [];
+    const pr = await sb.from('proveedores').select('id,codigo,nombre').eq('activo', true).order('nombre');
+    if (pr.error) { toast(msgErr(pr.error), 'err'); return; } provs = pr.data;
+    const st = { prov: provs[0] ? provs[0].id : '', doc: '', cant: '', uni: l.uni === 'kg' ? 'kg' : (l.prod.unidad_venta || l.uni), origen: '', lote: hoy().slice(2).replace(/-/g, '') + '-' + (l.prod.codigo || ''), precio: '' };
+    const provBox = h('div', {});
+    const pintarProv = () => provBox.replaceChildren(
+      h('label', { class: 'campo' }, 'Proveedor', h('select', { onchange: e => st.prov = e.target.value }, provs.map(p => h('option', { value: p.id, selected: p.id === st.prov }, p.nombre)))),
+      h('button', { class: 'ghost small', style: 'margin-bottom:8px', onclick: async () => {
+        const n = prompt('Nombre del nuevo proveedor'); if (!n || !n.trim()) return;
+        const r = await sb.from('proveedores').insert({ nombre: n.trim(), codigo: sinTilde(n).replace(/[^a-z0-9]/g, '').toUpperCase().slice(0, 10) || null }).select().single();
+        if (r.error) { toast(msgErr(r.error), 'err'); return; } provs.push(r.data); st.prov = r.data.id; pintarProv();
+      } }, '+ Nuevo proveedor'));
+    pintarProv();
+    const cerrar2 = () => ov2.remove();
+    const guardar = async () => {
+      const c = parseNum(st.cant);
+      if (!st.prov) { toast('Elige un proveedor.', 'err'); return; }
+      if (!c || c <= 0) { toast('Pon la cantidad recibida.', 'err'); return; }
+      if (!st.lote.trim()) { toast('Falta el código de lote.', 'err'); return; }
+      const cm = await sb.from('compras').insert({ proveedor_id: st.prov, fecha: hoy(), numero_documento: st.doc.trim() || null }).select('id').single();
+      if (cm.error) { toast(msgErr(cm.error), 'err'); return; }
+      const lo = await sb.from('lotes').insert({ compra_id: cm.data.id, producto_id: l.producto_id, origen: st.origen.trim(), codigo_lote: st.lote.trim(), cantidad_recibida: c, unidad: st.uni, precio_compra: st.precio.trim() ? parseNum(st.precio) : null });
+      if (lo.error) { await sb.from('compras').delete().eq('id', cm.data.id); toast(msgErr(lo.error), 'err'); return; }
+      toast('Compra y lote guardados', 'ok'); cerrar2(); cerrar(); abrirTrazabilidad(pedidoId, { corregir, keep: asig });
+    };
+    const ov2 = h('div', { class: 'overlay', style: 'z-index:60' }, h('div', { class: 'sheet', style: 'max-height:92vh;overflow:auto' },
+      h('h2', {}, 'Añadir compra de ' + (l.prod.nombre || '')),
+      h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Se guarda como una compra normal (también la verás en Más → Compras).'),
+      provBox,
+      h('label', { class: 'campo' }, 'Nº de albarán o factura del proveedor', h('input', { placeholder: 'Opcional', oninput: e => st.doc = e.target.value })),
+      h('div', { class: 'fila', style: 'gap:6px' },
+        h('label', { class: 'campo' }, 'Cantidad recibida', h('input', { inputmode: 'decimal', oninput: e => st.cant = e.target.value })),
+        h('label', { class: 'campo' }, 'Unidad', h('select', { onchange: e => st.uni = e.target.value }, ['kg', 'pieza', 'caja', 'saco', 'bolsa', 'bandeja', 'manojo'].map(u => h('option', { value: u, selected: u === st.uni }, u))))),
+      h('div', { class: 'fila', style: 'gap:6px' },
+        h('label', { class: 'campo' }, 'Origen', h('input', { placeholder: 'Ej. España', oninput: e => st.origen = e.target.value })),
+        h('label', { class: 'campo' }, 'Código de lote', h('input', { value: st.lote, oninput: e => st.lote = e.target.value }))),
+      h('label', { class: 'campo' }, 'Precio de compra € por unidad (opcional)', h('input', { inputmode: 'decimal', oninput: e => st.precio = e.target.value })),
+      h('button', { class: 'guardar', onclick: guardar }, 'Guardar compra y volver'),
+      h('button', { class: 'ghost', onclick: cerrar2 }, 'Cancelar')));
+    document.body.append(ov2);
+  }
   const tarjetas = lineas.map(l => {
     const lots = (porProd[l.producto_id] || []).filter(lo => lo.disp > 0.001 || asig[l.id][lo.id]);
     const estado = h('div', { class: 'sub', style: 'font-weight:700;margin:4px 0' });
@@ -788,7 +832,8 @@ async function abrirTrazabilidad(pedidoId, opt) {
     const tarj = h('div', { class: 'card' },
       h('div', { class: 'fila' }, h('div', { class: 'nombre' }, l.prod.nombre || 'Producto'), h('b', {}, num(l.need) + ' ' + l.uni)),
       estado, confirmarProp,
-      ...(filasL.length ? filasL : [h('p', { class: 'err', style: 'margin:4px 0' }, 'No hay compras con kilos disponibles de este producto. Regístralas en Más → Compras → Registrar compra.')]));
+      ...(filasL.length ? filasL : [h('p', { class: 'err', style: 'margin:4px 0' }, 'No hay compras con kilos disponibles de este producto.' + (puedeAnadir ? '' : ' Pide a oficina que registre la compra.'))]),
+      puedeAnadir ? h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: () => anadirLote(l) }, '+ Añadir compra / lote de este producto') : null);
     refs.push({ l, estado, tarj, confirmarProp });
     return tarj;
   });
