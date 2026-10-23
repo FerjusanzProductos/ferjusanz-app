@@ -135,6 +135,8 @@ header .quien span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hoja .caja{display:inline-block;width:12px;height:12px;border:1.5px solid #000;vertical-align:middle;margin-right:6px}
 .hoja .caja.on{background:#000}
 .tot-num{font-size:20px;font-weight:800;white-space:nowrap;text-align:right}
+.prac{background:#6d28d9;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 12px;font-weight:700;font-size:13px}
+.prac button{background:#fff;color:#6d28d9;min-height:32px;padding:0 12px;font-size:13px}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:10px}
 .cal-h{text-align:center;font-size:12px;color:var(--txt2);font-weight:700}
 .cal-d{min-height:54px;background:#fff;color:var(--txt);border:1px solid var(--borde);padding:2px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
@@ -169,7 +171,119 @@ const EMPRESA = {
   dir: 'Carare, 2 – 28033 Madrid',
   email: 'ferjusanz@hotmail.com'
 };
-const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+/* ---- Modo prácticas: base de datos de ejemplo dentro del móvil. Nunca toca Supabase ni los datos reales. ---- */
+const PRACTICA = (function () { try { return localStorage.getItem('fj_practica') === '1'; } catch (e) { return false; } })();
+const PRE = PRACTICA ? 'p_' : '';
+// Servidor simulado de Supabase, solo para pruebas.
+function crearSbPractica(){
+  const H=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
+  const cfg=JSON.parse(localStorage.getItem('fj_practica_cfg')||'{}');
+  const cli=(id,codigo,nombre,pago)=>({id,codigo,nombre,nombre_comercial:nombre,nif:'B0000000'+id.slice(1),direccion:'Calle de ejemplo '+id.slice(1),localidad:'Madrid',telefono:'600000000',forma_pago:pago,activo:true});
+  const pro=(id,codigo,nombre,unidad,iva)=>({id,codigo,nombre,unidad_venta:unidad,unidad_precio:'kg',iva,activo:true});
+  const lin=(id,ped,pr,cant,u,precio)=>({id,pedido_id:ped,producto_id:pr,cantidad_pedida:cant,unidad_pedida:u,peso_real:null,unidad_precio:'kg',precio,estado:'pendiente',version:1});
+  const __init = {
+    perfiles:[{id:'u1',nombre:cfg.nombre||'Tú',rol:cfg.rol||'admin',activo:true},{id:'u2',nombre:'Compañero (ejemplo)',rol:'preparador',activo:true}],
+    clientes:[cli('c1','LAFIGAL','Restaurante La Figal','credito'),cli('c2','TABERNA','Taberna El Enano','contado'),cli('c3','COLEGIO','Colegio San José','credito'),cli('c4','RESIDENCIA','Residencia Los Olmos','credito'),cli('c5','BARMANOLO','Bar Manolo','contado'),cli('c6','PARRAL','Restaurante El Parral','credito')],
+    productos:[pro('p1','105','Piña','pieza',4),pro('p2','127','Melón','pieza',4),pro('p3','91-D','Tomate pera','caja',4),pro('p4','200','Patata lavada','saco',4),pro('p5','210','Cebolla','saco',4),pro('p6','220','Zanahoria','caja',4),pro('p7','230','Lechuga romana','caja',4),pro('p8','240','Plátano','caja',4),pro('p9','250','Naranja zumo','caja',4),pro('p10','260','Limón','caja',4)],
+    tarifas:[['p1',2.2],['p2',1.1],['p3',2.1],['p4',0.6],['p5',0.7],['p6',0.8],['p7',1.2],['p8',1.5],['p9',0.9],['p10',1.4]].map(x=>({producto_id:x[0],cliente_id:null,precio:x[1],desde:'2026-01-01'})),
+    pedidos:[{id:'o1',cliente_id:'c1',fecha_entrega:H(),estado:'pendiente',notas:'Pedido de ejemplo: entregar antes de las 9',preparador_id:null},{id:'o2',cliente_id:'c3',fecha_entrega:H(),estado:'pendiente',notas:'',preparador_id:null},{id:'o3',cliente_id:'c4',fecha_entrega:H(),estado:'pendiente',notas:'',preparador_id:null}],
+    lineas_pedido:[lin('l1','o1','p1',1,'pieza',2.2),lin('l2','o1','p2',1,'pieza',1.1),lin('l3','o1','p3',2,'caja',2.1),lin('l4','o2','p4',3,'saco',0.6),lin('l5','o2','p5',2,'saco',0.7),lin('l6','o2','p8',2,'caja',1.5),lin('l7','o3','p6',2,'caja',0.8),lin('l8','o3','p7',3,'caja',1.2),lin('l9','o3','p9',2,'caja',0.9)],
+    albaranes:[], carga_lineas:[], sobrante:[], mensajes:[], fichajes:[], fotos_perfil:[], cobros:[], proveedores:[{id:'v1',codigo:'FRUTASSUR',nombre:'Frutas Sur (ejemplo)',activo:true},{id:'v2',codigo:'HORTALIZAS',nombre:'Hortalizas Norte (ejemplo)',activo:true}], compras:[], lotes:[], asignaciones_lote:[], entregas:[], incidencias:[], documentos_compra:[], seq:9000, log:[]
+  };
+  const __j=JSON.parse(localStorage.getItem('p_stub_db')||'null'); const __saved=(__j&&__j.dia===H())?__j:null;
+  const DB = window.__DB = __saved || __init; DB.dia=H(); DB.carga_lineas=DB.carga_lineas||[]; DB.sobrante=DB.sobrante||[]; DB.mensajes=DB.mensajes||[]; DB.fichajes=DB.fichajes||[]; DB.fotos_perfil=DB.fotos_perfil||[]; DB.cobros=DB.cobros||[]; DB.proveedores=DB.proveedores||[]; DB.compras=DB.compras||[]; DB.lotes=DB.lotes||[]; DB.asignaciones_lote=DB.asignaciones_lote||[]; DB.entregas=DB.entregas||[]; DB.incidencias=DB.incidencias||[]; DB.documentos_compra=DB.documentos_compra||[]; DB.avisos=DB.avisos||[];
+  const save=()=>localStorage.setItem('p_stub_db',JSON.stringify(DB));
+  const hoy=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
+  if(!__saved){save();}
+  DB.perfiles[0].nombre=cfg.nombre||DB.perfiles[0].nombre; DB.perfiles[0].rol=cfg.rol||DB.perfiles[0].rol; save();
+  const viewImporte=()=>DB.pedidos.map(p=>{const cl=DB.clientes.find(c=>c.id===p.cliente_id);const ls=DB.lineas_pedido.filter(l=>l.pedido_id===p.id&&l.peso_real!=null&&l.precio!=null);if(!ls.length)return null;const bases={};ls.forEach(l=>{const pr=DB.productos.find(x=>x.id===l.producto_id);const t=l.iva!=null?l.iva:(pr.iva!=null?pr.iva:4);bases[t]=Math.round(((bases[t]||0)+Math.round(l.peso_real*l.precio*100)/100)*100)/100;});let base=0,iva=0,rec=0;for(const t in bases){base+=bases[t];iva+=Math.round(bases[t]*t)/100;if(cl.recargo_equivalencia){const re={4:.5,10:1.4,21:5.2}[t]||0;rec+=Math.round(bases[t]*re)/100;}}
+    const cob=DB.cobros.filter(c=>c.pedido_id===p.id).reduce((a,c)=>a+c.importe,0);const al=DB.albaranes.find(a=>a.pedido_id===p.id);const total=Math.round((base+iva+rec)*100)/100;
+    return {pedido_id:p.id,cliente_id:p.cliente_id,fecha_entrega:p.fecha_entrega,estado:p.estado,cliente_codigo:cl.codigo,cliente_nombre:cl.nombre_comercial||cl.nombre,forma_pago:cl.forma_pago,serie:al&&al.serie,numero_albaran:al&&al.numero,base,iva,recargo:rec,total,cobrado:cob,pendiente:Math.round((total-cob)*100)/100};}).filter(Boolean);
+  const viewTraza=()=>DB.asignaciones_lote.map(a=>{const lo=DB.lotes.find(l=>l.id===a.lote_id),co=DB.compras.find(c=>c.id===lo.compra_id),pv=DB.proveedores.find(p=>p.id===co.proveedor_id),pr=DB.productos.find(p=>p.id===lo.producto_id),l=DB.lineas_pedido.find(x=>x.id===a.linea_id),p=DB.pedidos.find(x=>x.id===l.pedido_id),cl=DB.clientes.find(c=>c.id===p.cliente_id),al=DB.albaranes.find(x=>x.pedido_id===p.id);
+    return {lote_id:lo.id,codigo_lote:lo.codigo_lote,producto:pr.nombre,origen:lo.origen,proveedor:pv.nombre,fecha_compra:co.fecha,cantidad_entregada:a.cantidad,fecha_entrega:p.fecha_entrega,cliente:cl.nombre,serie:al&&al.serie,numero_albaran:al&&al.numero};});
+  const net=()=>{ if(!navigator.onLine){const e=new TypeError('Failed to fetch');throw e;} };
+  const join=(t,r)=>{
+    if(t==='pedidos'){return Object.assign({},r,{entregas:DB.entregas.find(e=>e.pedido_id===r.id)||null,clientes:DB.clientes.find(c=>c.id===r.cliente_id),albaranes:DB.albaranes.filter(a=>a.pedido_id===r.id),lineas_pedido:DB.lineas_pedido.filter(l=>l.pedido_id===r.id).map(l=>Object.assign({},l,{productos:DB.productos.find(p=>p.id===l.producto_id),carga_lineas:DB.carga_lineas.find(c=>c.linea_id===l.id)||null,asignaciones_lote:DB.asignaciones_lote.filter(a=>a.linea_id===l.id)}))});}
+    if(t==='sobrante'){return Object.assign({},r,{productos:DB.productos.find(p=>p.id===r.producto_id),perfiles:DB.perfiles.find(p=>p.id===r.repartidor_id)||null});}
+    if(t==='lineas_pedido'){return Object.assign({},r,{productos:DB.productos.find(p=>p.id===r.producto_id)});}
+    if(t==='tarifas'){return Object.assign({},r,{productos:DB.productos.find(p=>p.id===r.producto_id)});}
+    if(t==='entregas'){const p=DB.pedidos.find(x=>x.id===r.pedido_id);return Object.assign({},r,{pedidos:{clientes:DB.clientes.find(c=>c.id===p.cliente_id)}});}
+    if(t==='incidencias'){return Object.assign({},r,{clientes:DB.clientes.find(c=>c.id===r.cliente_id)||null,productos:DB.productos.find(p=>p.id===r.producto_id)||null});}
+    if(t==='documentos_compra'){return Object.assign({},r,{proveedores:DB.proveedores.find(p=>p.id===r.proveedor_id)||null});}
+    if(t==='compras'){return Object.assign({},r,{proveedores:DB.proveedores.find(p=>p.id===r.proveedor_id)||null});}
+    if(t==='cobros'){return Object.assign({},r,{clientes:DB.clientes.find(c=>c.id===r.cliente_id)});}
+    if(t==='lotes'){const co=DB.compras.find(c=>c.id===r.compra_id)||{};return Object.assign({},r,{productos:DB.productos.find(p=>p.id===r.producto_id),compras:Object.assign({},co,{proveedores:DB.proveedores.find(p=>p.id===co.proveedor_id)}),asignaciones_lote:DB.asignaciones_lote.filter(a=>a.lote_id===r.id)});}
+    return Object.assign({},r);
+  };
+  class Q{
+    constructor(t){this.t=t;this.f=[];this.op='select';this.lim=null;this.one=null;this.ord=null;this.payload=null;this.ret=false;}
+    select(c,o){ if(o&&o.head){this.head=true;} if(this.op==='insert'||this.op==='update')this.ret=true; else this.op='select'; return this;}
+    upsert(p,o){this.op='upsert';this.payload=p;return this;}
+    insert(p){this.op='insert';this.payload=p;return this;}
+    update(p){this.op='update';this.payload=p;return this;}
+    delete(){this.op='delete';return this;}
+    eq(k,v){this.f.push(r=>r[k]===v);return this;}
+    neq(k,v){this.f.push(r=>r[k]!==v);return this;}
+    or(s){const parts=s.split(',').map(x=>x.split('.'));const txt=parts[0][2].replace(/%/g,'').toLowerCase();this.f.push(r=>parts.some(p=>String(r[p[0]]||'').toLowerCase().includes(txt)));return this;}
+    in(k,vs){this.f.push(r=>vs.includes(r[k]));return this;}
+    is(k,v){this.f.push(r=>(r[k]==null)===(v===null));return this;}
+    lt_(){return this;}
+    gt(k,v){this.f.push(r=>r[k]>v);return this;}
+    gte(k,v){this.f.push(r=>r[k]>=v);return this;}
+    lt(k,v){this.f.push(r=>r[k]<v);return this;}
+    limit(n){this.lim=n;return this;}
+    order(k,o){this.ord=k;this.desc=o&&o.ascending===false;return this;}
+    range(a,b){this.lim=b+1;return this;}
+    single(){this.one='single';return this;}
+    maybeSingle(){this.one='maybe';return this;}
+    then(res,rej){return this.run().then(res,rej);}
+    async run(){
+      try{net();}catch(e){return {data:null,error:e};}
+      const T=this.t==='v_pedidos_importe'?viewImporte():this.t==='v_trazabilidad'?viewTraza():DB[this.t]; let rows=T.filter(r=>this.f.every(f=>f(r)));
+      if(this.op==='insert'){if(this.t==='clientes'&&T.some(r=>r.codigo===this.payload.codigo))return {data:null,error:{code:'23505',message:'duplicate key value'}};
+        const arr=Array.isArray(this.payload)?this.payload:[this.payload];
+        const out=arr.map(p=>{const r=Object.assign({id:this.t[0]+Math.random().toString(36).slice(2,8),estado:'pendiente',version:1,activo:true},this.t==='mensajes'?{creado:new Date().toISOString(),autor:'u1'}:{created_at:new Date().toISOString()},(this.t==='incidencias'||this.t==='documentos_compra')?{creado_por:'u1',subido_por:'u1'}:{},p);T.push(r);return r;});
+        DB.log.push(['insert',this.t,out.length]);save();
+        return this.one?{data:out[0],error:null}:{data:this.ret?out:null,error:null};}
+      if(this.op==='upsert'){if(!T.some(r=>r.id===this.payload.id)){T.push(Object.assign({resuelta:false,archivado:false,creado_por:'u1',subido_por:'u1'},this.payload));}DB.log.push(['upsert',this.t]);save();return {data:null,error:null};}
+      if(this.op==='update'){rows.forEach(r=>Object.assign(r,this.payload));DB.log.push(['update',this.t,this.payload]);save();return this.ret?{data:this.one?rows[0]:rows,error:null}:{data:null,error:null};}
+      if(this.op==='delete'){DB[this.t]=T.filter(r=>!rows.includes(r));save();return {data:null,error:null};}
+      if(this.ord){rows=rows.slice().sort((a,b)=>String(a[this.ord]).localeCompare(String(b[this.ord])));if(this.desc)rows.reverse();}
+      if(this.lim)rows=rows.slice(0,this.lim);
+      if(this.head)return {data:null,count:rows.length,error:null};
+      const out=rows.map(r=>join(this.t,r));
+      if(this.one==='single')return out.length?{data:out[0],error:null}:{data:null,error:{message:'no rows'}};
+      if(this.one==='maybe')return {data:out[0]||null,error:null};
+      return {data:out,error:null};
+    }
+  }
+  const RPC={
+    cobrar(a){const ex=a.p_clave&&DB.cobros.find(c=>c.clave===a.p_clave);if(ex)return ex;const v=viewImporte().find(x=>x.pedido_id===a.p_pedido);if(!v)throw new Error('SIN_IMPORTE');if(a.p_importe>v.pendiente+0.01)throw new Error('COBRO_MAYOR_QUE_PENDIENTE');const p=DB.pedidos.find(x=>x.id===a.p_pedido);const r={id:'k'+Math.random().toString(36).slice(2,7),pedido_id:a.p_pedido,cliente_id:p.cliente_id,importe:a.p_importe,forma:a.p_forma,nota:a.p_nota,clave:a.p_clave,cobrado_por:'u1',created_at:new Date().toISOString()};DB.cobros.push(r);return r;},
+    guardar_foto(a){DB.fotos_perfil=DB.fotos_perfil.filter(x=>x.usuario_id!=='u1');if(a.p_foto)DB.fotos_perfil.push({usuario_id:'u1',foto:a.p_foto});return null;},
+    fichar(a){const ab=DB.fichajes.find(f=>f.usuario_id==='u1'&&!f.salida);const t=a.p_cuando||new Date().toISOString();if(a.p_accion==='entrada'){if(ab)return ab;const r={id:'f'+Math.random().toString(36).slice(2,7),usuario_id:'u1',entrada:t,salida:null,sin_conexion:!!a.p_cuando,nota:null};DB.fichajes.push(r);return r;}if(!ab)throw new Error('SIN_ENTRADA');ab.salida=t;return ab;},
+    marcar_entregado(a){const p=DB.pedidos.find(x=>x.id===a.p_pedido);if(p.estado!=='terminado')throw new Error('PEDIDO_NO_TERMINADO');if(!DB.entregas.some(e=>e.pedido_id===a.p_pedido))DB.entregas.push({pedido_id:a.p_pedido,entregado_por:'u1',entregado_at:a.p_at||new Date().toISOString(),created_at:new Date().toISOString()});return null;},
+    marcar_cargado(a){let c=DB.carga_lineas.find(x=>x.linea_id===a.p_linea);if(c)c.cargado=a.p_cargado;else DB.carga_lineas.push({linea_id:a.p_linea,cargado:a.p_cargado});return null;},
+    empezar_pedido(a){const p=DB.pedidos.find(x=>x.id===a.p_pedido);p.estado='en_preparacion';p.preparador_id='u1';return null;},
+    guardar_peso(a){const l=DB.lineas_pedido.find(x=>x.id===a.p_linea);if(l.version!==a.p_version)throw new Error('CONFLICTO');l.peso_real=a.p_peso;l.estado='hecha';l.version++;return l.version;},
+    terminar_pedido(a){const ls=DB.lineas_pedido.filter(l=>l.pedido_id===a.p_pedido);if(ls.some(l=>l.estado==='pendiente'))throw new Error('LINEAS_PENDIENTES');
+      DB.pedidos.find(p=>p.id===a.p_pedido).estado='terminado';let al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);
+      if(!al){al={pedido_id:a.p_pedido,serie:'F',numero:DB.seq++,fecha:hoy(),estado:'emitido'};DB.albaranes.push(al);}return al.numero;}
+  };
+  let session={user:{id:'u1',email:'practicas@local'}};
+  return {
+    from:t=>new Q(t),
+    rpc:async(n,a)=>{try{net();const v=RPC[n](a);save();return{data:v,error:null};}catch(e){return{data:null,error:e};}},
+    storage:{from:()=>({upload:async(r,b)=>{(DB.__files=DB.__files||{})[r]=b.size||1;save();return{data:{},error:null}},remove:async()=>({error:null}),createSignedUrl:async(r)=>({data:{signedUrl:'data:image/gif;base64,R0lGODlhAQABAAAAACw='},error:null})})},
+    auth:{
+      getSession:async()=>({data:{session}}),
+      signInWithPassword:async({email,password})=>{ if(password!=='ok')return{data:null,error:{message:'Invalid login'}};
+        session={user:{id:'u1',email}};localStorage.setItem('stub_session',JSON.stringify(session));return{data:{user:session.user},error:null};},
+      signOut:async()=>{},
+      onAuthStateChange:()=>({data:{subscription:{}}})}
+  };
+}
+
+const sb = PRACTICA ? crearSbPractica() : (window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null);
 const $app = document.getElementById('app');
 const state = { user: null, perfil: null, view: 'lista', params: {}, fecha: hoy(), filtro: 'todos', sheetAbierta: false, ped: null, pedidos: [], carga: null, cargaModo: 'clientes', gente: {}, chatNoLeidos: 0, chatTimer: null };
 
@@ -192,8 +306,8 @@ const parseNum = s => { const n = parseFloat(String(s).trim().replace(',', '.'))
 const fechaES = iso => { if (!iso) return ''; const [y, m, d] = String(iso).slice(0, 10).split('-'); return d + '/' + m + '/' + y; };
 const nombreCli = c => (c && (c.nombre_comercial || c.nombre)) || '';
 const LS = {
-  get(k, def) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch (e) { return def; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }
+  get(k, def) { try { const v = localStorage.getItem(PRE + k); return v ? JSON.parse(v) : def; } catch (e) { return def; } },
+  set(k, v) { try { localStorage.setItem(PRE + k, JSON.stringify(v)); } catch (e) { } }
 };
 function toast(msg, tipo) {
   const t = document.getElementById('toast');
@@ -222,13 +336,13 @@ function isNetErr(e) {
 const esOficina = () => !!state.perfil && ['oficina', 'admin'].includes(state.perfil.rol);
 const ESTADO = { pendiente: 'Pendiente', en_preparacion: 'En preparación', terminado: 'Terminado', anulado: 'Anulado' };
 const CLASE_ESTADO = { pendiente: 'pend', en_preparacion: 'prep', terminado: 'fin', anulado: 'pend' };
-const VISTAS_MAS = ['mas', 'clientes', 'cliente', 'catalogo', 'compras', 'traza', 'perfil', 'fichajes', 'entregas', 'calendario', 'incidencias', 'precios', 'facturas', 'resumen'];
+const VISTAS_MAS = ['mas', 'clientes', 'cliente', 'catalogo', 'compras', 'traza', 'perfil', 'fichajes', 'entregas', 'calendario', 'incidencias', 'precios', 'facturas', 'resumen', 'archivo', 'avisos'];
 const puedeCompras = () => !!state.perfil && ['compras', 'oficina', 'admin'].includes(state.perfil.rol);
 const UNIDADES = ['kg', 'pieza', 'caja', 'saco', 'bolsa', 'bandeja', 'manojo'];
 const limpiaBusqueda = s => String(s).replace(/[,()%*\\]/g, ' ').trim();
 
 /* =====================  GENTE, FOTOS Y HORAS  ===================== */
-state.gente = (function () { try { return JSON.parse(localStorage.getItem('fj_gente') || '{}'); } catch (e) { return {}; } })();
+state.gente = (function () { try { return JSON.parse(localStorage.getItem(PRE + 'fj_gente') || '{}'); } catch (e) { return {}; } })();
 async function cargarGente() {
   if (!navigator.onLine || !sb) return;
   try {
@@ -329,10 +443,24 @@ function shell(titulo, contenido, opts) {
       opts.volver ? h('button', { class: 'back', onclick: opts.volver }, '← Volver') : h('span', { class: 'logo' }, 'Ferjusanz'),
       h('span', { class: 'tit' }, titulo || ''),
       h('button', { class: 'quien', onclick: () => go('perfil') }, avatar(state.user && state.user.id, state.perfil && state.perfil.nombre, 30), h('span', {}, state.perfil ? state.perfil.nombre.split(' ')[0] : ''))),
+    PRACTICA ? h('div', { class: 'prac' }, h('span', {}, 'MODO PRÁCTICAS · datos de ejemplo, nada es real'), h('button', { onclick: salirPracticas }, 'Salir')) : null,
     h('div', { id: 'banner', class: 'banner' }),
     h('main', {}, contenido), nav);
 }
+function salirPracticas() { try { localStorage.removeItem('fj_practica'); } catch (e) { } location.reload(); }
+function empezarPracticas(rol) { try { localStorage.setItem('fj_practica_cfg', JSON.stringify({ nombre: state.perfil.nombre, rol })); localStorage.setItem('fj_practica', '1'); } catch (e) { } location.reload(); }
+function reiniciarPracticas() { try { Object.keys(localStorage).filter(k => k.startsWith('p_')).forEach(k => localStorage.removeItem(k)); } catch (e) { } location.reload(); }
+function panelPracticas() {
+  if (PRACTICA) return h('div', { class: 'card' }, h('div', { class: 'nombre', style: 'margin-bottom:6px' }, 'Estás en MODO PRÁCTICAS'),
+    h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Todo lo que hagas aquí es de ejemplo y se queda solo en este móvil. Cada día empieza con datos nuevos.'),
+    h('div', { style: 'display:flex;gap:8px' }, h('button', { class: 'ghost', style: 'flex:1', onclick: () => { if (confirm('¿Borrar lo practicado y empezar de cero?')) reiniciarPracticas(); } }, 'Reiniciar'), h('button', { style: 'flex:1', onclick: salirPracticas }, 'Volver al trabajo real')));
+  const rol = h('select', {}, [['preparador', 'Preparador / repartidor'], ['oficina', 'Oficina'], ['admin', 'Administración']].map(([v, n]) => h('option', { value: v, selected: v === state.perfil.rol }, n)));
+  return h('div', { class: 'card' }, h('div', { class: 'nombre', style: 'margin-bottom:6px' }, 'Modo prácticas'),
+    h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Para aprender sin miedo: pedidos, clientes y productos de ejemplo. No cambia ningún dato real.'),
+    h('label', { class: 'campo' }, 'Practicar como', rol), h('button', { class: 'ghost', style: 'width:100%', onclick: () => empezarPracticas(rol.value) }, 'Empezar prácticas'));
+}
 async function salir() {
+  if (PRACTICA) { salirPracticas(); return; }
   if (totalPendiente()) { toast('Hay cambios sin enviar. Conéctate y espera a que se envíen antes de salir.', 'err'); return; }
   await sb.auth.signOut(); state.user = null; state.perfil = null; LS.set('fj_perfil', null); render();
 }
@@ -638,7 +766,7 @@ function htmlAlbaran(d, formato) {
       ? '<div class="pie">Cobrado: &#9744; Sí &nbsp; &#9744; No &nbsp;&nbsp; Forma de pago: ____________________</div>'
       : '<div class="pie">Conforme: Recibí<br><br>Firma y nombre: ______________________________</div>';
     return '<div class="copia ' + formato + '">' +
-      '<div class="cab"><div class="emp"><b>' + esc(EMPRESA.nombre) + '</b><div>' + esc(EMPRESA.lema) + '</div><div>' + esc(EMPRESA.tels) + '</div><div>' + esc(EMPRESA.dir) + ' · ' + esc(EMPRESA.email) + '</div></div>' +
+      '<div class="cab"><div class="emp"><b>' + esc(EMPRESA.nombre) + (PRACTICA ? ' — SIMULACRO, SIN VALOR' : '') + '</b><div>' + esc(EMPRESA.lema) + '</div><div>' + esc(EMPRESA.tels) + '</div><div>' + esc(EMPRESA.dir) + ' · ' + esc(EMPRESA.email) + '</div></div>' +
       '<div class="num">ALBARÁN<b>' + esc(num7) + '</b>Fecha: ' + esc(fechaES(a.fecha || p.fecha_entrega)) + '<br><span class="tipo">COPIA ' + tipo + '</span></div></div>' +
       '<div class="cli"><b>' + esc(nombreCli(cli)) + '</b>' + (cli.nombre_comercial && cli.nombre ? '<br>' + esc(cli.nombre) : '') +
       '<br>' + esc([cli.direccion, cli.localidad].filter(Boolean).join(' · ')) + (cli.nif ? '<br>NIF: ' + esc(cli.nif) : '') + '</div>' +
@@ -1246,7 +1374,7 @@ function vistaPerfil() {
         abierto ? h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Entrada hoy a las ' + fmtHora(abierto.entrada) + (abierto.pendiente ? ' (pendiente de enviar)' : '')) : h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Todavía no has fichado la entrada.'),
         h('button', { class: 'fichar-btn' + (abierto ? ' sal' : ''), onclick: fichar }, abierto ? 'Fichar SALIDA' : 'Fichar ENTRADA'),
         filas.length ? h('div', { style: 'margin-top:12px' }, h('div', { class: 'sub', style: 'margin-bottom:4px' }, 'Mis últimos fichajes'), ...lista) : null),
-      panelAvisos(),
+      panelAvisos(), panelPracticas(),
       esOficina() ? h('button', { class: 'ghost', style: 'width:100%;margin-bottom:10px', onclick: () => go('fichajes') }, 'Fichajes del equipo') : null,
       h('button', { class: 'peligro', style: 'width:100%', onclick: salir }, 'Cerrar sesión'));
   }
@@ -1333,6 +1461,8 @@ function vistaMas() {
   const k = [b('Mi perfil y fichaje', 'Foto, fichar entrada y salida', () => go('perfil'))];
   if (esOficina()) k.push(b('Clientes', 'Lista de A a Z, datos, precios y últimos pedidos', () => go('clientes')), b('Catálogo', 'Productos: activos, unidades, IVA y precio general', () => go('catalogo')));
   k.push(b('Entregas', 'Pedidos entregados y a qué hora', () => go('entregas')), b('Calendario', 'Ver y añadir pedidos por día', () => go('calendario')), b('Incidencias', 'Quejas y productos en mal estado, por cliente y producto', () => go('incidencias')), b('Precios de compra', 'Cuánto costó cada producto y a quién se compró', () => go('precios')), b('Facturas de compra', 'Fotos y PDF de facturas y hojas, ordenadas por día', () => go('facturas')));
+  k.unshift(b('Avisos y ofertas', 'Avisos del equipo, ofertas y recordatorios', () => go('avisos')));
+  if (esOficina()) k.push(b('Archivo', 'Ver y restaurar lo archivado', () => go('archivo')));
   if (esOficina()) k.push(b('Resumen del día', 'Ventas, cobros, lo comprado e incidencias', () => go('resumen')));
   if (puedeCompras()) k.push(b('Compras y lista de la compra', 'Qué comprar hoy, registrar compras y lotes', () => go('compras')));
   if (puedeCompras()) k.push(b('Trazabilidad', 'De qué lote sale cada producto y a quién se entregó', () => go('traza')));
@@ -2190,12 +2320,81 @@ function vistaResumen() {
   cargar();
 }
 
+/* ---------- Archivo: ver y restaurar lo archivado ---------- */
+function vistaArchivo() {
+  state.view = 'archivo'; if (!esOficina()) { go('mas'); return; }
+  const SEC = {
+    pedidos: { n: 'Pedidos', sel: 'id,fecha_entrega,estado,clientes(nombre,nombre_comercial)', ord: 'fecha_entrega', t: r => nombreCli(uno(r.clientes)), s: r => fechaES(r.fecha_entrega) + ' · ' + ESTADO[r.estado] },
+    incidencias: { n: 'Incidencias', sel: 'id,tipo,nota,created_at,clientes(nombre,nombre_comercial),productos(nombre)', ord: 'created_at', t: r => TIPOS_INC[r.tipo] + ': ' + r.nota, s: r => [r.clientes && nombreCli(uno(r.clientes)), r.productos && uno(r.productos).nombre].filter(Boolean).join(' · ') },
+    lotes: { n: 'Lotes', sel: 'id,codigo_lote,cantidad_recibida,unidad,created_at,productos(nombre)', ord: 'created_at', t: r => (uno(r.productos) || {}).nombre || 'Lote', s: r => r.codigo_lote + ' · ' + num(r.cantidad_recibida) + ' ' + r.unidad },
+    documentos_compra: { n: 'Facturas', sel: 'id,fecha,tipo,nombre,proveedores(nombre)', ord: 'fecha', t: r => (r.proveedores ? uno(r.proveedores).nombre : 'Sin proveedor'), s: r => fechaES(r.fecha) + ' · ' + (TIPOS_DOC[r.tipo] || '') },
+    avisos: { n: 'Avisos', sel: 'id,titulo,tipo,created_at', ord: 'created_at', t: r => r.titulo, s: r => fechaES(r.created_at) }
+  };
+  let sec = LS.get('fj_archivo_sec', 'pedidos'); if (!SEC[sec]) sec = 'pedidos';
+  const cont = h('div', {}), chips = h('div', { class: 'chips' }), lista = h('div', {});
+  const pintarChips = () => chips.replaceChildren(...Object.keys(SEC).map(k => h('button', { class: 'chip' + (sec === k ? ' on' : ''), onclick: () => { sec = k; LS.set('fj_archivo_sec', k); pintarChips(); cargar(); } }, SEC[k].n)));
+  async function cargar() {
+    lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); const c = SEC[sec];
+    try {
+      const r = await sb.from(sec).select(c.sel).eq('archivado', true).order(c.ord, { ascending: false }).limit(100); if (r.error) throw r.error;
+      lista.replaceChildren(...(r.data.length ? r.data.map(x => h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'nombre' }, c.t(x)), h('div', { class: 'sub' }, c.s(x))),
+        h('button', { class: 'ghost small', onclick: async () => { const u = await sb.from(sec).update({ archivado: false }).eq('id', x.id); if (u.error) toast(msgErr(u.error), 'err'); else { toast('Restaurado', 'ok'); cargar(); } } }, 'Restaurar'))) : [h('p', { class: 'vacio' }, 'No hay nada archivado aquí.')]));
+    } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+  }
+  cont.append(h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Lo archivado no se pierde: aquí se puede restaurar. Los clientes y productos se activan o desactivan en Catálogo.'), chips, lista);
+  $app.replaceChildren(shell('Archivo', cont, { volver: () => go('mas') })); renderBanner(); pintarChips(); cargar();
+}
+
+/* ---------- Tablón de avisos y ofertas ---------- */
+const TIPOS_AVISO = { aviso: 'Aviso', oferta: 'Oferta', recordatorio: 'Recordatorio', apertura: 'Apertura / cierre', cliente_nuevo: 'Cliente nuevo' };
+function textoAviso(a) { return (a.tipo === 'oferta' ? '🍎 OFERTA · ' : '') + a.titulo + (a.texto ? '\n\n' + a.texto : '') + '\n\n' + EMPRESA.nombre + (EMPRESA.tels ? ' · ' + EMPRESA.tels : ''); }
+async function compartirTexto(tx) { try { if (navigator.share) await navigator.share({ text: tx }); else { await navigator.clipboard.writeText(tx); toast('Texto copiado: pégalo en WhatsApp', 'ok'); } } catch (e) { } }
+function vistaAvisos() {
+  state.view = 'avisos';
+  const cont = h('div', {}), lista = h('div', {}); let filtro = 'todos';
+  const chips = h('div', { class: 'chips' });
+  const pintarChips = () => chips.replaceChildren(...[['todos', 'Todos'], ['equipo', 'Para el equipo'], ['clientes', 'Para clientes']].map(([f, n]) => h('button', { class: 'chip' + (filtro === f ? ' on' : ''), onclick: () => { filtro = f; pintarChips(); cargar(); } }, n)));
+  function nuevo() {
+    const tipo = h('select', {}, Object.keys(TIPOS_AVISO).map(k => h('option', { value: k }, TIPOS_AVISO[k])));
+    const para = h('select', {}, [['equipo', 'Para el equipo'], ['clientes', 'Para clientes']].map(([v, n]) => h('option', { value: v }, n)));
+    const tit = h('input', { placeholder: 'Título. Ej.: Oferta de melón esta semana' }), tx = h('textarea', { rows: 4, placeholder: 'Texto' });
+    const fij = h('input', { type: 'checkbox' }), cad = h('input', { type: 'date' }); let cerrar;
+    cerrar = hoja('Nuevo aviso', h('div', {}, h('label', { class: 'campo' }, 'Tipo', tipo), h('label', { class: 'campo' }, 'Dirigido a', para), h('label', { class: 'campo' }, 'Título', tit), h('label', { class: 'campo' }, 'Texto', tx),
+      h('label', { class: 'campo' }, 'Se muestra hasta (opcional)', cad), h('label', { class: 'interruptor', style: 'margin-bottom:10px' }, fij, 'Fijar arriba'),
+      h('button', { class: 'guardar', style: 'width:100%', onclick: async () => {
+        if (!tit.value.trim()) { toast('Escribe un título', 'err'); return; }
+        const r = await sb.from('avisos').insert({ tipo: tipo.value, para: para.value, titulo: tit.value.trim(), texto: tx.value.trim() || null, fijado: fij.checked, caduca: cad.value || null });
+        if (r.error) { toast(msgErr(r.error), 'err'); return; } cerrar(); toast('Aviso publicado', 'ok'); cargar();
+      } }, 'Publicar')));
+  }
+  async function cargar() {
+    lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+    try {
+      const r = await sb.from('avisos').select('id,tipo,para,titulo,texto,fijado,caduca,created_at,creado_por').neq('archivado', true).order('created_at', { ascending: false }).limit(100); if (r.error) throw r.error;
+      LS.set('fj_avisos_visto', new Date().toISOString());
+      const t = hoy(); const vis = r.data.filter(a => (!a.caduca || a.caduca >= t) && (filtro === 'todos' || a.para === filtro)).sort((a, b) => (b.fijado ? 1 : 0) - (a.fijado ? 1 : 0));
+      lista.replaceChildren(...(vis.length ? vis.map(a => h('div', { class: 'card' },
+        h('div', { class: 'fila' }, h('span', { class: 'badge ' + (a.tipo === 'oferta' ? 'prep' : 'cont') }, (a.fijado ? '📌 ' : '') + TIPOS_AVISO[a.tipo]), h('span', { class: 'sub' }, (a.para === 'clientes' ? 'Clientes · ' : '') + fechaES(a.created_at))),
+        h('div', { class: 'nombre', style: 'margin:6px 0 2px' }, a.titulo), a.texto ? h('div', { style: 'white-space:pre-wrap' }, a.texto) : null,
+        a.caduca ? h('div', { class: 'sub' }, 'Hasta el ' + fechaES(a.caduca)) : null,
+        h('div', { style: 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap' },
+          esOficina() || a.para === 'clientes' ? h('button', { class: 'ghost small', onclick: () => compartirTexto(textoAviso(a)) }, 'Compartir (WhatsApp)') : null,
+          esOficina() ? h('a', { href: 'mailto:?subject=' + encodeURIComponent(a.titulo) + '&body=' + encodeURIComponent(textoAviso(a)), style: 'align-self:center;color:var(--verde-osc);font-weight:700' }, 'Correo') : null,
+          esOficina() ? h('button', { class: 'ghost small', onclick: async () => { const u = await sb.from('avisos').update({ fijado: !a.fijado }).eq('id', a.id); if (u.error) toast(msgErr(u.error), 'err'); else cargar(); } }, a.fijado ? 'Desfijar' : 'Fijar') : null,
+          esOficina() ? h('button', { class: 'ghost small', onclick: async () => { if (!await confirmar('¿Archivar este aviso?')) return; const u = await sb.from('avisos').update({ archivado: true }).eq('id', a.id); if (u.error) toast(msgErr(u.error), 'err'); else cargar(); } }, 'Archivar') : null)))
+        : [h('p', { class: 'vacio' }, 'No hay avisos.')]));
+    } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver los avisos.' : msgErr(e))); }
+  }
+  cont.append(esOficina() ? h('button', { style: 'width:100%;margin-bottom:10px', onclick: nuevo }, '+ Nuevo aviso u oferta') : null, chips, lista);
+  $app.replaceChildren(shell('Avisos y ofertas', cont, { volver: () => go('mas') })); renderBanner(); pintarChips(); cargar();
+}
+
 /* =====================  ARRANQUE  ===================== */
 function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, resumen: vistaResumen }[state.view] || vistaLista;
+  const v = { lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos }[state.view] || vistaLista;
   if ((state.view === 'nuevo' || state.view === 'catalogo') && !esOficina()) return vistaLista();
   v();
 }
