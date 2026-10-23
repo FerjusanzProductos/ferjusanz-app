@@ -2009,7 +2009,8 @@ function panelIncidencias(pref, opc) {
         h('div', { class: 'sub' }, [i.clientes ? 'Cliente: ' + nombreCli(uno(i.clientes)) : '', i.productos ? 'Producto: ' + uno(i.productos).nombre : '', quienEs(i.creado_por) ? 'Anotó: ' + quienEs(i.creado_por) : ''].filter(Boolean).join(' · ')),
         esOficina() ? h('div', { style: 'display:flex;gap:8px;margin-top:8px' },
           h('button', { class: 'ghost small', onclick: async () => { const x = await sb.from('incidencias').update({ resuelta: !i.resuelta }).eq('id', i.id); if (x.error) toast(msgErr(x.error), 'err'); else cargar(); } }, i.resuelta ? 'Reabrir' : 'Marcar resuelta'),
-          h('button', { class: 'ghost small', onclick: async () => { if (!await confirmar('¿Archivar esta incidencia? Dejará de verse.')) return; const x = await sb.from('incidencias').update({ archivado: true }).eq('id', i.id); if (x.error) toast(msgErr(x.error), 'err'); else cargar(); } }, 'Archivar')) : null)));
+          h('button', { class: 'ghost small', onclick: async () => { if (!await confirmar('¿Archivar esta incidencia? Dejará de verse.')) return; const x = await sb.from('incidencias').update({ archivado: true }).eq('id', i.id); if (x.error) toast(msgErr(x.error), 'err'); else cargar(); } }, 'Archivar'),
+          h('button', { class: 'peligro small', onclick: async () => { if (!await confirmar('¿ELIMINAR esta incidencia? Desaparece de la lista (queda copia en el historial).')) return; const x = await sb.from('incidencias').delete().eq('id', i.id); if (x.error) toast(msgErr(x.error), 'err'); else { toast('Incidencia eliminada', 'ok'); cargar(); } } }, 'Eliminar')) : null)));
       if (!kids.length) kids.push(h('p', { class: 'vacio' }, 'No hay incidencias.'));
       lista.replaceChildren(...kids);
     } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver las incidencias.' : msgErr(e))); }
@@ -2139,6 +2140,7 @@ function vistaFacturas() {
     const r = await sb.storage.from('facturas').createSignedUrl(d.ruta, 900); if (r.error) { toast(msgErr(r.error), 'err'); return; }
     const url = r.data.signedUrl; const esPdf = d.ruta.endsWith('.pdf'); let cerrar;
     const acc = [h('a', { href: url, target: '_blank', rel: 'noopener', style: 'display:block;text-align:center;padding:12px;border:1px solid var(--borde);border-radius:12px;text-decoration:none;color:var(--verde-osc);font-weight:700' }, esPdf ? 'Abrir PDF' : 'Abrir en grande')];
+    if (state.perfil.rol === 'admin') acc.push(h('button', { class: 'peligro', onclick: async () => { if (!await confirmar('¿ELIMINAR este documento y su archivo? No se podrá recuperar.')) return; if (!await confirmar('Última confirmación: ¿eliminar de verdad?')) return; const x = await sb.from('documentos_compra').delete().eq('id', d.id); if (x.error) { toast(msgErr(x.error), 'err'); return; } await sb.storage.from('facturas').remove([d.ruta]); cerrar(); cargar(); } }, 'Eliminar documento'));
     if (esOficina()) acc.push(h('button', { class: 'ghost', onclick: async () => { if (!await confirmar('¿Archivar este documento? Dejará de verse en la lista (no se borra).')) return; const x = await sb.from('documentos_compra').update({ archivado: true }).eq('id', d.id); if (x.error) toast(msgErr(x.error), 'err'); else { cerrar(); cargar(); } } }, 'Archivar documento'));
     cerrar = hoja(fechaES(d.fecha) + ' · ' + TIPOS_DOC[d.tipo], h('div', { style: 'display:flex;flex-direction:column;gap:10px' }, esPdf ? null : h('img', { src: url, style: 'width:100%;border-radius:10px' }), ...acc));
   }
