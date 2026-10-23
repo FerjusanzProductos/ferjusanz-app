@@ -460,7 +460,7 @@ function tabActiva(tabs) {
   if (v === 'mas') return 'inicio'; if (VISTAS_PEDIDOS.includes(v)) return 'lista'; return 'inicio';
 }
 function chipsHub() {
-  const it = [['lista', 'Preparar'], ['carga', 'Carga'], ['entregas', 'Entregas'], ['calendario', 'Calendario'], ['ruta', 'Ruta']]; if (esOficina()) it.push(['nuevo', '+ Nuevo pedido']);
+  const it = [['lista', 'Preparar'], ['carga', 'Carga'], ['entregas', 'Entregas'], ['calendario', 'Calendario'], ['ruta', 'Ruta']]; it.push(['nuevo', '+ Nuevo pedido']);
   return h('div', { class: 'chips' }, it.map(([v, t]) => h('button', { class: 'chip' + (state.view === v ? ' on' : ''), onclick: () => go(v) }, t)));
 }
 function shell(titulo, contenido, opts) {
@@ -1529,7 +1529,7 @@ function vistaMas() {
   const k = [
     h('div', { class: 'saludo' }, h('div', { style: 'font-size:20px;font-weight:800' }, 'Hola, ' + (state.perfil.nombre || '').split(' ')[0]), h('div', { class: 'sub' }, (d => d.charAt(0).toUpperCase() + d.slice(1))(fmtDiaLargo(new Date().toISOString())))),
     ...g('Trabajo diario', c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Carga', () => go('carga'), V), c('✅', 'Entregas', () => go('entregas'), V), c('🗺️', 'Ruta', () => go('ruta'), V), c('📅', 'Calendario', () => go('calendario'), V),
-      esOficina() ? c('➕', 'Nuevo pedido', () => go('nuevo'), V) : null, esOficina() ? c('📲', 'Pedido de WhatsApp', () => go('importar'), V) : null, c('💰', 'Cobros', () => go('cobros'), V), c('🧮', 'Deudas', () => go('deudas'), V)),
+      c('➕', 'Nuevo pedido', () => go('nuevo'), V), c('✍️', 'Escribir pedido', () => go('importar'), V), c('💰', 'Cobros', () => go('cobros'), V), c('🧮', 'Deudas', () => go('deudas'), V)),
     ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null),
     ...g('Compras y mercancía', puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, puedeCompras() ? c('💶', 'Precios de compra', () => go('precios'), A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
@@ -1979,7 +1979,7 @@ function vistaNuevo() {
     toast('Pedido guardado', 'ok'); state.fecha = nuevo.fecha; go('lista');
   }
   raiz.append(
-    h('button', { class: 'ghost', style: 'width:100%;margin-bottom:10px', onclick: () => go('importar') }, '📲 Pegar pedido de WhatsApp'),
+    h('button', { class: 'ghost', style: 'width:100%;margin-bottom:10px', onclick: () => go('importar') }, '✍️ Escribir pedido (texto o WhatsApp)'),
     h('label', { class: 'campo' }, 'Cliente'), cliBox, atajos,
     h('label', { class: 'campo', style: 'margin-top:10px' }, 'Fecha de entrega', fechaInp),
     h('label', { class: 'campo' }, 'Productos'), lineasBox, prodBox,
@@ -2798,11 +2798,16 @@ function vistaDeudas() {
 }
 
 /*WA-INICIO*/
-/* ---------- Importación de pedidos desde texto (WhatsApp): interpretación y reconocimiento de productos ---------- */
-const WA_UNIDADES = { kg: 'kg', kgs: 'kg', kilo: 'kg', kilos: 'kg', kilogramo: 'kg', kilogramos: 'kg', caja: 'caja', cajas: 'caja', saco: 'saco', sacos: 'saco', malla: 'saco', mallas: 'saco', manojo: 'manojo', manojos: 'manojo', bolsa: 'bolsa', bolsas: 'bolsa', bandeja: 'bandeja', bandejas: 'bandeja', ud: 'pieza', uds: 'pieza', und: 'pieza', unds: 'pieza', unidad: 'pieza', unidades: 'pieza', pieza: 'pieza', piezas: 'pieza', pza: 'pieza', pzas: 'pieza' };
-const WA_NUMEROS = { un: 1, uno: 1, una: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10, once: 11, doce: 12, trece: 13, catorce: 14, quince: 15, veinte: 20, veinticinco: 25, treinta: 30, cuarenta: 40, cincuenta: 50, cien: 100, medio: 0.5, media: 0.5 };
-const WA_RUIDO = new Set('de del la el los las lo unos unas por favor hola buenas buenos dias tardes noches gracias ponme ponedme pon necesito necesitamos necesitaria quiero queremos quisiera mandame mandar manda mandadme enviame traeme dame ademas tambien para con en y e o mas que si me nos se puedes podeis podrias algo saludos ok vale pedido pedir otro otra al a es esta estan hay'.split(' '));
+/* ---------- Pedido inteligente por texto: interpretación de mensajes y reconocimiento de clientes y productos ---------- */
+const WA_UNIDADES = { kg: 'kg', kgs: 'kg', kilo: 'kg', kilos: 'kg', kilogramo: 'kg', kilogramos: 'kg', k: 'kg', g: 'g', gr: 'g', grs: 'g', gramo: 'g', gramos: 'g', caja: 'caja', cajas: 'caja', saco: 'saco', sacos: 'saco', malla: 'saco', mallas: 'saco', manojo: 'manojo', manojos: 'manojo', bolsa: 'bolsa', bolsas: 'bolsa', bandeja: 'bandeja', bandejas: 'bandeja', ud: 'pieza', uds: 'pieza', und: 'pieza', unds: 'pieza', u: 'pieza', unidad: 'pieza', unidades: 'pieza', pieza: 'pieza', piezas: 'pieza', pza: 'pieza', pzas: 'pieza', docena: 'docena', docenas: 'docena' };
+const WA_UNI_CORTAS = new Set(['k', 'g', 'u', 'gr', 'grs']);
+const WA_NUM1 = { un: 1, uno: 1, una: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10, once: 11, doce: 12, trece: 13, catorce: 14, quince: 15, dieciseis: 16, diecisiete: 17, dieciocho: 18, diecinueve: 19, veinte: 20, veintiuno: 21, veintiun: 21, veintiuna: 21, veintidos: 22, veintitres: 23, veinticuatro: 24, veinticinco: 25, veintiseis: 26, veintisiete: 27, veintiocho: 28, veintinueve: 29, treinta: 30, cuarenta: 40, cincuenta: 50, sesenta: 60, setenta: 70, ochenta: 80, noventa: 90, cien: 100, ciento: 100, doscientos: 200, trescientos: 300, cuatrocientos: 400, quinientos: 500, medio: 0.5, media: 0.5 };
+const WA_DECENAS = new Set([30, 40, 50, 60, 70, 80, 90]);
+const WA_RUIDO = new Set('de del la el los las lo unos unas por favor hola buenas buenos dias tardes noches gracias ponme ponedme pon necesito necesitamos necesitaria necesita necesitan quiero queremos quiere quieren quisiera pide piden encarga encargan lleva llevan mandame mandar manda mandadme enviame traeme dame ademas tambien para con en y e o mas que si me nos se puedes podeis podrias algo saludos ok vale pedido pedir otro otra al a es esta estan hay apunta apuntame anota anotame pedidos'.split(' '));
+const WA_CORR = new Set(['perdon', 'perdona', 'perdone', 'digo', 'corrijo', 'rectifico', 'mejor']);
 const WA_DIAS = { domingo: 0, lunes: 1, martes: 2, miercoles: 3, jueves: 4, viernes: 5, sabado: 6 };
+const WA_MESES = { enero: 0, febrero: 1, marzo: 2, abril: 3, mayo: 4, junio: 5, julio: 6, agosto: 7, septiembre: 8, setiembre: 8, octubre: 9, noviembre: 10, diciembre: 11 };
+const WA_ESPEC = new Set(['cal', 'calibre', 'gr', 'kg', 'grs', 'env', 'x', 'ud', 'uds']);
 const waSin = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 function waLlave(w) {
   w = waSin(w).replace(/[^a-z0-9]/g, ''); if (!w) return '';
@@ -2827,9 +2832,13 @@ function waSimTok(q, p) {
   if (L >= 4 && dist === 1) return 0.85; if (L >= 7 && dist === 2) return 0.74; return 0;
 }
 const waPalabras = t => (waSin(t).match(/[a-z0-9]+/g) || []).filter(w => !WA_RUIDO.has(w));
-function waIndice(productos) {
-  return productos.map(p => {
-    const vars = [p.nombre].concat(Array.isArray(p.alias) ? p.alias : []).filter(Boolean).map(v => { const ks = waPalabras(v).map(waLlave).filter(Boolean); return { texto: v, ks }; }).filter(v => v.ks.length);
+/* Índice de búsqueda. Sirve para productos y para clientes: cada elemento necesita .nombre y, si quiere, .alias (lista de textos) */
+function waIndice(elementos) {
+  return elementos.map(p => {
+    const vars = [p.nombre].concat(Array.isArray(p.alias) ? p.alias : []).filter(Boolean).map(v => {
+      const todas = waPalabras(v); let util = todas.filter(w => !/\d/.test(w) && !WA_ESPEC.has(w)); if (!util.length) util = todas;
+      return { texto: v, ks: util.map(waLlave).filter(Boolean), drop: todas.length - util.length };
+    }).filter(v => v.ks.length);
     return { p, vars };
   });
 }
@@ -2839,66 +2848,136 @@ function waPuntua(qks, v) {
   if (!ok) return 0;
   const covQ = suma / qks.length, covP = suma / v.ks.length; let sc = covQ * 0.75 + covP * 0.25;
   if (ok < qks.length) sc *= 0.7;
-  return sc;
+  return sc - 0.03 * Math.min(v.drop || 0, 3);
 }
-/* Devuelve { estado: ok|dudoso|ambiguo|noenc, producto, cand:[{p,score}] } */
+/* Devuelve { estado: ok|dudoso|ambiguo|noenc, producto, cand:[{p,score}] }.
+   Los elementos con activo === false se ofrecen, pero nunca se eligen solos si hay uno activo igual de bueno. */
 function waBuscarProducto(nombre, indice) {
   const qks = waPalabras(nombre).map(waLlave).filter(Boolean); if (!qks.length) return { estado: 'noenc', cand: [] };
-  const res = indice.map(it => { let mejor = 0; it.vars.forEach(v => { const s = waPuntua(qks, v); if (s > mejor) mejor = s; }); return { p: it.p, score: mejor }; }).filter(x => x.score >= 0.45).sort((a, b) => b.score - a.score || a.p.nombre.length - b.p.nombre.length);
+  const res = indice.map(it => { let mejor = 0; it.vars.forEach(v => { const s = waPuntua(qks, v); if (s > mejor) mejor = s; }); return { p: it.p, score: mejor }; }).filter(x => x.score >= 0.45)
+    .sort((a, b) => b.score - a.score || ((b.p.activo === false ? 0 : 1) - (a.p.activo === false ? 0 : 1)) || String(a.p.nombre).length - String(b.p.nombre).length);
   if (!res.length || res[0].score < 0.6) return { estado: 'noenc', cand: res.slice(0, 5) };
-  const c0 = res[0], c1 = res[1];
-  if (c1 && c1.score >= c0.score - 0.06) return { estado: 'ambiguo', cand: res.filter(x => x.score >= c0.score - 0.3).slice(0, 6) };
+  const c0 = res[0]; if (c0.score >= 0.99 && (!res[1] || res[1].score <= c0.score - 0.025)) return { estado: 'ok', producto: c0.p, cand: res.slice(0, 5), score: c0.score };
+  const grupo = res.filter(x => x.score >= c0.score - 0.06);
+  if (grupo.length > 1) {
+    const activos = grupo.filter(x => x.p.activo !== false);
+    if (activos.length === 1) return { estado: 'dudoso', producto: activos[0].p, cand: res.slice(0, 6), score: activos[0].score, porActivo: true };
+    return { estado: 'ambiguo', cand: res.filter(x => x.score >= c0.score - 0.3).slice(0, 6) };
+  }
   return { estado: c0.score >= 0.9 ? 'ok' : 'dudoso', producto: c0.p, cand: res.slice(0, 5), score: c0.score };
 }
 function waSumaDias(d, n) { const x = new Date(d.getTime()); x.setDate(x.getDate() + n); return x; }
 function waISO(d) { return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
-/* Extrae fecha de entrega e instrucción de repetir; devuelve { texto sin esas frases, fecha, repetir } */
-function waFrases(texto, ahora) {
-  let t = texto, fecha = null, repetir = null, fraseFecha = '';
-  const s = () => waSin(t); const quita = m => { const ini = m.index, fin = m.index + m[0].length; t = t.slice(0, ini) + ' ' + t.slice(fin); };
-  const buscaEn = re => { const m = re.exec(s()); return m; };
+const waMeses = '(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)';
+const waDiasRe = '(lunes|martes|miercoles|jueves|viernes|sabado|domingo)';
+/* Quita del texto las frases de fecha de entrega y la instrucción de repetir un pedido anterior */
+function waFecha(texto, ahora) {
+  let t = texto, repetir = null; const frases = []; const base = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate()); const cand = {};
+  const quita = m => { t = t.slice(0, m.index) + ' ' + t.slice(m.index + m[0].length); };
+  const busca = re => re.exec(waSin(t));
   let m;
-  if ((m = buscaEn(/\b(lo\s+mismo|igual|como|idem|lo\s+de)\s*(que|de|del)?\s*(la\s+)?semana\s+(pasada|anterior)\b/))) { repetir = 'semana'; quita(m); }
-  else if ((m = buscaEn(/\b(lo\s+de\s+siempre|lo\s+habitual|el\s+habitual|lo\s+mismo\s+de\s+siempre|lo\s+mismo\s+que\s+siempre)\b/))) { repetir = 'ultimo'; quita(m); }
-  else if ((m = buscaEn(/\b(lo\s+mismo|igual|idem)\s+(que\s+)?(ayer|el\s+ultimo|el\s+anterior|la\s+ultima\s+vez|el\s+otro\s+dia|la\s+otra\s+vez)\b/))) { repetir = 'ultimo'; quita(m); }
-  else if ((m = buscaEn(/\blo\s+mismo\b/))) { repetir = 'ultimo'; quita(m); }
-  const base = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
-  if ((m = buscaEn(/\b(para\s+)?(el\s+)?pasado\s+manana\b/))) { fecha = waSumaDias(base, 2); fraseFecha = m[0].trim(); quita(m); }
-  else if ((m = buscaEn(/\b(para\s+)?(el\s+dia\s+de\s+)?manana\b/))) { fecha = waSumaDias(base, 1); fraseFecha = m[0].trim(); quita(m); }
-  else if ((m = buscaEn(/\bpara\s+hoy\b/))) { fecha = base; fraseFecha = m[0].trim(); quita(m); }
-  else if ((m = buscaEn(/\b(para\s+)?(el\s+)?(proximo\s+)?(lunes|martes|miercoles|jueves|viernes|sabado|domingo)\b(?!\s+pasado)/))) {
-    const dw = WA_DIAS[m[4]]; let n = (dw - base.getDay() + 7) % 7; if (n === 0) n = 7; fecha = waSumaDias(base, n); fraseFecha = m[0].trim(); quita(m);
+  if ((m = busca(/\b(lo\s+mismo|igual|como|idem|lo\s+de)\s*(que|de|del)?\s*(la\s+)?semana\s+(pasada|anterior)\b/))) { repetir = 'semana'; quita(m); }
+  else if ((m = busca(/\b(lo\s+de\s+siempre|lo\s+habitual|el\s+habitual|lo\s+mismo\s+de\s+siempre|lo\s+mismo\s+que\s+siempre)\b/))) { repetir = 'ultimo'; quita(m); }
+  else if ((m = busca(/\b(lo\s+mismo|igual|idem)\s+(que\s+)?(ayer|el\s+ultimo|el\s+anterior|la\s+ultima\s+vez|el\s+otro\s+dia|la\s+otra\s+vez)\b/))) { repetir = 'ultimo'; quita(m); }
+  else if ((m = busca(/\blo\s+mismo\b/))) { repetir = 'ultimo'; quita(m); }
+  const sig = (dia, mes) => { let f = new Date(base.getFullYear(), mes, dia); if (f < base) f = new Date(base.getFullYear() + 1, mes, dia); return f; };
+  while ((m = busca(new RegExp('\\b(?:para\\s+)?(?:el\\s+)?(?:dia\\s+)?(\\d{1,2})\\s+de\\s+' + waMeses + '(?:\\s+de\\s+(\\d{4}))?\\b')))) {
+    const dia = Number(m[1]), mes = WA_MESES[m[2]]; const f = m[3] ? new Date(Number(m[3]), mes, dia) : sig(dia, mes);
+    if (dia >= 1 && dia <= 31 && !cand.exp) { cand.exp = f; frases.push(m[0].trim()); } quita(m);
   }
-  else if ((m = buscaEn(/\bpara\s+el\s+(\d{1,2})(?:[\/\-.](\d{1,2}))?(?![\d,.]*\s*(kg|kilo|caja|saco|uds|unidad))\b/))) {
-    const dia = Number(m[1]); let mes = m[2] ? Number(m[2]) - 1 : base.getMonth(); let anio = base.getFullYear();
-    let f = new Date(anio, mes, dia); if (f < base) { if (m[2]) f = new Date(anio + 1, mes, dia); else f = new Date(anio, mes + 1, dia); }
-    if (dia >= 1 && dia <= 31) { fecha = f; fraseFecha = m[0].trim(); quita(m); }
+  while ((m = busca(/\b(?:para\s+el|el\s+dia|para\s+dia|dia|del)\s+(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\b/))) {
+    const dia = Number(m[1]), mes = Number(m[2]) - 1; let f = m[3] ? new Date(m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3]), mes, dia) : sig(dia, mes);
+    if (dia >= 1 && dia <= 31 && mes >= 0 && mes <= 11 && !cand.exp) { cand.exp = f; frases.push(m[0].trim()); } quita(m);
   }
-  return { texto: t, fecha: fecha ? waISO(fecha) : null, repetir, fraseFecha };
+  if ((m = busca(/\b(?:para\s+)?(?:el\s+)?pasado\s+manana\b/))) { cand.rel = waSumaDias(base, 2); frases.push(m[0].trim()); quita(m); }
+  while ((m = busca(/(?<!\b(?:la|esta)\s)\b(?:para\s+)?manana\b/))) { if (!cand.rel) { cand.rel = waSumaDias(base, 1); frases.push(m[0].trim()); } quita(m); }
+  if ((m = busca(/\bpara\s+hoy\b/))) { if (!cand.rel) cand.rel = base; frases.push(m[0].trim()); quita(m); }
+  if ((m = busca(new RegExp('\\b(?:para\\s+)?(?:el\\s+)?(?:proximo\\s+)?' + waDiasRe + '(?:\\s+(?:que\\s+viene|proximo|siguiente))?\\b(?!\\s+pasado)')))) {
+    const dw = WA_DIAS[m[1]]; let n = (dw - base.getDay() + 7) % 7; if (n === 0) n = 7; cand.dia = waSumaDias(base, n); frases.push(m[0].trim()); quita(m);
+  }
+  if (!cand.exp && (m = busca(/\bpara\s+el\s+(\d{1,2})\b(?!\s*(?:kg|kilo|caja|saco|uds|unidad|de))/))) {
+    const dia = Number(m[1]); if (dia >= 1 && dia <= 31) { let f = new Date(base.getFullYear(), base.getMonth(), dia); if (f < base) f = new Date(base.getFullYear(), base.getMonth() + 1, dia); cand.exp = f; frases.push(m[0].trim()); quita(m); }
+  }
+  const f = cand.exp || cand.dia || cand.rel || null; const avisos = [];
+  if (cand.exp && (cand.rel || cand.dia) && waISO(cand.exp) !== waISO(cand.rel || cand.dia)) avisos.push('El mensaje da dos fechas distintas; he usado la fecha escrita con día y mes. Compruébala.');
+  return { texto: t, fecha: f ? waISO(f) : null, repetir, fraseFecha: frases.join(' · '), avisos };
+}
+/* Cambia números escritos con letras por cifras (solo para detectar horas) */
+function waDigitaliza(s) {
+  const w = s.split(/(\s+)/); const out = [];
+  for (let i = 0; i < w.length; i++) {
+    const a = w[i]; const n = WA_NUM1[a];
+    if (n != null && n >= 1 && n !== 0.5 && !/\s/.test(a)) {
+      let v = n; if (WA_DECENAS.has(n) && w[i + 1] && /\s/.test(w[i + 1]) && w[i + 2] === 'y' && WA_NUM1[w[i + 4]] >= 1 && WA_NUM1[w[i + 4]] <= 9) { v = n + WA_NUM1[w[i + 4]]; i += 4; }
+      out.push(String(v));
+    } else out.push(a);
+  }
+  return out.join('');
+}
+/* Horas: «antes de las 9», «a las 8:30», «entre las 8 y las 9» */
+function waHora(trozo) {
+  let s = waDigitaliza(waSin(trozo)); const res = { limite: null, desde: null, hasta: null, texto: trozo }; let m;
+  const hh = (h, mi, mer) => { h = Number(h); mi = mi ? Number(mi) : 0; if (mer && /tarde|noche|pm/.test(mer) && h < 12) h += 12; if (h > 23 || mi > 59) return null; return String(h).padStart(2, '0') + ':' + String(mi).padStart(2, '0'); };
+  const T = '(?:la\\s+una|las?\\s+(\\d{1,2}))(?:\\s*(?::|h|\\.|y)?\\s*(\\d{2}|media|cuarto))?(?:\\s*(?:h\\b|horas))?';
+  const M = '(?:\\s+(?:de\\s+la\\s+|por\\s+la\\s+|en\\s+la\\s+)?(manana|tarde|noche|am|pm))?';
+  const mi = x => x === 'media' ? '30' : x === 'cuarto' ? '15' : x;
+  if ((m = new RegExp('\\bentre\\s+' + T + '\\s+y\\s+' + T + M).exec(s))) { res.desde = hh(m[1] || 1, mi(m[2]), m[5]); res.hasta = hh(m[3] || 1, mi(m[4]), m[5]); }
+  else if ((m = new RegExp('\\b(?:antes\\s+de|hasta|como\\s+tarde\\s+a)\\s+' + T + M).exec(s))) { res.limite = hh(m[1] || 1, mi(m[2]), m[3]); }
+  else if ((m = new RegExp('\\b(?:a|sobre|hacia)\\s+' + T + M).exec(s)) && /\d|la\s+una/.test(m[0])) { res.desde = hh(m[1] || 1, mi(m[2]), m[3]); }
+  else m = null;
+  if (m) res.texto = s.slice(0, m.index) + ' ' + s.slice(m.index + m[0].length);
+  return res;
+}
+const waEsObs = tr => {
+  const s = waDigitaliza(waSin(tr)); const toks = waTokens(tr);
+  for (let i = 0; i < toks.length - 1; i++) if (toks[i].tipo === 'num' && toks[i + 1].tipo === 'uni') return false;
+  return /^\s*(entreg|dej|avis|llam|ojo\b|import|no olvid|recuerd|tocar|timbr|descarg|subir|bajar|portal|puerta|nota\b|observ|urgente)/.test(s) || /(puerta\s+(trasera|principal|de atras|del almacen|de servicio)|antes de las|antes de la una|despues de las|a primera hora|primera hora|no antes|llamar (al|a la)|\bavisar\b|\btimbre\b|\bportal\b)/.test(s) || /^\s*(a|sobre|hacia)\s+las\s+\d/.test(s) || /^\s*entre\s+las\s+\d/.test(s);
+};
+/* Frase del cliente: «pedido para Florencio», «Florencio necesita…», «cliente: X» */
+function waClienteFrase(texto) {
+  const s = waSin(texto); let m, ini, fin, frase = null;
+  const noFecha = f => !/^(manana|pasado|hoy|el\s+(lunes|martes|miercoles|jueves|viernes|sabado|domingo)|\d)/.test(f.trim());
+  m = /\b(?:(?:apunta(?:me)?|anota(?:me)?|pon(?:me)?|toma(?:me)?(?:\s+nota)?|hazme|haz|crea|nuevo|un|el)\s+)*pedido\s+(?:de|para|a\s+nombre\s+de|del\s+cliente)\s+(?:el\s+|la\s+|los\s+|las\s+)?(.+?)(?=\s*[,.;:\n]|\s+para\s+(?:el|la|manana|pasado|hoy|\d)|\s+(?:pasado\s+manana|manana|hoy)\b|\s+(?:entre|antes|hasta|sobre|a\s+las?|el\s+(?:lunes|martes|miercoles|jueves|viernes|sabado|domingo)|\d{1,2}\s+de\s+\w+)\b|\s+(?:necesita|necesitan|quiere|quieren|pide|piden|encarga|lleva)\b|\s+(?:con|que)\b|$)/.exec(s);
+  if (m && noFecha(m[1])) { frase = m[1]; ini = m.index; fin = m.index + m[0].length; }
+  if (!frase) { m = /\b(?:cliente|de\s+parte\s+de|para\s+el\s+cliente)\s*:?\s+(.+?)(?=\s*[,.;:\n]|$)/.exec(s); if (m && noFecha(m[1])) { frase = m[1]; ini = m.index; fin = m.index + m[0].length; } }
+  if (!frase) { m = /^\s*(?:hola[,.\s]+)?(?:buenos\s+dias[,.\s]+|buenas[,.\s]+)?([a-z][a-z0-9 ]{1,40}?)\s+(?:necesita|necesitan|quiere|quieren|pide|piden|encarga|encargan|lleva)\b/.exec(s); if (m && noFecha(m[1]) && waPalabras(m[1]).length) { frase = m[1]; ini = s.indexOf(m[1]); fin = ini + m[1].length; } }
+  if (!frase) return { frase: null, texto: texto };
+  return { frase: frase.trim(), texto: texto.slice(0, ini) + ' ' + texto.slice(fin) };
 }
 function waTokens(chunk) {
   const out = []; const re = /(\d+\s*\/\s*\d+)|(\d+(?:[.,]\d+)?)|([A-Za-zÀ-ÿñÑ]+)/g; let m;
   while ((m = re.exec(chunk))) {
     if (m[1]) { const [a, b] = m[1].split('/').map(Number); out.push({ t: m[1], tipo: 'num', v: b ? a / b : null }); }
     else if (m[2]) out.push({ t: m[2], tipo: 'num', v: parseFloat(m[2].replace(',', '.')) });
-    else { const w = waSin(m[3]); if (WA_NUMEROS[w] != null) out.push({ t: m[3], tipo: 'num', v: WA_NUMEROS[w], palabra: true }); else if (WA_UNIDADES[w]) out.push({ t: m[3], tipo: 'uni', v: WA_UNIDADES[w] }); else if (WA_RUIDO.has(w)) out.push({ t: m[3], tipo: 'ruido' }); else out.push({ t: m[3], tipo: 'pal' }); }
+    else {
+      const w = waSin(m[3]); const prev = out[out.length - 1];
+      if (WA_NUM1[w] != null) out.push({ t: m[3], tipo: 'num', v: WA_NUM1[w], palabra: true });
+      else if (WA_UNIDADES[w] && (!WA_UNI_CORTAS.has(w) || (prev && prev.tipo === 'num'))) out.push({ t: m[3], tipo: 'uni', v: WA_UNIDADES[w] });
+      else if (WA_CORR.has(w)) out.push({ t: m[3], tipo: 'corr' });
+      else if (w === 'y') out.push({ t: m[3], tipo: 'ruido', y: true });
+      else if (WA_RUIDO.has(w)) out.push({ t: m[3], tipo: 'ruido' }); else out.push({ t: m[3], tipo: 'pal' });
+    }
+  }
+  /* «cuarenta y cinco» → 45 */
+  for (let i = 0; i < out.length - 2; i++) {
+    if (out[i].tipo === 'num' && out[i].palabra && WA_DECENAS.has(out[i].v) && out[i + 1].y && out[i + 2].tipo === 'num' && out[i + 2].palabra && out[i + 2].v >= 1 && out[i + 2].v <= 9) { out[i] = { t: out[i].t + ' y ' + out[i + 2].t, tipo: 'num', v: out[i].v + out[i + 2].v, palabra: true }; out.splice(i + 1, 2); }
   }
   return out;
 }
-function waItemsDeTrozo(chunk) {
-  const toks = waTokens(chunk); const items = []; let cur = { pre: [], post: [], qty: null, unit: null, raw: [] };
+function waItemsDeTrozo(chunk, corrInicial) {
+  const toks = waTokens(chunk); const items = []; let cur = { pre: [], post: [], qty: null, unit: null, raw: [], corr: !!corrInicial };
   const vacio = c => c.qty == null && !c.unit && !c.pre.length && !c.post.length;
-  const cierra = () => { if (!vacio(cur)) items.push(cur); cur = { pre: [], post: [], qty: null, unit: null, raw: [] }; };
+  const cierra = () => { if (!vacio(cur)) items.push(cur); cur = { pre: [], post: [], qty: null, unit: null, raw: [], corr: false }; };
   for (let i = 0; i < toks.length; i++) {
     const k = toks[i], ant = toks[i - 1];
+    if (k.tipo === 'corr') { if (!vacio(cur)) cierra(); cur.corr = true; continue; }
     if (k.tipo === 'num') {
-      if (k.palabra && k.v === 0.5 && cur.qty != null && cur.unit && ant && waSin(ant.t) === 'y') { cur.qty += 0.5; cur.raw.push(k.t); continue; }
-      if (k.palabra && toks[i + 1] && toks[i + 1].tipo === 'pal' && k.v !== 0.5 && k.v < 100 && cur.qty == null && false) { }
+      if (k.palabra && k.v === 0.5 && cur.qty != null && cur.unit && ant && ant.y) { cur.qty += 0.5; cur.raw.push(k.t); continue; }
       if (cur.qty != null) cierra();
       cur.qty = k.v; cur.raw.push(k.t);
     } else if (k.tipo === 'uni') {
       if (cur.unit && cur.qty != null) cierra();
-      if (cur.unit == null) { cur.unit = k.v; if (cur.qty == null) cur.qty = 1, cur.qtyImplicita = true; }
+      if (cur.unit == null) { cur.unit = k.v; if (cur.qty == null) { cur.qty = 1; cur.qtyImplicita = true; } }
       cur.raw.push(k.t);
     } else if (k.tipo === 'pal') {
       if (cur.qty != null && cur.pre.length) cierra();
@@ -2906,18 +2985,47 @@ function waItemsDeTrozo(chunk) {
     } else cur.raw.push(k.t);
   }
   cierra();
-  return items.map(c => ({ raw: c.raw.join(' '), nombre: c.pre.concat(c.post).join(' '), qty: c.qty, unit: c.unit, qtyImplicita: !!c.qtyImplicita }));
+  return items.map(c => {
+    let qty = c.qty, unit = c.unit;
+    if (unit === 'g' && qty != null) { qty = qty / 1000; unit = 'kg'; } else if (unit === 'docena' && qty != null) { qty = qty * 12; unit = 'pieza'; }
+    return { raw: c.raw.join(' '), nombre: c.pre.concat(c.post).join(' '), qty, unit, qtyImplicita: !!c.qtyImplicita, corr: !!c.corr };
+  });
 }
 /* Interpreta el mensaje completo */
 function waInterpretar(texto, ahora) {
-  ahora = ahora || new Date();
-  const fr = waFrases(texto, ahora); let t = fr.texto; const ignorado = [];
-  let trozos;
-  if (t.indexOf('#') >= 0) { const partes = t.split('#'); const cab = partes.shift(); if (cab.trim()) ignorado.push(cab.trim()); trozos = partes; }
-  else trozos = t.split(/[\n;]+|,(?!\d)|(?:^|\s)[-•*]\s+/);
-  const items = [];
-  trozos.forEach(tr => { if (!tr.trim()) return; const its = waItemsDeTrozo(tr); if (!its.length) { ignorado.push(tr.trim()); return; } its.forEach(x => { x.dePorAlmohadilla = t.indexOf('#') >= 0; items.push(x); }); });
-  return { fecha: fr.fecha, fraseFecha: fr.fraseFecha, repetir: fr.repetir, items, ignorado };
+  ahora = ahora || new Date(); const avisos = []; const observaciones = []; const hora = { limite: null, desde: null, hasta: null };
+  const cf = waClienteFrase(texto); let t = cf.texto;
+  const fr = waFecha(t, ahora); t = fr.texto; fr.avisos.forEach(a => avisos.push(a));
+  const conAlmohadilla = t.indexOf('#') >= 0; const ignorado = []; let trozos;
+  if (conAlmohadilla) { const partes = t.split('#'); const cab = partes.shift(); if (waPalabras(cab).length) ignorado.push(cab.trim()); trozos = partes; }
+  else trozos = t.split(/[\n;]+|\.(?!\d)|,(?!\d)|(?:^|\s)[-•*]\s+/);
+  const items = []; let pendCorr = false;
+  const ponHora = h => { if (h.limite && !hora.limite) hora.limite = h.limite; if (h.desde && !hora.desde) hora.desde = h.desde; if (h.hasta && !hora.hasta) hora.hasta = h.hasta; };
+  trozos.forEach(tr => {
+    if (!tr.trim()) return;
+    if (waEsObs(tr)) { observaciones.push(tr.trim()); ponHora(waHora(tr)); return; }
+    { const hh = waHora(tr); if (hh.limite || hh.desde) { ponHora(hh); tr = hh.texto; if (!tr.trim()) return; } }
+    const toks = waTokens(tr); if (toks.length && toks.every(k => k.tipo === 'corr' || k.tipo === 'ruido')) { if (toks.some(k => k.tipo === 'corr')) pendCorr = true; if (!toks.some(k => k.tipo === 'corr')) ignorado.push(tr.trim()); return; }
+    const its = waItemsDeTrozo(tr, pendCorr); pendCorr = false;
+    if (!its.length) { ignorado.push(tr.trim()); return; }
+    its.forEach(x => { x.dePorAlmohadilla = conAlmohadilla; items.push(x); });
+  });
+  /* correcciones: «cinco kilos de tomate, perdón, ocho kilos» */
+  const fin = [];
+  items.forEach(it => {
+    const prev = fin[fin.length - 1];
+    if (it.corr && prev) {
+      const mismo = !it.nombre || waPalabras(it.nombre).join(' ') === waPalabras(prev.nombre).join(' ') || waPalabras(prev.nombre).join(' ').includes(waPalabras(it.nombre).join(' '));
+      const antes = prev.qty + ' ' + (prev.unit || '');
+      if (mismo) { if (it.qty != null) { prev.qty = it.qty; prev.qtyImplicita = it.qtyImplicita; } if (it.unit) prev.unit = it.unit; prev.raw += ' → ' + it.raw; prev.corregido = true; avisos.push('Corrección entendida: «' + antes.trim() + '» pasa a ser «' + prev.qty + ' ' + (prev.unit || '') + '»' + (prev.nombre ? ' (' + prev.nombre + ')' : '') + '.'); return; }
+      fin[fin.length - 1] = Object.assign(it, { corregido: true, raw: prev.raw + ' → ' + it.raw }); avisos.push('Corrección entendida: «' + prev.nombre + '» sustituido por «' + it.nombre + '».'); return;
+    }
+    /* tamaño del envase: «2 sacos de patata de 25 kilos» */
+    if (prev && !it.nombre && it.qty != null && it.unit === 'kg' && ['saco', 'caja', 'bolsa', 'bandeja'].includes(prev.unit) && !it.corr) { prev.detalle = prev.unit + 's de ' + String(it.qty).replace('.', ',') + ' kg'; prev.raw += ' ' + it.raw; return; }
+    fin.push(it);
+  });
+  const hAviso = (hora.desde && hora.hasta) ? 'Franja de entrega: ' + hora.desde + '–' + hora.hasta : hora.limite ? 'Hora límite de entrega: ' + hora.limite : hora.desde ? 'Entrega sobre las ' + hora.desde : '';
+  return { fecha: fr.fecha, fraseFecha: fr.fraseFecha, repetir: fr.repetir, items: fin, ignorado, clienteFrase: cf.frase, observaciones, hora, horaTexto: hAviso, avisos };
 }
 /* Resuelve cada elemento contra el catálogo. Los que no tienen cantidad ni producto se pasan a «ignorado». */
 function waResolver(interp, indice) {
@@ -2926,9 +3034,18 @@ function waResolver(interp, indice) {
     const r = it.nombre ? waBuscarProducto(it.nombre, indice) : { estado: 'noenc', cand: [] };
     const sinCantidadReal = it.qty == null || it.qtyImplicita;
     if (r.estado === 'noenc' && sinCantidadReal && !it.dePorAlmohadilla) { ignorado.push(it.raw); return; }
-    lineas.push({ raw: it.raw, nombre: it.nombre, estado: r.estado, producto: r.producto || null, cand: r.cand, cantidad: it.qty, unidad: it.unit, qtyImplicita: it.qtyImplicita });
+    lineas.push({ raw: it.raw, nombre: it.nombre, estado: r.estado, producto: r.producto || null, cand: r.cand, cantidad: it.qty, unidad: it.unit, qtyImplicita: it.qtyImplicita, detalle: it.detalle || '', corregido: !!it.corregido, porActivo: !!r.porActivo });
   });
   return { lineas, ignorado };
+}
+/* Cliente: ok (se preselecciona) | dudoso/ambiguo (hay que elegir) | noenc */
+function waBuscarCliente(frase, indiceCli) {
+  const r = waBuscarProducto(frase, indiceCli);
+  if (r.estado === 'dudoso') {
+    const segundo = r.cand[1]; const claro = !r.porActivo && r.score >= 0.8 && (!segundo || r.score - segundo.score >= 0.15);
+    return claro ? Object.assign(r, { estado: 'ok' }) : { estado: 'ambiguo', cand: r.cand.slice(0, 6) };
+  }
+  return r;
 }
 function waHash(texto) {
   const s = waSin(texto).replace(/[^a-z0-9]+/g, ' ').trim(); let h1 = 0x811c9dc5, h2 = 5381;
@@ -2946,125 +3063,176 @@ function waClienteEnTexto(texto, clientes) {
 }
 /*WA-FIN*/
 
-/* ---------- Importar pedido desde WhatsApp (pantalla) ---------- */
+/* ---------- Pedido inteligente por texto (pantalla) ---------- */
 async function waProductos() {
   try {
     if (!navigator.onLine) throw new TypeError('network');
-    let q = await sb.from('productos').select('id,codigo,nombre,unidad_venta,unidad_precio,activo,alias').eq('activo', true).range(0, 4999);
-    if (q.error) q = await sb.from('productos').select('id,codigo,nombre,unidad_venta,unidad_precio,activo').eq('activo', true).range(0, 4999);
+    let q = await sb.from('productos').select('id,codigo,nombre,unidad_venta,unidad_precio,activo,alias').range(0, 4999);
+    if (q.error) q = await sb.from('productos').select('id,codigo,nombre,unidad_venta,unidad_precio,activo').range(0, 4999);
     if (q.error) throw q.error; LS.set('fj_wa_prod', q.data); return q.data;
   } catch (e) { if (isNetErr(e)) { const c = LS.get('fj_wa_prod', null); if (c) return c; } throw e; }
 }
 async function waClientes() {
   try {
     if (!navigator.onLine) throw new TypeError('network');
-    const q = await sb.from('clientes').select('id,codigo,nombre,nombre_comercial,forma_pago,activo').eq('activo', true).range(0, 4999); if (q.error) throw q.error; LS.set('fj_wa_cli', q.data); return q.data;
-  } catch (e) { return LS.get('fj_wa_cli', []); }
+    let q = await sb.from('clientes').select('id,codigo,nombre,nombre_comercial,forma_pago,activo,alias').range(0, 4999);
+    if (q.error) q = await sb.from('clientes').select('id,codigo,nombre,nombre_comercial,forma_pago,activo').range(0, 4999);
+    if (q.error) throw q.error; LS.set('fj_wa_cli', q.data); return q.data;
+  } catch (e) { if (isNetErr(e)) { const c = LS.get('fj_wa_cli', null); if (c) return c; } throw e; }
 }
 function aplicarCompartido() {
   try {
     const t = localStorage.getItem('fj_wa_pend_raw'); if (!t) return; localStorage.removeItem('fj_wa_pend_raw');
     if (!state.perfil) return;
-    if (!esOficina()) { setTimeout(() => toast('Solo administración puede importar pedidos de WhatsApp.', 'err'), 400); return; }
     state.view = 'importar'; state.params = { texto: t };
   } catch (e) { }
 }
 function vistaImportar() {
-  state.view = 'importar'; if (!esOficina()) { go('inicio'); return; }
-  const S = { hist: {}, cliente: null, detectado: false, fecha: hoy(), lineas: [], ignorado: [], interpretado: false, notas: '', aviso: '', repetir: null, fraseFecha: '', guardando: false, prods: null };
-  const ta = h('textarea', { rows: 6, placeholder: 'Pega aquí el mensaje de WhatsApp.\nEj.: #patata 2 sacos #tomate pera 5 kg #plátano 1 caja\nTambién vale sin # y con frases como «para mañana» o «lo mismo que la semana pasada».' }); ta.value = (state.params && state.params.texto) || '';
-  const cliBox = h('div', {}), fechaBox = h('div', {}), avisoBox = h('div', {}), lineasBox = h('div', {}), ignBox = h('div', {}), pie = h('div', {});
+  state.view = 'importar';
+  const S = { cliente: null, clienteEstado: null, clienteCand: [], clienteFrase: '', clienteManual: false, detectado: false, fecha: hoy(), fechaOk: false, fraseFecha: '', hora: { limite: '', desde: '', hasta: '' }, lineas: [], ignorado: [], avisos: [], interpretado: false, notas: '', repetir: null, guardando: false, prods: null, clis: null, hist: {}, aviso: '' };
+  const ta = h('textarea', { rows: 6, placeholder: 'Escribe o pega el pedido como lo dirías:\n«Pedido para Florencio, para mañana. Dos sacos de patatas, cinco kilos de tomate pera y una caja de calabacines. Entregar antes de las 9.»\nTambién vale con # copiado de WhatsApp.' }); ta.value = (state.params && state.params.texto) || '';
+  const cliBox = h('div', {}), fechaBox = h('div', {}), horaBox = h('div', {}), avisoBox = h('div', {}), lineasBox = h('div', {}), ignBox = h('div', {}), pie = h('div', {});
   const diaSem = f => ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'][new Date(f + 'T12:00:00').getDay()];
   const manana = () => { const d = new Date(); d.setDate(d.getDate() + 1); return hoy(d); };
-  const aprendidos = () => LS.get('fj_wa_alias', {});
-  const indice = () => waIndice(S.prods.map(p => Object.assign({}, p, { alias: (Array.isArray(p.alias) ? p.alias : []).concat(aprendidos()[p.id] || []) })));
+  const aprendidos = k => LS.get(k, {});
+  const indiceProd = () => waIndice(S.prods.map(p => Object.assign({}, p, { alias: (Array.isArray(p.alias) ? p.alias : []).concat(aprendidos('fj_wa_alias')[p.id] || []) })));
+  const indiceCli = () => waIndice(S.clis.map(c => ({ id: c.id, codigo: c.codigo, activo: c.activo, _c: c, nombre: nombreCli(c), alias: [c.nombre].concat(Array.isArray(c.alias) ? c.alias : [], aprendidos('fj_wa_alias_cli')[c.id] || []).filter(Boolean) })));
+  const uniStr = l => l.unidad || 'pieza';
 
+  function elegirCliente(c, manual) {
+    S.cliente = c; S.clienteEstado = 'ok'; S.clienteManual = !!manual; S.detectado = !manual; S.clienteCand = []; pintarCliente(); cargarHist(); ponPrecios(); pintarPie();
+  }
   function pintarCliente() {
-    if (S.cliente) { cliBox.replaceChildren(h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'nombre' }, nombreCli(S.cliente)), h('div', { class: 'sub' }, S.cliente.codigo + (S.detectado ? ' · detectado en el mensaje, compruébalo' : ''))), h('button', { class: 'ghost small', onclick: () => { S.cliente = null; S.detectado = false; pintarCliente(); pintarPie(); } }, 'Cambiar'))); return; }
-    const res = h('div', {}); const inp = h('input', { placeholder: 'Buscar cliente (nombre o código)…', oninput: debounce(async () => {
-      try { const r = await buscar('clientes', inp.value, true, 12); res.replaceChildren(r.length ? h('div', { class: 'res' }, r.map(c => h('button', { onclick: async () => { S.cliente = c; S.detectado = false; pintarCliente(); await alElegirCliente(); } }, nombreCli(c) + '  ·  ' + c.codigo))) : h('p', { class: 'sub' }, 'Sin resultados entre los clientes activos.')); } catch (e) { res.replaceChildren(h('p', { class: 'err' }, msgErr(e))); } }, 250) });
-    cliBox.replaceChildren(h('label', { class: 'campo' }, 'Cliente *'), inp, res);
+    if (S.cliente) {
+      cliBox.replaceChildren(h('label', { class: 'campo' }, 'Cliente'), h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'nombre' }, nombreCli(S.cliente)), h('div', { class: 'sub' }, S.cliente.codigo + (S.cliente.activo === false ? ' · INACTIVO: se activará al confirmar' : '') + (S.detectado ? ' · detectado en el mensaje («' + (S.clienteFrase || '') + '»), compruébalo' : ''))),
+        h('button', { class: 'ghost small', onclick: () => { S.cliente = null; S.detectado = false; S.clienteEstado = 'noenc'; pintarCliente(); pintarPie(); } }, 'Cambiar')));
+      return;
+    }
+    const kids = [h('label', { class: 'campo' }, 'Cliente *')];
+    if (S.clienteFrase && S.clienteEstado === 'ambiguo') kids.push(h('div', { class: 'sub' }, 'He leído «' + S.clienteFrase + '», pero hay varios parecidos. Elige el correcto:'), h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:6px 0' }, S.clienteCand.map(c => h('button', { class: 'chip', onclick: () => { S.clienteManual = true; recordarAliasCliente(c.p._c); elegirCliente(c.p._c, true); } }, nombreCli(c.p._c) + (c.p._c.activo === false ? ' (inactivo)' : '')))));
+    else if (S.clienteFrase && S.clienteEstado === 'noenc') kids.push(h('div', { class: 'card', style: 'background:#fee2e2;border-color:#ef4444' }, 'No encuentro ningún cliente que se llame «' + S.clienteFrase + '». Búscalo abajo o crea uno nuevo.'));
+    else if (!S.clienteFrase && S.interpretado) kids.push(h('div', { class: 'card', style: 'background:#fee2e2;border-color:#ef4444' }, 'En el mensaje no aparece el cliente. Elígelo abajo.'));
+    const res = h('div', {}); const inp = h('input', { placeholder: 'Buscar cliente (nombre o código)…', oninput: debounce(() => {
+      const t = sinTilde(limpiaBusqueda(inp.value)); if (!t) { res.replaceChildren(); return; }
+      const r = (S.clis || []).filter(c => t.split(/\s+/).every(w => sinTilde([c.nombre, c.nombre_comercial, c.codigo].filter(Boolean).join(' ')).includes(w))).sort((a, b) => (b.activo ? 1 : 0) - (a.activo ? 1 : 0)).slice(0, 12);
+      res.replaceChildren(r.length ? h('div', { class: 'res' }, r.map(c => h('button', { onclick: () => { recordarAliasCliente(c); elegirCliente(c, true); } }, nombreCli(c) + '  ·  ' + c.codigo + (c.activo ? '' : '  (inactivo)')))) : h('p', { class: 'sub' }, 'Sin resultados.'));
+    }, 200) });
+    kids.push(inp, res, h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: crearClienteNuevo }, '+ Crear cliente nuevo'));
+    cliBox.replaceChildren(...kids);
+  }
+  function recordarAliasCliente(c) { S.aliasCli = { id: c.id, texto: S.clienteFrase }; }
+  function crearClienteNuevo() {
+    const cod = h('input', { placeholder: 'Código (ej. FLOR2)', value: '' }), nom = h('input', { placeholder: 'Nombre', value: S.clienteFrase ? S.clienteFrase.replace(/\b\w/g, x => x.toUpperCase()) : '' }), fp = h('select', {}, [['credito', 'Crédito'], ['contado', 'Contado']].map(([v, n]) => h('option', { value: v }, n))); let cerrar;
+    cerrar = hoja('Cliente nuevo', h('div', {}, h('label', { class: 'campo' }, 'Código *', cod), h('label', { class: 'campo' }, 'Nombre *', nom), h('label', { class: 'campo' }, 'Forma de pago', fp),
+      h('button', { class: 'guardar', style: 'width:100%', onclick: async () => {
+        if (!cod.value.trim() || !nom.value.trim()) { toast('Escribe código y nombre', 'err'); return; }
+        const r = await sb.from('clientes').insert({ codigo: cod.value.trim(), nombre: nom.value.trim(), forma_pago: fp.value, activo: true }).select().single();
+        if (r.error) { toast(r.error.code === '23505' ? 'Ya existe un cliente con ese código.' : msgErr(r.error), 'err'); return; }
+        S.clis = (S.clis || []).concat([r.data]); cerrar(); toast('Cliente creado', 'ok'); elegirCliente(r.data, true);
+      } }, 'Crear y usar')));
   }
   function pintarFecha() {
-    const fi = h('input', { type: 'date', value: S.fecha, onchange: e => { S.fecha = e.target.value || hoy(); pintarFecha(); } });
-    fechaBox.replaceChildren(h('label', { class: 'campo' }, 'Fecha de entrega'), h('div', { class: 'chips' }, h('button', { class: 'chip' + (S.fecha === hoy() ? ' on' : ''), onclick: () => { S.fecha = hoy(); pintarFecha(); } }, 'Hoy'), h('button', { class: 'chip' + (S.fecha === manana() ? ' on' : ''), onclick: () => { S.fecha = manana(); pintarFecha(); } }, 'Mañana')), fi,
-      h('div', { class: 'sub', style: 'margin-top:4px' }, diaSem(S.fecha) + ' ' + fechaES(S.fecha) + (S.fraseFecha ? ' · leído de «' + S.fraseFecha + '»' : '')));
+    const fi = h('input', { type: 'date', value: S.fecha, onchange: e => { S.fecha = e.target.value || hoy(); S.fechaOk = true; pintarFecha(); pintarPie(); } });
+    fechaBox.replaceChildren(h('label', { class: 'campo', style: 'margin-top:10px' }, 'Fecha de entrega'), h('div', { class: 'chips' }, h('button', { class: 'chip' + (S.fechaOk && S.fecha === hoy() ? ' on' : ''), onclick: () => { S.fecha = hoy(); S.fechaOk = true; pintarFecha(); pintarPie(); } }, 'Hoy'), h('button', { class: 'chip' + (S.fechaOk && S.fecha === manana() ? ' on' : ''), onclick: () => { S.fecha = manana(); S.fechaOk = true; pintarFecha(); pintarPie(); } }, 'Mañana')), fi,
+      h('div', { class: 'sub', style: 'margin-top:4px;' + (S.fechaOk ? '' : 'color:#b91c1c;font-weight:700') }, diaSem(S.fecha) + ' ' + fechaES(S.fecha) + (S.fraseFecha ? ' · leído de «' + S.fraseFecha + '»' : S.interpretado ? ' · NO he encontrado fecha en el mensaje: elige una' : '')));
+  }
+  function pintarHora() {
+    const ti = (k, et) => h('label', { class: 'campo' }, et, h('input', { type: 'time', value: S.hora[k] || '', onchange: e => { S.hora[k] = e.target.value; } }));
+    horaBox.replaceChildren(h('div', { style: 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px' }, ti('limite', 'Hora límite'), ti('desde', 'Franja desde'), ti('hasta', 'hasta')));
   }
   async function ponPrecios() {
     if (!S.cliente) return; const ls = S.lineas.filter(l => l.producto && !l.precioManual); if (!ls.length) return;
     const pr = await preciosPara(S.cliente.id, Array.from(new Set(ls.map(l => l.producto.id))));
     ls.forEach(l => { if (pr[l.producto.id] != null) l.precio = String(pr[l.producto.id]).replace('.', ','); }); pintarLineas();
   }
-  function asigna(l, p, manual) {
-    l.producto = p; l.estado = 'ok'; l.manual = !!manual; if (!l.unidad) l.unidad = p.unidad_venta; l.unidad_precio = p.unidad_precio; l.precio = ''; l.precioManual = false;
-  }
   async function cargarHist() {
     S.hist = {}; if (!S.cliente) return;
     try { const r = await sb.from('pedidos').select('id,lineas_pedido(producto_id)').eq('cliente_id', S.cliente.id).neq('estado', 'anulado').order('fecha_entrega', { ascending: false }).limit(60); if (r.error) return; r.data.forEach(p => (p.lineas_pedido || []).forEach(l => { S.hist[l.producto_id] = (S.hist[l.producto_id] || 0) + 1; })); } catch (e) { }
     pintarLineas();
   }
-  async function alElegirCliente() { cargarHist(); await ponPrecios(); if (S.repetir) await cargarRepetir(); pintarPie(); }
+  function asigna(l, p, manual) { l.producto = p; l.estado = 'ok'; l.manual = !!manual; if (!l.unidad) { l.unidad = 'pieza'; l.sinUnidad = p.unidad_venta !== 'pieza'; } l.unidad_precio = p.unidad_precio; l.precio = ''; l.precioManual = false; }
   async function cargarRepetir() {
     if (!S.cliente || !S.repetir) return;
     try {
       let ped = null; const base = new Date(S.fecha + 'T12:00:00'); base.setDate(base.getDate() - 7);
       if (S.repetir === 'semana') { const r = await sb.from('pedidos').select('id,fecha_entrega').eq('cliente_id', S.cliente.id).eq('fecha_entrega', hoy(base)).neq('estado', 'anulado').neq('archivado', true).limit(1); if (!r.error && r.data.length) ped = r.data[0]; }
-      if (!ped) { const r = await sb.from('pedidos').select('id,fecha_entrega').eq('cliente_id', S.cliente.id).lt('fecha_entrega', S.fecha).neq('estado', 'anulado').neq('archivado', true).order('fecha_entrega', { ascending: false }).limit(1); if (!r.error && r.data.length) ped = r.data[0]; if (ped && S.repetir === 'semana') S.aviso = 'No había pedido de este cliente el ' + fechaES(hoy(base)) + '; he cogido el último que tiene (' + fechaES(ped.fecha_entrega) + ').'; }
+      let aviso = '';
+      if (!ped) { const r = await sb.from('pedidos').select('id,fecha_entrega').eq('cliente_id', S.cliente.id).lt('fecha_entrega', S.fecha).neq('estado', 'anulado').neq('archivado', true).order('fecha_entrega', { ascending: false }).limit(1); if (!r.error && r.data.length) ped = r.data[0]; if (ped && S.repetir === 'semana') aviso = 'No había pedido de este cliente el ' + fechaES(hoy(base)) + '; he cogido el último que tiene (' + fechaES(ped.fecha_entrega) + '). '; }
       if (!ped) { S.aviso = 'Este cliente no tiene pedidos anteriores que copiar.'; S.repetir = null; pintarAviso(); return; }
       const l = await sb.from('lineas_pedido').select('cantidad_pedida,unidad_pedida,unidad_precio,productos(id,codigo,nombre,unidad_venta,unidad_precio,activo)').eq('pedido_id', ped.id); if (l.error) throw l.error;
       let n = 0; l.data.forEach(x => { const p = uno(x.productos); if (!p || p.activo === false || S.lineas.some(y => y.producto && y.producto.id === p.id)) return;
         S.lineas.push({ id: uuid(), raw: 'Copiado del pedido del ' + fechaES(ped.fecha_entrega), nombre: p.nombre, estado: 'ok', producto: p, cand: [], cantidad: String(x.cantidad_pedida).replace('.', ','), unidad: x.unidad_pedida, unidad_precio: x.unidad_precio, precio: '', copiada: true }); n++; });
-      S.aviso = (S.aviso ? S.aviso + ' ' : '') + 'Se han copiado ' + n + ' líneas del pedido del ' + fechaES(ped.fecha_entrega) + '. Revísalas.'; S.repetir = null; await ponPrecios(); pintarAviso(); pintarLineas();
+      S.aviso = aviso + 'Se han copiado ' + n + ' líneas del pedido del ' + fechaES(ped.fecha_entrega) + '. Revísalas.'; S.repetir = null; await ponPrecios(); pintarAviso(); pintarLineas();
     } catch (e) { toast(msgErr(e), 'err'); }
   }
   async function interpretar() {
-    const texto = ta.value; if (!texto.trim()) { toast('Pega primero el mensaje', 'err'); return; }
-    try { if (!S.prods) S.prods = await waProductos(); } catch (e) { toast(msgErr(e), 'err'); return; }
-    const it = waInterpretar(texto); const r = waResolver(it, indice());
-    S.lineas = r.lineas.map(l => ({ id: uuid(), raw: l.raw, nombre: l.nombre, estado: l.estado, estadoOrigen: l.estado, producto: l.producto, cand: l.cand, cantidad: l.cantidad != null ? String(l.cantidad).replace('.', ',') : '', unidad: l.unidad || (l.producto ? l.producto.unidad_venta : null), unidad_precio: l.producto ? l.producto.unidad_precio : 'kg', precio: '' }));
-    S.ignorado = r.ignorado; S.interpretado = true; S.aviso = ''; S.repetir = it.repetir; S.hash = waHash(texto);
-    if (it.fecha) { S.fecha = it.fecha; S.fraseFecha = it.fraseFecha; } else S.fraseFecha = '';
-    if (!S.cliente) { const cl = await waClientes(); const c = waClienteEnTexto(texto, cl); if (c) { S.cliente = c; S.detectado = true; } }
-    pintarCliente(); pintarFecha();
-    if (it.repetir && !S.cliente) S.aviso = 'El mensaje pide repetir un pedido anterior: elige el cliente para copiarlo.';
+    const texto = ta.value; if (!texto.trim()) { toast('Escribe o pega primero el pedido', 'err'); return; }
+    try { if (!S.prods) S.prods = await waProductos(); if (!S.clis) S.clis = await waClientes(); } catch (e) { toast(msgErr(e), 'err'); return; }
+    const it = waInterpretar(texto); const r = waResolver(it, indiceProd());
+    S.lineas = r.lineas.map(l => { const p = l.producto; const sin = !l.unidad && l.cantidad != null; return { id: uuid(), raw: l.raw, nombre: l.nombre, estado: l.estado, estadoOrigen: l.estado, producto: p, cand: l.cand, cantidad: l.cantidad != null ? String(l.cantidad).replace('.', ',') : '', unidad: l.unidad || (sin || p ? 'pieza' : null), sinUnidad: sin && (!p || p.unidad_venta !== 'pieza'), unidad_precio: p ? p.unidad_precio : 'kg', precio: '', detalle: l.detalle, corregido: l.corregido, porActivo: l.porActivo }; });
+    S.ignorado = r.ignorado; S.interpretado = true; S.aviso = ''; S.repetir = it.repetir; S.avisos = it.avisos.slice(); S.aliasCli = null;
+    S.fechaOk = !!it.fecha; if (it.fecha) { S.fecha = it.fecha; S.fraseFecha = it.fraseFecha; } else { S.fecha = hoy(); S.fraseFecha = ''; }
+    S.hora = { limite: it.hora.limite || '', desde: it.hora.desde || '', hasta: it.hora.hasta || '' };
+    S.notas = it.observaciones.join('. ');
+    notasTa.value = S.notas;
+    if (!S.clienteManual) {
+      S.cliente = null; S.detectado = false; S.clienteFrase = it.clienteFrase || ''; S.clienteEstado = null; S.clienteCand = [];
+      if (it.clienteFrase) { const c = waBuscarCliente(it.clienteFrase, indiceCli()); S.clienteEstado = c.estado; S.clienteCand = c.cand || []; if (c.estado === 'ok' && c.producto) { S.cliente = c.producto._c; S.detectado = true; } }
+      else { const c = waClienteEnTexto(texto, S.clis); if (c) { S.cliente = c; S.detectado = true; S.clienteEstado = 'ok'; S.clienteFrase = nombreCli(c); } }
+    }
+    pintarCliente(); pintarFecha(); pintarHora();
+    if (it.repetir && !S.cliente) S.aviso = 'El mensaje pide repetir un pedido anterior: elige primero el cliente para copiarlo.';
     pintarAviso(); pintarLineas(); pintarIgn(); if (S.cliente) cargarHist(); await ponPrecios(); if (S.cliente && S.repetir) await cargarRepetir(); pintarPie();
     if (!S.lineas.length && !S.repetir) toast('No he encontrado productos en el mensaje.', 'err');
   }
-  function pintarAviso() { avisoBox.replaceChildren(...(S.aviso ? [h('div', { class: 'card', style: 'background:#fef9c3;border-color:#eab308' }, S.aviso)] : [])); }
+  function pintarAviso() {
+    const a = S.avisos.concat(S.aviso ? [S.aviso] : []);
+    avisoBox.replaceChildren(...(a.length ? [h('div', { class: 'card', style: 'background:#fef9c3;border-color:#eab308' }, a.map(x => h('div', {}, '⚠ ' + x)))] : []));
+  }
   function pintarIgn() { ignBox.replaceChildren(...(S.ignorado.length ? [h('details', { class: 'card' }, h('summary', {}, 'Texto no usado (' + S.ignorado.length + ')'), ...S.ignorado.map(t => h('div', { class: 'sub' }, '· ' + t)))] : [])); }
   const ETQ = { ok: ['✔ Reconocido', 'color:#15803d'], dudoso: ['⚠ Revisa si es este', 'color:#b45309'], ambiguo: ['⚠ Elige cuál es', 'color:#b45309'], noenc: ['✖ No lo reconozco', 'color:#b91c1c'] };
   function pintarLineas() {
     lineasBox.replaceChildren(...S.lineas.map((l, i) => {
       const et = ETQ[l.estado] || ETQ.noenc;
       const cab = h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, l.producto ? l.producto.nombre : 'Sin producto'), h('div', { class: 'sub' }, '«' + l.raw + '»')), h('button', { class: 'peligro small', onclick: () => { S.lineas.splice(i, 1); pintarLineas(); pintarPie(); } }, 'Quitar'));
-      const kids = [cab, h('div', { style: 'font-weight:700;font-size:13px;margin:4px 0;' + et[1] }, l.copiada ? '↺ Copiado de un pedido anterior' : et[0])];
+      const kids = [cab, h('div', { style: 'font-weight:700;font-size:13px;margin:4px 0;' + et[1] }, l.copiada ? '↺ Copiado de un pedido anterior' : et[0] + (l.porActivo ? ' (los demás parecidos están desactivados)' : ''))];
+      if (l.producto && l.producto.activo === false) kids.push(h('div', { class: 'sub', style: 'color:#b45309' }, 'Este producto está INACTIVO: se activará al confirmar el pedido.'));
+      if (l.corregido) kids.push(h('div', { class: 'sub', style: 'color:#b45309' }, '✎ Corrección entendida: se usa la cantidad final.'));
       if (l.estado === 'ambiguo' || l.estado === 'noenc' || l.estado === 'dudoso' || l.cambiando) {
-        if (l.cand && l.cand.length) kids.push(h('div', { class: 'sub' }, l.estado === 'ambiguo' ? 'Varias opciones parecidas:' : 'Opciones parecidas:'), h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:4px 0' }, l.cand.slice().sort((a, b) => l.estado === 'ambiguo' ? ((S.hist[b.p.id] || 0) - (S.hist[a.p.id] || 0) || b.score - a.score) : 0).map(c => h('button', { class: 'chip' + (l.producto && l.producto.id === c.p.id ? ' on' : ''), onclick: () => { asigna(l, c.p, true); l.cambiando = false; ponPrecios(); pintarLineas(); pintarPie(); } }, (S.hist[c.p.id] ? '★ ' : '') + c.p.nombre))), ...(Object.keys(S.hist).length && l.cand.some(c => S.hist[c.p.id]) ? [h('div', { class: 'sub' }, '★ = este cliente ya lo ha pedido antes')] : []));
-        const res = h('div', {}); const bi = h('input', { placeholder: 'Buscar otro producto…', oninput: debounce(async () => { if (!bi.value.trim()) { res.replaceChildren(); return; } try { const r = await buscar('productos', bi.value, true, 10); res.replaceChildren(r.length ? h('div', { class: 'res' }, r.map(p => h('button', { onclick: () => { asigna(l, p, true); l.cambiando = false; ponPrecios(); pintarLineas(); pintarPie(); } }, p.nombre + ' · ' + p.codigo))) : h('p', { class: 'sub' }, 'Sin resultados entre los productos activos. Actívalo antes en Productos.')); } catch (e) { res.replaceChildren(h('p', { class: 'err' }, msgErr(e))); } }, 250) });
+        if (l.cand && l.cand.length) kids.push(h('div', { class: 'sub' }, l.estado === 'ambiguo' ? 'Varias opciones parecidas:' : 'Opciones parecidas:'), h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:4px 0' }, l.cand.slice().sort((a, b) => l.estado === 'ambiguo' ? ((S.hist[b.p.id] || 0) - (S.hist[a.p.id] || 0) || b.score - a.score) : 0).map(c => h('button', { class: 'chip' + (l.producto && l.producto.id === c.p.id ? ' on' : ''), onclick: () => { asigna(l, c.p, true); l.cambiando = false; ponPrecios(); pintarLineas(); pintarPie(); } }, (S.hist[c.p.id] ? '★ ' : '') + c.p.nombre + (c.p.activo === false ? ' (inactivo)' : ''))), ...(Object.keys(S.hist).length && l.cand.some(c => S.hist[c.p.id]) ? [h('div', { class: 'sub' }, '★ = este cliente ya lo ha pedido antes')] : [])));
+        const res = h('div', {}); const bi = h('input', { placeholder: 'Buscar otro producto…', oninput: debounce(() => { const t = sinTilde(limpiaBusqueda(bi.value)); if (!t) { res.replaceChildren(); return; }
+          const r = (S.prods || []).filter(p => t.split(/\s+/).every(w => sinTilde(p.nombre + ' ' + p.codigo).includes(w))).sort((a, b) => (b.activo ? 1 : 0) - (a.activo ? 1 : 0)).slice(0, 10);
+          res.replaceChildren(r.length ? h('div', { class: 'res' }, r.map(p => h('button', { onclick: () => { asigna(l, p, true); l.cambiando = false; ponPrecios(); pintarLineas(); pintarPie(); } }, p.nombre + ' · ' + p.codigo + (p.activo ? '' : ' (inactivo)')))) : h('p', { class: 'sub' }, 'Sin resultados.')); }, 200) });
         kids.push(bi, res);
       } else kids.push(h('button', { class: 'ghost small', onclick: () => { l.cambiando = true; pintarLineas(); } }, 'Cambiar producto'));
+      if (l.sinUnidad) kids.push(h('div', { class: 'sub', style: 'color:#b45309' }, '⚠ El mensaje no dice la unidad: he puesto «pieza». Cámbiala si son kilos, cajas…'));
       kids.push(h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px' },
         h('label', { class: 'campo' }, 'Cantidad', h('input', { type: 'text', inputmode: 'decimal', value: l.cantidad, oninput: e => { l.cantidad = e.target.value; pintarPie(); } })),
-        h('label', { class: 'campo' }, 'Unidad', h('select', { onchange: e => l.unidad = e.target.value }, UNIDADES.map(u => h('option', { value: u, selected: u === (l.unidad || (l.producto && l.producto.unidad_venta)) }, u)))),
+        h('label', { class: 'campo' }, 'Unidad', h('select', { onchange: e => { l.unidad = e.target.value; l.sinUnidad = false; } }, UNIDADES.map(u => h('option', { value: u, selected: u === uniStr(l) }, u)))),
         h('label', { class: 'campo' }, 'Se cobra por', h('select', { onchange: e => l.unidad_precio = e.target.value }, ['kg', 'unidad'].map(u => h('option', { value: u, selected: u === l.unidad_precio }, u)))),
-        h('label', { class: 'campo' }, 'Precio (€)', h('input', { type: 'text', inputmode: 'decimal', value: l.precio, placeholder: 'opcional', oninput: e => { l.precio = e.target.value; l.precioManual = true; } }))));
+        h('label', { class: 'campo' }, 'Precio (€)', h('input', { type: 'text', inputmode: 'decimal', value: l.precio, placeholder: 'opcional', oninput: e => { l.precio = e.target.value; l.precioManual = true; } }))),
+        h('label', { class: 'campo' }, 'Detalle (opcional)', h('input', { type: 'text', value: l.detalle || '', placeholder: 'Ej.: sacos de 25 kg', oninput: e => l.detalle = e.target.value })));
       return h('div', { class: 'card' }, ...kids);
     }));
   }
   function problemas() {
-    const p = []; if (!S.cliente) p.push('Elige el cliente'); if (!S.lineas.length) p.push('No hay productos');
+    const p = []; if (!S.cliente) p.push('Elige el cliente'); if (!S.fechaOk) p.push('Confirma la fecha de entrega'); if (!S.lineas.length) p.push('No hay productos');
     const amb = S.lineas.filter(l => l.estado === 'ambiguo' || l.estado === 'noenc' || !l.producto).length; if (amb) p.push('Faltan por elegir ' + amb + ' producto' + (amb > 1 ? 's' : ''));
     const sc = S.lineas.filter(l => l.producto && !(parseNum(l.cantidad) > 0)).length; if (sc) p.push('Falta la cantidad en ' + sc + ' línea' + (sc > 1 ? 's' : ''));
     const rep = {}; S.lineas.forEach(l => { if (l.producto) rep[l.producto.id] = (rep[l.producto.id] || 0) + 1; }); if (Object.values(rep).some(n => n > 1)) p.push('Hay un producto repetido: quita una de las líneas');
     return p;
   }
+  const notasTa = h('textarea', { rows: 3, placeholder: 'Observaciones del pedido (opcional)', oninput: e => S.notas = e.target.value });
   function pintarPie() {
     if (!S.interpretado) { pie.replaceChildren(); return; }
     const pr = problemas();
-    pie.replaceChildren(h('div', { style: 'margin-top:10px' }, notasTa),
+    pie.replaceChildren(h('label', { class: 'campo', style: 'margin-top:10px' }, 'Observaciones', notasTa),
       pr.length ? h('div', { class: 'card', style: 'background:#fee2e2;border-color:#ef4444;margin-top:8px' }, pr.map(x => h('div', {}, '• ' + x))) : null,
-      h('button', { style: 'width:100%;margin-top:8px', disabled: pr.length > 0 || S.guardando, onclick: guardar }, 'Revisado: guardar pedido'),
-      h('div', { class: 'sub', style: 'margin-top:6px' }, 'No se guarda nada hasta que pulses el botón. El mensaje original se conserva en el pedido.'));
+      h('button', { style: 'width:100%;margin-top:8px', disabled: pr.length > 0 || S.guardando, onclick: guardar }, 'Confirmar pedido'),
+      h('div', { style: 'display:flex;gap:8px;margin-top:8px' },
+        h('button', { class: 'ghost', style: 'flex:1', onclick: () => { ta.scrollIntoView({ behavior: 'smooth', block: 'center' }); ta.focus(); } }, 'Editar pedido'),
+        h('button', { class: 'ghost', style: 'flex:1', onclick: async () => { if (S.lineas.length && !await confirmar('¿Cancelar este pedido? Se pierde lo interpretado (no se ha guardado nada).')) return; go('nuevo'); } }, 'Cancelar')),
+      h('div', { class: 'sub', style: 'margin-top:6px' }, 'No se guarda nada hasta que pulses «Confirmar pedido». El texto original se conserva en el pedido.'));
   }
   async function guardar() {
     if (S.guardando) return; const pr = problemas(); if (pr.length) { toast(pr[0], 'err'); return; }
@@ -3079,23 +3247,32 @@ function vistaImportar() {
         const msg = comunes.length ? nombreCli(S.cliente) + ' YA tiene un pedido para el ' + fechaES(S.fecha) + ' con: ' + Array.from(new Set(comunes)).slice(0, 6).join(', ') + '. Crear otro pedido duplicaría esos productos. ¿Crearlo igualmente?' : nombreCli(S.cliente) + ' ya tiene ' + ex.data.length + ' pedido(s) para el ' + fechaES(S.fecha) + '. ¿Crear uno más?';
         if (!await confirmar(msg)) { S.guardando = false; pintarPie(); return; }
       }
-      const filas = S.lineas.map(l => ({ producto_id: l.producto.id, cantidad_pedida: parseNum(l.cantidad), unidad_pedida: l.unidad || l.producto.unidad_venta, unidad_precio: l.unidad_precio, precio: String(l.precio).trim() === '' ? null : parseNum(l.precio) }));
+      const inactivos = S.lineas.filter(l => l.producto.activo === false).map(l => l.producto); const cliInactivo = S.cliente.activo === false;
+      if (inactivos.length || cliInactivo) {
+        if (!await confirmar('Se van a ACTIVAR para poder usarlos: ' + (cliInactivo ? 'el cliente ' + nombreCli(S.cliente) + (inactivos.length ? ' y ' : '') : '') + inactivos.map(p => p.nombre).join(', ') + '. ¿Continuar?')) { S.guardando = false; pintarPie(); return; }
+        if (cliInactivo) { const a = await sb.from('clientes').update({ activo: true }).eq('id', S.cliente.id); if (a.error) { S.guardando = false; pintarPie(); toast('No se pudo activar el cliente: ' + msgErr(a.error), 'err'); return; } }
+        for (const p of inactivos) { const a = await sb.from('productos').update({ activo: true }).eq('id', p.id); if (a.error) { S.guardando = false; pintarPie(); toast('No se pudo activar ' + p.nombre + ': ' + msgErr(a.error), 'err'); return; } }
+      }
+      const filas = S.lineas.map(l => ({ producto_id: l.producto.id, cantidad_pedida: parseNum(l.cantidad), unidad_pedida: l.unidad || 'pieza', unidad_precio: l.unidad_precio, precio: String(l.precio).trim() === '' ? null : parseNum(l.precio), notas: (l.detalle || '').trim() || null }));
       if (filas.some(f => f.precio !== null && f.precio < 0)) { toast('Hay un precio no válido', 'err'); S.guardando = false; pintarPie(); return; }
-      const cab = { cliente_id: S.cliente.id, fecha_entrega: S.fecha, notas: S.notas || null, mensaje_origen: texto, origen: 'whatsapp', hash_origen: hash };
+      const hl = S.hora.limite, hd = S.hora.desde, hh = S.hora.hasta;
+      const lineaHora = (hd && hh) ? 'Franja de entrega: ' + hd + '–' + hh : hl ? 'Hora límite de entrega: ' + hl : hd ? 'Entrega sobre las ' + hd : '';
+      const notasFin = [S.notas.trim(), lineaHora && !S.notas.includes(lineaHora.split(':')[0]) ? lineaHora : ''].filter(Boolean).join('\n') || null;
+      const cab = { cliente_id: S.cliente.id, fecha_entrega: S.fecha, notas: notasFin, mensaje_origen: texto, origen: 'texto', hash_origen: hash }; if (hl) cab.hora_limite = hl;
       let ped = await sb.from('pedidos').insert(cab).select('id').single(); let sinColumnas = false;
       if (ped.error && (ped.error.code === '42703' || ped.error.code === 'PGRST204' || /column|schema cache/i.test(ped.error.message || ''))) {
-        sinColumnas = true; ped = await sb.from('pedidos').insert({ cliente_id: S.cliente.id, fecha_entrega: S.fecha, notas: ((S.notas ? S.notas + '\n' : '') + 'Mensaje original (WhatsApp):\n' + texto).slice(0, 4000) }).select('id').single();
+        sinColumnas = true; ped = await sb.from('pedidos').insert({ cliente_id: S.cliente.id, fecha_entrega: S.fecha, notas: ((notasFin ? notasFin + '\n' : '') + 'Texto original:\n' + texto).slice(0, 4000) }).select('id').single();
       }
       if (ped.error) { S.guardando = false; pintarPie(); toast(ped.error.code === '23505' ? 'Este mensaje ya estaba importado para ese cliente y día.' : msgErr(ped.error), 'err'); return; }
       const li = await sb.from('lineas_pedido').insert(filas.map(f => Object.assign({ pedido_id: ped.data.id }, f)));
       if (li.error) { await sb.from('pedidos').delete().eq('id', ped.data.id); S.guardando = false; pintarPie(); toast(msgErr(li.error), 'err'); return; }
       await recordarAlias();
-      toast(sinColumnas ? 'Pedido guardado (falta ejecutar la parte 15 del SQL: el mensaje se guardó en las notas)' : 'Pedido guardado', 'ok'); state.fecha = S.fecha; go('pedido', { id: ped.data.id });
+      toast(sinColumnas ? 'Pedido guardado (falta ejecutar la parte 15 del SQL: el texto original se guardó en las notas)' : 'Pedido guardado', 'ok'); state.fecha = S.fecha; go('pedido', { id: ped.data.id });
     } catch (e) { S.guardando = false; pintarPie(); toast(msgErr(e), 'err'); }
   }
   async function recordarAlias() {
     try {
-      const ap = aprendidos();
+      const ap = aprendidos('fj_wa_alias');
       for (const l of S.lineas) {
         if (!l.manual || !l.producto || !(l.estadoOrigen === 'noenc' || l.estadoOrigen === 'dudoso') || !l.nombre) continue;
         const a = waPalabras(l.nombre).join(' '); if (!a || a === waPalabras(l.producto.nombre).join(' ')) continue;
@@ -3104,13 +3281,22 @@ function vistaImportar() {
         if ('alias' in prod) { const r = await sb.from('productos').update({ alias: (Array.isArray(prod.alias) ? prod.alias : []).concat(a) }).eq('id', l.producto.id); if (!r.error) { delete ap[l.producto.id]; } }
       }
       LS.set('fj_wa_alias', ap);
+      if (S.aliasCli && S.cliente && S.aliasCli.id === S.cliente.id) {
+        const a = waPalabras(S.aliasCli.texto).join(' '); const c = S.cliente; const nom = waPalabras(nombreCli(c)).join(' ');
+        if (a && a !== nom && a !== waPalabras(c.nombre).join(' ')) {
+          const ya = (Array.isArray(c.alias) ? c.alias : []); const ac = aprendidos('fj_wa_alias_cli');
+          if (!ya.includes(a) && !(ac[c.id] || []).includes(a)) {
+            let guardado = false; if ('alias' in c) { const r = await sb.from('clientes').update({ alias: ya.concat(a) }).eq('id', c.id); guardado = !r.error; }
+            if (!guardado) { ac[c.id] = (ac[c.id] || []).concat(a); LS.set('fj_wa_alias_cli', ac); }
+          }
+        }
+      }
     } catch (e) { }
   }
-  const notasTa = h('textarea', { rows: 2, placeholder: 'Notas del pedido (opcional)', oninput: e => S.notas = e.target.value });
-  const btnInt = h('button', { style: 'width:100%;margin-top:8px', onclick: interpretar }, 'Interpretar mensaje');
-  $app.replaceChildren(shell('Pedido de WhatsApp', h('div', {}, h('p', { class: 'sub' }, 'Pega el mensaje, revisa lo que he entendido y guarda. Nada se guarda solo.'), ta, btnInt,
-    h('div', { style: 'margin-top:12px' }, cliBox), fechaBox, avisoBox, lineasBox, ignBox, pie), { volver: () => go('nuevo') })); renderBanner();
-  pintarCliente(); pintarFecha();
+  const btnInt = h('button', { style: 'width:100%;margin-top:8px', onclick: interpretar }, 'Interpretar pedido');
+  $app.replaceChildren(shell('Escribir pedido', h('div', {}, h('p', { class: 'sub' }, 'Escribe el pedido tal como lo dirías. Reviso cliente, fecha, productos y cantidades y tú confirmas. Nada se guarda solo.'), ta, btnInt,
+    h('div', { style: 'margin-top:12px' }, cliBox), fechaBox, horaBox, avisoBox, lineasBox, ignBox, pie), { volver: () => go('nuevo') })); renderBanner();
+  pintarCliente(); pintarFecha(); pintarHora();
   if (ta.value.trim()) interpretar();
 }
 async function waMostrarOrigen(cont, pedidoId) {
@@ -3216,7 +3402,6 @@ function render() {
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
   const v = { lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
-  if (state.view === 'nuevo' && !esOficina()) return vistaLista();
   v();
 }
 function tick() {
