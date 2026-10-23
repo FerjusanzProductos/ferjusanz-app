@@ -261,6 +261,7 @@ function crearSbPractica(){
     cobrar(a){const ex=a.p_clave&&DB.cobros.find(c=>c.clave===a.p_clave);if(ex)return ex;const v=viewImporte().find(x=>x.pedido_id===a.p_pedido);if(!v)throw new Error('SIN_IMPORTE');if(a.p_importe>v.pendiente+0.01)throw new Error('COBRO_MAYOR_QUE_PENDIENTE');const p=DB.pedidos.find(x=>x.id===a.p_pedido);const r={id:'k'+Math.random().toString(36).slice(2,7),pedido_id:a.p_pedido,cliente_id:p.cliente_id,importe:a.p_importe,forma:a.p_forma,nota:a.p_nota,clave:a.p_clave,cobrado_por:'u1',created_at:new Date().toISOString()};DB.cobros.push(r);return r;},
     guardar_foto(a){DB.fotos_perfil=DB.fotos_perfil.filter(x=>x.usuario_id!=='u1');if(a.p_foto)DB.fotos_perfil.push({usuario_id:'u1',foto:a.p_foto});return null;},
     fichar(a){const ab=DB.fichajes.find(f=>f.usuario_id==='u1'&&!f.salida);const t=a.p_cuando||new Date().toISOString();if(a.p_accion==='entrada'){if(ab)return ab;const r={id:'f'+Math.random().toString(36).slice(2,7),usuario_id:'u1',entrada:t,salida:null,sin_conexion:!!a.p_cuando,nota:null};DB.fichajes.push(r);return r;}if(!ab)throw new Error('SIN_ENTRADA');ab.salida=t;return ab;},
+    guardar_ubicacion(a){const c=DB.clientes.find(x=>x.id===a.p_cliente);c.lat=a.p_lat;c.lng=a.p_lng;return null;},
     marcar_entregado(a){const p=DB.pedidos.find(x=>x.id===a.p_pedido);if(p.estado!=='terminado')throw new Error('PEDIDO_NO_TERMINADO');if(!DB.entregas.some(e=>e.pedido_id===a.p_pedido))DB.entregas.push({pedido_id:a.p_pedido,entregado_por:'u1',entregado_at:a.p_at||new Date().toISOString(),created_at:new Date().toISOString()});return null;},
     marcar_cargado(a){let c=DB.carga_lineas.find(x=>x.linea_id===a.p_linea);if(c)c.cargado=a.p_cargado;else DB.carga_lineas.push({linea_id:a.p_linea,cargado:a.p_cargado});return null;},
     empezar_pedido(a){const p=DB.pedidos.find(x=>x.id===a.p_pedido);p.estado='en_preparacion';p.preparador_id='u1';return null;},
@@ -336,7 +337,7 @@ function isNetErr(e) {
 const esOficina = () => !!state.perfil && ['oficina', 'admin'].includes(state.perfil.rol);
 const ESTADO = { pendiente: 'Pendiente', en_preparacion: 'En preparación', terminado: 'Terminado', anulado: 'Anulado' };
 const CLASE_ESTADO = { pendiente: 'pend', en_preparacion: 'prep', terminado: 'fin', anulado: 'pend' };
-const VISTAS_MAS = ['mas', 'clientes', 'cliente', 'catalogo', 'compras', 'traza', 'perfil', 'fichajes', 'entregas', 'calendario', 'incidencias', 'precios', 'facturas', 'resumen', 'archivo', 'avisos'];
+const VISTAS_MAS = ['mas', 'clientes', 'cliente', 'catalogo', 'compras', 'traza', 'perfil', 'fichajes', 'entregas', 'calendario', 'incidencias', 'precios', 'facturas', 'resumen', 'archivo', 'avisos', 'ruta'];
 const puedeCompras = () => !!state.perfil && ['compras', 'oficina', 'admin'].includes(state.perfil.rol);
 const UNIDADES = ['kg', 'pieza', 'caja', 'saco', 'bolsa', 'bandeja', 'manojo'];
 const limpiaBusqueda = s => String(s).replace(/[,()%*\\]/g, ' ').trim();
@@ -1112,6 +1113,9 @@ function vistaCliente() {
     f.activo = h('input', { type: 'checkbox', checked: c.activo !== false });
     f.recargo = h('input', { type: 'checkbox', checked: !!c.recargo_equivalencia });
     f.notas = h('textarea', { rows: 3 }); f.notas.value = c.notas || '';
+    let ubic = c.lat != null && c.lng != null ? { lat: +c.lat, lng: +c.lng } : null;
+    const ubicTxt = h('div', { class: 'sub' }); const verUbic = () => { ubicTxt.textContent = ubic ? 'Ubicación guardada: ' + ubic.lat + ', ' + ubic.lng : 'Sin ubicación todavía'; }; verUbic();
+    f.notas_reparto = h('input', { value: c.notas_reparto || '', placeholder: 'Ej.: entrada por la puerta de atrás' });
     async function guardar(btn) {
       const nombre = f.nombre.value.trim();
       if (!nombre) { toast('Escribe el nombre del cliente', 'err'); return; }
@@ -1122,7 +1126,9 @@ function vistaCliente() {
         codigo, nombre, nombre_comercial: f.nombre_comercial.value.trim() || null, nif: f.nif.value.trim().toUpperCase() || null,
         email: f.email.value.trim() || null, telefono: f.telefono.value.trim() || null, direccion: f.direccion.value.trim() || null,
         codigo_postal: f.codigo_postal.value.trim() || null, localidad: f.localidad.value.trim() || null, ruta: f.ruta.value.trim() || null,
-        forma_pago: f.forma_pago.value, activo: f.activo.checked, recargo_equivalencia: f.recargo.checked, notas: f.notas.value.trim() || null };
+        forma_pago: f.forma_pago.value, activo: f.activo.checked, recargo_equivalencia: f.recargo.checked, notas: f.notas.value.trim() || null,
+        abre: f.abre.value || null, cierra: f.cierra.value || null, franja_desde: f.franja_desde.value || null, franja_hasta: f.franja_hasta.value || null,
+        tiempo_parada: Math.max(0, parseInt(f.tiempo_parada.value, 10) || 10), notas_reparto: f.notas_reparto.value.trim() || null, lat: ubic ? ubic.lat : null, lng: ubic ? ubic.lng : null };
       if (fila.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fila.email)) { toast('El correo no parece válido', 'err'); return; }
       btn.disabled = true;
       const r = id ? await sb.from('clientes').update(fila).eq('id', id).select().single() : await sb.from('clientes').insert(fila).select().single();
@@ -1137,6 +1143,14 @@ function vistaCliente() {
       campo('telefono', 'Teléfono', { type: 'tel', inputmode: 'tel' }), campo('direccion', 'Dirección'),
       h('div', { style: 'display:grid;grid-template-columns:1fr 2fr;gap:10px' }, campo('codigo_postal', 'C. postal', { inputmode: 'numeric' }), campo('localidad', 'Localidad')),
       h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:10px' }, campo('codigo', 'Código (si lo dejas vacío se crea solo)'), campo('ruta', 'Ruta (ej. R1)')),
+      h('div', { class: 'card' }, h('div', { class: 'nombre', style: 'margin-bottom:8px' }, 'Horario y reparto'),
+        h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:10px' }, campo('abre', 'Abre', { type: 'time', value: (c.abre || '').slice(0, 5) }), campo('cierra', 'Cierra', { type: 'time', value: (c.cierra || '').slice(0, 5) }),
+          campo('franja_desde', 'Quiere el pedido desde', { type: 'time', value: (c.franja_desde || '').slice(0, 5) }), campo('franja_hasta', 'Quiere el pedido antes de', { type: 'time', value: (c.franja_hasta || '').slice(0, 5) })),
+        campo('tiempo_parada', 'Minutos que se tarda en descargar', { type: 'number', inputmode: 'numeric', value: c.tiempo_parada != null ? c.tiempo_parada : 10 }),
+        h('label', { class: 'campo' }, 'Notas para el repartidor', f.notas_reparto), ubicTxt,
+        h('div', { style: 'display:flex;gap:8px;margin-top:6px' },
+          h('button', { class: 'ghost small', style: 'flex:1', onclick: async () => { try { const u = await geocodificar({ direccion: f.direccion.value, codigo_postal: f.codigo_postal.value, localidad: f.localidad.value }); if (!u) { toast('No se encontró esa dirección', 'err'); return; } ubic = u; verUbic(); toast('Ubicación encontrada. Guarda el cliente.', 'ok'); } catch (e) { toast(msgErr(e), 'err'); } } }, 'Buscar por dirección'),
+          h('button', { class: 'ghost small', style: 'flex:1', onclick: async () => { try { ubic = await miUbicacion(); verUbic(); toast('Ubicación tomada. Guarda el cliente.', 'ok'); } catch (e) { toast(e.message, 'err'); } } }, '📍 Estoy aquí'))),
       h('label', { class: 'campo' }, 'Forma de pago', f.forma_pago),
       h('label', { class: 'campo' }, 'Notas', f.notas),
       h('label', { class: 'interruptor', style: 'margin-bottom:8px' }, f.recargo, 'Recargo de equivalencia (se suma al IVA en el albarán)'),
@@ -1461,6 +1475,7 @@ function vistaMas() {
   const k = [b('Mi perfil y fichaje', 'Foto, fichar entrada y salida', () => go('perfil'))];
   if (esOficina()) k.push(b('Clientes', 'Lista de A a Z, datos, precios y últimos pedidos', () => go('clientes')), b('Catálogo', 'Productos: activos, unidades, IVA y precio general', () => go('catalogo')));
   k.push(b('Entregas', 'Pedidos entregados y a qué hora', () => go('entregas')), b('Calendario', 'Ver y añadir pedidos por día', () => go('calendario')), b('Incidencias', 'Quejas y productos en mal estado, por cliente y producto', () => go('incidencias')), b('Precios de compra', 'Cuánto costó cada producto y a quién se compró', () => go('precios')), b('Facturas de compra', 'Fotos y PDF de facturas y hojas, ordenadas por día', () => go('facturas')));
+  k.unshift(b('Ruta de reparto', 'Ordena tus entregas del día según horarios y distancias', () => go('ruta')));
   k.unshift(b('Avisos y ofertas', 'Avisos del equipo, ofertas y recordatorios', () => go('avisos')));
   if (esOficina()) k.push(b('Archivo', 'Ver y restaurar lo archivado', () => go('archivo')));
   if (esOficina()) k.push(b('Resumen del día', 'Ventas, cobros, lo comprado e incidencias', () => go('resumen')));
@@ -2389,12 +2404,146 @@ function vistaAvisos() {
   $app.replaceChildren(shell('Avisos y ofertas', cont, { volver: () => go('mas') })); renderBanner(); pintarChips(); cargar();
 }
 
+/* ---------- Rutas de reparto ---------- */
+const BASE_MERCAMADRID = { lat: 40.3589, lng: -3.66 };
+const kmRecta = (a, b) => { const R = 6371, t = x => x * Math.PI / 180; const dl = t(b.lat - a.lat), dn = t(b.lng - a.lng); const q = Math.sin(dl / 2) ** 2 + Math.cos(t(a.lat)) * Math.cos(t(b.lat)) * Math.sin(dn / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(q)); };
+const aMin = s => { if (!s) return null; const [hh, mm] = String(s).split(':'); return (+hh) * 60 + (+mm || 0); };
+const deMin = m => { m = Math.round(m); return String(Math.floor(m / 60) % 24).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+const ventanaCli = p => { const a = aMin(p.franja_desde); const b = aMin(p.franja_hasta); return [a != null ? a : aMin(p.abre), b != null ? b : aMin(p.cierra)]; };
+// Orden de visita: minimiza el tiempo total y penaliza llegar fuera de horario. No usa tráfico en tiempo real.
+function planRuta(ini, salida, paradas, vel) {
+  const rod = 1.35, n = paradas.length;
+  function evaluar(orden) {
+    let pos = ini, tm = salida, pen = 0, dist = 0; const det = [];
+    for (const p of orden) {
+      const d = kmRecta(pos, p) * rod; dist += d; let llega = tm + d / vel * 60; const [a, c] = ventanaCli(p); let espera = 0, tarde = 0;
+      if (a != null && llega < a) { espera = a - llega; llega = a; }
+      if (c != null && llega > c) { tarde = llega - c; pen += tarde * 8 + 30; }
+      pen += espera * 0.3;
+      const sale = llega + (p.tiempo_parada || 10);
+      det.push({ p, llega, espera, tarde, sale, d }); tm = sale; pos = p;
+    }
+    return { det, coste: tm - salida + pen, dist, fin: tm };
+  }
+  if (!n) return { det: [], coste: 0, dist: 0, fin: salida };
+  let mejor = null; const probar = o => { const e = evaluar(o); if (!mejor || e.coste < mejor.coste - 1e-9) mejor = e; return e; };
+  if (n <= 8) {
+    const rec = (resto, act) => { if (!resto.length) { probar(act); return; } for (let i = 0; i < resto.length; i++) rec(resto.slice(0, i).concat(resto.slice(i + 1)), act.concat([resto[i]])); };
+    rec(paradas, []);
+  } else {
+    const mejorar = o => {
+      let orden = o.slice(), cur = probar(orden), mejora = true;
+      while (mejora) {
+        mejora = false;
+        for (let i = 0; i < n - 1; i++) for (let j = i + 1; j < n; j++) { const c = orden.slice(0, i).concat(orden.slice(i, j + 1).reverse(), orden.slice(j + 1)); const e = evaluar(c); if (e.coste < cur.coste - 1e-6) { orden = c; cur = e; mejora = true; } }
+        for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) { if (i === j) continue; const c = orden.slice(); const x = c.splice(i, 1)[0]; c.splice(j, 0, x); const e = evaluar(c); if (e.coste < cur.coste - 1e-6) { orden = c; cur = e; mejora = true; } }
+      }
+    };
+    const vecino = []; let resto = paradas.slice(), pos = ini;
+    while (resto.length) { resto.sort((x, y) => kmRecta(pos, x) - kmRecta(pos, y)); const x = resto.shift(); vecino.push(x); pos = x; }
+    mejorar(vecino); mejorar(paradas.slice().sort((x, y) => (ventanaCli(x)[1] == null ? 1e9 : ventanaCli(x)[1]) - (ventanaCli(y)[1] == null ? 1e9 : ventanaCli(y)[1])));
+    for (let k = 0; k < 12; k++) mejorar(paradas.slice().sort(() => Math.random() - 0.5));
+  }
+  return mejor;
+}
+async function geocodificar(c) {
+  const q = [c.direccion, c.codigo_postal, c.localidad, 'España'].filter(Boolean).join(', ');
+  const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=es&q=' + encodeURIComponent(q), { headers: { 'Accept-Language': 'es' } });
+  if (!r.ok) throw new Error('El servicio de mapas no responde'); const j = await r.json();
+  return j[0] ? { lat: +(+j[0].lat).toFixed(6), lng: +(+j[0].lon).toFixed(6) } : null;
+}
+function miUbicacion() {
+  return new Promise((ok, ko) => { if (!navigator.geolocation) { ko(new Error('Este móvil no da la ubicación')); return; }
+    navigator.geolocation.getCurrentPosition(p => ok({ lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6) }), e => ko(new Error('No se pudo obtener la ubicación. Revisa el permiso de ubicación del navegador.')), { enableHighAccuracy: true, timeout: 12000 }); });
+}
+async function guardarUbicacion(id, u) { const r = await sb.rpc('guardar_ubicacion', { p_cliente: id, p_lat: u.lat, p_lng: u.lng }); if (r.error) throw r.error; }
+const enlaceMapas = (puntos, origen) => 'https://www.google.com/maps/dir/?api=1&travelmode=driving' + (origen ? '&origin=' + origen.lat + ',' + origen.lng : '') + '&destination=' + puntos[puntos.length - 1].lat + ',' + puntos[puntos.length - 1].lng + (puntos.length > 1 ? '&waypoints=' + puntos.slice(0, -1).map(p => p.lat + ',' + p.lng).join('%7C') : '');
+
+function vistaRuta() {
+  state.view = 'ruta';
+  let fecha = state.fecha, clientes = [], sel = {}, inicio = null, plan = null, cache = false;
+  const hh = new Date(); const ahora = String(hh.getHours()).padStart(2, '0') + ':' + String(Math.ceil(hh.getMinutes() / 5) * 5 % 60).padStart(2, '0');
+  const cfg = Object.assign({ salida: fecha === hoy() ? ahora : '06:30', vel: 25 }, LS.get('fj_ruta_cfg', {}));
+  const cont = h('div', {}), lista = h('div', {}), resultado = h('div', {});
+  const fechaInp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); state.fecha = fecha; plan = null; cargar(); } });
+  const salidaInp = h('input', { type: 'time', value: cfg.salida, onchange: e => { cfg.salida = e.target.value; LS.set('fj_ruta_cfg', cfg); } });
+  const velInp = h('input', { type: 'number', min: 10, max: 60, value: cfg.vel, onchange: e => { cfg.vel = Math.min(60, Math.max(10, +e.target.value || 25)); LS.set('fj_ruta_cfg', cfg); } });
+  const origenTxt = h('div', { class: 'sub' }, 'Salida: Mercamadrid');
+  $app.replaceChildren(shell('Ruta de reparto', cont, { volver: () => go('mas') })); renderBanner();
+  cont.append(h('div', { class: 'barra' }, fechaInp, h('button', { class: 'ghost', onclick: () => cargar() }, '↻')),
+    h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px' }, h('label', { class: 'campo' }, 'Hora de salida', salidaInp), h('label', { class: 'campo' }, 'Velocidad media km/h', velInp)),
+    h('div', { style: 'display:flex;gap:8px;align-items:center;margin-bottom:10px' }, origenTxt,
+      h('button', { class: 'ghost small', onclick: async () => { try { inicio = await miUbicacion(); origenTxt.textContent = 'Salida: mi ubicación actual'; toast('Ubicación obtenida', 'ok'); } catch (e) { toast(e.message, 'err'); } } }, 'Salir desde donde estoy')),
+    lista, resultado);
+  async function cargar() {
+    const key = 'fj_ruta_' + fecha; lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+    try {
+      if (!navigator.onLine) throw new TypeError('network');
+      const r = await sb.from('pedidos').select('id,estado,clientes(id,codigo,nombre,nombre_comercial,direccion,codigo_postal,localidad,telefono,lat,lng,abre,cierra,franja_desde,franja_hasta,tiempo_parada,notas_reparto),entregas(entregado_at)').eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true);
+      if (r.error) throw r.error; LS.set(key, r.data); cache = false; armar(r.data);
+    } catch (e) { if (!isNetErr(e)) { lista.replaceChildren(h('p', { class: 'err' }, msgErr(e))); return; } cache = true; armar(LS.get(key, [])); }
+    pintarLista();
+  }
+  function armar(peds) {
+    const m = {};
+    peds.forEach(p => { const c = uno(p.clientes); if (!c) return; const x = m[c.id] || (m[c.id] = Object.assign({}, c, { pedidos: [], entregado: true })); x.pedidos.push(p.id); if (p.estado !== 'terminado' || !uno(p.entregas)) x.entregado = false; if (p.estado !== 'terminado') x.sinTerminar = true; });
+    clientes = Object.values(m).sort((a, b) => nombreCli(a).localeCompare(nombreCli(b), 'es'));
+    clientes.forEach(c => { if (!(c.id in sel)) sel[c.id] = !c.entregado; });
+  }
+  function pintarLista() {
+    const kids = [];
+    if (cache) kids.push(h('div', { class: 'aviso-card' }, 'Datos guardados en este móvil.'));
+    kids.push(h('div', { class: 'letra' }, 'Clientes de este día (' + clientes.length + ')'));
+    clientes.forEach(c => {
+      const [a, b] = ventanaCli(c);
+      kids.push(h('label', { class: 'card fila', style: 'cursor:pointer' }, h('div', { style: 'display:flex;gap:10px;align-items:center' },
+        h('input', { type: 'checkbox', style: 'width:24px;min-height:24px;height:24px', checked: !!sel[c.id], onchange: e => { sel[c.id] = e.target.checked; } }),
+        h('div', {}, h('div', { class: 'nombre' }, (c.entregado ? '✔ ' : '') + nombreCli(c)), h('div', { class: 'sub' }, [c.localidad, a != null || b != null ? (a != null ? deMin(a) : '') + '–' + (b != null ? deMin(b) : '') : 'sin horario', c.lat == null ? '⚠ sin ubicación' : ''].filter(Boolean).join(' · '))))));
+    });
+    if (!clientes.length) kids.push(h('p', { class: 'vacio' }, 'No hay pedidos para este día.'));
+    kids.push(h('button', { class: 'guardar', style: 'width:100%;margin:8px 0', onclick: calcular }, 'Calcular la mejor ruta'));
+    lista.replaceChildren(...kids);
+  }
+  async function calcular() {
+    const elegidos = clientes.filter(c => sel[c.id]); if (!elegidos.length) { toast('Marca al menos un cliente', 'err'); return; }
+    const sin = elegidos.filter(c => c.lat == null), con = elegidos.filter(c => c.lat != null);
+    resultado.replaceChildren(h('p', { class: 'vacio' }, sin.length ? 'Buscando ubicaciones…' : 'Calculando…'));
+    for (const c of sin) {   // intenta localizar por la dirección (máximo 1 petición por segundo)
+      try { const u = await geocodificar(c); if (u) { c.lat = u.lat; c.lng = u.lng; con.push(c); try { await guardarUbicacion(c.id, u); } catch (e) { } } } catch (e) { }
+      await new Promise(r => setTimeout(r, 1100));
+    }
+    const faltan = elegidos.filter(c => c.lat == null);
+    if (!inicio && !(navigator.geolocation === undefined)) { /* se usa Mercamadrid salvo que el repartidor pulse "Salir desde donde estoy" */ }
+    const ini = inicio || BASE_MERCAMADRID, vel = Math.min(60, Math.max(10, +velInp.value || 25));
+    plan = planRuta(ini, aMin(salidaInp.value) != null ? aMin(salidaInp.value) : 360, con, vel); pintarPlan(faltan, ini);
+  }
+  function pintarPlan(faltan, ini) {
+    const kids = [h('div', { class: 'card' }, h('div', { class: 'nombre' }, plan.det.length + ' paradas · ' + Math.round(plan.dist * 10) / 10 + ' km'), h('div', { class: 'sub' }, 'Salida ' + deMin(plan.det.length ? plan.det[0].llega - plan.det[0].d / (+velInp.value || 25) * 60 : 0) + ' · fin estimado ' + deMin(plan.fin) + ' (calculado sin tráfico en tiempo real)'))];
+    plan.det.forEach((x, i) => { const c = x.p; kids.push(h('div', { class: 'card', style: x.tarde ? 'border-color:var(--rojo)' : '' },
+      h('div', { class: 'fila' }, h('div', { class: 'nombre' }, (i + 1) + '. ' + nombreCli(c)), h('b', { style: 'font-size:20px' }, deMin(x.llega))),
+      h('div', { class: 'sub' }, [c.direccion, c.localidad].filter(Boolean).join(', ')),
+      h('div', { class: 'sub' }, Math.round(x.d * 10) / 10 + ' km desde la parada anterior' + (x.espera > 1 ? ' · esperar ' + Math.round(x.espera) + ' min hasta que abra' : '') + (x.tarde > 1 ? '' : '')),
+      x.tarde > 1 ? h('div', { style: 'color:var(--rojo);font-weight:700' }, '⚠ Llegaría ' + Math.round(x.tarde) + ' min tarde (' + deMin(ventanaCli(c)[1]) + ')') : null,
+      c.notas_reparto ? h('div', { style: 'margin-top:4px' }, '📝 ' + c.notas_reparto) : null,
+      h('div', { style: 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap' },
+        h('a', { href: enlaceMapas([c]), target: '_blank', rel: 'noopener', style: 'padding:8px 12px;border:1px solid var(--borde);border-radius:12px;text-decoration:none;color:var(--verde-osc);font-weight:700' }, 'Navegar'),
+        c.telefono ? h('a', { href: 'tel:' + c.telefono, style: 'padding:8px 12px;border:1px solid var(--borde);border-radius:12px;text-decoration:none;color:var(--verde-osc);font-weight:700' }, 'Llamar') : null,
+        h('button', { class: 'ghost small', onclick: async () => { try { const u = await miUbicacion(); await guardarUbicacion(c.id, u); c.lat = u.lat; c.lng = u.lng; toast('Ubicación del cliente guardada aquí', 'ok'); } catch (e) { toast(msgErr(e), 'err'); } } }, '📍 Estoy aquí'),
+        !c.entregado && c.pedidos ? h('button', { class: 'guardar small', onclick: async () => { for (const id of c.pedidos) await marcarEntregado(id); c.entregado = true; toast('Entrega registrada', 'ok'); } }, 'Entregado') : null))); });
+    if (faltan.length) kids.push(h('div', { class: 'aviso-card' }, 'Sin ubicación (no entran en la ruta): ' + faltan.map(nombreCli).join(', ') + '. Pulsa "📍 Estoy aquí" cuando estés en su puerta o escribe su dirección en la ficha del cliente.'));
+    const pts = plan.det.map(x => x.p); const tramos = []; for (let i = 0; i < pts.length; i += 9) tramos.push(pts.slice(i, i + 9));
+    tramos.forEach((t, k) => kids.push(h('a', { href: enlaceMapas(t, k === 0 ? ini : tramos[k - 1][tramos[k - 1].length - 1]), target: '_blank', rel: 'noopener', style: 'display:block;text-align:center;padding:14px;margin-bottom:8px;border-radius:14px;background:var(--verde);color:#fff;font-weight:700;text-decoration:none' }, tramos.length > 1 ? 'Abrir en Google Maps · tramo ' + (k + 1) : 'Abrir ruta completa en Google Maps')));
+    resultado.replaceChildren(...kids);
+  }
+  cargar();
+}
+
 /* =====================  ARRANQUE  ===================== */
 function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos }[state.view] || vistaLista;
+  const v = { lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta }[state.view] || vistaLista;
   if ((state.view === 'nuevo' || state.view === 'catalogo') && !esOficina()) return vistaLista();
   v();
 }
