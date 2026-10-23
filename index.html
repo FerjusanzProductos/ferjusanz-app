@@ -670,6 +670,7 @@ function pintarPedido() {
       faltan > 0 ? 'Faltan ' + faltan + ' líneas' : 'Terminar pedido y crear albarán'));
     if (esOficina()) acciones.push(h('button', { class: 'peligro', onclick: () => anularPedido(d.pedido.id) }, 'Anular pedido'));
   }
+  if (esOficina() && estado !== 'terminado' && estado !== 'anulado') acciones.push(h('button', { class: 'ghost', onclick: () => go('importar', { anadir: d.pedido.id }) }, '➕ Añadir productos (texto, voz o foto)'));
   if (esOficina()) acciones.push(h('button', { class: 'ghost', onclick: async () => { if (!await confirmar('¿Archivar este pedido? Dejará de verse en las listas.')) return; const r = await sb.from('pedidos').update({ archivado: true }).eq('id', d.pedido.id); if (r.error) toast(msgErr(r.error), 'err'); else { toast('Pedido archivado', 'ok'); go('lista'); } } }, 'Archivar pedido'));
   kids.push(h('div', { style: 'display:flex;flex-direction:column;gap:10px;margin-top:14px' }, acciones));
   cont.replaceChildren(...kids); waMostrarOrigen(cont, d.pedido.id);
@@ -1529,7 +1530,7 @@ function vistaMas() {
   const k = [
     h('div', { class: 'saludo' }, h('div', { style: 'font-size:20px;font-weight:800' }, 'Hola, ' + (state.perfil.nombre || '').split(' ')[0]), h('div', { class: 'sub' }, (d => d.charAt(0).toUpperCase() + d.slice(1))(fmtDiaLargo(new Date().toISOString())))),
     ...g('Trabajo diario', c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Carga', () => go('carga'), V), c('✅', 'Entregas', () => go('entregas'), V), c('🗺️', 'Ruta', () => go('ruta'), V), c('📅', 'Calendario', () => go('calendario'), V),
-      c('➕', 'Nuevo pedido', () => go('nuevo'), V), c('✍️', 'Escribir pedido', () => go('importar'), V), c('💰', 'Cobros', () => go('cobros'), V), c('🧮', 'Deudas', () => go('deudas'), V)),
+      c('➕', 'Nuevo pedido', () => go('nuevo'), V), c('✍️', 'Escribir pedido', () => go('importar'), V), c('🎤', 'Dictar pedido', () => go('importar', { modo: 'voz' }), V), c('📷', 'Escanear pedido', () => go('importar', { modo: 'escanear' }), V), c('💰', 'Cobros', () => go('cobros'), V), c('🧮', 'Deudas', () => go('deudas'), V)),
     ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null),
     ...g('Compras y mercancía', puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, puedeCompras() ? c('💶', 'Precios de compra', () => go('precios'), A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
@@ -1979,7 +1980,8 @@ function vistaNuevo() {
     toast('Pedido guardado', 'ok'); state.fecha = nuevo.fecha; go('lista');
   }
   raiz.append(
-    h('button', { class: 'ghost', style: 'width:100%;margin-bottom:10px', onclick: () => go('importar') }, '✍️ Escribir pedido (texto o WhatsApp)'),
+    h('button', { class: 'ghost', style: 'width:100%;margin-bottom:6px', onclick: () => go('importar') }, '✍️ Escribir pedido (texto o WhatsApp)'),
+    h('div', { style: 'display:flex;gap:6px;margin-bottom:10px' }, h('button', { class: 'ghost', style: 'flex:1', onclick: () => go('importar', { modo: 'voz' }) }, '🎤 Dictar pedido'), h('button', { class: 'ghost', style: 'flex:1', onclick: () => go('importar', { modo: 'escanear' }) }, '📷 Escanear pedido')),
     h('label', { class: 'campo' }, 'Cliente'), cliBox, atajos,
     h('label', { class: 'campo', style: 'margin-top:10px' }, 'Fecha de entrega', fechaInp),
     h('label', { class: 'campo' }, 'Productos'), lineasBox, prodBox,
@@ -3063,6 +3065,54 @@ function waClienteEnTexto(texto, clientes) {
 }
 /*WA-FIN*/
 
+/* ---------- Lectura de imágenes y PDF (gratis, dentro del móvil) ---------- */
+const WA_TESS = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+const WA_PDFJS = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js';
+const WA_PDFW = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+function waCargarScript(url) {
+  return new Promise((ok, ko) => { if (document.querySelector('script[data-wa="' + url + '"]')) return ok(); const sc = document.createElement('script'); sc.src = url; sc.dataset.wa = url; sc.onload = ok; sc.onerror = () => ko(new Error('No se pudo cargar el lector (¿hay internet?)')); document.head.append(sc); });
+}
+function waImagenACanvas(fuente, maxLado) {
+  return new Promise((ok, ko) => {
+    const im = new Image(); const u = URL.createObjectURL(fuente);
+    im.onload = () => { const k = Math.min(1, maxLado / Math.max(im.width, im.height)); const c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); ok(c); };
+    im.onerror = () => { URL.revokeObjectURL(u); ko(new Error('No se pudo abrir la imagen')); }; im.src = u;
+  });
+}
+function waNitidez(canvas) { /* varianza del laplaciano en una copia pequeña: bajo = borroso */
+  try {
+    const k = Math.min(1, 500 / canvas.width), w = Math.max(8, Math.round(canvas.width * k)), hh = Math.max(8, Math.round(canvas.height * k)); const c = document.createElement('canvas'); c.width = w; c.height = hh; const x = c.getContext('2d'); x.drawImage(canvas, 0, 0, w, hh);
+    const d = x.getImageData(0, 0, w, hh).data; const g = new Float32Array(w * hh); for (let i = 0; i < g.length; i++) g[i] = d[i * 4] * 0.3 + d[i * 4 + 1] * 0.59 + d[i * 4 + 2] * 0.11;
+    let n = 0, sm = 0, sq = 0; for (let y = 1; y < hh - 1; y++) for (let xx = 1; xx < w - 1; xx++) { const i = y * w + xx; const l = 4 * g[i] - g[i - 1] - g[i + 1] - g[i - w] - g[i + w]; sm += l; sq += l * l; n++; }
+    return sq / n - (sm / n) * (sm / n);
+  } catch (e) { return null; }
+}
+async function waOCR(canvas, progreso) {
+  if (window.waOCRMotor) return window.waOCRMotor(canvas, progreso);
+  await waCargarScript(WA_TESS);
+  const r = await window.Tesseract.recognize(canvas, 'spa', { logger: m => { if (progreso && m.status) progreso(m.status === 'recognizing text' ? 'Leyendo… ' + Math.round((m.progress || 0) * 100) + '%' : 'Preparando el lector (solo la primera vez)…'); } });
+  return { texto: (r.data.text || '').trim(), conf: r.data.confidence };
+}
+async function waLeerPdf(file, progreso) {
+  await waCargarScript(WA_PDFJS);
+  if (!window.__waPdfW) { const t = await (await fetch(WA_PDFW)).text(); window.__waPdfW = URL.createObjectURL(new Blob([t], { type: 'text/javascript' })); }
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.__waPdfW;
+  const pdf = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise; const partes = []; let confs = [];
+  for (let n = 1; n <= Math.min(pdf.numPages, 15); n++) {
+    progreso && progreso('Página ' + n + ' de ' + pdf.numPages + '…'); const pg = await pdf.getPage(n); const tc = await pg.getTextContent(); let y = null, linea = '', filas = [];
+    tc.items.forEach(it => { const yy = Math.round(it.transform[5]); if (y !== null && Math.abs(yy - y) > 3) { filas.push(linea); linea = ''; } y = yy; linea += (linea ? ' ' : '') + it.str; }); if (linea) filas.push(linea);
+    const txt = filas.join('\n').trim();
+    if (txt.length > 25) { partes.push(txt); confs.push(100); continue; }
+    const vp = pg.getViewport({ scale: 2 }); const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height; await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    const o = await waOCR(c, progreso); partes.push(o.texto); confs.push(o.conf);
+  }
+  return { texto: partes.join('\n'), conf: Math.min(...confs), paginas: pdf.numPages };
+}
+async function waLeerArchivo(file, progreso) {
+  if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) { const r = await waLeerPdf(file, progreso); r.nitidez = null; return r; }
+  const c = await waImagenACanvas(file, 2200); const nit = waNitidez(c); const o = await waOCR(c, progreso); o.nitidez = nit; return o;
+}
+
 /* ---------- Pedido inteligente por texto (pantalla) ---------- */
 async function waProductos() {
   try {
@@ -3089,7 +3139,8 @@ function aplicarCompartido() {
 }
 function vistaImportar() {
   state.view = 'importar';
-  const S = { cliente: null, clienteEstado: null, clienteCand: [], clienteFrase: '', clienteManual: false, detectado: false, fecha: hoy(), fechaOk: false, fraseFecha: '', hora: { limite: '', desde: '', hasta: '' }, lineas: [], ignorado: [], avisos: [], interpretado: false, notas: '', repetir: null, guardando: false, prods: null, clis: null, hist: {}, aviso: '' };
+  const S = { cliente: null, clienteEstado: null, clienteCand: [], clienteFrase: '', clienteManual: false, detectado: false, fecha: hoy(), fechaOk: false, fraseFecha: '', hora: { limite: '', desde: '', hasta: '' }, lineas: [], ignorado: [], avisos: [], interpretado: false, notas: '', repetir: null, guardando: false, prods: null, clis: null, hist: {}, aviso: '', archivos: [], origen: 'texto', anadir: (state.params && state.params.anadir) || null, anadirFecha: null, anadirPed: null };
+  const modo = (state.params && state.params.modo) || 'texto';
   const ta = h('textarea', { rows: 6, placeholder: 'Escribe o pega el pedido como lo dirías:\n«Pedido para Florencio, para mañana. Dos sacos de patatas, cinco kilos de tomate pera y una caja de calabacines. Entregar antes de las 9.»\nTambién vale con # copiado de WhatsApp.' }); ta.value = (state.params && state.params.texto) || '';
   const cliBox = h('div', {}), fechaBox = h('div', {}), horaBox = h('div', {}), avisoBox = h('div', {}), lineasBox = h('div', {}), ignBox = h('div', {}), pie = h('div', {});
   const diaSem = f => ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'][new Date(f + 'T12:00:00').getDay()];
@@ -3172,6 +3223,7 @@ function vistaImportar() {
     S.lineas = r.lineas.map(l => { const p = l.producto; const sin = !l.unidad && l.cantidad != null; return { id: uuid(), raw: l.raw, nombre: l.nombre, estado: l.estado, estadoOrigen: l.estado, producto: p, cand: l.cand, cantidad: l.cantidad != null ? String(l.cantidad).replace('.', ',') : '', unidad: l.unidad || (sin || p ? 'pieza' : null), sinUnidad: sin && (!p || p.unidad_venta !== 'pieza'), unidad_precio: p ? p.unidad_precio : 'kg', precio: '', detalle: l.detalle, corregido: l.corregido, porActivo: l.porActivo }; });
     S.ignorado = r.ignorado; S.interpretado = true; S.aviso = ''; S.repetir = it.repetir; S.avisos = it.avisos.slice(); S.aliasCli = null;
     S.fechaOk = !!it.fecha; if (it.fecha) { S.fecha = it.fecha; S.fraseFecha = it.fraseFecha; } else { S.fecha = hoy(); S.fraseFecha = ''; }
+    if (S.anadir && S.anadirFecha) { S.fecha = S.anadirFecha; S.fechaOk = true; }
     S.hora = { limite: it.hora.limite || '', desde: it.hora.desde || '', hasta: it.hora.hasta || '' };
     S.notas = it.observaciones.join('. ');
     notasTa.value = S.notas;
@@ -3239,6 +3291,7 @@ function vistaImportar() {
     S.guardando = true; pintarPie();
     try {
       const texto = ta.value; const hash = waHash(texto);
+      if (S.anadir) { await guardarAnadir(texto); return; }
       const dup = await sb.from('pedidos').select('id,fecha_entrega').eq('cliente_id', S.cliente.id).eq('fecha_entrega', S.fecha).eq('hash_origen', hash).neq('estado', 'anulado').neq('archivado', true).limit(1);
       if (!dup.error && dup.data.length) { S.guardando = false; pintarPie(); if (await confirmar('Este mismo mensaje ya se importó para ' + nombreCli(S.cliente) + ' el ' + fechaES(S.fecha) + '. ¿Quieres abrir ese pedido en vez de duplicarlo?')) go('pedido', { id: dup.data[0].id }); return; }
       const ex = await sb.from('pedidos').select('id,lineas_pedido(producto_id,productos(nombre))').eq('cliente_id', S.cliente.id).eq('fecha_entrega', S.fecha).neq('estado', 'anulado').neq('archivado', true);
@@ -3258,18 +3311,89 @@ function vistaImportar() {
       const hl = S.hora.limite, hd = S.hora.desde, hh = S.hora.hasta;
       const lineaHora = (hd && hh) ? 'Franja de entrega: ' + hd + '–' + hh : hl ? 'Hora límite de entrega: ' + hl : hd ? 'Entrega sobre las ' + hd : '';
       const notasFin = [S.notas.trim(), lineaHora && !S.notas.includes(lineaHora.split(':')[0]) ? lineaHora : ''].filter(Boolean).join('\n') || null;
-      const cab = { cliente_id: S.cliente.id, fecha_entrega: S.fecha, notas: notasFin, mensaje_origen: texto, origen: 'texto', hash_origen: hash }; if (hl) cab.hora_limite = hl;
+      const origen = S.archivos.length ? 'imagen' : S.origen; const pedId = uuid(); const rutas = []; let avisoArch = '';
+      for (let i = 0; i < S.archivos.length; i++) { const a = S.archivos[i]; const ruta = pedId + '/' + (i + 1) + '-' + a.nombre.replace(/[^A-Za-z0-9._-]+/g, '_').slice(-60); const up = await sb.storage.from('pedidos-originales').upload(ruta, a.file, { contentType: a.file.type || 'application/octet-stream' }); if (up.error) { avisoArch = ' (el archivo original NO se pudo guardar: falta ejecutar la parte 17 del SQL)'; break; } rutas.push({ ruta, nombre: a.nombre, tipo: a.file.type || '' }); }
+      const cab = { id: pedId, cliente_id: S.cliente.id, fecha_entrega: S.fecha, notas: notasFin, mensaje_origen: texto, origen, hash_origen: hash }; if (hl) cab.hora_limite = hl; if (rutas.length) cab.archivos = rutas;
       let ped = await sb.from('pedidos').insert(cab).select('id').single(); let sinColumnas = false;
       if (ped.error && (ped.error.code === '42703' || ped.error.code === 'PGRST204' || /column|schema cache/i.test(ped.error.message || ''))) {
-        sinColumnas = true; ped = await sb.from('pedidos').insert({ cliente_id: S.cliente.id, fecha_entrega: S.fecha, notas: ((notasFin ? notasFin + '\n' : '') + 'Texto original:\n' + texto).slice(0, 4000) }).select('id').single();
+        sinColumnas = true; if (rutas.length) { await sb.storage.from('pedidos-originales').remove(rutas.map(r => r.ruta)); avisoArch = ' (el archivo original no se guardó: falta la parte 17 del SQL)'; } ped = await sb.from('pedidos').insert({ cliente_id: S.cliente.id, fecha_entrega: S.fecha, notas: ((notasFin ? notasFin + '\n' : '') + 'Texto original:\n' + texto).slice(0, 4000) }).select('id').single();
       }
-      if (ped.error) { S.guardando = false; pintarPie(); toast(ped.error.code === '23505' ? 'Este mensaje ya estaba importado para ese cliente y día.' : msgErr(ped.error), 'err'); return; }
+      if (ped.error) { if (rutas.length) await sb.storage.from('pedidos-originales').remove(rutas.map(r => r.ruta)); S.guardando = false; pintarPie(); toast(ped.error.code === '23505' ? 'Este mensaje ya estaba importado para ese cliente y día.' : msgErr(ped.error), 'err'); return; }
       const li = await sb.from('lineas_pedido').insert(filas.map(f => Object.assign({ pedido_id: ped.data.id }, f)));
-      if (li.error) { await sb.from('pedidos').delete().eq('id', ped.data.id); S.guardando = false; pintarPie(); toast(msgErr(li.error), 'err'); return; }
+      if (li.error) { await sb.from('pedidos').delete().eq('id', ped.data.id); if (rutas.length) await sb.storage.from('pedidos-originales').remove(rutas.map(r => r.ruta)); S.guardando = false; pintarPie(); toast(msgErr(li.error), 'err'); return; }
       await recordarAlias();
-      toast(sinColumnas ? 'Pedido guardado (falta ejecutar la parte 15 del SQL: el texto original se guardó en las notas)' : 'Pedido guardado', 'ok'); state.fecha = S.fecha; go('pedido', { id: ped.data.id });
+      toast((sinColumnas ? 'Pedido guardado (falta ejecutar la parte 15 del SQL: el texto original se guardó en las notas)' : 'Pedido guardado') + avisoArch, avisoArch ? 'err' : 'ok'); state.fecha = S.fecha; go('pedido', { id: ped.data.id });
     } catch (e) { S.guardando = false; pintarPie(); toast(msgErr(e), 'err'); }
   }
+  async function guardarAnadir(texto) {
+    const ex = await sb.from('lineas_pedido').select('producto_id').eq('pedido_id', S.anadir);
+    const ya = new Set((ex.data || []).map(l => l.producto_id)); const rep = S.lineas.filter(l => ya.has(l.producto.id)).map(l => l.producto.nombre);
+    if (rep.length && !await confirmar('Este pedido YA tiene: ' + rep.slice(0, 6).join(', ') + '. Añadirlos otra vez los duplicaría. ¿Añadir igualmente?')) { S.guardando = false; pintarPie(); return; }
+    const inactivos = S.lineas.filter(l => l.producto.activo === false).map(l => l.producto);
+    if (inactivos.length) { if (!await confirmar('Se van a ACTIVAR: ' + inactivos.map(p => p.nombre).join(', ') + '. ¿Continuar?')) { S.guardando = false; pintarPie(); return; } for (const p of inactivos) { const a = await sb.from('productos').update({ activo: true }).eq('id', p.id); if (a.error) { S.guardando = false; pintarPie(); toast(msgErr(a.error), 'err'); return; } } }
+    const filas = S.lineas.map(l => ({ pedido_id: S.anadir, producto_id: l.producto.id, cantidad_pedida: parseNum(l.cantidad), unidad_pedida: l.unidad || 'pieza', unidad_precio: l.unidad_precio, precio: String(l.precio).trim() === '' ? null : parseNum(l.precio), notas: (l.detalle || '').trim() || null }));
+    const li = await sb.from('lineas_pedido').insert(filas); if (li.error) { S.guardando = false; pintarPie(); toast(msgErr(li.error), 'err'); return; }
+    const antes = (S.anadirPed && S.anadirPed.mensaje_origen) || ''; await sb.from('pedidos').update({ mensaje_origen: (antes ? antes + '\n--- añadido ---\n' : '') + texto }).eq('id', S.anadir);
+    await recordarAlias(); toast('Productos añadidos al pedido', 'ok'); go('pedido', { id: S.anadir });
+  }
+  /* Dictado por voz (reconocimiento del navegador) */
+  let rec = null, oyendo = false, baseVoz = '';
+  const btnVoz = h('button', { class: modo === 'voz' ? '' : 'ghost', style: 'flex:1' }, '🎤 Dictar');
+  function pintarVoz() { btnVoz.textContent = oyendo ? '⏹ Parar y revisar' : '🎤 Dictar'; btnVoz.style.background = oyendo ? '#dc2626' : ''; btnVoz.style.color = oyendo ? '#fff' : ''; }
+  btnVoz.onclick = async () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { toast('Este navegador no permite dictar. Abre la app en Chrome (Android) o usa el micrófono del teclado.', 'err'); return; }
+    if (oyendo) { try { rec.stop(); } catch (e) { } return; }
+    if (!LS.get('fj_voz_ok', false)) { if (!await confirmar('Para dictar, el móvil (Chrome) envía el audio a Google para convertirlo en texto. Ferjusanz no guarda la grabación. ¿Lo aceptas? Si no, escribe el pedido o usa el micrófono del teclado.')) return; LS.set('fj_voz_ok', true); }
+    rec = new SR(); rec.lang = 'es-ES'; rec.continuous = true; rec.interimResults = true; baseVoz = ta.value.trim() ? ta.value.trim() + '\n' : '';
+    rec.onresult = e => { let t = ''; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript + ' '; ta.value = baseVoz + t.trim(); };
+    rec.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toast('No tengo permiso para el micrófono. Actívalo en los ajustes del navegador.', 'err'); else if (e.error !== 'no-speech' && e.error !== 'aborted') toast('Error del dictado: ' + e.error, 'err'); };
+    rec.onend = () => { oyendo = false; pintarVoz(); if (ta.value.trim() && !S.archivos.length) S.origen = 'voz'; if (ta.value.trim()) interpretar(); };
+    try { rec.start(); oyendo = true; S.origen = 'voz'; pintarVoz(); } catch (e) { toast('No se pudo iniciar el micrófono', 'err'); }
+  };
+  /* Escaneo: foto, galería, captura o PDF */
+  const archBox = h('div', {});
+  const inFoto = h('input', { type: 'file', accept: 'image/*', capture: 'environment', style: 'display:none' });
+  const inGal = h('input', { type: 'file', accept: 'image/*', multiple: true, style: 'display:none' });
+  const inDoc = h('input', { type: 'file', accept: 'application/pdf,image/*', multiple: true, style: 'display:none' });
+  [inFoto, inGal, inDoc].forEach(i => i.onchange = async () => { const fs = Array.from(i.files || []); i.value = ''; await tomarArchivos(fs); });
+  async function tomarArchivos(fs) {
+    let leidos = 0;
+    for (const f of fs) {
+      const a = { id: uuid(), file: f, nombre: f.name || 'pedido', url: f.type.startsWith('image/') ? URL.createObjectURL(f) : null, estado: 'leyendo', msg: 'Preparando…', aviso: '' };
+      S.archivos.push(a); pintarArch();
+      try {
+        const r = await waLeerArchivo(f, m => { a.msg = m; pintarArch(); });
+        a.texto = r.texto; a.estado = 'ok';
+        if (!r.texto || r.texto.replace(/\s/g, '').length < 8) { a.estado = 'mala'; a.aviso = 'No he podido leer nada. Repite la foto con más luz, bien enfocada y con la hoja entera.'; }
+        else {
+          const av = []; if (r.conf != null && r.conf < 60) av.push('lectura poco segura (' + Math.round(r.conf) + '%): si es letra a mano, revisa TODO con la imagen'); if (r.nitidez != null && r.nitidez < 15) av.push('la foto parece borrosa'); if (av.length) { a.estado = 'dudosa'; a.aviso = av.join(' · ') + '. Puedes repetirla.'; }
+          ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + r.texto; leidos++;
+        }
+      } catch (e) { a.estado = 'mala'; a.aviso = 'No se pudo leer: ' + (e && e.message ? e.message : e); }
+      pintarArch();
+    }
+    S.origen = 'imagen'; if (leidos) await interpretar();
+  }
+  function quitarArch(a) { S.archivos = S.archivos.filter(x => x !== a); pintarArch(); }
+  function verArch(a) {
+    if (!a.url) { const u = URL.createObjectURL(a.file); window.open(u, '_blank'); return; }
+    hoja(a.nombre, h('div', { style: 'overflow:auto;max-height:70vh' }, h('img', { src: a.url, style: 'width:100%;min-width:100%' })));
+  }
+  function pintarArch() {
+    if (!S.archivos.length) { archBox.replaceChildren(); return; }
+    archBox.replaceChildren(h('div', { class: 'sub', style: 'margin-top:8px' }, 'Originales (toca para ver grande y comparar con el pedido leído):'),
+      h('div', { style: 'display:flex;gap:8px;overflow-x:auto;padding:6px 0' }, S.archivos.map((a, i) => h('div', { class: 'card', style: 'min-width:130px;max-width:150px;padding:6px;' + (a.estado === 'mala' ? 'border-color:#ef4444;background:#fee2e2' : a.estado === 'dudosa' ? 'border-color:#eab308;background:#fef9c3' : '') },
+        a.url ? h('img', { src: a.url, style: 'width:100%;height:90px;object-fit:cover;border-radius:6px', onclick: () => verArch(a) }) : h('div', { style: 'height:90px;display:flex;align-items:center;justify-content:center;font-size:34px', onclick: () => verArch(a) }, '📄'),
+        h('div', { class: 'sub', style: 'font-size:11px;word-break:break-all' }, (i + 1) + '. ' + a.nombre.slice(-24)),
+        h('div', { style: 'font-size:12px' }, a.estado === 'leyendo' ? '⏳ ' + a.msg : a.estado === 'ok' ? '✔ Leída' : a.aviso),
+        h('button', { class: 'ghost small', style: 'margin-top:4px', onclick: () => quitarArch(a) }, 'Quitar')))),
+      S.archivos.some(a => a.estado === 'ok' || a.estado === 'dudosa') ? h('div', { class: 'sub' }, 'Compara cada línea de abajo con la imagen. La lectura gratuita funciona bien con texto impreso; la letra a mano puede fallar.') : null);
+  }
+  const barra = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:8px 0' }, btnVoz,
+    h('button', { class: modo === 'escanear' ? '' : 'ghost', style: 'flex:1', onclick: () => inFoto.click() }, '📷 Hacer foto'),
+    h('button', { class: 'ghost', style: 'flex:1', onclick: () => inGal.click() }, '🖼️ Galería / captura'),
+    h('button', { class: 'ghost', style: 'flex:1', onclick: () => inDoc.click() }, '📄 PDF / documento'), inFoto, inGal, inDoc);
   async function recordarAlias() {
     try {
       const ap = aprendidos('fj_wa_alias');
@@ -3294,18 +3418,35 @@ function vistaImportar() {
     } catch (e) { }
   }
   const btnInt = h('button', { style: 'width:100%;margin-top:8px', onclick: interpretar }, 'Interpretar pedido');
-  $app.replaceChildren(shell('Escribir pedido', h('div', {}, h('p', { class: 'sub' }, 'Escribe el pedido tal como lo dirías. Reviso cliente, fecha, productos y cantidades y tú confirmas. Nada se guarda solo.'), ta, btnInt,
-    h('div', { style: 'margin-top:12px' }, cliBox), fechaBox, horaBox, avisoBox, lineasBox, ignBox, pie), { volver: () => go('nuevo') })); renderBanner();
+  const fijoBox = h('div', {});
+  $app.replaceChildren(shell(S.anadir ? 'Añadir al pedido' : modo === 'voz' ? 'Dictar pedido' : modo === 'escanear' ? 'Escanear pedido' : 'Escribir pedido', h('div', {}, h('p', { class: 'sub' }, S.anadir ? 'Escribe, dicta o escanea los productos que faltan. Se añadirán a este pedido; no se crea otro.' : 'Escribe, dicta o escanea el pedido. Reviso cliente, fecha, productos y cantidades y tú confirmas. Nada se guarda solo.'), barra, archBox, ta, btnInt,
+    fijoBox, h('div', { style: 'margin-top:12px' }, cliBox), fechaBox, horaBox, avisoBox, lineasBox, ignBox, pie), { volver: () => S.anadir ? go('pedido', { id: S.anadir }) : go('nuevo') })); renderBanner();
   pintarCliente(); pintarFecha(); pintarHora();
+  if (S.anadir) {
+    cliBox.style.display = 'none'; fechaBox.style.display = 'none'; horaBox.style.display = 'none';
+    sb.from('pedidos').select('id,fecha_entrega,mensaje_origen,clientes(*)').eq('id', S.anadir).single().then(r => {
+      if (r.error || !r.data) { toast('No se pudo abrir el pedido', 'err'); return; }
+      S.anadirPed = r.data; S.anadirFecha = r.data.fecha_entrega; S.fecha = r.data.fecha_entrega; S.fechaOk = true; const c = uno(r.data.clientes);
+      S.cliente = c; S.clienteManual = true; S.clienteEstado = 'ok'; fijoBox.replaceChildren(h('div', { class: 'card' }, '📦 Pedido de ', h('b', {}, nombreCli(c)), ' · entrega ' + fechaES(r.data.fecha_entrega))); ponPrecios(); pintarPie();
+    });
+  }
   if (ta.value.trim()) interpretar();
 }
 async function waMostrarOrigen(cont, pedidoId) {
   if (!esOficina() || !navigator.onLine) return;
   try {
-    const r = await sb.from('pedidos').select('mensaje_origen,origen').eq('id', pedidoId).maybeSingle();
-    if (r.error || !r.data || !r.data.mensaje_origen || !document.body.contains(cont)) return;
+    let r = await sb.from('pedidos').select('mensaje_origen,origen,archivos').eq('id', pedidoId).maybeSingle();
+    if (r.error) r = await sb.from('pedidos').select('mensaje_origen,origen').eq('id', pedidoId).maybeSingle();
+    const arch = r.data && Array.isArray(r.data.archivos) ? r.data.archivos : [];
+    if (r.error || !r.data || (!r.data.mensaje_origen && !arch.length) || !document.body.contains(cont)) return;
     if (cont.querySelector('.wa-origen')) return;
-    cont.append(h('details', { class: 'card wa-origen' }, h('summary', {}, '📲 Mensaje original (' + (r.data.origen || 'texto') + ')'), h('div', { style: 'white-space:pre-wrap;margin-top:6px' }, r.data.mensaje_origen)));
+    const etq = { texto: '✍️ Texto', voz: '🎤 Dictado', imagen: '📷 Imagen' }[r.data.origen] || '📲 Mensaje';
+    cont.append(h('details', { class: 'card wa-origen' }, h('summary', {}, etq + ' original (' + (r.data.origen || 'texto') + ')'),
+      r.data.mensaje_origen ? h('div', { style: 'white-space:pre-wrap;margin-top:6px' }, r.data.mensaje_origen) : null,
+      arch.map((a, i) => h('button', { class: 'ghost small', style: 'margin-top:6px;display:block', onclick: async () => {
+        const u = await sb.storage.from('pedidos-originales').createSignedUrl(a.ruta, 900); if (u.error) { toast(msgErr(u.error), 'err'); return; }
+        if ((a.tipo || '').startsWith('image/')) hoja(a.nombre, h('div', { style: 'overflow:auto;max-height:70vh' }, h('img', { src: u.data.signedUrl, style: 'width:100%' }))); else window.open(u.data.signedUrl, '_blank');
+      } }, '📎 Ver original ' + (i + 1) + ': ' + a.nombre))));
   } catch (e) { }
 }
 
