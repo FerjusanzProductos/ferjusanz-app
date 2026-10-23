@@ -2803,6 +2803,15 @@ function vistaDeudas() {
 /* ---------- Pedido inteligente por texto: interpretación de mensajes y reconocimiento de clientes y productos ---------- */
 const WA_UNIDADES = { kg: 'kg', kgs: 'kg', kilo: 'kg', kilos: 'kg', kilogramo: 'kg', kilogramos: 'kg', k: 'kg', g: 'g', gr: 'g', grs: 'g', gramo: 'g', gramos: 'g', caja: 'caja', cajas: 'caja', saco: 'saco', sacos: 'saco', malla: 'saco', mallas: 'saco', manojo: 'manojo', manojos: 'manojo', bolsa: 'bolsa', bolsas: 'bolsa', bandeja: 'bandeja', bandejas: 'bandeja', ud: 'pieza', uds: 'pieza', und: 'pieza', unds: 'pieza', u: 'pieza', unidad: 'pieza', unidades: 'pieza', pieza: 'pieza', piezas: 'pieza', pza: 'pieza', pzas: 'pieza', docena: 'docena', docenas: 'docena' };
 const WA_UNI_CORTAS = new Set(['k', 'g', 'u', 'gr', 'grs']);
+/* Abreviaturas de unidad que se aceptan SOLO justo después de una cantidad («3 s», «1 c», «6 b»). Se pueden ampliar desde el panel. */
+const WA_ABREV_DEF = { s: 'saco', c: 'caja', b: 'bolsa/bandeja', m: 'manojo', pz: 'pieza', k: 'kg' };
+let WA_ABREV = Object.assign({}, WA_ABREV_DEF);
+/* «a 2,00€», «2 euros el kg»: precio escrito dentro de una línea */
+function waPrecio(tr) {
+  const m = /(?:\ba\s+)?(\d+(?:[.,]\d+)?)\s*(?:€|euros?\b|eur\b)(?:\s*(?:\/|el\s+|la\s+|por\s+)\s*(kg|kilo|kilos|k|caja|saco|ud|u|pieza|bolsa|bandeja|manojo)\b)?/i.exec(tr);
+  if (!m) return null; const u = (m[2] || '').toLowerCase();
+  return { valor: parseFloat(m[1].replace(',', '.')), uni: !u ? null : /^(kg|kilo|kilos|k)$/.test(u) ? 'kg' : 'unidad', texto: tr.slice(0, m.index) + ' ' + tr.slice(m.index + m[0].length) };
+}
 const WA_NUM1 = { un: 1, uno: 1, una: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10, once: 11, doce: 12, trece: 13, catorce: 14, quince: 15, dieciseis: 16, diecisiete: 17, dieciocho: 18, diecinueve: 19, veinte: 20, veintiuno: 21, veintiun: 21, veintiuna: 21, veintidos: 22, veintitres: 23, veinticuatro: 24, veinticinco: 25, veintiseis: 26, veintisiete: 27, veintiocho: 28, veintinueve: 29, treinta: 30, cuarenta: 40, cincuenta: 50, sesenta: 60, setenta: 70, ochenta: 80, noventa: 90, cien: 100, ciento: 100, doscientos: 200, trescientos: 300, cuatrocientos: 400, quinientos: 500, medio: 0.5, media: 0.5 };
 const WA_DECENAS = new Set([30, 40, 50, 60, 70, 80, 90]);
 const WA_RUIDO = new Set('de del la el los las lo unos unas por favor hola buenas buenos dias tardes noches gracias ponme ponedme pon necesito necesitamos necesitaria necesita necesitan quiero queremos quiere quieren quisiera pide piden encarga encargan lleva llevan mandame mandar manda mandadme enviame traeme dame ademas tambien para con en y e o mas que si me nos se puedes podeis podrias algo saludos ok vale pedido pedir otro otra al a es esta estan hay apunta apuntame anota anotame pedidos'.split(' '));
@@ -2943,6 +2952,7 @@ function waClienteFrase(texto) {
   if (m && noFecha(m[1])) { frase = m[1]; ini = m.index; fin = m.index + m[0].length; }
   if (!frase) { m = /\b(?:cliente|de\s+parte\s+de|para\s+el\s+cliente)\s*:?\s+(.+?)(?=\s*[,.;:\n]|$)/.exec(s); if (m && noFecha(m[1])) { frase = m[1]; ini = m.index; fin = m.index + m[0].length; } }
   if (!frase) { m = /^\s*(?:hola[,.\s]+)?(?:buenos\s+dias[,.\s]+|buenas[,.\s]+)?([a-z][a-z0-9 ]{1,40}?)\s+(?:necesita|necesitan|quiere|quieren|pide|piden|encarga|encargan|lleva)\b/.exec(s); if (m && noFecha(m[1]) && waPalabras(m[1]).length) { frase = m[1]; ini = s.indexOf(m[1]); fin = ini + m[1].length; } }
+  if (!frase) { const nl = /^[ \t]*([^\n\d€]{2,60}?)[ \t]*\n/.exec(texto); if (nl && !waEsObs(nl[1]) && waPalabras(nl[1]).length && !/(manana|pasado|hoy|lunes|martes|miercoles|jueves|viernes|sabado|domingo)/.test(waSin(nl[1]))) { frase = waSin(nl[1]); ini = 0; fin = nl[0].length; return { frase: frase.trim(), texto: ' ' + texto.slice(fin) }; } }
   if (!frase) return { frase: null, texto: texto };
   return { frase: frase.trim(), texto: texto.slice(0, ini) + ' ' + texto.slice(fin) };
 }
@@ -2955,6 +2965,7 @@ function waTokens(chunk) {
       const w = waSin(m[3]); const prev = out[out.length - 1];
       if (WA_NUM1[w] != null) out.push({ t: m[3], tipo: 'num', v: WA_NUM1[w], palabra: true });
       else if (WA_UNIDADES[w] && (!WA_UNI_CORTAS.has(w) || (prev && prev.tipo === 'num'))) out.push({ t: m[3], tipo: 'uni', v: WA_UNIDADES[w] });
+      else if (WA_ABREV[w] && prev && prev.tipo === 'num') out.push({ t: m[3], tipo: 'uni', v: WA_ABREV[w] });
       else if (WA_CORR.has(w)) out.push({ t: m[3], tipo: 'corr' });
       else if (w === 'y') out.push({ t: m[3], tipo: 'ruido', y: true });
       else if (WA_RUIDO.has(w)) out.push({ t: m[3], tipo: 'ruido' }); else out.push({ t: m[3], tipo: 'pal' });
@@ -3000,7 +3011,7 @@ function waInterpretar(texto, ahora) {
   const fr = waFecha(t, ahora); t = fr.texto; fr.avisos.forEach(a => avisos.push(a));
   const conAlmohadilla = t.indexOf('#') >= 0; const ignorado = []; let trozos;
   if (conAlmohadilla) { const partes = t.split('#'); const cab = partes.shift(); if (waPalabras(cab).length) ignorado.push(cab.trim()); trozos = partes; }
-  else trozos = t.split(/[\n;]+|\.(?!\d)|,(?!\d)|(?:^|\s)[-•*]\s+/);
+  else trozos = t.replace(/(^|\n)[ \t]*[-•*][ \t]*(?=\S)/g, '$1').split(/[\n;]+|\.(?!\d)|,(?!\d)|(?:^|\s)[-•*]\s+/);
   const items = []; let pendCorr = false;
   const ponHora = h => { if (h.limite && !hora.limite) hora.limite = h.limite; if (h.desde && !hora.desde) hora.desde = h.desde; if (h.hasta && !hora.hasta) hora.hasta = h.hasta; };
   trozos.forEach(tr => {
@@ -3008,7 +3019,9 @@ function waInterpretar(texto, ahora) {
     if (waEsObs(tr)) { observaciones.push(tr.trim()); ponHora(waHora(tr)); return; }
     { const hh = waHora(tr); if (hh.limite || hh.desde) { ponHora(hh); tr = hh.texto; if (!tr.trim()) return; } }
     const toks = waTokens(tr); if (toks.length && toks.every(k => k.tipo === 'corr' || k.tipo === 'ruido')) { if (toks.some(k => k.tipo === 'corr')) pendCorr = true; if (!toks.some(k => k.tipo === 'corr')) ignorado.push(tr.trim()); return; }
+    const pm = waPrecio(tr); if (pm) tr = pm.texto;
     const its = waItemsDeTrozo(tr, pendCorr); pendCorr = false;
+    if (pm && its.length) { const u = its[its.length - 1]; u.precio = pm.valor; u.precioUni = pm.uni; }
     if (!its.length) { ignorado.push(tr.trim()); return; }
     its.forEach(x => { x.dePorAlmohadilla = conAlmohadilla; items.push(x); });
   });
@@ -3023,7 +3036,7 @@ function waInterpretar(texto, ahora) {
       fin[fin.length - 1] = Object.assign(it, { corregido: true, raw: prev.raw + ' → ' + it.raw }); avisos.push('Corrección entendida: «' + prev.nombre + '» sustituido por «' + it.nombre + '».'); return;
     }
     /* tamaño del envase: «2 sacos de patata de 25 kilos» */
-    if (prev && !it.nombre && it.qty != null && it.unit === 'kg' && ['saco', 'caja', 'bolsa', 'bandeja'].includes(prev.unit) && !it.corr) { prev.detalle = prev.unit + 's de ' + String(it.qty).replace('.', ',') + ' kg'; prev.raw += ' ' + it.raw; return; }
+    if (prev && !it.nombre && it.qty != null && it.unit === 'kg' && ['saco', 'caja', 'bolsa', 'bandeja', 'bolsa/bandeja'].includes(prev.unit) && !it.corr) { prev.detalle = prev.unit + 's de ' + String(it.qty).replace('.', ',') + ' kg'; prev.raw += ' ' + it.raw; return; }
     fin.push(it);
   });
   const hAviso = (hora.desde && hora.hasta) ? 'Franja de entrega: ' + hora.desde + '–' + hora.hasta : hora.limite ? 'Hora límite de entrega: ' + hora.limite : hora.desde ? 'Entrega sobre las ' + hora.desde : '';
@@ -3036,7 +3049,9 @@ function waResolver(interp, indice) {
     const r = it.nombre ? waBuscarProducto(it.nombre, indice) : { estado: 'noenc', cand: [] };
     const sinCantidadReal = it.qty == null || it.qtyImplicita;
     if (r.estado === 'noenc' && sinCantidadReal && !it.dePorAlmohadilla) { ignorado.push(it.raw); return; }
-    lineas.push({ raw: it.raw, nombre: it.nombre, estado: r.estado, producto: r.producto || null, cand: r.cand, cantidad: it.qty, unidad: it.unit, qtyImplicita: it.qtyImplicita, detalle: it.detalle || '', corregido: !!it.corregido, porActivo: !!r.porActivo });
+    let uni = it.unit, uniAmbigua = false;
+    if (uni === 'bolsa/bandeja') { const uv = r.producto && r.producto.unidad_venta; if (uv === 'bandeja' || uv === 'bolsa') uni = uv; else { uni = 'bolsa'; uniAmbigua = true; } }
+    lineas.push({ raw: it.raw, nombre: it.nombre, estado: r.estado, producto: r.producto || null, cand: r.cand, cantidad: it.qty, unidad: uni, uniAmbigua, precioTexto: it.precio != null ? it.precio : null, precioUniTexto: it.precioUni || null, qtyImplicita: it.qtyImplicita, detalle: it.detalle || '', corregido: !!it.corregido, porActivo: !!r.porActivo });
   });
   return { lineas, ignorado };
 }
@@ -3064,6 +3079,49 @@ function waClienteEnTexto(texto, clientes) {
   return hits.length === 1 ? hits[0] : null;
 }
 /*WA-FIN*/
+
+/* ---------- Memoria: abreviaturas y kilos por saco / caja (compartida si existen las tablas de la parte 18; si no, solo en este móvil) ---------- */
+const WA_ENVASES = ['saco', 'caja', 'bolsa', 'bandeja', 'manojo'];
+const WA_PLURAL = { saco: 'sacos', caja: 'cajas', bolsa: 'bolsas', bandeja: 'bandejas', manojo: 'manojos' };
+const WA_KG_SUGERIDOS = { saco: [25, 10] };
+let WAMEM = null;
+const fmtKg = x => String(Math.round(x * 100) / 100).replace('.', ',');
+function waMemGuardarLocal() { LS.set('fj_wa_mem', { abrev: WAMEM.abrev, eq: WAMEM.eq }); }
+function waMemAplicar() { const ab = {}; Object.keys(WAMEM.abrev).forEach(k => { ab[waSin(k).replace(/[^a-z]/g, '')] = WAMEM.abrev[k]; }); WA_ABREV = Object.assign({}, WA_ABREV_DEF, ab); }
+async function waMemCargar(forzar) {
+  if (WAMEM && !forzar) return WAMEM;
+  const m = LS.get('fj_wa_mem', { abrev: {}, eq: {} }); WAMEM = { abrev: Object.assign({}, m.abrev), eq: JSON.parse(JSON.stringify(m.eq || {})), remoto: false };
+  try {
+    if (navigator.onLine) {
+      const a = await sb.from('abreviaturas').select('abrev,unidad'); const e = await sb.from('equivalencias').select('producto_id,unidad,kg,usos');
+      if (!a.error && !e.error) {
+        WAMEM.remoto = true; WAMEM.abrev = {}; (a.data || []).forEach(x => { WAMEM.abrev[x.abrev] = x.unidad; });
+        WAMEM.eq = {}; (e.data || []).forEach(x => { const o = (WAMEM.eq[x.producto_id] = WAMEM.eq[x.producto_id] || {}); (o[x.unidad] = o[x.unidad] || []).push({ kg: Number(x.kg), usos: x.usos || 1 }); });
+        waMemGuardarLocal();
+      }
+    }
+  } catch (er) { }
+  waMemAplicar(); return WAMEM;
+}
+function waMemEq(prodId, unidad) { const o = WAMEM && WAMEM.eq[prodId]; return ((o && o[unidad]) || []).slice().sort((a, b) => (b.usos || 0) - (a.usos || 0) || a.kg - b.kg); }
+async function waMemSetAbrev(abrev, unidad) {
+  abrev = waSin(abrev).replace(/[^a-z]/g, ''); if (!abrev || abrev.length > 4) throw new Error('La abreviatura debe tener de 1 a 4 letras'); if (!unidad) throw new Error('Elige la unidad');
+  await waMemCargar(); WAMEM.abrev[abrev] = unidad; waMemGuardarLocal(); waMemAplicar();
+  if (WAMEM.remoto) { const r = await sb.from('abreviaturas').upsert({ abrev, unidad }); if (r.error) throw r.error; }
+}
+async function waMemDelAbrev(abrev) {
+  await waMemCargar(); delete WAMEM.abrev[abrev]; waMemGuardarLocal(); waMemAplicar();
+  if (WAMEM.remoto) { const r = await sb.from('abreviaturas').delete().eq('abrev', abrev); if (r.error) throw r.error; }
+}
+async function waMemUsar(prodId, unidad, kg, usos) {
+  if (!prodId || !(kg > 0) || !WA_ENVASES.includes(unidad)) return; await waMemCargar();
+  const o = (WAMEM.eq[prodId] = WAMEM.eq[prodId] || {}); const l = (o[unidad] = o[unidad] || []); let x = l.find(v => v.kg === kg); if (!x) { x = { kg, usos: 0 }; l.push(x); } x.usos = (usos != null ? usos : x.usos + 1); waMemGuardarLocal();
+  if (WAMEM.remoto) { const r = await sb.from('equivalencias').upsert({ producto_id: prodId, unidad, kg, usos: x.usos }, { onConflict: 'producto_id,unidad,kg' }); if (r.error) throw r.error; }
+}
+async function waMemDelEq(prodId, unidad, kg) {
+  await waMemCargar(); const o = WAMEM.eq[prodId]; if (o && o[unidad]) o[unidad] = o[unidad].filter(v => v.kg !== kg); waMemGuardarLocal();
+  if (WAMEM.remoto) { const r = await sb.from('equivalencias').delete().eq('producto_id', prodId).eq('unidad', unidad).eq('kg', kg); if (r.error) throw r.error; }
+}
 
 /* ---------- Lectura de imágenes y PDF (gratis, dentro del móvil) ---------- */
 const WA_TESS = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
@@ -3201,7 +3259,46 @@ function vistaImportar() {
     try { const r = await sb.from('pedidos').select('id,lineas_pedido(producto_id)').eq('cliente_id', S.cliente.id).neq('estado', 'anulado').order('fecha_entrega', { ascending: false }).limit(60); if (r.error) return; r.data.forEach(p => (p.lineas_pedido || []).forEach(l => { S.hist[l.producto_id] = (S.hist[l.producto_id] || 0) + 1; })); } catch (e) { }
     pintarLineas();
   }
-  function asigna(l, p, manual) { l.producto = p; l.estado = 'ok'; l.manual = !!manual; if (!l.unidad) { l.unidad = 'pieza'; l.sinUnidad = p.unidad_venta !== 'pieza'; } l.unidad_precio = p.unidad_precio; l.precio = ''; l.precioManual = false; }
+  function kgMemoria(l) { if (l.kgPor || !l.producto || !WA_ENVASES.includes(uniStr(l))) return; const m = waMemEq(l.producto.id, uniStr(l)); if (m.length) { l.kgPor = m[0].kg; l.kgRecordado = true; } }
+  function actualizaDetalle(l) {
+    const u = uniStr(l); const auto = !l.detalle || l.detalleAuto || /^\w+ de [\d.,]+ kg/.test(l.detalle);
+    if (!l.kgPor || !WA_ENVASES.includes(u)) { if (l.detalleAuto) { l.detalle = ''; l.detalleAuto = false; } return; }
+    if (!auto) return; const q = parseNum(l.cantidad);
+    l.detalle = WA_PLURAL[u] + ' de ' + fmtKg(l.kgPor) + ' kg' + (q > 0 ? ' · total ' + fmtKg(q * l.kgPor) + ' kg' : ''); l.detalleAuto = true; if (l._det) l._det.value = l.detalle;
+  }
+  function kgFila(l) {
+    const u = uniStr(l); if (!l.producto || !WA_ENVASES.includes(u)) return null;
+    const mem = waMemEq(l.producto.id, u).map(x => x.kg); const sug = (WA_KG_SUGERIDOS[u] || []).filter(k => !mem.includes(k)); const todos = mem.concat(sug);
+    const tot = h('div', { class: 'sub' }); l._upd = () => { const q = parseNum(l.cantidad); tot.textContent = l.kgPor ? (q > 0 ? '= ' + fmtKg(q * l.kgPor) + ' kg en total' : '') + (l.kgRecordado ? ' · recordado de otras veces, compruébalo' : '') : 'Sin equivalencia en kg: se queda en ' + (q > 0 ? fmtKg(q) : '…') + ' ' + WA_PLURAL[u] + '. Si lo sabes, elige los kg.'; actualizaDetalle(l); };
+    const otro = h('input', { type: 'text', inputmode: 'decimal', placeholder: 'otro', style: 'width:70px', onchange: e => { const v = parseNum(e.target.value); l.kgPor = v > 0 ? v : null; l.kgRecordado = false; actualizaDetalle(l); pintarLineas(); } });
+    const fila = h('div', { style: 'margin-top:6px' }, h('div', { class: 'sub' }, 'Kg por ' + u + ':'), h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;align-items:center' },
+      todos.map(k => h('button', { class: 'chip' + (l.kgPor === k ? ' on' : ''), onclick: () => { l.kgPor = l.kgPor === k ? null : k; l.kgRecordado = false; actualizaDetalle(l); pintarLineas(); } }, (mem.includes(k) ? '★ ' : '') + fmtKg(k) + ' kg')), otro), tot);
+    l._upd(); return fila;
+  }
+  function abrirPanelAbrev() {
+    const cont = h('div', {}); let prodSel = null;
+    const pintar = async () => {
+      await waMemCargar(); const ab = Object.assign({}, WA_ABREV_DEF, WAMEM.abrev); const nom = { 'bolsa/bandeja': 'bolsa o bandeja (según el producto)' };
+      const abIn = h('input', { placeholder: 'abreviatura, ej. bd', style: 'width:110px', maxlength: 4 }); const unSel = h('select', {}, ['saco', 'caja', 'bolsa', 'bandeja', 'manojo', 'pieza', 'kg', 'bolsa/bandeja'].map(u => h('option', { value: u }, nom[u] || u)));
+      const filas = Object.keys(ab).map(k => h('div', { class: 'fila', style: 'padding:4px 0' }, h('div', {}, h('b', {}, k), ' = ' + (nom[ab[k]] || ab[k]) + (WAMEM.abrev[k] ? '' : ' (base)')), WAMEM.abrev[k] ? h('button', { class: 'peligro small', onclick: async () => { try { await waMemDelAbrev(k); pintar(); } catch (e) { toast(msgErr(e), 'err'); } } }, 'Quitar') : null));
+      const resEq = h('div', {}); const pintarEq = () => {
+        if (!prodSel) { resEq.replaceChildren(); return; }
+        const unE = h('select', {}, WA_ENVASES.map(u => h('option', { value: u }, u))); const kgIn = h('input', { placeholder: 'kg', inputmode: 'decimal', style: 'width:70px' });
+        const lista = []; WA_ENVASES.forEach(u => waMemEq(prodSel.id, u).forEach(x => lista.push(h('div', { class: 'fila', style: 'padding:3px 0' }, h('div', {}, '1 ' + u + ' = ' + fmtKg(x.kg) + ' kg  (usado ' + x.usos + ' veces)'), h('button', { class: 'peligro small', onclick: async () => { try { await waMemDelEq(prodSel.id, u, x.kg); pintarEq(); pintarLineas(); } catch (e) { toast(msgErr(e), 'err'); } } }, 'Quitar')))));
+        resEq.replaceChildren(h('div', { class: 'nombre', style: 'margin-top:8px' }, prodSel.nombre), ...(lista.length ? lista : [h('div', { class: 'sub' }, 'Todavía no hay equivalencias para este producto.')]),
+          h('div', { style: 'display:flex;gap:6px;margin-top:6px;align-items:center' }, '1', unE, '=', kgIn, 'kg', h('button', { class: 'small', onclick: async () => { const v = parseNum(kgIn.value); if (!(v > 0)) { toast('Escribe los kg', 'err'); return; } try { await waMemUsar(prodSel.id, unE.value, v, 1); pintarEq(); pintarLineas(); } catch (e) { toast(msgErr(e), 'err'); } } }, 'Añadir')));
+      };
+      const busca = h('input', { placeholder: 'Buscar producto…' }); const res = h('div', {});
+      busca.oninput = debounce(() => { const t = sinTilde(limpiaBusqueda(busca.value)); if (!t) { res.replaceChildren(); return; } const r = (S.prods || []).filter(p => t.split(/\s+/).every(w => sinTilde(p.nombre + ' ' + p.codigo).includes(w))).slice(0, 8); res.replaceChildren(h('div', { class: 'res' }, r.map(p => h('button', { onclick: () => { prodSel = p; res.replaceChildren(); busca.value = ''; pintarEq(); } }, p.nombre)))); }, 200);
+      cont.replaceChildren(h('div', { class: 'sub' }, WAMEM.remoto ? 'Compartido con todo el equipo.' : '⚠ Solo se guarda en este móvil (falta ejecutar la parte 18 del SQL para compartirlo).'),
+        h('h3', {}, 'Abreviaturas'), h('div', { class: 'sub' }, 'Se entienden justo detrás de un número: «3 s patatas», «1 c tomate», «6 b mezclum».'), ...filas,
+        h('div', { style: 'display:flex;gap:6px;margin-top:8px;align-items:center;flex-wrap:wrap' }, abIn, '=', unSel, h('button', { class: 'small', onclick: async () => { try { await waMemSetAbrev(abIn.value, unSel.value); pintar(); } catch (e) { toast(msgErr(e), 'err'); } } }, 'Añadir')),
+        h('h3', { style: 'margin-top:16px' }, 'Kg por saco, caja…'), h('div', { class: 'sub' }, 'Busca un producto y apunta cuántos kg tiene su saco o su caja. La app lo recordará.'), busca, res, resEq);
+      pintarEq();
+    };
+    hoja('Abreviaturas y kg por envase', cont); pintar();
+  }
+  function asigna(l, p, manual) { l.producto = p; l.estado = 'ok'; l.manual = !!manual; if (!l.unidad) { l.unidad = 'pieza'; l.sinUnidad = p.unidad_venta !== 'pieza'; } l.unidad_precio = p.unidad_precio; l.precio = ''; l.precioManual = false; l.kgPor = null; l.kgRecordado = false; kgMemoria(l); actualizaDetalle(l); }
   async function cargarRepetir() {
     if (!S.cliente || !S.repetir) return;
     try {
@@ -3219,8 +3316,9 @@ function vistaImportar() {
   async function interpretar() {
     const texto = ta.value; if (!texto.trim()) { toast('Escribe o pega primero el pedido', 'err'); return; }
     try { if (!S.prods) S.prods = await waProductos(); if (!S.clis) S.clis = await waClientes(); } catch (e) { toast(msgErr(e), 'err'); return; }
-    const it = waInterpretar(texto); const r = waResolver(it, indiceProd());
-    S.lineas = r.lineas.map(l => { const p = l.producto; const sin = !l.unidad && l.cantidad != null; return { id: uuid(), raw: l.raw, nombre: l.nombre, estado: l.estado, estadoOrigen: l.estado, producto: p, cand: l.cand, cantidad: l.cantidad != null ? String(l.cantidad).replace('.', ',') : '', unidad: l.unidad || (sin || p ? 'pieza' : null), sinUnidad: sin && (!p || p.unidad_venta !== 'pieza'), unidad_precio: p ? p.unidad_precio : 'kg', precio: '', detalle: l.detalle, corregido: l.corregido, porActivo: l.porActivo }; });
+    await waMemCargar(); const it = waInterpretar(texto); const r = waResolver(it, indiceProd());
+    S.lineas = r.lineas.map(l => { const p = l.producto; const sin = !l.unidad && l.cantidad != null; return { id: uuid(), raw: l.raw, nombre: l.nombre, estado: l.estado, estadoOrigen: l.estado, producto: p, cand: l.cand, cantidad: l.cantidad != null ? String(l.cantidad).replace('.', ',') : '', unidad: l.unidad || (sin || p ? 'pieza' : null), sinUnidad: sin && (!p || p.unidad_venta !== 'pieza'), unidad_precio: l.precioUniTexto === 'unidad' ? 'unidad' : l.precioUniTexto === 'kg' ? 'kg' : (p ? p.unidad_precio : 'kg'), precio: l.precioTexto != null ? String(l.precioTexto).replace('.', ',') : '', precioManual: l.precioTexto != null, uniAmbigua: l.uniAmbigua, detalle: l.detalle, corregido: l.corregido, porActivo: l.porActivo }; });
+    S.lineas.forEach(l => { const m = /de\s+([\d.,]+)\s*kg/i.exec(l.detalle || ''); if (m) { l.kgPor = parseNum(m[1]); l.detalleAuto = true; } kgMemoria(l); actualizaDetalle(l); });
     S.ignorado = r.ignorado; S.interpretado = true; S.aviso = ''; S.repetir = it.repetir; S.avisos = it.avisos.slice(); S.aliasCli = null;
     S.fechaOk = !!it.fecha; if (it.fecha) { S.fecha = it.fecha; S.fraseFecha = it.fraseFecha; } else { S.fecha = hoy(); S.fraseFecha = ''; }
     if (S.anadir && S.anadirFecha) { S.fecha = S.anadirFecha; S.fechaOk = true; }
@@ -3259,11 +3357,13 @@ function vistaImportar() {
       } else kids.push(h('button', { class: 'ghost small', onclick: () => { l.cambiando = true; pintarLineas(); } }, 'Cambiar producto'));
       if (l.sinUnidad) kids.push(h('div', { class: 'sub', style: 'color:#b45309' }, '⚠ El mensaje no dice la unidad: he puesto «pieza». Cámbiala si son kilos, cajas…'));
       kids.push(h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px' },
-        h('label', { class: 'campo' }, 'Cantidad', h('input', { type: 'text', inputmode: 'decimal', value: l.cantidad, oninput: e => { l.cantidad = e.target.value; pintarPie(); } })),
-        h('label', { class: 'campo' }, 'Unidad', h('select', { onchange: e => { l.unidad = e.target.value; l.sinUnidad = false; } }, UNIDADES.map(u => h('option', { value: u, selected: u === uniStr(l) }, u)))),
+        h('label', { class: 'campo' }, 'Cantidad', h('input', { type: 'text', inputmode: 'decimal', value: l.cantidad, oninput: e => { l.cantidad = e.target.value; if (l._upd) l._upd(); pintarPie(); } })),
+        h('label', { class: 'campo' }, 'Unidad', h('select', { onchange: e => { l.unidad = e.target.value; l.sinUnidad = false; l.kgPor = null; l.kgRecordado = false; if (l.detalleAuto) { l.detalle = ''; l.detalleAuto = false; } kgMemoria(l); actualizaDetalle(l); pintarLineas(); } }, UNIDADES.map(u => h('option', { value: u, selected: u === uniStr(l) }, u)))),
         h('label', { class: 'campo' }, 'Se cobra por', h('select', { onchange: e => l.unidad_precio = e.target.value }, ['kg', 'unidad'].map(u => h('option', { value: u, selected: u === l.unidad_precio }, u)))),
         h('label', { class: 'campo' }, 'Precio (€)', h('input', { type: 'text', inputmode: 'decimal', value: l.precio, placeholder: 'opcional', oninput: e => { l.precio = e.target.value; l.precioManual = true; } }))),
-        h('label', { class: 'campo' }, 'Detalle (opcional)', h('input', { type: 'text', value: l.detalle || '', placeholder: 'Ej.: sacos de 25 kg', oninput: e => l.detalle = e.target.value })));
+        h('label', { class: 'campo' }, 'Detalle (opcional)', (l._det = h('input', { type: 'text', value: l.detalle || '', placeholder: 'Ej.: sacos de 25 kg', oninput: e => { l.detalle = e.target.value; l.detalleAuto = false; } }))));
+      const kf = kgFila(l); if (kf) kids.push(kf);
+      if (l.uniAmbigua) kids.push(h('div', { class: 'sub', style: 'color:#b45309' }, '⚠ «b» puede ser bolsa o bandeja: he puesto bolsa. Cámbialo en Unidad si es bandeja.'));
       return h('div', { class: 'card' }, ...kids);
     }));
   }
@@ -3321,6 +3421,7 @@ function vistaImportar() {
       if (ped.error) { if (rutas.length) await sb.storage.from('pedidos-originales').remove(rutas.map(r => r.ruta)); S.guardando = false; pintarPie(); toast(ped.error.code === '23505' ? 'Este mensaje ya estaba importado para ese cliente y día.' : msgErr(ped.error), 'err'); return; }
       const li = await sb.from('lineas_pedido').insert(filas.map(f => Object.assign({ pedido_id: ped.data.id }, f)));
       if (li.error) { await sb.from('pedidos').delete().eq('id', ped.data.id); if (rutas.length) await sb.storage.from('pedidos-originales').remove(rutas.map(r => r.ruta)); S.guardando = false; pintarPie(); toast(msgErr(li.error), 'err'); return; }
+      for (const l of S.lineas) { try { if (l.kgPor && l.producto) await waMemUsar(l.producto.id, uniStr(l), l.kgPor); } catch (e) { } }
       await recordarAlias();
       toast((sinColumnas ? 'Pedido guardado (falta ejecutar la parte 15 del SQL: el texto original se guardó en las notas)' : 'Pedido guardado') + avisoArch, avisoArch ? 'err' : 'ok'); state.fecha = S.fecha; go('pedido', { id: ped.data.id });
     } catch (e) { S.guardando = false; pintarPie(); toast(msgErr(e), 'err'); }
@@ -3334,6 +3435,7 @@ function vistaImportar() {
     const filas = S.lineas.map(l => ({ pedido_id: S.anadir, producto_id: l.producto.id, cantidad_pedida: parseNum(l.cantidad), unidad_pedida: l.unidad || 'pieza', unidad_precio: l.unidad_precio, precio: String(l.precio).trim() === '' ? null : parseNum(l.precio), notas: (l.detalle || '').trim() || null }));
     const li = await sb.from('lineas_pedido').insert(filas); if (li.error) { S.guardando = false; pintarPie(); toast(msgErr(li.error), 'err'); return; }
     const antes = (S.anadirPed && S.anadirPed.mensaje_origen) || ''; await sb.from('pedidos').update({ mensaje_origen: (antes ? antes + '\n--- añadido ---\n' : '') + texto }).eq('id', S.anadir);
+    for (const l of S.lineas) { try { if (l.kgPor && l.producto) await waMemUsar(l.producto.id, uniStr(l), l.kgPor); } catch (e) { } }
     await recordarAlias(); toast('Productos añadidos al pedido', 'ok'); go('pedido', { id: S.anadir });
   }
   /* Dictado por voz (reconocimiento del navegador) */
@@ -3404,7 +3506,8 @@ function vistaImportar() {
   const barra = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:8px 0' }, btnVoz,
     h('button', { class: modo === 'escanear' ? '' : 'ghost', style: 'flex:1', onclick: () => inFoto.click() }, '📷 Hacer foto'),
     h('button', { class: 'ghost', style: 'flex:1', onclick: () => inGal.click() }, '🖼️ Galería / captura'),
-    h('button', { class: 'ghost', style: 'flex:1', onclick: () => inDoc.click() }, '📄 PDF / documento'), inFoto, inGal, inDoc);
+    h('button', { class: 'ghost', style: 'flex:1', onclick: () => inDoc.click() }, '📄 PDF / documento'),
+    h('button', { class: 'ghost small', style: 'width:100%', onclick: abrirPanelAbrev }, '⚙️ Abreviaturas y kg por saco/caja'), inFoto, inGal, inDoc);
   async function recordarAlias() {
     try {
       const ap = aprendidos('fj_wa_alias');
@@ -3429,7 +3532,7 @@ function vistaImportar() {
     } catch (e) { }
   }
   const btnInt = h('button', { style: 'width:100%;margin-top:8px', onclick: interpretar }, 'Interpretar pedido');
-  const fijoBox = h('div', {});
+  const fijoBox = h('div', {}); waMemCargar().then(async () => { try { if (!S.prods) S.prods = await waProductos(); } catch (e) { } });
   $app.replaceChildren(shell(S.anadir ? 'Añadir al pedido' : modo === 'voz' ? 'Dictar pedido' : modo === 'escanear' ? 'Escanear pedido' : 'Escribir pedido', h('div', {}, h('p', { class: 'sub' }, S.anadir ? 'Escribe, dicta o escanea los productos que faltan. Se añadirán a este pedido; no se crea otro.' : 'Escribe, dicta o escanea el pedido. Reviso cliente, fecha, productos y cantidades y tú confirmas. Nada se guarda solo.'), barra, archBox, ta, btnInt,
     fijoBox, h('div', { style: 'margin-top:12px' }, cliBox), fechaBox, horaBox, avisoBox, lineasBox, ignBox, pie), { volver: () => S.anadir ? go('pedido', { id: S.anadir }) : go('nuevo') })); renderBanner();
   pintarCliente(); pintarFecha(); pintarHora();
