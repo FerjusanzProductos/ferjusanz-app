@@ -1534,7 +1534,7 @@ function vistaMas() {
     ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null),
     ...g('Compras y mercancía', puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, puedeCompras() ? c('💶', 'Precios de compra', () => go('precios'), A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
-      esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null)];
+      esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
   k.push(h('button', { class: 'peligro', style: 'width:100%;margin-top:20px', onclick: salir }, 'Cerrar sesión'));
   $app.replaceChildren(shell('Inicio', h('div', {}, ...k))); renderBanner();
 }
@@ -3481,6 +3481,39 @@ async function bgCargarBase() {
   } catch (e) { if (isNetErr(e)) { const x = LS.get('fj_bg_base', null); if (x) return x; } throw e; }
   return bgCache;
 }
+
+/* =====================  COPIA DE SEGURIDAD (solo admin)  ===================== */
+const COPIA_TABLAS = ['perfiles', 'clientes', 'productos', 'tarifas', 'pedidos', 'lineas_pedido', 'albaranes', 'entregas', 'cobros', 'incidencias', 'sobrante', 'proveedores', 'compras', 'lotes', 'asignaciones_lote', 'documentos_compra', 'pedidos_habituales', 'lineas_habituales', 'avisos', 'fichajes', 'mensajes', 'historial'];
+function copiaVieja() { const u = LS.get('fj_ult_copia', null); return !u || (Date.now() - u) > 7 * 86400000; }
+function vistaCopia() {
+  state.view = 'copia';
+  if (state.perfil.rol !== 'admin') { go('inicio'); return; }
+  const estado = h('div', {}), btn = h('button', { class: 'guardar', style: 'width:100%' }, '💾 Descargar copia de seguridad ahora');
+  const ult = () => { const u = LS.get('fj_ult_copia', null); return u ? 'Última copia hecha en este móvil: ' + new Date(u).toLocaleString('es-ES') : 'Todavía no se ha hecho ninguna copia desde este móvil.'; };
+  const info = h('p', { class: 'sub' }, ult());
+  btn.onclick = async () => {
+    if (!navigator.onLine) { toast('Sin conexión: la copia necesita internet', 'err'); return; }
+    btn.disabled = true; const out = {}; const fallos = []; let filas = 0;
+    try {
+      for (const t of COPIA_TABLAS) {
+        estado.replaceChildren(h('div', { class: 'sub' }, '⏳ Descargando ' + t + '…')); const datos = []; let desde = 0, ok = true;
+        for (;;) { const r = await sb.from(t).select('*').range(desde, desde + 999); if (r.error) { ok = false; fallos.push(t + ' (' + (r.error.code === '42P01' ? 'no existe todavía' : msgErr(r.error)) + ')'); break; } datos.push(...r.data); if (r.data.length < 1000) break; desde += 1000; }
+        if (ok) { out[t] = datos; filas += datos.length; }
+      }
+      const cuerpo = JSON.stringify({ app: 'ferjusanz', creada: new Date().toISOString(), por: state.perfil.nombre, tablas: out }, null, 1);
+      const blob = new Blob([cuerpo], { type: 'application/json' }); const nombre = 'ferjusanz-copia-' + hoy() + '.json';
+      const a = h('a', { href: URL.createObjectURL(blob), download: nombre }); document.body.append(a); a.click(); a.remove();
+      LS.set('fj_ult_copia', Date.now()); info.textContent = ult();
+      estado.replaceChildren(h('div', { class: 'card', style: 'background:#dcfce7;border-color:#22c55e' }, '✔ Copia descargada: ' + nombre + ' · ' + Object.keys(out).length + ' tablas, ' + filas + ' registros (' + Math.round(cuerpo.length / 1024) + ' KB).'),
+        fallos.length ? h('div', { class: 'card', style: 'background:#fef9c3;border-color:#eab308' }, 'No incluidas: ' + fallos.join('; ')) : null);
+    } catch (e) { estado.replaceChildren(h('div', { class: 'card', style: 'background:#fee2e2;border-color:#ef4444' }, 'La copia ha fallado: ' + msgErr(e))); }
+    btn.disabled = false;
+  };
+  $app.replaceChildren(shell('Copia de seguridad', h('div', {},
+    h('p', {}, 'Descarga un archivo con todos los datos de Ferjusanz (clientes, productos, pedidos, cobros, compras, etc.). Si algún día algo se borra o se rompe, con este archivo se pueden recuperar.'),
+    info, btn, estado,
+    h('div', { class: 'card', style: 'margin-top:12px' }, h('b', {}, 'Cómo guardarla bien'), h('div', { class: 'sub' }, '1) Hazla una vez por semana (la app te avisa con un «!» si pasan más de 7 días).  2) Se guarda en Descargas del móvil: súbela también a Google Drive o envíatela por correo.  3) No la compartas: contiene datos de clientes.  4) Las fotos de perfil y los archivos de facturas y pedidos escaneados no van dentro de este archivo.'))), { volver: () => go('inicio') })); renderBanner();
+}
 function vistaBuscar() {
   state.view = 'buscar'; const oficina = esOficina(), compras = puedeCompras();
   const res = h('div', {}); const info = h('p', { class: 'sub' }, 'Escribe un cliente, producto, proveedor, número de albarán… y busco en todos los apartados que puedes ver.');
@@ -3553,7 +3586,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v();
 }
 function tick() {
