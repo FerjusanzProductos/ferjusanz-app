@@ -851,7 +851,7 @@ async function cargarCarga(fecha) {
     const d0 = new Date(fecha + 'T12:00:00'); const ant = x => { const d = new Date(d0.getTime() - x * 86400000); return hoy(d); };
     const [p, s, pv, rp] = await Promise.all([
       sb.from('pedidos').select('id,estado,notas,clientes(codigo,nombre,nombre_comercial,forma_pago,ruta,direccion,localidad),albaranes(serie,numero,estado),lineas_pedido(id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,productos(id,codigo,nombre),carga_lineas(cargado))')
-        .eq('fecha_entrega', fecha).neq('estado', 'anulado'),
+        .eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true),
       sb.from('sobrante').select('id,producto_id,cantidad,unidad,nota,repartidor_id,productos(codigo,nombre),perfiles(nombre)').eq('fecha', fecha),
       sb.from('sobrante').select('fecha,producto_id,cantidad,unidad,productos(codigo,nombre)').gte('fecha', ant(6)).lt('fecha', fecha),
       sb.from('perfiles').select('id,nombre,rol').eq('activo', true)]);
@@ -949,7 +949,8 @@ function pintarCargaClientes(datos, kids) {
           h('div', { class: 'sub' }, 'Pedido: ' + num(l.cantidad_pedida) + ' ' + l.unidad_pedida +
             (l.peso_real != null ? ' · Preparado: ' + num(l.peso_real) + ' ' + (l.unidad_precio === 'kg' ? 'kg' : 'ud') : ' · sin preparar'))),
         h('div', { class: 'peso' + (l._cargado ? '' : ' vacio') }, l._cargado ? '✔ Cargado' : 'Cargar'))),
-      nc < ls.length ? h('button', { class: 'ghost small', style: 'width:100%', onclick: () => marcarTodo(p) }, 'Marcar todo como cargado') : null);
+      nc < ls.length ? h('button', { class: 'ghost small', style: 'width:100%', onclick: () => marcarTodo(p) }, 'Marcar todo como cargado') : null,
+      esOficina() ? h('button', { class: 'peligro small', style: 'width:100%;margin-top:6px', onclick: async () => { if (!await confirmar('¿Quitar de la carga el pedido de ' + nombreCli(cli) + '? Se archiva (se puede restaurar desde Archivo).')) return; const r = await sb.from('pedidos').update({ archivado: true }).eq('id', p.id); if (r.error) toast(msgErr(r.error), 'err'); else { toast('Pedido archivado', 'ok'); actualizarCarga(true); } } }, 'Quitar este pedido de la carga') : null);
   });
   kids.push(h('div', { class: 'card' },
     h('div', { class: 'nombre' }, tc + ' de ' + tl + ' líneas cargadas'),
@@ -982,7 +983,8 @@ function pintarSobrante(datos, kids) {
     kids.push(h('div', { class: 'card tap', onclick: () => abrirSobrante(s) },
       h('div', { class: 'fila' },
         h('div', {}, h('div', { class: 'nombre' }, s.productos ? s.productos.nombre : ''), s.nota ? h('div', { class: 'sub' }, s.nota) : null),
-        h('div', { class: 'tot-num' }, num(s.cantidad) + ' ' + s.unidad))));
+        h('div', { style: 'display:flex;align-items:center;gap:10px' }, h('div', { class: 'tot-num' }, num(s.cantidad) + ' ' + s.unidad),
+          h('button', { class: 'peligro small', onclick: async e => { e.stopPropagation(); if (!await confirmar('¿Eliminar este sobrante (' + (s.productos ? s.productos.nombre : '') + ')?')) return; if (!navigator.onLine) { toast('Necesitas conexión.', 'err'); return; } const r = await sb.from('sobrante').delete().eq('id', s.id); if (r.error) toast(msgErr(r.error), 'err'); else { toast('Sobrante eliminado', 'ok'); actualizarCarga(true); } } }, '🗑')))));
   }
 }
 function abrirSobrante(s) {
@@ -1640,7 +1642,8 @@ function vistaCobros() {
       Object.keys(porForma).map(k => lin(nombreForma[k] || k, porForma[k])), Object.keys(porPers).length ? h('div', { class: 'sub', style: 'margin:8px 0 2px' }, 'Por persona') : null, Object.keys(porPers).sort().map(k => lin(k, porPers[k])))];
     if (!filas.length) kids.push(h('p', { class: 'vacio' }, 'No hay cobros este día.'));
     filas.forEach(c => { const cl = c.clientes ? (Array.isArray(c.clientes) ? c.clientes[0] : c.clientes) : null;
-      kids.push(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, nombreCli(cl)), h('div', { class: 'sub' }, fmtHora(c.created_at) + ' · ' + (nombreForma[c.forma] || c.forma) + ' · ' + (((state.gente[c.cobrado_por] || {}).nombre) || '') + (c.nota ? ' · ' + c.nota : ''))), h('b', {}, eur(c.importe) + ' €')))); });
+      kids.push(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, nombreCli(cl)), h('div', { class: 'sub' }, fmtHora(c.created_at) + ' · ' + (nombreForma[c.forma] || c.forma) + ' · ' + (((state.gente[c.cobrado_por] || {}).nombre) || '') + (c.nota ? ' · ' + c.nota : ''))), h('b', {}, eur(c.importe) + ' €')),
+        state.perfil.rol === 'admin' ? h('button', { class: 'peligro small', style: 'margin-top:8px', onclick: async () => { if (!await confirmar('¿ELIMINAR este cobro de ' + eur(c.importe) + ' € de ' + nombreCli(cl) + '?\nEl albarán volverá a salir como pendiente de cobro. Queda copia en el historial.')) return; if (!navigator.onLine) { toast('Necesitas conexión.', 'err'); return; } const r = await sb.from('cobros').delete().eq('id', c.id); if (r.error) toast(msgErr(r.error), 'err'); else { toast('Cobro eliminado', 'ok'); cargar(); } } }, 'Eliminar cobro') : null)); });
     cont.replaceChildren(...kids);
   }
   $app.replaceChildren(shell('Cobros', h('div', {}, chipsModo, h('div', { id: 'barraCobros' }), cont))); renderBanner(); pintarChips();
