@@ -90,6 +90,7 @@ label.campo{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(
 .copia .emp div{font-size:11px;line-height:1.35}
 .copia .num{text-align:right;font-size:12px}
 .copia .num b{font-size:18px;display:block}
+.copia .tz{font-size:10px;color:#333;margin-top:1px}
 .copia .tipo{font-weight:700;font-size:11px;letter-spacing:1px;border:1px solid #000;display:inline-block;padding:1px 6px;margin-top:4px}
 .copia .cli{border:1px solid #000;padding:6px 8px;margin-bottom:6px;line-height:1.4}
 .copia table{width:100%;border-collapse:collapse}
@@ -221,7 +222,8 @@ function crearSbPractica(){
   const join=(t,r)=>{
     if(t==='pedidos'){return Object.assign({},r,{entregas:DB.entregas.find(e=>e.pedido_id===r.id)||null,clientes:DB.clientes.find(c=>c.id===r.cliente_id),albaranes:DB.albaranes.filter(a=>a.pedido_id===r.id),lineas_pedido:DB.lineas_pedido.filter(l=>l.pedido_id===r.id).map(l=>Object.assign({},l,{productos:DB.productos.find(p=>p.id===l.producto_id),carga_lineas:DB.carga_lineas.find(c=>c.linea_id===l.id)||null,asignaciones_lote:DB.asignaciones_lote.filter(a=>a.linea_id===l.id)}))});}
     if(t==='sobrante'){return Object.assign({},r,{productos:DB.productos.find(p=>p.id===r.producto_id),perfiles:DB.perfiles.find(p=>p.id===r.repartidor_id)||null});}
-    if(t==='lineas_pedido'){return Object.assign({},r,{productos:DB.productos.find(p=>p.id===r.producto_id),pedidos:DB.pedidos.find(p=>p.id===r.pedido_id)||null});}
+    if(t==='lineas_pedido'){return Object.assign({},r,{productos:DB.productos.find(p=>p.id===r.producto_id),pedidos:DB.pedidos.find(p=>p.id===r.pedido_id)||null,asignaciones_lote:DB.asignaciones_lote.filter(a=>a.linea_id===r.id)});}
+    if(t==='asignaciones_lote'){return Object.assign({},r,{lotes:DB.lotes.find(l=>l.id===r.lote_id)||null});}
     if(t==='tarifas'){return Object.assign({},r,{productos:DB.productos.find(p=>p.id===r.producto_id)});}
     if(t==='pedidos_habituales'){return Object.assign({},r,{clientes:DB.clientes.find(c=>c.id===r.cliente_id)||null,lineas_habituales:DB.lineas_habituales.filter(l=>l.habitual_id===r.id).map(l=>Object.assign({},l,{productos:DB.productos.find(p=>p.id===l.producto_id)||null}))});}
     if(t==='lineas_habituales'){return Object.assign({},r,{productos:DB.productos.find(p=>p.id===r.producto_id)||null});}
@@ -286,6 +288,17 @@ function crearSbPractica(){
     marcar_cargado(a){let c=DB.carga_lineas.find(x=>x.linea_id===a.p_linea);if(c)c.cargado=a.p_cargado;else DB.carga_lineas.push({linea_id:a.p_linea,cargado:a.p_cargado});return null;},
     empezar_pedido(a){const p=DB.pedidos.find(x=>x.id===a.p_pedido);p.estado='en_preparacion';p.preparador_id='u1';return null;},
     guardar_peso(a){const l=DB.lineas_pedido.find(x=>x.id===a.p_linea);if(l.version!==a.p_version)throw new Error('CONFLICTO');l.peso_real=a.p_peso;l.estado='hecha';l.version++;return l.version;},
+    _vtz(ped,asig){const ls=DB.lineas_pedido.filter(l=>l.pedido_id===ped);const kn=l=>l.unidad_precio==='kg'?(l.peso_real||0):l.cantidad_pedida;
+      const seen={};asig.forEach(x=>{const k=x.linea_id+'|'+x.lote_id;if(seen[k])throw new Error('ASIGNACION_DUPLICADA');seen[k]=1;const l=ls.find(y=>y.id===x.linea_id),lo=DB.lotes.find(y=>y.id===x.lote_id);if(!l||!lo||lo.producto_id!==l.producto_id||lo.archivado||!(x.cantidad>0)||!['hecha','parcial'].includes(l.estado))throw new Error('ASIGNACION_NO_VALIDA');});
+      ls.filter(l=>['hecha','parcial'].includes(l.estado)&&kn(l)>0).forEach(l=>{const s=asig.filter(x=>x.linea_id===l.id).reduce((t,x)=>t+x.cantidad,0);if(!s)throw new Error('FALTA_TRAZABILIDAD');if(Math.abs(s-kn(l))>0.001)throw new Error('KILOS_NO_COINCIDEN');});
+      const por={};asig.forEach(x=>{const l=ls.find(y=>y.id===x.linea_id);if(l.unidad_precio==='kg')por[x.lote_id]=(por[x.lote_id]||0)+x.cantidad;});
+      Object.keys(por).forEach(id=>{const lo=DB.lotes.find(y=>y.id===id);if(lo.unidad!=='kg')return;const otros=DB.asignaciones_lote.filter(a=>a.lote_id===id&&!ls.some(l=>l.id===a.linea_id)).reduce((t,a)=>t+a.cantidad,0);if(por[id]>lo.cantidad_recibida+0.001-otros)throw new Error('LOTE_SIN_KILOS');});},
+    confirmar_trazabilidad(a){const ls=DB.lineas_pedido.filter(l=>l.pedido_id===a.p_pedido);if(DB.pedidos.find(p=>p.id===a.p_pedido).estado==='terminado')throw new Error('PEDIDO_YA_TERMINADO');if(ls.some(l=>l.estado==='pendiente'))throw new Error('LINEAS_PENDIENTES');
+      const mot=(a.p_sin_motivo||'').trim();
+      if(!mot){this._vtz(a.p_pedido,a.p_asignaciones||[]);DB.asignaciones_lote=DB.asignaciones_lote.filter(x=>!ls.some(l=>l.id===x.linea_id));(a.p_asignaciones||[]).forEach(x=>DB.asignaciones_lote.push({id:'as'+Math.random().toString(36).slice(2,8),linea_id:x.linea_id,lote_id:x.lote_id,cantidad:x.cantidad}));}
+      const n=this.terminar_pedido({p_pedido:a.p_pedido});const al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);al.traza_estado=mot?'sin_trazabilidad':'confirmada';al.traza_motivo=mot||null;return n;},
+    corregir_trazabilidad(a){const mot=(a.p_motivo||'').trim();if(!mot)throw new Error('MOTIVO_OBLIGATORIO');const ls=DB.lineas_pedido.filter(l=>l.pedido_id===a.p_pedido);this._vtz(a.p_pedido,a.p_asignaciones||[]);
+      DB.asignaciones_lote=DB.asignaciones_lote.filter(x=>!ls.some(l=>l.id===x.linea_id));(a.p_asignaciones||[]).forEach(x=>DB.asignaciones_lote.push({id:'as'+Math.random().toString(36).slice(2,8),linea_id:x.linea_id,lote_id:x.lote_id,cantidad:x.cantidad}));const al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);al.traza_estado='confirmada';al.traza_motivo=mot;DB.log.push({accion:'CORREGIR_TRAZABILIDAD',motivo:mot});return null;},
     terminar_pedido(a){const ls=DB.lineas_pedido.filter(l=>l.pedido_id===a.p_pedido);if(ls.some(l=>l.estado==='pendiente'))throw new Error('LINEAS_PENDIENTES');
       DB.pedidos.find(p=>p.id===a.p_pedido).estado='terminado';let al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);
       if(!al){al={pedido_id:a.p_pedido,serie:'F',numero:DB.seq++,fecha:hoy(),estado:'emitido'};DB.albaranes.push(al);}return al.numero;}
@@ -346,9 +359,19 @@ const ERR = {
   YA_ASIGNADO: 'Este pedido ya lo está preparando otra persona.',
   PEDIDO_NO_EXISTE: 'El pedido no existe.',
   PEDIDO_ANULADO: 'El pedido está anulado.',
-  PEDIDO_NO_TERMINADO: 'El pedido aún no está terminado.'
+  PEDIDO_NO_TERMINADO: 'El pedido aún no está terminado.',
+  PEDIDO_YA_TERMINADO: 'Este pedido ya está terminado.',
+  ASIGNACION_DUPLICADA: 'Un mismo lote está repetido en una línea.',
+  ASIGNACION_NO_VALIDA: 'Hay un lote que no corresponde a ese producto, o está archivado.',
+  FALTA_TRAZABILIDAD: 'Falta asignar lote a algún producto.',
+  KILOS_NO_COINCIDEN: 'Los kilos repartidos entre lotes no coinciden con lo preparado.',
+  LOTE_SIN_KILOS: 'Un lote no tiene kilos suficientes disponibles.',
+  SOLO_OFICINA_SIN_TRAZA: 'Solo oficina puede cerrar un albarán sin trazabilidad.',
+  TRAZABILIDAD_CERRADA: 'La trazabilidad de este albarán ya está confirmada. Solo se cambia con «Corregir trazabilidad».',
+  MOTIVO_OBLIGATORIO: 'Hay que escribir el motivo.',
+  ALBARAN_NO_EXISTE: 'El albarán no existe.'
 };
-function msgErr(e) { const m = (e && e.message) || ''; if (e && (e.code === '23505' || m.includes('duplicate key'))) return ERR.CLIENTE_DUPLICADO; for (const k in ERR) if (m.includes(k)) return ERR[k]; return m || 'Error desconocido'; }
+function msgErr(e) { const m = (e && e.message) || ''; if (/(confirmar|corregir)_trazabilidad|validar_trazabilidad|traza_estado/.test(m) && /does not exist|schema cache|Could not find/i.test(m)) return 'Falta ejecutar en Supabase las Partes 25A a 25E (trazabilidad).'; if (e && (e.code === '23505' || m.includes('duplicate key'))) return ERR.CLIENTE_DUPLICADO; for (const k in ERR) if (m.includes(k)) return ERR[k]; return m || 'Error desconocido'; }
 function isNetErr(e) {
   if (!e) return false;
   const m = String(e.message || '').toLowerCase();
@@ -668,7 +691,7 @@ function pintarPedido() {
   } else if (estado !== 'anulado') {
     const faltan = ls.length - hechas;
     acciones.push(h('button', { disabled: faltan > 0 || !ls.length, onclick: () => terminarPedido(d.pedido.id) },
-      faltan > 0 ? 'Faltan ' + faltan + ' líneas' : 'Terminar pedido y crear albarán'));
+      faltan > 0 ? 'Faltan ' + faltan + ' líneas' : 'Continuar → asignar trazabilidad y crear albarán'));
     if (esOficina()) acciones.push(h('button', { class: 'peligro', onclick: () => anularPedido(d.pedido.id) }, 'Anular pedido'));
   }
   if (esOficina() && estado !== 'terminado' && estado !== 'anulado') acciones.push(h('button', { class: 'ghost', onclick: () => go('importar', { anadir: d.pedido.id }) }, '➕ Añadir productos (texto, voz o foto)'));
@@ -713,10 +736,105 @@ async function terminarPedido(id) {
   if (!navigator.onLine) { toast('Necesitas conexión para terminar el pedido y crear el albarán.', 'err'); return; }
   await sincronizar();
   if (getCola().some(x => x.pedido_id === id)) { toast('Quedan cambios sin enviar. Inténtalo de nuevo en unos segundos.', 'err'); return; }
-  const { data, error } = await sb.rpc('terminar_pedido', { p_pedido: id });
-  if (error) { toast(msgErr(error), 'err'); actualizarPedido(); return; }
-  toast('Pedido terminado. Albarán nº ' + data, 'ok');
-  go('albaran', { id: id });
+  abrirTrazabilidad(id, {});
+}
+/* =====================  ASIGNAR TRAZABILIDAD (al terminar el albarán)  ===================== */
+async function abrirTrazabilidad(pedidoId, opt) {
+  opt = opt || {}; const corregir = !!opt.corregir; const oficina = esOficina();
+  const r = await sb.from('lineas_pedido').select('id,estado,peso_real,cantidad_pedida,unidad_pedida,unidad_precio,producto_id,productos(codigo,nombre),asignaciones_lote(lote_id,cantidad)').eq('pedido_id', pedidoId);
+  if (r.error) { toast(msgErr(r.error), 'err'); return; }
+  const lineas = r.data.filter(l => ['hecha', 'parcial'].includes(l.estado)).map(l => Object.assign({}, l, {
+    need: Math.round((Number(l.unidad_precio === 'kg' ? l.peso_real : l.cantidad_pedida) || 0) * 1000) / 1000,
+    uni: l.unidad_precio === 'kg' ? 'kg' : (l.unidad_pedida || 'ud'), prod: uno(l.productos) || {} })).filter(l => l.need > 0)
+    .sort((a, b) => (a.prod.nombre || '').localeCompare(b.prod.nombre || '', 'es'));
+  const misLineas = new Set(r.data.map(l => l.id));
+  const prodIds = [...new Set(lineas.map(l => l.producto_id))];
+  const lr = prodIds.length ? await sb.from('lotes').select('id,producto_id,codigo_lote,origen,cantidad_recibida,unidad,precio_compra,created_at,compras(fecha,numero_documento,proveedores(nombre)),asignaciones_lote(cantidad,linea_id)').in('producto_id', prodIds).neq('archivado', true).order('created_at', { ascending: false }).limit(1000) : { data: [] };
+  if (lr.error) { toast(msgErr(lr.error), 'err'); return; }
+  // kilos que ya han salido de cada lote en OTROS pedidos
+  const lotes = lr.data.map(lo => { const c = uno(lo.compras) || {}; const pv = c.proveedores ? uno(c.proveedores) : null;
+    const fuera = (lo.asignaciones_lote || []).filter(a => !misLineas.has(a.linea_id)).reduce((t, a) => t + Number(a.cantidad), 0);
+    return { id: lo.id, producto_id: lo.producto_id, codigo: lo.codigo_lote, origen: lo.origen, rec: Number(lo.cantidad_recibida), unidad: lo.unidad, precio: lo.precio_compra, fecha: c.fecha, creado: lo.created_at, factura: c.numero_documento, proveedor: pv ? pv.nombre : '', disp: Math.round((Number(lo.cantidad_recibida) - fuera) * 1000) / 1000 }; });
+  const porProd = {};
+  lotes.forEach(lo => (porProd[lo.producto_id] = porProd[lo.producto_id] || []).push(lo));
+  Object.values(porProd).forEach(a => a.sort((x, y) => String(x.fecha || '').localeCompare(String(y.fecha || '')) || String(x.creado || '').localeCompare(String(y.creado || ''))));   // más antiguo primero
+  const asig = {}, propuesta = new Set();
+  lineas.forEach(l => {
+    asig[l.id] = {};
+    (l.asignaciones_lote || []).forEach(a => { asig[l.id][a.lote_id] = Number(a.cantidad); });
+    if (!Object.keys(asig[l.id]).length) {
+      const ok = (porProd[l.producto_id] || []).filter(lo => lo.disp >= l.need - 0.001);
+      const todos = (porProd[l.producto_id] || []).filter(lo => lo.disp > 0.001);
+      if (ok.length === 1 && todos.length === 1) { asig[l.id][ok[0].id] = l.need; propuesta.add(l.id); }
+    }
+  });
+  const usoLote = lid => lineas.reduce((t, l) => t + (Number(asig[l.id][lid]) || 0), 0);
+  const sumaLinea = l => Object.values(asig[l.id]).reduce((t, v) => t + (Number(v) || 0), 0);
+  const refs = [];
+  const tarjetas = lineas.map(l => {
+    const lots = (porProd[l.producto_id] || []).filter(lo => lo.disp > 0.001 || asig[l.id][lo.id]);
+    const estado = h('div', { class: 'sub', style: 'font-weight:700;margin:4px 0' });
+    const filasL = lots.map(lo => {
+      const inp = h('input', { inputmode: 'decimal', placeholder: lo.unidad, style: 'width:90px;text-align:right', value: asig[l.id][lo.id] ? String(asig[l.id][lo.id]).replace('.', ',') : '',
+        oninput: () => { const v = parseNum(inp.value); if (v && v > 0) asig[l.id][lo.id] = v; else delete asig[l.id][lo.id]; propuesta.delete(l.id); refrescar(); } });
+      const resto = h('button', { class: 'ghost small', onclick: () => { const falta = Math.round((l.need - sumaLinea(l) + (Number(asig[l.id][lo.id]) || 0)) * 1000) / 1000; const maxL = lo.unidad === 'kg' && l.uni === 'kg' ? lo.disp - (usoLote(lo.id) - (Number(asig[l.id][lo.id]) || 0)) : falta; const v = Math.max(0, Math.min(falta, maxL)); inp.value = v ? String(v).replace('.', ',') : ''; if (v) asig[l.id][lo.id] = v; else delete asig[l.id][lo.id]; propuesta.delete(l.id); refrescar(); } }, 'Lo que falta');
+      const det = [lo.fecha && 'compra ' + fechaES(lo.fecha), lo.factura && 'fra. ' + lo.factura, lo.origen && 'origen ' + lo.origen, oficina && lo.precio != null ? eur(lo.precio) + ' €/' + lo.unidad : null, 'recibidos ' + num(lo.rec) + ' ' + lo.unidad, 'disponibles ' + num(lo.disp) + ' ' + lo.unidad].filter(Boolean).join(' · ');
+      return h('div', { style: 'border-top:1px solid var(--lin,#ddd);padding:6px 0' },
+        h('div', { class: 'nombre', style: 'font-size:14px' }, (lo.proveedor || 'Proveedor') + ' · lote ' + (lo.codigo || 'sin código')),
+        h('div', { class: 'sub' }, det),
+        h('div', { class: 'fila', style: 'gap:6px;margin-top:4px;justify-content:flex-start;align-items:center' }, inp, h('span', { class: 'sub' }, lo.unidad), resto));
+    });
+    const confirmarProp = h('button', { class: 'small', style: 'display:none', onclick: () => { propuesta.delete(l.id); refrescar(); } }, 'Confirmar este lote');
+    const tarj = h('div', { class: 'card' },
+      h('div', { class: 'fila' }, h('div', { class: 'nombre' }, l.prod.nombre || 'Producto'), h('b', {}, num(l.need) + ' ' + l.uni)),
+      estado, confirmarProp,
+      ...(filasL.length ? filasL : [h('p', { class: 'err', style: 'margin:4px 0' }, 'No hay compras con kilos disponibles de este producto. Regístralas en Más → Compras → Registrar compra.')]));
+    refs.push({ l, estado, tarj, confirmarProp });
+    return tarj;
+  });
+  const btnOk = h('button', { class: 'guardar', disabled: true, onclick: () => enviar(null) }, corregir ? 'Guardar corrección de trazabilidad' : 'Confirmar trazabilidad y generar albarán');
+  function problemas() {
+    const out = [];
+    lineas.forEach(l => {
+      const s = Math.round(sumaLinea(l) * 1000) / 1000;
+      if (s === 0) out.push({ l, t: 'Falta elegir lote' });
+      else if (Math.abs(s - l.need) > 0.001) out.push({ l, t: s < l.need ? 'Faltan ' + num(Math.round((l.need - s) * 1000) / 1000) + ' ' + l.uni : 'Sobran ' + num(Math.round((s - l.need) * 1000) / 1000) + ' ' + l.uni });
+      else if (propuesta.has(l.id)) out.push({ l, t: 'Lote propuesto: confírmalo', prop: true });
+      else {
+        const mal = (porProd[l.producto_id] || []).find(lo => asig[l.id][lo.id] && lo.unidad === 'kg' && l.uni === 'kg' && usoLote(lo.id) > lo.disp + 0.001);
+        if (mal) out.push({ l, t: 'El lote ' + (mal.codigo || '') + ' solo tiene ' + num(mal.disp) + ' kg disponibles' });
+      }
+    });
+    return out;
+  }
+  function refrescar() {
+    const ps = problemas();
+    refs.forEach(x => { const p = ps.find(q => q.l === x.l); x.estado.textContent = p ? '⚠ ' + p.t : '✔ Correcto'; x.estado.style.color = p ? '#b45309' : '#15803d'; x.confirmarProp.style.display = p && p.prop ? '' : 'none'; });
+    btnOk.disabled = ps.length > 0 || !lineas.length;
+    resumen.textContent = ps.length ? ps.length + (ps.length === 1 ? ' producto por resolver' : ' productos por resolver') : '✔ Toda la trazabilidad está lista';
+  }
+  const resumen = h('div', { class: 'aviso-card' });
+  async function enviar(sinMotivo) {
+    btnOk.disabled = true;
+    const cant = []; lineas.forEach(l => Object.entries(asig[l.id]).forEach(([lid, v]) => { if (v > 0) cant.push({ linea_id: l.id, lote_id: lid, cantidad: v }); }));
+    let res;
+    if (corregir) {
+      const mot = (prompt('Motivo de la corrección (queda anotado con tu nombre y la hora):') || '').trim(); if (!mot) { toast('Hace falta escribir el motivo.', 'err'); refrescar(); return; }
+      res = await sb.rpc('corregir_trazabilidad', { p_pedido: pedidoId, p_asignaciones: cant, p_motivo: mot });
+    } else res = await sb.rpc('confirmar_trazabilidad', { p_pedido: pedidoId, p_asignaciones: sinMotivo ? [] : cant, p_sin_motivo: sinMotivo });
+    if (res.error) { toast(msgErr(res.error), 'err'); refrescar(); return; }
+    cerrar();
+    toast(corregir ? 'Trazabilidad corregida y anotada en el historial' : 'Pedido terminado. Albarán nº ' + res.data + (sinMotivo ? ' (sin trazabilidad)' : ' con trazabilidad'), 'ok');
+    go('albaran', { id: pedidoId });
+  }
+  const sinTraza = !corregir && oficina ? h('button', { class: 'ghost', onclick: () => { const m = (prompt('Cerrar SIN trazabilidad. Escribe el motivo (quedará anotado):') || '').trim(); if (!m) { toast('Hace falta escribir el motivo.', 'err'); return; } enviar(m); } }, 'Cerrar sin trazabilidad (solo oficina, con motivo)') : null;
+  const cerrar = () => { ov.remove(); state.sheetAbierta = false; };
+  const ov = h('div', { class: 'overlay' }, h('div', { class: 'sheet', style: 'max-height:92vh;overflow:auto' },
+    h('h2', {}, corregir ? 'Corregir trazabilidad' : 'Asignar trazabilidad'),
+    h('div', { class: 'sub', style: 'margin-bottom:8px' }, corregir ? 'Cambia los lotes de un albarán ya emitido. Quedará anotado quién lo cambia, cuándo y el motivo.' : 'Elige de qué compra salió cada producto. Si usaste dos lotes, reparte los kilos entre ambos. El albarán no se cierra hasta que todo cuadre.'),
+    resumen, ...(lineas.length ? tarjetas : [h('p', { class: 'vacio' }, 'Este pedido no tiene productos preparados que necesiten lote.')]),
+    btnOk, sinTraza, h('button', { class: 'ghost', onclick: cerrar }, 'Volver')));
+  state.sheetAbierta = true; document.body.append(ov); refrescar();
 }
 async function anularPedido(id) {
   if (!confirm('¿Anular este pedido?')) return;
@@ -734,6 +852,13 @@ async function vistaAlbaran() {
   try {
     const d = await cargarPedido(state.params.id);
     if (!d.albaran) { cont.replaceChildren(h('p', { class: 'vacio' }, 'Este pedido todavía no tiene albarán.')); return; }
+    d.traza = {}; d.trazaEstado = undefined;
+    try {
+      const tr = await sb.from('asignaciones_lote').select('linea_id,cantidad,lotes(codigo_lote,origen)').in('linea_id', d.lineas.map(l => l.id));
+      if (!tr.error) tr.data.forEach(a => (d.traza[a.linea_id] = d.traza[a.linea_id] || []).push({ cant: a.cantidad, lote: uno(a.lotes) || {} }));
+      const ta = await sb.from('albaranes').select('traza_estado,traza_motivo,traza_at').eq('pedido_id', d.pedido.id).maybeSingle();
+      if (!ta.error && ta.data) d.trazaEstado = ta.data;
+    } catch (e) { /* sin conexión: se imprime con lo que haya */ }
     const formato = h('select', { onchange: () => pintar() }, h('option', { value: 'a4' }, 'Papel A4'), h('option', { value: 'ticket' }, 'Ticket 80 mm'));
     formato.value = LS.get('fj_formato', 'a4');
     const wrap = h('div', { class: 'alb-wrap' });
@@ -745,11 +870,19 @@ async function vistaAlbaran() {
     cont.replaceChildren(
       ...(avisoIva ? [avisoIva] : []),
       cobroBox,
+      cajaTraza(d),
       h('label', { class: 'campo' }, 'Formato de impresión', formato),
       h('button', { style: 'width:100%;margin-bottom:12px', onclick: () => imprimir(wrap.innerHTML) }, 'Imprimir (2 copias)'),
       wrap);
     cargarCobroAlbaran(d.pedido.id, cobroBox);
   } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, msgErr(e))); }
+}
+function cajaTraza(d) {
+  const te = d.trazaEstado; if (te === undefined) return h('div', {});
+  const est = te.traza_estado;
+  const txt = est === 'confirmada' ? '✔ Trazabilidad confirmada' : est === 'sin_trazabilidad' ? '⚠ Albarán cerrado SIN trazabilidad' + (te.traza_motivo ? ': ' + te.traza_motivo : '') : '⚠ Albarán sin trazabilidad asignada';
+  return h('div', { class: 'card', style: 'margin-bottom:10px' }, h('div', { class: 'nombre' }, txt),
+    esOficina() ? h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: () => abrirTrazabilidad(d.pedido.id, { corregir: true }) }, est === 'confirmada' ? 'Corregir trazabilidad' : 'Asignar trazabilidad ahora') : null);
 }
 async function cargarCobroAlbaran(pedidoId, caja) {
   try {
@@ -776,7 +909,9 @@ function htmlAlbaran(d, formato) {
       const t = l.iva != null ? Number(l.iva) : (l.productos && l.productos.iva != null ? Number(l.productos.iva) : 4);
       bases[t] = Math.round(((bases[t] || 0) + imp) * 100) / 100;
     }
-    return '<tr><td>' + esc(l.productos ? l.productos.nombre : '') + '</td>' +
+    const tz = (d.traza || {})[l.id] || [];
+    const tzTxt = tz.length ? '<div class="tz">Lote: ' + tz.map(t => esc([t.lote.codigo_lote || 'sin código', t.lote.origen ? 'Origen ' + t.lote.origen : null].filter(Boolean).join(' · ') + (tz.length > 1 ? ' (' + num(t.cant) + ')' : ''))).join(' &nbsp;|&nbsp; ') + '</div>' : '';
+    return '<tr><td>' + esc(l.productos ? l.productos.nombre : '') + tzTxt + '</td>' +
       '<td class="d oc-ticket">' + esc(num(l.cantidad_pedida) + ' ' + l.unidad_pedida) + '</td>' +
       '<td class="d"><b>' + esc(l.peso_real != null ? num(l.peso_real) + ' ' + u : '—') + '</b></td>' +
       '<td class="d">' + esc(l.precio != null ? eur(l.precio) : '') + '</td>' +
@@ -1804,9 +1939,9 @@ function vistaTraza() {
   if (!puedeCompras()) { go('lista'); return; }
   let modo = LS.get('fj_traza_modo', 'pend'), fecha = hoy();
   const cont = h('div', {}); const chips = h('div', { class: 'chips' });
-  const pintarChips = () => chips.replaceChildren(...[['pend', 'Pendientes de lote'], ['lote', 'Por lote'], ['cliente', 'Por cliente']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_traza_modo', m); pintarChips(); pintar(); } }, n)));
+  const pintarChips = () => chips.replaceChildren(...[['pend', 'Pendientes de lote'], ['lote', 'Por lote'], ['cliente', 'Por cliente'], ['factura', 'Para factura']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_traza_modo', m); pintarChips(); pintar(); } }, n)));
   $app.replaceChildren(shell('Trazabilidad', h('div', {}, chips, cont), { volver: () => go('inicio') })); renderBanner(); pintarChips();
-  function pintar() { (modo === 'pend' ? pPend : modo === 'lote' ? pLote : pCliente)(); }
+  function pintar() { (modo === 'pend' ? pPend : modo === 'lote' ? pLote : modo === 'factura' ? pFactura : pCliente)(); }
   const filasTz = rows => rows.map(r => h('div', { class: 'fila', style: 'padding:5px 0;border-top:1px solid var(--borde)' },
     h('div', {}, h('div', {}, fechaES(r.fecha_entrega) + ' · ' + (r.cliente || r.producto)), h('div', { class: 'sub' }, [r.numero_albaran ? 'Albarán ' + r.serie + ' ' + r.numero_albaran : '', r.codigo_lote, r.proveedor, r.origen].filter(Boolean).join(' · '))),
     h('b', {}, num(r.cantidad_entregada))));
@@ -1870,6 +2005,37 @@ function vistaTraza() {
       const r = await sb.from('v_trazabilidad').select('*').eq('cliente', cli.nombre).gte('fecha_entrega', a).lt('fecha_entrega', b).order('fecha_entrega', { ascending: true }).limit(500);
       if (r.error) { lista.replaceChildren(h('p', { class: 'err' }, msgErr(r.error))); return; }
       lista.replaceChildren(...(r.data.length ? [csvTz('trazabilidad_' + cli.codigo + '_' + mes + '.csv', r.data), ...filasTz(r.data.map(x => Object.assign({}, x, { cliente: x.producto })))] : [h('p', { class: 'vacio' }, 'Sin entregas con lote en ese mes.')]));
+    }
+    cont.replaceChildren(caja, lista); pintarSel();
+  }
+  async function pFactura() {
+    let cli = null, desde = hoy(new Date(new Date().getFullYear(), new Date().getMonth(), 1)), hasta = hoy(); const caja = h('div', {}), lista = h('div', {});
+    function pintarSel() {
+      if (cli) {
+        caja.replaceChildren(h('div', { class: 'card fila' }, h('div', { class: 'nombre' }, nombreCli(cli)), h('button', { class: 'ghost small', onclick: () => { cli = null; pintarSel(); lista.replaceChildren(); } }, 'Cambiar')),
+          h('div', { class: 'fila', style: 'gap:6px' }, h('label', { class: 'campo' }, 'Desde', h('input', { type: 'date', value: desde, onchange: e => { desde = e.target.value || desde; cargarF(); } })), h('label', { class: 'campo' }, 'Hasta', h('input', { type: 'date', value: hasta, onchange: e => { hasta = e.target.value || hasta; cargarF(); } }))));
+        cargarF(); return;
+      }
+      const res = h('div', {}); const inp = h('input', { placeholder: 'Buscar cliente a facturar…', oninput: debounce(async () => { const r = await buscar('clientes', inp.value, false, 10); res.replaceChildren(h('div', { class: 'res' }, r.map(c => h('button', { onclick: () => { cli = c; pintarSel(); } }, nombreCli(c) + '  ·  ' + c.codigo)))); }, 250) });
+      caja.replaceChildren(h('div', { class: 'aviso-card' }, 'Elige el cliente y marca los albaranes que vas a incluir en la factura. Aquí sale la trazabilidad confirmada de cada uno (sin precios de compra) para copiarla a la factura o imprimirla como anexo.'), inp, res);
+    }
+    async function cargarF() {
+      lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+      const r = await sb.from('v_trazabilidad').select('*').eq('cliente', cli.nombre).gte('fecha_entrega', desde).lt('fecha_entrega', hoy(new Date(new Date(hasta + 'T00:00:00').getTime() + 86400000))).order('fecha_entrega', { ascending: true }).limit(1000);
+      if (r.error) { lista.replaceChildren(h('p', { class: 'err' }, msgErr(r.error))); return; }
+      const grupos = {}; r.data.forEach(x => { const k = x.numero_albaran ? x.serie + ' ' + String(x.numero_albaran).padStart(7, '0') : 'Sin albarán · ' + x.fecha_entrega; (grupos[k] = grupos[k] || { k, fecha: x.fecha_entrega, filas: [], on: true }).filas.push(x); });
+      const gs = Object.values(grupos);
+      if (!gs.length) { lista.replaceChildren(h('p', { class: 'vacio' }, 'Sin albaranes con lote en esas fechas.')); return; }
+      const textoG = g => 'Albarán ' + g.k + ' (' + fechaES(g.fecha) + ')\n' + g.filas.map(x => '  - ' + x.producto + ': lote ' + (x.codigo_lote || 'sin código') + (x.origen ? ', origen ' + x.origen : '') + ', ' + num(x.cantidad_entregada) + ' kg').join('\n');
+      const sel = () => gs.filter(g => g.on);
+      const tarjetas = gs.map(g => h('div', { class: 'card' },
+        h('label', { class: 'fila', style: 'gap:8px;justify-content:flex-start' }, h('input', { type: 'checkbox', checked: true, onchange: e => { g.on = e.target.checked; } }), h('div', { class: 'nombre' }, 'Albarán ' + g.k + ' · ' + fechaES(g.fecha))),
+        ...g.filas.map(x => h('div', { class: 'sub' }, x.producto + ' · lote ' + (x.codigo_lote || 'sin código') + (x.origen ? ' · ' + x.origen : '') + ' · ' + num(x.cantidad_entregada) + ' kg'))));
+      lista.replaceChildren(
+        h('button', { style: 'width:100%;margin-bottom:6px', onclick: async () => { const t = sel().map(textoG).join('\n\n'); if (!t) { toast('Marca algún albarán.', 'err'); return; } try { await navigator.clipboard.writeText(t); toast('Trazabilidad copiada. Pégala en la factura.', 'ok'); } catch (e) { prompt('Copia este texto:', t); } } }, 'Copiar trazabilidad de los marcados'),
+        h('button', { class: 'ghost', style: 'width:100%;margin-bottom:6px', onclick: () => { const q = sel(); if (!q.length) { toast('Marca algún albarán.', 'err'); return; } imprimir('<div class="copia a4"><div class="cab"><div class="emp"><b>' + esc(EMPRESA.nombre) + '</b></div><div class="num">ANEXO DE TRAZABILIDAD<br>' + esc(nombreCli(cli)) + '</div></div>' + q.map(g => '<p><b>Albarán ' + esc(g.k) + '</b> · ' + esc(fechaES(g.fecha)) + '</p><table><tbody>' + g.filas.map(x => '<tr><td>' + esc(x.producto) + '</td><td>Lote ' + esc(x.codigo_lote || 'sin código') + '</td><td>' + esc(x.origen || '') + '</td><td class="d">' + esc(num(x.cantidad_entregada)) + ' kg</td></tr>').join('') + '</tbody></table>').join('') + '</div>'); } }, 'Imprimir anexo de trazabilidad'),
+        h('button', { class: 'ghost', style: 'width:100%;margin-bottom:8px', onclick: () => { const q = sel(); if (!q.length) { toast('Marca algún albarán.', 'err'); return; } descargarCSV('trazabilidad_factura_' + cli.codigo + '.csv', [['Albarán', 'Fecha', 'Producto', 'Lote', 'Origen', 'Proveedor', 'Kilos']].concat(q.flatMap(g => g.filas.map(x => [g.k, fechaES(g.fecha), x.producto, x.codigo_lote, x.origen, x.proveedor, x.cantidad_entregada])))); } }, 'Descargar Excel (CSV) de los marcados'),
+        ...tarjetas);
     }
     cont.replaceChildren(caja, lista); pintarSel();
   }
