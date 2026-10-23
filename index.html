@@ -3337,19 +3337,30 @@ function vistaImportar() {
     await recordarAlias(); toast('Productos añadidos al pedido', 'ok'); go('pedido', { id: S.anadir });
   }
   /* Dictado por voz (reconocimiento del navegador) */
-  let rec = null, oyendo = false, baseVoz = '';
+  let rec = null, oyendo = false, baseVoz = '', parar = false, vacias = 0;
+  function terminarVoz() { oyendo = false; pintarVoz(); if (ta.value.trim() && !S.archivos.length) S.origen = 'voz'; if (ta.value.trim()) interpretar(); }
+  function arrancarVoz() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition; let hubo = false;
+    rec = new SR(); rec.lang = 'es-ES'; rec.continuous = false; rec.interimResults = true;
+    /* una frase por sesión (evita el fallo de Android que repite el texto acumulado); se reinicia sola hasta pulsar Parar */
+    rec.onresult = e => { const r = e.results[e.results.length - 1]; const t = (r[0].transcript || '').trim(); if (!t) return; hubo = true; ta.value = baseVoz + t; if (r.isFinal) baseVoz = ta.value.trim() + ' '; };
+    rec.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { parar = true; toast('No tengo permiso para el micrófono. Actívalo en los ajustes del navegador.', 'err'); } else if (e.error !== 'no-speech' && e.error !== 'aborted') toast('Error del dictado: ' + e.error, 'err'); };
+    rec.onend = () => {
+      if (ta.value.trim() && ta.value.trim() + ' ' !== baseVoz) baseVoz = ta.value.trim() + ' ';
+      vacias = hubo ? 0 : vacias + 1;
+      if (parar || vacias >= 2) { terminarVoz(); return; }
+      try { arrancarVoz(); } catch (er) { terminarVoz(); }
+    };
+    rec.start();
+  }
   const btnVoz = h('button', { class: modo === 'voz' ? '' : 'ghost', style: 'flex:1' }, '🎤 Dictar');
   function pintarVoz() { btnVoz.textContent = oyendo ? '⏹ Parar y revisar' : '🎤 Dictar'; btnVoz.style.background = oyendo ? '#dc2626' : ''; btnVoz.style.color = oyendo ? '#fff' : ''; }
   btnVoz.onclick = async () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { toast('Este navegador no permite dictar. Abre la app en Chrome (Android) o usa el micrófono del teclado.', 'err'); return; }
-    if (oyendo) { try { rec.stop(); } catch (e) { } return; }
+    if (oyendo) { parar = true; try { rec.stop(); } catch (e) { terminarVoz(); } return; }
     if (!LS.get('fj_voz_ok', false)) { if (!await confirmar('Para dictar, el móvil (Chrome) envía el audio a Google para convertirlo en texto. Ferjusanz no guarda la grabación. ¿Lo aceptas? Si no, escribe el pedido o usa el micrófono del teclado.')) return; LS.set('fj_voz_ok', true); }
-    rec = new SR(); rec.lang = 'es-ES'; rec.continuous = true; rec.interimResults = true; baseVoz = ta.value.trim() ? ta.value.trim() + '\n' : '';
-    rec.onresult = e => { let t = ''; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript + ' '; ta.value = baseVoz + t.trim(); };
-    rec.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toast('No tengo permiso para el micrófono. Actívalo en los ajustes del navegador.', 'err'); else if (e.error !== 'no-speech' && e.error !== 'aborted') toast('Error del dictado: ' + e.error, 'err'); };
-    rec.onend = () => { oyendo = false; pintarVoz(); if (ta.value.trim() && !S.archivos.length) S.origen = 'voz'; if (ta.value.trim()) interpretar(); };
-    try { rec.start(); oyendo = true; S.origen = 'voz'; pintarVoz(); } catch (e) { toast('No se pudo iniciar el micrófono', 'err'); }
+    baseVoz = ta.value.trim() ? ta.value.trim() + ' ' : ''; parar = false; vacias = 0; oyendo = true; S.origen = 'voz'; pintarVoz(); arrancarVoz();
   };
   /* Escaneo: foto, galería, captura o PDF */
   const archBox = h('div', {});
