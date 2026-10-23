@@ -1073,8 +1073,7 @@ async function guardarTarifa(productoId, clienteId, precio) {
 let clientesCache = null;
 const sinTilde = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 function vistaClientes() {
-  state.view = 'clientes';
-  if (!esOficina()) { go('lista'); return; }
+  state.view = 'clientes'; const lectura = false;
   let soloActivos = LS.get('fj_cli_activos', true), tope = 80;
   const lista = h('div', {}); const info = h('p', { class: 'sub' });
   const inp = h('input', { placeholder: 'Buscar por nombre, código, NIF o teléfono…', oninput: debounce(() => { tope = 80; pintar(); }, 200) });
@@ -1086,7 +1085,7 @@ function vistaClientes() {
     if (!clientesCache) { lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); return; }
     const t = sinTilde(limpiaBusqueda(inp.value));
     let r = clientesCache.filter(c => !soloActivos || c.activo);
-    if (t) r = r.filter(c => sinTilde([c.nombre, c.nombre_comercial, c.codigo, c.nif, c.telefono, c.localidad].join(' ')).includes(t));
+    if (t) r = r.filter(c => sinTilde([c.nombre, c.nombre_comercial, c.codigo, lectura ? '' : c.nif, c.telefono, c.localidad].join(' ')).includes(t));
     info.textContent = r.length + (r.length === 1 ? ' cliente' : ' clientes') + ' · de la A a la Z';
     const kids = []; let letra = '';
     for (const c of r.slice(0, tope)) {
@@ -1095,7 +1094,7 @@ function vistaClientes() {
       kids.push(h('div', { class: 'card tap', onclick: () => go('cliente', { id: c.id }) },
         h('div', { class: 'fila' },
           h('div', {}, h('div', { class: 'nombre' }, n), h('div', { class: 'sub' }, [c.codigo, c.localidad, c.telefono].filter(Boolean).join(' · '))),
-          h('div', { style: 'text-align:right' }, c.activo ? null : h('span', { class: 'badge' }, 'Inactivo'), c.forma_pago === 'contado' ? [' ', h('span', { class: 'badge cont' }, 'Contado')] : null))));
+          h('div', { style: 'text-align:right' }, c.activo ? null : h('span', { class: 'badge' }, 'Inactivo'), !lectura && c.forma_pago === 'contado' ? [' ', h('span', { class: 'badge cont' }, 'Contado')] : null))));
     }
     if (!r.length) kids.push(h('p', { class: 'vacio' }, 'No hay clientes con esa búsqueda.'));
     if (r.length > tope) kids.push(h('button', { class: 'ghost', style: 'width:100%', onclick: () => { tope += 120; pintar(); } }, 'Mostrar más (' + (r.length - tope) + ' restantes)'));
@@ -1103,19 +1102,37 @@ function vistaClientes() {
   }
   async function cargar() {
     try {
-      const { data, error } = await sb.from('clientes').select('id,codigo,nombre,nombre_comercial,nif,telefono,email,localidad,forma_pago,activo').range(0, 4999);
+      const { data, error } = await sb.from('clientes').select(lectura ? 'id,codigo,nombre,nombre_comercial,telefono,localidad,activo' : 'id,codigo,nombre,nombre_comercial,nif,telefono,email,localidad,forma_pago,activo').range(0, 4999);
       if (error) throw error;
       clientesCache = data.sort((a, b) => nombreCli(a).localeCompare(nombreCli(b), 'es')); pintar();
     } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver los clientes.' : msgErr(e))); }
   }
   $app.replaceChildren(shell('Clientes', h('div', {},
-    h('button', { style: 'width:100%;margin-bottom:10px', onclick: () => go('cliente', { id: null }) }, '+ Añadir cliente'),
+    lectura ? h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Solo consulta: los datos los modifica administración.') : h('button', { style: 'width:100%;margin-bottom:10px', onclick: () => go('cliente', { id: null }) }, '+ Añadir cliente'),
     h('div', { class: 'chips' }, bAct, bTod), inp, info, lista)));
   renderBanner(); pintar(); cargar();
 }
+/* Ficha de cliente de solo lectura (preparadores y repartidores): sin datos económicos */
+function fichaClienteLectura() {
+  const cont = h('div', {}); $app.replaceChildren(shell('Cliente', cont, { volver: () => go('clientes') })); renderBanner();
+  cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+  (async () => {
+    try {
+      const r = await sb.from('clientes').select('*').eq('id', state.params.id).single(); if (r.error) throw r.error; const c = r.data;
+      const dir = [c.direccion, c.codigo_postal, c.localidad].filter(Boolean).join(', ');
+      const fila = (t, v) => v ? h('div', { style: 'margin-top:8px' }, h('div', { class: 'sub' }, t), h('div', {}, v)) : null;
+      const hor = [c.abre ? 'abre ' + String(c.abre).slice(0, 5) : '', c.cierra ? 'cierra ' + String(c.cierra).slice(0, 5) : ''].filter(Boolean).join(' · ');
+      const fr = c.franja_desde && c.franja_hasta ? String(c.franja_desde).slice(0, 5) + ' a ' + String(c.franja_hasta).slice(0, 5) : '';
+      cont.replaceChildren(h('div', { class: 'card' }, h('div', { class: 'nombre' }, nombreCli(c)), h('div', { class: 'sub' }, c.codigo + (c.activo ? '' : ' · inactivo')),
+        fila('Dirección', dir), fila('Teléfono', c.telefono ? h('a', { href: 'tel:' + c.telefono }, c.telefono) : ''), fila('Horario', hor), fila('Franja preferida de entrega', fr),
+        fila('Tiempo de descarga', c.tiempo_parada ? c.tiempo_parada + ' min' : ''), fila('Observaciones de acceso / reparto', c.notas_reparto),
+        dir ? h('a', { class: 'ghost', style: 'display:block;text-align:center;margin-top:12px;padding:12px;border:1px solid var(--borde);border-radius:12px', href: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(dir), target: '_blank', rel: 'noopener' }, '📍 Cómo llegar') : null),
+        h('div', { class: 'sub', style: 'margin-top:8px' }, 'Solo consulta: los datos los modifica administración.'));
+    } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver el cliente.' : msgErr(e))); }
+  })();
+}
 function vistaCliente() {
   state.view = 'cliente';
-  if (!esOficina()) { go('lista'); return; }
   let id = state.params.id || null, pestana = state.params.tab || 'datos', c = null;
   const cont = h('div', {});
   const volver = () => { clientesCache = null; go('clientes'); };
@@ -1513,7 +1530,7 @@ function vistaMas() {
     h('div', { class: 'saludo' }, h('div', { style: 'font-size:20px;font-weight:800' }, 'Hola, ' + (state.perfil.nombre || '').split(' ')[0]), h('div', { class: 'sub' }, (d => d.charAt(0).toUpperCase() + d.slice(1))(fmtDiaLargo(new Date().toISOString())))),
     ...g('Trabajo diario', c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Carga', () => go('carga'), V), c('✅', 'Entregas', () => go('entregas'), V), c('🗺️', 'Ruta', () => go('ruta'), V), c('📅', 'Calendario', () => go('calendario'), V),
       esOficina() ? c('➕', 'Nuevo pedido', () => go('nuevo'), V) : null, esOficina() ? c('📲', 'Pedido de WhatsApp', () => go('importar'), V) : null, c('💰', 'Cobros', () => go('cobros'), V), c('🧮', 'Deudas', () => go('deudas'), V)),
-    ...(esOficina() ? g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), c('📊', 'Resumen', () => go('resumen'), Z), c('📈', 'Rentabilidad', () => go('rentabilidad'), Z)) : []),
+    ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null),
     ...g('Compras y mercancía', puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, puedeCompras() ? c('💶', 'Precios de compra', () => go('precios'), A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null)];
@@ -1974,7 +1991,7 @@ function vistaNuevo() {
 let productosCache = null;
 function vistaCatalogo() {
   state.view = 'catalogo';
-  const tabla = 'productos'; let soloActivos = LS.get('fj_prod_activos', true), tope = 80;
+  const tabla = 'productos'; const lectura = false; let soloActivos = LS.get('fj_prod_activos', true), tope = 80;
   const lista = h('div', {}); const info = h('p', { class: 'sub' });
   const inp = h('input', { placeholder: 'Buscar por nombre o código…', oninput: debounce(() => { tope = 80; cargar(); }, 200) });
   const bAct = h('button', { class: 'chip', onclick: () => { soloActivos = true; LS.set('fj_prod_activos', true); tope = 80; cargar(); } }, 'Activos');
@@ -2004,19 +2021,20 @@ function vistaCatalogo() {
       let todos = productosCache.filter(x => !soloActivos || t || x.activo); if (t) todos = todos.filter(x => sinTilde(x.nombre + ' ' + x.codigo).includes(t));
       const r = todos.slice(0, tope);
       let gen = {};
-      if (tabla === 'productos' && r.length) { const g = await sb.from('tarifas').select('producto_id,precio,desde').is('cliente_id', null).in('producto_id', r.map(x => x.id)).order('desde', { ascending: false }); (g.data || []).forEach(x => { if (gen[x.producto_id] == null) gen[x.producto_id] = x.precio; }); }
+      if (tabla === 'productos' && r.length && !lectura) { const g = await sb.from('tarifas').select('producto_id,precio,desde').is('cliente_id', null).in('producto_id', r.map(x => x.id)).order('desde', { ascending: false }); (g.data || []).forEach(x => { if (gen[x.producto_id] == null) gen[x.producto_id] = x.precio; }); }
       info.textContent = todos.length + (todos.length === 1 ? ' producto' : ' productos') + ' · de la A a la Z';
       let letra = '';
       lista.replaceChildren(...(r.length ? r.flatMap(f => {
         const check = h('input', { type: 'checkbox', checked: f.activo, onchange: e => guardarCampo(f, { activo: e.target.checked }) });
         const ctl = [h('label', { class: 'interruptor' }, check, 'Activo')];
-        if (tabla === 'productos') {
+        if (lectura) { ctl.length = 0; ctl.push(h('span', { class: 'sub' }, 'Se vende en ' + f.unidad_venta + (f.activo ? '' : ' · inactivo'))); }
+        else if (tabla === 'productos') {
           ctl.push(h('select', { onchange: e => guardarCampo(f, { unidad_venta: e.target.value }) }, UNIDADES.map(u => h('option', { value: u, selected: u === f.unidad_venta }, 'Se vende en ' + u))));
           ctl.push(h('select', { onchange: e => guardarCampo(f, { unidad_precio: e.target.value }) }, ['kg', 'unidad'].map(u => h('option', { value: u, selected: u === f.unidad_precio }, 'Precio por ' + u))));
           ctl.push(h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Precio general €', value: gen[f.id] != null ? String(gen[f.id]).replace('.', ',') : '', style: 'width:130px;min-height:42px', onchange: async e => { const n = parseNum(e.target.value); if (n === null || n < 0) { toast('Precio no válido', 'err'); return; } if (await guardarTarifa(f.id, null, n)) toast('Precio general guardado', 'ok'); } }));
           if ('alias' in f) ctl.push(h('input', { type: 'text', placeholder: 'Alias: pera, tom pera…', value: (f.alias || []).join(', '), style: 'width:170px;min-height:42px', onchange: e => guardarCampo(f, { alias: e.target.value.split(',').map(x => x.trim().toLowerCase()).filter(Boolean) }) }));
           ctl.push(h('button', { class: 'ghost small', onclick: () => hoja('Incidencias · ' + f.nombre, panelIncidencias({ producto: f })) }, 'Incidencias'));
-          ctl.push(h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Coste €/' + (f.unidad_precio === 'kg' ? 'kg' : 'ud'), value: f.coste_compra != null ? String(f.coste_compra).replace('.', ',') : '', style: 'width:120px;min-height:42px', onchange: e => { const t = e.target.value.trim(); const n = t ? parseNum(t) : null; if (t && (n === null || n < 0)) { toast('Coste no válido', 'err'); return; } guardarCampo(f, { coste_compra: n }); } }));
+          if (puedeCompras()) ctl.push(h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Coste €/' + (f.unidad_precio === 'kg' ? 'kg' : 'ud'), value: f.coste_compra != null ? String(f.coste_compra).replace('.', ',') : '', style: 'width:120px;min-height:42px', onchange: e => { const t = e.target.value.trim(); const n = t ? parseNum(t) : null; if (t && (n === null || n < 0)) { toast('Coste no válido', 'err'); return; } guardarCampo(f, { coste_compra: n }); } }));
           ctl.push(h('select', { onchange: e => guardarCampo(f, { iva: Number(e.target.value) }) }, [4, 10, 21, 0].map(v => h('option', { value: v, selected: v === Number(f.iva != null ? f.iva : 4) }, 'IVA ' + v + ' %'))));
         } else {
           ctl.push(h('select', { onchange: e => guardarCampo(f, { forma_pago: e.target.value }) }, [['credito', 'Crédito'], ['contado', 'Contado']].map(([v, n]) => h('option', { value: v, selected: v === f.forma_pago }, n))));
@@ -2027,7 +2045,7 @@ function vistaCatalogo() {
       }).concat(todos.length > tope ? [h('button', { class: 'ghost', style: 'width:100%', onclick: () => { tope += 120; cargar(); } }, 'Mostrar más (' + (todos.length - tope) + ' restantes)')] : []) : [h('p', { class: 'vacio' }, 'Nada que mostrar.')]));
     } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, msgErr(e))); }
   }
-  $app.replaceChildren(shell('Productos', h('div', {}, h('button', { style: 'width:100%;margin-bottom:10px', onclick: nuevoProducto }, '+ Añadir producto'), h('div', { class: 'chips' }, bAct, bTod), inp, info, lista)));
+  $app.replaceChildren(shell('Productos', h('div', {}, lectura ? h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Solo consulta: los productos los modifica administración.') : h('button', { style: 'width:100%;margin-bottom:10px', onclick: nuevoProducto }, '+ Añadir producto'), h('div', { class: 'chips' }, bAct, bTod), inp, info, lista)));
   if (tabla === 'productos' && state.params && state.params.q) inp.value = state.params.q;
   renderBanner(); cargar();
 }
@@ -3166,8 +3184,8 @@ function vistaBuscar() {
       const vistos = new Set(); const peds = [];
       [].concat((out.pedC || []), (out.pedP || []).map(l => uno(l.pedidos) ? Object.assign({}, uno(l.pedidos), { extra: num(l.cantidad_pedida) + ' ' + l.unidad_pedida + ' de ' + (mapP[l.producto_id] ? mapP[l.producto_id].nombre : '') }) : null).filter(Boolean), (out.pedN || [])).forEach(p => { if (!p || p.archivado || vistos.has(p.id)) return; vistos.add(p.id); peds.push(p); });
       const kids = [];
-      kids.push(grupo('Clientes', cl.slice(0, 8).map(c => fila(nc(c), c.codigo + (c.activo ? '' : ' · inactivo'), () => oficina ? go('cliente', { id: c.id }) : buscarTodo(inp.value = nc(c))))));
-      kids.push(grupo('Productos', pd.slice(0, 8).map(p => fila(p.nombre, p.codigo + (p.activo ? '' : ' · inactivo'), () => oficina ? go('catalogo', { q: p.nombre }) : toast('Solo administración ve la ficha de productos', 'err')))));
+      kids.push(grupo('Clientes', cl.slice(0, 8).map(c => fila(nc(c), c.codigo + (c.activo ? '' : ' · inactivo'), () => go('cliente', { id: c.id })))));
+      kids.push(grupo('Productos', pd.slice(0, 8).map(p => fila(p.nombre, p.codigo + (p.activo ? '' : ' · inactivo'), () => go('catalogo', { q: p.nombre })))));
       kids.push(grupo('Pedidos', peds.slice(0, 10).map(p => fila(nc(mapC[p.cliente_id] || {}) || 'Pedido', fechaES(p.fecha_entrega) + (p.extra ? ' · ' + p.extra : ''), () => go('pedido', { id: p.id }), ESTADO[p.estado] || p.estado)), peds.length > 10));
       const albs = []; const vA = new Set();
       (out.albN || []).forEach(a => { if (!vA.has(a.pedido_id)) { vA.add(a.pedido_id); albs.push({ pid: a.pedido_id, tit: 'Albarán ' + a.serie + ' ' + a.numero, sub: nc(mapC[(uno(a.pedidos) || {}).cliente_id] || {}) + ' · ' + fechaES(a.fecha) }); } });
@@ -3198,7 +3216,7 @@ function render() {
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
   const v = { lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
-  if ((state.view === 'nuevo' || state.view === 'catalogo') && !esOficina()) return vistaLista();
+  if (state.view === 'nuevo' && !esOficina()) return vistaLista();
   v();
 }
 function tick() {
