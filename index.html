@@ -195,7 +195,7 @@ function crearSbPractica(){
   const H=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
   const cfg=JSON.parse(localStorage.getItem('fj_practica_cfg')||'{}');
   const cli=(id,codigo,nombre,pago)=>({id,codigo,nombre,nombre_comercial:nombre,nif:'B0000000'+id.slice(1),direccion:'Calle de ejemplo '+id.slice(1),localidad:'Madrid',telefono:'600000000',forma_pago:pago,activo:true});
-  const pro=(id,codigo,nombre,unidad,iva)=>({id,codigo,nombre,unidad_venta:unidad,unidad_precio:'kg',iva,activo:true});
+  const pro=(id,codigo,nombre,unidad,iva)=>({id,codigo,nombre,unidad_venta:unidad,unidad_precio:'kg',iva,iva_origen:'golden',activo:true});
   const lin=(id,ped,pr,cant,u,precio)=>({id,pedido_id:ped,producto_id:pr,cantidad_pedida:cant,unidad_pedida:u,peso_real:null,unidad_precio:'kg',precio,estado:'pendiente',version:1});
   const __init = {
     perfiles:[{id:'u1',nombre:cfg.nombre||'Tú',rol:cfg.rol||'admin',activo:true},{id:'u2',nombre:'Compañero (ejemplo)',rol:'preparador',activo:true}],
@@ -593,7 +593,7 @@ async function cargarPedido(id) {
   if (navigator.onLine) {
     let [p, l, a, en] = await Promise.all([
       sb.from('pedidos').select('id,cliente_id,estado,fecha_entrega,notas,preparador_id,clientes(codigo,nombre,nombre_comercial,forma_pago,direccion,localidad,recargo_equivalencia)').eq('id', id).single(),
-      sb.from('lineas_pedido').select('id,producto_id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,iva,version,notas,formato_peso_kg,peso_estimado,peso_variable,productos(codigo,nombre,iva)').eq('pedido_id', id),
+      sb.from('lineas_pedido').select('id,producto_id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,iva,version,notas,formato_peso_kg,peso_estimado,peso_variable,productos(codigo,nombre,iva,iva_origen)').eq('pedido_id', id),
       sb.from('albaranes').select('serie,numero,fecha,estado').eq('pedido_id', id).maybeSingle(),
       sb.from('entregas').select('entregado_at,entregado_por').eq('pedido_id', id).maybeSingle()]);
     if (l.error && /column|schema cache/i.test(l.error.message || '')) l = await sb.from('lineas_pedido').select('id,producto_id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,iva,version,notas,productos(codigo,nombre,iva)').eq('pedido_id', id);
@@ -740,7 +740,10 @@ async function vistaAlbaran() {
     const pintar = () => { LS.set('fj_formato', formato.value); wrap.innerHTML = htmlAlbaran(d, formato.value); };
     pintar();
     const cobroBox = h('div', {});
+    const sinIvaP = [...new Set(d.lineas.filter(l => l.productos && 'iva_origen' in l.productos && l.productos.iva_origen == null).map(l => l.productos.nombre))];
+    const avisoIva = sinIvaP.length ? h('div', { class: 'card', style: 'border-left:4px solid #b45309;margin-bottom:10px' }, h('div', { class: 'nombre' }, '⚠ IVA sin definir en ' + sinIvaP.length + (sinIvaP.length === 1 ? ' producto' : ' productos')), h('div', { class: 'sub' }, sinIvaP.slice(0, 8).join(', ') + (sinIvaP.length > 8 ? '…' : '') + '. Este albarán lo calcula provisionalmente al 4 %. Defínelo en Productos y vuelve a abrir el albarán.'), h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: () => go('catalogo') }, 'Ir a Productos')) : null;
     cont.replaceChildren(
+      ...(avisoIva ? [avisoIva] : []),
       cobroBox,
       h('label', { class: 'campo' }, 'Formato de impresión', formato),
       h('button', { style: 'width:100%;margin-bottom:12px', onclick: () => imprimir(wrap.innerHTML) }, 'Imprimir (2 copias)'),
@@ -1994,23 +1997,29 @@ function vistaNuevo() {
 let productosCache = null;
 function vistaCatalogo() {
   state.view = 'catalogo';
-  const tabla = 'productos'; const lectura = false; let soloActivos = LS.get('fj_prod_activos', true), tope = 80;
+  const tabla = 'productos'; const lectura = false; let soloActivos = LS.get('fj_prod_activos', true), tope = 80, fIva = null;
   const lista = h('div', {}); const info = h('p', { class: 'sub' });
   const inp = h('input', { placeholder: 'Buscar por nombre o código…', oninput: debounce(() => { tope = 80; cargar(); }, 200) });
   const bAct = h('button', { class: 'chip', onclick: () => { soloActivos = true; LS.set('fj_prod_activos', true); tope = 80; cargar(); } }, 'Activos');
   const bTod = h('button', { class: 'chip', onclick: () => { soloActivos = false; LS.set('fj_prod_activos', false); tope = 80; cargar(); } }, 'Todos');
-  const marca = () => { bAct.className = 'chip' + (soloActivos ? ' on' : ''); bTod.className = 'chip' + (!soloActivos ? ' on' : ''); };
+  const bIvaSin = h('button', { class: 'chip', style: 'display:none', onclick: () => { fIva = fIva === 'sin' ? null : 'sin'; tope = 80; cargar(); } }, 'IVA sin definir');
+  const bIvaRev = h('button', { class: 'chip', style: 'display:none', onclick: () => { fIva = fIva === 'revisar' ? null : 'revisar'; tope = 80; cargar(); } }, 'IVA a revisar');
+  const ivaEstado = f => !('iva_origen' in f) ? 'ok' : (f.iva_origen == null ? 'sin' : (f.iva_origen === 'golden_revisar' ? 'revisar' : 'ok'));
+  const marca = () => { bAct.className = 'chip' + (soloActivos ? ' on' : ''); bTod.className = 'chip' + (!soloActivos ? ' on' : ''); bIvaSin.className = 'chip' + (fIva === 'sin' ? ' on' : ''); bIvaRev.className = 'chip' + (fIva === 'revisar' ? ' on' : ''); };
   async function guardarCampo(fila, cambios, ctl) {
     const { error } = await sb.from(tabla).update(cambios).eq('id', fila.id);
     if (error) { toast(msgErr(error), 'err'); cargar(); return; }
     Object.assign(fila, cambios); toast('Guardado', 'ok');
   }
   function nuevoProducto() {
-    const f = { codigo: h('input', { placeholder: 'Ej. 105' }), nombre: h('input', { placeholder: 'Nombre del producto' }), uv: h('select', {}, UNIDADES.map(u => h('option', { value: u }, 'Se vende en ' + u))), up: h('select', {}, ['kg', 'unidad'].map(u => h('option', { value: u }, 'Precio por ' + u))), iva: h('select', {}, [4, 10, 21, 0].map(v => h('option', { value: v }, 'IVA ' + v + ' %'))), precio: h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Opcional' }) }; let cerrar;
+    const f = { codigo: h('input', { placeholder: 'Ej. 105' }), nombre: h('input', { placeholder: 'Nombre del producto' }), uv: h('select', {}, UNIDADES.map(u => h('option', { value: u }, 'Se vende en ' + u))), up: h('select', {}, ['kg', 'unidad'].map(u => h('option', { value: u }, 'Precio por ' + u))), iva: h('select', {}, [h('option', { value: '' }, '— elegir IVA —')].concat([4, 10, 21, 0].map(v => h('option', { value: v }, 'IVA ' + v + ' %')))), precio: h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Opcional' }) }; let cerrar;
     cerrar = hoja('Nuevo producto', h('div', {}, h('label', { class: 'campo' }, 'Código *', f.codigo), h('label', { class: 'campo' }, 'Nombre *', f.nombre), h('label', { class: 'campo' }, 'Unidad de venta', f.uv), h('label', { class: 'campo' }, 'Precio por', f.up), h('label', { class: 'campo' }, 'IVA', f.iva), h('label', { class: 'campo' }, 'Precio general €', f.precio),
       h('button', { class: 'guardar', style: 'width:100%', onclick: async () => {
         if (!f.codigo.value.trim() || !f.nombre.value.trim()) { toast('Escribe código y nombre', 'err'); return; }
-        const r = await sb.from('productos').insert({ codigo: f.codigo.value.trim(), nombre: f.nombre.value.trim(), unidad_venta: f.uv.value, unidad_precio: f.up.value, iva: Number(f.iva.value), activo: true }).select().single();
+        if (f.iva.value === '') { toast('Elige el IVA del producto', 'err'); return; }
+        const nuevoP = { codigo: f.codigo.value.trim(), nombre: f.nombre.value.trim(), unidad_venta: f.uv.value, unidad_precio: f.up.value, iva: Number(f.iva.value), activo: true };
+        let r = await sb.from('productos').insert(Object.assign({ iva_origen: 'manual' }, nuevoP)).select().single();
+        if (r.error && /iva_origen|column|schema cache/i.test(r.error.message || '')) r = await sb.from('productos').insert(nuevoP).select().single();
         if (r.error) { toast(r.error.code === '23505' ? 'Ya existe un producto con ese código.' : msgErr(r.error), 'err'); return; }
         const pr = f.precio.value.trim() ? parseNum(f.precio.value) : null; if (pr !== null && pr >= 0) await guardarTarifa(r.data.id, null, pr);
         cerrar(); toast('Producto creado', 'ok'); productosCache = null; inp.value = r.data.nombre; soloActivos = true; cargar();
@@ -2022,6 +2031,12 @@ function vistaCatalogo() {
       if (!productosCache) { lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); const q = await sb.from('productos').select('*').range(0, 4999); if (q.error) throw q.error; productosCache = q.data.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')); }
       const t = sinTilde(limpiaBusqueda(inp.value));
       let todos = productosCache.filter(x => !soloActivos || t || x.activo); if (t) todos = todos.filter(x => sinTilde(x.nombre + ' ' + x.codigo).includes(t));
+      if (tabla === 'productos' && productosCache.length && 'iva_origen' in productosCache[0]) {
+        const base = productosCache.filter(x => !soloActivos || x.activo);
+        const nSin = base.filter(x => ivaEstado(x) === 'sin').length, nRev = base.filter(x => ivaEstado(x) === 'revisar').length;
+        bIvaSin.textContent = 'IVA sin definir (' + nSin + ')'; bIvaRev.textContent = 'IVA a revisar (' + nRev + ')'; bIvaSin.style.display = ''; bIvaRev.style.display = '';
+        if (fIva) todos = todos.filter(x => ivaEstado(x) === fIva);
+      }
       const r = todos.slice(0, tope);
       let gen = {};
       if (tabla === 'productos' && r.length && !lectura) { const g = await sb.from('tarifas').select('producto_id,precio,desde').is('cliente_id', null).in('producto_id', r.map(x => x.id)).order('desde', { ascending: false }); (g.data || []).forEach(x => { if (gen[x.producto_id] == null) gen[x.producto_id] = x.precio; }); }
@@ -2038,17 +2053,18 @@ function vistaCatalogo() {
           if ('alias' in f) ctl.push(h('input', { type: 'text', placeholder: 'Alias: pera, tom pera…', value: (f.alias || []).join(', '), style: 'width:170px;min-height:42px', onchange: e => guardarCampo(f, { alias: e.target.value.split(',').map(x => x.trim().toLowerCase()).filter(Boolean) }) }));
           ctl.push(h('button', { class: 'ghost small', onclick: () => hoja('Incidencias · ' + f.nombre, panelIncidencias({ producto: f })) }, 'Incidencias'));
           if (puedeCompras()) ctl.push(h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Coste €/' + (f.unidad_precio === 'kg' ? 'kg' : 'ud'), value: f.coste_compra != null ? String(f.coste_compra).replace('.', ',') : '', style: 'width:120px;min-height:42px', onchange: e => { const t = e.target.value.trim(); const n = t ? parseNum(t) : null; if (t && (n === null || n < 0)) { toast('Coste no válido', 'err'); return; } guardarCampo(f, { coste_compra: n }); } }));
-          ctl.push(h('select', { onchange: e => guardarCampo(f, { iva: Number(e.target.value) }) }, [4, 10, 21, 0].map(v => h('option', { value: v, selected: v === Number(f.iva != null ? f.iva : 4) }, 'IVA ' + v + ' %'))));
+          const sinIva = ivaEstado(f) === 'sin';
+          ctl.push(h('select', { style: sinIva ? 'border-color:#b45309' : '', onchange: e => { if (e.target.value === '') return; const c = { iva: Number(e.target.value) }; if ('iva_origen' in f) c.iva_origen = 'manual'; guardarCampo(f, c).then(() => cargar()); } }, (sinIva ? [h('option', { value: '', selected: true }, '— elegir IVA —')] : []).concat([4, 10, 21, 0].map(v => h('option', { value: v, selected: !sinIva && v === Number(f.iva != null ? f.iva : 4) }, 'IVA ' + v + ' %')))));
         } else {
           ctl.push(h('select', { onchange: e => guardarCampo(f, { forma_pago: e.target.value }) }, [['credito', 'Crédito'], ['contado', 'Contado']].map(([v, n]) => h('option', { value: v, selected: v === f.forma_pago }, n))));
           ctl.push(h('input', { placeholder: 'Ruta (ej. R1)', value: f.ruta || '', style: 'width:130px;min-height:42px', onchange: e => guardarCampo(f, { ruta: e.target.value.trim() || null }) }));
         }
         const L0 = (sinTilde(f.nombre).charAt(0) || '#').toUpperCase(), L = /[A-Z]/.test(L0) ? L0 : '#'; const cab = L !== letra ? (letra = L, [h('div', { class: 'letra' }, L)]) : [];
-        return cab.concat([h('div', { class: 'card rowcat' }, h('div', {}, h('div', { class: 'nombre' }, tabla === 'clientes' ? nombreCli(f) : f.nombre), h('div', { class: 'sub' }, f.codigo)), h('div', {}), h('div', { class: 'controles' }, ctl))]);
+        return cab.concat([h('div', { class: 'card rowcat' }, h('div', {}, h('div', { class: 'nombre' }, tabla === 'clientes' ? nombreCli(f) : f.nombre), h('div', { class: 'sub' }, f.codigo, tabla === 'productos' && ivaEstado(f) === 'sin' ? h('span', { style: 'color:#b45309;font-weight:700' }, ' · ⚠ IVA sin definir') : null, tabla === 'productos' && ivaEstado(f) === 'revisar' ? h('span', { style: 'color:#b45309' }, ' · 🔎 IVA tomado de Golden, pendiente de la gestoría') : null)), h('div', {}), h('div', { class: 'controles' }, ctl))]);
       }).concat(todos.length > tope ? [h('button', { class: 'ghost', style: 'width:100%', onclick: () => { tope += 120; cargar(); } }, 'Mostrar más (' + (todos.length - tope) + ' restantes)')] : []) : [h('p', { class: 'vacio' }, 'Nada que mostrar.')]));
     } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, msgErr(e))); }
   }
-  $app.replaceChildren(shell('Productos', h('div', {}, lectura ? h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Solo consulta: los productos los modifica administración.') : h('button', { style: 'width:100%;margin-bottom:10px', onclick: nuevoProducto }, '+ Añadir producto'), h('div', { class: 'chips' }, bAct, bTod), inp, info, lista)));
+  $app.replaceChildren(shell('Productos', h('div', {}, lectura ? h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Solo consulta: los productos los modifica administración.') : h('button', { style: 'width:100%;margin-bottom:10px', onclick: nuevoProducto }, '+ Añadir producto'), h('div', { class: 'chips' }, bAct, bTod, bIvaSin, bIvaRev), inp, info, lista)));
   if (tabla === 'productos' && state.params && state.params.q) inp.value = state.params.q;
   renderBanner(); cargar();
 }
@@ -3050,7 +3066,14 @@ function waInterpretar(texto, ahora) {
 function waResolver(interp, indice) {
   const lineas = [], ignorado = interp.ignorado.slice();
   interp.items.forEach(it => {
-    const r = it.nombre ? waBuscarProducto(it.nombre, indice) : { estado: 'noenc', cand: [] };
+    let r = it.nombre ? waBuscarProducto(it.nombre, indice) : { estado: 'noenc', cand: [] };
+    /* «tomate ensalada» no existe tal cual en el catálogo: se ofrecen los productos que comparten la palabra principal («tomate») para elegir */
+    if (r.estado === 'noenc' && it.nombre) {
+      const ws = waPalabras(it.nombre).filter(w => w.length >= 4); const acum = new Map();
+      if (ws.length >= 2) ws.forEach(w => { const q = waBuscarProducto(w, indice); (q.cand || (q.producto ? [{ p: q.producto, score: q.score || 1 }] : [])).forEach(c => { if (c.score >= 0.7) { const e = acum.get(c.p.id) || { p: c.p, score: 0 }; e.score += c.score; acum.set(c.p.id, e); } }); });
+      const lista = Array.from(acum.values()).sort((x, y) => y.score - x.score || String(x.p.nombre).length - String(y.p.nombre).length).slice(0, 8);
+      if (lista.length) r = { estado: 'ambiguo', cand: lista.map(e => ({ p: e.p, score: Math.min(0.69, e.score / ws.length) })) };
+    }
     const sinCantidadReal = it.qty == null || it.qtyImplicita;
     if (r.estado === 'noenc' && sinCantidadReal && !it.dePorAlmohadilla) { ignorado.push(it.raw); return; }
     let uni = it.unit, uniAmbigua = false;
@@ -3622,6 +3645,21 @@ function vistaImportar() {
   const inGal = h('input', { type: 'file', accept: 'image/*', multiple: true, style: 'display:none' });
   const inDoc = h('input', { type: 'file', accept: 'application/pdf,image/*', multiple: true, style: 'display:none' });
   [inFoto, inGal, inDoc].forEach(i => i.onchange = async () => { const fs = Array.from(i.files || []); i.value = ''; await tomarArchivos(fs); });
+  const esPdf = f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name || '');
+  async function leerConIA(a) {
+    if (!navigator.onLine) { toast('Sin conexión: la IA necesita internet', 'err'); return; }
+    if (!LS.get('fj_ia_ok', false)) { if (!await confirmar('«Leer con IA» envía ESTA foto a un servicio externo (Anthropic) para transcribirla. Tiene un coste pequeño por foto. La foto puede contener nombres de clientes. ¿Lo aceptas?')) return; LS.set('fj_ia_ok', true); }
+    a.estado = 'leyendo'; a.msg = 'Leyendo con IA…'; a.aviso = ''; pintarArch();
+    try {
+      const c = await waImagenACanvas(a.file, 1600); const b64 = c.toDataURL('image/jpeg', 0.85).split(',')[1];
+      const r = await sb.functions.invoke('leer-pedido', { body: { imagen: b64, tipo: 'image/jpeg' } });
+      if (r.error) { let m = r.error.message || ''; try { const j = await r.error.context.json(); if (j && j.error) m = j.error; } catch (e) { } throw new Error(/not found|404/i.test(m) ? 'La lectura con IA todavía no está activada en Supabase' : m); }
+      const txt = String((r.data && r.data.texto) || '').trim(); if (!txt) throw new Error('La IA no devolvió texto');
+      if (a.texto && ta.value.includes(a.texto)) ta.value = ta.value.replace(a.texto, txt); else ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + txt;
+      a.texto = txt; a.estado = 'ok'; a.aviso = ''; a.ia = true; S.origen = 'imagen'; pintarArch(); await interpretar();
+      if (/\[\?\]/.test(txt)) toast('La IA marcó partes dudosas con [?]: revísalas con la foto', 'err');
+    } catch (e) { a.estado = 'mala'; a.aviso = 'No se pudo leer con IA: ' + (e && e.message ? e.message : e); pintarArch(); }
+  }
   async function tomarArchivos(fs) {
     let leidos = 0;
     for (const f of fs) {
@@ -3632,6 +3670,7 @@ function vistaImportar() {
         a.texto = r.texto; a.estado = 'ok';
         if (!r.texto || r.texto.replace(/\s/g, '').length < 8) { a.estado = 'mala'; a.aviso = 'No he podido leer nada. Repite la foto con más luz, bien enfocada y con la hoja entera.'; }
         else {
+          if (!esPdf(f) && r.conf != null && r.conf < 50) { a.estado = 'mala'; a.texto = ''; a.textoOCR = r.texto; a.aviso = 'No se lee bien (' + Math.round(r.conf) + '%): parece letra a mano y el lector gratuito no la entiende. Prueba «Leer con IA», repite la foto o escribe el pedido.'; pintarArch(); continue; }
           const av = []; if (r.conf != null && r.conf < 60) av.push('lectura poco segura (' + Math.round(r.conf) + '%): si es letra a mano, revisa TODO con la imagen'); if (r.nitidez != null && r.nitidez < 15) av.push('la foto parece borrosa'); if (av.length) { a.estado = 'dudosa'; a.aviso = av.join(' · ') + '. Puedes repetirla.'; }
           ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + r.texto; leidos++;
         }
@@ -3652,6 +3691,7 @@ function vistaImportar() {
         a.url ? h('img', { src: a.url, style: 'width:100%;height:90px;object-fit:cover;border-radius:6px', onclick: () => verArch(a) }) : h('div', { style: 'height:90px;display:flex;align-items:center;justify-content:center;font-size:34px', onclick: () => verArch(a) }, '📄'),
         h('div', { class: 'sub', style: 'font-size:11px;word-break:break-all' }, (i + 1) + '. ' + a.nombre.slice(-24)),
         h('div', { style: 'font-size:12px' }, a.estado === 'leyendo' ? '⏳ ' + a.msg : a.estado === 'ok' ? '✔ Leída' : a.aviso),
+        a.url && a.estado !== 'leyendo' ? h('button', { class: 'small', style: 'margin-top:4px;width:100%', onclick: () => leerConIA(a) }, a.ia ? '🧠 Releer con IA' : '🧠 Leer con IA') : null,
         h('button', { class: 'ghost small', style: 'margin-top:4px', onclick: () => quitarArch(a) }, 'Quitar')))),
       S.archivos.some(a => a.estado === 'ok' || a.estado === 'dudosa') ? h('div', { class: 'sub' }, 'Compara cada línea de abajo con la imagen. La lectura gratuita funciona bien con texto impreso; la letra a mano puede fallar.') : null);
   }
