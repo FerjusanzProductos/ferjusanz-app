@@ -1964,12 +1964,15 @@ function vistaNuevo() {
 }
 
 /* =====================  CATÁLOGO (oficina)  ===================== */
+let productosCache = null;
 function vistaCatalogo() {
   state.view = 'catalogo';
-  const tabla = 'productos';
+  const tabla = 'productos'; let soloActivos = LS.get('fj_prod_activos', true), tope = 80;
   const lista = h('div', {}); const info = h('p', { class: 'sub' });
-  const inp = h('input', { placeholder: 'Buscar por nombre o código…', oninput: debounce(cargar, 250) });
-  const marca = () => { };
+  const inp = h('input', { placeholder: 'Buscar por nombre o código…', oninput: debounce(() => { tope = 80; cargar(); }, 200) });
+  const bAct = h('button', { class: 'chip', onclick: () => { soloActivos = true; LS.set('fj_prod_activos', true); tope = 80; cargar(); } }, 'Activos');
+  const bTod = h('button', { class: 'chip', onclick: () => { soloActivos = false; LS.set('fj_prod_activos', false); tope = 80; cargar(); } }, 'Todos');
+  const marca = () => { bAct.className = 'chip' + (soloActivos ? ' on' : ''); bTod.className = 'chip' + (!soloActivos ? ' on' : ''); };
   async function guardarCampo(fila, cambios, ctl) {
     const { error } = await sb.from(tabla).update(cambios).eq('id', fila.id);
     if (error) { toast(msgErr(error), 'err'); cargar(); return; }
@@ -1983,18 +1986,21 @@ function vistaCatalogo() {
         const r = await sb.from('productos').insert({ codigo: f.codigo.value.trim(), nombre: f.nombre.value.trim(), unidad_venta: f.uv.value, unidad_precio: f.up.value, iva: Number(f.iva.value), activo: true }).select().single();
         if (r.error) { toast(r.error.code === '23505' ? 'Ya existe un producto con ese código.' : msgErr(r.error), 'err'); return; }
         const pr = f.precio.value.trim() ? parseNum(f.precio.value) : null; if (pr !== null && pr >= 0) await guardarTarifa(r.data.id, null, pr);
-        cerrar(); toast('Producto creado', 'ok'); inp.value = r.data.nombre; cargar();
+        cerrar(); toast('Producto creado', 'ok'); productosCache = null; inp.value = r.data.nombre; soloActivos = true; cargar();
       } }, 'Crear producto')));
   }
   async function cargar() {
     marca();
-    const t = inp.value.trim();
     try {
-      const r = await buscar(tabla, t, !t, t ? 40 : 100);
+      if (!productosCache) { lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); const q = await sb.from('productos').select('*').range(0, 4999); if (q.error) throw q.error; productosCache = q.data.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')); }
+      const t = sinTilde(limpiaBusqueda(inp.value));
+      let todos = productosCache.filter(x => !soloActivos || t || x.activo); if (t) todos = todos.filter(x => sinTilde(x.nombre + ' ' + x.codigo).includes(t));
+      const r = todos.slice(0, tope);
       let gen = {};
       if (tabla === 'productos' && r.length) { const g = await sb.from('tarifas').select('producto_id,precio,desde').is('cliente_id', null).in('producto_id', r.map(x => x.id)).order('desde', { ascending: false }); (g.data || []).forEach(x => { if (gen[x.producto_id] == null) gen[x.producto_id] = x.precio; }); }
-      info.textContent = t ? r.length + ' resultados (máximo 40)' : r.length + ' ' + tabla + ' activos (escribe para buscar entre todos)';
-      lista.replaceChildren(...(r.length ? r.map(f => {
+      info.textContent = todos.length + (todos.length === 1 ? ' producto' : ' productos') + ' · de la A a la Z';
+      let letra = '';
+      lista.replaceChildren(...(r.length ? r.flatMap(f => {
         const check = h('input', { type: 'checkbox', checked: f.activo, onchange: e => guardarCampo(f, { activo: e.target.checked }) });
         const ctl = [h('label', { class: 'interruptor' }, check, 'Activo')];
         if (tabla === 'productos') {
@@ -2008,11 +2014,12 @@ function vistaCatalogo() {
           ctl.push(h('select', { onchange: e => guardarCampo(f, { forma_pago: e.target.value }) }, [['credito', 'Crédito'], ['contado', 'Contado']].map(([v, n]) => h('option', { value: v, selected: v === f.forma_pago }, n))));
           ctl.push(h('input', { placeholder: 'Ruta (ej. R1)', value: f.ruta || '', style: 'width:130px;min-height:42px', onchange: e => guardarCampo(f, { ruta: e.target.value.trim() || null }) }));
         }
-        return h('div', { class: 'card rowcat' }, h('div', {}, h('div', { class: 'nombre' }, tabla === 'clientes' ? nombreCli(f) : f.nombre), h('div', { class: 'sub' }, f.codigo)), h('div', {}), h('div', { class: 'controles' }, ctl));
-      }) : [h('p', { class: 'vacio' }, 'Nada que mostrar.')]));
+        const L0 = (sinTilde(f.nombre).charAt(0) || '#').toUpperCase(), L = /[A-Z]/.test(L0) ? L0 : '#'; const cab = L !== letra ? (letra = L, [h('div', { class: 'letra' }, L)]) : [];
+        return cab.concat([h('div', { class: 'card rowcat' }, h('div', {}, h('div', { class: 'nombre' }, tabla === 'clientes' ? nombreCli(f) : f.nombre), h('div', { class: 'sub' }, f.codigo)), h('div', {}), h('div', { class: 'controles' }, ctl))]);
+      }).concat(todos.length > tope ? [h('button', { class: 'ghost', style: 'width:100%', onclick: () => { tope += 120; cargar(); } }, 'Mostrar más (' + (todos.length - tope) + ' restantes)')] : []) : [h('p', { class: 'vacio' }, 'Nada que mostrar.')]));
     } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, msgErr(e))); }
   }
-  $app.replaceChildren(shell('Productos', h('div', {}, h('button', { style: 'width:100%;margin-bottom:10px', onclick: nuevoProducto }, '+ Añadir producto'), inp, info, lista)));
+  $app.replaceChildren(shell('Productos', h('div', {}, h('button', { style: 'width:100%;margin-bottom:10px', onclick: nuevoProducto }, '+ Añadir producto'), h('div', { class: 'chips' }, bAct, bTod), inp, info, lista)));
   renderBanner(); cargar();
 }
 
