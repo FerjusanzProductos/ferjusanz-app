@@ -213,7 +213,7 @@ function crearSbPractica(){
     albaranes:[], carga_lineas:[], sobrante:[], mensajes:[], fichajes:[], fotos_perfil:[], cobros:[], proveedores:[{id:'v1',codigo:'FRUTASSUR',nombre:'Frutas Sur (ejemplo)',activo:true},{id:'v2',codigo:'HORTALIZAS',nombre:'Hortalizas Norte (ejemplo)',activo:true}], compras:[], tarifas_compra:[{id:'tc1',producto_id:'p1',proveedor_id:'v1',precio:0.45,fecha:'2026-10-20',origen:'golden-factura'}], lotes:[], asignaciones_lote:[], entregas:[], incidencias:[], documentos_compra:[], seq:9000, log:[]
   };
   const __j=JSON.parse(localStorage.getItem('p_stub_db')||'null'); const __saved=(__j&&__j.dia===H())?__j:null;
-  const DB = window.__DB = __saved || __init; DB.dia=H(); DB.carga_lineas=DB.carga_lineas||[]; DB.sobrante=DB.sobrante||[]; DB.mensajes=DB.mensajes||[]; DB.fichajes=DB.fichajes||[]; DB.fotos_perfil=DB.fotos_perfil||[]; DB.cobros=DB.cobros||[]; DB.proveedores=DB.proveedores||[]; DB.compras=DB.compras||[]; DB.lotes=DB.lotes||[]; DB.asignaciones_lote=DB.asignaciones_lote||[]; DB.entregas=DB.entregas||[]; DB.incidencias=DB.incidencias||[]; DB.documentos_compra=DB.documentos_compra||[]; DB.facturas_recibidas=DB.facturas_recibidas||[]; DB.avisos=DB.avisos||[]; DB.pedidos_habituales=DB.pedidos_habituales||[]; DB.lineas_habituales=DB.lineas_habituales||[];
+  const DB = window.__DB = __saved || __init; DB.dia=H(); DB.carga_lineas=DB.carga_lineas||[]; DB.sobrante=DB.sobrante||[]; DB.mensajes=DB.mensajes||[]; DB.fichajes=DB.fichajes||[]; DB.fotos_perfil=DB.fotos_perfil||[]; DB.cobros=DB.cobros||[]; DB.proveedores=DB.proveedores||[]; DB.compras=DB.compras||[]; DB.lotes=DB.lotes||[]; DB.asignaciones_lote=DB.asignaciones_lote||[]; DB.entregas=DB.entregas||[]; DB.incidencias=DB.incidencias||[]; DB.documentos_compra=DB.documentos_compra||[]; DB.facturas_recibidas=DB.facturas_recibidas||[]; DB.facturas_clientes=DB.facturas_clientes||[]; DB.avisos=DB.avisos||[]; DB.pedidos_habituales=DB.pedidos_habituales||[]; DB.lineas_habituales=DB.lineas_habituales||[];
   const gv=(r,k)=>{if(k.includes('->>')){const [a,b]=k.split('->>');return r[a]?r[a][b]:undefined;}return r[k];};
   DB.historial=DB.historial||[];
   const AUD=['lineas_pedido','pedidos','albaranes','asignaciones_lote','cobros','productos','clientes'];
@@ -406,7 +406,7 @@ function isNetErr(e) {
 const esOficina = () => !!state.perfil && ['oficina', 'admin'].includes(state.perfil.rol);
 const ESTADO = { pendiente: 'Pendiente', en_preparacion: 'En preparación', terminado: 'Terminado', anulado: 'Anulado' };
 const CLASE_ESTADO = { pendiente: 'pend', en_preparacion: 'prep', terminado: 'fin', anulado: 'pend' };
-const VISTAS_MAS_OLD = ['mas', 'clientes', 'cliente', 'catalogo', 'compras', 'traza', 'perfil', 'fichajes', 'entregas', 'calendario', 'incidencias', 'precios', 'facturas', 'resumen', 'archivo', 'avisos', 'ruta', 'rentabilidad', 'registro', 'quien'];
+const VISTAS_MAS_OLD = ['mas', 'clientes', 'cliente', 'catalogo', 'compras', 'traza', 'perfil', 'fichajes', 'entregas', 'calendario', 'incidencias', 'precios', 'facturas', 'resumen', 'archivo', 'avisos', 'ruta', 'rentabilidad', 'registro', 'quien', 'facturascli', 'pedidos'];
 const puedeCompras = () => !!state.perfil && ['compras', 'oficina', 'admin'].includes(state.perfil.rol);
 const UNIDADES = ['kg', 'pieza', 'caja', 'saco', 'bolsa', 'bandeja', 'manojo', 'docena'];
 /* Texto de «Se cobra por»: kg, o la unidad del pedido (docena, caja, pieza…) */
@@ -1313,6 +1313,88 @@ async function guardarTarifa(productoId, clienteId, precio) {
 /* =====================  CLIENTES (oficina)  ===================== */
 let clientesCache = null;
 const sinTilde = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+/* ===== FACTURAS DE CLIENTES (las emite Golden; aquí se registran para consultarlas por cliente) ===== */
+async function cargarFacturasCli(clienteId) {
+  let q = sb.from('facturas_clientes').select('*');
+  if (clienteId) q = q.eq('cliente_id', clienteId);
+  const r = await q.order('fecha', { ascending: false }).limit(1000);
+  if (r.error) throw r.error; return r.data || [];
+}
+function filaFacturaCli(f, nom, refrescar) {
+  const det = h('div', { class: 'sub', style: 'display:none;margin-top:8px' });
+  const pintaDet = () => {
+    const kids = [f.nota ? h('div', {}, 'Nota: ' + f.nota) : null, h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' },
+      h('button', { class: 'small', onclick: async e => { e.stopPropagation(); const r = await sb.from('facturas_clientes').update({ pagada: !f.pagada, fecha_pago: f.pagada ? null : hoy() }).eq('id', f.id); if (r.error) { toast(msgErr(r.error), 'err'); return; } toast(f.pagada ? 'Marcada como pendiente' : 'Marcada como cobrada', 'ok'); refrescar(); } }, f.pagada ? 'Marcar como pendiente' : 'Marcar como cobrada'),
+      f.ruta ? h('button', { class: 'ghost small', onclick: e => { e.stopPropagation(); verDocumento(f.ruta); } }, 'Ver archivo') : null,
+      h('button', { class: 'peligro small', onclick: async e => { e.stopPropagation(); if (!await confirmar('¿Quitar esta factura de la lista? (No afecta a Golden.)')) return; const r = await sb.from('facturas_clientes').delete().eq('id', f.id); if (r.error) { toast(msgErr(r.error), 'err'); return; } if (f.ruta) await sb.storage.from('facturas').remove([f.ruta]); toast('Factura quitada', 'ok'); refrescar(); } }, 'Quitar'))];
+    det.replaceChildren(...kids.filter(Boolean));
+  };
+  pintaDet();
+  const card = h('div', { class: 'card tap', onclick: () => { det.style.display = det.style.display === 'none' ? '' : 'none'; } },
+    h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, 'Factura ' + f.numero), h('div', { class: 'sub' }, [nom, fechaES(f.fecha)].filter(Boolean).join(' · '))),
+      h('div', { style: 'text-align:right' }, h('b', {}, eur(f.importe) + ' €'), h('div', {}, h('span', { class: 'badge' + (f.pagada ? '' : ' cont') }, f.pagada ? 'Cobrada' : 'Pendiente')))), det);
+  return card;
+}
+function abrirNuevaFacturaCli(clienteFijo, hecho) {
+  let cli = clienteFijo || null; const cliBox = h('div', {});
+  const num = h('input', { placeholder: 'Nº de factura (el de Golden)' }), fec = h('input', { type: 'date', value: hoy() }), imp = h('input', { inputmode: 'decimal', placeholder: 'Importe total con IVA' }), nota = h('input', { placeholder: 'Nota (opcional)' }), arch = h('input', { type: 'file', accept: 'application/pdf,image/*' });
+  const pagada = h('input', { type: 'checkbox' });
+  async function pintaCli() {
+    if (cli) { cliBox.replaceChildren(h('label', { class: 'campo' }, 'Cliente'), h('div', { class: 'card fila' }, h('div', { class: 'nombre' }, nombreCli(cli)), clienteFijo ? null : h('button', { class: 'ghost small', onclick: () => { cli = null; pintaCli(); } }, 'Cambiar'))); return; }
+    if (!clientesCache) { try { const { data } = await sb.from('clientes').select('id,codigo,nombre,nombre_comercial,activo').range(0, 4999); clientesCache = data || []; } catch (e) { clientesCache = []; } }
+    const res = h('div', {}); const inp = h('input', { placeholder: 'Buscar cliente…', oninput: debounce(() => { const r = buscarCliLocal(clientesCache, inp.value); res.replaceChildren(r.length ? h('div', { class: 'res' }, r.map(c => h('button', { onclick: () => { cli = c; pintaCli(); } }, nombreCli(c) + '  ·  ' + c.codigo))) : h('p', { class: 'sub' }, 'Sin resultados.')); }, 200) });
+    cliBox.replaceChildren(h('label', { class: 'campo' }, 'Cliente *'), inp, res);
+  }
+  pintaCli(); let cerrar;
+  cerrar = hoja('Nueva factura de cliente', h('div', {}, cliBox, h('label', { class: 'campo' }, 'Número *', num), h('label', { class: 'campo' }, 'Fecha', fec), h('label', { class: 'campo' }, 'Importe total (€) *', imp), h('label', { class: 'campo' }, 'Nota', nota),
+    h('label', { class: 'campo' }, 'PDF o foto de la factura (opcional)', arch), h('label', { class: 'campo', style: 'flex-direction:row;gap:8px;align-items:center' }, pagada, ' Ya está cobrada'),
+    h('button', { class: 'guardar', style: 'width:100%', onclick: async ev => {
+      const b = ev.target; const importe = parseFloat(String(imp.value).replace(',', '.'));
+      if (!cli) { toast('Elige el cliente', 'err'); return; } if (!num.value.trim()) { toast('Escribe el número de factura', 'err'); return; } if (!(importe >= 0) || imp.value.trim() === '') { toast('Escribe el importe', 'err'); return; }
+      b.disabled = true; let ruta = null, nombre = null;
+      try {
+        const file = arch.files && arch.files[0];
+        if (file) { let blob = file, ext = (file.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5) || 'bin', ct = file.type || 'application/octet-stream';
+          if ((file.type || '').startsWith('image/')) { blob = await reducirImagen(file, 1800, 0.75); ext = 'jpg'; ct = 'image/jpeg'; } else if (file.size > 15e6) throw new Error('El archivo pesa demasiado (máximo 15 MB).');
+          ruta = 'clientes/' + fec.value.slice(0, 4) + '/' + uuid() + '.' + ext; nombre = file.name; const up = await sb.storage.from('facturas').upload(ruta, blob, { contentType: ct }); if (up.error) throw up.error; }
+        const r = await sb.from('facturas_clientes').insert({ cliente_id: cli.id, numero: num.value.trim(), fecha: fec.value || hoy(), importe, nota: nota.value.trim() || null, pagada: pagada.checked, fecha_pago: pagada.checked ? hoy() : null, ruta, nombre });
+        if (r.error) { if (ruta) await sb.storage.from('facturas').remove([ruta]); throw r.error; }
+        cerrar(); toast('Factura guardada', 'ok'); hecho && hecho();
+      } catch (e) { b.disabled = false; toast(e.code === '23505' ? 'Ya existe una factura con ese número para ese cliente.' : msgErr(e), 'err'); }
+    } }, 'Guardar factura')));
+}
+/* Lista de facturas de un cliente (para la ficha y el desplegable de Clientes) */
+function panelFacturasCli(cliente) {
+  const cont = h('div', {});
+  async function cargar() {
+    cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+    try {
+      const fs = await cargarFacturasCli(cliente.id); const pend = fs.filter(f => !f.pagada).reduce((a, f) => a + Number(f.importe || 0), 0);
+      cont.replaceChildren(h('button', { class: 'small', style: 'margin-bottom:8px', onclick: () => abrirNuevaFacturaCli(cliente, cargar) }, '+ Añadir factura'),
+        fs.length ? h('div', { class: 'sub', style: 'margin-bottom:6px' }, fs.length + (fs.length === 1 ? ' factura' : ' facturas') + (pend > 0 ? ' · pendiente de cobro: ' + eur(pend) + ' €' : ' · todo cobrado')) : null,
+        ...(fs.length ? fs.map(f => filaFacturaCli(f, '', cargar)) : [h('p', { class: 'vacio' }, 'Este cliente no tiene facturas registradas.')]));
+    } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver las facturas.' : msgErr(e))); }
+  }
+  cargar(); return cont;
+}
+function vistaFacturasCli() {
+  state.view = 'facturascli'; let modo = LS.get('fj_fcli_modo', 'todas'), fs = null, texto = ''; const cont = h('div', {}), chips = h('div', { class: 'chips' }), info = h('p', { class: 'sub' }); let nombres = {};
+  const buscar_ = h('input', { placeholder: 'Buscar por cliente o nº de factura…', oninput: debounce(() => { texto = sinTilde(limpiaBusqueda(buscar_.value)); pintar(); }, 200) });
+  function pintar() {
+    chips.replaceChildren(...[['todas', 'Todas'], ['pend', 'Pendientes de cobro'], ['cob', 'Cobradas']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_fcli_modo', m); pintar(); } }, n)));
+    if (!fs) return;
+    let r = fs.filter(f => modo === 'todas' || (modo === 'pend' ? !f.pagada : f.pagada));
+    if (texto) r = r.filter(f => sinTilde((nombres[f.cliente_id] || '') + ' ' + f.numero).includes(texto));
+    const tot = r.reduce((a, f) => a + Number(f.importe || 0), 0);
+    info.textContent = r.length + (r.length === 1 ? ' factura' : ' facturas') + ' · ' + eur(tot) + ' €';
+    cont.replaceChildren(...(r.length ? r.map(f => filaFacturaCli(f, nombres[f.cliente_id] || '', cargar)) : [h('p', { class: 'vacio' }, 'No hay facturas con este filtro.')]));
+  }
+  async function cargar() {
+    try { fs = await cargarFacturasCli(null); const c = await sb.from('clientes').select('id,codigo,nombre,nombre_comercial').range(0, 4999); nombres = {}; (c.data || []).forEach(x => nombres[x.id] = nombreCli(x)); pintar(); }
+    catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver las facturas.' : msgErr(e))); }
+  }
+  $app.replaceChildren(shell('Facturas de clientes', h('div', {}, h('button', { style: 'width:100%;margin-bottom:10px', onclick: () => abrirNuevaFacturaCli(null, cargar) }, '+ Añadir factura'), chips, buscar_, info, cont), { volver: () => go('inicio') })); renderBanner(); pintar(); cargar();
+}
 function vistaClientes() {
   state.view = 'clientes'; const lectura = false;
   let soloActivos = LS.get('fj_cli_activos', true), tope = 80;
@@ -1332,10 +1414,13 @@ function vistaClientes() {
     for (const c of r.slice(0, tope)) {
       const n = nombreCli(c); const l = (sinTilde(n).charAt(0) || '#').toUpperCase(); const L = /[A-Z]/.test(l) ? l : '#';
       if (L !== letra) { letra = L; kids.push(h('div', { class: 'letra' }, L)); }
+      const desp = h('div', { style: 'display:none;margin-top:8px' });
+      const btnF = esOficina() ? h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: e => { e.stopPropagation(); if (desp.style.display === 'none') { desp.style.display = ''; if (!desp.hasChildNodes()) desp.append(panelFacturasCli(c)); btnF.textContent = '▴ Ocultar facturas'; } else { desp.style.display = 'none'; btnF.textContent = '▾ Facturas'; } } }, '▾ Facturas') : null;
       kids.push(h('div', { class: 'card tap', onclick: () => go('cliente', { id: c.id }) },
         h('div', { class: 'fila' },
           h('div', {}, h('div', { class: 'nombre' }, n), h('div', { class: 'sub' }, [c.codigo, c.localidad, c.telefono].filter(Boolean).join(' · '))),
-          h('div', { style: 'text-align:right' }, c.activo ? null : h('span', { class: 'badge' }, 'Inactivo'), !lectura && c.forma_pago === 'contado' ? [' ', h('span', { class: 'badge cont' }, 'Contado')] : null))));
+          h('div', { style: 'text-align:right' }, c.activo ? null : h('span', { class: 'badge' }, 'Inactivo'), !lectura && c.forma_pago === 'contado' ? [' ', h('span', { class: 'badge cont' }, 'Contado')] : null)), btnF,
+        h('div', { onclick: e => e.stopPropagation() }, desp)));
     }
     if (!r.length) kids.push(h('p', { class: 'vacio' }, 'No hay clientes con esa búsqueda.'));
     if (r.length > tope) kids.push(h('button', { class: 'ghost', style: 'width:100%', onclick: () => { tope += 120; pintar(); } }, 'Mostrar más (' + (r.length - tope) + ' restantes)'));
@@ -1394,8 +1479,9 @@ function vistaCliente() {
       h('button', { class: 'chip' + (pestana === 'precios' ? ' on' : ''), onclick: () => { pestana = 'precios'; pintar(); } }, 'Precios'),
       h('button', { class: 'chip' + (pestana === 'pedidos' ? ' on' : ''), onclick: () => { pestana = 'pedidos'; pintar(); } }, 'Últimos pedidos'),
       h('button', { class: 'chip' + (pestana === 'hab' ? ' on' : ''), onclick: () => { pestana = 'hab'; pintar(); } }, 'Habituales'),
+      ...(esOficina() ? [h('button', { class: 'chip' + (pestana === 'fact' ? ' on' : ''), onclick: () => { pestana = 'fact'; pintar(); } }, 'Facturas')] : []),
       h('button', { class: 'chip' + (pestana === 'inc' ? ' on' : ''), onclick: () => { pestana = 'inc'; pintar(); } }, 'Incidencias')));
-    kids.push(pestana === 'hab' && id ? panelHabituales(c) : pestana === 'inc' && id ? panelIncidencias({ cliente: c }) : pestana === 'pedidos' && id ? panelPedidos() : pestana === 'precios' && id ? panelPrecios() : formulario());
+    kids.push(pestana === 'fact' && id && esOficina() ? panelFacturasCli(c) : pestana === 'hab' && id ? panelHabituales(c) : pestana === 'inc' && id ? panelIncidencias({ cliente: c }) : pestana === 'pedidos' && id ? panelPedidos() : pestana === 'precios' && id ? panelPrecios() : formulario());
     cont.replaceChildren(...kids);
   }
   function formulario() {
@@ -1769,9 +1855,9 @@ function vistaMas() {
   const V = '#2f7d4a', A = '#d97706', Z = '#2563eb', M = '#7c3aed', R = '#dc2626', T = '#0d9488';
   const k = [
     h('div', { class: 'saludo' }, h('div', { style: 'font-size:20px;font-weight:800' }, 'Hola, ' + (state.perfil.nombre || '').split(' ')[0]), h('div', { class: 'sub' }, (d => d.charAt(0).toUpperCase() + d.slice(1))(fmtDiaLargo(new Date().toISOString())))),
-    ...g('Trabajo diario', c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Carga', () => go('carga'), V), c('✅', 'Entregas', () => go('entregas'), V), c('🧾', 'Albaranes', () => go('albaranes'), V), c('🗺️', 'Ruta', () => go('ruta'), V), c('📅', 'Calendario', () => go('calendario'), V),
-      c('🧾', 'Albaranes', () => go('albaranes'), V), c('🛒', 'A quién compramos hoy', () => go('quien'), V), c('➕', 'Nuevo pedido', () => go('nuevo'), V), c('✍️', 'Escribir pedido', () => go('importar'), V), c('🎤', 'Dictar pedido', () => go('importar', { modo: 'voz' }), V), c('📷', 'Escanear pedido', () => go('importar', { modo: 'escanear' }), V), c('💰', 'Cobros', () => go('cobros'), V), c('🧮', 'Deudas', () => go('deudas'), V)),
-    ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null),
+    ...g('Trabajo diario', c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Carga', () => go('carga'), V), c('✅', 'Entregas', () => go('entregas'), V), c('📑', 'Lista de pedidos', () => go('pedidos'), V), c('🧾', 'Albaranes', () => go('albaranes'), V), c('🗺️', 'Ruta', () => go('ruta'), V), c('📅', 'Calendario', () => go('calendario'), V),
+      c('🛒', 'A quién compramos hoy', () => go('quien'), V), c('➕', 'Nuevo pedido', () => go('nuevo'), V), c('✍️', 'Escribir pedido', () => go('importar'), V), c('🎤', 'Dictar pedido', () => go('importar', { modo: 'voz' }), V), c('📷', 'Escanear pedido', () => go('importar', { modo: 'escanear' }), V), c('💰', 'Cobros', () => go('cobros'), V), c('🧮', 'Deudas', () => go('deudas'), V)),
+    ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null),
     ...g('Compras y mercancía', puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, puedeCompras() ? c('💶', 'Precios de compra', () => go('precios'), A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
@@ -2831,6 +2917,31 @@ function vistaEntregas() {
 }
 
 /* ---------- Calendario ---------- */
+/* ---------- Lista de pedidos (consulta) ---------- */
+function vistaPedidos() {
+  state.view = 'pedidos'; const d0 = new Date(); const ini = hoy(new Date(d0.getTime() - 3 * 86400000)), fin = hoy(new Date(d0.getTime() + 7 * 86400000));
+  let desde = (state.params && state.params.desde) || ini, hasta = (state.params && state.params.hasta) || fin, est = LS.get('fj_ped_est', 'todos'), texto = '', datos = [];
+  const cont = h('div', {}), chips = h('div', { class: 'chips' }), info = h('p', { class: 'sub' });
+  const fd = h('input', { type: 'date', value: desde, onchange: e => { desde = e.target.value || ini; cargar(); } }), fh = h('input', { type: 'date', value: hasta, onchange: e => { hasta = e.target.value || fin; cargar(); } });
+  const bus = h('input', { placeholder: 'Buscar por cliente…', oninput: debounce(() => { texto = sinTilde(limpiaBusqueda(bus.value)); pintar(); }, 200) });
+  function pintar() {
+    chips.replaceChildren(...[['todos', 'Todos'], ['pendiente', 'Pendientes'], ['en_preparacion', 'En preparación'], ['terminado', 'Terminados']].map(([m, n]) => h('button', { class: 'chip' + (est === m ? ' on' : ''), onclick: () => { est = m; LS.set('fj_ped_est', m); pintar(); } }, n)));
+    let r = datos.filter(p => p.estado !== 'anulado' && (est === 'todos' || p.estado === est));
+    if (texto) r = r.filter(p => sinTilde(nombreCli(uno(p.clientes))).includes(texto));
+    info.textContent = r.length + (r.length === 1 ? ' pedido' : ' pedidos');
+    const kids = []; let dia = '';
+    r.forEach(p => { if (p.fecha_entrega !== dia) { dia = p.fecha_entrega; kids.push(h('div', { class: 'letra', style: 'text-transform:capitalize' }, fmtDiaLargo(dia + 'T12:00:00'))); }
+      kids.push(h('div', { class: 'card tap fila', onclick: () => go('pedido', { id: p.id }) }, h('div', {}, h('div', { class: 'nombre' }, nombreCli(uno(p.clientes)))), h('span', { class: 'badge ' + CLASE_ESTADO[p.estado] }, ESTADO[p.estado]))); });
+    if (!r.length) kids.push(h('p', { class: 'vacio' }, 'No hay pedidos con estos filtros.'));
+    cont.replaceChildren(...kids);
+  }
+  async function cargar() {
+    try { const r = await sb.from('pedidos').select('id,estado,fecha_entrega,clientes(codigo,nombre,nombre_comercial)').gte('fecha_entrega', desde).lte('fecha_entrega', hasta).order('fecha_entrega', { ascending: true }).limit(1000); if (r.error) throw r.error; datos = r.data || []; pintar(); }
+    catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver los pedidos.' : msgErr(e))); }
+  }
+  $app.replaceChildren(shell('Lista de pedidos', h('div', {}, h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px' }, h('label', { class: 'campo' }, 'Desde', fd), h('label', { class: 'campo' }, 'Hasta', fh)), chips, bus, info, cont,
+    h('button', { class: 'ghost', style: 'width:100%;margin-top:10px', onclick: () => go('calendario') }, '📅 Ver en el calendario')), { volver: () => go('inicio') })); renderBanner(); pintar(); cargar();
+}
 function vistaCalendario() {
   state.view = 'calendario';
   let mes = (state.params.mes || state.fecha).slice(0, 7), sel = state.params.dia || state.fecha, datos = [];
@@ -2866,7 +2977,7 @@ function vistaCalendario() {
       h('div', {}, h('div', { class: 'nombre' }, nombreCli(uno(p.clientes))), e ? h('div', { class: 'sub' }, '✔ Entregado a las ' + fmtHora(e.entregado_at)) : null),
       h('span', { class: 'badge ' + CLASE_ESTADO[p.estado] }, ESTADO[p.estado]))); });
     if (!dia.length) kids.push(h('p', { class: 'vacio' }, 'No hay pedidos este día.'));
-    const bs = [h('button', { class: 'ghost', style: 'flex:1', onclick: () => { state.fecha = sel; go('lista'); } }, 'Abrir en Preparar')];
+    const bs = [h('button', { class: 'ghost', style: 'flex:1', onclick: () => { state.fecha = sel; go('lista'); } }, 'Abrir en Preparar'), h('button', { class: 'ghost', style: 'flex:1', onclick: () => go('pedidos', { desde: mes + '-01', hasta: mover(mes, 1) + '-01' }) }, 'Ver como lista')];
     if (esOficina()) bs.unshift(h('button', { style: 'flex:1', onclick: () => go('nuevo', { fecha: sel }) }, '+ Añadir pedido'));
     if (esOficina()) kids.push(h('button', { class: 'ghost', style: 'width:100%;margin-bottom:8px', onclick: () => crearHabituales(sel, cargar) }, 'Crear pedidos habituales de este día'));
     kids.push(h('div', { style: 'display:flex;gap:8px' }, ...bs));
@@ -4001,6 +4112,20 @@ function aplicarCompartido() {
     state.view = 'importar'; state.params = { texto: t };
   } catch (e) { }
 }
+/* Búsqueda de clientes tolerante: primero coincidencias exactas por trozos de texto y, si faltan, parecidos (faltas de ortografía) */
+function buscarCliLocal(clis, texto) {
+  const t = sinTilde(limpiaBusqueda(texto)); if (!t) return [];
+  const act = (a, b) => (b.activo ? 1 : 0) - (a.activo ? 1 : 0);
+  const ex = clis.filter(c => t.split(/\s+/).every(w => sinTilde([c.nombre, c.nombre_comercial, c.codigo].filter(Boolean).join(' ')).includes(w))).sort(act);
+  if (ex.length >= 12) return ex.slice(0, 12);
+  let dif = [];
+  try {
+    const idx = waIndice(clis.map(c => ({ id: c.id, codigo: c.codigo, activo: c.activo, _c: c, nombre: nombreCli(c), alias: [c.nombre, c.nombre_comercial].concat(Array.isArray(c.alias) ? c.alias : []).filter(Boolean) })));
+    const qks = waPalabras(texto).map(waLlave).filter(Boolean);
+    if (qks.length) dif = idx.map(it => { let m = 0; it.vars.forEach(v => { const x = waPuntua(qks, v); if (x > m) m = x; }); return { c: it.p._c, m }; }).filter(x => x.m >= 0.45 && !ex.includes(x.c)).sort((a, b) => b.m - a.m).map(x => x.c);
+  } catch (e) { }
+  return ex.concat(dif).slice(0, 12);
+}
 function vistaImportar() {
   state.view = 'importar';
   const S = { cliente: null, clienteEstado: null, clienteCand: [], clienteFrase: '', clienteManual: false, detectado: false, fecha: hoy(), fechaOk: false, fraseFecha: '', hora: { limite: '', desde: '', hasta: '' }, lineas: [], ignorado: [], avisos: [], interpretado: false, notas: '', repetir: null, guardando: false, prods: null, clis: null, hist: {}, aviso: '', archivos: [], origen: 'texto', anadir: (state.params && state.params.anadir) || null, anadirFecha: null, anadirPed: null };
@@ -4027,9 +4152,10 @@ function vistaImportar() {
     if (S.clienteFrase && S.clienteEstado === 'ambiguo') kids.push(h('div', { class: 'sub' }, 'He leído «' + S.clienteFrase + '», pero hay varios parecidos. Elige el correcto:'), h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:6px 0' }, S.clienteCand.map(c => h('button', { class: 'chip', onclick: () => { S.clienteManual = true; recordarAliasCliente(c.p._c); elegirCliente(c.p._c, true); } }, nombreCli(c.p._c) + (c.p._c.activo === false ? ' (inactivo)' : '')))));
     else if (S.clienteFrase && S.clienteEstado === 'noenc') kids.push(h('div', { class: 'card', style: 'background:#fee2e2;border-color:#ef4444' }, 'No encuentro ningún cliente que se llame «' + S.clienteFrase + '». Búscalo abajo o crea uno nuevo.'));
     else if (!S.clienteFrase && S.interpretado) kids.push(h('div', { class: 'card', style: 'background:#fee2e2;border-color:#ef4444' }, 'En el mensaje no aparece el cliente. Elígelo abajo.'));
-    const res = h('div', {}); const inp = h('input', { placeholder: 'Buscar cliente (nombre o código)…', oninput: debounce(() => {
+    const res = h('div', {}); const inp = h('input', { placeholder: 'Buscar cliente (nombre o código)…', oninput: debounce(async () => {
       const t = sinTilde(limpiaBusqueda(inp.value)); if (!t) { res.replaceChildren(); return; }
-      const r = (S.clis || []).filter(c => t.split(/\s+/).every(w => sinTilde([c.nombre, c.nombre_comercial, c.codigo].filter(Boolean).join(' ')).includes(w))).sort((a, b) => (b.activo ? 1 : 0) - (a.activo ? 1 : 0)).slice(0, 12);
+      if (!S.clis) { res.replaceChildren(h('p', { class: 'sub' }, 'Cargando clientes…')); try { S.clis = await waClientes(); } catch (e) { res.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para buscar clientes.' : msgErr(e))); return; } }
+      const r = buscarCliLocal(S.clis || [], inp.value);
       res.replaceChildren(r.length ? h('div', { class: 'res' }, r.map(c => h('button', { onclick: () => { recordarAliasCliente(c); elegirCliente(c, true); } }, nombreCli(c) + '  ·  ' + c.codigo + (c.activo ? '' : '  (inactivo)')))) : h('p', { class: 'sub' }, 'Sin resultados.'));
     }, 200) });
     kids.push(inp, res, h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: crearClienteNuevo }, '+ Crear cliente nuevo'));
@@ -4543,7 +4669,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, pedidos: vistaPedidos, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v();
 }
 function tick() {
