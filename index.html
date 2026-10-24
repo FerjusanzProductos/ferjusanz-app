@@ -174,6 +174,22 @@ header .tit{font-size:15px}
   #printArea .copia:last-child{page-break-after:auto}
   @page{margin:6mm}
 }
+/*TOURCSS*/
+.tour{position:fixed;inset:0;z-index:60;background:linear-gradient(160deg,#14532d,#166534 55%,#15803d);color:#fff;display:flex;flex-direction:column;padding:16px;padding-top:calc(16px + env(safe-area-inset-top));padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+.tour-top{display:flex;justify-content:space-between;align-items:center;font-size:14px;opacity:.9}.tour-top .ghost{color:#fff;border-color:rgba(255,255,255,.5);background:transparent}
+.tour-card{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;max-width:460px;margin:0 auto;padding:0 8px}
+.tour-e{font-size:88px;line-height:1;margin-bottom:18px}.tour-card h2{font-size:26px;margin:0 0 12px;color:#fff}.tour-card p{font-size:18px;line-height:1.45;margin:0;opacity:.95}
+.tour-card.in-r{animation:tourR .28s ease}.tour-card.in-l{animation:tourL .28s ease}
+@keyframes tourR{from{transform:translateX(60px);opacity:0}to{transform:none;opacity:1}}@keyframes tourL{from{transform:translateX(-60px);opacity:0}to{transform:none;opacity:1}}
+.tour-gesto{margin-top:26px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:15px;opacity:.9}.tour-gesto .mano{font-size:44px;display:inline-block;animation:mano 1.4s ease-in-out infinite}
+@keyframes mano{0%{transform:translateX(34px) rotate(8deg)}60%{transform:translateX(-34px) rotate(-8deg)}100%{transform:translateX(34px) rotate(8deg)}}
+.tour-dots{display:flex;gap:7px;justify-content:center;margin:10px 0}.tour-dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.35)}.tour-dots i.on{background:#fff;width:22px;border-radius:6px}
+.tour-nav{display:flex;justify-content:space-between;gap:10px}.tour-nav button{min-width:120px}.tour-nav .ghost{color:#fff;border-color:rgba(255,255,255,.5);background:transparent}
+.tour .tour-card button.ghost{color:#fff;border-color:rgba(255,255,255,.6);background:transparent}.tour .tour-card button:not(.ghost){background:#fff;color:#14532d}
+.tip{position:fixed;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:40;background:#1f2937;color:#fff;border-radius:16px;padding:14px;box-shadow:0 8px 28px rgba(0,0,0,.35);display:grid;grid-template-columns:auto 1fr;gap:4px 12px;max-width:560px;margin:0 auto;animation:tipUp .3s ease}
+.tip-e{font-size:30px;grid-row:span 2}.tip-t{font-size:15px;line-height:1.4}.tip-b{display:flex;gap:8px;justify-content:flex-end}.tip .ghost{color:#fff;border-color:rgba(255,255,255,.5);background:transparent}
+@keyframes tipUp{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+/*TOURCSS_FIN*/
 </style>
 </head>
 <body>
@@ -544,7 +560,7 @@ function shell(titulo, contenido, opts) {
       (opts.volver || state.view !== 'inicio') ? h('button', { class: 'back', onclick: opts.volver || (() => atras()) }, '← Volver') : h('span', { class: 'logo' }, 'Ferjusanz'),
       h('span', { class: 'tit' }, titulo || ''),
       h('button', { class: 'chatbtn', title: 'Buscar', onclick: () => go('buscar') }, '🔍'),
-      h('button', { class: 'chatbtn', title: 'Ayuda', onclick: () => go('ayuda') }, '❓'),
+      h('button', { class: 'chatbtn', title: 'Ayuda', onclick: () => go('ayuda', { desde: state.view }) }, '❓'),
       h('button', { class: 'chatbtn', title: 'Chat del equipo', onclick: () => go('chat') }, '💬', h('span', { id: 'chatBadge', class: 'insig' }, state.chatNoLeidos ? String(state.chatNoLeidos) : '')),
       h('button', { class: 'quien', onclick: () => go('perfil') }, avatar(state.user && state.user.id, state.perfil && state.perfil.nombre, 30), h('span', {}, state.perfil ? state.perfil.nombre.split(' ')[0] : ''))),
     PRACTICA ? h('div', { class: 'prac' }, h('span', {}, 'MODO PRÁCTICAS · datos de ejemplo, nada es real'), h('button', { onclick: salirPracticas }, 'Salir')) : null,
@@ -1204,11 +1220,37 @@ const guiaVisible = g => g.roles === 't' || (g.roles === 'o' && esOficina()) || 
 function guiaTexto(g) { return g.icono + ' *' + g.titulo + '*\n' + (g.antes ? '📝 Antes: ' + g.antes + '\n' : '') + '📱 Ahora: ' + g.ahora + '\n\n' + g.pasos.map((p, i) => (i + 1) + '. ' + p).join('\n'); }
 function guiaEnlace() { return location.href.replace(/[#?].*$/, '').replace(/[^/]*$/, '') + 'guia.html'; }
 function guiaWhatsApp(texto) { const u = 'https://wa.me/?text=' + encodeURIComponent(texto); window.open(u, '_blank'); }
+
+/* Voz: escuchar (texto a voz) y hablar (voz a texto). Todo lo hace el propio móvil; no cuesta nada. */
+const VOZ_VISTA = { lista: 'preparar', pedido: 'preparar', carga: 'carga', entregas: 'entregar', importar: 'escribir', nuevo: 'nuevo', albaranes: 'albaranes', albaran: 'albaranes', hojacompra: 'compra', quien: 'quien', traza: 'traza', facturascli: 'fclientes', pedidos: 'pedidos', calendario: 'pedidos', cobros: 'cobros', deudas: 'cobros', ruta: 'ruta', perfil: 'fichajes', fichajes: 'fichajes', registro: 'registro', copia: 'copia', archivo: 'archivo', clientes: 'clientes', cliente: 'clientes', catalogo: 'clientes', chat: 'equipo', compras: 'compras_reg', facturas: 'frecibidas', resumen: 'resumen', rentabilidad: 'resumen' };
+const limpiaVoz = t => String(t || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '').replace(/[*_«»]/g, '').replace(/\s+/g, ' ').trim();
+function vozDisponibleSalida() { return 'speechSynthesis' in window; }
+function pararVoz() { try { speechSynthesis.cancel(); } catch (e) { } }
+function leerVoz(texto) {
+  if (!vozDisponibleSalida()) { toast('Este móvil no puede leer en voz alta.', 'err'); return; }
+  pararVoz(); const u = new SpeechSynthesisUtterance(limpiaVoz(texto)); u.lang = 'es-ES'; u.rate = 0.95;
+  try { const v = speechSynthesis.getVoices().find(x => /^es/i.test(x.lang)); if (v) u.voice = v; } catch (e) { }
+  speechSynthesis.speak(u);
+}
+const textoLeer = g => g.titulo + '. ' + g.ahora + ' ' + g.pasos.map((p, i) => 'Paso ' + (i + 1) + '. ' + p).join(' ');
+const textoLeerProb = x => x.t + '. ' + x.c + ' ' + x.p.map((p, i) => 'Paso ' + (i + 1) + '. ' + p).join(' ');
+async function escucharPregunta(alTexto, alEstado) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { toast('Este navegador no entiende la voz. Abre la app en Chrome, o usa el micrófono del teclado.', 'err'); return null; }
+  if (!LS.get('fj_voz_ok', false)) { if (!await confirmar('Para escucharte, el móvil (Chrome) envía el audio a Google para convertirlo en texto. Ferjusanz no guarda la grabación. ¿Lo aceptas?')) return null; LS.set('fj_voz_ok', true); }
+  pararVoz(); const rec = new SR(); rec.lang = 'es-ES'; rec.continuous = false; rec.interimResults = true; let ultimo = '';
+  rec.onresult = e => { const r = e.results[e.results.length - 1]; ultimo = (r[0].transcript || '').trim(); alTexto(ultimo, r.isFinal); };
+  rec.onerror = e => { alEstado(false); if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toast('No tengo permiso para el micrófono. Actívalo en los ajustes del navegador.', 'err'); else if (e.error === 'no-speech') toast('No te he oído. Prueba otra vez, más cerca del móvil.', 'err'); else if (e.error !== 'aborted') toast('No he podido escucharte (' + e.error + ').', 'err'); };
+  rec.onend = () => { alEstado(false); if (ultimo) alTexto(ultimo, true, true); };
+  try { rec.start(); alEstado(true); } catch (e) { alEstado(false); }
+  return rec;
+}
 function guiaBuscar(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
+  const toca = (w, pals) => pals.some(x => x === w || (w.length > 4 && x.startsWith(w.slice(0, 5))) || (w.length > 3 && x.length > 3 && (waSimTok(w, x) >= 0.74 || (w[0] === x[0] && [...w].sort().join('') === [...x].sort().join('')))));
   return GUIA.filter(guiaVisible).map(g => {
-    const base = sinTilde(g.titulo + ' ' + g.ahora), pasos = sinTilde(g.pasos.join(' ') + ' ' + (g.antes || '')), sin = sinTilde(GUIA_SINON[g.id] || '');
-    let sc = 0; t.forEach(w => { if (base.includes(w)) sc += 4; if (sin.split(/\s+/).some(x => x === w || (w.length > 4 && x.startsWith(w.slice(0, 5))))) sc += 5; if (pasos.includes(w)) sc += 1.5; });
+    const base = sinTilde(g.titulo + ' ' + g.ahora).split(/\s+/), pasos = sinTilde(g.pasos.join(' ') + ' ' + (g.antes || '')).split(/\s+/), sin = sinTilde(GUIA_SINON[g.id] || '').split(/\s+/);
+    let sc = 0; t.forEach(w => { if (toca(w, base)) sc += 4; if (toca(w, sin)) sc += 5; if (pasos.includes(w)) sc += 1.5; });
     return { g, sc };
   }).filter(x => x.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 3).map(x => x.g);
 }
@@ -1218,7 +1260,7 @@ function tarjetaGuia(g, abierta) {
     h('ol', { style: 'padding-left:20px;margin:6px 0' }, g.pasos.map(p => h('li', { style: 'margin:6px 0;line-height:1.35' }, p))),
     h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' },
       g.ir ? h('button', { class: 'small', onclick: e => { e.stopPropagation(); go(g.ir); } }, 'Abrir esta pantalla') : null,
-      h('button', { class: 'ghost small', onclick: e => { e.stopPropagation(); guiaWhatsApp(guiaTexto(g)); } }, '📲 Enviar por WhatsApp')));
+      h('button', { class: 'ghost small', onclick: e => { e.stopPropagation(); leerVoz(textoLeer(g)); } }, '🔊 Escuchar'), h('button', { class: 'ghost small', onclick: e => { e.stopPropagation(); guiaWhatsApp(guiaTexto(g)); } }, '📲 Enviar por WhatsApp')));
   return h('div', { class: 'card tap', onclick: () => { cuerpo.style.display = cuerpo.style.display === 'none' ? 'block' : 'none'; } },
     h('div', { class: 'fila' }, h('div', { class: 'nombre' }, g.icono + ' ' + g.titulo), g.roles === 'o' ? h('span', { class: 'badge' }, 'Oficina') : g.roles === 'c' ? h('span', { class: 'badge' }, 'Compras') : g.roles === 'a' ? h('span', { class: 'badge' }, 'Admin') : null), cuerpo);
 }
@@ -1242,7 +1284,7 @@ const GUIA_PROB = [
 ];
 function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
-  return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
+  return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
@@ -1267,37 +1309,136 @@ function tarjetaProblema(x) {
     h('ol', { style: 'padding-left:20px;margin:6px 0' }, x.p.map(p => h('li', { style: 'margin:6px 0' }, p))),
     h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' }, x.ir ? h('button', { class: 'small', onclick: () => go(x.ir) }, 'Ir a esa pantalla') : null,
       x.accion === 'recargar' ? h('button', { class: 'small', onclick: () => accionAyuda('recargar') }, 'Actualizar la app') : null, x.accion === 'sincronizar' ? h('button', { class: 'small', onclick: () => accionAyuda('sincronizar') }, 'Enviar lo pendiente') : null,
+      h('button', { class: 'ghost small', onclick: () => leerVoz(textoLeerProb(x)) }, '🔊 Escuchar'),
       h('button', { class: 'ghost small', onclick: () => guiaWhatsApp('🛟 ' + x.t + '\n' + x.p.map((p, i) => (i + 1) + '. ' + p).join('\n')) }, '📲 WhatsApp')));
 }
 function vistaAyuda() {
-  state.view = 'ayuda'; let modo = (state.params && state.params.modo) || 'guia';
-  const cont = h('div', {}), chips = h('div', { class: 'chips' });
+  state.view = 'ayuda'; const P = state.params || {};
+  let modo = P.modo || (P.desde ? 'asistente' : 'guia');
+  const cont = h('div', {}), chips = h('div', { class: 'chips' }); let rec = null;
   function pintaGuia() {
     const bus = h('input', { placeholder: 'Buscar en la guía…', oninput: debounce(() => { const t = sinTilde(limpiaBusqueda(bus.value)); lista.replaceChildren(...GUIA.filter(guiaVisible).filter(g => !t || sinTilde(g.titulo + ' ' + g.ahora + ' ' + (g.antes || '') + ' ' + g.pasos.join(' ')).includes(t)).map(g => tarjetaGuia(g, !!t))); }, 200) });
-    const lista = h('div', {}, GUIA.filter(guiaVisible).map(g => tarjetaGuia(g, false)));
-    cont.replaceChildren(bus, lista,
+    let grupo = ''; const tarjetas = [];
+    GUIA.filter(guiaVisible).forEach(g => { if (g.grupo !== grupo) { grupo = g.grupo; tarjetas.push(h('div', { class: 'letra' }, grupo)); } tarjetas.push(tarjetaGuia(g, P.abrir === g.id)); });
+    const lista = h('div', {}, tarjetas);
+    cont.replaceChildren(h('button', { class: 'ghost', style: 'width:100%;margin-bottom:8px', onclick: () => repetirTutorial() }, '👋 Ver el recorrido de bienvenida otra vez'), bus, lista,
       h('div', { class: 'card', style: 'margin-top:10px' }, h('div', { class: 'nombre' }, 'Enviar la guía completa'), h('div', { class: 'sub', style: 'margin:4px 0 8px' }, 'Se abre una página con toda la guía, sin contraseña, para leer desde el móvil. Compártela por WhatsApp con el equipo.'),
         h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap' }, h('button', { class: 'small', onclick: () => guiaWhatsApp('Guía de la app de Ferjusanz: cómo hacer cada cosa paso a paso 👇\n' + guiaEnlace()) }, '📲 Enviar enlace por WhatsApp'), h('button', { class: 'ghost small', onclick: () => window.open(guiaEnlace(), '_blank') }, 'Abrir la guía'))));
+    if (P.abrir) setTimeout(() => { const el = lista.querySelector('.card.tap'); }, 0);
   }
   function pintaAsistente() {
-    const salida = h('div', {});
-    const inp = h('input', { placeholder: 'Ej.: ¿cómo añado unos limones que he dejado al cliente?', onkeydown: e => { if (e.key === 'Enter') preguntar(); } });
+    const salida = h('div', {}), ctx = h('div', {});
+    const nombre = state.perfil ? state.perfil.nombre.split(' ')[0] : '';
+    const inp = h('input', { placeholder: 'Escribe o pulsa 🎤 y cuéntame qué te pasa', onkeydown: e => { if (e.key === 'Enter') preguntar(); } });
+    const leerAuto = h('input', { type: 'checkbox', checked: LS.get('fj_asis_voz', false), onchange: () => LS.set('fj_asis_voz', leerAuto.checked) });
+    const btnMic = h('button', { style: 'flex:1;min-height:52px;font-size:17px' }, '🎤 Hablar');
+    function estadoMic(on) { btnMic.textContent = on ? '⏹ Te escucho… (toca para parar)' : '🎤 Hablar'; btnMic.style.background = on ? '#dc2626' : ''; }
+    btnMic.onclick = async () => {
+      if (rec) { try { rec.stop(); } catch (e) { } return; }
+      rec = await escucharPregunta((t, fin, final) => { inp.value = t; if (final) { rec = null; preguntar(t); } }, on => { estadoMic(on); if (!on) rec = null; });
+    };
     function preguntar(q) {
-      q = q || inp.value; if (!q.trim()) return; inp.value = q; const r = guiaBuscar(q), pr = guiaProblemas(q);
-      salida.replaceChildren(...(r.length || pr.length ? [h('p', { class: 'sub' }, 'Esto es lo que creo que necesitas:')].concat(pr.map(tarjetaProblema), r.map((g, i) => tarjetaGuia(g, i === 0 && !pr.length))) :
-        [h('p', { class: 'vacio' }, 'No he encontrado nada parecido. Prueba con otras palabras (por ejemplo: pedido, albarán, sobrante, factura), pulsa «Comprobar mi app» o avisa a la oficina.'), h('button', { class: 'ghost', onclick: () => { modo = 'guia'; pinta(); } }, 'Ver la guía completa')]));
+      q = q || inp.value; if (!q.trim()) return; inp.value = q; pararVoz(); const r = guiaBuscar(q), pr = guiaProblemas(q);
+      const util = h('div', { class: 'card' }, h('b', {}, '¿Te ha servido?'), h('div', { style: 'display:flex;gap:6px;margin-top:6px;flex-wrap:wrap' },
+        h('button', { class: 'small', onclick: () => util.replaceChildren(h('b', {}, '¡Me alegro! 👍')) }, 'Sí'),
+        h('button', { class: 'ghost small', onclick: () => { const l = LS.get('fj_asis_sin', []); l.push({ q, f: new Date().toISOString() }); LS.set('fj_asis_sin', l.slice(-50)); util.replaceChildren(h('div', { class: 'sub' }, 'Vaya, perdona. Pregúntalo a la oficina; así lo apunto para ampliarme.'), h('button', { class: 'small', style: 'margin-top:6px', onclick: () => guiaWhatsApp('Hola, no encuentro en la app cómo hacer esto: «' + q + '»') }, '📲 Preguntar a la oficina por WhatsApp')); } }, 'No')));
+      salida.replaceChildren(...(r.length || pr.length ? [h('p', { class: 'sub' }, 'Esto es lo que creo que necesitas:')].concat(pr.map(tarjetaProblema), r.map((g, i) => tarjetaGuia(g, i === 0 && !pr.length)), [util]) :
+        [h('p', { class: 'vacio' }, 'No he encontrado nada parecido. Prueba con otras palabras (por ejemplo: pedido, albarán, sobrante, factura), pulsa «Comprobar mi app» o pregunta a la oficina.'), h('button', { class: 'ghost', style: 'width:100%', onclick: () => guiaWhatsApp('Hola, no encuentro en la app cómo hacer esto: «' + q + '»') }, '📲 Preguntar a la oficina por WhatsApp')]));
+      if (leerAuto.checked && (pr.length || r.length)) leerVoz(pr.length ? textoLeerProb(pr[0]) : textoLeer(r[0]));
     }
+    const gDesde = P.desde && VOZ_VISTA[P.desde] ? GUIA.find(g => g.id === VOZ_VISTA[P.desde] && guiaVisible(g)) : null;
+    if (gDesde) ctx.replaceChildren(h('p', { class: 'sub' }, 'Estás en esta pantalla. Así se usa:'), tarjetaGuia(gDesde, true));
     const ejemplos = ['No me deja terminar el pedido', 'No veo lo nuevo de la app', 'Me equivoqué en un peso', '¿Cómo termino un pedido?', 'Se me ha olvidado un producto', 'Dónde veo los albaranes', '¿Qué copia le doy al cliente?', 'Cómo imprimo la hoja de compra'];
-    cont.replaceChildren(h('div', { class: 'aviso-card' }, 'Soy el asistente de la app. Cuéntame qué te pasa o qué quieres hacer: busco la solución, te la explico paso a paso y, cuando se puede, te la arreglo con un botón. No invento: si no lo sé, te lo digo.'), inp,
-      h('button', { style: 'width:100%;margin:8px 0 4px', onclick: () => preguntar() }, 'Preguntar'), h('button', { class: 'ghost', style: 'width:100%;margin-bottom:8px', onclick: () => diagnosticoApp(salida) }, '🩺 Comprobar mi app (conexión, sesión, pendientes)'), h('div', { class: 'chips' }, ejemplos.map(x => h('button', { class: 'chip', onclick: () => preguntar(x) }, x))), salida);
+    cont.replaceChildren(h('div', { class: 'aviso-card' }, (nombre ? 'Hola, ' + nombre + '. ' : '') + 'Soy el asistente. Escríbeme o háblame: dime qué te pasa o qué quieres hacer. Busco la solución, te la explico paso a paso, te la leo en voz alta si quieres y, cuando se puede, te la arreglo con un botón. No invento: si no lo sé, te lo digo.'), ctx,
+      h('div', { style: 'display:flex;gap:8px;margin:8px 0' }, btnMic), inp,
+      h('button', { style: 'width:100%;margin:8px 0 4px', onclick: () => preguntar() }, 'Preguntar'),
+      h('label', { style: 'display:flex;gap:8px;align-items:center;font-size:14px;margin:6px 0' }, leerAuto, '🔊 Leer la respuesta en voz alta'),
+      h('button', { class: 'ghost', style: 'width:100%;margin-bottom:8px', onclick: () => diagnosticoApp(salida) }, '🩺 Comprobar mi app (conexión, sesión, pendientes)'), h('div', { class: 'chips' }, ejemplos.map(x => h('button', { class: 'chip', onclick: () => preguntar(x) }, x))), salida);
   }
-  function pinta() { chips.replaceChildren(...[['guia', '📖 Guía paso a paso'], ['asistente', '🤖 Asistente']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; pinta(); } }, n))); modo === 'asistente' ? pintaAsistente() : pintaGuia(); }
+  function pinta() { pararVoz(); chips.replaceChildren(...[['asistente', '🤖 Asistente'], ['guia', '📖 Guía paso a paso']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; pinta(); } }, n))); modo === 'asistente' ? pintaAsistente() : pintaGuia(); }
   $app.replaceChildren(shell('Ayuda', h('div', {}, chips, cont), { volver: () => go('inicio') })); renderBanner(); pinta();
 }
 /*GUIA_FIN*/
 
 
 
+
+
+
+/*TOUR_INICIO*/
+/* ---------- Recorrido de bienvenida (se desliza como en Tinder/TikTok) y consejos la primera vez en cada pantalla ---------- */
+const TOUR_BASE = [
+  { e: '👋', t: '¡Bienvenido a la app de Ferjusanz!', d: 'Sustituye al papel: pedidos, hoja de carga, albaranes, compras y facturas, todo en el móvil. En un minuto te enseño lo básico.', gesto: true },
+  { e: '🏠', t: 'Todo empieza en «Inicio»', d: 'Cada cuadro es una tarea: Preparar, Carga, Entregas, Albaranes… Si no ves un cuadro, es que no es para tu puesto.' },
+  { e: '🔍', t: 'Los tres botones de arriba', d: '🔍 busca clientes, productos y albaranes. ❓ es la ayuda. 💬 es el chat del equipo.' },
+  { e: '📋', t: 'Preparar un pedido', d: '1) Toca el pedido. 2) Toca cada línea y escribe lo que has preparado. 3) Pulsa «Terminar»: el albarán sale solo.' },
+  { e: '🔴', t: 'Si algo sale en rojo…', d: '…es que falta algo. Tócalo y la app te lleva justo a ese sitio para arreglarlo. Nada se guarda solo.' },
+  { e: '🧾', t: 'El albarán se hace solo', d: 'Sale con tres copias: BLANCA para el cliente, ROSA para la oficina y AMARILLA (se firma si el cliente no paga al momento).' },
+  { e: '🖨️', t: 'Imprime desde el móvil', d: 'Albaranes, hoja de carga y hoja de compra se imprimen con el botón «Imprimir», también con una impresora Bluetooth.' },
+  { e: '📶', t: 'Sin cobertura no pasa nada', d: 'La app guarda lo que haces y lo envía cuando vuelve la conexión. No pierdes nada.' },
+  { e: '🎤', t: 'Pregúntale al asistente', d: 'En ❓ Ayuda puedes escribir o hablar: «¿cómo termino un pedido?». Te contesta y también te lo lee en voz alta.' }
+];
+const TOUR_OFI = [
+  { e: '✍️', t: 'Apuntar un pedido es pegar el WhatsApp', d: 'En «Escribir pedido» pegas el mensaje y la app entiende cliente, fecha y productos. Tú revisas y confirmas.' },
+  { e: '🧺', t: 'Hoja de compra automática', d: 'Eliges el día y sale lo que hay que comprar, restando el sobrante. Se imprime y listo.' },
+  { e: '📬', t: 'Las facturas llegan solas', d: 'Las facturas de proveedores que llegan al correo se cargan directamente en la app. No hay que abrirlas ni guardarlas.' }
+];
+const TOUR_FIN = { e: '🚀', t: '¡Listo para empezar!', d: 'Si te pierdes, pulsa ❓. Y la primera vez que entres en cada pantalla te saldrá un pequeño consejo.', fin: true };
+function tourSlides() { return TOUR_BASE.concat(esOficina() ? TOUR_OFI : [], [TOUR_FIN]); }
+const tourClave = () => 'fj_tour_v1_' + (state.user ? state.user.id : 'x');
+const sinTours = () => navigator.webdriver && !LS.get('fj_forzar_tour', false);
+function mostrarTour(forzar) {
+  if (document.getElementById('tour')) return; const S = tourSlides(); let i = 0, x0 = null;
+  const cerrar = (guiaFin) => { try { LS.set(tourClave(), 1); } catch (e) { } ov.remove(); document.removeEventListener('keydown', tecla); if (guiaFin) go('ayuda'); };
+  const tecla = e => { if (e.key === 'ArrowRight') ir(1); else if (e.key === 'ArrowLeft') ir(-1); };
+  const card = h('div', { class: 'tour-card' }), dots = h('div', { class: 'tour-dots' });
+  function ir(d) { const n = i + d; if (n < 0) return; if (n >= S.length) { cerrar(false); return; } i = n; pinta(d); }
+  function pinta(d) {
+    const s = S[i]; card.className = 'tour-card ' + (d > 0 ? 'in-r' : d < 0 ? 'in-l' : '');
+    card.replaceChildren(h('div', { class: 'tour-e' }, s.e), h('h2', {}, s.t), h('p', {}, s.d),
+      s.gesto ? h('div', { class: 'tour-gesto' }, h('span', { class: 'mano' }, '👆'), h('span', {}, 'Desliza hacia la izquierda')) : null,
+      s.fin ? h('div', { style: 'display:flex;flex-direction:column;gap:8px;margin-top:14px' }, h('button', { onclick: () => cerrar(false) }, 'Empezar a trabajar'), h('button', { class: 'ghost', onclick: () => cerrar(true) }, 'Ver la guía completa')) : null);
+    dots.replaceChildren(...S.map((_, k) => h('i', { class: k === i ? 'on' : '' })));
+    atr.style.visibility = i === 0 ? 'hidden' : 'visible'; sig.style.visibility = i === S.length - 1 ? 'hidden' : 'visible';
+  }
+  const atr = h('button', { class: 'ghost small', onclick: () => ir(-1) }, '← Atrás'), sig = h('button', { class: 'small', onclick: () => ir(1) }, 'Siguiente →');
+  const ov = h('div', { id: 'tour', class: 'tour' },
+    h('div', { class: 'tour-top' }, h('span', {}, 'Recorrido rápido'), h('button', { class: 'ghost small', onclick: () => cerrar(false) }, 'Saltar')),
+    card, dots, h('div', { class: 'tour-nav' }, atr, sig));
+  ov.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+  ov.addEventListener('touchend', e => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 50) ir(dx < 0 ? 1 : -1); }, { passive: true });
+  document.addEventListener('keydown', tecla); document.body.append(ov); pinta(0);
+}
+/* Consejos de la primera vez en cada pantalla */
+const TIPS = {
+  lista: ['📋', 'Toca un pedido para empezar a prepararlo. Cuando todas sus líneas estén hechas, pulsa «Terminar y crear albarán».', 'preparar'],
+  pedido: ['👆', 'Toca cada línea para escribir lo que has preparado. Lo que esté en rojo o sin marcar impide terminar.', 'preparar'],
+  carga: ['🚚', 'Marca cada línea cuando esté cargada. «Totales» te dice cuánto cargar de cada producto. Abajo puedes imprimir la hoja.', 'carga'],
+  entregas: ['✅', 'Marca cada pedido cuando lo entregues. Blanca si paga al momento; amarilla (firmada) si no paga.', 'entregar'],
+  importar: ['✍️', 'Pega aquí el pedido tal como te llega y pulsa «Interpretar». Lo que salga en rojo, tócalo y te lleva a arreglarlo.', 'escribir'],
+  nuevo: ['🆕', 'Elige el cliente y la fecha de entrega (puede ser dentro de varios días) y añade los productos.', 'nuevo'],
+  albaranes: ['🧾', 'Toca un albarán para abrirlo e imprimirlo. Salen tres copias: blanca, rosa y amarilla.', 'albaranes'],
+  hojacompra: ['🧺', 'Elige el día con el calendario: sale lo que hay que comprar. Pulsa «Imprimir» para llevarla al mercado.', 'compra'],
+  quien: ['🛒', 'Anota el proveedor de cada producto que has comprado. No pasa nada si lo dejas en blanco.', 'quien'],
+  traza: ['🔎', 'Revisa lo que propone la app (en naranja lo dudoso) y confirma pedido a pedido.', 'traza'],
+  facturascli: ['📄', 'Las facturas se hacen en Golden. Aquí las apuntas para ver las de cada cliente y si están cobradas.', 'fclientes'],
+  pedidos: ['📑', 'Elige «Desde» y «Hasta» y filtra por estado. Toca un pedido para abrirlo.', 'pedidos'],
+  calendario: ['📅', 'Cada día muestra cuántos pedidos tiene. Toca un día para verlos o crear pedidos habituales.', 'pedidos'],
+  cobros: ['💶', 'Aquí ves lo pendiente de cobro. Toca un albarán para apuntar un cobro.', 'cobros'],
+  ruta: ['🗺️', 'Elige el día y la hora de salida: la app ordena las paradas.', 'ruta'],
+  perfil: ['⏱️', 'Aquí fichas tu entrada y tu salida con el botón grande.', 'fichajes'],
+  ayuda: ['❓', 'Pulsa 🎤 para hablar y el asistente te contesta; con 🔊 te lo lee en voz alta.', 'problemas']
+};
+function mostrarTip() {
+  if (sinTours() || !state.user || document.getElementById('tour') || document.getElementById('tip')) return;
+  const t = TIPS[state.view]; if (!t) return; const k = 'fj_tip_' + (state.user ? state.user.id : 'x'); const vistos = LS.get(k, {}); if (vistos[state.view]) return;
+  const vista = state.view; const cerrar = () => { vistos[vista] = 1; LS.set(k, vistos); b.remove(); };
+  const b = h('div', { id: 'tip', class: 'tip' }, h('div', { class: 'tip-e' }, t[0]), h('div', { class: 'tip-t' }, t[1]),
+    h('div', { class: 'tip-b' }, h('button', { class: 'small', onclick: cerrar }, 'Entendido'), h('button', { class: 'ghost small', onclick: () => { cerrar(); go('ayuda', { abrir: t[2] }); } }, 'Más ayuda')));
+  document.body.append(b); setTimeout(() => { if (b.isConnected && state.view !== vista) b.remove(); }, 400);
+}
+function repetirTutorial() { try { LS.set(tourClave(), 0); LS.set('fj_tip_' + (state.user ? state.user.id : 'x'), {}); } catch (e) { } mostrarTour(true); }
+/*TOUR_FIN*/
 
 function vistaCarga() {
   state.view = 'carga';
@@ -4835,11 +4976,13 @@ function vistaBuscar() {
 
 /* =====================  ARRANQUE  ===================== */
 function render() {
+  { const t = document.getElementById('tip'); if (t) t.remove(); }
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
   const v = { formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v();
+  try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
 }
 function tick() {
   if (!state.user || !state.perfil) return;
