@@ -254,6 +254,7 @@ function crearSbPractica(){
     gt(k,v){this.f.push(r=>r[k]>v);return this;}
     gte(k,v){this.f.push(r=>r[k]>=v);return this;}
     lt(k,v){this.f.push(r=>r[k]<v);return this;}
+    lte(k,v){this.f.push(r=>r[k]<=v);return this;}
     limit(n){this.lim=n;return this;}
     order(k,o){this.ord=k;this.desc=o&&o.ascending===false;return this;}
     range(a,b){this.lim=b+1;return this;}
@@ -299,6 +300,13 @@ function crearSbPractica(){
       const mot=(a.p_sin_motivo||'').trim();
       if(!mot){this._vtz(a.p_pedido,a.p_asignaciones||[]);DB.asignaciones_lote=DB.asignaciones_lote.filter(x=>!ls.some(l=>l.id===x.linea_id));(a.p_asignaciones||[]).forEach(x=>DB.asignaciones_lote.push({id:'as'+Math.random().toString(36).slice(2,8),linea_id:x.linea_id,lote_id:x.lote_id,cantidad:x.cantidad}));}
       const n=this.terminar_pedido({p_pedido:a.p_pedido});const al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);al.traza_estado=mot?'sin_trazabilidad':'confirmada';al.traza_motivo=mot||null;return n;},
+    quien_dia(a){const pedF=DB.pedidos.filter(p=>p.fecha_entrega===a.p_fecha&&p.estado!=='anulado'&&!DB.albaranes.some(x=>x.pedido_id===p.id&&x.estado==='emitido'&&x.traza_estado));
+      const ls=DB.lineas_pedido.filter(l=>pedF.some(p=>p.id===l.pedido_id)&&['hecha','parcial'].includes(l.estado));
+      const lineas=ls.map(l=>{const p=DB.pedidos.find(x=>x.id===l.pedido_id),c=DB.clientes.find(x=>x.id===p.cliente_id)||{},pr=DB.productos.find(x=>x.id===l.producto_id);return{linea_id:l.id,pedido_id:p.id,cliente:c.nombre_comercial||c.nombre,producto_id:l.producto_id,producto:pr.nombre,cantidad:l.unidad_precio==='kg'?(l.peso_real||0):l.cantidad_pedida,unidad_precio:l.unidad_precio,lotes:DB.asignaciones_lote.filter(x=>x.linea_id===l.id).map(x=>({lote_id:x.lote_id,cantidad:x.cantidad}))};});
+      const lotes=DB.lotes.filter(lo=>!lo.archivado&&ls.some(l=>l.producto_id===lo.producto_id)).map(lo=>{const co=DB.compras.find(c=>c.id===lo.compra_id)||{},pv=DB.proveedores.find(v=>v.id===co.proveedor_id);return{id:lo.id,producto_id:lo.producto_id,codigo:lo.codigo_lote,origen:lo.origen,proveedor:pv?pv.nombre:null,fecha:co.fecha,unidad:lo.unidad,queda:lo.cantidad_recibida-DB.asignaciones_lote.filter(x=>x.lote_id===lo.id).reduce((t,x)=>t+x.cantidad,0)};});
+      return{lineas,lotes};},
+    anotar_lote(a){const l=DB.lineas_pedido.find(x=>x.id===a.p_linea);if(!l)throw new Error('LINEA_NO_EXISTE');if(DB.albaranes.some(x=>x.pedido_id===l.pedido_id&&x.estado==='emitido'&&x.traza_estado))throw new Error('TRAZABILIDAD_CERRADA');
+      DB.asignaciones_lote=DB.asignaciones_lote.filter(x=>x.linea_id!==l.id);if(a.p_lote)DB.asignaciones_lote.push({id:'as'+Math.random().toString(36).slice(2,8),linea_id:l.id,lote_id:a.p_lote,cantidad:l.unidad_precio==='kg'?(l.peso_real||0):l.cantidad_pedida});return null;},
     corregir_trazabilidad(a){const mot=(a.p_motivo||'').trim();if(!mot)throw new Error('MOTIVO_OBLIGATORIO');const ls=DB.lineas_pedido.filter(l=>l.pedido_id===a.p_pedido);this._vtz(a.p_pedido,a.p_asignaciones||[]);
       DB.asignaciones_lote=DB.asignaciones_lote.filter(x=>!ls.some(l=>l.id===x.linea_id));(a.p_asignaciones||[]).forEach(x=>DB.asignaciones_lote.push({id:'as'+Math.random().toString(36).slice(2,8),linea_id:x.linea_id,lote_id:x.lote_id,cantidad:x.cantidad}));const al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);al.traza_estado='confirmada';al.traza_motivo=mot;DB.log.push({accion:'CORREGIR_TRAZABILIDAD',motivo:mot});return null;},
     terminar_pedido(a){const ls=DB.lineas_pedido.filter(l=>l.pedido_id===a.p_pedido);if(ls.some(l=>l.estado==='pendiente'))throw new Error('LINEAS_PENDIENTES');
@@ -708,7 +716,8 @@ function pintarPedido() {
   } else if (estado !== 'anulado') {
     const faltan = ls.length - hechas;
     acciones.push(h('button', { disabled: faltan > 0 || !ls.length, onclick: () => terminarPedido(d.pedido.id) },
-      faltan > 0 ? 'Faltan ' + faltan + ' líneas' : 'Continuar → asignar trazabilidad y crear albarán'));
+      faltan > 0 ? 'Faltan ' + faltan + ' líneas' : 'Terminar y crear albarán'));
+    if (esOficina() && faltan === 0 && ls.length) acciones.push(h('button', { class: 'ghost', onclick: async () => { if (!navigator.onLine) { toast('Necesitas conexión.', 'err'); return; } await sincronizar(); abrirTrazabilidad(d.pedido.id, {}); } }, 'Terminar asignando los lotes ahora'));
     if (esOficina()) acciones.push(h('button', { class: 'peligro', onclick: () => anularPedido(d.pedido.id) }, 'Anular pedido'));
   }
   if (esOficina() && estado !== 'terminado' && estado !== 'anulado') acciones.push(h('button', { class: 'ghost', onclick: () => go('importar', { anadir: d.pedido.id }) }, '➕ Añadir productos (texto, voz o foto)'));
@@ -753,7 +762,11 @@ async function terminarPedido(id) {
   if (!navigator.onLine) { toast('Necesitas conexión para terminar el pedido y crear el albarán.', 'err'); return; }
   await sincronizar();
   if (getCola().some(x => x.pedido_id === id)) { toast('Quedan cambios sin enviar. Inténtalo de nuevo en unos segundos.', 'err'); return; }
-  abrirTrazabilidad(id, {});
+  // El albarán se crea al momento. Los lotes (trazabilidad) los asigna después oficina o administración.
+  const r = await sb.rpc('terminar_pedido', { p_pedido: id });
+  if (r.error) { toast(msgErr(r.error), 'err'); return; }
+  toast('Pedido terminado. Albarán nº ' + r.data + (esOficina() ? '. Falta asignar la trazabilidad.' : ''), 'ok');
+  go('albaran', { id });
 }
 /* =====================  ASIGNAR TRAZABILIDAD (al terminar el albarán)  ===================== */
 async function abrirTrazabilidad(pedidoId, opt) {
@@ -854,7 +867,7 @@ async function abrirTrazabilidad(pedidoId, opt) {
     refs.push({ l, estado, tarj, confirmarProp });
     return tarj;
   });
-  const btnOk = h('button', { class: 'guardar', disabled: true, onclick: () => enviar(null) }, corregir ? 'Guardar corrección de trazabilidad' : 'Confirmar trazabilidad y generar albarán');
+  const btnOk = h('button', { class: 'guardar', disabled: true, onclick: () => enviar(null) }, corregir ? (opt.primera ? 'Confirmar trazabilidad' : 'Guardar corrección de trazabilidad') : 'Confirmar trazabilidad y generar albarán');
   function problemas() {
     const out = [];
     lineas.forEach(l => {
@@ -881,19 +894,19 @@ async function abrirTrazabilidad(pedidoId, opt) {
     const cant = []; lineas.forEach(l => Object.entries(asig[l.id]).forEach(([lid, v]) => { if (v > 0) cant.push({ linea_id: l.id, lote_id: lid, cantidad: v }); }));
     let res;
     if (corregir) {
-      const mot = (prompt('Motivo de la corrección (queda anotado con tu nombre y la hora):') || '').trim(); if (!mot) { toast('Hace falta escribir el motivo.', 'err'); refrescar(); return; }
+      const mot = opt.primera ? 'Trazabilidad asignada después de crear el albarán' : (prompt('Motivo de la corrección (queda anotado con tu nombre y la hora):') || '').trim(); if (!mot) { toast('Hace falta escribir el motivo.', 'err'); refrescar(); return; }
       res = await sb.rpc('corregir_trazabilidad', { p_pedido: pedidoId, p_asignaciones: cant, p_motivo: mot });
     } else res = await sb.rpc('confirmar_trazabilidad', { p_pedido: pedidoId, p_asignaciones: sinMotivo ? [] : cant, p_sin_motivo: sinMotivo });
     if (res.error) { toast(msgErr(res.error), 'err'); refrescar(); return; }
     cerrar();
-    toast(corregir ? 'Trazabilidad corregida y anotada en el historial' : 'Pedido terminado. Albarán nº ' + res.data + (sinMotivo ? ' (sin trazabilidad)' : ' con trazabilidad'), 'ok');
+    toast(corregir ? (opt.primera ? 'Trazabilidad asignada y confirmada' : 'Trazabilidad corregida y anotada en el historial') : 'Pedido terminado. Albarán nº ' + res.data + (sinMotivo ? ' (sin trazabilidad)' : ' con trazabilidad'), 'ok');
     go('albaran', { id: pedidoId });
   }
   const sinTraza = !corregir && oficina ? h('button', { class: 'ghost', onclick: () => { const m = (prompt('Cerrar SIN trazabilidad. Escribe el motivo (quedará anotado):') || '').trim(); if (!m) { toast('Hace falta escribir el motivo.', 'err'); return; } enviar(m); } }, 'Cerrar sin trazabilidad (solo oficina, con motivo)') : null;
   const cerrar = () => { ov.remove(); state.sheetAbierta = false; };
   const ov = h('div', { class: 'overlay' }, h('div', { class: 'sheet', style: 'max-height:92vh;overflow:auto' },
-    h('h2', {}, corregir ? 'Corregir trazabilidad' : 'Asignar trazabilidad'),
-    h('div', { class: 'sub', style: 'margin-bottom:8px' }, corregir ? 'Cambia los lotes de un albarán ya emitido. Quedará anotado quién lo cambia, cuándo y el motivo.' : 'Elige de qué compra salió cada producto. Si usaste dos lotes, reparte los kilos entre ambos. El albarán no se cierra hasta que todo cuadre.'),
+    h('h2', {}, corregir && !opt.primera ? 'Corregir trazabilidad' : 'Asignar trazabilidad'),
+    h('div', { class: 'sub', style: 'margin-bottom:8px' }, corregir ? (opt.primera ? 'Elige de qué compra salió cada producto de este albarán ya entregado.' : 'Cambia los lotes de un albarán ya emitido. Quedará anotado quién lo cambia, cuándo y el motivo.') : 'Elige de qué compra salió cada producto. Si usaste dos lotes, reparte los kilos entre ambos. El albarán no se cierra hasta que todo cuadre.'),
     resumen, ...(lineas.length ? tarjetas : [h('p', { class: 'vacio' }, 'Este pedido no tiene productos preparados que necesiten lote.')]),
     btnOk, sinTraza, h('button', { class: 'ghost', onclick: cerrar }, 'Volver')));
   state.sheetAbierta = true; document.body.append(ov); refrescar();
@@ -944,7 +957,7 @@ function cajaTraza(d) {
   const est = te.traza_estado;
   const txt = est === 'confirmada' ? '✔ Trazabilidad confirmada' : est === 'sin_trazabilidad' ? '⚠ Albarán cerrado SIN trazabilidad' + (te.traza_motivo ? ': ' + te.traza_motivo : '') : '⚠ Albarán sin trazabilidad asignada';
   return h('div', { class: 'card', style: 'margin-bottom:10px' }, h('div', { class: 'nombre' }, txt),
-    esOficina() ? h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: () => abrirTrazabilidad(d.pedido.id, { corregir: true }) }, est === 'confirmada' ? 'Corregir trazabilidad' : 'Asignar trazabilidad ahora') : null);
+    esOficina() ? h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: () => abrirTrazabilidad(d.pedido.id, { corregir: true, primera: !est }) }, est === 'confirmada' ? 'Corregir trazabilidad' : est ? 'Asignar trazabilidad ahora' : 'Asignar trazabilidad') : null);
 }
 async function cargarCobroAlbaran(pedidoId, caja) {
   try {
@@ -1731,7 +1744,7 @@ function vistaMas() {
   const k = [
     h('div', { class: 'saludo' }, h('div', { style: 'font-size:20px;font-weight:800' }, 'Hola, ' + (state.perfil.nombre || '').split(' ')[0]), h('div', { class: 'sub' }, (d => d.charAt(0).toUpperCase() + d.slice(1))(fmtDiaLargo(new Date().toISOString())))),
     ...g('Trabajo diario', c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Carga', () => go('carga'), V), c('✅', 'Entregas', () => go('entregas'), V), c('🗺️', 'Ruta', () => go('ruta'), V), c('📅', 'Calendario', () => go('calendario'), V),
-      c('➕', 'Nuevo pedido', () => go('nuevo'), V), c('✍️', 'Escribir pedido', () => go('importar'), V), c('🎤', 'Dictar pedido', () => go('importar', { modo: 'voz' }), V), c('📷', 'Escanear pedido', () => go('importar', { modo: 'escanear' }), V), c('💰', 'Cobros', () => go('cobros'), V), c('🧮', 'Deudas', () => go('deudas'), V)),
+      c('🛒', 'A quién compramos hoy', () => go('quien'), V), c('➕', 'Nuevo pedido', () => go('nuevo'), V), c('✍️', 'Escribir pedido', () => go('importar'), V), c('🎤', 'Dictar pedido', () => go('importar', { modo: 'voz' }), V), c('📷', 'Escanear pedido', () => go('importar', { modo: 'escanear' }), V), c('💰', 'Cobros', () => go('cobros'), V), c('🧮', 'Deudas', () => go('deudas'), V)),
     ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null),
     ...g('Compras y mercancía', puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, puedeCompras() ? c('💶', 'Precios de compra', () => go('precios'), A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
@@ -2077,13 +2090,58 @@ function vistaCompras() {
   pintar();
 }
 
+/* =====================  A QUIÉN HEMOS COMPRADO HOY  ===================== */
+function vistaQuien() {
+  state.view = 'quien'; let fecha = hoy();
+  const cont = h('div', {});
+  $app.replaceChildren(shell('A quién hemos comprado hoy', cont, { volver: () => go('inicio') })); renderBanner();
+  const num3 = n => num(Math.round(n * 1000) / 1000);
+  async function cargar() {
+    const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); cargar(); } });
+    const lista = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); cont.replaceChildren(h('div', { class: 'barra' }, inp), lista);
+    try {
+      const r = await sb.rpc('quien_dia', { p_fecha: fecha }); if (r.error) throw r.error;
+      const lineas = r.data.lineas || [], lotes = r.data.lotes || [];
+      const kids = [h('div', { class: 'aviso-card' }, 'Para la trazabilidad y para hacer las facturas: toca a quién se lo hemos comprado hoy a cada producto. Si no lo sabes, déjalo como está; no pasa nada, la oficina lo completa.')];
+      const por = {}; lineas.filter(l => Number(l.cantidad) > 0).forEach(l => (por[l.producto_id] = por[l.producto_id] || { nombre: l.producto, lineas: [] }).lineas.push(l));
+      const ids = Object.keys(por).sort((a, b) => por[a].nombre.localeCompare(por[b].nombre, 'es'));
+      if (!ids.length) kids.push(h('p', { class: 'vacio' }, 'No hay productos preparados este día pendientes de anotar.'));
+      ids.forEach(pid => {
+        const g = por[pid]; const ls = lotes.filter(x => x.producto_id === pid); const total = g.lineas.reduce((t, l) => t + Number(l.cantidad), 0);
+        const nomProv = x => x.proveedor || x.origen || 'Sin nombre';
+        const provs = []; ls.forEach(x => { if (!provs.includes(nomProv(x))) provs.push(nomProv(x)); });
+        const provDe = id => { const x = lotes.find(w => w.id === id); return x ? nomProv(x) : null; };
+        const actual = g.lineas.map(l => { const s = new Set((l.lotes || []).map(e => provDe(e.lote_id)).filter(Boolean)); return s.size === 1 ? [...s][0] : (s.size ? '*varios*' : null); });
+        const igual = actual.every(a => a === actual[0]) ? actual[0] : '*varios*';
+        const elegir = async prov => {
+          for (const l of g.lineas) {
+            let lote = null;
+            if (prov) { const cand = ls.filter(x => nomProv(x) === prov); lote = (cand.find(x => Number(x.queda) >= Number(l.cantidad) - 0.001) || cand.find(x => Number(x.queda) > 0) || cand[cand.length - 1]).id; }
+            const rr = await sb.rpc('anotar_lote', { p_linea: l.linea_id, p_lote: lote });
+            if (rr.error) { toast(rr.error.message === 'TRAZABILIDAD_CERRADA' || /TRAZABILIDAD_CERRADA/.test(rr.error.message || '') ? 'La oficina ya cerró este albarán.' : msgErr(rr.error), 'err'); cargar(); return; }
+          }
+          toast(prov ? 'Anotado: ' + g.nombre + ' → ' + prov : 'Quitado', 'ok'); cargar();
+        };
+        const btns = provs.map(p => h('button', { class: igual === p ? '' : 'ghost', style: 'width:100%;margin-top:6px;text-align:left;font-size:17px;padding:12px', onclick: () => elegir(p) }, (igual === p ? '✔ ' : '') + p));
+        const sinProv = !provs.length ? h('div', { class: 'sub', style: 'margin-top:6px' }, 'Todavía no hay compra anotada de este producto. Déjalo en blanco: la oficina lo completa.') : null;
+        const nada = provs.length ? h('button', { class: 'ghost small', style: 'width:100%;margin-top:6px', onclick: () => elegir(null) }, igual === null ? '✔ No lo sé (se queda en blanco)' : 'No lo sé / quitar') : null;
+        const mezcla = igual === '*varios*' ? h('div', { class: 'sub', style: 'color:#b45309' }, 'Ya está repartido entre varios proveedores.') : null;
+        kids.push(h('div', { class: 'card', style: igual && igual !== '*varios*' ? 'border-left:4px solid #15803d' : 'border-left:4px solid #f59e0b' },
+          h('div', { class: 'nombre' }, g.nombre), h('div', { class: 'sub' }, g.lineas.length + (g.lineas.length === 1 ? ' cliente · ' : ' clientes · ') + num3(total) + ' en total'), mezcla, sinProv, ...btns, nada));
+      });
+      lista.replaceChildren(...kids);
+    } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+  }
+  cargar();
+}
+
 /* =====================  TRAZABILIDAD  ===================== */
 function vistaTraza() {
   state.view = 'traza';
   if (!puedeCompras()) { go('lista'); return; }
   let modo = LS.get('fj_traza_modo', 'pend'), fecha = hoy();
   const cont = h('div', {}); const chips = h('div', { class: 'chips' });
-  const pintarChips = () => chips.replaceChildren(...[['pend', 'Pendientes de lote'], ['lote', 'Por lote'], ['cliente', 'Por cliente'], ['factura', 'Para factura']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_traza_modo', m); pintarChips(); pintar(); } }, n)));
+  const pintarChips = () => chips.replaceChildren(...[['pend', 'Confirmar trazabilidad'], ['lote', 'Por lote'], ['cliente', 'Por cliente'], ['factura', 'Para factura']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_traza_modo', m); pintarChips(); pintar(); } }, n)));
   $app.replaceChildren(shell('Trazabilidad', h('div', {}, chips, cont), { volver: () => go('inicio') })); renderBanner(); pintarChips();
   function pintar() { (modo === 'pend' ? pPend : modo === 'lote' ? pLote : modo === 'factura' ? pFactura : pCliente)(); }
   const filasTz = rows => rows.map(r => h('div', { class: 'fila', style: 'padding:5px 0;border-top:1px solid var(--borde)' },
@@ -2094,33 +2152,69 @@ function vistaTraza() {
   async function pPend() {
     const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); pPend(); } });
     const lista = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); cont.replaceChildren(h('div', { class: 'barra' }, inp), lista);
+    if (!esOficina()) { lista.replaceChildren(h('p', { class: 'vacio' }, 'El reparto del día lo confirma la oficina o el jefe.')); return; }
     try {
-      const r = await sb.from('pedidos').select('id,lineas_pedido(id,estado,peso_real,cantidad_pedida,unidad_precio,producto_id,productos(codigo,nombre),asignaciones_lote(id))').eq('fecha_entrega', fecha).eq('estado', 'terminado');
+      const r = await sb.from('pedidos').select('id,clientes(codigo,nombre,nombre_comercial),albaranes(traza_estado),lineas_pedido(id,estado,peso_real,cantidad_pedida,unidad_precio,producto_id,productos(codigo,nombre),asignaciones_lote(lote_id,cantidad))').eq('fecha_entrega', fecha).eq('estado', 'terminado');
       if (r.error) throw r.error;
-      const por = {};
-      r.data.forEach(p => (p.lineas_pedido || []).forEach(l => { if (!['hecha', 'parcial'].includes(l.estado) || (l.asignaciones_lote || []).length) return; (por[l.producto_id] = por[l.producto_id] || { nombre: l.productos.nombre, lineas: [] }).lineas.push(l); }));
+      const pedidos = r.data.filter(p => { const a = uno(p.albaranes); return a && !a.traza_estado; });
+      const kn = l => Number(l.unidad_precio === 'kg' ? l.peso_real : l.cantidad_pedida) || 0;
+      const por = {}, lineaIds = new Set();
+      pedidos.forEach(p => (p.lineas_pedido || []).forEach(l => { if (!['hecha', 'parcial'].includes(l.estado) || kn(l) <= 0) return; lineaIds.add(l.id);
+        (por[l.producto_id] = por[l.producto_id] || { id: l.producto_id, nombre: l.productos.nombre, lineas: [] }).lineas.push({ l, pedido: p, cli: nombreCli(uno(p.clientes)), q: kn(l), ex: (l.asignaciones_lote || []) }); }));
       const ids = Object.keys(por).sort((a, b) => por[a].nombre.localeCompare(por[b].nombre, 'es'));
-      const kids = [h('div', { class: 'aviso-card' }, 'Cada producto preparado debe tener su lote. Elige el lote y se asigna a todas las líneas de ese producto del día.')];
-      if (!ids.length) kids.push(h('p', { class: 'vacio' }, '✔ Todos los productos preparados este día tienen lote.'));
-      ids.forEach(id => { const g = por[id]; const kg = g.lineas.reduce((a, l) => a + Number(l.unidad_precio === 'kg' ? l.peso_real : l.cantidad_pedida), 0);
-        kids.push(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, g.nombre), h('div', { class: 'sub' }, g.lineas.length + ' líneas · ' + num(Math.round(kg * 1000) / 1000) + ' en total')),
-          state.perfil.rol === 'compras' ? null : h('button', { class: 'small', onclick: () => elegirLote(id, g, pPend) }, 'Asignar lote')))); });
-      lista.replaceChildren(...kids);
+      if (!ids.length) { lista.replaceChildren(h('p', { class: 'vacio' }, '✔ No queda nada por repartir este día: todos los albaranes tienen su trazabilidad.')); return; }
+      const rl = await sb.from('lotes').select('id,producto_id,codigo_lote,origen,cantidad_recibida,unidad,archivado,created_at,compras(fecha,proveedores(nombre)),asignaciones_lote(linea_id,cantidad)').in('producto_id', ids).limit(1000);
+      if (rl.error) throw rl.error;
+      const lotes = {};
+      rl.data.filter(x => !x.archivado).forEach(x => { const c = uno(x.compras) || {}; const pv = c.proveedores ? uno(c.proveedores) : null;
+        const otros = (x.asignaciones_lote || []).filter(a => !lineaIds.has(a.linea_id)).reduce((t, a) => t + Number(a.cantidad), 0);
+        (lotes[x.producto_id] = lotes[x.producto_id] || []).push({ id: x.id, codigo: x.codigo_lote || 'sin código', prov: pv ? pv.nombre : '', origen: x.origen || '', fecha: c.fecha || '', creado: x.created_at || '', unidad: x.unidad, disp: Number(x.cantidad_recibida) - otros }); });
+      Object.values(lotes).forEach(a => a.sort((p, q) => (p.fecha + p.creado).localeCompare(q.fecha + q.creado)));
+      // elección por línea: lista de {lote_id, cantidad}
+      const elec = {}; const refs = [];
+      ids.forEach(pid => { const g = por[pid]; const ls = (lotes[pid] || []).filter(x => x.disp > 0.0005 || g.lineas.some(z => z.ex.some(e => e.lote_id === x.id)));
+        const resto = {}; ls.forEach(x => resto[x.id] = x.disp);
+        g.lineas.forEach(z => { if (z.ex.length) { elec[z.l.id] = z.ex.map(e => ({ lote_id: e.lote_id, cantidad: Number(e.cantidad) })); return; } });
+        g.lineas.forEach(z => { if (elec[z.l.id]) { elec[z.l.id].forEach(e => { if (resto[e.lote_id] != null) resto[e.lote_id] -= e.cantidad; }); return; }
+          let falta = z.q; const out = [];
+          ls.filter(x => x.unidad === z.l.unidad_precio || !ls.some(y => y.unidad === z.l.unidad_precio)).forEach(x => { if (falta <= 0.0005 || resto[x.id] <= 0.0005) return; const t = Math.min(falta, resto[x.id]); out.push({ lote_id: x.id, cantidad: Math.round(t * 1000) / 1000 }); resto[x.id] -= t; falta -= t; });
+          elec[z.l.id] = out; });
+        g.ls = ls; });
+      const usoDe = (pid, lid) => por[pid].lineas.reduce((t, z) => t + (elec[z.l.id] || []).filter(e => e.lote_id === lid).reduce((s, e) => s + e.cantidad, 0), 0);
+      const sumaL = z => (elec[z.l.id] || []).reduce((t, e) => t + e.cantidad, 0);
+      const btn = h('button', { class: 'ok' }, 'Confirmar reparto'); const resumen = h('div', { class: 'aviso-card' });
+      const probsProd = pid => { const g = por[pid]; const p = [];
+        g.lineas.forEach(z => { if (Math.abs(sumaL(z) - z.q) > 0.001) p.push(z.cli + ': faltan ' + num(Math.round((z.q - sumaL(z)) * 1000) / 1000) + ' sin lote'); });
+        g.ls.forEach(x => { if (x.unidad === 'kg' && usoDe(pid, x.id) > x.disp + 0.001) p.push('El lote ' + x.codigo + ' solo tiene ' + num(Math.round(x.disp * 1000) / 1000) + ' kg'); });
+        return p; };
+      const tarj = ids.map(pid => { const g = por[pid]; const multi = g.ls.length >= 2;
+        const estado = h('div', { class: 'sub' }); const filas = h('div', {});
+        const kg = g.lineas.reduce((t, z) => t + z.q, 0);
+        const pinta = () => {
+          filas.replaceChildren(...g.lineas.map(z => { const sel = h('select', { onchange: e => { const v = e.target.value; elec[z.l.id] = v ? [{ lote_id: v, cantidad: z.q }] : []; pinta(); resumir(); } },
+            h('option', { value: '' }, '— elegir lote —'), ...g.ls.map(x => h('option', { value: x.id }, [x.prov || x.origen || 'sin proveedor', x.codigo, 'queda ' + num(Math.round(x.disp * 1000) / 1000) + ' ' + x.unidad].join(' · '))));
+            const e = elec[z.l.id] || []; sel.value = e.length === 1 ? e[0].lote_id : '';
+            const partido = e.length > 1 ? h('div', { class: 'sub' }, 'Repartido: ' + e.map(y => { const x = g.ls.find(w => w.id === y.lote_id); return (x ? (x.prov || x.codigo) : '?') + ' ' + num(y.cantidad); }).join(' + ')) : null;
+            return h('div', { style: 'padding:6px 0;border-top:1px solid var(--borde)' }, h('div', { class: 'fila' }, h('div', {}, z.cli), h('b', {}, num(z.q))), multi || e.length !== 1 ? sel : h('div', { class: 'sub' }, (() => { const x = g.ls.find(w => w.id === e[0].lote_id); return x ? [x.prov, x.codigo].filter(Boolean).join(' · ') : ''; })()), partido); }));
+          const p = probsProd(pid); estado.textContent = p.length ? '⚠ ' + p.join(' · ') : (multi ? '✔ Revisado' : '✔ Un solo lote'); estado.style.color = p.length ? '#b45309' : '#15803d'; };
+        pinta(); g.pinta = pinta;
+        const cab = h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, g.nombre), h('div', { class: 'sub' }, g.lineas.length + ' líneas · ' + num(Math.round(kg * 1000) / 1000) + ' en total' + (multi ? ' · ' + g.ls.length + ' lotes / proveedores' : ''))));
+        const sinLotes = !g.ls.length ? h('div', { class: 'aviso-card' }, 'No hay lotes con existencias de este producto. Regístralos en Más → Compras → Registrar compra.') : null;
+        return h('div', { class: 'card', style: multi ? 'border-left:4px solid #f59e0b' : '' }, cab, estado, sinLotes, filas); });
+      const sobre = pid => por[pid].ls.some(x => x.unidad === 'kg' && usoDe(pid, x.id) > x.disp + 0.001);
+      const pedOk = p => { const ls = (p.lineas_pedido || []).filter(l => lineaIds.has(l.id)); return ls.length > 0 && ls.every(l => { const z = por[l.producto_id].lineas.find(w => w.l.id === l.id); return Math.abs(sumaL(z) - z.q) <= 0.001 && !sobre(l.producto_id); }); };
+      function resumir() { ids.forEach(pid => por[pid].pinta()); const listos = pedidos.filter(pedOk).length, total = pedidos.filter(p => (p.lineas_pedido || []).some(l => lineaIds.has(l.id))).length;
+        btn.disabled = listos === 0; btn.textContent = listos ? 'Confirmar ' + listos + (listos === 1 ? ' albarán completo' : ' albaranes completos') : 'Confirmar reparto';
+        resumen.textContent = listos === total ? '✔ Reparto completo: ya se puede confirmar' : listos + ' de ' + total + ' albaranes listos. Los demás esperan a que haya lote (los puedes dejar para más tarde).'; }
+      btn.onclick = async () => { btn.disabled = true; let ok = 0;
+        for (const p of pedidos.filter(pedOk)) { const ls = (p.lineas_pedido || []).filter(l => lineaIds.has(l.id));
+          const asig = []; ls.forEach(l => (elec[l.id] || []).forEach(e => asig.push({ linea_id: l.id, lote_id: e.lote_id, cantidad: e.cantidad })));
+          const rr = await sb.rpc('corregir_trazabilidad', { p_pedido: p.id, p_asignaciones: asig, p_motivo: 'Reparto del día' });
+          if (rr.error) { toast(msgErr(rr.error), 'err'); btn.disabled = false; if (ok) pPend(); return; } ok++; }
+        toast('Reparto confirmado en ' + ok + (ok === 1 ? ' albarán' : ' albaranes'), 'ok'); pPend(); };
+      resumir();
+      lista.replaceChildren(h('div', { class: 'aviso-card' }, 'Lo que ya hayan anotado el jefe o los preparadores aparece puesto. Para el resto se propone empezar por la compra más antigua. Revisa los productos marcados en naranja (los que tienen varios proveedores) y cambia el proveedor donde no coincida. Luego pulsa Confirmar.'), resumen, ...tarj, btn);
     } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
-  }
-  async function elegirLote(productoId, g, alTerminar) {
-    const r = await sb.from('lotes').select('id,codigo_lote,origen,cantidad_recibida,unidad,compras(fecha,proveedores(nombre)),asignaciones_lote(cantidad)').eq('producto_id', productoId).order('created_at', { ascending: false }).limit(30);
-    if (r.error) { toast(msgErr(r.error), 'err'); return; }
-    state.sheetAbierta = true; const cerrar = () => { ov.remove(); state.sheetAbierta = false; };
-    const cuerpo = r.data.length ? r.data.map(l => { const c = uno(l.compras) || {}; const pv = c.proveedores ? uno(c.proveedores) : null; const ent = (l.asignaciones_lote || []).reduce((a, x) => a + Number(x.cantidad), 0);
-      return h('button', { class: 'ghost', style: 'text-align:left;width:100%', onclick: async () => {
-        const filas = g.lineas.map(l2 => ({ linea_id: l2.id, lote_id: l.id, cantidad: Number(l2.unidad_precio === 'kg' ? l2.peso_real : l2.cantidad_pedida) }));
-        const ins = await sb.from('asignaciones_lote').insert(filas); if (ins.error) { toast(msgErr(ins.error), 'err'); return; }
-        cerrar(); toast('Lote asignado a ' + filas.length + (filas.length === 1 ? ' línea' : ' líneas'), 'ok'); alTerminar();
-      } }, h('div', { class: 'nombre' }, l.codigo_lote || 'sin código'), h('div', { class: 'sub' }, [pv && pv.nombre, l.origen, c.fecha && fechaES(c.fecha), 'queda ' + num(Math.round((l.cantidad_recibida - ent) * 1000) / 1000) + ' ' + l.unidad].filter(Boolean).join(' · '))); })
-      : [h('p', { class: 'vacio' }, 'No hay lotes de este producto. Regístralos en Más → Compras → Registrar compra.')];
-    const ov = h('div', { class: 'overlay', onclick: e => { if (e.target === ov) cerrar(); } }, h('div', { class: 'sheet' }, h('h2', {}, 'Lote de ' + g.nombre), ...cuerpo, h('div', { class: 'acciones' }, h('button', { class: 'ghost', onclick: cerrar }, 'Cancelar'))));
-    document.body.append(ov);
   }
   async function pLote() {
     const lista = h('div', {}); const inp = h('input', { placeholder: 'Buscar por código de lote o producto…', oninput: debounce(buscarT, 300) });
@@ -2169,13 +2263,20 @@ function vistaTraza() {
       if (r.error) { lista.replaceChildren(h('p', { class: 'err' }, msgErr(r.error))); return; }
       const grupos = {}; r.data.forEach(x => { const k = x.numero_albaran ? x.serie + ' ' + String(x.numero_albaran).padStart(7, '0') : 'Sin albarán · ' + x.fecha_entrega; (grupos[k] = grupos[k] || { k, fecha: x.fecha_entrega, filas: [], on: true }).filas.push(x); });
       const gs = Object.values(grupos);
-      if (!gs.length) { lista.replaceChildren(h('p', { class: 'vacio' }, 'Sin albaranes con lote en esas fechas.')); return; }
+      let sinLote = [];
+      try {
+        const pr = await sb.from('pedidos').select('id,fecha_entrega,albaranes(serie,numero),lineas_pedido(id,estado,asignaciones_lote(id))').eq('cliente_id', cli.id).eq('estado', 'terminado').gte('fecha_entrega', desde).lte('fecha_entrega', hasta).limit(500);
+        if (!pr.error && pr.data) sinLote = pr.data.filter(p => (p.lineas_pedido || []).some(l => ['hecha', 'parcial'].includes(l.estado) && !(l.asignaciones_lote || []).length));
+      } catch (e) { }
+      const avisoSin = sinLote.length ? h('div', { class: 'aviso-card', style: 'border-left:4px solid var(--ambar)' }, '⚠ ' + sinLote.length + (sinLote.length > 1 ? ' albaranes de este cliente en esas fechas tienen' : ' albarán de este cliente en esas fechas tiene') + ' productos SIN lote asignado: ' + sinLote.map(p => { const a = uno(p.albaranes) || {}; return (a.numero ? (a.serie || 'F') + ' ' + a.numero : 'sin albarán') + ' (' + fechaES(p.fecha_entrega) + ')'; }).join(', ') + '. Asigna la trazabilidad antes de facturar (abre el albarán → «Asignar trazabilidad»).') : null;
+      if (!gs.length) { lista.replaceChildren(...[avisoSin, h('p', { class: 'vacio' }, 'Sin albaranes con lote en esas fechas.')].filter(Boolean)); return; }
       const textoG = g => 'Albarán ' + g.k + ' (' + fechaES(g.fecha) + ')\n' + g.filas.map(x => '  - ' + x.producto + ': lote ' + (x.codigo_lote || 'sin código') + (x.origen ? ', origen ' + x.origen : '') + ', ' + num(x.cantidad_entregada) + ' kg').join('\n');
       const sel = () => gs.filter(g => g.on);
       const tarjetas = gs.map(g => h('div', { class: 'card' },
         h('label', { class: 'fila', style: 'gap:8px;justify-content:flex-start' }, h('input', { type: 'checkbox', checked: true, onchange: e => { g.on = e.target.checked; } }), h('div', { class: 'nombre' }, 'Albarán ' + g.k + ' · ' + fechaES(g.fecha))),
         ...g.filas.map(x => h('div', { class: 'sub' }, x.producto + ' · lote ' + (x.codigo_lote || 'sin código') + (x.origen ? ' · ' + x.origen : '') + ' · ' + num(x.cantidad_entregada) + ' kg'))));
       lista.replaceChildren(
+        ...(avisoSin ? [avisoSin] : []),
         h('button', { style: 'width:100%;margin-bottom:6px', onclick: async () => { const t = sel().map(textoG).join('\n\n'); if (!t) { toast('Marca algún albarán.', 'err'); return; } try { await navigator.clipboard.writeText(t); toast('Trazabilidad copiada. Pégala en la factura.', 'ok'); } catch (e) { prompt('Copia este texto:', t); } } }, 'Copiar trazabilidad de los marcados'),
         h('button', { class: 'ghost', style: 'width:100%;margin-bottom:6px', onclick: () => { const q = sel(); if (!q.length) { toast('Marca algún albarán.', 'err'); return; } imprimir('<div class="copia a4"><div class="cab"><div class="emp"><b>' + esc(EMPRESA.nombre) + '</b></div><div class="num">ANEXO DE TRAZABILIDAD<br>' + esc(nombreCli(cli)) + '</div></div>' + q.map(g => '<p><b>Albarán ' + esc(g.k) + '</b> · ' + esc(fechaES(g.fecha)) + '</p><table><tbody>' + g.filas.map(x => '<tr><td>' + esc(x.producto) + '</td><td>Lote ' + esc(x.codigo_lote || 'sin código') + '</td><td>' + esc(x.origen || '') + '</td><td class="d">' + esc(num(x.cantidad_entregada)) + ' kg</td></tr>').join('') + '</tbody></table>').join('') + '</div>'); } }, 'Imprimir anexo de trazabilidad'),
         h('button', { class: 'ghost', style: 'width:100%;margin-bottom:8px', onclick: () => { const q = sel(); if (!q.length) { toast('Marca algún albarán.', 'err'); return; } descargarCSV('trazabilidad_factura_' + cli.codigo + '.csv', [['Albarán', 'Fecha', 'Producto', 'Lote', 'Origen', 'Proveedor', 'Kilos']].concat(q.flatMap(g => g.filas.map(x => [g.k, fechaES(g.fecha), x.producto, x.codigo_lote, x.origen, x.proveedor, x.cantidad_entregada])))); } }, 'Descargar Excel (CSV) de los marcados'),
@@ -4196,7 +4297,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v();
 }
 function tick() {
