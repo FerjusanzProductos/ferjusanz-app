@@ -409,7 +409,7 @@ function isNetErr(e) {
 const esOficina = () => !!state.perfil && ['oficina', 'admin'].includes(state.perfil.rol);
 const ESTADO = { pendiente: 'Pendiente', en_preparacion: 'En preparación', terminado: 'Terminado', anulado: 'Anulado' };
 const CLASE_ESTADO = { pendiente: 'pend', en_preparacion: 'prep', terminado: 'fin', anulado: 'pend' };
-const VISTAS_MAS_OLD = ['mas', 'clientes', 'cliente', 'catalogo', 'compras', 'traza', 'perfil', 'fichajes', 'entregas', 'calendario', 'incidencias', 'precios', 'facturas', 'resumen', 'archivo', 'avisos', 'ruta', 'rentabilidad', 'registro', 'quien', 'facturascli', 'pedidos'];
+const VISTAS_MAS_OLD = ['mas', 'clientes', 'cliente', 'catalogo', 'compras', 'traza', 'perfil', 'fichajes', 'entregas', 'calendario', 'incidencias', 'precios', 'facturas', 'resumen', 'archivo', 'avisos', 'ruta', 'rentabilidad', 'registro', 'quien', 'facturascli', 'pedidos', 'hojacompra'];
 const puedeCompras = () => !!state.perfil && ['compras', 'oficina', 'admin'].includes(state.perfil.rol);
 const UNIDADES = ['kg', 'pieza', 'caja', 'saco', 'bolsa', 'bandeja', 'manojo', 'docena'];
 /* Texto de «Se cobra por»: kg, o la unidad del pedido (docena, caja, pieza…) */
@@ -1164,6 +1164,28 @@ function totalesCarga(datos) {
   return [...m.values()].map(t => Object.assign(t, { pedido: r3(t.pedido), kg: r3(t.kg), sobrante: r3(t.sobrante), total: Math.max(0, r3(t.pedido - t.sobrante)) }))
     .sort((a, b) => a.producto.localeCompare(b.producto, 'es'));
 }
+/* ---------- Hoja de compra (lista de lo que hay que comprar para los pedidos de una fecha) ---------- */
+function htmlHojaCompra(fecha, datos) {
+  const t = totalesCarga(datos);
+  return '<div class="hoja"><h1>HOJA DE COMPRA · ' + esc(fechaES(fecha)) + '</h1><table><tr><th>Producto</th><th class="d">Pedido</th><th class="d">Sobrante</th><th class="d">A comprar</th><th>Proveedor</th><th class="d">Comprado</th></tr>' +
+    t.map(x => '<tr><td><span class="caja"></span>' + esc(x.producto) + '</td><td class="d">' + esc(num(x.pedido) + ' ' + x.unidad) + '</td><td class="d">' + (x.sobrante ? esc(num(x.sobrante) + ' ' + x.unidad) : '') + '</td><td class="d"><b>' + esc(num(x.total) + ' ' + x.unidad) + '</b></td><td></td><td class="d">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>').join('') + '</table></div>';
+}
+function vistaHojaCompra() {
+  state.view = 'hojacompra'; let fecha = (state.params && state.params.fecha) || manana0(); const cont = h('div', {}); let datos = null;
+  const fi = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || fecha; cargar(); } });
+  function pintar() {
+    if (!datos) return; const t = totalesCarga(datos);
+    const kids = [h('div', { class: 'aviso-card' }, 'Lo que hay que comprar para los pedidos de ' + fechaES(fecha) + ' (pedido − sobrante del día anterior). Elige otra fecha si los pedidos llegaron con días de antelación.')];
+    if (!t.length) kids.push(h('p', { class: 'vacio' }, 'No hay pedidos para esta fecha.'));
+    t.forEach(x => kids.push(h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'nombre' }, x.producto), h('div', { class: 'sub' }, 'Pedido ' + num(x.pedido) + ' ' + x.unidad + (x.sobrante ? ' · Sobrante ' + num(x.sobrante) + ' ' + x.unidad : ''))), h('div', { class: 'tot-num' }, num(x.total) + ' ' + x.unidad))));
+    if (t.length) kids.push(h('button', { style: 'width:100%;margin-top:6px', onclick: () => imprimir(htmlHojaCompra(fecha, datos)) }, 'Imprimir hoja de compra (A4)'));
+    kids.push(h('div', { style: 'display:flex;gap:8px;margin-top:8px' }, h('button', { class: 'ghost', style: 'flex:1', onclick: () => { state.fecha = fecha; go('carga'); } }, 'Hoja de carga'), h('button', { class: 'ghost', style: 'flex:1', onclick: () => go('quien', { fecha }) }, 'A quién hemos comprado')));
+    cont.replaceChildren(...kids);
+  }
+  async function cargar() { cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); try { const r = await cargarCarga(fecha); datos = r.datos; pintar(); } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); } }
+  $app.replaceChildren(shell('Hoja de compra', h('div', {}, h('div', { class: 'barra' }, fi, h('button', { class: 'ghost', onclick: cargar }, '↻')), cont), { volver: () => go('inicio') })); renderBanner(); cargar();
+}
+const manana0 = () => { const d = new Date(); d.setDate(d.getDate() + 1); return hoy(d); };
 function vistaCarga() {
   state.view = 'carga';
   const fechaInp = h('input', { type: 'date', value: state.fecha, onchange: e => { state.fecha = e.target.value || hoy(); state.carga = null; actualizarCarga(true); } });
@@ -1194,6 +1216,7 @@ function pintarCarga() {
   else if (state.cargaModo === 'totales') pintarCargaTotales(datos, kids);
   else pintarSobrante(datos, kids);
   kids.push(h('button', { class: 'ghost', style: 'width:100%;margin-top:6px', onclick: () => imprimir(htmlHoja(datos)) }, 'Imprimir hoja de carga (A4)'));
+  kids.push(h('div', { style: 'display:flex;gap:8px;margin-top:8px' }, h('button', { class: 'ghost', style: 'flex:1', onclick: () => go('hojacompra', { fecha: state.fecha }) }, 'Hoja de compra'), h('button', { class: 'ghost', style: 'flex:1', onclick: () => go('quien', { fecha: state.fecha }) }, 'A quién hemos comprado')));
   cont.replaceChildren(...kids);
 }
 function alternarCarga(l) {
@@ -1324,7 +1347,7 @@ function htmlHoja(datos) {
     out += '<div class="blq"><div class="cb"><span>' + esc(nombreCli(cli)) + (cli.ruta ? ' · Ruta ' + esc(cli.ruta) : '') + '</span><span>' +
       (alb && alb.estado !== 'anulado' ? 'Albarán ' + esc(alb.serie + ' ' + alb.numero) : 'Sin albarán') + (cli.forma_pago === 'contado' ? ' · CONTADO' : '') + '</span></div><table>' +
       lineasCarga(p).map(l => '<tr><td><span class="caja' + (l._cargado ? ' on' : '') + '"></span>' + esc(nomProd(l)) + '</td><td class="d">' + esc(num(l.cantidad_pedida) + ' ' + l.unidad_pedida) +
-        '</td><td class="d">' + (l.peso_real != null ? esc(num(l.peso_real) + ' ' + udLinea(l)) : '') + '</td></tr>').join('') + '</table></div>';
+        '</td><td class="d">' + (l.peso_real != null ? esc(num(l.peso_real) + ' ' + udLinea(l)) : '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;') + '</td><td class="d">falta: ______</td></tr>').join('') + '</table></div>';
   }
   out += '<h2>Totales por producto</h2><table><tr><th>Producto</th><th class="d">Pedido</th><th class="d">Sobrante anterior</th><th class="d">A cargar</th></tr>' +
     totalesCarga(datos).map(t => '<tr><td>' + esc(t.producto) + '</td><td class="d">' + esc(num(t.pedido) + ' ' + t.unidad) + '</td><td class="d">' + (t.sobrante ? esc(num(t.sobrante) + ' ' + t.unidad) : '') +
@@ -1888,7 +1911,7 @@ function vistaMas() {
   const V = '#2f7d4a', A = '#d97706', Z = '#2563eb', M = '#7c3aed', R = '#dc2626', T = '#0d9488';
   const k = [
     h('div', { class: 'saludo' }, h('div', { style: 'font-size:20px;font-weight:800' }, 'Hola, ' + (state.perfil.nombre || '').split(' ')[0]), h('div', { class: 'sub' }, (d => d.charAt(0).toUpperCase() + d.slice(1))(fmtDiaLargo(new Date().toISOString())))),
-    ...g('Trabajo diario', c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Carga', () => go('carga'), V), c('✅', 'Entregas', () => go('entregas'), V), c('📑', 'Lista de pedidos', () => go('pedidos'), V), c('🧾', 'Albaranes', () => go('albaranes'), V), c('🗺️', 'Ruta', () => go('ruta'), V), c('📅', 'Calendario', () => go('calendario'), V),
+    ...g('Trabajo diario', c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Carga', () => go('carga'), V), c('✅', 'Entregas', () => go('entregas'), V), c('📑', 'Lista de pedidos', () => go('pedidos'), V), c('🧺', 'Hoja de compra', () => go('hojacompra'), V), c('🧾', 'Albaranes', () => go('albaranes'), V), c('🗺️', 'Ruta', () => go('ruta'), V), c('📅', 'Calendario', () => go('calendario'), V),
       c('🛒', 'A quién compramos hoy', () => go('quien'), V), c('➕', 'Nuevo pedido', () => go('nuevo'), V), c('✍️', 'Escribir pedido', () => go('importar'), V), c('🎤', 'Dictar pedido', () => go('importar', { modo: 'voz' }), V), c('📷', 'Escanear pedido', () => go('importar', { modo: 'escanear' }), V), c('💰', 'Cobros', () => go('cobros'), V), c('🧮', 'Deudas', () => go('deudas'), V)),
     ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null),
     ...g('Compras y mercancía', puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, puedeCompras() ? c('💶', 'Precios de compra', () => go('precios'), A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
@@ -2238,7 +2261,7 @@ function vistaCompras() {
 
 /* =====================  A QUIÉN HEMOS COMPRADO HOY  ===================== */
 function vistaQuien() {
-  state.view = 'quien'; let fecha = hoy();
+  state.view = 'quien'; let fecha = (state.params && state.params.fecha) || hoy();
   const cont = h('div', {});
   $app.replaceChildren(shell('A quién hemos comprado hoy', cont, { volver: () => go('inicio') })); renderBanner();
   const num3 = n => num(Math.round(n * 1000) / 1000);
@@ -4702,7 +4725,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, pedidos: vistaPedidos, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v();
 }
 function tick() {
