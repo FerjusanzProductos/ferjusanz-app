@@ -205,10 +205,10 @@ function crearSbPractica(){
     tarifas:[['p1',2.2],['p2',1.1],['p3',2.1],['p4',0.6],['p5',0.7],['p6',0.8],['p7',1.2],['p8',1.5],['p9',0.9],['p10',1.4]].map(x=>({producto_id:x[0],cliente_id:null,precio:x[1],desde:'2026-01-01'})),
     pedidos:[{id:'o1',cliente_id:'c1',fecha_entrega:H(),estado:'pendiente',notas:'Pedido de ejemplo: entregar antes de las 9',preparador_id:null},{id:'o2',cliente_id:'c3',fecha_entrega:H(),estado:'pendiente',notas:'',preparador_id:null},{id:'o3',cliente_id:'c4',fecha_entrega:H(),estado:'pendiente',notas:'',preparador_id:null}],
     lineas_pedido:[lin('l1','o1','p1',1,'pieza',2.2),lin('l2','o1','p2',1,'pieza',1.1),lin('l3','o1','p3',2,'caja',2.1),lin('l4','o2','p4',3,'saco',0.6),lin('l5','o2','p5',2,'saco',0.7),lin('l6','o2','p8',2,'caja',1.5),lin('l7','o3','p6',2,'caja',0.8),lin('l8','o3','p7',3,'caja',1.2),lin('l9','o3','p9',2,'caja',0.9)],
-    albaranes:[], carga_lineas:[], sobrante:[], mensajes:[], fichajes:[], fotos_perfil:[], cobros:[], proveedores:[{id:'v1',codigo:'FRUTASSUR',nombre:'Frutas Sur (ejemplo)',activo:true},{id:'v2',codigo:'HORTALIZAS',nombre:'Hortalizas Norte (ejemplo)',activo:true}], compras:[], lotes:[], asignaciones_lote:[], entregas:[], incidencias:[], documentos_compra:[], seq:9000, log:[]
+    albaranes:[], carga_lineas:[], sobrante:[], mensajes:[], fichajes:[], fotos_perfil:[], cobros:[], proveedores:[{id:'v1',codigo:'FRUTASSUR',nombre:'Frutas Sur (ejemplo)',activo:true},{id:'v2',codigo:'HORTALIZAS',nombre:'Hortalizas Norte (ejemplo)',activo:true}], compras:[], tarifas_compra:[{id:'tc1',producto_id:'p1',proveedor_id:'v1',precio:0.45,fecha:'2026-10-20',origen:'golden-factura'}], lotes:[], asignaciones_lote:[], entregas:[], incidencias:[], documentos_compra:[], seq:9000, log:[]
   };
   const __j=JSON.parse(localStorage.getItem('p_stub_db')||'null'); const __saved=(__j&&__j.dia===H())?__j:null;
-  const DB = window.__DB = __saved || __init; DB.dia=H(); DB.carga_lineas=DB.carga_lineas||[]; DB.sobrante=DB.sobrante||[]; DB.mensajes=DB.mensajes||[]; DB.fichajes=DB.fichajes||[]; DB.fotos_perfil=DB.fotos_perfil||[]; DB.cobros=DB.cobros||[]; DB.proveedores=DB.proveedores||[]; DB.compras=DB.compras||[]; DB.lotes=DB.lotes||[]; DB.asignaciones_lote=DB.asignaciones_lote||[]; DB.entregas=DB.entregas||[]; DB.incidencias=DB.incidencias||[]; DB.documentos_compra=DB.documentos_compra||[]; DB.avisos=DB.avisos||[]; DB.pedidos_habituales=DB.pedidos_habituales||[]; DB.lineas_habituales=DB.lineas_habituales||[];
+  const DB = window.__DB = __saved || __init; DB.dia=H(); DB.carga_lineas=DB.carga_lineas||[]; DB.sobrante=DB.sobrante||[]; DB.mensajes=DB.mensajes||[]; DB.fichajes=DB.fichajes||[]; DB.fotos_perfil=DB.fotos_perfil||[]; DB.cobros=DB.cobros||[]; DB.proveedores=DB.proveedores||[]; DB.compras=DB.compras||[]; DB.lotes=DB.lotes||[]; DB.asignaciones_lote=DB.asignaciones_lote||[]; DB.entregas=DB.entregas||[]; DB.incidencias=DB.incidencias||[]; DB.documentos_compra=DB.documentos_compra||[]; DB.facturas_recibidas=DB.facturas_recibidas||[]; DB.avisos=DB.avisos||[]; DB.pedidos_habituales=DB.pedidos_habituales||[]; DB.lineas_habituales=DB.lineas_habituales||[];
   const save=()=>localStorage.setItem('p_stub_db',JSON.stringify(DB));
   const hoy=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
   if(!__saved){save();}
@@ -230,6 +230,7 @@ function crearSbPractica(){
     if(t==='entregas'){const p=DB.pedidos.find(x=>x.id===r.pedido_id);return Object.assign({},r,{pedidos:{clientes:DB.clientes.find(c=>c.id===p.cliente_id)}});}
     if(t==='incidencias'){return Object.assign({},r,{clientes:DB.clientes.find(c=>c.id===r.cliente_id)||null,productos:DB.productos.find(p=>p.id===r.producto_id)||null});}
     if(t==='documentos_compra'){return Object.assign({},r,{proveedores:DB.proveedores.find(p=>p.id===r.proveedor_id)||null});}
+    if(t==='facturas_recibidas'){return Object.assign({},r,{proveedores:DB.proveedores.find(p=>p.id===r.proveedor_id)||null});}
     if(t==='compras'){return Object.assign({},r,{proveedores:DB.proveedores.find(p=>p.id===r.proveedor_id)||null,documentos_compra:DB.documentos_compra.filter(d=>d.compra_id===r.id)});}
     if(t==='cobros'){return Object.assign({},r,{clientes:DB.clientes.find(c=>c.id===r.cliente_id)});}
     if(t==='lotes'){const co=DB.compras.find(c=>c.id===r.compra_id)||{};return Object.assign({},r,{productos:DB.productos.find(p=>p.id===r.producto_id),compras:Object.assign({},co,{proveedores:DB.proveedores.find(p=>p.id===co.proveedor_id),documentos_compra:DB.documentos_compra.filter(d=>d.compra_id===co.id)}),asignaciones_lote:DB.asignaciones_lote.filter(a=>a.lote_id===r.id)});}
@@ -238,7 +239,7 @@ function crearSbPractica(){
   class Q{
     constructor(t){this.t=t;this.f=[];this.op='select';this.lim=null;this.one=null;this.ord=null;this.payload=null;this.ret=false;}
     select(c,o){ if(o&&o.head){this.head=true;} if(this.op==='insert'||this.op==='update')this.ret=true; else this.op='select'; return this;}
-    upsert(p,o){this.op='upsert';this.payload=p;return this;}
+    upsert(p,o){this.op='upsert';this.payload=p;this.conf=o&&o.onConflict;return this;}
     insert(p){this.op='insert';this.payload=p;return this;}
     update(p){this.op='update';this.payload=p;return this;}
     delete(){this.op='delete';return this;}
@@ -267,6 +268,7 @@ function crearSbPractica(){
         const out=arr.map(p=>{const r=Object.assign({id:this.t[0]+Math.random().toString(36).slice(2,8),estado:'pendiente',version:1,activo:true},this.t==='mensajes'?{creado:new Date().toISOString(),autor:'u1'}:{created_at:new Date().toISOString()},(this.t==='incidencias'||this.t==='documentos_compra')?{creado_por:'u1',subido_por:'u1'}:{},p);T.push(r);return r;});
         DB.log.push(['insert',this.t,out.length]);save();
         return this.one?{data:out[0],error:null}:{data:this.ret?out:null,error:null};}
+      if(this.op==='upsert'&&Array.isArray(this.payload)){const ks=(this.conf||'id').split(',');this.payload.forEach(p=>{const ex=T.find(r=>ks.every(k=>r[k]===p[k]));if(ex)Object.assign(ex,p);else T.push(Object.assign({id:'tc'+Math.random().toString(36).slice(2,8)},p));});DB.log.push(['upsert',this.t,this.payload.length]);save();return {data:null,error:null};}
       if(this.op==='upsert'){if(!T.some(r=>r.id===this.payload.id)){T.push(Object.assign({resuelta:false,archivado:false,creado_por:'u1',subido_por:'u1'},this.payload));}DB.log.push(['upsert',this.t]);save();return {data:null,error:null};}
       if(this.op==='update'){rows.forEach(r=>Object.assign(r,this.payload));DB.log.push(['update',this.t,this.payload]);save();return this.ret?{data:this.one?rows[0]:rows,error:null}:{data:null,error:null};}
       if(this.op==='delete'){DB[this.t]=T.filter(r=>!rows.includes(r));save();return {data:null,error:null};}
@@ -1869,9 +1871,9 @@ function vistaCompras() {
   if (!puedeCompras()) { go('lista'); return; }
   let modo = LS.get('fj_compras_modo', 'lista'), fecha = hoy();
   const cont = h('div', {}); const chips = h('div', { class: 'chips' });
-  const pintarChips = () => chips.replaceChildren(...[['lista', 'Qué comprar'], ['registrar', 'Registrar compra'], ['lotes', 'Lotes'], ['sinfac', 'Sin factura']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_compras_modo', m); pintarChips(); pintar(); } }, n)));
+  const pintarChips = () => chips.replaceChildren(...[['lista', 'Qué comprar'], ['registrar', 'Registrar compra'], ['lotes', 'Lotes'], ['sinfac', 'Sin factura'], ['recib', 'Recibidas']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_compras_modo', m); pintarChips(); pintar(); } }, n)));
   $app.replaceChildren(shell('Compras', h('div', {}, chips, cont), { volver: () => go('inicio') })); renderBanner(); pintarChips();
-  function pintar() { (modo === 'lista' ? pLista : modo === 'registrar' ? pRegistrar : modo === 'sinfac' ? pSinFactura : pLotes)(); }
+  function pintar() { (modo === 'lista' ? pLista : modo === 'registrar' ? pRegistrar : modo === 'sinfac' ? pSinFactura : modo === 'recib' ? pRecibidas : pLotes)(); }
 
   async function pLista() {
     const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); pLista(); } });
@@ -1899,11 +1901,14 @@ function vistaCompras() {
     let provs = [];
     try { const r = await sb.from('proveedores').select('id,codigo,nombre').eq('activo', true).order('nombre'); if (r.error) throw r.error; provs = r.data; }
     catch (e) { caja.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para registrar compras.' : msgErr(e))); return; }
-    const st = { prov: provs[0] ? provs[0].id : '', fecha: hoy(), doc: '', lineas: [], docs: [] };
+    const st = { prov: provs[0] ? provs[0].id : '', fecha: hoy(), doc: '', lineas: [], docs: [], tc: {} };
+    const tcClave = l => st.prov + '|' + l.producto.id;
+    async function cargarTarifa(l) { const k = tcClave(l); if (k in st.tc) return; st.tc[k] = null; try { const r = await sb.from('tarifas_compra').select('precio,fecha').eq('producto_id', l.producto.id).eq('proveedor_id', st.prov).maybeSingle(); if (!r.error && r.data) { st.tc[k] = r.data; pintarLineas(); } } catch (e) { } }
+    const tarifaTexto = l => { const t = st.tc[tcClave(l)]; return t ? 'Último precio con este proveedor: ' + eur(t.precio) + (t.fecha ? ' (' + fechaES(t.fecha) + ')' : '') : null; };
     const docBox = h('div', {});
     const lineasBox = h('div', {}), prodBox = h('div', {}), provBox = h('div', {});
     function pintarProv() {
-      const sel = h('select', { onchange: e => st.prov = e.target.value }, provs.map(p => h('option', { value: p.id, selected: p.id === st.prov }, p.nombre)));
+      const sel = h('select', { onchange: e => { st.prov = e.target.value; st.lineas.forEach(cargarTarifa); pintarLineas(); } }, provs.map(p => h('option', { value: p.id, selected: p.id === st.prov }, p.nombre)));
       provBox.replaceChildren(h('label', { class: 'campo' }, 'Proveedor', sel), h('button', { class: 'ghost small', style: 'margin-bottom:10px', onclick: async () => {
         const n = prompt('Nombre del nuevo proveedor'); if (!n || !n.trim()) return;
         const r = await sb.from('proveedores').insert({ nombre: n.trim(), codigo: sinTilde(n).replace(/[^a-z0-9]/g, '').toUpperCase().slice(0, 10) || null }).select().single();
@@ -1919,14 +1924,14 @@ function vistaCompras() {
           h('label', { class: 'campo' }, 'Unidad', h('select', { onchange: e => l.unidad = e.target.value }, UNIDADES.map(u => h('option', { value: u, selected: u === l.unidad }, u)))),
           h('label', { class: 'campo' }, 'Origen', h('input', { value: l.origen, placeholder: 'Ej. Almería', oninput: e => l.origen = e.target.value })),
           h('label', { class: 'campo' }, 'Código de lote', h('input', { value: l.lote, oninput: e => l.lote = e.target.value })),
-          h('label', { class: 'campo' }, 'Precio de compra € por ' + l.unidad, h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Opcional', value: l.precio || '', oninput: e => l.precio = e.target.value }))))));
+          h('label', { class: 'campo' }, 'Precio de compra € por ' + l.unidad, h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Opcional', value: l.precio || '', oninput: e => l.precio = e.target.value }), tarifaTexto(l) ? h('div', { class: 'sub', style: 'margin-top:4px' }, tarifaTexto(l), ' ', h('button', { type: 'button', class: 'ghost small', onclick: () => { l.precio = String(st.tc[tcClave(l)].precio).replace('.', ','); pintarLineas(); } }, 'Usar')) : null)))));
     }
     function buscadorProd() {
       const res = h('div', {});
       const inp = h('input', { placeholder: 'Añadir producto comprado…', oninput: debounce(async () => {
         if (!inp.value.trim()) { res.replaceChildren(); return; }
         const r = await buscar('productos', inp.value, true, 10);
-        res.replaceChildren(h('div', { class: 'res' }, r.map(pr => h('button', { onclick: () => { st.lineas.push({ producto: pr, cantidad: '', unidad: pr.unidad_venta, origen: '', lote: codigoLote(pr) }); pintarLineas(); inp.value = ''; res.replaceChildren(); } }, pr.nombre + '  ·  ' + pr.codigo))));
+        res.replaceChildren(h('div', { class: 'res' }, r.map(pr => h('button', { onclick: () => { const nl = { producto: pr, cantidad: '', unidad: pr.unidad_venta, origen: '', lote: codigoLote(pr) }; st.lineas.push(nl); pintarLineas(); cargarTarifa(nl); inp.value = ''; res.replaceChildren(); } }, pr.nombre + '  ·  ' + pr.codigo))));
       }, 250) });
       prodBox.replaceChildren(inp, res);
     }
@@ -1944,6 +1949,7 @@ function vistaCompras() {
       if (c.error) { btn.disabled = false; toast(msgErr(c.error), 'err'); return; }
       const lo = await sb.from('lotes').insert(filas.map(f => Object.assign({ compra_id: c.data.id }, f)));
       if (lo.error) { await sb.from('compras').delete().eq('id', c.data.id); btn.disabled = false; toast(msgErr(lo.error), 'err'); return; }
+      try { const tf = filas.filter(f => f.precio_compra != null && f.precio_compra > 0).map(f => ({ producto_id: f.producto_id, proveedor_id: st.prov, precio: f.precio_compra, fecha: st.fecha, origen: 'app', updated_at: new Date().toISOString() })); if (tf.length) await sb.from('tarifas_compra').upsert(tf, { onConflict: 'producto_id,proveedor_id' }); } catch (e) { }
       let fallos = 0; for (const fi of st.docs) { try { await subirDoc(fi, { fecha: st.fecha || hoy(), prov: st.prov, tipo: 'factura', importe: null, nota: null, compra: c.data.id }); } catch (e) { fallos++; } }
       toast('Compra registrada con ' + filas.length + ' lote(s)' + (st.docs.length ? (fallos ? '. Algún archivo NO se subió: adjúntalo desde «Sin factura».' : ' y ' + st.docs.length + ' archivo(s) adjunto(s)') : ''), fallos ? 'err' : 'ok'); modo = 'lotes'; LS.set('fj_compras_modo', modo); pintarChips(); pintar();
     }
@@ -1962,6 +1968,53 @@ function vistaCompras() {
     pintarProv(); pintarLineas(); pintarDocs(); buscadorProd();
   }
 
+  async function pRecibidas() {
+    const lista = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
+    cont.replaceChildren(h('div', { class: 'aviso-card' }, 'Facturas que han llegado por correo. Elige a qué compra corresponde cada una, o descártala si no es una factura.'), lista);
+    try {
+      const r = await sb.from('facturas_recibidas').select('id,recibido_en,remitente,asunto,ruta,nombre,proveedor_id,proveedores(nombre)').eq('estado', 'nueva').order('recibido_en', { ascending: false }).limit(100);
+      if (r.error) { lista.replaceChildren(h('p', { class: 'err' }, /does not exist|schema cache|Could not find/i.test(r.error.message || '') ? 'Falta ejecutar en Supabase la Parte 27.' : msgErr(r.error))); return; }
+      if (!r.data.length) { lista.replaceChildren(h('p', { class: 'vacio' }, '✔ No hay facturas nuevas por enlazar.')); return; }
+      const provsR = await sb.from('proveedores').select('id,nombre,email').eq('activo', true).order('nombre'); const provs = provsR.data || [];
+      lista.replaceChildren(...r.data.map(f => {
+        const pv = f.proveedores ? uno(f.proveedores) : null;
+        return h('div', { class: 'card' },
+          h('div', { class: 'nombre' }, pv ? pv.nombre : (f.remitente || 'Remitente desconocido')),
+          h('div', { class: 'sub' }, [f.asunto, f.nombre, fechaES(String(f.recibido_en).slice(0, 10)), pv ? null : 'proveedor sin identificar'].filter(Boolean).join(' · ')),
+          h('div', { class: 'fila', style: 'gap:6px;margin-top:6px;justify-content:flex-start;flex-wrap:wrap' },
+            h('button', { class: 'ghost small', onclick: () => verDocumento(f.ruta) }, '👁 Ver'),
+            h('button', { class: 'small', onclick: () => enlazarRecibida(f, provs, pv) }, 'Enlazar con una compra'),
+            h('button', { class: 'ghost small', onclick: async () => { if (!await confirmar('¿Descartar este archivo? Dejará de aparecer en la bandeja.')) return; const x = await sb.from('facturas_recibidas').update({ estado: 'descartada' }).eq('id', f.id); if (x.error) toast(msgErr(x.error), 'err'); else pRecibidas(); } }, 'Descartar')));
+      }));
+    } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+  }
+  async function enlazarRecibida(f, provs, pv) {
+    let provId = f.proveedor_id || (provs[0] ? provs[0].id : ''); let recordar = !pv && !!f.remitente;
+    const caja = h('div', {});
+    async function pintarCompras() {
+      caja.replaceChildren(h('p', { class: 'vacio' }, 'Cargando compras…'));
+      const d = hoy(new Date(Date.now() - 120 * 86400000));
+      const r = await sb.from('compras').select('id,fecha,numero_documento,proveedor_id,proveedores(nombre),documentos_compra(id,archivado)').eq('proveedor_id', provId).gte('fecha', d).order('fecha', { ascending: false }).limit(60);
+      if (r.error) { caja.replaceChildren(h('p', { class: 'err' }, msgErr(r.error))); return; }
+      caja.replaceChildren(...(r.data.length ? r.data.map(c => h('button', { class: 'card tap', style: 'width:100%;text-align:left', onclick: () => confirmarEnlace(c) },
+        h('div', { class: 'nombre' }, fechaES(c.fecha) + (c.numero_documento ? ' · Nº ' + c.numero_documento : '')), h('div', { class: 'sub' }, (c.documentos_compra || []).some(x => !x.archivado) ? 'ya tiene otra factura adjunta' : 'sin factura adjunta')))
+        : [h('p', { class: 'vacio' }, 'No hay compras de este proveedor en los últimos 4 meses. Regístrala en «Registrar compra» y vuelve aquí.')]));
+    }
+    async function confirmarEnlace(c) {
+      const i = await sb.from('documentos_compra').insert({ fecha: c.fecha, proveedor_id: provId, compra_id: c.id, tipo: 'factura', ruta: f.ruta, nombre: f.nombre });
+      if (i.error) { toast(msgErr(i.error), 'err'); return; }
+      const u = await sb.from('facturas_recibidas').update({ estado: 'enlazada', compra_id: c.id, proveedor_id: provId }).eq('id', f.id);
+      if (u.error) { toast(msgErr(u.error), 'err'); return; }
+      if (recordar && f.remitente) await sb.from('proveedores').update({ email: f.remitente }).eq('id', provId);
+      ov.remove(); toast('Factura enlazada con la compra', 'ok'); pRecibidas();
+    }
+    const sel = h('select', { onchange: e => { provId = e.target.value; pintarCompras(); } }, provs.map(p => h('option', { value: p.id, selected: p.id === provId }, p.nombre)));
+    const ov = h('div', { class: 'overlay' }, h('div', { class: 'sheet', style: 'max-height:92vh;overflow:auto' }, h('h2', {}, 'Enlazar factura'),
+      h('div', { class: 'sub' }, [f.remitente, f.asunto].filter(Boolean).join(' · ')), h('label', { class: 'campo' }, 'Proveedor', sel),
+      f.remitente && !pv ? h('label', { class: 'fila', style: 'gap:8px;justify-content:flex-start;margin-bottom:8px' }, h('input', { type: 'checkbox', checked: true, onchange: e => { recordar = e.target.checked; } }), h('span', { class: 'sub' }, 'Recordar ' + f.remitente + ' para este proveedor')) : null,
+      h('div', { class: 'sub', style: 'margin-bottom:6px' }, 'Toca la compra a la que corresponde:'), caja, h('button', { class: 'ghost', onclick: () => ov.remove() }, 'Cancelar')));
+    document.body.append(ov); pintarCompras();
+  }
   async function pSinFactura() {
     const lista = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); cont.replaceChildren(h('div', { class: 'aviso-card' }, 'Compras de los últimos 90 días que todavía no tienen factura o albarán del proveedor adjunto.'), lista);
     try {
