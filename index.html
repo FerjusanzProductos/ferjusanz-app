@@ -209,7 +209,17 @@ function crearSbPractica(){
   };
   const __j=JSON.parse(localStorage.getItem('p_stub_db')||'null'); const __saved=(__j&&__j.dia===H())?__j:null;
   const DB = window.__DB = __saved || __init; DB.dia=H(); DB.carga_lineas=DB.carga_lineas||[]; DB.sobrante=DB.sobrante||[]; DB.mensajes=DB.mensajes||[]; DB.fichajes=DB.fichajes||[]; DB.fotos_perfil=DB.fotos_perfil||[]; DB.cobros=DB.cobros||[]; DB.proveedores=DB.proveedores||[]; DB.compras=DB.compras||[]; DB.lotes=DB.lotes||[]; DB.asignaciones_lote=DB.asignaciones_lote||[]; DB.entregas=DB.entregas||[]; DB.incidencias=DB.incidencias||[]; DB.documentos_compra=DB.documentos_compra||[]; DB.facturas_recibidas=DB.facturas_recibidas||[]; DB.avisos=DB.avisos||[]; DB.pedidos_habituales=DB.pedidos_habituales||[]; DB.lineas_habituales=DB.lineas_habituales||[];
-  const save=()=>localStorage.setItem('p_stub_db',JSON.stringify(DB));
+  const gv=(r,k)=>{if(k.includes('->>')){const [a,b]=k.split('->>');return r[a]?r[a][b]:undefined;}return r[k];};
+  DB.historial=DB.historial||[];
+  const AUD=['lineas_pedido','pedidos','albaranes','asignaciones_lote','cobros','productos','clientes'];
+  const snapNow=()=>{const o={};AUD.forEach(t=>{o[t]=new Map((DB[t]||[]).map(r=>[r.id,JSON.stringify(r)]));});return o;};
+  let __snap=snapNow();
+  const auditar=()=>{const now=new Date().toISOString();const add=(t,id,acc,a,d)=>DB.historial.push({id:'h'+DB.historial.length+Math.random().toString(36).slice(2,5),tabla:t,registro_id:id,accion:acc,usuario:'u1',fecha:now,antes:a,despues:d});
+    AUD.forEach(t=>{const prev=__snap[t],cur=new Map((DB[t]||[]).map(r=>[r.id,r]));
+      cur.forEach((r,id)=>{if(!prev.has(id))add(t,id,'INSERT',null,JSON.parse(JSON.stringify(r)));else if(prev.get(id)!==JSON.stringify(r))add(t,id,'UPDATE',JSON.parse(prev.get(id)),JSON.parse(JSON.stringify(r)));});
+      prev.forEach((sv,id)=>{if(!cur.has(id))add(t,id,'DELETE',JSON.parse(sv),null);});});
+    __snap=snapNow();};
+  const save=()=>{auditar();localStorage.setItem('p_stub_db',JSON.stringify(DB));};
   const hoy=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
   if(!__saved){save();}
   DB.perfiles[0].nombre=cfg.nombre||DB.perfiles[0].nombre; DB.perfiles[0].rol=cfg.rol||DB.perfiles[0].rol; save();
@@ -243,12 +253,12 @@ function crearSbPractica(){
     insert(p){this.op='insert';this.payload=p;return this;}
     update(p){this.op='update';this.payload=p;return this;}
     delete(){this.op='delete';return this;}
-    eq(k,v){this.f.push(r=>r[k]===v);return this;}
+    eq(k,v){this.f.push(r=>gv(r,k)===v);return this;}
     neq(k,v){this.f.push(r=>r[k]!==v);return this;}
     ilike(k,v){const t=String(v).replace(/%/g,'').toLowerCase();this.f.push(r=>String(r[k]||'').toLowerCase().includes(t));return this;}
     not(k,op,v){this.f.push(r=>op==='is'&&v===null?r[k]!=null:r[k]!==v);return this;}
     or(s){const parts=s.split(',').map(x=>x.split('.'));const txt=parts[0][2].replace(/%/g,'').toLowerCase();this.f.push(r=>parts.some(p=>String(r[p[0]]||'').toLowerCase().includes(txt)));return this;}
-    in(k,vs){this.f.push(r=>vs.includes(r[k]));return this;}
+    in(k,vs){this.f.push(r=>vs.includes(gv(r,k)));return this;}
     is(k,v){this.f.push(r=>(r[k]==null)===(v===null));return this;}
     lt_(){return this;}
     gt(k,v){this.f.push(r=>r[k]>v);return this;}
@@ -311,7 +321,7 @@ function crearSbPractica(){
       DB.asignaciones_lote=DB.asignaciones_lote.filter(x=>!ls.some(l=>l.id===x.linea_id));(a.p_asignaciones||[]).forEach(x=>DB.asignaciones_lote.push({id:'as'+Math.random().toString(36).slice(2,8),linea_id:x.linea_id,lote_id:x.lote_id,cantidad:x.cantidad}));const al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);al.traza_estado='confirmada';al.traza_motivo=mot;DB.log.push({accion:'CORREGIR_TRAZABILIDAD',motivo:mot});return null;},
     terminar_pedido(a){const ls=DB.lineas_pedido.filter(l=>l.pedido_id===a.p_pedido);if(ls.some(l=>l.estado==='pendiente'))throw new Error('LINEAS_PENDIENTES');
       DB.pedidos.find(p=>p.id===a.p_pedido).estado='terminado';let al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);
-      if(!al){al={pedido_id:a.p_pedido,serie:'F',numero:DB.seq++,fecha:hoy(),estado:'emitido'};DB.albaranes.push(al);}return al.numero;}
+      if(!al){al={id:'al'+Math.random().toString(36).slice(2,7),pedido_id:a.p_pedido,serie:'F',numero:DB.seq++,fecha:hoy(),estado:'emitido',created_at:new Date().toISOString()};DB.albaranes.push(al);}return al.numero;}
   };
   let session={user:{id:'u1',email:'practicas@local'}};
   return {
@@ -390,7 +400,7 @@ function isNetErr(e) {
 const esOficina = () => !!state.perfil && ['oficina', 'admin'].includes(state.perfil.rol);
 const ESTADO = { pendiente: 'Pendiente', en_preparacion: 'En preparación', terminado: 'Terminado', anulado: 'Anulado' };
 const CLASE_ESTADO = { pendiente: 'pend', en_preparacion: 'prep', terminado: 'fin', anulado: 'pend' };
-const VISTAS_MAS_OLD = ['mas', 'clientes', 'cliente', 'catalogo', 'compras', 'traza', 'perfil', 'fichajes', 'entregas', 'calendario', 'incidencias', 'precios', 'facturas', 'resumen', 'archivo', 'avisos', 'ruta', 'rentabilidad'];
+const VISTAS_MAS_OLD = ['mas', 'clientes', 'cliente', 'catalogo', 'compras', 'traza', 'perfil', 'fichajes', 'entregas', 'calendario', 'incidencias', 'precios', 'facturas', 'resumen', 'archivo', 'avisos', 'ruta', 'rentabilidad', 'registro', 'quien'];
 const puedeCompras = () => !!state.perfil && ['compras', 'oficina', 'admin'].includes(state.perfil.rol);
 const UNIDADES = ['kg', 'pieza', 'caja', 'saco', 'bolsa', 'bandeja', 'manojo'];
 const limpiaBusqueda = s => String(s).replace(/[,()%*\\]/g, ' ').trim();
@@ -723,7 +733,7 @@ function pintarPedido() {
   if (esOficina() && estado !== 'terminado' && estado !== 'anulado') acciones.push(h('button', { class: 'ghost', onclick: () => go('importar', { anadir: d.pedido.id }) }, '➕ Añadir productos (texto, voz o foto)'));
   if (esOficina()) acciones.push(h('button', { class: 'ghost', onclick: async () => { if (!await confirmar('¿Archivar este pedido? Dejará de verse en las listas.')) return; const r = await sb.from('pedidos').update({ archivado: true }).eq('id', d.pedido.id); if (r.error) toast(msgErr(r.error), 'err'); else { toast('Pedido archivado', 'ok'); go('lista'); } } }, 'Archivar pedido'));
   kids.push(h('div', { style: 'display:flex;flex-direction:column;gap:10px;margin-top:14px' }, acciones));
-  cont.replaceChildren(...kids); waMostrarOrigen(cont, d.pedido.id);
+  kids.push(bloqueHistorial(d)); cont.replaceChildren(...kids.filter(Boolean)); waMostrarOrigen(cont, d.pedido.id);
 }
 function abrirLinea(l) {
   state.sheetAbierta = true;
@@ -1748,9 +1758,10 @@ function vistaMas() {
     ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null),
     ...g('Compras y mercancía', puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, puedeCompras() ? c('💶', 'Precios de compra', () => go('precios'), A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
-      esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
+      esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
   k.push(h('button', { class: 'peligro', style: 'width:100%;margin-top:20px', onclick: salir }, 'Cerrar sesión'));
   $app.replaceChildren(shell('Inicio', h('div', {}, ...k))); renderBanner();
+  if (esOficina() && navigator.onLine) cuentaCambiosTras().then(n => { if (!n || state.view !== 'inicio') return; const b = [...document.querySelectorAll('.circ')].find(x => /Registro de cambios/.test(x.textContent)); if (b) { const sp = b.querySelector('.c'); if (sp && !sp.querySelector('.insig')) sp.append(h('span', { class: 'insig' }, String(n > 99 ? '99+' : n))); b.onclick = () => go('registro', { grupo: 'tras' }); } }).catch(() => { });
 }
 
 /* =====================  COBROS  ===================== */
@@ -2135,6 +2146,177 @@ function vistaQuien() {
   cargar();
 }
 
+/* =====================  REGISTRO DE CAMBIOS  ===================== */
+const IGN_REG = ['updated_at', 'version', 'created_at', 'preparado_en', 'preparado_por', 'traza_at', 'traza_por', 'creado_por', 'subido_por', 'id'];
+const ETQ_REG = { peso_real: 'peso', cantidad_pedida: 'cantidad', unidad_pedida: 'unidad', precio: 'precio', estado: 'estado', notas: 'notas', fecha_entrega: 'fecha de entrega', archivado: 'archivado', activo: 'activo', cantidad: 'cantidad', traza_estado: 'trazabilidad', traza_motivo: 'motivo', importe: 'importe', forma: 'forma de pago', nombre: 'nombre', nombre_comercial: 'nombre comercial', iva: 'IVA', precio_compra: 'precio de compra', telefono: 'teléfono', email: 'correo' };
+const EST_REG = { pendiente: 'pendiente', en_preparacion: 'en preparación', terminado: 'terminado', anulado: 'anulado', hecha: 'hecha', parcial: 'parcial', no_disponible: 'no disponible', confirmada: 'confirmada', sin_trazabilidad: 'sin trazabilidad', emitido: 'emitido' };
+const TABLA_REG = { productos: 'el producto', clientes: 'el cliente', tarifas: 'un precio de venta', tarifas_compra: 'un precio de compra', lotes: 'una compra (lote)', compras: 'una compra', entregas: 'una entrega', incidencias: 'una incidencia', perfiles: 'un usuario', proveedores: 'un proveedor', facturas_recibidas: 'una factura recibida', documentos_compra: 'una factura de compra', cobros: 'un cobro', pedidos: 'un pedido', albaranes: 'un albarán', asignaciones_lote: 'el origen de un producto', lineas_pedido: 'una línea de pedido' };
+const GRUPOS_REG = [['todo', 'Todo'], ['peso', 'Pesos y cantidades'], ['precio', 'Precios'], ['albaran', 'Albaranes y trazabilidad'], ['cobro', 'Cobros'], ['tras', '⚠ Tras terminar']];
+const TABLAS_GRUPO = { peso: ['lineas_pedido', 'pedidos'], precio: ['lineas_pedido', 'tarifas', 'tarifas_compra', 'lotes', 'productos'], albaran: ['albaranes', 'asignaciones_lote'], cobro: ['cobros'], tras: ['lineas_pedido', 'pedidos'] };
+function difReg(r) {
+  const a = r.antes || {}, d = r.despues || {}; const ks = new Set([...Object.keys(a), ...Object.keys(d)]); const out = [];
+  ks.forEach(k => { if (IGN_REG.includes(k)) return; if (JSON.stringify(a[k]) === JSON.stringify(d[k])) return; out.push({ k, a: a[k], d: d[k] }); });
+  return out;
+}
+function fvReg(k, v) {
+  if (v == null || v === '') return 'vacío'; if (typeof v === 'boolean') return v ? 'sí' : 'no';
+  if (k === 'estado' || k === 'traza_estado') return EST_REG[v] || v; if (k === 'fecha_entrega') return fechaES(v);
+  if (['precio', 'precio_compra', 'importe'].includes(k)) return eur(v);
+  if (/_id$/.test(k)) return '…'; if (typeof v === 'number' || /^-?\d+(\.\d+)?$/.test(String(v))) return num(v);
+  return String(v).slice(0, 80);
+}
+const detReg = (dif, ks) => dif.filter(x => !ks || ks.includes(x.k)).map(x => (ETQ_REG[x.k] || x.k) + ': ' + fvReg(x.k, x.a) + ' → ' + fvReg(x.k, x.d)).join(' · ');
+function descReg(r, X) {
+  const a = r.antes || {}, d = r.despues || {}, b = Object.assign({}, a, d), A = r.accion, dif = difReg(r);
+  const prod = X.prod[b.producto_id] || (X.lin[b.linea_id] && X.prod[X.lin[b.linea_id].producto_id]) || 'un producto';
+  const cliDe = pid => X.cli[pid] || 'un cliente';
+  let t = '', det = '', g = 'otro', ok = true, pedido = null;
+  if (!['INSERT', 'UPDATE', 'DELETE'].includes(A)) {
+    t = A === 'CORREGIR_TRAZABILIDAD' ? 'corrigió la trazabilidad de un albarán' : A === 'ANOTAR_LOTE' ? 'anotó a quién se compró un producto' : A.toLowerCase().replace(/_/g, ' ');
+    det = d.motivo ? 'Motivo: ' + d.motivo : ''; g = 'albaran'; pedido = r.tabla === 'albaranes' ? (X.alb[r.registro_id] || {}).pedido_id : (r.tabla === 'lineas_pedido' ? (X.lin[r.registro_id] || {}).pedido_id : null);
+    if (r.tabla === 'lineas_pedido' && X.lin[r.registro_id]) t += ' (' + (X.prod[X.lin[r.registro_id].producto_id] || '') + ' de ' + cliDe(X.lin[r.registro_id].pedido_id) + ')';
+    return { t, det, g, ok, pedido };
+  }
+  switch (r.tabla) {
+    case 'lineas_pedido': {
+      const cli = cliDe(b.pedido_id); pedido = b.pedido_id; g = 'peso';
+      if (A === 'INSERT') t = 'añadió ' + prod + ' (' + num(b.cantidad_pedida) + ' ' + (b.unidad_pedida || '') + ') al pedido de ' + cli;
+      else if (A === 'DELETE') t = 'quitó ' + prod + ' del pedido de ' + cli;
+      else { const c = dif.filter(x => ['peso_real', 'cantidad_pedida', 'unidad_pedida', 'precio', 'estado', 'notas'].includes(x.k)); if (!c.length) { ok = false; break; }
+        t = 'cambió ' + prod + ' del pedido de ' + cli; det = detReg(c); g = c.every(x => x.k === 'precio') ? 'precio' : 'peso'; }
+      break; }
+    case 'pedidos': {
+      const cli = cliDe(b.id); pedido = b.id; g = 'peso';
+      if (A === 'INSERT') t = 'creó el pedido de ' + cli;
+      else if (A === 'DELETE') t = 'eliminó el pedido de ' + cli;
+      else { const c = dif.filter(x => ['estado', 'fecha_entrega', 'notas', 'cliente_id', 'archivado'].includes(x.k)); if (!c.length) { ok = false; break; }
+        const est = c.find(x => x.k === 'estado'); t = est && est.d === 'terminado' ? 'terminó el pedido de ' + cli : est && est.d === 'anulado' ? 'anuló el pedido de ' + cli : 'cambió el pedido de ' + cli;
+        det = detReg(c.map(x => x.k === 'cliente_id' ? { k: 'cliente_id', a: 'otro', d: 'otro' } : x)); if (c.some(x => x.k === 'cliente_id')) det = (det ? det + ' · ' : '') + 'cambió el cliente'; }
+      break; }
+    case 'albaranes': {
+      g = 'albaran'; pedido = b.pedido_id; const num_ = (b.serie || '') + ' ' + (b.numero || '');
+      if (A === 'INSERT') t = 'creó el albarán ' + num_ + ' de ' + cliDe(b.pedido_id);
+      else if (A === 'DELETE') t = 'eliminó el albarán ' + num_;
+      else { const c = dif.filter(x => ['estado', 'traza_estado', 'traza_motivo'].includes(x.k)); if (!c.length) { ok = false; break; } t = 'cambió el albarán ' + num_ + ' de ' + cliDe(b.pedido_id); det = detReg(c); }
+      break; }
+    case 'asignaciones_lote': {
+      g = 'albaran'; const li = X.lin[b.linea_id] || {}; pedido = li.pedido_id; const lo = X.lote[b.lote_id]; const quien = lo ? lo.prov || lo.codigo : 'un proveedor';
+      const sobre = prod + ' de ' + cliDe(li.pedido_id);
+      if (A === 'INSERT') t = 'anotó que ' + sobre + ' viene de ' + quien; else if (A === 'DELETE') t = 'quitó el origen de ' + sobre;
+      else { const c = dif.filter(x => ['cantidad', 'lote_id'].includes(x.k)); if (!c.length) { ok = false; break; } t = 'cambió el origen de ' + sobre; det = c.map(x => x.k === 'lote_id' ? 'cambió de lote' : 'cantidad: ' + num(x.a) + ' → ' + num(x.d)).join(' · '); }
+      break; }
+    case 'cobros': {
+      g = 'cobro'; const cli = X.cliId[b.cliente_id] || 'un cliente';
+      t = A === 'INSERT' ? 'cobró ' + eur(b.importe) + ' a ' + cli : A === 'DELETE' ? 'eliminó el cobro de ' + eur(b.importe) + ' de ' + cli : 'cambió un cobro de ' + cli; if (A === 'UPDATE') det = detReg(dif);
+      break; }
+    default: {
+      const nom = b.nombre_comercial || b.nombre || b.codigo || ''; const que = (TABLA_REG[r.tabla] || 'un registro de ' + r.tabla) + (nom ? ' «' + nom + '»' : '');
+      g = ['tarifas', 'tarifas_compra'].includes(r.tabla) ? 'precio' : 'otro';
+      if (A === 'INSERT') t = 'creó ' + que; else if (A === 'DELETE') t = 'eliminó ' + que; else { if (!dif.length) { ok = false; break; } t = 'cambió ' + que; det = detReg(dif);
+        if (dif.some(x => ['precio', 'precio_compra', 'iva'].includes(x.k))) g = 'precio'; }
+    }
+  }
+  return { t, det, g, ok, pedido };
+}
+async function contextoReg(rows) {
+  const X = { prod: {}, cli: {}, cliId: {}, lin: {}, lote: {}, alb: {}, perf: {} };
+  const ids = k => [...new Set(rows.map(r => Object.assign({}, r.antes || {}, r.despues || {})).map(b => b[k]).filter(Boolean))];
+  const peds = new Set([...ids('pedido_id'), ...rows.filter(r => r.tabla === 'pedidos').map(r => r.registro_id)]);
+  const linIds = new Set([...ids('linea_id'), ...rows.filter(r => r.tabla === 'lineas_pedido' && !['INSERT', 'UPDATE', 'DELETE'].includes(r.accion)).map(r => r.registro_id)]);
+  const q = async (p) => { try { const r = await p; return r.error ? [] : (r.data || []); } catch (e) { return []; } };
+  const [lins, per] = await Promise.all([linIds.size ? q(sb.from('lineas_pedido').select('id,producto_id,pedido_id').in('id', [...linIds])) : [], q(sb.from('perfiles').select('id,nombre'))]);
+  lins.forEach(l => { X.lin[l.id] = l; peds.add(l.pedido_id); }); per.forEach(p => X.perf[p.id] = p.nombre);
+  const pids = new Set([...ids('producto_id'), ...lins.map(l => l.producto_id)]);
+  const [prs, pds, los, cls, als] = await Promise.all([
+    pids.size ? q(sb.from('productos').select('id,nombre').in('id', [...pids])) : [],
+    peds.size ? q(sb.from('pedidos').select('id,clientes(codigo,nombre,nombre_comercial)').in('id', [...peds])) : [],
+    ids('lote_id').length ? q(sb.from('lotes').select('id,codigo_lote,compras(proveedores(nombre))').in('id', ids('lote_id'))) : [],
+    ids('cliente_id').length ? q(sb.from('clientes').select('id,nombre,nombre_comercial').in('id', ids('cliente_id'))) : [],
+    peds.size ? q(sb.from('albaranes').select('id,pedido_id,created_at').in('pedido_id', [...peds])) : []]);
+  prs.forEach(p => X.prod[p.id] = p.nombre); pds.forEach(p => X.cli[p.id] = nombreCli(uno(p.clientes)) || 'un cliente');
+  los.forEach(l => { const c = uno(l.compras) || {}; const pv = c.proveedores ? uno(c.proveedores) : null; X.lote[l.id] = { codigo: l.codigo_lote, prov: pv ? pv.nombre : '' }; });
+  cls.forEach(c => X.cliId[c.id] = nombreCli(c)); als.forEach(a => { X.alb[a.id] = a; (X.albPed = X.albPed || {})[a.pedido_id] = a; });
+  return X;
+}
+function filasReg(rows, X, opt) {
+  opt = opt || {}; const out = []; let dia = '';
+  rows.forEach(r => {
+    const dsc = descReg(r, X); if (!dsc.ok) return;
+    if (opt.tras) { const al = (X.albPed || {})[dsc.pedido]; if (!al || new Date(r.fecha) - new Date(al.created_at) < 2000) return; if (dsc.g !== 'peso' && dsc.g !== 'precio') return; }
+    if (opt.grupo && opt.grupo !== 'todo' && opt.grupo !== 'tras' && dsc.g !== opt.grupo) return;
+    out.push({ r, dsc });
+  });
+  return out;
+}
+function pintarFilasReg(filas, X, vacio) {
+  if (!filas.length) return [h('p', { class: 'vacio' }, vacio || 'No hay cambios con estos filtros.')];
+  const kids = []; let dia = '';
+  filas.forEach(({ r, dsc }) => {
+    const f = new Date(r.fecha); const d = fechaES(hoy(f)); if (d !== dia) { dia = d; kids.push(h('div', { class: 'grupo' }, d)); }
+    const quien = X.perf[r.usuario] || (r.usuario ? 'Alguien' : 'El sistema');
+    kids.push(h('div', { class: 'card', style: 'padding:8px 10px;margin-bottom:6px' },
+      h('div', { class: 'fila' }, h('div', { style: 'font-weight:600' }, quien), h('div', { class: 'sub' }, f.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }))),
+      h('div', {}, dsc.t), dsc.det ? h('div', { class: 'sub' }, dsc.det) : null));
+  });
+  return kids;
+}
+async function vistaRegistro() {
+  state.view = 'registro';
+  if (!esOficina()) { go('inicio'); return; }
+  let grupo = LS.get('fj_reg_grupo', 'todo'); if (state.params && state.params.grupo) grupo = state.params.grupo;
+  let dias = 1, persona = '', tope = 120;
+  const chips = h('div', { class: 'chips' }), filtros = h('div', {}), lista = h('div', {});
+  $app.replaceChildren(shell('Registro de cambios', h('div', {}, h('div', { class: 'aviso-card' }, 'Aquí queda anotado quién cambió qué y cuándo (pesos, precios, albaranes, trazabilidad, cobros…). No se puede borrar desde la app.'), chips, filtros, lista), { volver: () => go('inicio') })); renderBanner();
+  const pintarChips = () => chips.replaceChildren(...GRUPOS_REG.map(([m, n]) => h('button', { class: 'chip' + (grupo === m ? ' on' : ''), onclick: () => { grupo = m; LS.set('fj_reg_grupo', m); tope = 120; pintarChips(); cargar(); } }, n)));
+  const selDias = h('select', { onchange: e => { dias = Number(e.target.value); tope = 120; cargar(); } }, ...[[1, 'Hoy'], [2, 'Ayer y hoy'], [7, 'Últimos 7 días'], [30, 'Últimos 30 días']].map(([v, n]) => h('option', { value: v }, n)));
+  const selPers = h('select', { onchange: e => { persona = e.target.value; tope = 120; cargar(); } }, h('option', { value: '' }, 'Todas las personas'));
+  filtros.replaceChildren(h('div', { class: 'fila', style: 'gap:6px' }, selDias, selPers));
+  try { const p = await sb.from('perfiles').select('id,nombre').eq('activo', true); (p.data || []).forEach(x => selPers.append(h('option', { value: x.id }, x.nombre))); } catch (e) { }
+  pintarChips();
+  async function cargar() {
+    lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+    try {
+      const desde = new Date(new Date(hoy() + 'T00:00:00').getTime() - (dias - 1) * 86400000).toISOString();
+      let q = sb.from('historial').select('id,tabla,registro_id,accion,usuario,fecha,antes,despues').gte('fecha', desde).order('fecha', { ascending: false }).limit(1500);
+      if (persona) q = q.eq('usuario', persona); if (TABLAS_GRUPO[grupo]) q = q.in('tabla', TABLAS_GRUPO[grupo]);
+      const r = await q; if (r.error) throw r.error;
+      const X = await contextoReg(r.data);
+      const filas = filasReg(r.data, X, { grupo, tras: grupo === 'tras' });
+      const ver = filas.slice(0, tope);
+      lista.replaceChildren(...pintarFilasReg(ver, X, grupo === 'tras' ? '✔ Nadie ha cambiado nada en pedidos ya terminados en este periodo.' : null),
+        ...(filas.length > tope ? [h('button', { class: 'ghost', style: 'width:100%', onclick: () => { tope += 120; cargar(); } }, 'Ver más (' + (filas.length - tope) + ')')] : []));
+    } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+  }
+  cargar();
+}
+async function cuentaCambiosTras() {
+  const desde = new Date(Date.now() - 2 * 86400000).toISOString();
+  const r = await sb.from('historial').select('id,tabla,registro_id,accion,usuario,fecha,antes,despues').gte('fecha', desde).in('tabla', ['lineas_pedido', 'pedidos']).order('fecha', { ascending: false }).limit(1500);
+  if (r.error) return 0; const X = await contextoReg(r.data); return filasReg(r.data, X, { tras: true }).length;
+}
+function bloqueHistorial(d) {
+  if (!esOficina()) return null;
+  const caja = h('div', {}); let abierto = state.histPed === d.pedido.id;
+  const btn = h('button', { class: 'ghost small', style: 'width:100%;margin-top:14px', onclick: () => { abierto = !abierto; state.histPed = abierto ? d.pedido.id : null; pintar(); } });
+  async function pintar() {
+    btn.textContent = abierto ? 'Ocultar historial de cambios' : '📝 Ver historial de cambios de este pedido';
+    if (!abierto) { caja.replaceChildren(); return; }
+    caja.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+    try {
+      const idsL = (d.lineas || []).map(l => l.id), base = [d.pedido.id, ...idsL, ...(d.albaran ? [d.albaran.id] : [])];
+      const sel = 'id,tabla,registro_id,accion,usuario,fecha,antes,despues';
+      const rs = await Promise.all([sb.from('historial').select(sel).in('registro_id', base), idsL.length ? sb.from('historial').select(sel).in('despues->>linea_id', idsL) : { data: [] }, idsL.length ? sb.from('historial').select(sel).in('antes->>linea_id', idsL) : { data: [] }]);
+      const err = rs.find(x => x.error); if (err) throw err.error;
+      const mapa = new Map(); rs.forEach(x => (x.data || []).forEach(f => mapa.set(f.id, f)));
+      const rows = [...mapa.values()].sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+      const X = await contextoReg(rows); const filas = filasReg(rows, X, {});
+      caja.replaceChildren(...pintarFilasReg(filas, X, 'Este pedido no tiene cambios anotados todavía.'));
+    } catch (e) { caja.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+  }
+  pintar();
+  return h('div', {}, btn, caja);
+}
+
 /* =====================  TRAZABILIDAD  ===================== */
 function vistaTraza() {
   state.view = 'traza';
@@ -2209,7 +2391,7 @@ function vistaTraza() {
       btn.onclick = async () => { btn.disabled = true; let ok = 0;
         for (const p of pedidos.filter(pedOk)) { const ls = (p.lineas_pedido || []).filter(l => lineaIds.has(l.id));
           const asig = []; ls.forEach(l => (elec[l.id] || []).forEach(e => asig.push({ linea_id: l.id, lote_id: e.lote_id, cantidad: e.cantidad })));
-          const rr = await sb.rpc('corregir_trazabilidad', { p_pedido: p.id, p_asignaciones: asig, p_motivo: 'Reparto del día' });
+          const rr = await sb.rpc('corregir_trazabilidad', { p_pedido: p.id, p_asignaciones: asig, p_motivo: 'Confirmación de trazabilidad por la oficina' });
           if (rr.error) { toast(msgErr(rr.error), 'err'); btn.disabled = false; if (ok) pPend(); return; } ok++; }
         toast('Reparto confirmado en ' + ok + (ok === 1 ? ' albarán' : ' albaranes'), 'ok'); pPend(); };
       resumir();
@@ -4297,7 +4479,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v();
 }
 function tick() {
