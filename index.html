@@ -476,7 +476,22 @@ function renderBanner() {
 }
 
 /* =====================  ESTRUCTURA COMÚN  ===================== */
-function go(view, params) { state.view = view; state.params = params || {}; render(); window.scrollTo(0, 0); }
+/* Navegación con historial: el botón «atrás» del móvil y el «← Volver» funcionan en todas las pantallas */
+const NAV = { d: 0 };
+function navSnap(d) { let p = {}; try { p = JSON.parse(JSON.stringify(state.params || {})); } catch (e) { } return { v: state.view, p, d }; }
+function go(view, params, opts) {
+  const mismo = view === state.view && JSON.stringify(params || {}) === JSON.stringify(state.params || {});
+  state.view = view; state.params = params || {};
+  try { if (mismo || (opts && opts.replace)) history.replaceState(navSnap(NAV.d), ''); else { NAV.d++; history.pushState(navSnap(NAV.d), ''); } } catch (e) { }
+  render(); window.scrollTo(0, 0);
+}
+function atras(fallback) { if (NAV.d > 0) history.back(); else if (fallback) fallback(); else go('inicio', {}, { replace: true }); }
+window.addEventListener('popstate', e => {
+  const ov = document.querySelector('.overlay');
+  if (ov) { ov.remove(); state.sheetAbierta = false; try { history.pushState(navSnap(NAV.d), ''); } catch (x) { } return; }
+  const s = e.state; if (!s || !s.v) { NAV.d = 0; state.view = 'inicio'; state.params = {}; } else { NAV.d = s.d || 0; state.view = s.v; state.params = s.p || {}; }
+  render(); window.scrollTo(0, 0);
+});
 const VISTAS_HUB = ['lista', 'carga', 'entregas', 'calendario', 'ruta', 'nuevo', 'importar'];
 const VISTAS_PEDIDOS = VISTAS_HUB.concat(['pedido', 'albaran']);
 function tabsRol() { return [['inicio', 'Inicio'], ['lista', 'Preparar'], ['carga', 'Carga'], ['cobros', 'Cobros']]; }
@@ -495,7 +510,7 @@ function shell(titulo, contenido, opts) {
   if (VISTAS_HUB.includes(state.view)) contenido = h('div', {}, chipsHub(), contenido);
   return h('div', { class: 'shell' },
     h('header', {},
-      opts.volver ? h('button', { class: 'back', onclick: opts.volver }, '← Volver') : h('span', { class: 'logo' }, 'Ferjusanz'),
+      (opts.volver || state.view !== 'inicio') ? h('button', { class: 'back', onclick: opts.volver || (() => atras()) }, '← Volver') : h('span', { class: 'logo' }, 'Ferjusanz'),
       h('span', { class: 'tit' }, titulo || ''),
       h('button', { class: 'chatbtn', title: 'Buscar', onclick: () => go('buscar') }, '🔍'),
       h('button', { class: 'chatbtn', title: 'Chat del equipo', onclick: () => go('chat') }, '💬', h('span', { id: 'chatBadge', class: 'insig' }, state.chatNoLeidos ? String(state.chatNoLeidos) : '')),
@@ -4200,6 +4215,7 @@ async function init() {
   }
   try { const { data } = await sb.auth.getSession(); if (data && data.session) await cargarPerfil(data.session.user); } catch (e) { }
   aplicarCompartido(); render(); cargarGente();
+  try { history.replaceState(navSnap(0), ''); } catch (e) { }
   sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') { state.user = null; state.perfil = null; render(); } });
   window.addEventListener('online', () => { renderBanner(); sincronizar(); sincronizarCarga(); sincronizarFichaje(); sincronizarCobros(); sincronizarEntregas(); sincronizarInc(); refrescarVista(); });
   window.addEventListener('offline', renderBanner);
