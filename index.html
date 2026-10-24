@@ -324,6 +324,9 @@ function crearSbPractica(){
       DB.asignaciones_lote=DB.asignaciones_lote.filter(x=>x.linea_id!==l.id);if(a.p_lote)DB.asignaciones_lote.push({id:'as'+Math.random().toString(36).slice(2,8),linea_id:l.id,lote_id:a.p_lote,cantidad:l.unidad_precio==='kg'?(l.peso_real||0):l.cantidad_pedida});return null;},
     corregir_trazabilidad(a){const mot=(a.p_motivo||'').trim();if(!mot)throw new Error('MOTIVO_OBLIGATORIO');const ls=DB.lineas_pedido.filter(l=>l.pedido_id===a.p_pedido);this._vtz(a.p_pedido,a.p_asignaciones||[]);
       DB.asignaciones_lote=DB.asignaciones_lote.filter(x=>!ls.some(l=>l.id===x.linea_id));(a.p_asignaciones||[]).forEach(x=>DB.asignaciones_lote.push({id:'as'+Math.random().toString(36).slice(2,8),linea_id:x.linea_id,lote_id:x.lote_id,cantidad:x.cantidad}));const al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);al.traza_estado='confirmada';al.traza_motivo=mot;DB.log.push({accion:'CORREGIR_TRAZABILIDAD',motivo:mot});return null;},
+    anadir_venta_ruta(a){const ped=DB.pedidos.find(x=>x.id===a.p_pedido);if(!ped)throw new Error('PEDIDO_NO_EXISTE');if(ped.estado==='anulado')throw new Error('PEDIDO_ANULADO');if(!(a.p_cantidad>0))throw new Error('CANTIDAD_NO_VALIDA');
+      const id='vr'+Math.random().toString(36).slice(2,8);DB.lineas_pedido.push({id,pedido_id:a.p_pedido,producto_id:a.p_producto,cantidad_pedida:a.p_cantidad,unidad_pedida:a.p_unidad,peso_real:a.p_cantidad,unidad_precio:a.p_unidad_precio,precio:a.p_precio,estado:'hecha',notas:'Venta en ruta'+(a.p_nota?' · '+a.p_nota:''),version:1,venta_ruta:true});
+      DB.albaranes.filter(x=>x.pedido_id===a.p_pedido&&x.estado==='emitido').forEach(x=>{x.traza_estado=null;x.traza_motivo=null;});return id;},
     terminar_pedido(a){const ls=DB.lineas_pedido.filter(l=>l.pedido_id===a.p_pedido);if(ls.some(l=>l.estado==='pendiente'))throw new Error('LINEAS_PENDIENTES');
       DB.pedidos.find(p=>p.id===a.p_pedido).estado='terminado';let al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);
       if(!al){al={id:'al'+Math.random().toString(36).slice(2,7),pedido_id:a.p_pedido,serie:'F',numero:DB.seq++,fecha:hoy(),estado:'emitido',created_at:new Date().toISOString()};DB.albaranes.push(al);}return al.numero;}
@@ -740,10 +743,40 @@ function pintarPedido() {
     if (esOficina() && faltan === 0 && ls.length) acciones.push(h('button', { class: 'ghost', onclick: async () => { if (!navigator.onLine) { toast('Necesitas conexión.', 'err'); return; } await sincronizar(); abrirTrazabilidad(d.pedido.id, {}); } }, 'Terminar asignando los lotes ahora'));
     if (esOficina()) acciones.push(h('button', { class: 'peligro', onclick: () => anularPedido(d.pedido.id) }, 'Anular pedido'));
   }
+  if (estado === 'terminado') acciones.push(h('button', { class: 'ghost', onclick: () => abrirVentaRuta(d) }, '➕ Venta en ruta (añadir producto después de entregar)'));
   if (esOficina() && estado !== 'terminado' && estado !== 'anulado') acciones.push(h('button', { class: 'ghost', onclick: () => go('importar', { anadir: d.pedido.id }) }, '➕ Añadir productos (texto, voz o foto)'));
   if (esOficina()) acciones.push(h('button', { class: 'ghost', onclick: async () => { if (!await confirmar('¿Archivar este pedido? Dejará de verse en las listas.')) return; const r = await sb.from('pedidos').update({ archivado: true }).eq('id', d.pedido.id); if (r.error) toast(msgErr(r.error), 'err'); else { toast('Pedido archivado', 'ok'); go('lista'); } } }, 'Archivar pedido'));
   kids.push(h('div', { style: 'display:flex;flex-direction:column;gap:10px;margin-top:14px' }, acciones));
   kids.push(bloqueHistorial(d)); cont.replaceChildren(...kids.filter(Boolean)); waMostrarOrigen(cont, d.pedido.id);
+}
+/* Venta en ruta: producto que se deja al cliente sin estar en el pedido; se añade al pedido y al albarán */
+function abrirVentaRuta(d) {
+  let prod = null, cerrar; const ped = d.pedido; const cli = uno(ped.clientes);
+  const res = h('div', {}), selP = h('div', {});
+  const cant = h('input', { inputmode: 'decimal', placeholder: 'Cantidad' }), uni = h('select', {}, UNIDADES.map(u => h('option', { value: u }, u)));
+  const precio = h('input', { inputmode: 'decimal', placeholder: 'Precio (€)' }), nota = h('input', { placeholder: 'Nota (opcional)' });
+  const cobro = h('select', {}, [['unidad', 'Precio por unidad pedida (caja, saco…)'], ['kg', 'Precio por kg']].map(([v, n]) => h('option', { value: v }, n)));
+  const pintaProd = () => { selP.replaceChildren(prod ? h('div', { class: 'card fila' }, h('div', { class: 'nombre' }, prod.nombre), h('button', { class: 'ghost small', onclick: () => { prod = null; pintaProd(); } }, 'Cambiar')) : h('div', {}));
+    res.style.display = prod ? 'none' : ''; inp.style.display = prod ? 'none' : ''; };
+  const inp = h('input', { placeholder: 'Buscar producto (nombre o código)…', oninput: debounce(async () => {
+    try { const r = await buscar('productos', inp.value, true, 12);
+      res.replaceChildren(r.length ? h('div', { class: 'res' }, r.map(p => h('button', { onclick: async () => { prod = p; uni.value = UNIDADES.includes(p.unidad_venta) ? p.unidad_venta : 'kg'; cobro.value = uni.value === 'kg' ? 'kg' : 'unidad'; pintaProd();
+        const pr = await preciosPara(ped.cliente_id, [p.id]); if (pr[p.id] != null && !precio.value) precio.value = String(pr[p.id]).replace('.', ','); } }, p.nombre + '  ·  ' + p.codigo))) : h('p', { class: 'sub' }, 'Sin resultados.'));
+    } catch (e) { res.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); } }, 250) });
+  uni.onchange = () => { cobro.value = uni.value === 'kg' ? 'kg' : 'unidad'; };
+  cerrar = hoja('Venta en ruta · ' + nombreCli(cli), h('div', {},
+    h('p', { class: 'sub' }, 'Producto que se ha dejado al cliente sin estar en el pedido. Se añade al pedido y al albarán, y la oficina tendrá que asignarle el lote en «Confirmar trazabilidad».'),
+    selP, inp, res, h('label', { class: 'campo' }, 'Cantidad', cant), h('label', { class: 'campo' }, 'Unidad', uni), h('label', { class: 'campo' }, 'Precio', precio), h('label', { class: 'campo' }, 'Cobrar', cobro), h('label', { class: 'campo' }, 'Nota', nota),
+    h('button', { class: 'guardar', style: 'width:100%', onclick: async ev => {
+      const q = parseNum(cant.value), pr = precio.value.trim() === '' ? null : parseNum(precio.value);
+      if (!prod) { toast('Elige el producto', 'err'); return; } if (!(q > 0)) { toast('Escribe la cantidad', 'err'); return; } if (pr === null || isNaN(pr)) { toast('Escribe el precio', 'err'); return; }
+      if (!navigator.onLine) { toast('Necesitas conexión para añadir una venta en ruta.', 'err'); return; }
+      if (ped.estado === 'terminado' && !await confirmar('Este pedido ya está terminado. Se añadirá al albarán y su importe cambiará.\n\nSi el albarán ya estaba en una factura de Golden, habrá que corregirla allí.\n\n¿Continuar?')) return;
+      ev.target.disabled = true;
+      const r = await sb.rpc('anadir_venta_ruta', { p_pedido: ped.id, p_producto: prod.id, p_cantidad: q, p_unidad: uni.value, p_precio: pr, p_unidad_precio: cobro.value, p_nota: nota.value.trim() || null });
+      if (r.error) { ev.target.disabled = false; toast(msgErr(r.error), 'err'); return; }
+      cerrar(); toast('Añadido al pedido y al albarán', 'ok'); state.sheetAbierta = false; actualizarPedido(false);
+    } }, 'Añadir al pedido y al albarán')));
 }
 function abrirLinea(l) {
   state.sheetAbierta = true;
