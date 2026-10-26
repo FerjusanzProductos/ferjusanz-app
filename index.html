@@ -1402,7 +1402,7 @@ function vistaAyuda() {
   function pintaAsistente() {
     const salida = h('div', { style: 'scroll-margin-top:72px' }), ctx = h('div', {});
     const nombre = state.perfil ? state.perfil.nombre.split(' ')[0] : '';
-    clientesAsis().catch(() => { });
+    clientesAsis().catch(() => { }); productosAsis().catch(() => { });
     const inp = h('input', { placeholder: 'Escribe o pulsa 🎤 y cuéntame qué te pasa', onkeydown: e => { if (e.key === 'Enter') preguntar(); } });
     const leerAuto = h('input', { type: 'checkbox', style: 'width:26px;height:26px;min-height:0;flex:none;padding:0', checked: LS.get('fj_asis_voz', false), onchange: () => LS.set('fj_asis_voz', leerAuto.checked) });
     const btnMic = h('button', { style: 'flex:1;min-height:52px;font-size:17px' }, '🎤 Hablar');
@@ -1433,7 +1433,8 @@ function vistaAyuda() {
       if (det) {
         const correr = d2 => {
           salida.replaceChildren(h('p', { class: 'sub' }, 'Buscando…')); subir();
-          consultarDatos(d2, c => correr(Object.assign({}, d2, { cli: c, nombre: '' }))).then(rs => {
+          const tope = new Promise((_, no) => setTimeout(() => no(new TypeError('Failed to fetch (tarda demasiado)')), 25000));
+          Promise.race([consultarDatos(d2, c => correr(Object.assign({}, d2, { cli: c, nombre: '' }))), tope]).then(rs => {
             if (!rs) { siguiente(); return; }
             const extra = [];
             if (rs.otros && rs.otros.length) extra.push(h('div', { class: 'sub', style: 'margin:10px 2px 4px' }, '¿No es ese cliente? Prueba con:'), h('div', { style: 'display:flex;flex-wrap:wrap;gap:6px' }, rs.otros.map(c => h('button', { class: 'chip', onclick: () => correr(Object.assign({}, d2, { cli: c, nombre: '' })) }, nombreCli(c)))));
@@ -1442,7 +1443,7 @@ function vistaAyuda() {
             if (rs.ir) { salida.replaceChildren(h('p', { class: 'sub' }, 'He entendido «' + q + '»:'), ...rs.nodos, ...extra); if (leerAuto.checked && rs.voz) leerVoz(rs.voz); setTimeout(rs.ir, 450); return; }
             salida.replaceChildren(h('p', { class: 'sub' }, 'He entendido «' + q + '»:'), ...rs.nodos, ...extra, rs.cands ? null : util); subir();
             if (leerAuto.checked && rs.voz) leerVoz(rs.voz);
-          }).catch(e => { salida.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesito conexión para consultar los datos.' : msgErr(e))); });
+          }).catch(e => { salida.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Esto está tardando demasiado: parece que hay poca cobertura. Vuelve a intentarlo en un momento.' : msgErr(e))); });
         };
         correr(det);
         return;
@@ -1466,8 +1467,26 @@ function vistaAyuda() {
   $app.replaceChildren(shell('Ayuda', h('div', {}, chips, cont), { volver: () => go('inicio') })); renderBanner(); pinta();
 }
 /* =====================  CONSULTAS DEL ASISTENTE: responde con los datos, sin pasos  ===================== */
-let _clisAsis = null;
-async function clientesAsis() { if (!_clisAsis) _clisAsis = await waClientes(); return _clisAsis; }
+let _clisAsis = null, _prodsAsis = null;
+async function clientesAsis() {
+  if (_clisAsis) return _clisAsis;
+  const c = LS.get('fj_wa_cli', null);
+  if (c && c.length) { _clisAsis = c; waClientes().then(x => { _clisAsis = x; }).catch(() => { }); return c; }
+  _clisAsis = await waClientes(); return _clisAsis;
+}
+async function productosAsis() {
+  if (_prodsAsis) return _prodsAsis;
+  const c = LS.get('fj_wa_prod', null);
+  if (c && c.length) { _prodsAsis = c; waProductos().then(x => { _prodsAsis = x; }).catch(() => { }); return c; }
+  _prodsAsis = await waProductos(); return _prodsAsis;
+}
+/* Quita los pedidos archivados mirando solo los pedidos de la lista (no los 5.000 archivados) */
+async function sinArchivadosRapido(filas) {
+  if (!filas.length) return filas;
+  try { const ids = filas.map(f => f.pedido_id).slice(0, 400); const q = await sb.from('pedidos').select('id').eq('archivado', true).in('id', ids); if (q.error) return filas; const a = new Set(q.data.map(x => x.id)); return filas.filter(f => !a.has(f.pedido_id)); } catch (e) { return filas; }
+}
+const _cacheAsis = {};
+async function conCache(clave, f, seg) { const c = _cacheAsis[clave]; if (c && Date.now() - c.t < (seg || 60) * 1000) return c.v; const v = await f(); _cacheAsis[clave] = { t: Date.now(), v }; return v; }
 const CONS_PARAR = new Set('dime dame damelas damelos muestrame muestra ensename quiero quisiera ver saber necesito busca buscame mira mirame de del la las el los al a que cuales cual cuantas cuantos cuanto son hay tiene tienen tengo me mis mi por favor cliente clientes para con un una unos unas todas todos en y se le les lo he ha es esta estan hoy manana ayer semana mes ultima ultimas ultimo ultimos lista listado numero nº sus su ese esa esos esas pendientes pendiente quien quienes debo debes dinero euros cuenta total todo alguien algun alguno nadie ahora actualmente'.split(' '));
 /* Contexto de la conversación: el último cliente y el último tipo de consulta (para «¿y sus albaranes?») */
 const ctxAsis = { cli: null, tipo: null, fecha: null };
@@ -1560,23 +1579,40 @@ async function consultarDatos(d, elegir) {
   }
   if (d.tipo === 'precio') {
     if (!esOficina()) return sinPermiso('Los precios los ve la oficina.');
-    let prods, todos; try { prods = await waProductos(); todos = await clientesAsis(); } catch (e) { return { nodos: [h('p', { class: 'err' }, isNetErr(e) ? 'Necesito conexión.' : msgErr(e))], voz: '' }; }
-    const toks = d.nombre.split(/\s+/).filter(Boolean); let encontrados = [], clip = d.cli || null;
+    let prods, todos; try { [prods, todos] = await Promise.all([productosAsis(), clientesAsis()]); } catch (e) { return { nodos: [h('p', { class: 'err' }, isNetErr(e) ? 'Necesito conexión.' : msgErr(e))], voz: '' }; }
+    const toks = d.nombre.split(/\s+/).filter(Boolean); let encontrados = [], clip = d.cli || null, palabra = '';
     for (let i = toks.length; i >= 1 && !encontrados.length; i--) {
       const ps = buscarProdAsis(prods, toks.slice(0, i).join(' ')); if (!ps.length) continue;
       const resto = toks.slice(i).join(' ');
-      if (!resto) { encontrados = ps; break; }
-      const cs = buscarCliLocal(todos, resto); if (cs.length) { encontrados = ps; clip = cs[0]; }
+      if (!resto) { encontrados = ps; palabra = toks.slice(0, i).join(' '); break; }
+      const cs = buscarCliLocal(todos, resto); if (cs.length) { encontrados = ps; clip = cs[0]; palabra = toks.slice(0, i).join(' '); }
     }
     if (!encontrados.length) return { nodos: [h('div', { class: 'aviso-card' }, 'No encuentro ese producto' + (d.nombre ? ' («' + d.nombre + '»)' : '') + '. Prueba con el nombre como sale en la app.')], voz: 'No encuentro ese producto.' };
-    const r = await sb.from('tarifas').select('producto_id,precio,desde,cliente_id').in('producto_id', encontrados.map(p => p.id)).order('desde', { ascending: false }).limit(500); if (r.error) throw r.error;
-    const filas = []; const voz = [];
+    if (clip) { ctxAsis.cli = clip; ctxAsis.tipo = 'precio'; }
+    const ids = encontrados.slice(0, 5).map(p => p.id);
+    let qt = sb.from('tarifas').select('producto_id,precio,desde,cliente_id').in('producto_id', ids); qt = clip ? qt.or('cliente_id.is.null,cliente_id.eq.' + clip.id) : qt.is('cliente_id', null);
+    const sing = w => w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w, pal = sinTilde(palabra).split(/\s+/).map(sing).filter(Boolean).sort((a, b) => b.length - a.length)[0] || '';
+    const pGold = (async () => {
+      if (!clip || !pal) return null;
+      const fr = await sb.from('golden_facturas').select('numero,fecha').ilike('cliente_codigo', clip.codigo).eq('borrador', false).order('fecha', { ascending: false }).limit(120); if (fr.error || !(fr.data || []).length) return null;
+      const fe = {}; fr.data.forEach(f => { fe[f.numero] = f.fecha; });
+      const lr = await sb.from('golden_lineas').select('factura_numero,descripcion,cantidad,precio,importe').in('factura_numero', Object.keys(fe)).ilike('descripcion', '%' + pal + '%').limit(400); if (lr.error) return null;
+      return (lr.data || []).map(l => Object.assign({}, l, { fecha: fe[l.factura_numero] })).sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+    })();
+    const [r, lg] = await Promise.all([qt.order('desde', { ascending: false }).limit(300), pGold.catch(() => null)]); if (r.error) throw r.error;
+    const filas = [], voz = [];
+    if (clip && lg && lg.length) {
+      const ult = lg[0], mismo = lg.filter(x => x.descripcion === ult.descripcion).slice(0, 4);
+      filas.push(filaCons('Último precio a ' + nombreCli(clip), ult.descripcion + ' · ' + fechaES(ult.fecha) + ' · factura ' + ult.factura_numero, eur(ult.precio) + ' €', null));
+      mismo.slice(1).forEach(x => filas.push(filaCons('Antes', fechaES(x.fecha) + ' · factura ' + x.factura_numero, eur(x.precio) + ' €', null)));
+      voz.push('El último precio de ' + ult.descripcion + ' a ' + nombreCli(clip) + ' fue ' + eur(ult.precio) + ' euros, el ' + fechaES(ult.fecha));
+    } else if (clip) { filas.push(filaCons('Último precio a ' + nombreCli(clip), 'No encuentro ventas de «' + palabra + '» a este cliente en Golden 2026.', '—', null)); }
     encontrados.slice(0, 5).forEach(p => {
       const ts = (r.data || []).filter(x => x.producto_id === p.id), g = ts.find(x => !x.cliente_id), c = clip ? ts.find(x => x.cliente_id === clip.id) : null, u = '€/' + (p.unidad_precio === 'kg' ? 'kg' : (p.unidad_venta || 'ud'));
-      filas.push(filaCons(p.nombre, (g ? 'Precio general desde ' + fechaES(g.desde) : 'Sin precio general') + (clip ? (c ? ' · para ' + nombreCli(clip) + ': ' + eur(c.precio) + ' ' + u : ' · ' + nombreCli(clip) + ' no tiene precio propio') : ''), g ? eur(g.precio) + ' ' + u : '—', null));
-      voz.push(p.nombre + (c ? ', para ' + nombreCli(clip) + ', ' + eur(c.precio) : g ? ', ' + eur(g.precio) : ', sin precio'));
+      filas.push(filaCons('Tarifa · ' + p.nombre, (g ? 'General desde ' + fechaES(g.desde) : 'Sin precio general') + (clip ? (c ? ' · ' + nombreCli(clip) + ': ' + eur(c.precio) + ' ' + u + ' desde ' + fechaES(c.desde) : ' · sin precio propio') : ''), (c ? eur(c.precio) : g ? eur(g.precio) : '—') + ' ' + u, null));
+      if (!voz.length) voz.push(p.nombre + (c ? ', para ' + nombreCli(clip) + ', ' + eur(c.precio) : g ? ', ' + eur(g.precio) : ', sin precio'));
     });
-    return { nodos: [tarjetaConsulta('Precio' + (encontrados.length > 1 ? 's' : ''), clip ? 'Para ' + nombreCli(clip) + ' si tiene precio propio; si no, el general.' : null, filas, { t: 'Abrir Precios ›', f: () => go('precios') })], voz: voz.join('. ') };
+    return { nodos: [tarjetaConsulta(clip ? 'Precio a ' + nombreCli(clip) : 'Precios', clip ? 'Lo último que se le vendió (Golden 2026) y la tarifa de la app.' : null, filas, { t: 'Abrir Precios ›', f: () => go('precios') })], voz: voz.join('. '), cli: clip };
   }
   if ((d.tipo === 'factura') && !esOficina()) return sinPermiso('Las facturas de los clientes las ve la oficina. Si necesitas una, pídela a administración.');
   let cli = d.cli || null, otros = null;
@@ -1608,10 +1644,12 @@ async function consultarDatos(d, elegir) {
     return { nodos: [tarjetaConsulta(nom, res + ' Código ' + cli.codigo + '.', albs.map(x => filaCons('Albarán ' + (x.serie ? x.serie + ' ' : '') + x.numero_albaran, fechaES(x.fecha_entrega), eur(x.total) + ' €', () => go('albaran', { id: x.pedido_id }))), { t: 'Abrir la ficha de ' + nom + ' ›', f: () => go('cliente', { id: cli.id }) }), h('div', { class: 'sub', style: 'margin:6px 2px' }, 'Pregúntame también: «sus facturas», «sus pedidos», «qué compra».')], voz: res, otros, cli };
   }
   if (d.tipo === 'factura') {
-    let fs = [];
-    if (cli) { const r = await sb.from('golden_facturas').select('*').ilike('cliente_codigo', cli.codigo).order('fecha', { ascending: false }).limit(500); if (r.error) throw r.error; fs = (r.data || []).filter(f => !f.borrador); }
-    else { const r = await sb.from('golden_facturas').select('*').eq('borrador', false).order('fecha', { ascending: false }).limit(d.fecha ? 300 : 10); if (r.error) throw r.error; fs = r.data || []; if (d.fecha) fs = fs.filter(f => String(f.fecha).slice(0, 10) === d.fecha); }
-    let propias = []; if (cli) { try { propias = await cargarFacturasCli(cli.id); } catch (e) { } }
+    let fs = [], propias = [];
+    const cols = 'numero,fecha,total,base,tipo,borrador,cliente_nombre,cliente_codigo';
+    if (cli) {
+      const [r, pr] = await Promise.all([conCache('gf_' + cli.codigo, () => sb.from('golden_facturas').select(cols).ilike('cliente_codigo', cli.codigo).eq('borrador', false).order('fecha', { ascending: false }).limit(500), 45), cargarFacturasCli(cli.id).catch(() => [])]);
+      if (r.error) throw r.error; fs = r.data || []; propias = pr;
+    } else { const r = await sb.from('golden_facturas').select(cols).eq('borrador', false).order('fecha', { ascending: false }).limit(d.fecha ? 300 : 10); if (r.error) throw r.error; fs = r.data || []; if (d.fecha) fs = fs.filter(f => String(f.fecha).slice(0, 10) === d.fecha); }
     const tot = fs.reduce((a, f) => a + Number(f.total || 0), 0);
     const res = cli ? (fs.length ? fs.length + (fs.length === 1 ? ' factura' : ' facturas') + ' de Golden en 2026 · ' + eur(tot) + ' € en total' + (propias.length ? ' · y ' + propias.length + ' subidas a la app' : '') : 'No hay facturas de Golden de este cliente' + (propias.length ? ', pero hay ' + propias.length + ' subidas a la app.' : '.')) : (d.fecha ? fs.length + ' facturas el ' + fechaES(d.fecha) + ' · ' + eur(tot) + ' €' : 'Las 10 últimas facturas de Golden');
     const filas = fs.slice(0, cli ? 12 : 10).map(f => filaCons('Factura ' + f.numero, fechaES(f.fecha) + (cli ? '' : ' · ' + (f.cliente_nombre || '')), eur(f.total) + ' €', () => abrirFacturaGolden(f)))
@@ -1619,9 +1657,10 @@ async function consultarDatos(d, elegir) {
     nodos.push(tarjetaConsulta(cli ? 'Facturas de ' + nom : 'Facturas', res, filas, cli ? { t: 'Ver todas en la ficha de ' + nom + ' ›', f: () => go('cliente', { id: cli.id }) } : { t: 'Abrir el histórico de Golden ›', f: () => go('golden') }));
     voz.push(res);
   } else if (d.tipo === 'deuda') {
-    const r = await sb.from('v_pedidos_importe').select('*').eq('estado', 'terminado').gt('pendiente', 0.009).order('fecha_entrega').range(0, 4999); if (r.error) throw r.error;
-    let filas = (await sinArchivados(r.data)).map(f => Object.assign({}, f, { pend: pendienteLocal(f.pedido_id, f.pendiente) })).filter(f => f.pend > 0.009);
-    if (cli) filas = filas.filter(f => f.cliente_id === cli.id);
+    let qd = sb.from('v_pedidos_importe').select('pedido_id,cliente_id,cliente_nombre,fecha_entrega,serie,numero_albaran,pendiente').eq('estado', 'terminado').gt('pendiente', 0.009);
+    if (cli) qd = qd.eq('cliente_id', cli.id);
+    const r = await qd.order('fecha_entrega').range(0, 4999); if (r.error) throw r.error;
+    let filas = (await sinArchivadosRapido(r.data)).map(f => Object.assign({}, f, { pend: pendienteLocal(f.pedido_id, f.pendiente) })).filter(f => f.pend > 0.009);
     const tot = Math.round(filas.reduce((a, f) => a + f.pend, 0) * 100) / 100;
     if (cli) {
       const res = filas.length ? nom + ' debe ' + eur(tot) + ' € en ' + filas.length + ' albaranes' : nom + ' no debe nada ahora mismo.';
@@ -1651,6 +1690,8 @@ async function consultarDatos(d, elegir) {
   return { nodos, voz: voz.join('. '), otros, cli };
 }
 /*GUIA_FIN*/
+
+
 
 
 
