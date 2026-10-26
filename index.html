@@ -362,7 +362,26 @@ function crearSbPractica(){
   };
 }
 
-const sb = PRACTICA ? crearSbPractica() : (window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null);
+/* Cobertura débil: si el servidor no responde a tiempo, se trata como «sin conexión» (usa lo guardado en el móvil). */
+function fetchConTiempo(url, opts) {
+  const u = String(url && url.url ? url.url : url);
+  const largo = /\/storage\/|\/functions\//.test(u);
+  const ms = largo ? 60000 : 10000;
+  const ctl = new AbortController();
+  const orig = opts && opts.signal;
+  if (orig) { if (orig.aborted) ctl.abort(); else orig.addEventListener('abort', () => ctl.abort()); }
+  let caducado = false;
+  const t = setTimeout(() => { caducado = true; ctl.abort(); }, ms);
+  return fetch(url, Object.assign({}, opts || {}, { signal: ctl.signal }))
+    .catch(e => { throw caducado ? new TypeError('Failed to fetch (sin respuesta)') : e; })
+    .finally(() => clearTimeout(t));
+}
+/* Sesión guardada en el móvil (la deja Supabase al entrar): sirve para abrir la app sin conexión */
+function sesionLocal() {
+  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^sb-.*-auth-token$/.test(k)) { const x = JSON.parse(localStorage.getItem(k)); if (x && x.user && x.user.id) return x; } } } catch (e) { }
+  return null;
+}
+const sb = PRACTICA ? crearSbPractica() : (window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { global: { fetch: fetchConTiempo } }) : null);
 const $app = document.getElementById('app');
 const state = { user: null, perfil: null, view: 'inicio', params: {}, fecha: hoy(), filtro: 'todos', sheetAbierta: false, ped: null, pedidos: [], carga: null, cargaModo: 'clientes', gente: {}, chatNoLeidos: 0, chatTimer: null };
 
@@ -607,7 +626,7 @@ function vistaLogin() {
       btn.disabled = false;
       if (error) {
         const m = String(error.message || '');
-        err.textContent = isNetErr(error) ? 'No hay conexión.'
+        err.textContent = isNetErr(error) ? 'Cobertura muy débil o sin conexión. Prueba otra vez en unos segundos.'
           : /invalid login/i.test(m) ? 'Correo o contraseña incorrectos.'
           : /confirm/i.test(m) ? 'El correo todavía no está confirmado en Supabase.'
           : 'No se pudo entrar: ' + m;
@@ -1417,6 +1436,7 @@ function vistaAyuda() {
   $app.replaceChildren(shell('Ayuda', h('div', {}, chips, cont), { volver: () => go('inicio') })); renderBanner(); pinta();
 }
 /*GUIA_FIN*/
+
 
 
 
@@ -5132,7 +5152,10 @@ async function init() {
       h('button', { onclick: () => location.reload() }, 'Reintentar')));
     return;
   }
-  try { const { data } = await sb.auth.getSession(); if (data && data.session) await cargarPerfil(data.session.user); } catch (e) { }
+  let ses = null;
+  try { const r = await Promise.race([sb.auth.getSession(), new Promise((_, no) => setTimeout(() => no(new Error('tiempo')), 5000))]); ses = r && r.data && r.data.session; } catch (e) { }
+  if (ses) await cargarPerfil(ses.user);
+  else if (!PRACTICA) { const sl = sesionLocal(), pl = LS.get('fj_perfil', null); if (sl && pl && pl.id === sl.user.id) { state.user = sl.user; state.perfil = pl; } }
   aplicarCompartido(); render(); cargarGente();
   try { history.replaceState(navSnap(0), ''); } catch (e) { }
   sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') { state.user = null; state.perfil = null; render(); } });
