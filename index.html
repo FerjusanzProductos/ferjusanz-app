@@ -1402,6 +1402,7 @@ function vistaAyuda() {
   function pintaAsistente() {
     const salida = h('div', { style: 'scroll-margin-top:72px' }), ctx = h('div', {});
     const nombre = state.perfil ? state.perfil.nombre.split(' ')[0] : '';
+    clientesAsis().catch(() => { });
     const inp = h('input', { placeholder: 'Escribe o pulsa 🎤 y cuéntame qué te pasa', onkeydown: e => { if (e.key === 'Enter') preguntar(); } });
     const leerAuto = h('input', { type: 'checkbox', style: 'width:26px;height:26px;min-height:0;flex:none;padding:0', checked: LS.get('fj_asis_voz', false), onchange: () => LS.set('fj_asis_voz', leerAuto.checked) });
     const btnMic = h('button', { style: 'flex:1;min-height:52px;font-size:17px' }, '🎤 Hablar');
@@ -1413,7 +1414,8 @@ function vistaAyuda() {
     const subir = () => { setTimeout(() => { try { salida.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { salida.scrollIntoView(); } }, 60); };
     function preguntar(q, alts) {
       q = q || inp.value; if (!q.trim()) return;
-      if (alts && alts.length > 1) { let mejor = q, ms = -1; alts.forEach(x => { const o = guiaOpciones(x, 1)[0]; const s = o ? o.sc : 0; if (s > ms) { ms = s; mejor = x; } }); q = mejor; }
+      const altsOtras = alts && alts.length > 1 ? alts : null;
+      if (altsOtras) { let mejor = q, ms = -1; alts.forEach(x => { const o = guiaOpciones(x, 1)[0]; let s = o ? o.sc : 0; try { const dx = detectaConsulta(x); if (dx) { s += 2; if (dx.nombre && _clisAsis) { const cs = buscarCliLocal(_clisAsis, dx.nombre); if (cs.length && sinTilde(nombreCli(cs[0])).includes(sinTilde(dx.nombre.split(' ')[0]))) s += 5; } } } catch (e) { } if (s > ms) { ms = s; mejor = x; } }); q = mejor; }
       inp.value = q; pararVoz(); aviso.style.display = 'none'; const ops = guiaOpciones(q, 4);
       const util = h('div', { class: 'card' }, h('b', {}, '¿Te ha servido?'), h('div', { style: 'display:flex;gap:6px;margin-top:6px;flex-wrap:wrap' },
         h('button', { class: 'small', onclick: () => util.replaceChildren(h('b', {}, '¡Me alegro! 👍')) }, 'Sí'),
@@ -1426,13 +1428,19 @@ function vistaAyuda() {
       subir();
       if (leerAuto.checked) { const o = ops[0]; leerVoz(o.tipo === 'prob' ? textoLeerProb(o.it) : textoLeer(o.it)); }
       };
-      const det = detectaConsulta(q);
+      let det = detectaConsulta(q);
+      if (!det && !ops.length) { const nm = sinTilde(limpiaBusqueda(q)).toLowerCase().split(/\s+/).filter(w => w && !CONS_PARAR.has(w)).join(' '); if (nm && nm.split(' ').length <= 4) det = { tipo: 'cliente', nombre: nm, q }; }
       if (det) {
         const correr = d2 => {
           salida.replaceChildren(h('p', { class: 'sub' }, 'Buscando…')); subir();
-          consultarDatos(d2, c => correr(Object.assign({}, d2, { cli: c }))).then(rs => {
+          consultarDatos(d2, c => correr(Object.assign({}, d2, { cli: c, nombre: '' }))).then(rs => {
             if (!rs) { siguiente(); return; }
-            salida.replaceChildren(h('p', { class: 'sub' }, 'He entendido «' + q + '»:'), ...rs.nodos, rs.cands ? null : util); subir();
+            const extra = [];
+            if (rs.otros && rs.otros.length) extra.push(h('div', { class: 'sub', style: 'margin:10px 2px 4px' }, '¿No es ese cliente? Prueba con:'), h('div', { style: 'display:flex;flex-wrap:wrap;gap:6px' }, rs.otros.map(c => h('button', { class: 'chip', onclick: () => correr(Object.assign({}, d2, { cli: c, nombre: '' })) }, nombreCli(c)))));
+            const dist = (altsOtras || []).filter((x, i, a) => x && sinTilde(x) !== sinTilde(q) && a.findIndex(y => sinTilde(y) === sinTilde(x)) === i).slice(0, 3);
+            if (dist.length) extra.push(h('div', { class: 'sub', style: 'margin:10px 2px 4px' }, '¿Querías decir otra cosa? Toca para probar:'), h('div', { style: 'display:flex;flex-wrap:wrap;gap:6px' }, dist.map(x => h('button', { class: 'chip', style: 'white-space:normal;text-align:left', onclick: () => preguntar(x) }, x))));
+            if (rs.ir) { salida.replaceChildren(h('p', { class: 'sub' }, 'He entendido «' + q + '»:'), ...rs.nodos, ...extra); if (leerAuto.checked && rs.voz) leerVoz(rs.voz); setTimeout(rs.ir, 450); return; }
+            salida.replaceChildren(h('p', { class: 'sub' }, 'He entendido «' + q + '»:'), ...rs.nodos, ...extra, rs.cands ? null : util); subir();
             if (leerAuto.checked && rs.voz) leerVoz(rs.voz);
           }).catch(e => { salida.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesito conexión para consultar los datos.' : msgErr(e))); });
         };
@@ -1443,8 +1451,8 @@ function vistaAyuda() {
     }
     const gDesde = P.desde && VOZ_VISTA[P.desde] ? GUIA.find(g => g.id === VOZ_VISTA[P.desde] && guiaVisible(g)) : null;
     if (gDesde) ctx.replaceChildren(h('p', { class: 'sub' }, 'Estás en esta pantalla. Así se usa:'), tarjetaGuia(gDesde, true));
-    const ejemplos = ['Quién me debe', 'Pedidos de hoy', 'Albaranes de hoy', 'Quiero apuntar un pedido', 'No me deja terminar el pedido', 'No veo lo nuevo de la app', 'Me equivoqué en un peso', '¿Cómo termino un pedido?', 'Se me ha olvidado un producto', 'Dónde veo los albaranes', '¿Qué copia le doy al cliente?', 'Cómo imprimo la hoja de compra'];
-    const aviso = h('div', { class: 'aviso-card' }, (nombre ? 'Hola, ' + nombre + '. ' : '') + 'Soy el asistente. Escríbeme o háblame: dime qué te pasa o qué quieres hacer. Te enseño al momento los datos que pidas (por ejemplo «facturas de Florencio», «quién me debe», «pedidos de hoy») o te explico paso a paso cómo se hace algo. No invento: si no lo sé, te lo digo.');
+    const ejemplos = ['Resumen de hoy', 'Quién me debe', 'Pedidos de hoy', 'Abre albaranes', 'Precio del tomate', 'Albaranes de hoy', 'Quiero apuntar un pedido', 'No me deja terminar el pedido', 'No veo lo nuevo de la app', 'Me equivoqué en un peso', '¿Cómo termino un pedido?', 'Se me ha olvidado un producto', 'Dónde veo los albaranes', '¿Qué copia le doy al cliente?', 'Cómo imprimo la hoja de compra'];
+    const aviso = h('div', { class: 'aviso-card' }, (nombre ? 'Hola, ' + nombre + '. ' : '') + 'Soy el asistente. Escríbeme o háblame: dime qué te pasa o qué quieres hacer. Te enseño al momento los datos que pidas (por ejemplo «facturas de Florencio», «quién me debe», «precio del tomate»), abrir pantallas («abre albaranes») o empezar un pedido («pedido para Florencio, 10 kilos de tomate») o te explico paso a paso cómo se hace algo. No invento: si no lo sé, te lo digo.');
     cont.replaceChildren(aviso, ctx,
       h('div', { style: 'display:flex;gap:8px;margin:8px 0' }, btnMic), inp,
       h('button', { style: 'width:100%;margin:8px 0 4px', onclick: () => preguntar() }, 'Preguntar'),
@@ -1461,19 +1469,53 @@ function vistaAyuda() {
 let _clisAsis = null;
 async function clientesAsis() { if (!_clisAsis) _clisAsis = await waClientes(); return _clisAsis; }
 const CONS_PARAR = new Set('dime dame damelas damelos muestrame muestra ensename quiero quisiera ver saber necesito busca buscame mira mirame de del la las el los al a que cuales cual cuantas cuantos cuanto son hay tiene tienen tengo me mis mi por favor cliente clientes para con un una unos unas todas todos en y se le les lo he ha es esta estan hoy manana ayer semana mes ultima ultimas ultimo ultimos lista listado numero nº sus su ese esa esos esas pendientes pendiente quien quienes debo debes dinero euros cuenta total todo alguien algun alguno nadie ahora actualmente'.split(' '));
+/* Contexto de la conversación: el último cliente y el último tipo de consulta (para «¿y sus albaranes?») */
+const ctxAsis = { cli: null, tipo: null, fecha: null };
+function lev(a, b) { if (a === b) return 0; const m = a.length, n = b.length; if (Math.abs(m - n) > 2) return 9; const d = []; for (let i = 0; i <= m; i++) { d[i] = [i]; } for (let j = 0; j <= n; j++) d[0][j] = j; for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) { d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1); } return d[m][n]; }
+const CANON = ['factura', 'facturas', 'albaran', 'albaranes', 'pedido', 'pedidos', 'deuda', 'deudas', 'precio', 'precios', 'resumen', 'cuesta', 'cuestan', 'apunta', 'apuntame', 'anota', 'abre', 'abreme', 'llevame'];
+/* Arregla faltas y palabras mal reconocidas por la voz: «facutra» → «factura», «albarna» → «albaran» */
+function normalizaIntent(t) {
+  return t.split(/\s+/).map(w => { if (w.length < 5 || CANON.includes(w)) return w; let mejor = null, md = 9; CANON.forEach(c => { const d = lev(w, c); if (d < md) { md = d; mejor = c; } }); return mejor && md <= (w.length >= 9 ? 2 : 1) ? mejor : w; }).join(' ');
+}
+const NAV_DESTINOS = [
+  [/\bfacturas? de (los )?clientes\b/, 'facturascli', 'Facturas de clientes', 'o'], [/\b(golden|historico)\b/, 'golden', 'Histórico de Golden', 'o'],
+  [/\balbaranes\b|\balbaran\b/, 'albaranes', 'Albaranes'], [/\b(deudas|deuda)\b/, 'deudas', 'Deudas'], [/\bcobros\b/, 'cobros', 'Cobros'],
+  [/\bhoja de compra\b/, 'hojacompra', 'Hoja de compra'], [/\bhoja de carga\b|\bcarga\b/, 'carga', 'Carga'], [/\bcalendario\b/, 'calendario', 'Calendario'],
+  [/\b(lista de )?pedidos\b/, 'pedidos', 'Pedidos'], [/\bclientes\b/, 'clientes', 'Clientes'], [/\bcompras\b/, 'compras', 'Compras', 'c'],
+  [/\b(chat|mensajes)\b/, 'chat', 'Chat'], [/\b(fichajes|fichar)\b/, 'fichajes', 'Fichajes'], [/\b(productos|catalogo)\b/, 'catalogo', 'Productos'],
+  [/\bincidencias\b/, 'incidencias', 'Incidencias'], [/\bavisos\b/, 'avisos', 'Avisos'], [/\bcopia de seguridad\b/, 'copia', 'Copia de seguridad', 'o'],
+  [/\b(inicio|principal)\b/, 'inicio', 'Inicio'], [/\bentregas\b/, 'entregas', 'Entregas'], [/\bprecios\b/, 'precios', 'Precios', 'o']];
 function detectaConsulta(q) {
-  const t = sinTilde(limpiaBusqueda(q)).toLowerCase();
+  let t = normalizaIntent(sinTilde(limpiaBusqueda(q)).toLowerCase());
+  /* Abrir una pantalla: «ábreme albaranes», «llévame a deudas» */
+  if (/\b(abre|abreme|abrir|llevame|lleva|ir a|ir al|ve a|ve al|vete a|quiero ir|muestrame la pantalla|ensename la pantalla|pantalla de)\b/.test(t)) {
+    const d = NAV_DESTINOS.find(x => x[0].test(t));
+    if (d) return { tipo: 'nav', destino: d, q };
+  }
+  /* Empezar un pedido dictado: «apunta un pedido para Florencio, 10 kilos de tomate» */
+  if (/\b(apunta|apuntame|anota|anotame|pon|ponme|haz|hazme|crea|creame|mete|metele|prepara)\b/.test(t) && /\bpedido\b/.test(t) && !/\b(como|donde)\b/.test(t) && (/\d/.test(t) || /\b(uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|doce|medio|media)\b/.test(t) || /\bpara\b/.test(t) && /\b(kilo|kilos|kg|caja|cajas|saco|sacos|docena|docenas|bandeja|bandejas|manojo|manojos|bolsa|bolsas)\b/.test(t))) return { tipo: 'pedir', q };
   if (/\b(como|donde|cuando|porque|puedo|puede|deja|funciona|falla|error|no me|no sale|no veo|no puedo|paso|pasos|ayuda|explica|que es|para que|hago|hacer|imprim\w*|cambiar|activar|configur\w*|apunt\w*|anot\w*|crear|nuevo|nueva|meter|anadir|borrar|eliminar|equivoq\w*|olvid\w*)\b/.test(t)) return null;
+  const seg = /^(y|tambien|ademas)\b/.test(t) || /\b(sus|su|ese|esa|el mismo|ella|el)\b/.test(t);
   let tipo = null;
-  if (/\b(debe|deben|deuda|deudas|deudor|deudores|moroso|morosos|impagad\w*|por cobrar|cobrar|saldo|saldos)\b/.test(t)) tipo = 'deuda';
+  if (/\b(resumen|como va el dia|que tal el dia|como vamos|balance del dia|que hay hoy)\b/.test(t)) tipo = 'resumen';
+  else if (/\b(precio|precios|cuesta|cuestan|vale|valen|a cuanto|tarifa)\b/.test(t)) tipo = 'precio';
+  else if (/\bque (le )?(compra|vendo|lleva|pide|suele llevar|suele comprar)\b|\bproductos de\b|\blo habitual de\b/.test(t)) tipo = 'compra';
+  else if (/\b(debe|deben|deuda|deudas|deudor|deudores|moroso|morosos|impagad\w*|por cobrar|cobrar|saldo|saldos)\b/.test(t)) tipo = 'deuda';
   else if (/factur/.test(t) || /\b(vendido|vendi|ventas|ha comprado|ha facturado)\b/.test(t)) tipo = 'factura';
   else if (/albaran/.test(t)) tipo = 'albaran';
   else if (/pedido/.test(t)) tipo = 'pedido';
+  if (!tipo && ctxAsis.tipo && /^(y )?(de |del |para |en )?(hoy|ayer|manana)\b/.test(t)) tipo = ctxAsis.tipo;
   if (!tipo) return null;
-  const nombre = t.split(/\s+/).filter(w => w && !CONS_PARAR.has(w) && !/^(factur|albaran|pedid|deb[ea]|deud|moros|cobr|impag|saldo|vend|compr|venta)/.test(w)).join(' ');
+  const parar = CONS_PARAR;
+  const nombre = t.split(/\s+/).filter(w => w && !parar.has(w) && !/^(factur|albaran|pedid|deb[ea]|deud|moros|cobr|impag|saldo|vend|compr|venta|resum|precio|cuest|cuanto|valen|vale$|tarifa|habitual|producto|lleva|pide|suele|llev)/.test(w)).join(' ');
   const fecha = /\bhoy\b/.test(t) ? hoy() : /\bmanana\b/.test(t) ? hoy(new Date(Date.now() + 86400000)) : /\bayer\b/.test(t) ? hoy(new Date(Date.now() - 86400000)) : null;
-  if ((tipo === 'albaran' || tipo === 'pedido') && !nombre && !fecha) return null;
-  return { tipo, nombre, fecha, q };
+  const d = { tipo, nombre, fecha, q };
+  if (tipo === 'precio') return d;
+  if (tipo === 'resumen') return d;
+  if (!nombre && ctxAsis.cli && (seg || fecha || tipo === 'compra' || (tipo === 'deuda' && /\bdebe\b/.test(t) && !/\b(quien|quienes|me debe|nos debe)\b/.test(t)))) d.cli = ctxAsis.cli;
+  if ((tipo === 'albaran' || tipo === 'pedido') && !nombre && !fecha && !d.cli) return null;
+  if (tipo === 'compra' && !nombre && !d.cli) return null;
+  return d;
 }
 /* Tarjeta de resultado: título, resumen, filas y botón a la pestaña */
 function tarjetaConsulta(titulo, resumen, filas, ir) {
@@ -1482,21 +1524,89 @@ function tarjetaConsulta(titulo, resumen, filas, ir) {
     ir ? h('button', { style: 'width:100%;margin-top:8px', onclick: ir.f }, ir.t) : null);
 }
 const filaCons = (izq, sub, der, onclick) => h('div', { class: 'card' + (onclick ? ' tap' : ''), style: 'margin:6px 0', onclick }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:16px' }, izq), sub ? h('div', { class: 'sub' }, sub) : null), der != null ? h('b', {}, der) : null));
+function buscarProdAsis(prods, texto) {
+  const t = sinTilde(limpiaBusqueda(texto)); if (!t) return [];
+  const sing = w => w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w;
+  const nm = p => sinTilde([p.nombre].concat(Array.isArray(p.alias) ? p.alias : []).join(' '));
+  const act = (a, b) => (b.activo ? 1 : 0) - (a.activo ? 1 : 0);
+  const ex = prods.filter(p => t.split(/\s+/).every(w => nm(p).includes(sing(w)))).sort(act);
+  if (ex.length) return ex.slice(0, 6);
+  let dif = [];
+  try {
+    const idx = waIndice(prods.map(p => ({ id: p.id, codigo: p.codigo, activo: p.activo, _c: p, nombre: p.nombre, alias: Array.isArray(p.alias) ? p.alias : [] })));
+    const qks = waPalabras(texto).map(waLlave).filter(Boolean);
+    if (qks.length) dif = idx.map(it => { let m = 0; it.vars.forEach(v => { const x = waPuntua(qks, v); if (x > m) m = x; }); return { c: it.p._c, m }; }).filter(x => x.m >= 0.55).sort((a, b) => b.m - a.m).map(x => x.c);
+  } catch (e) { }
+  return dif.slice(0, 5);
+}
 async function consultarDatos(d, elegir) {
   const nodos = [], voz = [];
   const sinPermiso = txt => ({ nodos: [h('div', { class: 'aviso-card' }, txt)], voz: txt });
+  if (d.tipo === 'nav') {
+    const [, vista, nombreV, rol] = d.destino;
+    if (rol === 'o' && !esOficina()) return sinPermiso('«' + nombreV + '» lo ve la oficina.');
+    if (rol === 'c' && !puedeCompras()) return sinPermiso('«' + nombreV + '» no está disponible para tu usuario.');
+    return { nodos: [h('p', { class: 'sub' }, 'Abriendo ' + nombreV + '…')], voz: 'Abriendo ' + nombreV, ir: () => go(vista) };
+  }
+  if (d.tipo === 'pedir') return { nodos: [h('p', { class: 'sub' }, 'Abriendo el pedido con lo que has dicho, para que lo revises…')], voz: 'Abriendo el pedido para que lo revises', ir: () => go('importar', { texto: d.q }) };
+  if (d.tipo === 'resumen') {
+    const hoyS = hoy();
+    const rp = await sb.from('pedidos').select('estado').eq('fecha_entrega', hoyS).neq('estado', 'anulado').neq('archivado', true); if (rp.error) throw rp.error;
+    const rv = await sb.from('v_pedidos_importe').select('total,pendiente,numero_albaran,estado').eq('fecha_entrega', hoyS); if (rv.error) throw rv.error;
+    const ps = rp.data || [], c = e => ps.filter(p => p.estado === e).length, albs = (rv.data || []).filter(x => x.numero_albaran != null);
+    const vendido = albs.reduce((a, x) => a + Number(x.total || 0), 0), pend = albs.reduce((a, x) => a + Math.max(0, Number(x.pendiente || 0)), 0);
+    const res = ps.length + ' pedidos hoy: ' + c('pendiente') + ' pendientes, ' + c('en_preparacion') + ' en preparación y ' + c('terminado') + ' terminados. ' + albs.length + ' albaranes hechos' + (esOficina() ? ', ' + eur(vendido) + ' € vendidos y ' + eur(pend) + ' € sin cobrar.' : '.');
+    return { nodos: [tarjetaConsulta('Resumen de hoy', res, [filaCons('Pendientes', null, String(c('pendiente'))), filaCons('En preparación', null, String(c('en_preparacion'))), filaCons('Terminados', null, String(c('terminado'))), filaCons('Albaranes hechos', null, String(albs.length))].concat(esOficina() ? [filaCons('Vendido hoy', null, eur(vendido) + ' €'), filaCons('Sin cobrar de hoy', null, eur(pend) + ' €')] : []), { t: 'Ver los pedidos de hoy ›', f: () => go('pedidos') })], voz: res };
+  }
+  if (d.tipo === 'precio') {
+    if (!esOficina()) return sinPermiso('Los precios los ve la oficina.');
+    let prods, todos; try { prods = await waProductos(); todos = await clientesAsis(); } catch (e) { return { nodos: [h('p', { class: 'err' }, isNetErr(e) ? 'Necesito conexión.' : msgErr(e))], voz: '' }; }
+    const toks = d.nombre.split(/\s+/).filter(Boolean); let encontrados = [], clip = d.cli || null;
+    for (let i = toks.length; i >= 1 && !encontrados.length; i--) {
+      const ps = buscarProdAsis(prods, toks.slice(0, i).join(' ')); if (!ps.length) continue;
+      const resto = toks.slice(i).join(' ');
+      if (!resto) { encontrados = ps; break; }
+      const cs = buscarCliLocal(todos, resto); if (cs.length) { encontrados = ps; clip = cs[0]; }
+    }
+    if (!encontrados.length) return { nodos: [h('div', { class: 'aviso-card' }, 'No encuentro ese producto' + (d.nombre ? ' («' + d.nombre + '»)' : '') + '. Prueba con el nombre como sale en la app.')], voz: 'No encuentro ese producto.' };
+    const r = await sb.from('tarifas').select('producto_id,precio,desde,cliente_id').in('producto_id', encontrados.map(p => p.id)).order('desde', { ascending: false }).limit(500); if (r.error) throw r.error;
+    const filas = []; const voz = [];
+    encontrados.slice(0, 5).forEach(p => {
+      const ts = (r.data || []).filter(x => x.producto_id === p.id), g = ts.find(x => !x.cliente_id), c = clip ? ts.find(x => x.cliente_id === clip.id) : null, u = '€/' + (p.unidad_precio === 'kg' ? 'kg' : (p.unidad_venta || 'ud'));
+      filas.push(filaCons(p.nombre, (g ? 'Precio general desde ' + fechaES(g.desde) : 'Sin precio general') + (clip ? (c ? ' · para ' + nombreCli(clip) + ': ' + eur(c.precio) + ' ' + u : ' · ' + nombreCli(clip) + ' no tiene precio propio') : ''), g ? eur(g.precio) + ' ' + u : '—', null));
+      voz.push(p.nombre + (c ? ', para ' + nombreCli(clip) + ', ' + eur(c.precio) : g ? ', ' + eur(g.precio) : ', sin precio'));
+    });
+    return { nodos: [tarjetaConsulta('Precio' + (encontrados.length > 1 ? 's' : ''), clip ? 'Para ' + nombreCli(clip) + ' si tiene precio propio; si no, el general.' : null, filas, { t: 'Abrir Precios ›', f: () => go('precios') })], voz: voz.join('. ') };
+  }
   if ((d.tipo === 'factura') && !esOficina()) return sinPermiso('Las facturas de los clientes las ve la oficina. Si necesitas una, pídela a administración.');
-  let cli = d.cli || null;
+  let cli = d.cli || null, otros = null;
   if (d.nombre && !cli) {
     let todos; try { todos = await clientesAsis(); } catch (e) { return { nodos: [h('p', { class: 'err' }, isNetErr(e) ? 'Necesito conexión para buscar clientes.' : msgErr(e))], voz: '' }; }
     const cands = buscarCliLocal(todos, d.nombre);
+    if (!cands.length && d.tipo === 'cliente') return null;
     if (!cands.length) return { nodos: [h('div', { class: 'aviso-card' }, 'No encuentro ningún cliente que se parezca a «' + d.nombre + '». Prueba con el nombre o el código tal como sale en la app.')], voz: 'No encuentro a ese cliente.' };
     if (cands.length > 1 && sinTilde(nombreCli(cands[0])) !== sinTilde(d.nombre) && !(cands.length === 2 && !cands[1].activo)) {
       return { nodos: [h('p', { class: 'sub' }, 'Hay varios clientes parecidos. ¿De cuál?'), h('div', { style: 'display:flex;flex-direction:column;gap:6px' }, cands.slice(0, 6).map(c => h('button', { class: 'ghost', style: 'text-align:left', onclick: () => elegir && elegir(c) }, nombreCli(c) + ' · ' + c.codigo)))], voz: 'Hay varios clientes parecidos. Elige uno.', cands };
     }
-    cli = cands[0];
+    cli = cands[0]; if (cands.length > 1 && sinTilde(nombreCli(cli)) !== sinTilde(d.nombre)) otros = cands.slice(1, 4);
   }
   const nom = cli ? nombreCli(cli) : '';
+  if (cli) ctxAsis.cli = cli; ctxAsis.tipo = d.tipo; ctxAsis.fecha = d.fecha;
+  if (d.tipo === 'compra') {
+    if (!esOficina()) return sinPermiso('Lo que compra cada cliente lo ve la oficina.');
+    const r = await sb.from('golden_facturas').select('numero').ilike('cliente_codigo', cli.codigo).eq('borrador', false).order('fecha', { ascending: false }).limit(40); if (r.error) throw r.error;
+    const nums = (r.data || []).map(x => x.numero); let por = {};
+    if (nums.length) { const l = await sb.from('golden_lineas').select('descripcion,cantidad,importe').in('factura_numero', nums).limit(3000); if (l.error) throw l.error; (l.data || []).forEach(x => { const k = x.descripcion; (por[k] = por[k] || { n: k, c: 0, t: 0, v: 0 }); por[k].c += Number(x.cantidad || 0); por[k].t += Number(x.importe || 0); por[k].v++; }); }
+    const lista = Object.values(por).sort((a, b) => b.v - a.v || b.t - a.t).slice(0, 12);
+    const res = lista.length ? 'Lo que más lleva ' + nom + ' (en sus últimas ' + nums.length + ' facturas)' : 'No tengo facturas de Golden de ' + nom + ' para saber qué compra.';
+    return { nodos: [tarjetaConsulta('Qué compra ' + nom, res, lista.map(x => filaCons(x.n, x.v + ' veces · ' + num(x.c) + ' en total', eur(x.t) + ' €', null)), { t: 'Ver la ficha de ' + nom + ' ›', f: () => go('cliente', { id: cli.id }) })], voz: res + (lista.length ? ': ' + lista.slice(0, 3).map(x => x.n).join(', ') : ''), otros, cli };
+  }
+  if (d.tipo === 'cliente') {
+    const r = await sb.from('v_pedidos_importe').select('pedido_id,fecha_entrega,estado,serie,numero_albaran,total,pendiente,cliente_id').eq('cliente_id', cli.id).order('fecha_entrega', { ascending: false }).limit(30); if (r.error) throw r.error;
+    const ds = (r.data || []).filter(x => x.estado === 'terminado' && x.pendiente > 0.009), debe = Math.round(ds.reduce((a, x) => a + Number(x.pendiente), 0) * 100) / 100, albs = (r.data || []).filter(x => x.numero_albaran != null).slice(0, 5);
+    const res = debe > 0 ? nom + ' debe ' + eur(debe) + ' €.' : nom + ' no debe nada.';
+    return { nodos: [tarjetaConsulta(nom, res + ' Código ' + cli.codigo + '.', albs.map(x => filaCons('Albarán ' + (x.serie ? x.serie + ' ' : '') + x.numero_albaran, fechaES(x.fecha_entrega), eur(x.total) + ' €', () => go('albaran', { id: x.pedido_id }))), { t: 'Abrir la ficha de ' + nom + ' ›', f: () => go('cliente', { id: cli.id }) }), h('div', { class: 'sub', style: 'margin:6px 2px' }, 'Pregúntame también: «sus facturas», «sus pedidos», «qué compra».')], voz: res, otros, cli };
+  }
   if (d.tipo === 'factura') {
     let fs = [];
     if (cli) { const r = await sb.from('golden_facturas').select('*').ilike('cliente_codigo', cli.codigo).order('fecha', { ascending: false }).limit(500); if (r.error) throw r.error; fs = (r.data || []).filter(f => !f.borrador); }
@@ -1538,9 +1648,12 @@ async function consultarDatos(d, elegir) {
     const res = cli ? (ps.length ? 'Sus últimos ' + ps.length + ' pedidos' : nom + ' no tiene pedidos.') : ps.length + ' pedidos el ' + fechaES(d.fecha || hoy());
     nodos.push(tarjetaConsulta(cli ? 'Pedidos de ' + nom : 'Pedidos', res, ps.map(p => filaCons(cli ? fechaES(p.fecha_entrega) : nombreCli(p.clientes), ESTADO_T[p.estado] || p.estado, null, () => go('pedido', { id: p.id }))), { t: 'Abrir la lista de pedidos ›', f: () => go('pedidos') })); voz.push(res);
   }
-  return { nodos, voz: voz.join('. ') };
+  return { nodos, voz: voz.join('. '), otros, cli };
 }
 /*GUIA_FIN*/
+
+
+
 
 
 
