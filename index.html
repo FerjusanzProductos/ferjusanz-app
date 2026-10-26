@@ -1400,7 +1400,7 @@ function vistaAyuda() {
     if (P.abrir) setTimeout(() => { const el = lista.querySelector('.card.tap'); }, 0);
   }
   function pintaAsistente() {
-    const salida = h('div', {}), ctx = h('div', {});
+    const salida = h('div', { style: 'scroll-margin-top:72px' }), ctx = h('div', {});
     const nombre = state.perfil ? state.perfil.nombre.split(' ')[0] : '';
     const inp = h('input', { placeholder: 'Escribe o pulsa 🎤 y cuéntame qué te pasa', onkeydown: e => { if (e.key === 'Enter') preguntar(); } });
     const leerAuto = h('input', { type: 'checkbox', style: 'width:26px;height:26px;min-height:0;flex:none;padding:0', checked: LS.get('fj_asis_voz', false), onchange: () => LS.set('fj_asis_voz', leerAuto.checked) });
@@ -1410,32 +1410,40 @@ function vistaAyuda() {
       if (rec) { try { rec.stop(); } catch (e) { } return; }
       rec = await escucharPregunta((t, fin, final, alts) => { inp.value = t; if (final) { rec = null; preguntar(t, alts); } }, on => { estadoMic(on); if (!on) rec = null; });
     };
+    const subir = () => { setTimeout(() => { try { salida.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { salida.scrollIntoView(); } }, 60); };
     function preguntar(q, alts) {
       q = q || inp.value; if (!q.trim()) return;
       if (alts && alts.length > 1) { let mejor = q, ms = -1; alts.forEach(x => { const o = guiaOpciones(x, 1)[0]; const s = o ? o.sc : 0; if (s > ms) { ms = s; mejor = x; } }); q = mejor; }
-      inp.value = q; pararVoz(); const ops = guiaOpciones(q, 4);
+      inp.value = q; pararVoz(); aviso.style.display = 'none'; const ops = guiaOpciones(q, 4);
       const util = h('div', { class: 'card' }, h('b', {}, '¿Te ha servido?'), h('div', { style: 'display:flex;gap:6px;margin-top:6px;flex-wrap:wrap' },
         h('button', { class: 'small', onclick: () => util.replaceChildren(h('b', {}, '¡Me alegro! 👍')) }, 'Sí'),
         h('button', { class: 'ghost small', onclick: () => { const l = LS.get('fj_asis_sin', []); l.push({ q, f: new Date().toISOString() }); LS.set('fj_asis_sin', l.slice(-50)); util.replaceChildren(h('div', { class: 'sub' }, 'Vaya, perdona. Pregúntalo a la oficina; así lo apunto para ampliarme.'), h('button', { class: 'small', style: 'margin-top:6px', onclick: () => guiaWhatsApp('Hola, no encuentro en la app cómo hacer esto: «' + q + '»') }, '📲 Preguntar a la oficina por WhatsApp')); } }, 'No')));
-      if (!ops.length) { salida.replaceChildren(h('p', { class: 'vacio' }, 'No he entendido bien «' + q + '». Prueba con otras palabras (pedido, albarán, sobrante, factura…) o pulsa una de estas:'), h('div', { style: 'display:flex;flex-direction:column;gap:6px' }, GUIA.filter(guiaVisible).slice(2, 9).map(g => h('button', { class: 'ghost', style: 'text-align:left', onclick: () => preguntar(g.titulo) }, g.icono + ' ' + g.titulo))), h('button', { class: 'ghost', style: 'width:100%;margin-top:8px', onclick: () => guiaWhatsApp('Hola, no encuentro en la app cómo hacer esto: «' + q + '»') }, '📲 Preguntar a la oficina por WhatsApp')); return; }
+      if (!ops.length) { salida.replaceChildren(h('p', { class: 'vacio' }, 'No he entendido bien «' + q + '». Prueba con otras palabras (pedido, albarán, sobrante, factura…) o pulsa una de estas:'), h('div', { style: 'display:flex;flex-direction:column;gap:6px' }, GUIA.filter(guiaVisible).slice(2, 9).map(g => h('button', { class: 'ghost', style: 'text-align:left', onclick: () => preguntar(g.titulo) }, g.icono + ' ' + g.titulo))), h('button', { class: 'ghost', style: 'width:100%;margin-top:8px', onclick: () => guiaWhatsApp('Hola, no encuentro en la app cómo hacer esto: «' + q + '»') }, '📲 Preguntar a la oficina por WhatsApp')); subir(); return; }
       const lista = h('div', {}); const abrirUno = k => { [...lista.children].forEach((c, n) => { const cu = c.querySelector(':scope > div:last-child'); if (cu && c._cuerpo) c._cuerpo.style.display = n === k ? 'block' : 'none'; }); };
       salida.replaceChildren(h('p', { class: 'sub' }, ops.length > 1 ? 'He entendido «' + q + '». Elige lo que necesitas (toca para ver los pasos, o «Ir ›» para ir directo):' : 'He entendido «' + q + '»:'),
         ...ops.map((o, n) => o.tipo === 'prob' ? tarjetaProblema(o.it) : tarjetaGuia(o.it, n === 0)), util);
+      subir();
       if (leerAuto.checked) { const o = ops[0]; leerVoz(o.tipo === 'prob' ? textoLeerProb(o.it) : textoLeer(o.it)); }
     }
     const gDesde = P.desde && VOZ_VISTA[P.desde] ? GUIA.find(g => g.id === VOZ_VISTA[P.desde] && guiaVisible(g)) : null;
     if (gDesde) ctx.replaceChildren(h('p', { class: 'sub' }, 'Estás en esta pantalla. Así se usa:'), tarjetaGuia(gDesde, true));
     const ejemplos = ['Quiero apuntar un pedido', 'No me deja terminar el pedido', 'No veo lo nuevo de la app', 'Me equivoqué en un peso', '¿Cómo termino un pedido?', 'Se me ha olvidado un producto', 'Dónde veo los albaranes', '¿Qué copia le doy al cliente?', 'Cómo imprimo la hoja de compra'];
-    cont.replaceChildren(h('div', { class: 'aviso-card' }, (nombre ? 'Hola, ' + nombre + '. ' : '') + 'Soy el asistente. Escríbeme o háblame: dime qué te pasa o qué quieres hacer. Busco la solución, te la explico paso a paso, te la leo en voz alta si quieres y, cuando se puede, te la arreglo con un botón. No invento: si no lo sé, te lo digo.'), ctx,
+    const aviso = h('div', { class: 'aviso-card' }, (nombre ? 'Hola, ' + nombre + '. ' : '') + 'Soy el asistente. Escríbeme o háblame: dime qué te pasa o qué quieres hacer. Busco la solución, te la explico paso a paso, te la leo en voz alta si quieres y, cuando se puede, te la arreglo con un botón. No invento: si no lo sé, te lo digo.');
+    cont.replaceChildren(aviso, ctx,
       h('div', { style: 'display:flex;gap:8px;margin:8px 0' }, btnMic), inp,
       h('button', { style: 'width:100%;margin:8px 0 4px', onclick: () => preguntar() }, 'Preguntar'),
       h('label', { style: 'display:flex;gap:10px;align-items:center;font-size:15px;margin:8px 0' }, leerAuto, h('span', {}, '🔊 Leer la respuesta en voz alta')),
-      h('button', { class: 'ghost', style: 'width:100%;margin-bottom:8px', onclick: () => diagnosticoApp(salida) }, '🩺 Comprobar mi app (conexión, sesión, pendientes)'), h('div', { style: 'display:flex;flex-wrap:wrap;gap:6px;margin:8px 0' }, ejemplos.map(x => h('button', { class: 'chip', style: 'white-space:normal;text-align:left', onclick: () => preguntar(x) }, x))), salida);
+      salida,
+      h('div', { class: 'sub', style: 'margin:14px 0 4px' }, 'Otras cosas que puedes preguntar:'),
+      h('div', { style: 'display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px' }, ejemplos.map(x => h('button', { class: 'chip', style: 'white-space:normal;text-align:left', onclick: () => preguntar(x) }, x))),
+      h('button', { class: 'ghost', style: 'width:100%;margin-bottom:8px', onclick: async () => { aviso.style.display = 'none'; await diagnosticoApp(salida); subir(); } }, '🩺 Comprobar mi app (conexión, sesión, pendientes)'));
   }
   function pinta() { pararVoz(); chips.replaceChildren(...[['asistente', '🤖 Asistente'], ['guia', '📖 Guía paso a paso']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; pinta(); } }, n))); modo === 'asistente' ? pintaAsistente() : pintaGuia(); }
   $app.replaceChildren(shell('Ayuda', h('div', {}, chips, cont), { volver: () => go('inicio') })); renderBanner(); pinta();
 }
 /*GUIA_FIN*/
+
+
 
 
 
