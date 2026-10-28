@@ -342,6 +342,11 @@ function crearSbPractica(){
       DB.asignaciones_lote=DB.asignaciones_lote.filter(x=>x.linea_id!==l.id);if(a.p_lote)DB.asignaciones_lote.push({id:'as'+Math.random().toString(36).slice(2,8),linea_id:l.id,lote_id:a.p_lote,cantidad:l.unidad_precio==='kg'?(l.peso_real||0):l.cantidad_pedida});return null;},
     corregir_trazabilidad(a){const mot=(a.p_motivo||'').trim();if(!mot)throw new Error('MOTIVO_OBLIGATORIO');const ls=DB.lineas_pedido.filter(l=>l.pedido_id===a.p_pedido);this._vtz(a.p_pedido,a.p_asignaciones||[]);
       DB.asignaciones_lote=DB.asignaciones_lote.filter(x=>!ls.some(l=>l.id===x.linea_id));(a.p_asignaciones||[]).forEach(x=>DB.asignaciones_lote.push({id:'as'+Math.random().toString(36).slice(2,8),linea_id:x.linea_id,lote_id:x.lote_id,cantidad:x.cantidad}));const al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);al.traza_estado='confirmada';al.traza_motivo=mot;DB.log.push({accion:'CORREGIR_TRAZABILIDAD',motivo:mot});return null;},
+    editar_pedido(a){const ped=DB.pedidos.find(x=>x.id===a.p_pedido);if(!ped)throw new Error('PEDIDO_NO_EXISTE');if(ped.estado==='terminado'||ped.estado==='anulado')throw new Error('PEDIDO_CERRADO');
+      if(a.p_cliente)ped.cliente_id=a.p_cliente;if(a.p_fecha)ped.fecha_entrega=a.p_fecha;if(a.p_cambiar_notas)ped.notas=(a.p_notas||'').trim()||null;
+      (a.p_lineas||[]).forEach(x=>{const l=DB.lineas_pedido.find(y=>y.id===x.id&&y.pedido_id===a.p_pedido);if(!l)throw new Error('LINEA_NO_ES_DE_ESTE_PEDIDO');
+        if(x.quitar){if(l.estado!=='pendiente'||l.peso_real!=null)throw new Error('LINEA_YA_PREPARADA');DB.lineas_pedido=DB.lineas_pedido.filter(y=>y.id!==l.id);return;}
+        if(x.cantidad!=null)l.cantidad_pedida=x.cantidad;if(x.unidad)l.unidad_pedida=x.unidad;if(x.cambiar_precio)l.precio=x.precio;});return null;},
     anadir_venta_ruta(a){const ped=DB.pedidos.find(x=>x.id===a.p_pedido);if(!ped)throw new Error('PEDIDO_NO_EXISTE');if(ped.estado==='anulado')throw new Error('PEDIDO_ANULADO');if(!(a.p_cantidad>0))throw new Error('CANTIDAD_NO_VALIDA');
       const id='vr'+Math.random().toString(36).slice(2,8);DB.lineas_pedido.push({id,pedido_id:a.p_pedido,producto_id:a.p_producto,cantidad_pedida:a.p_cantidad,unidad_pedida:a.p_unidad,peso_real:a.p_cantidad,unidad_precio:a.p_unidad_precio,precio:a.p_precio,estado:'hecha',notas:'Venta en ruta'+(a.p_nota?' · '+a.p_nota:''),version:1,venta_ruta:true});
       DB.albaranes.filter(x=>x.pedido_id===a.p_pedido&&x.estado==='emitido').forEach(x=>{x.traza_estado=null;x.traza_motivo=null;});return id;},
@@ -782,10 +787,86 @@ function pintarPedido() {
     if (esOficina()) acciones.push(h('button', { class: 'peligro', onclick: () => anularPedido(d.pedido.id) }, 'Anular pedido'));
   }
   if (estado === 'terminado') acciones.push(h('button', { class: 'ghost', onclick: () => abrirVentaRuta(d) }, '➕ Venta en ruta (añadir producto después de entregar)'));
+  if (estado !== 'terminado' && estado !== 'anulado') acciones.push(h('button', { style: 'min-height:50px', onclick: () => abrirEdicionPedido(d) }, '✏️ Editar pedido (cliente, fecha, productos, precios)'));
   if (esOficina() && estado !== 'terminado' && estado !== 'anulado') acciones.push(h('button', { class: 'ghost', onclick: () => go('importar', { anadir: d.pedido.id }) }, '➕ Añadir productos (texto, voz o foto)'));
   if (esOficina()) acciones.push(h('button', { class: 'ghost', onclick: async () => { if (!await confirmar('¿Archivar este pedido? Dejará de verse en las listas.')) return; const r = await sb.from('pedidos').update({ archivado: true }).eq('id', d.pedido.id); if (r.error) toast(msgErr(r.error), 'err'); else { toast('Pedido archivado', 'ok'); go('lista'); } } }, 'Archivar pedido'));
   kids.push(h('div', { style: 'display:flex;flex-direction:column;gap:10px;margin-top:14px' }, acciones));
   kids.push(bloqueHistorial(d)); cont.replaceChildren(...kids.filter(Boolean)); waMostrarOrigen(cont, d.pedido.id);
+}
+/* Editar un pedido antes de terminarlo: cambiar cliente, fecha, notas; cantidad, unidad y precio de cada línea; quitar líneas */
+function abrirEdicionPedido(d) {
+  if (!navigator.onLine) { toast('Necesitas conexión para editar el pedido.', 'err'); return; }
+  const ped = d.pedido; const cliActual = Object.assign({ id: ped.cliente_id }, ped.clientes || {});
+  const lv = (state.lv && state.lv.length ? state.lv : d.lineas);
+  const E = { cliente: null, buscando: false, fecha: ped.fecha_entrega || hoy(), notas: ped.notas || '',
+    lin: lv.map(l => ({ l, cant: String(l.cantidad_pedida).replace('.', ','), unidad: l.unidad_pedida, precio: l.precio != null ? String(l.precio).replace('.', ',') : '', quitar: false })) };
+  const cliBox = h('div', {}), lineasBox = h('div', {}); let cerrar = () => { };
+  function pintaCli() {
+    const c = E.cliente || cliActual;
+    const kids = [h('label', { class: 'campo' }, 'Cliente'), h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'nombre' }, nombreCli(c)), h('div', { class: 'sub' }, (c.codigo || '') + (E.cliente ? ' · NUEVO (cambiado)' : ''))),
+      h('button', { class: 'ghost small', onclick: () => { E.buscando = !E.buscando; pintaCli(); } }, E.buscando ? 'Cancelar' : 'Cambiar cliente'))];
+    if (E.buscando) {
+      const res = h('div', {});
+      const inp = h('input', { placeholder: 'Buscar el cliente correcto (nombre o código)…', oninput: debounce(async () => {
+        if (!inp.value.trim()) { res.replaceChildren(); return; }
+        try { const b = await buscar('clientes', inp.value, true, 8);
+          res.replaceChildren(...(b.length ? [h('div', { class: 'res' }, b.map(x => h('button', { onclick: () => { E.cliente = x.id === ped.cliente_id ? null : x; E.buscando = false; pintaCli(); } }, nombreCli(x) + '  ·  ' + (x.codigo || ''))))] : [h('p', { class: 'sub' }, 'Sin resultados.')]));
+        } catch (e) { res.replaceChildren(h('p', { class: 'err' }, msgErr(e))); } }, 250) });
+      kids.push(inp, res); setTimeout(() => inp.focus(), 50);
+    }
+    cliBox.replaceChildren(...kids);
+  }
+  function pintaLineas() {
+    lineasBox.replaceChildren(...E.lin.map(x => {
+      const l = x.l; const prep = !!l._hecha;
+      const cc = cajaCoste(l.producto_id, () => x.precio, () => l.unidad_precio);
+      return h('div', { class: 'card', style: x.quitar ? 'opacity:.45' : '' },
+        h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, l.productos ? l.productos.nombre : '—'), prep ? h('div', { class: 'sub' }, '✔ ya preparada: no se puede quitar') : null),
+          prep ? null : h('button', { class: x.quitar ? 'ghost small' : 'peligro small', onclick: () => { x.quitar = !x.quitar; pintaLineas(); } }, x.quitar ? 'Dejar' : 'Quitar')),
+        x.quitar ? h('div', { class: 'sub' }, 'Se quitará del pedido al guardar.') : h('div', { style: 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px' },
+          h('label', { class: 'campo' }, 'Cantidad', h('input', { type: 'text', inputmode: 'decimal', value: x.cant, oninput: e => { x.cant = e.target.value; } })),
+          h('label', { class: 'campo' }, 'Unidad', h('select', { onchange: e => { x.unidad = e.target.value; } }, UNIDADES.map(u => h('option', { value: u, selected: u === x.unidad }, u)))),
+          h('label', { class: 'campo' }, 'Precio €', h('input', { type: 'text', inputmode: 'decimal', value: x.precio, placeholder: 'sin precio', oninput: e => { x.precio = e.target.value; cc.act(); } }))),
+        x.quitar ? null : cc);
+    }));
+  }
+  async function guardar(btn) {
+    if (!E.fecha) { toast('Pon la fecha de entrega', 'err'); return; }
+    const cambios = [];
+    for (const x of E.lin) {
+      if (x.quitar) { cambios.push({ tipo: 'del', x }); continue; }
+      const q = parseNum(x.cant); if (q === null || isNaN(q) || q <= 0) { toast('Cantidad no válida en ' + (x.l.productos ? x.l.productos.nombre : 'una línea'), 'err'); return; }
+      const pr = String(x.precio).trim() === '' ? null : parseNum(x.precio); if (pr !== null && (isNaN(pr) || pr < 0)) { toast('Precio no válido en ' + (x.l.productos ? x.l.productos.nombre : 'una línea'), 'err'); return; }
+      const antes = x.l.precio != null ? Number(x.l.precio) : null;
+      if (q !== Number(x.l.cantidad_pedida) || x.unidad !== x.l.unidad_pedida || pr !== antes) cambios.push({ tipo: 'upd', x, q, pr });
+    }
+    const quitadas = cambios.filter(k => k.tipo === 'del').length;
+    if (!E.cliente && E.fecha === ped.fecha_entrega && E.notas.trim() === (ped.notas || '').trim() && !cambios.length) { toast('No has cambiado nada', 'err'); return; }
+    let repreciar = false;
+    if (E.cliente && cambios.concat(E.lin.map(x => ({ tipo: 'nada', x }))).length) repreciar = await confirmar('Cambias el pedido a ' + nombreCli(E.cliente) + '.\n\n¿Poner también los precios de ' + nombreCli(E.cliente) + ' en las líneas que no hayas tocado?\n\nAceptar = sí, usar sus precios · Cancelar = dejar los precios como están');
+    if (quitadas && !await confirmar('Se van a quitar ' + quitadas + ' línea(s) del pedido. ¿Seguir?')) return;
+    btn.disabled = true;
+    try {
+      let nuevos = {}; if (repreciar) nuevos = await preciosPara(E.cliente.id, E.lin.filter(x => !x.quitar).map(x => x.l.producto_id));
+      const lineas = [];
+      for (const x of E.lin) {
+        if (x.quitar) { lineas.push({ id: x.l.id, quitar: true }); continue; }
+        const k = cambios.find(z => z.tipo === 'upd' && z.x === x); const o = { id: x.l.id };
+        if (k) { o.cantidad = k.q; o.unidad = x.unidad; o.cambiar_precio = true; o.precio = k.pr; }
+        else if (repreciar && nuevos[x.l.producto_id] != null && Number(nuevos[x.l.producto_id]) !== Number(x.l.precio)) { o.cambiar_precio = true; o.precio = Number(nuevos[x.l.producto_id]); }
+        if (Object.keys(o).length > 1) lineas.push(o);
+      }
+      const r = await sb.rpc('editar_pedido', { p_pedido: ped.id, p_cliente: E.cliente ? E.cliente.id : null, p_fecha: E.fecha !== ped.fecha_entrega ? E.fecha : null, p_notas: E.notas.trim() || null, p_cambiar_notas: E.notas.trim() !== (ped.notas || '').trim(), p_lineas: lineas });
+      if (r.error) throw r.error;
+      cerrar(); toast('Pedido actualizado', 'ok'); actualizarPedido();
+    } catch (e) { btn.disabled = false; toast(msgErr(e), 'err'); }
+  }
+  pintaCli(); pintaLineas();
+  const fecha = h('input', { type: 'date', value: E.fecha, onchange: e => { E.fecha = e.target.value; } });
+  const notas = h('textarea', { rows: 2, placeholder: 'Notas del pedido (opcional)', oninput: e => { E.notas = e.target.value; } }); notas.value = E.notas;
+  const btnG = h('button', { class: 'guardar', style: 'width:100%;margin:10px 0', onclick: () => guardar(btnG) }, 'Guardar cambios');
+  cerrar = hoja('✏️ Editar pedido', h('div', {}, h('p', { class: 'sub' }, 'Cambia lo que haga falta. No se toca nada hasta que pulses «Guardar cambios». Para añadir productos nuevos usa «➕ Añadir productos».'),
+    cliBox, h('label', { class: 'campo' }, 'Fecha de entrega', fecha), h('label', { class: 'campo' }, 'Notas', notas), h('h3', {}, 'Productos'), lineasBox, btnG));
 }
 /* Venta en ruta: producto que se deja al cliente sin estar en el pedido; se añade al pedido y al albarán */
 function abrirVentaRuta(d) {
