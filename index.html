@@ -2819,9 +2819,9 @@ function vistaCompras() {
       if (c.error) { btn.disabled = false; toast(msgErr(c.error), 'err'); return; }
       const lo = await sb.from('lotes').insert(filas.map(f => Object.assign({ compra_id: c.data.id }, f)));
       if (lo.error) { await sb.from('compras').delete().eq('id', c.data.id); btn.disabled = false; toast(msgErr(lo.error), 'err'); return; }
-      try { const tf = filas.filter(f => f.precio_compra != null && f.precio_compra > 0).map(f => ({ producto_id: f.producto_id, proveedor_id: st.prov, precio: f.precio_compra, fecha: st.fecha, origen: 'app', updated_at: new Date().toISOString() })); if (tf.length) await sb.from('tarifas_compra').upsert(tf, { onConflict: 'producto_id,proveedor_id' }); } catch (e) { }
+      let tcOmitidos = 0; try { let tf = filas.filter(f => f.precio_compra != null && f.precio_compra > 0).map(f => ({ producto_id: f.producto_id, proveedor_id: st.prov, precio: f.precio_compra, fecha: st.fecha, origen: 'app', updated_at: new Date().toISOString() })); if (tf.length) { try { const ex = await sb.from('tarifas_compra').select('producto_id,fecha').eq('proveedor_id', st.prov).in('producto_id', tf.map(x => x.producto_id)); if (!ex.error && ex.data) { const mx = {}; ex.data.forEach(e => { mx[e.producto_id] = e.fecha; }); const n0 = tf.length; tf = tf.filter(x => !(mx[x.producto_id] && st.fecha && String(mx[x.producto_id]).slice(0, 10) > String(st.fecha).slice(0, 10))); tcOmitidos = n0 - tf.length; } } catch (e) { } if (tf.length) await sb.from('tarifas_compra').upsert(tf, { onConflict: 'producto_id,proveedor_id' }); } } catch (e) { }
       let fallos = 0; for (const fi of st.docs) { try { await subirDoc(fi, { fecha: st.fecha || hoy(), prov: st.prov, tipo: 'factura', importe: null, nota: null, compra: c.data.id }); } catch (e) { fallos++; } }
-      toast('Compra registrada con ' + filas.length + ' lote(s)' + (st.docs.length ? (fallos ? '. Algún archivo NO se subió: adjúntalo desde «Sin factura».' : ' y ' + st.docs.length + ' archivo(s) adjunto(s)') : ''), fallos ? 'err' : 'ok'); modo = 'lotes'; LS.set('fj_compras_modo', modo); pintarChips(); pintar();
+      toast('Compra registrada con ' + filas.length + ' lote(s)' + (st.docs.length ? (fallos ? '. Algún archivo NO se subió: adjúntalo desde «Sin factura».' : ' y ' + st.docs.length + ' archivo(s) adjunto(s)') : '') + (tcOmitidos ? '. ' + tcOmitidos + ' precio(s) de compra sin cambiar: ya había uno de una factura más reciente' : ''), fallos ? 'err' : 'ok'); modo = 'lotes'; LS.set('fj_compras_modo', modo); pintarChips(); pintar();
     }
     const pintarDocs = () => {
       const f1 = h('input', { type: 'file', accept: 'image/*', capture: 'environment', style: 'display:none', onchange: e => { st.docs.push(...Array.from(e.target.files || [])); pintarDocs(); } });
@@ -2842,7 +2842,9 @@ function vistaCompras() {
     const lista = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
     cont.replaceChildren(h('div', { class: 'aviso-card' }, 'Facturas que han llegado por correo. Elige a qué compra corresponde cada una, o descártala si no es una factura.'), lista);
     try {
-      const r = await sb.from('facturas_recibidas').select('id,recibido_en,remitente,asunto,ruta,nombre,proveedor_id,proveedores(nombre)').eq('estado', 'nueva').order('recibido_en', { ascending: false }).limit(100);
+      let r = await sb.from('facturas_recibidas').select('id,recibido_en,fecha_factura,remitente,asunto,ruta,nombre,proveedor_id,proveedores(nombre)').eq('estado', 'nueva').order('recibido_en', { ascending: false }).limit(300);
+      if (r.error && /fecha_factura/i.test(r.error.message || '')) r = await sb.from('facturas_recibidas').select('id,recibido_en,remitente,asunto,ruta,nombre,proveedor_id,proveedores(nombre)').eq('estado', 'nueva').order('recibido_en', { ascending: false }).limit(300);
+      if (!r.error && r.data) { const fk = f => String(f.fecha_factura || f.recibido_en || '').slice(0, 10); r.data.sort((a, b) => fk(b).localeCompare(fk(a)) || String(b.recibido_en).localeCompare(String(a.recibido_en))); }
       if (r.error) { lista.replaceChildren(h('p', { class: 'err' }, /does not exist|schema cache|Could not find/i.test(r.error.message || '') ? 'Falta ejecutar en Supabase la Parte 27.' : msgErr(r.error))); return; }
       if (!r.data.length) { lista.replaceChildren(h('p', { class: 'vacio' }, '✔ No hay facturas nuevas por enlazar.')); return; }
       const provsR = await sb.from('proveedores').select('id,nombre,email').eq('activo', true).order('nombre'); const provs = provsR.data || [];
@@ -2850,7 +2852,7 @@ function vistaCompras() {
         const pv = f.proveedores ? uno(f.proveedores) : null;
         return h('div', { class: 'card' },
           h('div', { class: 'nombre' }, pv ? pv.nombre : (f.remitente || 'Remitente desconocido')),
-          h('div', { class: 'sub' }, [f.asunto, f.nombre, fechaES(String(f.recibido_en).slice(0, 10)), pv ? null : 'proveedor sin identificar'].filter(Boolean).join(' · ')),
+          h('div', { class: 'sub' }, [f.asunto, f.nombre, f.fecha_factura ? 'Factura del ' + fechaES(String(f.fecha_factura).slice(0, 10)) : 'Llegó el ' + fechaES(String(f.recibido_en).slice(0, 10)), pv ? null : 'proveedor sin identificar'].filter(Boolean).join(' · ')),
           h('div', { class: 'fila', style: 'gap:6px;margin-top:6px;justify-content:flex-start;flex-wrap:wrap' },
             h('button', { class: 'ghost small', onclick: () => verDocumento(f.ruta) }, '👁 Ver'),
             h('button', { class: 'small', onclick: () => enlazarRecibida(f, provs, pv) }, 'Enlazar con una compra'),
