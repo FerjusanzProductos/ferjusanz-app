@@ -4618,8 +4618,26 @@ function waItemsDeTrozo(chunk, corrInicial) {
   });
 }
 /* Interpreta el mensaje completo */
+/* Quita el ruido de WhatsApp: horas, ticks, separadores de día, cabeceras de exportación («[28/10/26, 14:32] Nombre: …») */
+function waLimpiaChat(texto) {
+  const EXP = /^\s*\[?\d{1,2}[\/.]\d{1,2}[\/.]\d{2,4},?\s+\d{1,2}[:.]\d{2}(?::\d{2})?\s*(?:[ap]\.?\s?m\.?)?\]?\s*(?:[-–]\s*)?/i;
+  const DIA = /^\s*(hoy|ayer|lunes|martes|miercoles|miércoles|jueves|viernes|sabado|sábado|domingo|\d{1,2}\s+de\s+[a-záéíóú]+(?:\s+de\s+\d{4})?)\s*$/i;
+  const BASURA = /^\s*(?:[vVwW✓✔√⁄]{1,4}|mensaje(?:s)? eliminado.*|escribe un mensaje.*|los mensajes y las llamadas.*|mensajes cifrados.*|\d{1,2}:\d{2}(?:\s*[vVwW✓✔√]{0,3})?|\d{1,2}:\d{2}\s+.*(?:%|4G|5G|LTE|wifi).*)\s*$/i;
+  const NO_HORA = /^(las|la|a|hasta|antes|desde|de|y|entre|sobre|hacia|para|dia|día)$/i;
+  let n = 0; const out = [];
+  String(texto || '').split(/\r?\n/).forEach(l => {
+    let x = l; const m = EXP.exec(x);
+    if (m) { x = x.slice(m[0].length); const nom = /^([^:\d]{1,40}):\s+/.exec(x); if (nom) x = x.slice(nom[0].length); n++; }
+    if (BASURA.test(x) || DIA.test(x)) { n++; return; }
+    const t = /^(.*\S)\s+(\d{1,2}:\d{2})(?:\s*[vVwW✓✔√]{1,3})?\s*$/.exec(x);
+    if (t) { const prev = (t[1].split(/\s+/).pop() || ''); if (!NO_HORA.test(prev)) { x = t[1]; n++; } }
+    x = x.replace(/\s+[✓✔√]{1,3}\s*$/, '');
+    if (x.trim() || !l.trim()) out.push(x);
+  });
+  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
 function waInterpretar(texto, ahora) {
-  ahora = ahora || new Date(); const avisos = []; const observaciones = []; const hora = { limite: null, desde: null, hasta: null };
+  ahora = ahora || new Date(); texto = waLimpiaChat(texto); const avisos = []; const observaciones = []; const hora = { limite: null, desde: null, hasta: null };
   const cf = waClienteFrase(texto); let t = cf.texto.replace(/(\d)\s*([a-zA-ZñÑ]{1,3})\.(?=\s+[a-zñ])/g, '$1 $2');
   const fr = waFecha(t, ahora); t = fr.texto; fr.avisos.forEach(a => avisos.push(a));
   const conAlmohadilla = t.indexOf('#') >= 0; const ignorado = []; let trozos;
@@ -4905,9 +4923,29 @@ async function waLeerPdf(file, progreso) {
   }
   return { texto: partes.join('\n'), conf: Math.min(...confs), paginas: pdf.numPages };
 }
+/* Prepara una captura/foto para el lector: más grande si es pequeña, grises, contraste al máximo y, si es modo oscuro, invertida */
+function waPrepara(canvas) {
+  try {
+    let w = canvas.width, hh = canvas.height; const k = Math.max(w, hh) < 1500 ? Math.min(2.5, 1800 / Math.max(w, hh)) : 1; w = Math.round(w * k); hh = Math.round(hh * k);
+    const c = document.createElement('canvas'); c.width = w; c.height = hh; const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(canvas, 0, 0, w, hh);
+    const im = x.getImageData(0, 0, w, hh); const d = im.data; const g = new Uint8ClampedArray(w * hh); const hist = new Uint32Array(256); let suma = 0;
+    for (let i = 0; i < g.length; i++) { const v = Math.round(d[i * 4] * 0.299 + d[i * 4 + 1] * 0.587 + d[i * 4 + 2] * 0.114); g[i] = v; hist[v]++; suma += v; }
+    const tot = g.length; let acc = 0, lo = 0, hi = 255; for (let v = 0; v < 256; v++) { acc += hist[v]; if (acc >= tot * 0.0005) { lo = v; break; } }
+    acc = 0; for (let v = 255; v >= 0; v--) { acc += hist[v]; if (acc >= tot * 0.0005) { hi = v; break; } }
+    const oscuro = suma / tot < 115; const rango = Math.max(40, hi - lo);
+    for (let i = 0; i < g.length; i++) { let v = (g[i] - lo) * 255 / rango; v = v < 0 ? 0 : v > 255 ? 255 : v; g[i] = oscuro ? 255 - v : v; }
+    /* las letras son lo más oscuro (o lo más claro, en modo oscuro) de la imagen: todo lo que no llega a ese extremo es fondo o burbuja y se pone blanco */
+    const t = 105;
+    for (let i = 0; i < g.length; i++) { let v = 128 + (g[i] - t) * 7; v = v < 0 ? 0 : v > 255 ? 255 : v; d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v; d[i * 4 + 3] = 255; }
+    x.putImageData(im, 0, 0); c.waOscuro = oscuro; return c;
+  } catch (e) { return canvas; }
+}
 async function waLeerArchivo(file, progreso) {
   if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) { const r = await waLeerPdf(file, progreso); r.nitidez = null; return r; }
-  const c = await waImagenACanvas(file, 2200); const nit = waNitidez(c); const o = await waOCR(c, progreso); o.nitidez = nit; return o;
+  const c = await waImagenACanvas(file, 2200); const nit = waNitidez(c);
+  let o = await waOCR(waPrepara(c), progreso);
+  if ((o.conf == null || o.conf < 72) && !window.__waSinReintento) { progreso && progreso('Probando otra forma de leerla…'); try { const o2 = await waOCR(c, progreso); if ((o2.conf || 0) > (o.conf || 0)) o = o2; } catch (e) { } }
+  o.nitidez = nit; o.texto = waLimpiaChat(o.texto); return o;
 }
 
 /* ---------- Lector de facturas de proveedores (gratis, dentro del móvil) ---------- */
@@ -5352,14 +5390,40 @@ function vistaImportar() {
     await aprenderFormatos();
     await recordarAlias(); toast('Productos añadidos al pedido', 'ok'); go('pedido', { id: S.anadir });
   }
+  /* Voz: entre las alternativas que da el móvil, elige la que más se parece a tus productos y clientes */
+  let vozVocab = null;
+  function vozVocabulario() {
+    if (vozVocab) return vozVocab; const v = new Set(); const add = t => waSin(String(t || '')).split(/[^a-z0-9ñ]+/).forEach(w => { if (w.length > 2) v.add(w); });
+    (S.prods || []).forEach(p => { add(p.nombre); (Array.isArray(p.alias) ? p.alias : []).forEach(add); }); (S.clis || []).forEach(c => { add(nombreCli(c)); add(c.nombre); });
+    Object.values(aprendidos('fj_wa_alias')).forEach(a => (a || []).forEach(add)); Object.values(aprendidos('fj_wa_alias_cli')).forEach(a => (a || []).forEach(add));
+    if (v.size) vozVocab = v; return v;
+  }
+  function vozMejor(r) {
+    try {
+      const n = Math.min(r.length || 1, 5); if (n < 2) return r[0].transcript || '';
+      const voc = vozVocabulario(); if (!voc.size) return r[0].transcript || '';
+      let mejor = 0, mp = -1;
+      for (let i = 0; i < n; i++) {
+        const ws = waSin(r[i].transcript || '').split(/[^a-z0-9ñ]+/).filter(w => w.length > 2); let pt = 0;
+        ws.forEach(w => { if (voc.has(w)) pt += 2; else if (WA_NUM1[w] != null || /^\d+$/.test(w)) pt += 1; });
+        pt = ws.length ? pt / ws.length : 0; pt += (r[i].confidence || 0) * 0.3 - i * 0.02;
+        if (pt > mp) { mp = pt; mejor = i; }
+      }
+      return r[mejor].transcript || '';
+    } catch (er) { return r[0].transcript || ''; }
+  }
+  /* Órdenes habladas: «siguiente» separa productos; «nueva línea» o «punto y aparte» pasan a otra línea */
+  function vozOrdenes(t) {
+    return t.replace(/\s+(?:punto y aparte|nueva l[ií]nea|salto de l[ií]nea)(?=\s|$)/gi, '\n').replace(/\s+siguiente(?=\s|$)/gi, ',').replace(/\s*\n\s*/g, '\n').replace(/,\s*,/g, ',');
+  }
   /* Dictado por voz (reconocimiento del navegador) */
   let rec = null, oyendo = false, baseVoz = '', parar = false, vacias = 0;
   function terminarVoz() { oyendo = false; pintarVoz(); if (ta.value.trim() && !S.archivos.length) S.origen = 'voz'; if (ta.value.trim()) interpretar(); }
   function arrancarVoz() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition; let hubo = false;
-    rec = new SR(); rec.lang = 'es-ES'; rec.continuous = false; rec.interimResults = true;
+    rec = new SR(); rec.lang = 'es-ES'; rec.continuous = false; rec.interimResults = true; try { rec.maxAlternatives = 5; } catch (er) { }
     /* una frase por sesión (evita el fallo de Android que repite el texto acumulado); se reinicia sola hasta pulsar Parar */
-    rec.onresult = e => { const r = e.results[e.results.length - 1]; const t = (r[0].transcript || '').trim(); if (!t) return; hubo = true; ta.value = baseVoz + t; if (r.isFinal) baseVoz = ta.value.trim() + ' '; };
+    rec.onresult = e => { const r = e.results[e.results.length - 1]; let t = (r.isFinal ? vozMejor(r) : (r[0].transcript || '')).trim(); if (!t) return; hubo = true; if (r.isFinal) t = vozOrdenes(t); ta.value = baseVoz + t; if (r.isFinal) baseVoz = ta.value.trim() + (/\n$/.test(ta.value) ? '' : ' '); };
     rec.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { parar = true; toast('No tengo permiso para el micrófono. Actívalo en los ajustes del navegador.', 'err'); } else if (e.error !== 'no-speech' && e.error !== 'aborted') toast('Error del dictado: ' + e.error, 'err'); };
     rec.onend = () => {
       if (ta.value.trim() && ta.value.trim() + ' ' !== baseVoz) baseVoz = ta.value.trim() + ' ';
@@ -5434,7 +5498,16 @@ function vistaImportar() {
         h('button', { class: 'ghost small', style: 'margin-top:4px', onclick: () => quitarArch(a) }, 'Quitar')))),
       S.archivos.some(a => a.estado === 'ok' || a.estado === 'dudosa') ? h('div', { class: 'sub' }, 'Compara cada línea de abajo con la imagen. La lectura gratuita funciona bien con texto impreso; la letra a mano puede fallar.') : null);
   }
-  const barra = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:8px 0' }, btnVoz,
+  async function pegarPortapapeles() {
+    let t = '';
+    try { t = await navigator.clipboard.readText(); } catch (e) { toast('No puedo leer lo copiado. Mantén pulsado en el recuadro de texto y elige «Pegar».', 'err'); ta.focus(); return; }
+    t = waLimpiaChat(t); if (!t.trim()) { toast('No hay nada copiado. En WhatsApp mantén pulsado el mensaje y elige «Copiar».', 'err'); return; }
+    if (ta.value.includes(t)) { toast('Eso ya está pegado', 'err'); return; }
+    ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + t; S.origen = 'texto'; await interpretar();
+  }
+  ta.addEventListener('paste', () => setTimeout(() => { if (ta.value.trim()) { const l = waLimpiaChat(ta.value); if (l !== ta.value.trim()) ta.value = l; interpretar(); } }, 250));
+  const barra = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:8px 0' },
+    h('button', { style: 'width:100%;min-height:52px;font-size:17px', onclick: pegarPortapapeles }, '📋 Pegar lo copiado (WhatsApp, correo…)'), btnVoz,
     h('button', { class: modo === 'escanear' ? '' : 'ghost', style: 'flex:1', onclick: () => inFoto.click() }, '📷 Hacer foto'),
     h('button', { class: 'ghost', style: 'flex:1', onclick: () => inGal.click() }, '🖼️ Galería / captura'),
     h('button', { class: 'ghost', style: 'flex:1', onclick: () => inDoc.click() }, '📄 PDF / documento'),
