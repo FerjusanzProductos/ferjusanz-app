@@ -1,7 +1,7 @@
 // Service worker de Ferjusanz: permite abrir la app sin conexión.
 // Guarda la propia app y la librería de Supabase. Los datos NUNCA se guardan aquí
 // (las llamadas a supabase.co siempre van a la red).
-const CACHE = 'ferjusanz-v22';
+const CACHE = 'ferjusanz-v23';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 // Librería de Supabase (la misma dirección que usa index.html): se guarda en la instalación
 // para que la app arranque aunque no haya conexión.
@@ -38,4 +38,20 @@ self.addEventListener('fetch', e => {
       .then(async res => res || (await guardado()) || red)
       .catch(() => guardado().then(r => r || Response.error()))
   );
+});
+
+// Avisos al móvil (push): se muestran aunque la app esté cerrada.
+self.addEventListener('push', e => {
+  let d = {}; try { d = e.data ? e.data.json() : {}; } catch (x) { d = { titulo: 'Ferjusanz', cuerpo: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.registration.showNotification(d.titulo || 'Ferjusanz', {
+    body: d.cuerpo || '', icon: 'icon-192.png', badge: 'icon-192.png', tag: d.tag || 'ferjusanz', renotify: true, data: { ir: d.ir || '' }
+  }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close(); const ir = (e.notification.data && e.notification.data.ir) || '';
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
+    const c = cs[0];
+    if (c) { if (ir) c.postMessage({ ir }); return c.focus(); }
+    return self.clients.openWindow('./' + (ir ? '?ir=' + ir : ''));
+  }));
 });
