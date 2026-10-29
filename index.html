@@ -373,6 +373,8 @@ function crearSbPractica(){
     corregir_linea(a){const l=DB.lineas_pedido.find(x=>x.id===a.p_linea);if(!l)throw new Error('LINEA_NO_EXISTE');if(a.p_cantidad!=null){if(!(a.p_cantidad>0))throw new Error('CANTIDAD_NO_VALIDA');l.cantidad_pedida=a.p_cantidad;}if(a.p_unidad)l.unidad_pedida=a.p_unidad;if(a.p_peso!=null){l.peso_real=a.p_peso;l.estado='hecha';}l.version=(l.version||1)+1;return null;},
     marcar_compra_despues(a){const l=DB.lineas_pedido.find(x=>x.id===a.p_linea);if(!l)throw new Error('LINEA_NO_EXISTE');l.peso_real=0;l.estado='no_disponible';l.notas='Se compra después';l.version=(l.version||1)+1;return null;},
     poner_info_interna(a){(a.p_lineas||[]).forEach(x=>{const l=DB.lineas_pedido.find(y=>y.id===x.id&&y.pedido_id===a.p_pedido);if(!l)throw new Error('LINEA_NO_ES_DE_ESTE_PEDIDO');l.precio_lista=x.precio_lista;l.nota_interna=x.nota_interna;});return (a.p_lineas||[]).length;},
+    guardar_push(a){return null;},
+    quitar_push(a){return null;},
     quitar_linea(a){const l=DB.lineas_pedido.find(x=>x.id===a.p_linea);if(!l)throw new Error('LINEA_NO_EXISTE');if(l.estado==='pendiente'&&l.peso_real==null){DB.lineas_pedido=DB.lineas_pedido.filter(y=>y.id!==l.id);return 'quitada';}l.peso_real=0;l.estado='no_disponible';l.version=(l.version||1)+1;return 'no_disponible';},
     borrar_pedido(a){const p=DB.pedidos.find(x=>x.id===a.p_pedido);if(!p)throw new Error('PEDIDO_NO_EXISTE');if(p.estado==='terminado')throw new Error('PEDIDO_TERMINADO');p.estado='anulado';return null;},
     anadir_venta_ruta(a){const ped=DB.pedidos.find(x=>x.id===a.p_pedido);if(!ped)throw new Error('PEDIDO_NO_EXISTE');if(ped.estado==='anulado')throw new Error('PEDIDO_ANULADO');if(!(a.p_cantidad>0))throw new Error('CANTIDAD_NO_VALIDA');
@@ -2906,6 +2908,44 @@ function fichajeAbierto(filas) {
   }
   return { abierto, pend };
 }
+/* Avisos al móvil (notificaciones push): llegan aunque la app esté cerrada */
+const PUSH_PUB = 'BH2MY9ZY4Ord6p4CtrrALPRd9GzLv11yypivKSc7OuI92jJltsy0jO0626uAh5qC5Iem2Z4AZBf3ONcLAsYlCrM';
+const b64u8 = t => { const p = '='.repeat((4 - t.length % 4) % 4); const b = atob((t + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(b, c => c.charCodeAt(0)); };
+const pushSoportado = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+async function pushSuscripcion() { try { const reg = await navigator.serviceWorker.ready; return await reg.pushManager.getSubscription(); } catch (e) { return null; } }
+async function activarPush() {
+  if (!pushSoportado()) throw new Error('Este navegador no admite avisos. Abre la app en Chrome.');
+  const perm = await Notification.requestPermission(); if (perm !== 'granted') throw new Error('No has dado permiso. Actívalo en los ajustes del navegador para esta app.');
+  const reg = await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u8(PUSH_PUB) });
+  const j = sub.toJSON();
+  const r = await sb.rpc('guardar_push', { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_dispositivo: (navigator.userAgent || '').slice(0, 120) });
+  if (r.error) throw r.error;
+}
+async function desactivarPush() {
+  const sub = await pushSuscripcion(); if (!sub) return;
+  const ep = sub.endpoint; await sub.unsubscribe().catch(() => { });
+  try { await sb.rpc('quitar_push', { p_endpoint: ep }); } catch (e) { }
+}
+function panelPush() {
+  if (!puedeCompras() && !esOficina()) return null;
+  const caja = h('div', { class: 'card' }); let activo = false;
+  const pinta = (msg) => {
+    const b = h('button', { class: activo ? 'ghost' : 'guardar', style: 'width:100%;min-height:50px', onclick: async () => {
+      b.disabled = true;
+      try { if (activo) { await desactivarPush(); activo = false; toast('Avisos desactivados en este móvil', 'ok'); } else { await activarPush(); activo = true; toast('Avisos activados en este móvil', 'ok'); } }
+      catch (e) { toast(msgErr(e), 'err'); }
+      pinta();
+    } }, activo ? 'Desactivar avisos en este móvil' : '🔔 Activar avisos en este móvil');
+    caja.replaceChildren(...[h('div', { class: 'nombre', style: 'margin-bottom:4px' }, '🔔 Avisos al móvil'),
+      h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Te avisa en el móvil, aunque la app esté cerrada, cuando llega una factura de un proveedor. ' + (pushSoportado() ? (activo ? '✔ Activados en este móvil.' : 'Ahora mismo están desactivados.') : 'Este navegador no los admite: usa Chrome.')),
+      pushSoportado() ? b : null, msg ? h('div', { class: 'sub' }, msg) : null].filter(Boolean));
+  };
+  pinta();
+  if (pushSoportado()) pushSuscripcion().then(sub => { activo = !!sub && Notification.permission === 'granted'; pinta(); });
+  return caja;
+}
 function vistaPerfil() {
   state.view = 'perfil';
   const me = state.user.id; const cont = h('div', {});
@@ -2963,7 +3003,7 @@ function vistaPerfil() {
         abierto ? h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Entrada hoy a las ' + fmtHora(abierto.entrada) + (abierto.pendiente ? ' (pendiente de enviar)' : '')) : h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Todavía no has fichado la entrada.'),
         h('button', { class: 'fichar-btn' + (abierto ? ' sal' : ''), onclick: fichar }, abierto ? 'Fichar SALIDA' : 'Fichar ENTRADA'),
         filas.length ? h('div', { style: 'margin-top:12px' }, h('div', { class: 'sub', style: 'margin-bottom:4px' }, 'Mis últimos fichajes'), ...lista) : null),
-      panelAvisos(), panelPracticas(),
+      panelAvisos(), panelPush(), panelPracticas(),
       esOficina() ? h('button', { class: 'ghost', style: 'width:100%;margin-bottom:10px', onclick: () => go('fichajes') }, 'Fichajes del equipo') : null,
       h('button', { class: 'peligro', style: 'width:100%', onclick: salir }, 'Cerrar sesión'));
   }
@@ -3044,8 +3084,17 @@ function vistaFichajes() {
 }
 
 /* =====================  MÁS (menú)  ===================== */
+/* Globito rojo con la cantidad de cosas pendientes sobre un círculo del menú principal */
+function marcaPend(re, n) {
+  const b = [...document.querySelectorAll('.circ')].find(x => re.test((x.title || '') + ' ' + x.textContent)); if (!b) return;
+  const c = b.querySelector('.c'); if (!c) return; let sp = c.querySelector('.insig.pend');
+  if (!n) { if (sp) sp.remove(); return; }
+  if (!sp) { sp = h('span', { class: 'insig pend' }); c.append(sp); }
+  sp.textContent = n > 99 ? '99+' : String(n);
+}
 function vistaMas() {
   state.view = 'inicio';
+  if (LS.get('fj_ir', null) === 'recib') { LS.set('fj_ir', null); LS.set('fj_compras_modo', 'recib'); setTimeout(() => go('compras'), 0); return; }
   const c = (ico, t, f, color, badge) => h('button', { class: 'circ', onclick: f }, h('span', { class: 'c', style: '--c:' + color }, ico, badge ? h('span', { class: 'insig' }, badge) : null), h('span', { class: 'l' }, t));
   const CORTO = { 'A quién compramos hoy': 'A quién compramos', 'Facturas de proveedores': 'Facturas proveed.', 'Facturas de clientes': 'Facturas clientes', 'Histórico de Golden': 'Histórico Golden', 'Registro de cambios': 'Registro cambios', 'Copia de seguridad': 'Copia seguridad', 'Lista de pedidos': 'Lista pedidos', 'Hoja de compra': 'Hoja compra', 'Avisos y ofertas': 'Avisos y ofertas' };
   /* Cada grupo es UN rosco: círculos alrededor de un centro. Si hay muchos, un segundo anillo por dentro. Todo visible y pulsable. */
@@ -3067,7 +3116,7 @@ function vistaMas() {
   const k = [
     h('div', { class: 'saludo' }, h('div', { style: 'font-size:20px;font-weight:800' }, 'Hola, ' + (state.perfil.nombre || '').split(' ')[0]), h('div', { class: 'sub' }, (d => d.charAt(0).toUpperCase() + d.slice(1))(fmtDiaLargo(new Date().toISOString())))),
     (() => { const num = h('span', { class: 'num cero' }, '…'); const b = h('button', { class: 'bandeja-fac', onclick: () => go('preciosp') }, h('span', { class: 'ic' }, '💶'), h('span', { class: 'tt' }, 'Poner precios a los pedidos', h('small', {}, 'Por hacer, en preparación o terminados · sin esperar a la factura')), num);
-      if (navigator.onLine) sb.from('lineas_pedido').select('pedido_id,precio,pedidos(estado,archivado)').is('precio', null).limit(1500).then(r => { if (r.error) { num.textContent = ''; return; } const ids = new Set((r.data || []).filter(l => { const p = uno(l.pedidos) || {}; return p.estado !== 'anulado' && !p.archivado; }).map(l => l.pedido_id)); num.textContent = String(ids.size); num.className = 'num' + (ids.size ? '' : ' cero'); }).catch(() => { num.textContent = ''; }); else num.textContent = '';
+      if (navigator.onLine) sb.from('lineas_pedido').select('pedido_id,precio,pedidos(estado,archivado)').is('precio', null).limit(1500).then(r => { if (r.error) { num.textContent = ''; return; } const ids = new Set((r.data || []).filter(l => { const p = uno(l.pedidos) || {}; return p.estado !== 'anulado' && !p.archivado; }).map(l => l.pedido_id)); num.textContent = String(ids.size); num.className = 'num' + (ids.size ? '' : ' cero'); marcaPend(/Poner precios/, ids.size); }).catch(() => { num.textContent = ''; }); else num.textContent = '';
       return b; })(),
     ...g('Trabajo diario', c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Carga', () => go('carga'), V), c('✅', 'Entregas', () => go('entregas'), V), c('📑', 'Lista de pedidos', () => go('pedidos'), V), c('🧺', 'Hoja de compra', () => go('hojacompra'), V), c('🧾', 'Albaranes', () => go('albaranes'), V), c('💶', 'Poner precios', () => go('preciosp'), V), c('🗺️', 'Ruta', () => go('ruta'), V), c('📅', 'Calendario', () => go('calendario'), V),
       c('🛒', 'A quién compramos hoy', () => go('quien'), V), c('➕', 'Nuevo pedido', () => go('nuevo'), V), c('✍️', 'Escribir pedido', () => go('importar'), V), c('🎤', 'Dictar pedido', () => go('importar', { modo: 'voz' }), V), c('📷', 'Escanear pedido', () => go('importar', { modo: 'escanear' }), V), c('💰', 'Cobros', () => go('cobros'), V), c('🧮', 'Deudas', () => go('deudas'), V)),
@@ -3077,6 +3126,12 @@ function vistaMas() {
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('❓', 'Ayuda y guía', () => go('ayuda'), T), c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
   k.push(h('button', { class: 'peligro', style: 'width:100%;margin-top:20px', onclick: salir }, 'Cerrar sesión'));
   $app.replaceChildren(shell('Inicio', h('div', {}, ...k))); renderBanner();
+  if (navigator.onLine) {
+    const hoyF = hoy(new Date());
+    if (puedeCompras()) sb.from('facturas_recibidas').select('id', { count: 'exact', head: true }).eq('estado', 'nueva').then(q => { if (!q.error && state.view === 'inicio') marcaPend(/Facturas de proveedores|Facturas proveed/, q.count || 0); }).catch(() => { });
+    sb.from('incidencias').select('id', { count: 'exact', head: true }).neq('archivado', true).eq('resuelta', false).then(q => { if (!q.error && state.view === 'inicio') marcaPend(/Incidencias/, q.count || 0); }).catch(() => { });
+    sb.from('pedidos').select('id', { count: 'exact', head: true }).eq('fecha_entrega', hoyF).in('estado', ['pendiente', 'en_preparacion']).neq('archivado', true).then(q => { if (!q.error && state.view === 'inicio') marcaPend(/^\s*Preparar/, q.count || 0); }).catch(() => { });
+  }
   if (esOficina() && navigator.onLine) cuentaCambiosTras().then(n => { if (!n || state.view !== 'inicio') return; const b = [...document.querySelectorAll('.circ')].find(x => /Registro de cambios/.test(x.textContent)); if (b) { const sp = b.querySelector('.c'); if (sp && !sp.querySelector('.insig')) sp.append(h('span', { class: 'insig' }, String(n > 99 ? '99+' : n))); b.onclick = () => go('registro', { grupo: 'tras' }); } }).catch(() => { });
 }
 
@@ -6644,6 +6699,7 @@ async function waMostrarOrigen(cont, pedidoId) {
 }
 
 /* Compartir desde WhatsApp (Web Share Target): el texto llega en la dirección y se guarda hasta entrar */
+(function () { try { const p = new URLSearchParams(location.search); if (p.get('ir') === 'recib') { LS.set('fj_ir', 'recib'); history.replaceState(null, '', location.pathname); } } catch (e) { } })();
 (function () { try { const p = new URLSearchParams(location.search); if (p.has('text') || p.has('title')) { const t = (p.get('text') || '') || (p.get('title') || ''); if (t.trim()) localStorage.setItem('fj_wa_pend_raw', t); history.replaceState(null, '', location.pathname); } } catch (e) { } })();
 
 /* ---------- Buscador global: busca en todos los apartados que el usuario puede ver ---------- */
@@ -6798,7 +6854,7 @@ async function init() {
   window.addEventListener('offline', renderBanner);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
   setInterval(tick, 8000);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => { });
+  if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(() => { }); navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.ir === 'recib' && state.user) { LS.set('fj_compras_modo', 'recib'); go('compras'); } }); }
 }
 init();
 </script>
