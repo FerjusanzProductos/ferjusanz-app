@@ -70,8 +70,12 @@ nav.tabs button.on{background:var(--verde-cl);color:var(--verde-osc);border-colo
 .sheet{background:#fff;width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
 .sheet h2{margin:0;font-size:22px}
 .sheet .unidad{text-align:center;color:var(--txt2);margin-top:-6px}
-.sheet .acciones{display:flex;gap:10px}
-.sheet .acciones button{flex:1}
+.sheet .acciones{display:flex;flex-wrap:wrap;gap:10px}
+/* Máximo dos columnas: cualquier fila con 3 o más botones se parte en dos columnas */
+div[style*="display:flex"]:has(>button:nth-child(3)){flex-wrap:wrap}
+div[style*="display:flex"]:has(>button:nth-child(3))>button{flex:1 1 calc(50% - 8px)}
+div[style*="display:grid"]:has(>button:nth-child(3)){grid-template-columns:1fr 1fr!important}
+.sheet .acciones button{flex:1 1 calc(50% - 10px);min-height:48px}
 .sheet .guardar{min-height:68px;font-size:20px}
 label.campo{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--txt2);margin-bottom:10px}
 .res{background:#fff;border:1px solid var(--borde);border-radius:12px;margin-top:6px;overflow:hidden}
@@ -143,7 +147,7 @@ header .quien span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hoja .caja.on{background:#000}
 .tot-num{font-size:20px;font-weight:800;white-space:nowrap;text-align:right}
 .saludo{margin:4px 4px 0}
-.rueda{display:grid;grid-template-columns:repeat(3,1fr);gap:18px 6px;justify-items:center}
+.rueda{display:grid;grid-template-columns:repeat(2,1fr);gap:18px 10px;justify-items:center}
 .circ{background:none;border:0;padding:0;min-height:0;color:var(--txt);display:flex;flex-direction:column;align-items:center;gap:6px;width:100%}
 .circ .c{position:relative;width:78px;height:78px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;background:#fff;border:4px solid var(--c);box-shadow:0 3px 8px rgba(0,0,0,.12)}
 .circ:active .c{transform:scale(.94);background:var(--verde-cl)}
@@ -788,10 +792,10 @@ function pintarPedido() {
     h('div', { class: 'sub' }, (cli.codigo || '') + ' · ' + fechaES(d.pedido.fecha_entrega) + ' · ' + (cli.forma_pago === 'contado' ? 'Pago al contado' : 'Crédito')),
     d.pedido.notas ? h('div', { style: 'margin-top:6px' }, '📝 ' + d.pedido.notas) : null,
     h('div', { class: 'sub', style: 'margin-top:6px' }, hechas + ' de ' + ls.length + ' líneas preparadas')));
-  if (!cerrado) kids.push(h('div', { style: 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px' },
+  if (!cerrado) kids.push(h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px' },
     h('button', { class: 'ghost', style: 'min-height:48px', onclick: () => abrirEdicionPedido(d) }, '✏️ Editar'),
     h('button', { class: 'ghost', style: 'min-height:48px', onclick: () => abrirAnadirProducto(d) }, '➕ Añadir'),
-    h('button', { class: 'peligro', style: 'min-height:48px', onclick: () => borrarPedidoPrep(d) }, '🗑 Borrar')));
+    h('button', { class: 'peligro', style: 'grid-column:1/-1;min-height:48px', onclick: () => borrarPedidoPrep(d) }, '🗑 Borrar')));
   if (state.perfil.rol === 'preparador' && d.pedido.preparador_id && d.pedido.preparador_id !== state.user.id && !cerrado)
     kids.push(h('div', { class: 'aviso-card' }, 'Este pedido lo está preparando otra persona.'));
   if (d.cache) kids.push(h('div', { class: 'aviso-card' }, 'Datos guardados en este móvil; se actualizarán al volver la conexión.'));
@@ -847,7 +851,7 @@ async function abrirPrecios(pedidoId, alGuardar) {
   const importe = x => { const p = parseNum(x.precio); if (!(p >= 0) || x.precio === '') return null; const k = x.up === 'kg' ? x.l.peso_real : x.l.cantidad_pedida; return k == null ? null : Math.round(Number(k) * p * 100) / 100; };
   function total() { let t = 0, falta = 0; R.forEach(x => { const i = importe(x); if (i == null) falta++; else t += i; }); totalBox.textContent = 'Total sin IVA: ' + eur(t) + ' €' + (falta ? ' · faltan ' + falta + ' línea(s)' : ' ✔'); }
   R.forEach(x => {
-    const imp = h('div', { class: 'sub' }), cc = cajaCoste(x.l.producto_id, () => x.precio, () => x.up);
+    const imp = h('div', { class: 'sub' }), cc = cajaCoste(x.l.producto_id, () => x.precio, () => x.up, () => x.up === 'kg' ? x.l.peso_real : x.l.cantidad_pedida);
     const pintaImp = () => { const i = importe(x); imp.textContent = i != null ? 'Importe: ' + eur(i) + ' €' : (x.up === 'kg' && x.l.peso_real == null ? 'Sin pesar todavía: el importe saldrá al pesar' : ''); total(); };
     const inp = h('input', { type: 'text', inputmode: 'decimal', value: x.precio, placeholder: tarifas[x.l.producto_id] != null ? 'tarifa ' + eur(tarifas[x.l.producto_id]) : 'precio €', oninput: e => { x.precio = e.target.value; cc.act(); pintaImp(); } });
     x.inp = inp; x.pinta = pintaImp;
@@ -938,7 +942,7 @@ function abrirEdicionPedido(d) {
   function pintaLineas() {
     lineasBox.replaceChildren(...E.lin.map(x => {
       const l = x.l; const prep = !!l._hecha;
-      const cc = cajaCoste(l.producto_id, () => x.precio, () => l.unidad_precio);
+      const cc = cajaCoste(l.producto_id, () => x.precio, () => l.unidad_precio, () => l.unidad_precio === 'kg' ? (l._peso != null ? l._peso : l.peso_real) : parseNum(x.cant));
       return h('div', { class: 'card', style: x.quitar ? 'opacity:.45' : '' },
         h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, l.productos ? l.productos.nombre : '—'), prep ? h('div', { class: 'sub' }, '✔ ya preparada' + (l._peso != null ? ' (' + num(l._peso) + ')' : '') + ': si la quitas quedará como «no ha llegado»') : null),
           h('button', { class: x.quitar ? 'ghost small' : 'peligro small', onclick: () => { x.quitar = !x.quitar; pintaLineas(); } }, x.quitar ? 'Dejar' : (prep ? 'No ha llegado' : 'Quitar'))),
@@ -5582,7 +5586,7 @@ function cargaCoste(pid) {
   if (!COSTES_PEND[pid]) COSTES_PEND[pid] = costesCompra([pid]).then(o => { COSTES[pid] = o[pid] || null; delete COSTES_PEND[pid]; return COSTES[pid]; }).catch(() => { delete COSTES_PEND[pid]; return null; });
   return COSTES_PEND[pid];
 }
-function cajaCoste(pid, getPrecio, getUP) {
+function cajaCoste(pid, getPrecio, getUP, getCant) {
   const d = h('div', { class: 'sub', style: 'display:none;margin-top:4px;font-weight:600;color:#0f766e' });
   d.act = () => {
     const c = COSTES[pid]; if (!c) { d.style.display = 'none'; return; }
@@ -5591,7 +5595,8 @@ function cajaCoste(pid, getPrecio, getUP) {
     const bajo = p !== null && !isNaN(p) && p > 0 && c.precio > 0 && up === 'kg' && (!c.unidad || c.unidad === 'kg') && p < c.precio;
     d.style.color = bajo ? '#b91c1c' : '#0f766e';
     let gan = '';
-    if (p !== null && !isNaN(p) && p > 0 && c.precio > 0 && ((up === 'kg' && (!c.unidad || c.unidad === 'kg')) || (up !== 'kg' && c.unidad && c.unidad !== 'kg'))) { const g = p - c.precio; gan = ' · Ganas ' + (g >= 0 ? '+' : '') + eur(g) + ' €/' + (up === 'kg' ? 'kg' : 'ud') + ' (' + num(Math.round(g / p * 1000) / 10, 1) + ' %)'; }
+    if (p !== null && !isNaN(p) && p > 0 && c.precio > 0 && ((up === 'kg' && (!c.unidad || c.unidad === 'kg')) || (up !== 'kg' && c.unidad && c.unidad !== 'kg'))) { const g = p - c.precio; gan = ' · Ganas ' + (g >= 0 ? '+' : '') + eur(g) + ' €/' + (up === 'kg' ? 'kg' : 'ud') + ' (' + num(Math.round(g / p * 1000) / 10, 1) + ' %)';
+      if (getCant) { const k = Number(getCant()); if (k > 0) { const gt = Math.round(g * k * 100) / 100; gan += ' · EN TOTAL ' + (gt >= 0 ? '+' : '') + eur(gt) + ' € (' + num(k) + (up === 'kg' ? ' kg' : ' ud') + ')'; } else if (up === 'kg') gan += ' · el total saldrá al pesar'; } }
     d.textContent = '💶 ' + textoCoste(c) + gan + (bajo ? ' · ⚠ Estás por debajo del coste' : '');
   };
   cargaCoste(pid).then(() => d.act());
@@ -6174,7 +6179,7 @@ function vistaImportar() {
   }
   function pintarHora() {
     const ti = (k, et) => h('label', { class: 'campo' }, et, h('input', { type: 'time', value: S.hora[k] || '', onchange: e => { S.hora[k] = e.target.value; } }));
-    horaBox.replaceChildren(h('div', { style: 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px' }, ti('limite', 'Hora límite'), ti('desde', 'Franja desde'), ti('hasta', 'hasta')));
+    horaBox.replaceChildren(h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px' }, ti('limite', 'Hora límite'), ti('desde', 'Franja desde'), ti('hasta', 'hasta')));
   }
   async function ponPrecios() {
     if (!S.cliente) return; const ls = S.lineas.filter(l => l.producto && !l.precioManual); if (!ls.length) return;
