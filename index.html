@@ -356,6 +356,7 @@ function crearSbPractica(){
     anadir_linea_pedido(a){const ped=DB.pedidos.find(x=>x.id===a.p_pedido);if(!ped)throw new Error('PEDIDO_NO_EXISTE');if(ped.estado==='terminado'||ped.estado==='anulado')throw new Error('PEDIDO_CERRADO');if(!(a.p_cantidad>0))throw new Error('CANTIDAD_NO_VALIDA');const id='ln'+Math.random().toString(36).slice(2,8);DB.lineas_pedido.push({id,pedido_id:a.p_pedido,producto_id:a.p_producto,cantidad_pedida:a.p_cantidad,unidad_pedida:a.p_unidad,unidad_precio:a.p_unidad_precio||'kg',precio:a.p_precio==null?null:a.p_precio,peso_real:null,estado:'pendiente',version:1});return id;},
     corregir_linea(a){const l=DB.lineas_pedido.find(x=>x.id===a.p_linea);if(!l)throw new Error('LINEA_NO_EXISTE');if(a.p_cantidad!=null){if(!(a.p_cantidad>0))throw new Error('CANTIDAD_NO_VALIDA');l.cantidad_pedida=a.p_cantidad;}if(a.p_unidad)l.unidad_pedida=a.p_unidad;if(a.p_peso!=null){l.peso_real=a.p_peso;l.estado='hecha';}l.version=(l.version||1)+1;return null;},
     marcar_compra_despues(a){const l=DB.lineas_pedido.find(x=>x.id===a.p_linea);if(!l)throw new Error('LINEA_NO_EXISTE');l.peso_real=0;l.estado='no_disponible';l.notas='Se compra después';l.version=(l.version||1)+1;return null;},
+    poner_info_interna(a){(a.p_lineas||[]).forEach(x=>{const l=DB.lineas_pedido.find(y=>y.id===x.id&&y.pedido_id===a.p_pedido);if(!l)throw new Error('LINEA_NO_ES_DE_ESTE_PEDIDO');l.precio_lista=x.precio_lista;l.nota_interna=x.nota_interna;});return (a.p_lineas||[]).length;},
     quitar_linea(a){const l=DB.lineas_pedido.find(x=>x.id===a.p_linea);if(!l)throw new Error('LINEA_NO_EXISTE');if(l.estado==='pendiente'&&l.peso_real==null){DB.lineas_pedido=DB.lineas_pedido.filter(y=>y.id!==l.id);return 'quitada';}l.peso_real=0;l.estado='no_disponible';l.version=(l.version||1)+1;return 'no_disponible';},
     borrar_pedido(a){const p=DB.pedidos.find(x=>x.id===a.p_pedido);if(!p)throw new Error('PEDIDO_NO_EXISTE');if(p.estado==='terminado')throw new Error('PEDIDO_TERMINADO');p.estado='anulado';return null;},
     anadir_venta_ruta(a){const ped=DB.pedidos.find(x=>x.id===a.p_pedido);if(!ped)throw new Error('PEDIDO_NO_EXISTE');if(ped.estado==='anulado')throw new Error('PEDIDO_ANULADO');if(!(a.p_cantidad>0))throw new Error('CANTIDAD_NO_VALIDA');
@@ -739,7 +740,7 @@ async function cargarPedido(id) {
   if (navigator.onLine) {
     let [p, l, a, en] = await Promise.all([
       sb.from('pedidos').select('id,cliente_id,estado,fecha_entrega,notas,preparador_id,clientes(codigo,nombre,nombre_comercial,forma_pago,direccion,localidad,recargo_equivalencia)').eq('id', id).single(),
-      sb.from('lineas_pedido').select('id,producto_id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,iva,version,notas,formato_peso_kg,peso_estimado,peso_variable,productos(codigo,nombre,iva,iva_origen)').eq('pedido_id', id),
+      sb.from('lineas_pedido').select('id,producto_id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,precio_lista,nota_interna,iva,version,notas,formato_peso_kg,peso_estimado,peso_variable,productos(codigo,nombre,iva,iva_origen)').eq('pedido_id', id),
       sb.from('albaranes').select('serie,numero,fecha,estado').eq('pedido_id', id).maybeSingle(),
       sb.from('entregas').select('entregado_at,entregado_por').eq('pedido_id', id).maybeSingle()]);
     if (l.error && /column|schema cache/i.test(l.error.message || '')) l = await sb.from('lineas_pedido').select('id,producto_id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,iva,version,notas,productos(codigo,nombre,iva)').eq('pedido_id', id);
@@ -808,7 +809,8 @@ function pintarPedido() {
       onclick: editable ? () => abrirLinea(l) : null
     },
       h('div', {}, h('div', { class: 'nombre' }, l.productos ? l.productos.nombre : '—'),
-        h('div', { class: 'sub' }, 'Pedido: ' + num(l.cantidad_pedida) + ' ' + l.unidad_pedida + textoEstimado(l) + (l._pend ? ' · pendiente de enviar' : '') + (esDespues(l) ? ' · 🛒 SE COMPRA DESPUÉS' : l.estado === 'no_disponible' ? ' · NO HA LLEGADO' : ''))),
+        h('div', { class: 'sub' }, 'Pedido: ' + num(l.cantidad_pedida) + ' ' + l.unidad_pedida + textoEstimado(l) + (l._pend ? ' · pendiente de enviar' : '') + (esDespues(l) ? ' · 🛒 SE COMPRA DESPUÉS' : l.estado === 'no_disponible' ? ' · NO HA LLEGADO' : '')),
+        (puedeCompras() || esOficina()) && (l.precio_lista != null || l.nota_interna) ? h('div', { class: 'sub', style: 'color:#92400e' }, '🔒 Interno: ' + (l.precio_lista != null ? 'lista ' + eur(l.precio_lista) + ' €' : '') + (l.precio_lista != null && l.nota_interna ? ' · ' : '') + (l.nota_interna || '')) : null),
       l._peso != null ? h('div', { class: 'peso' }, num(l._peso) + ' ' + u) : h('div', { class: 'peso vacio' }, 'Anotar')));
   }
   const acciones = [];
@@ -833,17 +835,37 @@ function pintarPedido() {
   kids.push(bloqueHistorial(d)); cont.replaceChildren(...kids.filter(Boolean)); waMostrarOrigen(cont, d.pedido.id);
 }
 /* Precios de un pedido: se ponen o cambian cuando llega la factura, antes o después de cerrar el albarán */
+/* Caja INTERNA de cada línea (precio de lista y nota): opcional, el cliente nunca la ve */
+function cajaInterna(x, repinta) {
+  const dto = h('div', { class: 'sub', style: 'margin-top:6px;font-weight:600;color:#92400e' });
+  x.dto = () => {
+    const p = parseNum(x.precio), li = parseNum(x.lista);
+    if (!(li > 0) || p === null || isNaN(p) || String(x.precio).trim() === '') { dto.textContent = ''; return; }
+    const g = Math.round((li - p) * 100) / 100; const k = x.up === 'kg' ? x.l.peso_real : x.l.cantidad_pedida; const u = x.up === 'kg' ? 'kg' : 'ud';
+    dto.textContent = g > 0 ? '🏷 Descuento que damos: ' + eur(g) + ' €/' + u + (k != null && Number(k) > 0 ? ' · ' + eur(Math.round(g * Number(k) * 100) / 100) + ' € en total' : '') + ' (' + num(Math.round(g / li * 1000) / 10, 1) + ' % sobre lista)'
+      : g < 0 ? '🏷 Cobras ' + eur(-g) + ' €/' + u + ' MÁS que la lista' : '🏷 Sin descuento: cobras el precio de lista';
+  };
+  const li = h('input', { type: 'text', inputmode: 'decimal', placeholder: 'opcional', value: x.lista, oninput: e => { x.lista = e.target.value; x.dto(); } });
+  const no = h('input', { type: 'text', placeholder: 'opcional', value: x.nota, oninput: e => { x.nota = e.target.value; } });
+  x.dto();
+  return h('div', { style: 'margin-top:8px;border:1.5px dashed #b45309;background:#fffbeb;border-radius:10px;padding:8px' },
+    h('div', { style: 'font-size:13px;font-weight:700;color:#92400e' }, '🔒 SOLO INTERNO · el cliente NO lo ve (ni en el albarán ni en la factura). Es opcional: si lo dejas vacío no pasa nada.'),
+    h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px' },
+      h('label', { class: 'campo', style: 'margin:0' }, 'Precio de lista / valor real €', li), h('label', { class: 'campo', style: 'margin:0' }, 'Nota interna', no)), dto);
+}
 async function abrirPrecios(pedidoId, alGuardar) {
   if (!navigator.onLine) { toast('Necesitas conexión para poner precios.', 'err'); return; }
   let pe, ln;
   try {
     [pe, ln] = await Promise.all([sb.from('pedidos').select('id,estado,cliente_id,fecha_entrega,clientes(codigo,nombre,nombre_comercial)').eq('id', pedidoId).single(),
-      sb.from('lineas_pedido').select('id,producto_id,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,productos(nombre)').eq('pedido_id', pedidoId)]);
+      sb.from('lineas_pedido').select('id,producto_id,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,precio_lista,nota_interna,productos(nombre)').eq('pedido_id', pedidoId)]);
+    if (ln.error && /column|schema cache/i.test(ln.error.message || '')) { ln = await sb.from('lineas_pedido').select('id,producto_id,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,productos(nombre)').eq('pedido_id', pedidoId); ln.sinInterna = true; }
     if (pe.error) throw pe.error; if (ln.error) throw ln.error;
   } catch (e) { toast(msgErr(e), 'err'); return; }
   const ped = pe.data; if (ped.estado === 'anulado') { toast('Este pedido está anulado.', 'err'); return; }
   const lineas = ln.data.slice().sort((a, b) => ((a.productos || {}).nombre || '').localeCompare(((b.productos || {}).nombre || ''), 'es'));
-  const R = lineas.map(l => ({ l, precio: l.precio != null ? String(l.precio).replace('.', ',') : '', up: l.unidad_precio }));
+  const R = lineas.map(l => ({ l, precio: l.precio != null ? String(l.precio).replace('.', ',') : '', up: l.unidad_precio, lista: l.precio_lista != null ? String(l.precio_lista).replace('.', ',') : '', nota: l.nota_interna || '' }));
+  const sinInterna = !!ln.sinInterna;
   let tarifas = {}; try { tarifas = await preciosPara(ped.cliente_id, lineas.map(l => l.producto_id)); } catch (e) { }
   const totalBox = h('div', { style: 'font-weight:700;margin:8px 0' }), cuerpo = h('div', {});
   let cerrar = () => { };
@@ -852,12 +874,12 @@ async function abrirPrecios(pedidoId, alGuardar) {
   function total() { let t = 0, falta = 0; R.forEach(x => { const i = importe(x); if (i == null) falta++; else t += i; }); totalBox.textContent = 'Total sin IVA: ' + eur(t) + ' €' + (falta ? ' · faltan ' + falta + ' línea(s)' : ' ✔'); }
   R.forEach(x => {
     const imp = h('div', { class: 'sub' }), cc = cajaCoste(x.l.producto_id, () => x.precio, () => x.up, () => x.up === 'kg' ? x.l.peso_real : x.l.cantidad_pedida);
-    const pintaImp = () => { const i = importe(x); imp.textContent = i != null ? 'Importe: ' + eur(i) + ' €' : (x.up === 'kg' && x.l.peso_real == null ? 'Sin pesar todavía: el importe saldrá al pesar' : ''); total(); };
+    const pintaImp = () => { const i = importe(x); imp.textContent = i != null ? 'Importe: ' + eur(i) + ' €' : (x.up === 'kg' && x.l.peso_real == null ? 'Sin pesar todavía: el importe saldrá al pesar' : ''); if (x.dto) x.dto(); total(); };
     const inp = h('input', { type: 'text', inputmode: 'decimal', value: x.precio, placeholder: tarifas[x.l.producto_id] != null ? 'tarifa ' + eur(tarifas[x.l.producto_id]) : 'precio €', oninput: e => { x.precio = e.target.value; cc.act(); pintaImp(); } });
     x.inp = inp; x.pinta = pintaImp;
     cuerpo.append(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, (x.l.productos || {}).nombre || '—'), h('div', { class: 'sub' }, cantTxt(x.l))),
       h('select', { onchange: e => { x.up = e.target.value; cc.act(); pintaImp(); } }, ['kg', 'unidad'].map(u => h('option', { value: u, selected: u === x.up }, 'por ' + (u === 'kg' ? 'kg' : x.l.unidad_pedida))))),
-      h('div', { style: 'display:flex;gap:8px;align-items:center;margin-top:6px' }, h('div', { style: 'flex:1' }, inp), tarifas[x.l.producto_id] != null && !x.precio ? h('button', { class: 'ghost small', onclick: () => { x.precio = String(tarifas[x.l.producto_id]).replace('.', ','); inp.value = x.precio; cc.act(); pintaImp(); } }, 'Usar ' + eur(tarifas[x.l.producto_id])) : null), imp, cc));
+      h('div', { style: 'display:flex;gap:8px;align-items:center;margin-top:6px' }, h('div', { style: 'flex:1' }, inp), tarifas[x.l.producto_id] != null && !x.precio ? h('button', { class: 'ghost small', onclick: () => { x.precio = String(tarifas[x.l.producto_id]).replace('.', ','); inp.value = x.precio; cc.act(); pintaImp(); } }, 'Usar ' + eur(tarifas[x.l.producto_id])) : null), imp, cc, sinInterna ? null : cajaInterna(x, pintaImp)));
     pintaImp();
   });
   async function guardar(btn) {
@@ -868,11 +890,20 @@ async function abrirPrecios(pedidoId, alGuardar) {
       const antes = x.l.precio != null ? Number(x.l.precio) : null;
       if (nuevo !== antes || x.up !== x.l.unidad_precio) { cambios.push({ id: x.l.id, precio: nuevo, unidad_precio: x.up }); if (antes != null) cambiaExistente = true; }
     }
-    if (!cambios.length) { toast('No has cambiado nada', 'err'); return; }
+    const info = [];
+    if (!sinInterna) for (const x of R) {
+      const li = String(x.lista).trim() === '' ? null : parseNum(x.lista);
+      if (li !== null && (isNaN(li) || li < 0)) { toast('Precio de lista no válido en ' + ((x.l.productos || {}).nombre || 'una línea'), 'err'); return; }
+      const antesL = x.l.precio_lista != null ? Number(x.l.precio_lista) : null;
+      if (li !== antesL || (x.nota.trim() || null) !== (x.l.nota_interna || null)) info.push({ id: x.l.id, precio_lista: li, nota_interna: x.nota.trim() || null });
+    }
+    if (!cambios.length && !info.length) { toast('No has cambiado nada', 'err'); return; }
     if (ped.estado === 'terminado' && cambiaExistente && !await confirmar('El albarán ya está cerrado y estás CAMBIANDO precios que ya tenía: su importe cambiará.\n\nSi ya estaba en una factura de Golden, habrá que corregirla allí.\n\n¿Continuar?')) return;
     btn.disabled = true;
-    const r = await sb.rpc('poner_precios', { p_pedido: ped.id, p_lineas: cambios });
-    if (r.error) { btn.disabled = false; toast(msgErr(r.error), 'err'); return; }
+    if (cambios.length) { const r = await sb.rpc('poner_precios', { p_pedido: ped.id, p_lineas: cambios });
+      if (r.error) { btn.disabled = false; toast(msgErr(r.error), 'err'); return; } }
+    if (info.length) { const r2 = await sb.rpc('poner_info_interna', { p_pedido: ped.id, p_lineas: info });
+      if (r2.error) { btn.disabled = false; toast(/poner_info_interna|schema cache|does not exist/i.test(r2.error.message || '') ? 'Falta ejecutar en Supabase la Parte 46 (información interna).' : msgErr(r2.error), 'err'); return; } }
     cerrar(); toast('Precios guardados', 'ok'); if (alGuardar) alGuardar();
   }
   const btnLlenar = h('button', { class: 'ghost', style: 'width:100%;margin:6px 0', onclick: () => { R.forEach(x => { if (!x.precio && tarifas[x.l.producto_id] != null) { x.precio = String(tarifas[x.l.producto_id]).replace('.', ','); x.inp.value = x.precio; } x.pinta(); }); } }, 'Rellenar los que faltan con las tarifas del cliente');
