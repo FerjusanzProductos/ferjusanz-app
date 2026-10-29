@@ -1534,7 +1534,7 @@ function vistaAyuda() {
     }
     const gDesde = P.desde && VOZ_VISTA[P.desde] ? GUIA.find(g => g.id === VOZ_VISTA[P.desde] && guiaVisible(g)) : null;
     if (gDesde) ctx.replaceChildren(h('p', { class: 'sub' }, 'Estás en esta pantalla. Así se usa:'), tarjetaGuia(gDesde, true));
-    const ejemplos = ['Resumen de hoy', 'Quién me debe', 'Pedidos de hoy', 'Abre albaranes', 'Precio del tomate', 'Albaranes de hoy', 'Quiero apuntar un pedido', 'No me deja terminar el pedido', 'No veo lo nuevo de la app', 'Me equivoqué en un peso', '¿Cómo termino un pedido?', 'Se me ha olvidado un producto', 'Dónde veo los albaranes', '¿Qué copia le doy al cliente?', 'Cómo imprimo la hoja de compra'];
+    const ejemplos = ['Resumen de hoy', 'Quién me debe', 'Pedidos de hoy', 'Abre albaranes', 'Precio del tomate', 'Último registro de la remolacha (compra y venta)', 'Albaranes de hoy', 'Quiero apuntar un pedido', 'No me deja terminar el pedido', 'No veo lo nuevo de la app', 'Me equivoqué en un peso', '¿Cómo termino un pedido?', 'Se me ha olvidado un producto', 'Dónde veo los albaranes', '¿Qué copia le doy al cliente?', 'Cómo imprimo la hoja de compra'];
     const aviso = h('div', { class: 'aviso-card' }, (nombre ? 'Hola, ' + nombre + '. ' : '') + 'Soy el asistente. Escríbeme o háblame: dime qué te pasa o qué quieres hacer. Te enseño al momento los datos que pidas (por ejemplo «facturas de Florencio», «quién me debe», «precio del tomate»), abrir pantallas («abre albaranes») o empezar un pedido («pedido para Florencio, 10 kilos de tomate») o te explico paso a paso cómo se hace algo. No invento: si no lo sé, te lo digo.');
     cont.replaceChildren(aviso, ctx,
       h('div', { style: 'display:flex;gap:8px;margin:8px 0' }, btnMic), inp,
@@ -1587,7 +1587,7 @@ const NAV_DESTINOS = [
   [/\bincidencias\b/, 'incidencias', 'Incidencias'], [/\bavisos\b/, 'avisos', 'Avisos'], [/\bcopia de seguridad\b/, 'copia', 'Copia de seguridad', 'o'],
   [/\b(inicio|principal)\b/, 'inicio', 'Inicio'], [/\bentregas\b/, 'entregas', 'Entregas'], [/\bprecios\b/, 'precios', 'Precios', 'o']];
 function detectaConsulta(q) {
-  let t = normalizaIntent(sinTilde(limpiaBusqueda(q)).toLowerCase());
+  let t = normalizaIntent(sinTilde(limpiaBusqueda(q)).toLowerCase()).replace(/\btanto\s+(\w+)\s+como\b/g, '$1 y');   // «tanto comprada como vendida» no es una pregunta de ayuda
   /* Abrir una pantalla: «ábreme albaranes», «llévame a deudas» */
   if (/\b(abre|abreme|abrir|llevame|lleva|ir a|ir al|ve a|ve al|vete a|quiero ir|muestrame la pantalla|ensename la pantalla|pantalla de)\b/.test(t)) {
     const d = NAV_DESTINOS.find(x => x[0].test(t));
@@ -1599,6 +1599,7 @@ function detectaConsulta(q) {
   const seg = /^(y|tambien|ademas)\b/.test(t) || /\b(sus|su|ese|esa|el mismo|ella|el)\b/.test(t);
   let tipo = null;
   if (/\b(resumen|como va el dia|que tal el dia|como vamos|balance del dia|que hay hoy)\b/.test(t)) tipo = 'resumen';
+  else if ((/\b(ultim\w*|registros?|historial|movimientos)\b/.test(t) && /\b(compr\w*|vend\w*|ventas?|registros?|historial)\b/.test(t)) || /\ba cuanto (hemos |se |he |les |lo |la )?(compr|vend)\w*/.test(t)) tipo = 'historial';
   else if (/\b(precio|precios|cuesta|cuestan|vale|valen|a cuanto|tarifa)\b/.test(t)) tipo = 'precio';
   else if (/\bque (le )?(compra|vendo|lleva|pide|suele llevar|suele comprar)\b|\bproductos de\b|\blo habitual de\b/.test(t)) tipo = 'compra';
   else if (/\b(debe|deben|deuda|deudas|deudor|deudores|moroso|morosos|impagad\w*|por cobrar|cobrar|saldo|saldos)\b/.test(t)) tipo = 'deuda';
@@ -1608,10 +1609,10 @@ function detectaConsulta(q) {
   if (!tipo && ctxAsis.tipo && /^(y )?(de |del |para |en )?(hoy|ayer|manana)\b/.test(t)) tipo = ctxAsis.tipo;
   if (!tipo) return null;
   const parar = CONS_PARAR;
-  const nombre = t.split(/\s+/).filter(w => w && !parar.has(w) && !/^(factur|albaran|pedid|deb[ea]|deud|moros|cobr|impag|saldo|vend|compr|venta|resum|precio|cuest|cuanto|valen|vale$|tarifa|habitual|producto|lleva|pide|suele|llev)/.test(w)).join(' ');
+  const nombre = t.split(/\s+/).filter(w => w && !parar.has(w) && !/^(factur|albaran|pedid|deb[ea]|deud|moros|cobr|impag|saldo|vend|compr|venta|resum|precio|cuest|cuanto|valen|vale$|tarifa|habitual|producto|lleva|pide|suele|llev|ultim|registr|histori|movimient|tanto|como$|veces|sido|hemos|se$|han$|sale|salio)/.test(w)).join(' ');
   const fecha = /\bhoy\b/.test(t) ? hoy() : /\bmanana\b/.test(t) ? hoy(new Date(Date.now() + 86400000)) : /\bayer\b/.test(t) ? hoy(new Date(Date.now() - 86400000)) : null;
   const d = { tipo, nombre, fecha, q };
-  if (tipo === 'precio') return d;
+  if (tipo === 'precio' || tipo === 'historial') return d;
   if (tipo === 'resumen') return d;
   if (!nombre && ctxAsis.cli && (seg || fecha || tipo === 'compra' || (tipo === 'deuda' && /\bdebe\b/.test(t) && !/\b(quien|quienes|me debe|nos debe)\b/.test(t)))) d.cli = ctxAsis.cli;
   if ((tipo === 'albaran' || tipo === 'pedido') && !nombre && !fecha && !d.cli) return null;
@@ -1658,6 +1659,51 @@ async function consultarDatos(d, elegir) {
     const vendido = albs.reduce((a, x) => a + Number(x.total || 0), 0), pend = albs.reduce((a, x) => a + Math.max(0, Number(x.pendiente || 0)), 0);
     const res = ps.length + ' pedidos hoy: ' + c('pendiente') + ' pendientes, ' + c('en_preparacion') + ' en preparación y ' + c('terminado') + ' terminados. ' + albs.length + ' albaranes hechos' + (esOficina() ? ', ' + eur(vendido) + ' € vendidos y ' + eur(pend) + ' € sin cobrar.' : '.');
     return { nodos: [tarjetaConsulta('Resumen de hoy', res, [filaCons('Pendientes', null, String(c('pendiente'))), filaCons('En preparación', null, String(c('en_preparacion'))), filaCons('Terminados', null, String(c('terminado'))), filaCons('Albaranes hechos', null, String(albs.length))].concat(esOficina() ? [filaCons('Vendido hoy', null, eur(vendido) + ' €'), filaCons('Sin cobrar de hoy', null, eur(pend) + ' €')] : []), { t: 'Ver los pedidos de hoy ›', f: () => go('pedidos') })], voz: res };
+  }
+  if (d.tipo === 'historial') {
+    if (!puedeCompras()) return sinPermiso('El historial de compras y ventas lo ve la oficina.');
+    let prods; try { prods = await productosAsis(); } catch (e) { return { nodos: [h('p', { class: 'err' }, isNetErr(e) ? 'Necesito conexión.' : msgErr(e))], voz: '' }; }
+    const toks = d.nombre.split(/\s+/).filter(Boolean); let encontrados = [], palabra = '';
+    for (let i = toks.length; i >= 1 && !encontrados.length; i--) { const ps = buscarProdAsis(prods, toks.slice(0, i).join(' ')); if (ps.length) { encontrados = ps; palabra = toks.slice(0, i).join(' '); } }
+    if (!encontrados.length) return { nodos: [h('div', { class: 'aviso-card' }, 'No encuentro ese producto' + (d.nombre ? ' («' + d.nombre + '»)' : '') + '. Prueba con el nombre como sale en la app.')], voz: 'No encuentro ese producto.' };
+    const p = encontrados[0]; const uPrecio = p.unidad_precio === 'kg' ? 'kg' : (p.unidad_venta || 'ud');
+    const comp = [], vent = []; const voz = [];
+    /* COMPRAS: lotes con precio y, si no hay, el último precio de compra guardado */
+    try {
+      let lc = await sb.from('lotes').select('precio_compra,cantidad_recibida,unidad,origen,created_at,compras(fecha,proveedores(nombre))').eq('producto_id', p.id).order('created_at', { ascending: false }).limit(6);
+      if (!lc.error) (lc.data || []).forEach(x => { const c = uno(x.compras) || {}; const pv = (uno(c.proveedores) || {}).nombre || ''; comp.push({ fecha: c.fecha || String(x.created_at || '').slice(0, 10), prov: pv, cant: x.cantidad_recibida, uni: x.unidad, precio: x.precio_compra != null ? Number(x.precio_compra) : null, origen: x.origen }); });
+    } catch (e) { }
+    let tc = null; try { tc = (await costesCompra([p.id]))[p.id] || null; } catch (e) { }
+    /* VENTAS: pedidos de la app y facturas de Golden 2026 */
+    if (esOficina()) {
+      try {
+        const la = await sb.from('lineas_pedido').select('precio,peso_real,cantidad_pedida,unidad_pedida,unidad_precio,updated_at,pedidos(fecha_entrega,estado,clientes(nombre,nombre_comercial,codigo))').eq('producto_id', p.id).not('precio', 'is', null).order('updated_at', { ascending: false }).limit(5);
+        if (!la.error) (la.data || []).forEach(x => { const pe = uno(x.pedidos) || {}; if (pe.estado === 'anulado') return; vent.push({ fecha: pe.fecha_entrega, cli: nombreCli(uno(pe.clientes) || {}), precio: Number(x.precio), uni: x.unidad_precio === 'kg' ? 'kg' : (x.unidad_pedida || 'ud'), cant: x.unidad_precio === 'kg' ? x.peso_real : x.cantidad_pedida, origen: 'app' }); });
+      } catch (e) { }
+      try {
+        const sing = w => w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w, pal = sinTilde(palabra).split(/\s+/).map(sing).filter(Boolean).sort((a, b) => b.length - a.length)[0] || '';
+        if (pal) {
+          const lr = await sb.from('golden_lineas').select('factura_numero,descripcion,cantidad,precio').ilike('descripcion', '%' + pal + '%').limit(300);
+          if (!lr.error && (lr.data || []).length) {
+            const nums = Array.from(new Set(lr.data.map(x => x.factura_numero))); const fe = {};
+            for (let i = 0; i < nums.length && i < 300; i += 100) { const fr = await sb.from('golden_facturas').select('numero,fecha,cliente_nombre').in('numero', nums.slice(i, i + 100)).eq('borrador', false); (fr.data || []).forEach(f => { fe[f.numero] = f; }); }
+            lr.data.filter(x => fe[x.factura_numero]).sort((a, b) => String(fe[b.factura_numero].fecha).localeCompare(String(fe[a.factura_numero].fecha))).slice(0, 5).forEach(x => vent.push({ fecha: fe[x.factura_numero].fecha, cli: fe[x.factura_numero].cliente_nombre || '', precio: Number(x.precio), uni: '', cant: x.cantidad, desc: x.descripcion, origen: 'Golden ' + x.factura_numero }));
+          }
+        }
+      } catch (e) { }
+      vent.sort((a, b) => String(b.fecha || '').localeCompare(String(a.fecha || '')));
+    }
+    const filasC = comp.slice(0, 5).map(x => filaCons(fechaES(x.fecha) + (x.prov ? ' · ' + x.prov : ''), num(x.cant) + ' ' + (x.uni || '') + (x.origen ? ' · ' + x.origen : ''), x.precio != null ? eur(x.precio) + ' €/' + (x.uni || 'kg') : 'sin precio', null));
+    if (!filasC.length && tc) filasC.push(filaCons(tc.fecha ? fechaES(String(tc.fecha).slice(0, 10)) + (tc.prov ? ' · ' + tc.prov : '') : (tc.prov || 'Último precio de compra'), 'Precio de compra guardado', eur(tc.precio) + ' €' + (tc.unidad ? '/' + tc.unidad : ''), null));
+    const filasV = vent.slice(0, 5).map(x => filaCons(fechaES(x.fecha) + (x.cli ? ' · ' + x.cli : ''), (x.desc ? x.desc + ' · ' : '') + (x.cant != null ? num(x.cant) + ' ' + (x.uni || '') + ' · ' : '') + x.origen, eur(x.precio) + ' €' + (x.uni ? '/' + x.uni : ''), null));
+    const uc = comp[0] && comp[0].precio != null ? comp[0] : null;
+    const resC = uc ? 'Última compra: ' + fechaES(uc.fecha) + (uc.prov ? ' a ' + uc.prov : '') + ', ' + eur(uc.precio) + ' € por ' + (uc.uni || 'kg') + '.' : tc ? 'Último precio de compra: ' + eur(tc.precio) + ' €' + (tc.unidad ? ' por ' + tc.unidad : '') + (tc.fecha ? ' (' + fechaES(String(tc.fecha).slice(0, 10)) + ')' : '') + '.' : 'No hay compras registradas de este producto.';
+    const resV = vent[0] ? 'Última venta: ' + fechaES(vent[0].fecha) + (vent[0].cli ? ' a ' + vent[0].cli : '') + ', ' + eur(vent[0].precio) + ' €' + (vent[0].uni ? ' por ' + vent[0].uni : '') + '.' : esOficina() ? 'No encuentro ventas de este producto.' : 'Las ventas las ve la oficina.';
+    voz.push(p.nombre + '. ' + resC + ' ' + resV);
+    const nodos = [tarjetaConsulta(p.nombre + ' · compras', resC, filasC, puedeCompras() ? { t: 'Abrir Compras ›', f: () => go('compras') } : null)];
+    if (esOficina()) nodos.push(tarjetaConsulta(p.nombre + ' · ventas', resV + ' (pedidos de la app y facturas de Golden 2026)', filasV, null));
+    if (encontrados.length > 1) nodos.push(h('div', { class: 'sub' }, 'También hay: ' + encontrados.slice(1, 5).map(x => x.nombre).join(', ') + '. Si no era ' + p.nombre + ', escribe el nombre completo.'));
+    return { nodos, voz: voz.join(' ') };
   }
   if (d.tipo === 'precio') {
     if (!esOficina()) return sinPermiso('Los precios los ve la oficina.');
