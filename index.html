@@ -848,7 +848,7 @@ async function cargarPedido(id) {
 }
 function vistaPedido() {
   state.view = 'pedido'; state.ped = null; state.hechasLoc = {};
-  $app.replaceChildren(shell('Pedido', h('div', { id: 'detalle' }, h('p', { class: 'vacio' }, 'Cargando…')), { volver: () => go('lista') }));
+  $app.replaceChildren(shell('Pedido', h('div', { id: 'detalle' }, h('p', { class: 'vacio' }, 'Cargando…')), { volver: () => state.params.desde === 'reparto' ? go('reparto') : go('lista') }));
   renderBanner();
   actualizarPedido(true);
 }
@@ -1430,7 +1430,7 @@ async function anularPedido(id) {
 async function vistaAlbaran() {
   state.view = 'albaran';
   const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
-  $app.replaceChildren(shell('Albarán', cont, { volver: () => go('pedido', { id: state.params.id }) }));
+  $app.replaceChildren(shell('Albarán', cont, { volver: () => state.params.desde === 'reparto' ? go('reparto') : go('pedido', { id: state.params.id }) }));
   renderBanner();
   try {
     const d = await cargarPedido(state.params.id);
@@ -5130,7 +5130,7 @@ function vistaReparto() {
     const m = {};
     peds.forEach(p => { const c = uno(p.clientes); if (!c) return;
       const g = m[c.id] || (m[c.id] = Object.assign({}, c, { pedidos: [], pend: [], rep: null, orden: 1e9, entregado: true, listo: true }));
-      g.pedidos.push(p.id); const ent = p.estado === 'terminado' && !!uno(p.entregas); if (!ent) { g.entregado = false; g.pend.push(p.id); } if (p.estado !== 'terminado') g.listo = false;
+      g.pedidos.push(p.id); (g.est = g.est || {})[p.id] = p.estado; const ent = p.estado === 'terminado' && !!uno(p.entregas); if (!ent) { g.entregado = false; g.pend.push(p.id); } if (p.estado !== 'terminado') g.listo = false;
       if (p.repartidor_id && !g.rep) g.rep = p.repartidor_id; if (p.orden_reparto != null) g.orden = Math.min(g.orden, p.orden_reparto); });
     grupos = Object.values(m); Object.keys(marcados).forEach(k => { if (!m[k] || m[k].rep) delete marcados[k]; });
   }
@@ -5188,7 +5188,8 @@ function vistaReparto() {
         h('div', { style: 'flex:1;min-width:0' }, h('div', { class: 'nombre' }, nombreCli(g)), h('div', { class: 'sub' }, sub), g.notas_reparto ? h('div', { class: 'sub' }, '📝 ' + g.notas_reparto) : null),
         edit ? h('div', { class: 'mov' }, h('button', { class: 'ghost small', 'aria-label': 'Subir', disabled: ctx.i === 0, onclick: () => mover(ctx.lista, ctx.i, -1) }, '↑'), h('button', { class: 'ghost small', 'aria-label': 'Bajar', disabled: ctx.i === ctx.lista.length - 1, onclick: () => mover(ctx.lista, ctx.i, 1) }, '↓'), h('button', { class: 'ghost small', 'aria-label': 'Soltar', onclick: () => asignar([g], null) }, '✕')) : null),
       !ctx && !g.entregado ? h('div', { style: 'display:flex;gap:8px;margin-top:6px;flex-wrap:wrap' }, soyRep() ? h('button', { class: 'guardar small', onclick: () => asignar([g], miId()) }, '🙋 Lo cojo yo') : null, gestor ? h('button', { class: 'ghost small', onclick: () => elegirRepartidor([g], 'Asignar «' + nombreCli(g) + '» a…') }, 'Asignar a…') : null) : null,
-      ctx && !ctx.editable && gestor === false ? null : null);
+      h('div', { style: 'display:flex;gap:8px;margin-top:6px;flex-wrap:wrap' }, g.pedidos.map((id, k) => { const t = (g.est || {})[id] === 'terminado'; const n = g.pedidos.length > 1 ? ' ' + (k + 1) : ''; return h('button', { class: (t ? 'small' : 'ghost small'), onclick: () => go(t ? 'albaran' : 'pedido', { id, desde: 'reparto' }) }, t ? '🧾 Albarán' + n : '📋 Pedido' + n + ' (aún sin albarán)'); }))
+      );
   }
   let barra = h('div', {});
   function pintarBarra() {
