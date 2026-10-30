@@ -95,6 +95,8 @@ label.campo{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(
 #toast div.err{background:var(--rojo)}
 #toast div.ok{background:var(--verde-osc)}
 /* ---- Albarán ---- */
+.vf td{background:#fff3b0!important}.vx td{background:#fecaca!important}.vr{font-size:11px;font-weight:700;color:#92400e}
+.ley-alb{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.ley-alb span{border-radius:999px;padding:4px 10px;font-size:13px;font-weight:700;border:1px solid #d1d5db;background:#fff}.ley-alb .l-ok{background:#dcfce7;border-color:#86efac}.ley-alb .l-f{background:#fff3b0;border-color:#facc15}.ley-alb .l-x{background:#fecaca;border-color:#f87171}
 .alb-wrap{background:#fff;border:1px solid var(--borde);border-radius:12px;padding:10px;overflow-x:auto}
 .copia{background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;font-size:13px;padding:4px 2px;margin-bottom:14px}
 .copia .cab{display:flex;justify-content:space-between;gap:10px;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:6px}
@@ -910,6 +912,7 @@ function pintarPedido() {
       l._peso != null ? h('div', { class: 'peso' }, num(l._peso) + ' ' + u) : h('div', { class: 'peso vacio' }, 'Anotar')));
   }
   const acciones = [];
+  if (estado !== 'anulado') { const ev = ls.map(estadoLineaAlb); const nf = ev.filter(e => e.tipo === 'falta').length, nx = ev.filter(e => e.tipo === 'fallo').length; acciones.push(h('button', { class: 'ghost', style: 'min-height:52px;font-size:17px', onclick: () => abrirAlbaranVivo(d.pedido.id) }, '📄 Ver cómo queda el albarán' + (nx ? '  ❌ ' + nx : '') + (nf ? '  🟡 ' + nf : '') + (!nx && !nf && ls.length ? '  ✅' : ''))); }
   if (estado === 'terminado') {
     const enCola = colaE.get().find(x => x.pedido === d.pedido.id);
     if (d.entrega || enCola) acciones.push(h('div', { class: 'aviso-card' }, '✔ Entregado a las ' + fmtHora(d.entrega ? d.entrega.entregado_at : enCola.at) + (enCola && !d.entrega ? ' (pendiente de enviar)' : '')));
@@ -953,9 +956,9 @@ async function abrirPrecios(pedidoId, alGuardar) {
   if (!navigator.onLine) { toast('Necesitas conexión para poner precios.', 'err'); return; }
   let pe, ln;
   try {
-    [pe, ln] = await Promise.all([sb.from('pedidos').select('id,estado,cliente_id,fecha_entrega,clientes(codigo,nombre,nombre_comercial)').eq('id', pedidoId).single(),
-      sb.from('lineas_pedido').select('id,producto_id,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,precio_lista,nota_interna,productos(nombre)').eq('pedido_id', pedidoId)]);
-    if (ln.error && /column|schema cache/i.test(ln.error.message || '')) { ln = await sb.from('lineas_pedido').select('id,producto_id,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,productos(nombre)').eq('pedido_id', pedidoId); ln.sinInterna = true; }
+    [pe, ln] = await Promise.all([sb.from('pedidos').select('id,estado,cliente_id,fecha_entrega,clientes(codigo,nombre,nombre_comercial,forma_pago,recargo_equivalencia,direccion,localidad)').eq('id', pedidoId).single(),
+      sb.from('lineas_pedido').select('id,producto_id,estado,notas,iva,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,precio_lista,nota_interna,productos(nombre,iva)').eq('pedido_id', pedidoId)]);
+    if (ln.error && /column|schema cache/i.test(ln.error.message || '')) { ln = await sb.from('lineas_pedido').select('id,producto_id,estado,notas,iva,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,productos(nombre,iva)').eq('pedido_id', pedidoId); ln.sinInterna = true; }
     if (pe.error) throw pe.error; if (ln.error) throw ln.error;
   } catch (e) { toast(msgErr(e), 'err'); return; }
   const ped = pe.data; if (ped.estado === 'anulado') { toast('Este pedido está anulado.', 'err'); return; }
@@ -964,10 +967,13 @@ async function abrirPrecios(pedidoId, alGuardar) {
   const sinInterna = !!ln.sinInterna;
   let tarifas = {}; try { tarifas = await preciosPara(ped.cliente_id, lineas.map(l => l.producto_id)); } catch (e) { }
   const totalBox = h('div', { style: 'font-weight:700;margin:8px 0' }), cuerpo = h('div', {});
+  const vivoDet = h('details', { style: 'margin:8px 0' }, h('summary', { style: 'font-weight:700;cursor:pointer;padding:8px 0' }, '📄 Ver el albarán con estos precios'), h('div', {}));
+  function actVivo() { if (!vivoDet.open) return; const dv = { pedido: ped, lineas: R.map(x => Object.assign({}, x.l, { precio: String(x.precio).trim() === '' || isNaN(parseNum(x.precio)) ? null : parseNum(x.precio), unidad_precio: x.up })), albaran: ped.estado === 'terminado' ? { serie: 'F', numero: null, estado: 'cerrado', fecha: ped.fecha_entrega } : null }; vivoDet.lastChild.replaceChildren(cuerpoAlbaranVivo(dv)); }
+  vivoDet.addEventListener('toggle', actVivo);
   let cerrar = () => { };
   const cantTxt = l => l.peso_real != null && l.unidad_precio === 'kg' ? num(l.peso_real) + ' kg' : num(l.cantidad_pedida) + ' ' + l.unidad_pedida;
   const importe = x => { const p = parseNum(x.precio); if (!(p >= 0) || x.precio === '') return null; const k = x.up === 'kg' ? x.l.peso_real : x.l.cantidad_pedida; return k == null ? null : Math.round(Number(k) * p * 100) / 100; };
-  function total() { let t = 0, falta = 0; R.forEach(x => { const i = importe(x); if (i == null) falta++; else t += i; }); totalBox.textContent = 'Total sin IVA: ' + eur(t) + ' €' + (falta ? ' · faltan ' + falta + ' línea(s)' : ' ✔'); }
+  function total() { let t = 0, falta = 0; R.forEach(x => { const i = importe(x); if (i == null) falta++; else t += i; }); totalBox.textContent = 'Total sin IVA: ' + eur(t) + ' €' + (falta ? ' · faltan ' + falta + ' línea(s)' : ' ✔'); actVivo(); }
   R.forEach(x => {
     const imp = h('div', { class: 'sub' }), cc = cajaCoste(x.l.producto_id, () => x.precio, () => x.up, () => x.up === 'kg' ? x.l.peso_real : x.l.cantidad_pedida);
     const pintaImp = () => { const i = importe(x); imp.textContent = i != null ? 'Importe: ' + eur(i) + ' €' : (x.up === 'kg' && x.l.peso_real == null ? 'Sin pesar todavía: el importe saldrá al pesar' : ''); if (x.dto) x.dto(); total(); };
@@ -1005,7 +1011,7 @@ async function abrirPrecios(pedidoId, alGuardar) {
   const btnLlenar = h('button', { class: 'ghost', style: 'width:100%;margin:6px 0', onclick: () => { R.forEach(x => { if (!x.precio && tarifas[x.l.producto_id] != null) { x.precio = String(tarifas[x.l.producto_id]).replace('.', ','); x.inp.value = x.precio; } x.pinta(); }); } }, 'Rellenar los que faltan con las tarifas del cliente');
   const btnG = h('button', { class: 'guardar', style: 'width:100%;margin:8px 0', onclick: () => guardar(btnG) }, 'Guardar precios');
   cerrar = hoja('💶 Precios · ' + nombreCli(uno(ped.clientes) || {}), h('div', {}, h('p', { class: 'sub' }, fechaES(ped.fecha_entrega) + ' · ' + (ped.estado === 'terminado' ? 'albarán cerrado' : 'albarán sin cerrar') + '. Puedes poner los precios ahora o más tarde: cerrar el albarán no depende de ellos.'),
-    Object.keys(tarifas).length ? btnLlenar : null, cuerpo, totalBox, btnG));
+    Object.keys(tarifas).length ? btnLlenar : null, cuerpo, totalBox, vivoDet, btnG));
 }
 async function vistaPreciosPend() {
   state.view = 'preciosp';
@@ -1038,7 +1044,8 @@ async function vistaPreciosPend() {
       ...(lst.length ? lst.map(f => h('div', { class: 'card tap', style: 'padding:14px;border-left:5px solid ' + (f.sin ? '#d97706' : '#166534'), onclick: () => abrirPrecios(f.id, cargar) },
         h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:18px' }, f.cli), h('div', { class: 'sub' }, fechaES(f.fecha) + ' · ' + (ESTADO[f.estado] || f.estado))), h('span', { class: 'badge ' + (CLASE_ESTADO[f.estado] || 'pend') }, ESTADO[f.estado] || f.estado)),
         h('div', { style: 'margin-top:6px;font-size:16px;font-weight:700;color:' + (f.sin ? '#b45309' : '#166534') }, f.sin ? f.sin + ' de ' + f.total + ' líneas sin precio' : '✔ ' + f.total + ' líneas con precio'),
-        h('button', { style: 'width:100%;min-height:48px;margin-top:8px;font-size:17px', onclick: e => { e.stopPropagation(); abrirPrecios(f.id, cargar); } }, f.sin ? '💶 Poner precios' : '💶 Ver / cambiar precios')))
+        h('button', { style: 'width:100%;min-height:48px;margin-top:8px;font-size:17px', onclick: e => { e.stopPropagation(); abrirPrecios(f.id, cargar); } }, f.sin ? '💶 Poner precios' : '💶 Ver / cambiar precios'),
+        h('button', { class: 'ghost', style: 'width:100%;min-height:44px;margin-top:6px', onclick: e => { e.stopPropagation(); abrirAlbaranVivo(f.id); } }, '📄 Ver cómo queda el albarán')))
         : [h('p', { class: 'vacio' }, F.solo ? '✔ No hay pedidos con precios por poner en este filtro.' : 'No hay pedidos en este filtro.')]));
   }
   cargar();
@@ -1197,7 +1204,7 @@ function abrirVentaRuta(d) {
       ev.target.disabled = true;
       const r = await sb.rpc('anadir_venta_ruta', { p_pedido: ped.id, p_producto: prod.id, p_cantidad: q, p_unidad: uni.value, p_precio: pr, p_unidad_precio: cobro.value, p_nota: nota.value.trim() || null });
       if (r.error) { ev.target.disabled = false; toast(msgErr(r.error), 'err'); return; }
-      cerrar(); toast('Añadido al pedido y al albarán', 'ok'); state.sheetAbierta = false; actualizarPedido(false);
+      cerrar(); toast('Añadido al pedido y al albarán', 'ok'); state.sheetAbierta = false; if (state.view === 'albaran') vistaAlbaran(); else actualizarPedido(false);
     } }, 'Añadir al pedido y al albarán')));
 }
 /* Al terminar de anotar pesos: todo hecho → confirmar; quedan líneas → avisar cuáles */
@@ -1428,6 +1435,47 @@ async function anularPedido(id) {
   toast('Pedido anulado', 'ok'); go('lista');
 }
 
+/* =====================  ALBARÁN EN VIVO  =====================
+   Se ve cómo va quedando el albarán con lo que se lleva anotado. ✅ listo · 🟡 falta algo (peso, precio o compra) · ❌ fallo a revisar. */
+function estadoLineaAlb(l) {
+  const motivos = []; let tipo = 'ok'; const pr = uno(l.productos) || {};
+  const fallo = m => { tipo = 'fallo'; motivos.push(m); };
+  const falta = m => { if (tipo !== 'fallo') tipo = 'falta'; motivos.push(m); };
+  if (l.estado === 'no_disponible') falta(esDespues(l) ? 'se compra después' : 'producto no disponible');
+  else {
+    if (l.peso_real == null) falta('falta peso o cantidad real'); else if (!(Number(l.peso_real) > 0)) fallo('peso o cantidad en 0');
+    if (l.precio == null || l.precio === '') falta('falta precio'); else if (!(Number(l.precio) > 0)) fallo('precio en 0');
+    if ('iva_origen' in pr && pr.iva_origen == null && pr.iva == null) fallo('IVA sin definir');
+  }
+  return { tipo, motivos };
+}
+function cuerpoAlbaranVivo(d) {
+  const ls = d.lineas || []; const est = ls.map(estadoLineaAlb); const nx = est.filter(e => e.tipo === 'fallo').length;
+  const sinPeso = ls.filter(l => l.estado !== 'no_disponible' && l.peso_real == null).length, sinPrecio = ls.filter(l => l.estado !== 'no_disponible' && (l.precio == null || l.precio === '')).length;
+  const despues = ls.filter(esDespues).length, nodisp = ls.filter(l => l.estado === 'no_disponible' && !esDespues(l)).length;
+  const faltas = [sinPeso ? sinPeso + ' sin peso' : '', sinPrecio ? sinPrecio + ' sin precio' : '', despues ? despues + ' por comprar' : '', nodisp ? nodisp + ' no disponible' : ''].filter(Boolean);
+  const prev = Object.assign({}, d, { albaran: d.albaran || { serie: 'F', numero: null, fecha: d.pedido.fecha_entrega, estado: 'borrador' }, traza: {} });
+  const wrap = h('div', { class: 'alb-wrap' }); wrap.innerHTML = htmlAlbaran(prev, 'a4', { vivo: true }); const bl = wrap.querySelector('.copia.blanca'); if (bl) wrap.replaceChildren(bl);
+  const completo = !faltas.length && !nx && ls.length;
+  return h('div', {},
+    h('div', { class: 'ley-alb' }, h('span', { class: 'l-ok' }, '✅ Listo'), h('span', { class: 'l-f' }, '🟡 Falta algo: peso, precio o compra'), h('span', { class: 'l-x' }, '❌ Fallo: revisar')),
+    h('div', { class: 'card', style: 'margin:6px 0;border-left:6px solid ' + (nx ? '#dc2626' : faltas.length ? '#facc15' : '#16a34a') },
+      completo ? h('div', { class: 'nombre' }, '✅ Albarán completo: ya se puede cerrar') : h('div', {},
+        faltas.length ? h('div', { class: 'nombre' }, '🟡 Falta: ' + faltas.join(' · ')) : null, nx ? h('div', { class: 'nombre' }, '❌ ' + nx + (nx === 1 ? ' fallo' : ' fallos') + ' que revisar') : null,
+        !ls.length ? h('div', { class: 'sub' }, 'El pedido todavía no tiene líneas.') : null)),
+    wrap);
+}
+function abrirAlbaranVivo(id) {
+  const cuerpo = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); let firma = '';
+  const cerrar0 = hoja('📄 Así va el albarán', cuerpo);
+  const pintar = async () => {
+    try {
+      const d = await cargarPedido(id); const f = JSON.stringify([d.lineas, d.pedido.estado, d.albaran && d.albaran.numero]); if (f === firma) return; firma = f;
+      cuerpo.replaceChildren(cuerpoAlbaranVivo(d), d.albaran ? h('button', { style: 'width:100%;margin:8px 0', onclick: () => { cerrar0(); go('albaran', { id }); } }, '🖨 Abrir el albarán cerrado e imprimir') : null);
+    } catch (e) { cuerpo.replaceChildren(h('p', { class: 'err' }, msgErr(e))); }
+  };
+  pintar(); const t = setInterval(() => { if (!document.body.contains(cuerpo)) { clearInterval(t); return; } pintar(); }, 8000);
+}
 /* =====================  ALBARÁN  ===================== */
 async function vistaAlbaran() {
   state.view = 'albaran';
@@ -1436,7 +1484,24 @@ async function vistaAlbaran() {
   renderBanner();
   try {
     const d = await cargarPedido(state.params.id);
-    if (!d.albaran) { cont.replaceChildren(h('p', { class: 'vacio' }, 'Este pedido todavía no tiene albarán.')); return; }
+    if (!d.albaran) {   /* Vista previa: así quedará el albarán. Se cierra (y recibe su número) al terminar el pedido. */
+      const prev = Object.assign({}, d, { albaran: { serie: 'F', numero: null, fecha: d.pedido.fecha_entrega, estado: 'borrador' }, traza: {} });
+      const wrapP = h('div', { class: 'alb-wrap' }); wrapP.innerHTML = htmlAlbaran(prev, LS.get('fj_formato', 'a4'));
+      const bl = wrapP.querySelector('.copia.blanca'); if (bl) wrapP.replaceChildren(bl);
+      const nmSin = nombresSinPrecio(d.lineas); const sinPeso = d.lineas.filter(l => l.peso_real == null && l.estado !== 'no_disponible').length;
+      const anul = d.pedido.estado === 'anulado';
+      cont.replaceChildren(
+        h('div', { class: 'card', style: 'border-left:6px solid #d97706;margin-bottom:10px' }, h('div', { class: 'nombre' }, '📝 Albarán por hacer · vista previa'),
+          h('div', { class: 'sub' }, 'Así quedará el albarán de ' + nombreCli(d.pedido.clientes) + '. Todavía no tiene número: lo recibe al terminar el pedido, y entonces ya se puede imprimir.'),
+          sinPeso ? h('div', { class: 'sub', style: 'color:#b45309' }, '⚠ ' + sinPeso + ' línea(s) sin peso o cantidad real todavía.') : null,
+          nmSin.length ? h('div', { class: 'sub', style: 'color:#b45309' }, '⚠ ' + textoSinPrecio(nmSin) + '.') : null,
+          anul ? h('div', { class: 'sub' }, 'Este pedido está anulado.') : h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;margin-top:8px' },
+            h('button', { class: 'guardar', onclick: () => terminarPedido(d.pedido.id) }, '✅ Terminar pedido y cerrar el albarán'),
+            h('button', { class: 'ghost', onclick: () => abrirPrecios(d.pedido.id, () => vistaAlbaran()) }, '💶 Poner precios'),
+            h('button', { class: 'ghost', onclick: () => go('pedido', { id: d.pedido.id }) }, '📋 Abrir pedido (pesos)'))),
+        wrapP);
+      return;
+    }
     sincronizarFirmas();
     { const pf = colaFi.get().find(x => x.pedido === d.pedido.id); if (pf) d.albaran = Object.assign({}, d.albaran, { firma_png: pf.firma, firma_nombre: pf.nombre || null, firma_at: pf.at, _pendiente: true }); }
     d.traza = {}; d.trazaEstado = undefined;
@@ -1460,6 +1525,7 @@ async function vistaAlbaran() {
       ...(avisoIva ? [avisoIva] : []),
       ...(nmSin.length ? [h('div', { class: 'aviso-card', style: 'margin-bottom:10px' }, '⚠ ' + textoSinPrecio(nmSin) + '. El albarán se imprime con esas casillas de precio vacías.')] : []),
       cobroBox,
+      d.pedido.estado === 'terminado' ? h('button', { class: 'ghost', style: 'width:100%;margin-bottom:10px;min-height:48px', onclick: () => abrirVentaRuta(d) }, '➕ Venta en ruta (el cliente se lleva algo más)') : null,
       cajaFirma(d),
       cajaTraza(d),
       gananciaBox,
@@ -1528,7 +1594,8 @@ async function cargarCobroAlbaran(pedidoId, caja) {
       pend > 0.009 ? h('button', { style: 'width:100%;margin-top:8px', onclick: () => abrirCobro('Cobrar albarán', [{ pedido_id: pedidoId, pendiente: pend }], () => cargarCobroAlbaran(pedidoId, caja)) }, 'Cobrar') : null));
   } catch (e) { }
 }
-function htmlAlbaran(d, formato) {
+function htmlAlbaran(d, formato, opt) {
+  const vivo = !!(opt && opt.vivo);
   const p = d.pedido, cli = p.clientes || {}, a = d.albaran;
   const lineas = d.lineas.slice().sort((x, y) => (x.productos ? x.productos.nombre : '').localeCompare(y.productos ? y.productos.nombre : '', 'es'));
   let total = 0, hayPrecio = false; const bases = {};
@@ -1542,7 +1609,8 @@ function htmlAlbaran(d, formato) {
     }
     const tz = (d.traza || {})[l.id] || [];
     const tzTxt = tz.length ? '<div class="tz">Lote: ' + tz.map(t => esc([t.lote.codigo_lote || 'sin código', t.lote.origen ? 'Origen ' + t.lote.origen : null].filter(Boolean).join(' · ') + (tz.length > 1 ? ' (' + num(t.cant) + ')' : ''))).join(' &nbsp;|&nbsp; ') + '</div>' : '';
-    return '<tr><td>' + esc(l.productos ? l.productos.nombre : '') + tzTxt + '</td>' +
+    const ev = vivo ? estadoLineaAlb(l) : null; const ico = ev ? (ev.tipo === 'fallo' ? '❌ ' : ev.tipo === 'falta' ? '🟡 ' : '✅ ') : ''; const mot = ev && ev.motivos.length ? '<div class="vr">' + esc(ev.motivos.join(' · ')) + '</div>' : '';
+    return '<tr' + (ev && ev.tipo !== 'ok' ? ' class="' + (ev.tipo === 'fallo' ? 'vx' : 'vf') + '"' : '') + '><td>' + ico + esc(l.productos ? l.productos.nombre : '') + mot + tzTxt + '</td>' +
       '<td class="d oc-ticket">' + esc(num(l.cantidad_pedida) + ' ' + l.unidad_pedida) + '</td>' +
       '<td class="d"><b>' + esc(l.peso_real != null ? num(l.peso_real) + ' ' + u : '—') + '</b></td>' +
       '<td class="d">' + esc(l.precio != null ? eur(l.precio) : '') + '</td>' +
@@ -1561,7 +1629,7 @@ function htmlAlbaran(d, formato) {
       (f.re ? '<tr><td></td><td></td><td>Rec. equiv. ' + esc(num(RE[f.t])) + ' %</td><td class="d">' + esc(eur(f.re)) + ' €</td></tr>' : '')).join('') +
     '</tbody></table><div class="totiva">TOTAL' + (cli.forma_pago === 'contado' ? ' A COBRAR' : '') + ': <b>' + esc(eur(totalIva)) + ' €</b> <span style="font-size:11px">(IVA incluido)</span></div>';
   const contado = cli.forma_pago === 'contado';
-  const num7 = a.serie + ' ' + String(a.numero).padStart(7, '0');
+  const num7 = a.numero == null ? (a.estado === 'cerrado' ? 'ALBARÁN CERRADO' : 'BORRADOR · nº pendiente') : a.serie + ' ' + String(a.numero).padStart(7, '0');
   const COP = {
     BLANCA: { dest: 'CLIENTE', cls: 'blanca', nota: 'SE ENTREGA AL CLIENTE SOLO SI PAGA AL MOMENTO' },
     AMARILLA: { dest: 'CLIENTE', cls: 'amarilla', nota: 'SE ENTREGA AL CLIENTE SOLO SI NO PAGA AL MOMENTO (transferencia o a deber) y la firma' },
@@ -2504,7 +2572,8 @@ function pintarCargaClientes(datos, kids) {
             cli.forma_pago === 'contado' ? [' ', h('span', { class: 'badge cont' }, 'Contado')] : null)),
         p.estado !== 'terminado' ? h('div', { class: 'sub', style: 'margin-top:6px;color:var(--ambar)' }, 'Aún se está preparando') : null,
         h('div', { class: 'sub', style: 'margin-top:6px' }, nc + ' de ' + ls.length + ' líneas cargadas'),
-        h('div', { class: 'progreso' }, h('i', { style: 'width:' + (ls.length ? Math.round(nc * 100 / ls.length) : 0) + '%' }))),
+        h('div', { class: 'progreso' }, h('i', { style: 'width:' + (ls.length ? Math.round(nc * 100 / ls.length) : 0) + '%' })),
+        h('button', { class: 'ghost small', style: 'margin-top:8px', onclick: () => abrirAlbaranVivo(p.id) }, '📄 Ver cómo queda el albarán')),
       ls.map(l => h('div', { class: 'linea' + (l._cargado ? ' hecha' : '') + (l._pend ? ' pendiente-envio' : ''), onclick: () => alternarCarga(l) },
         h('div', {}, h('div', { class: 'nombre' }, nomProd(l)),
           h('div', { class: 'sub' }, 'Pedido: ' + num(l.cantidad_pedida) + ' ' + l.unidad_pedida +
@@ -3993,11 +4062,12 @@ function vistaQuien() {
 function vistaAlbaranes() {
   state.view = 'albaranes';
   let dias = LS.get('fj_alb_dias', 1), texto = '', asc = LS.get('fj_alb_asc', true);
+  let tab = LS.get('fj_alb_tab', 'listos'), pend = [], sinPr = {}; const chipsT = h('div', { class: 'chips' });
   const cont = h('div', {});
   const selDias = h('select', { onchange: e => { dias = Number(e.target.value); LS.set('fj_alb_dias', dias); cargar(); } }, ...[[1, 'Hoy'], [2, 'Ayer y hoy'], [7, 'Últimos 7 días'], [30, 'Últimos 30 días']].map(([v, n]) => h('option', { value: v, selected: v === dias }, n)));
   const btnOrd = h('button', { class: 'ghost', onclick: () => { asc = !asc; LS.set('fj_alb_asc', asc); btnOrd.textContent = asc ? 'Nº ↑' : 'Nº ↓'; pintar(); } }, asc ? 'Nº ↑' : 'Nº ↓');
   const buscar_ = h('input', { placeholder: 'Buscar por cliente o nº…', oninput: debounce(() => { texto = limpiaBusqueda(buscar_.value).toLowerCase(); pintar(); }, 200) });
-  $app.replaceChildren(shell('Albaranes', h('div', {}, h('div', { class: 'barra' }, selDias, btnOrd, h('button', { class: 'ghost', onclick: () => cargar() }, '↻')), buscar_, cont))); renderBanner();
+  $app.replaceChildren(shell('Albaranes', h('div', {}, chipsT, h('div', { class: 'barra' }, selDias, btnOrd, h('button', { class: 'ghost', onclick: () => cargar() }, '↻')), buscar_, cont))); renderBanner();
   let datos = [], traza = {}, cache = false;
   async function cargar() {
     cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
@@ -4008,11 +4078,18 @@ function vistaAlbaranes() {
       if (r.error) throw r.error; datos = r.data.filter(x => x.numero_albaran != null);
       const ids = datos.map(x => x.pedido_id); traza = {};
       if (ids.length) { const t = await sb.from('albaranes').select('pedido_id,traza_estado,estado').in('pedido_id', ids); (t.data || []).forEach(a => traza[a.pedido_id] = a); }
+      sinPr = {}; pend = [];
+      try {
+        for (let i = 0; i < ids.length; i += 150) { const lp = await sb.from('lineas_pedido').select('pedido_id,precio,estado').in('pedido_id', ids.slice(i, i + 150)); (lp.data || []).forEach(l => { if (l.precio == null && l.estado !== 'no_disponible') sinPr[l.pedido_id] = (sinPr[l.pedido_id] || 0) + 1; }); }
+        const man = hoy(new Date(Date.now() + 86400000));
+        const pr = await sb.from('pedidos').select('id,fecha_entrega,estado,archivado,clientes(codigo,nombre,nombre_comercial),lineas_pedido(estado,precio,peso_real)').gte('fecha_entrega', desde).lte('fecha_entrega', man).in('estado', ['pendiente', 'en_preparacion']).limit(500);
+        pend = pr.error ? [] : (pr.data || []).filter(p => !p.archivado);
+      } catch (e2) { }
       cache = false; LS.set(key, { datos, traza });
     } catch (e) { if (!isNetErr(e)) { cont.replaceChildren(h('p', { class: 'err' }, msgErr(e))); return; } const c = LS.get(key, { datos: [], traza: {} }); datos = c.datos; traza = c.traza; cache = true; }
     pintar();
   }
-  function pintar() {
+  function pintarListos() {
     const lista = datos.filter(x => !texto || String(x.cliente_nombre || '').toLowerCase().includes(texto) || String(x.numero_albaran).includes(texto))
       .sort((a, b) => String(b.fecha_entrega).localeCompare(String(a.fecha_entrega)) || (asc ? a.numero_albaran - b.numero_albaran : b.numero_albaran - a.numero_albaran));
     const kids = []; if (cache) kids.push(h('div', { class: 'aviso-card' }, 'Sin conexión: se muestra la última lista guardada.'));
@@ -4026,11 +4103,30 @@ function vistaAlbaranes() {
       const pagado = Number(x.pendiente) <= 0.009;
       kids.push(h('div', { class: 'card tap fila', style: anul ? 'opacity:.55' : '', onclick: () => go('albaran', { id: x.pedido_id }) },
         h('div', {}, h('div', { class: 'nombre' }, (x.serie || 'F') + ' ' + x.numero_albaran + ' · ' + (x.cliente_nombre || '')),
-          h('div', { class: 'sub' }, [anul ? 'ANULADO' : (pagado ? '✔ Cobrado' : 'Pendiente de cobro ' + eur(x.pendiente)), esOficina() ? (t.traza_estado === 'confirmada' ? '✔ trazabilidad' : t.traza_estado === 'sin_trazabilidad' ? 'sin trazabilidad' : '⚠ trazabilidad pendiente') : null].filter(Boolean).join(' · '))),
+          h('div', { class: 'sub' }, [sinPr[x.pedido_id] ? '⚠ ' + sinPr[x.pedido_id] + ' sin precio' : null, anul ? 'ANULADO' : (pagado ? '✔ Cobrado' : 'Pendiente de cobro ' + eur(x.pendiente)), esOficina() ? (t.traza_estado === 'confirmada' ? '✔ trazabilidad' : t.traza_estado === 'sin_trazabilidad' ? 'sin trazabilidad' : '⚠ trazabilidad pendiente') : null].filter(Boolean).join(' · '))),
         h('b', { style: 'font-size:18px' }, eur(x.total))));
     });
-    cont.replaceChildren(...kids);
+    return kids;
   }
+  function pintarPend() {
+    const lista = pend.filter(p => !texto || sinTilde(nombreCli(uno(p.clientes)) || '').includes(sinTilde(texto))).sort((a, b) => String(a.fecha_entrega).localeCompare(String(b.fecha_entrega)) || nombreCli(uno(a.clientes)).localeCompare(nombreCli(uno(b.clientes)), 'es'));
+    const kids = [h('div', { class: 'aviso-card' }, 'Albaranes por hacer: pedidos que aún no están terminados. Ábrelos para ver cómo quedará el albarán; se cierra al terminar el pedido.')];
+    if (!lista.length) kids.push(h('p', { class: 'vacio' }, 'No hay albaranes por hacer en estas fechas.'));
+    let dia = '';
+    lista.forEach(p => {
+      if (p.fecha_entrega !== dia) { dia = p.fecha_entrega; kids.push(h('div', { class: 'grupo' }, fechaES(dia) + ' · ' + lista.filter(y => y.fecha_entrega === dia).length + ' por hacer')); }
+      const ls = (p.lineas_pedido || []).filter(l => l.estado !== 'no_disponible'); const sp = ls.filter(l => l.peso_real == null).length, sc = ls.filter(l => l.precio == null).length;
+      kids.push(h('div', { class: 'card tap fila', style: 'border-left:6px solid #d97706', onclick: () => go('albaran', { id: p.id }) },
+        h('div', {}, h('div', { class: 'nombre' }, nombreCli(uno(p.clientes))), h('div', { class: 'sub' }, [p.estado === 'pendiente' ? 'Por preparar' : 'En preparación', sp ? sp + ' sin peso' : '', sc ? sc + ' sin precio' : ''].filter(Boolean).join(' · '))),
+        h('span', { class: 'badge cont' }, 'Por hacer')));
+    });
+    return kids;
+  }
+  function pintar() {
+    chipsT.replaceChildren(...[['porhacer', 'Por hacer' + (pend.length ? ' (' + pend.length + ')' : '')], ['listos', 'Listos'], ['todos', 'Todos']].map(([m, n]) => h('button', { class: 'chip' + (tab === m ? ' on' : ''), onclick: () => { tab = m; LS.set('fj_alb_tab', m); pintar(); } }, n)));
+    cont.replaceChildren(...(tab === 'porhacer' ? pintarPend() : tab === 'todos' ? pintarPend().concat(pintarListos()) : pintarListos()));
+  }
+  pintar();
   cargar();
 }
 
