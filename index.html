@@ -312,7 +312,7 @@ function crearSbPractica(){
     albaranes:[], carga_lineas:[], sobrante:[], mensajes:[], fichajes:[], fotos_perfil:[], cobros:[], proveedores:[{id:'v1',codigo:'FRUTASSUR',nombre:'Frutas Sur (ejemplo)',activo:true},{id:'v2',codigo:'HORTALIZAS',nombre:'Hortalizas Norte (ejemplo)',activo:true}], compras:[], tarifas_compra:[{id:'tc1',producto_id:'p1',proveedor_id:'v1',precio:0.45,fecha:'2026-10-20',origen:'golden-factura'}], lotes:[], asignaciones_lote:[], entregas:[], incidencias:[], documentos_compra:[], seq:9000, log:[]
   };
   const __j=JSON.parse(localStorage.getItem('p_stub_db')||'null'); const __saved=(__j&&__j.dia===H())?__j:null;
-  const DB = window.__DB = __saved || __init; DB.dia=H(); DB.carga_lineas=DB.carga_lineas||[]; DB.sobrante=DB.sobrante||[]; DB.mensajes=DB.mensajes||[]; DB.fichajes=DB.fichajes||[]; DB.fotos_perfil=DB.fotos_perfil||[]; DB.cobros=DB.cobros||[]; DB.proveedores=DB.proveedores||[]; DB.compras=DB.compras||[]; DB.lotes=DB.lotes||[]; DB.asignaciones_lote=DB.asignaciones_lote||[]; DB.entregas=DB.entregas||[]; DB.incidencias=DB.incidencias||[]; DB.documentos_compra=DB.documentos_compra||[]; DB.facturas_recibidas=DB.facturas_recibidas||[]; DB.facturas_clientes=DB.facturas_clientes||[]; if(!DB.golden_facturas){DB.golden_facturas=[{id:'g1',numero:'P/20.001',serie:'P',fecha:'2026-09-10',tipo:'Serie PC',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:100,descuentos:0,gastos:0,base:100,total:104,borrador:false,n_lineas:2},{id:'g2',numero:'BOR/5',serie:'BOR',fecha:'2026-09-11',tipo:'Facturas borrador',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:50,descuentos:0,gastos:0,base:50,total:52,borrador:true,n_lineas:1},{id:'g3',numero:'F1/9.001',serie:'F1',fecha:'2026-08-01',tipo:'Facturas Fernando',cliente_codigo:'TABERNA',cliente_nombre:'Taberna El Enano',bruto:30,descuentos:0,gastos:0,base:30,total:31.2,borrador:false,n_lineas:1}];DB.golden_lineas=[{id:'l1',factura_numero:'P/20.001',orden:1,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:20,precio:2,iva:4,importe:41.6},{id:'l2',factura_numero:'P/20.001',orden:2,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'01',descripcion:'Patata Agria',cantidad:100,precio:0.6,iva:4,importe:62.4},{id:'l3',factura_numero:'BOR/5',orden:1,albaran:null,producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:25,precio:2,iva:4,importe:52},{id:'l4',factura_numero:'F1/9.001',orden:1,albaran:null,producto_codigo:'21',descripcion:'Cebollas Gordas',cantidad:30,precio:1,iva:4,importe:31.2}];} DB.alias_compra=DB.alias_compra||[]; DB.compra_ajustes=DB.compra_ajustes||[]; DB.listas_precios=DB.listas_precios||[]; DB.listas_precios_items=DB.listas_precios_items||[]; DB.recomendaciones=DB.recomendaciones||[]; DB.prospectos=DB.prospectos||[]; DB.avisos=DB.avisos||[]; DB.pedidos_habituales=DB.pedidos_habituales||[]; DB.lineas_habituales=DB.lineas_habituales||[];
+  const DB = window.__DB = __saved || __init; DB.dia=H(); DB.carga_lineas=DB.carga_lineas||[]; DB.sobrante=DB.sobrante||[]; DB.mensajes=DB.mensajes||[]; DB.fichajes=DB.fichajes||[]; DB.fotos_perfil=DB.fotos_perfil||[]; DB.cobros=DB.cobros||[]; DB.proveedores=DB.proveedores||[]; DB.compras=DB.compras||[]; DB.lotes=DB.lotes||[]; DB.asignaciones_lote=DB.asignaciones_lote||[]; DB.entregas=DB.entregas||[]; DB.incidencias=DB.incidencias||[]; DB.documentos_compra=DB.documentos_compra||[]; DB.facturas_recibidas=DB.facturas_recibidas||[]; DB.facturas_clientes=DB.facturas_clientes||[]; if(!DB.golden_facturas){DB.golden_facturas=[{id:'g1',numero:'P/20.001',serie:'P',fecha:'2026-09-10',tipo:'Serie PC',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:100,descuentos:0,gastos:0,base:100,total:104,borrador:false,n_lineas:2},{id:'g2',numero:'BOR/5',serie:'BOR',fecha:'2026-09-11',tipo:'Facturas borrador',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:50,descuentos:0,gastos:0,base:50,total:52,borrador:true,n_lineas:1},{id:'g3',numero:'F1/9.001',serie:'F1',fecha:'2026-08-01',tipo:'Facturas Fernando',cliente_codigo:'TABERNA',cliente_nombre:'Taberna El Enano',bruto:30,descuentos:0,gastos:0,base:30,total:31.2,borrador:false,n_lineas:1}];DB.golden_lineas=[{id:'l1',factura_numero:'P/20.001',orden:1,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:20,precio:2,iva:4,importe:41.6},{id:'l2',factura_numero:'P/20.001',orden:2,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'01',descripcion:'Patata Agria',cantidad:100,precio:0.6,iva:4,importe:62.4},{id:'l3',factura_numero:'BOR/5',orden:1,albaran:null,producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:25,precio:2,iva:4,importe:52},{id:'l4',factura_numero:'F1/9.001',orden:1,albaran:null,producto_codigo:'21',descripcion:'Cebollas Gordas',cantidad:30,precio:1,iva:4,importe:31.2}];} DB.alias_compra=DB.alias_compra||[]; DB.albaranes_facturados=DB.albaranes_facturados||[]; DB.compra_ajustes=DB.compra_ajustes||[]; DB.listas_precios=DB.listas_precios||[]; DB.listas_precios_items=DB.listas_precios_items||[]; DB.recomendaciones=DB.recomendaciones||[]; DB.prospectos=DB.prospectos||[]; DB.avisos=DB.avisos||[]; DB.pedidos_habituales=DB.pedidos_habituales||[]; DB.lineas_habituales=DB.lineas_habituales||[];
   const gv=(r,k)=>{if(k.includes('->>')){const [a,b]=k.split('->>');return r[a]?r[a][b]:undefined;}return r[k];};
   DB.historial=DB.historial||[];
   const AUD=['lineas_pedido','pedidos','albaranes','asignaciones_lote','cobros','productos','clientes'];
@@ -411,6 +411,8 @@ function crearSbPractica(){
       ls.filter(l=>['hecha','parcial'].includes(l.estado)&&kn(l)>0).forEach(l=>{const s=asig.filter(x=>x.linea_id===l.id).reduce((t,x)=>t+x.cantidad,0);if(!s)throw new Error('FALTA_TRAZABILIDAD');if(Math.abs(s-kn(l))>0.001)throw new Error('KILOS_NO_COINCIDEN');});
       const por={};asig.forEach(x=>{const l=ls.find(y=>y.id===x.linea_id);if(l.unidad_precio==='kg')por[x.lote_id]=(por[x.lote_id]||0)+x.cantidad;});
       Object.keys(por).forEach(id=>{const lo=DB.lotes.find(y=>y.id===id);if(lo.unidad!=='kg')return;const otros=DB.asignaciones_lote.filter(a=>a.lote_id===id&&!ls.some(l=>l.id===a.linea_id)).reduce((t,a)=>t+a.cantidad,0);if(por[id]>lo.cantidad_recibida+0.001-otros)throw new Error('LOTE_SIN_KILOS');});},
+    marcar_albaranes_facturados(a){if(!a.p_numero||!String(a.p_numero).trim())throw new Error('NUMERO_FACTURA_VACIO');(a.p_pedidos||[]).forEach(id=>{DB.albaranes_facturados=DB.albaranes_facturados.filter(x=>x.pedido_id!==id);DB.albaranes_facturados.push({pedido_id:id,numero_factura:a.p_numero,fecha_factura:a.p_fecha});});return a.p_pedidos.length;},
+    desmarcar_albaranes_facturados(a){DB.albaranes_facturados=DB.albaranes_facturados.filter(x=>!(a.p_pedidos||[]).includes(x.pedido_id));return a.p_pedidos.length;},
     guardar_firma_albaran(a){const al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);if(!al)throw new Error('ALBARAN_NO_EXISTE');if(a.p_firma&&!/^data:image\/png;base64,/.test(a.p_firma))throw new Error('FIRMA_NO_VALIDA');al.firma_png=a.p_firma||null;al.firma_nombre=a.p_firma?(a.p_nombre||null):null;al.firma_at=a.p_firma?new Date().toISOString():null;return null;},
     confirmar_trazabilidad(a){const ls=DB.lineas_pedido.filter(l=>l.pedido_id===a.p_pedido);if(DB.pedidos.find(p=>p.id===a.p_pedido).estado==='terminado')throw new Error('PEDIDO_YA_TERMINADO');if(ls.some(l=>l.estado==='pendiente'))throw new Error('LINEAS_PENDIENTES');
       const mot=(a.p_sin_motivo||'').trim();
@@ -2710,6 +2712,114 @@ function vistaFacturasCli() {
   }
   $app.replaceChildren(shell('Facturas de clientes', h('div', {}, h('button', { style: 'width:100%;margin-bottom:10px', onclick: () => abrirNuevaFacturaCli(null, cargar) }, '+ Añadir factura'), chips, buscar_, info, cont), { volver: () => go('inicio') })); renderBanner(); pintar(); cargar();
 }
+/* ===== PREPARAR FACTURAS (para Golden) ===== */
+/* La factura legal la emite Golden. Aquí se agrupan los albaranes ENTREGADOS y sin facturar de cada cliente, con totales e IVA ya sumados. */
+function totalesFact(ped) {
+  const cli = uno(ped.clientes) || {}; const bases = {}; let sinPrecio = 0, total = 0;
+  (ped.lineas_pedido || []).forEach(l => {
+    if (l.precio != null && l.peso_real != null) {
+      const imp = Math.round(l.peso_real * l.precio * 100) / 100; total = Math.round((total + imp) * 100) / 100;
+      const pr = uno(l.productos) || {}; const t = l.iva != null ? Number(l.iva) : (pr.iva != null ? Number(pr.iva) : 4);
+      bases[t] = Math.round(((bases[t] || 0) + imp) * 100) / 100;
+    } else sinPrecio++;
+  });
+  const RE = { 4: 0.5, 10: 1.4, 21: 5.2 }; let iva = 0, re = 0;
+  Object.keys(bases).forEach(t => { iva = Math.round((iva + bases[t] * t / 100) * 100) / 100; if (cli.recargo_equivalencia && RE[t]) re = Math.round((re + bases[t] * RE[t] / 100) * 100) / 100; });
+  return { bases, base: total, iva, re, total: Math.round((total + iva + re) * 100) / 100, sinPrecio };
+}
+function vistaPrefacturas() {
+  state.view = 'prefacturas';
+  if (!esOficina()) { go('inicio'); return; }
+  let desde = LS.get('fj_pf_desde', hoy(new Date(new Date().getFullYear(), new Date().getMonth(), 1))), hasta = hoy(), verFact = false, texto = '', datos = null, fact = {}, sinParte51 = false;
+  const sel = {}; /* pedido_id -> true */
+  const cont = h('div', {}), info = h('p', { class: 'sub' });
+  const iDesde = h('input', { type: 'date', value: desde, onchange: () => { desde = iDesde.value || desde; LS.set('fj_pf_desde', desde); cargar(); } });
+  const iHasta = h('input', { type: 'date', value: hasta, onchange: () => { hasta = iHasta.value || hasta; cargar(); } });
+  const buscar_ = h('input', { placeholder: 'Buscar cliente…', oninput: debounce(() => { texto = sinTilde(limpiaBusqueda(buscar_.value)); pintar(); }, 200) });
+  const chkFact = h('input', { type: 'checkbox', onchange: () => { verFact = chkFact.checked; pintar(); } });
+  const por = () => {
+    const g = {}; (datos || []).forEach(x => { const fa = fact[x.id]; if (fa && !verFact) return; const c = uno(x.clientes) || {}; const k = x.cliente_id; (g[k] = g[k] || { id: k, nombre: nombreCli(c), cli: c, items: [] }).items.push(x); });
+    return Object.values(g).filter(c => !texto || sinTilde(c.nombre).includes(texto)).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  };
+  function resumenHtml(c, items) {
+    const tot = items.map(x => Object.assign({ x }, totalesFact(x))); const B = {}; let base = 0, iva = 0, re = 0, total = 0;
+    tot.forEach(t => { base += t.base; iva += t.iva; re += t.re; total += t.total; Object.keys(t.bases).forEach(k => B[k] = Math.round(((B[k] || 0) + t.bases[k]) * 100) / 100); });
+    const r2 = n => Math.round(n * 100) / 100;
+    return '<div style="font-family:Arial,sans-serif;font-size:13px"><h2 style="margin:0 0 4px">Datos para facturar en Golden</h2><div><b>' + esc(c.nombre) + '</b>' + (c.cli.codigo ? ' · código ' + esc(c.cli.codigo) : '') + '</div><div style="margin-bottom:8px">Periodo: ' + esc(fechaES(desde)) + ' – ' + esc(fechaES(hasta)) + ' · ' + items.length + ' albarán(es)</div>' +
+      '<table style="width:100%;border-collapse:collapse"><thead><tr style="text-align:left;border-bottom:1px solid #000"><th>Albarán</th><th>Entrega</th><th style="text-align:right">Base</th><th style="text-align:right">IVA</th><th style="text-align:right">Total</th></tr></thead><tbody>' +
+      tot.map(t => { const al = albDe(t.x); return '<tr style="border-bottom:1px solid #ddd"><td>' + esc((al.serie || 'F') + ' ' + al.numero) + '</td><td>' + esc(fechaES(t.x.fecha_entrega)) + '</td><td style="text-align:right">' + eur(t.base) + '</td><td style="text-align:right">' + eur(r2(t.iva + t.re)) + '</td><td style="text-align:right">' + eur(t.total) + (t.sinPrecio ? ' ⚠' : '') + '</td></tr>'; }).join('') +
+      '</tbody></table><table style="margin-top:10px;margin-left:auto">' + Object.keys(B).sort((a, b) => a - b).map(k => '<tr><td>Base ' + esc(k) + ' %</td><td style="text-align:right;padding-left:14px">' + eur(B[k]) + ' €</td><td style="padding-left:14px">IVA</td><td style="text-align:right;padding-left:8px">' + eur(r2(B[k] * k / 100)) + ' €</td></tr>').join('') +
+      (re ? '<tr><td colspan="3">Recargo de equivalencia</td><td style="text-align:right">' + eur(re) + ' €</td></tr>' : '') + '<tr><td colspan="3"><b>TOTAL</b></td><td style="text-align:right"><b>' + eur(r2(total)) + ' €</b></td></tr></table>' +
+      (tot.some(t => t.sinPrecio) ? '<p>⚠ Hay albaranes con líneas sin precio o sin peso: su total está incompleto.</p>' : '') + '<p style="font-size:11px;color:#555">Documento de trabajo interno. La factura la emite Golden.</p></div>';
+  }
+  const albDe = x => { const a = arr(x.albaranes)[0]; return a || {}; };
+  const textoCli = (c, items) => { const t = items.map(x => Object.assign({ x }, totalesFact(x))); return 'Cliente: ' + c.nombre + (c.cli.codigo ? ' (' + c.cli.codigo + ')' : '') + '\n' + t.map(z => (albDe(z.x).serie || 'F') + ' ' + albDe(z.x).numero + ' · ' + fechaES(z.x.fecha_entrega) + ' · base ' + eur(z.base) + ' · total ' + eur(z.total)).join('\n') + '\nTOTAL: ' + eur(t.reduce((a, z) => a + z.total, 0)) + ' €'; };
+  function marcar(c, items) {
+    const num = h('input', { placeholder: 'Nº de factura de Golden' }), fec = h('input', { type: 'date', value: hoy() }), reg = h('input', { type: 'checkbox', checked: true });
+    const tot = Math.round(items.reduce((a, x) => a + totalesFact(x).total, 0) * 100) / 100; let cerrar;
+    cerrar = hoja('Ya la he hecho en Golden', h('div', {}, h('p', { class: 'sub' }, c.nombre + ' · ' + items.length + ' albarán(es) · ' + eur(tot) + ' €'), h('label', { class: 'campo' }, 'Número de la factura en Golden *', num), h('label', { class: 'campo' }, 'Fecha de la factura', fec),
+      h('label', { class: 'campo', style: 'flex-direction:row;gap:8px;align-items:center' }, reg, ' Apuntarla también en «Facturas de clientes»'),
+      h('button', { class: 'guardar', style: 'width:100%', onclick: async ev => {
+        const b = ev.target; if (!num.value.trim()) { toast('Escribe el número de factura', 'err'); return; } b.disabled = true;
+        const r = await sb.rpc('marcar_albaranes_facturados', { p_pedidos: items.map(x => x.id), p_numero: num.value.trim(), p_fecha: fec.value || null });
+        if (r.error) { b.disabled = false; toast(/schema cache|does not exist|marcar_albaranes/i.test(r.error.message || '') ? 'Falta ejecutar en Supabase la Parte 51.' : msgErr(r.error), 'err'); return; }
+        if (reg.checked) { const q = await sb.from('facturas_clientes').insert({ cliente_id: c.id, numero: num.value.trim(), fecha: fec.value || hoy(), importe: tot, nota: 'Preparada desde ' + items.length + ' albarán(es)', pagada: false }); if (q.error) toast(q.error.code === '23505' ? 'Albaranes marcados. Esa factura ya estaba en «Facturas de clientes».' : 'Albaranes marcados, pero no se pudo apuntar en «Facturas de clientes»: ' + msgErr(q.error), 'err'); else toast('Marcados y apuntada la factura', 'ok'); } else toast('Albaranes marcados como facturados', 'ok');
+        cerrar(); items.forEach(x => delete sel[x.id]); cargar();
+      } }, 'Marcar como facturados')));
+  }
+  function tarjeta(c) {
+    const abierto = h('div', { class: 'sub', style: 'display:none;margin-top:8px' });
+    const ids = c.items.filter(x => !fact[x.id]); const marcados = () => c.items.filter(x => sel[x.id] && !fact[x.id]);
+    const tot = () => Math.round(marcados().reduce((a, x) => a + totalesFact(x).total, 0) * 100) / 100;
+    const totTxt = h('b', {}, ''); const nTxt = h('div', { class: 'sub' }, '');
+    const refresca = () => { const m = marcados(); totTxt.textContent = eur(tot()) + ' €'; nTxt.textContent = m.length + ' de ' + ids.length + ' albarán(es) seleccionados'; bR.disabled = bM.disabled = !m.length; };
+    const bR = h('button', { class: 'small', onclick: e => { e.stopPropagation(); hoja('Resumen para Golden', h('div', {}, (() => { const dv = h('div', {}); dv.innerHTML = resumenHtml(c, marcados()); return dv; })(), h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:10px 0' }, h('button', { class: 'small', onclick: () => imprimir(resumenHtml(c, marcados())) }, '🖨 Imprimir'), h('button', { class: 'ghost small', onclick: () => compartirTexto(textoCli(c, marcados())) }, 'Copiar / compartir texto')))); } }, '📋 Ver resumen para Golden');
+    const bM = h('button', { class: 'guardar small', onclick: e => { e.stopPropagation(); marcar(c, marcados()); } }, '✔ Ya la he hecho en Golden');
+    const filas = c.items.slice().sort((a, b) => String(a.fecha_entrega).localeCompare(String(b.fecha_entrega))).map(x => {
+      const t = totalesFact(x), al = albDe(x), fa = fact[x.id];
+      const ch = h('input', { type: 'checkbox', checked: !!sel[x.id] && !fa, disabled: !!fa, onchange: () => { sel[x.id] = ch.checked; refresca(); } });
+      return h('label', { class: 'fila', style: 'gap:8px;padding:6px 0;border-top:1px solid #e5e7eb;align-items:center;' + (fa ? 'opacity:.6' : '') }, ch,
+        h('div', { style: 'flex:1' }, h('div', {}, (al.serie || 'F') + ' ' + al.numero + ' · ' + fechaES(x.fecha_entrega)), fa ? h('div', { class: 'sub' }, '✔ Facturado en ' + fa.numero_factura) : null, t.sinPrecio ? h('div', { class: 'sub', style: 'color:#b45309' }, '⚠ ' + t.sinPrecio + ' línea(s) sin precio o sin peso') : null),
+        h('b', {}, eur(t.total) + ' €'));
+    });
+    if (verFact && ids.length !== c.items.length) filas.push(h('button', { class: 'ghost small', onclick: async e => { e.stopPropagation(); if (!await confirmar('¿Quitar la marca de facturado de los albaranes de ' + c.nombre + ' de este periodo? (No cambia nada en Golden.)')) return; const r = await sb.rpc('desmarcar_albaranes_facturados', { p_pedidos: c.items.filter(x => fact[x.id]).map(x => x.id) }); if (r.error) { toast(msgErr(r.error), 'err'); return; } toast('Marca quitada', 'ok'); cargar(); } }, 'Quitar marca de facturado'));
+    abierto.replaceChildren(...filas, h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' }, bR, bM));
+    const todos = ids.length === 0;
+    refresca();
+    return h('div', { class: 'card tap', onclick: e => { if (e.target.closest('button,label,input')) return; abierto.style.display = abierto.style.display === 'none' ? '' : 'none'; } },
+      h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, c.nombre), nTxt), h('div', { style: 'text-align:right' }, totTxt, todos ? h('div', {}, h('span', { class: 'badge' }, 'Facturado')) : null)), abierto);
+  }
+  function pintar() {
+    if (!datos) return;
+    const gs = por(); const pend = datos.filter(x => !fact[x.id]);
+    info.textContent = pend.length + ' albarán(es) entregados sin facturar · ' + eur(pend.reduce((a, x) => a + totalesFact(x).total, 0)) + ' €';
+    const kids = [];
+    if (sinParte51) kids.push(h('div', { class: 'aviso-card' }, 'Falta ejecutar la Parte 51 en Supabase: puedes preparar y ver los datos, pero no marcar albaranes como facturados.'));
+    if (!gs.length) kids.push(h('p', { class: 'vacio' }, 'No hay albaranes entregados pendientes de facturar en estas fechas.'));
+    cont.replaceChildren(...kids, ...gs.map(tarjeta));
+  }
+  async function cargar() {
+    cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+    try {
+      if (!navigator.onLine) throw new TypeError('network');
+      const r = await sb.from('pedidos').select('id,cliente_id,fecha_entrega,estado,archivado,clientes(codigo,nombre,nombre_comercial,recargo_equivalencia),lineas_pedido(peso_real,precio,iva,productos(iva))').gte('fecha_entrega', desde).lte('fecha_entrega', hasta).neq('estado', 'anulado').limit(1500);
+      if (r.error) throw r.error; let ps = (r.data || []).filter(p => !p.archivado); const ids = ps.map(p => p.id); const alb = {}, ent = new Set();
+      for (let i = 0; i < ids.length; i += 150) { const ch = ids.slice(i, i + 150);
+        const [a, e] = await Promise.all([sb.from('albaranes').select('pedido_id,serie,numero,estado').in('pedido_id', ch), sb.from('entregas').select('pedido_id').in('pedido_id', ch)]);
+        if (a.error) throw a.error; if (e.error) throw e.error; (a.data || []).forEach(x => alb[x.pedido_id] = x); (e.data || []).forEach(x => ent.add(x.pedido_id)); }
+      datos = ps.filter(p => alb[p.id] && alb[p.id].estado !== 'anulado' && ent.has(p.id)).map(p => Object.assign({}, p, { albaranes: [alb[p.id]] }));
+      fact = {}; sinParte51 = false;
+      for (let i = 0; i < ids.length; i += 150) { const f = await sb.from('albaranes_facturados').select('pedido_id,numero_factura').in('pedido_id', ids.slice(i, i + 150)); if (f.error) { sinParte51 = true; break; } (f.data || []).forEach(x => fact[x.pedido_id] = x); }
+      datos.forEach(x => { if (sel[x.id] === undefined) sel[x.id] = true; });
+      pintar();
+    } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para preparar facturas.' : msgErr(e))); }
+  }
+  $app.replaceChildren(shell('Preparar facturas (para Golden)', h('div', {},
+    h('div', { class: 'aviso-card' }, 'Aquí se prepara lo que hay que facturar: albaranes ya ENTREGADOS, agrupados por cliente, con base, IVA y total sumados. La factura oficial se hace en Golden; después se marca aquí como facturada.'),
+    h('div', { class: 'barra' }, h('label', { class: 'campo' }, 'Desde', iDesde), h('label', { class: 'campo' }, 'Hasta', iHasta)), buscar_,
+    h('label', { class: 'campo', style: 'flex-direction:row;gap:8px;align-items:center' }, chkFact, ' Mostrar también los ya facturados'), info, cont), { volver: () => go('inicio') })); renderBanner(); cargar();
+}
+const arr = x => Array.isArray(x) ? x : (x ? [x] : []);
 function vistaClientes() {
   state.view = 'clientes'; const lectura = false;
   let soloActivos = LS.get('fj_cli_activos', true), tope = 80;
@@ -3237,7 +3347,7 @@ function vistaMas() {
       return b; })(),
     ...g('Trabajo diario', c('✍️', 'Escribir pedido', () => go('importar'), V), c('🎤', 'Dictar pedido', () => go('importar', { modo: 'voz' }), V), c('📷', 'Escanear pedido', () => go('importar', { modo: 'escanear' }), V), c('➕', 'Nuevo pedido', () => go('nuevo'), V),
       c('🛒', 'Compra de hoy', () => { if (puedeCompras()) { LS.set('fj_compras_modo', 'lista'); go('compras'); } else go('hojacompra'); }, V), c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Hoja de carga', () => go('carga'), V), c('💶', 'Poner precios', () => go('preciosp'), V), c('🧑‍✈️', 'Reparto', () => go('reparto'), V)),
-    ...g('Entregas y cobros', c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('💰', 'Cobros', () => go('cobros'), '#2f7d4a'), c('🧮', 'Deudas', () => go('deudas'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a'), c('📅', 'Calendario', () => go('calendario'), '#2f7d4a'), c('🧺', 'Hoja de compra', () => go('hojacompra'), '#2f7d4a')),
+    ...g('Entregas y cobros', c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('💰', 'Cobros', () => go('cobros'), '#2f7d4a'), c('🧮', 'Deudas', () => go('deudas'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a'), c('📅', 'Calendario', () => go('calendario'), '#2f7d4a'), c('🧺', 'Hoja de compra', () => go('hojacompra'), '#2f7d4a'), esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), '#2f7d4a') : null),
     ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null),
     ...g('Compras y mercancía', c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('💶', 'Precios de compra', () => go('precios'), A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
@@ -7224,7 +7334,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v();
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
 }
