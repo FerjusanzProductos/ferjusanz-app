@@ -401,6 +401,9 @@ function crearSbPractica(){
     }
   }
   const RPC={
+    mi_caja(a){return DB.cobros.filter(c=>c.cobrado_por==='u1'&&String(c.created_at).slice(0,10)===a.p_fecha).map(c=>{const cl=DB.clientes.find(x=>x.id===c.cliente_id)||{};return{id:c.id,importe:c.importe,forma:c.forma,nota:c.nota,created_at:c.created_at,pedido_id:c.pedido_id,cliente_codigo:cl.codigo,cliente_nombre:cl.nombre,cliente_nombre_comercial:cl.nombre_comercial};});},
+    incidencias_de_pedido(a){return DB.incidencias.filter(i=>i.pedido_id===a.p_pedido&&!i.archivado).map(i=>({id:i.id,tipo:i.tipo,nota:i.nota,created_at:i.created_at,con_foto:!!i.foto,resuelta:!!i.resuelta}));},
+    foto_incidencia(a){const i=DB.incidencias.find(x=>x.id===a.p_id);return i?(i.foto||null):null;},
     cobrar(a){const ex=a.p_clave&&DB.cobros.find(c=>c.clave===a.p_clave);if(ex)return ex;const v=viewImporte().find(x=>x.pedido_id===a.p_pedido);if(!v)throw new Error('SIN_IMPORTE');if(a.p_importe>v.pendiente+0.01)throw new Error('COBRO_MAYOR_QUE_PENDIENTE');const p=DB.pedidos.find(x=>x.id===a.p_pedido);const r={id:'k'+Math.random().toString(36).slice(2,7),pedido_id:a.p_pedido,cliente_id:p.cliente_id,importe:a.p_importe,forma:a.p_forma,nota:a.p_nota,clave:a.p_clave,cobrado_por:'u1',created_at:new Date().toISOString()};DB.cobros.push(r);return r;},
     guardar_foto(a){DB.fotos_perfil=DB.fotos_perfil.filter(x=>x.usuario_id!=='u1');if(a.p_foto)DB.fotos_perfil.push({usuario_id:'u1',foto:a.p_foto});return null;},
     fichar(a){const ab=DB.fichajes.find(f=>f.usuario_id==='u1'&&!f.salida);const t=a.p_cuando||new Date().toISOString();if(a.p_accion==='entrada'){if(ab)return ab;const r={id:'f'+Math.random().toString(36).slice(2,7),usuario_id:'u1',entrada:t,salida:null,sin_conexion:!!a.p_cuando,nota:null};DB.fichajes.push(r);return r;}if(!ab)throw new Error('SIN_ENTRADA');ab.salida=t;return ab;},
@@ -1511,6 +1514,8 @@ async function vistaAlbaran() {
       const ta = await sb.from('albaranes').select('traza_estado,traza_motivo,traza_at').eq('pedido_id', d.pedido.id).maybeSingle();
       if (!ta.error && ta.data) d.trazaEstado = ta.data;
     } catch (e) { /* sin conexión: se imprime con lo que haya */ }
+    d.incidencias = [];
+    try { const ri = await sb.rpc('incidencias_de_pedido', { p_pedido: d.pedido.id }); if (!ri.error && Array.isArray(ri.data)) d.incidencias = ri.data; } catch (e) { }
     const formato = h('select', { onchange: () => pintar() }, h('option', { value: 'a4' }, 'Papel A4'), h('option', { value: 'ticket' }, 'Ticket 80 mm'));
     formato.value = LS.get('fj_formato', 'a4');
     const wrap = h('div', { class: 'alb-wrap' });
@@ -1527,6 +1532,8 @@ async function vistaAlbaran() {
       cobroBox,
       d.pedido.estado === 'terminado' ? h('button', { class: 'ghost', style: 'width:100%;margin-bottom:10px;min-height:48px', onclick: () => abrirVentaRuta(d) }, '➕ Venta en ruta (el cliente se lleva algo más)') : null,
       cajaFirma(d),
+      h('button', { style: 'width:100%;margin-bottom:10px;min-height:48px;background:#16a34a', onclick: () => enviarAlbaranWhatsApp(d) }, '📲 Enviar al cliente por WhatsApp (PDF)'),
+      cajaIncidenciasAlb(d),
       cajaTraza(d),
       gananciaBox,
       (() => { const sinP = d.lineas.filter(l => l.precio == null).length; return d.pedido.estado === 'anulado' ? null : h('button', { class: sinP ? '' : 'ghost', style: 'width:100%;margin-bottom:10px;min-height:48px', onclick: () => abrirPrecios(d.pedido.id, () => vistaAlbaran()) }, '💶 Poner / cambiar precios' + (sinP ? ' (' + sinP + ' sin precio)' : '')); })(),
@@ -1581,6 +1588,126 @@ function cajaTraza(d) {
   return h('div', { class: 'card', style: 'margin-bottom:10px' }, h('div', { class: 'nombre' }, txt),
     esOficina() ? h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: () => abrirTrazabilidad(d.pedido.id, { corregir: true, primera: !est }) }, est === 'confirmada' ? 'Corregir trazabilidad' : est ? 'Asignar trazabilidad ahora' : 'Asignar trazabilidad') : null);
 }
+/* ---------- Albarán en PDF para enviar por WhatsApp (sin librerías) ---------- */
+const blobADataURL = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsDataURL(b); });
+const pdfBytes = s => { const o = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) o[i] = s.charCodeAt(i) & 255; return o; };
+const PDF_W = [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
+function pdfAncho(t, sz, neg) { let w = 0; for (const ch of String(t)) { const c = ch.charCodeAt(0); w += (c >= 32 && c <= 126) ? PDF_W[c - 32] : 556; } return w * sz / 1000 * (neg ? 1.06 : 1); }
+function pdfTxt(t) {
+  const M = { '€': '\x80', '–': '\x96', '—': '\x97', '·': '\xB7', '“': '\x93', '”': '\x94', '‘': '\x91', '’': '\x92', '…': '\x85', '✔': '', '⚠': '', '🟡': '', '❌': '', '✅': '' };
+  return String(t == null ? '' : t).replace(/[^\x20-\x7E\xA0-\xFF]/g, ch => ch in M ? M[ch] : '?').replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+}
+async function pdfFirmaJpeg(url) {
+  const img = new Image(); await new Promise((ok, ko) => { img.onload = ok; img.onerror = ko; img.src = url; });
+  const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0);
+  return { bytes: pdfBytes(atob(c.toDataURL('image/jpeg', 0.92).split(',')[1])), w: c.width, h: c.height };
+}
+async function pdfAlbaran(d) {
+  const p = d.pedido, cli = uno(p.clientes) || {}, a = d.albaran || {};
+  const lineas = d.lineas.slice().sort((x, y) => (x.productos ? x.productos.nombre : '').localeCompare(y.productos ? y.productos.nombre : '', 'es'));
+  let total = 0; const bases = {}; const filas = lineas.map(l => {
+    const imp = l.precio != null && l.peso_real != null ? Math.round(l.peso_real * l.precio * 100) / 100 : null;
+    if (imp != null) { total = Math.round((total + imp) * 100) / 100; const t = l.iva != null ? Number(l.iva) : (l.productos && l.productos.iva != null ? Number(l.productos.iva) : 4); bases[t] = Math.round(((bases[t] || 0) + imp) * 100) / 100; }
+    return { n: l.productos ? l.productos.nombre : '', ped: num(l.cantidad_pedida) + ' ' + l.unidad_pedida, cant: l.peso_real != null ? num(l.peso_real) + ' ' + udLinea(l) : '—', pre: l.precio != null ? eur(l.precio) : '', imp: imp != null ? eur(imp) : '' };
+  });
+  const RE = { 4: 0.5, 10: 1.4, 21: 5.2 }; let sumaIva = 0, sumaRe = 0;
+  const tipos = Object.keys(bases).map(Number).sort((x, y) => x - y).map(t => { const c = Math.round(bases[t] * t) / 100; sumaIva = Math.round((sumaIva + c) * 100) / 100; const re = cli.recargo_equivalencia && RE[t] ? Math.round(bases[t] * RE[t]) / 100 : 0; sumaRe = Math.round((sumaRe + re) * 100) / 100; return { t, base: bases[t], cuota: c, re }; });
+  const totalIva = Math.round((total + sumaIva + sumaRe) * 100) / 100;
+  const num7 = a.numero == null ? 'BORRADOR' : a.serie + ' ' + String(a.numero).padStart(7, '0');
+  const firma = a.firma_png && /^data:image\/png;base64,[A-Za-z0-9+\/=]+$/.test(a.firma_png) ? await pdfFirmaJpeg(a.firma_png).catch(() => null) : null;
+  const W = 595, H = 842, M = 40, pages = []; let cur, y;
+  const txt = (x, yy, t, sz, neg, der) => cur.push('BT /F' + (neg ? 2 : 1) + ' ' + sz + ' Tf ' + (der ? x - pdfAncho(t, sz, neg) : x).toFixed(1) + ' ' + yy.toFixed(1) + ' Td (' + pdfTxt(t) + ') Tj ET');
+  const raya = (yy) => cur.push('0.5 w ' + M + ' ' + yy.toFixed(1) + ' m ' + (W - M) + ' ' + yy.toFixed(1) + ' l S');
+  const corta = (t, max, sz, neg) => { t = String(t); if (pdfAncho(t, sz, neg) <= max) return t; while (t.length > 1 && pdfAncho(t + '…', sz, neg) > max) t = t.slice(0, -1); return t + '…'; };
+  const cabTabla = () => { txt(M, y, 'Artículo', 9, true); txt(335, y, 'Pedido', 9, true, true); txt(415, y, 'Cantidad', 9, true, true); txt(485, y, 'Precio', 9, true, true); txt(W - M, y, 'Importe', 9, true, true); y -= 4; raya(y); y -= 13; };
+  const nueva = (cabecera) => { cur = []; pages.push(cur); y = H - M; if (cabecera) { txt(M, y, 'Albarán ' + num7 + ' · ' + nombreCli(cli) + ' (continuación)', 9, true); y -= 20; cabTabla(); } };
+  nueva(false);
+  txt(M, y, EMPRESA.nombre, 12, true); txt(W - M, y, 'ALBARÁN', 18, true, true); y -= 14;
+  txt(M, y, EMPRESA.lema, 8.5); txt(W - M, y, num7, 12, true, true); y -= 11;
+  txt(M, y, EMPRESA.tels, 8); txt(W - M, y, 'Fecha: ' + fechaES(a.fecha || p.fecha_entrega), 10, false, true); y -= 10;
+  txt(M, y, (EMPRESA.dir || '') + ' · ' + (EMPRESA.email || ''), 8); y -= 14; raya(y); y -= 18;
+  txt(M, y, 'Cliente', 8.5); y -= 13; txt(M, y, nombreCli(cli), 12, true); y -= 13;
+  if (cli.nombre_comercial && cli.nombre) { txt(M, y, cli.nombre, 9); y -= 11; }
+  const dir = [cli.direccion, cli.localidad].filter(Boolean).join(' · '); if (dir) { txt(M, y, dir, 9); y -= 11; }
+  if (cli.nif) { txt(M, y, 'NIF: ' + cli.nif, 9); y -= 11; }
+  y -= 10; cabTabla();
+  for (const f of filas) {
+    if (y < 120) nueva(true);
+    txt(M, y, corta(f.n, 255, 9.5), 9.5); txt(335, y, f.ped, 9.5, false, true); txt(415, y, f.cant, 9.5, true, true); txt(485, y, f.pre, 9.5, false, true); txt(W - M, y, f.imp, 9.5, false, true); y -= 14;
+  }
+  y -= 2; raya(y); y -= 16;
+  if (y < 170) nueva(false);
+  if (tipos.length) {
+    for (const t of tipos) { txt(M, y, 'Base imponible ' + num(t.t) + ' %', 9); txt(215, y, eur(t.base) + ' €', 9, false, true); txt(260, y, 'IVA ' + num(t.t) + ' %', 9); txt(380, y, eur(t.cuota) + ' €', 9, false, true); y -= 12; if (t.re) { txt(260, y, 'Rec. equiv. ' + num(RE[t.t]) + ' %', 9); txt(380, y, eur(t.re) + ' €', 9, false, true); y -= 12; } }
+    y -= 4; txt(W - M, y, 'TOTAL' + (cli.forma_pago === 'contado' ? ' A COBRAR' : '') + ': ' + eur(totalIva) + ' € (IVA incluido)', 12, true, true); y -= 20;
+  } else { txt(M, y, 'Importes pendientes de poner precio.', 9); y -= 18; }
+  txt(M, y, cli.forma_pago === 'contado' ? 'PAGO AL CONTADO' : 'PENDIENTE DE FACTURA', 9.5, true); y -= 18;
+  const inc = d.incidencias || [];
+  if (inc.length) {
+    if (y < 120) nueva(false);
+    txt(M, y, 'Incidencias anotadas en la entrega:', 9.5, true); y -= 13;
+    for (const i of inc) { if (y < 70) nueva(false); txt(M + 8, y, corta('· ' + (TIPOS_INC[i.tipo] || i.tipo) + ': ' + i.nota, W - 2 * M - 10, 9), 9); y -= 12; }
+    y -= 8;
+  }
+  if (y < 130) nueva(false);
+  txt(M, y, 'Conforme: Recibí', 9.5, true); y -= 6;
+  if (firma) {
+    const hh = 52, ww = Math.min(200, hh * firma.w / firma.h); y -= hh;
+    cur.push('q ' + ww.toFixed(1) + ' 0 0 ' + hh + ' ' + M + ' ' + y.toFixed(1) + ' cm /Im1 Do Q'); y -= 12;
+    txt(M, y, 'Firmado' + (a.firma_nombre ? ' por ' + a.firma_nombre : '') + (a.firma_at ? ' el ' + fechaES(String(a.firma_at).slice(0, 10)) + ' ' + fmtHora(a.firma_at) : ''), 8.5);
+  } else { y -= 30; txt(M, y, 'Firma y nombre: ______________________________', 9.5); }
+  /* ---- montar el fichero PDF ---- */
+  const chunks = []; let off = 0; const offs = []; const put = x => { const b = typeof x === 'string' ? pdfBytes(x) : x; chunks.push(b); off += b.length; };
+  const obj = (id, ...partes) => { offs[id] = off; put(id + ' 0 obj\n'); partes.forEach(put); put('\nendobj\n'); };
+  const nP = pages.length, idImg = 5, primera = firma ? 6 : 5;
+  put('%PDF-1.4\n');
+  obj(1, '<< /Type /Catalog /Pages 2 0 R >>');
+  obj(2, '<< /Type /Pages /Count ' + nP + ' /Kids [' + pages.map((_, i) => (primera + i * 2 + 1) + ' 0 R').join(' ') + '] >>');
+  obj(3, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+  obj(4, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+  if (firma) obj(idImg, '<< /Type /XObject /Subtype /Image /Width ' + firma.w + ' /Height ' + firma.h + ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + firma.bytes.length + ' >>\nstream\n', firma.bytes, '\nendstream');
+  pages.forEach((pg, i) => {
+    const cs = pdfBytes(pg.join('\n')), ic = primera + i * 2, ip = ic + 1;
+    obj(ic, '<< /Length ' + cs.length + ' >>\nstream\n', cs, '\nendstream');
+    obj(ip, '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + W + ' ' + H + '] /Resources << /Font << /F1 3 0 R /F2 4 0 R >>' + (firma ? ' /XObject << /Im1 ' + idImg + ' 0 R >>' : '') + ' >> /Contents ' + ic + ' 0 R >>');
+  });
+  const n = primera + nP * 2, xr = off;
+  put('xref\n0 ' + n + '\n0000000000 65535 f \n'); for (let i = 1; i < n; i++) put(String(offs[i]).padStart(10, '0') + ' 00000 n \n');
+  put('trailer\n<< /Size ' + n + ' /Root 1 0 R >>\nstartxref\n' + xr + '\n%%EOF\n');
+  return new Blob(chunks, { type: 'application/pdf' });
+}
+async function enviarAlbaranWhatsApp(d) {
+  try {
+    toast('Preparando el PDF…');
+    const blob = await pdfAlbaran(d), a = d.albaran || {};
+    const nom = 'Albaran-' + (a.numero != null ? a.serie + '-' + String(a.numero).padStart(7, '0') : 'borrador') + '.pdf';
+    const file = new File([blob], nom, { type: 'application/pdf' });
+    const texto = 'Hola, le enviamos su albarán' + (a.numero != null ? ' ' + a.serie + ' ' + String(a.numero).padStart(7, '0') : '') + ' del ' + fechaES(a.fecha || d.pedido.fecha_entrega) + ' de ' + EMPRESA.nombre + '. Gracias.';
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text: texto }); return; }
+    const url = URL.createObjectURL(blob); const lk = h('a', { href: url, download: nom }); document.body.append(lk); lk.click(); lk.remove();
+    let tel = ''; try { const r = await sb.from('clientes').select('telefono').eq('id', d.pedido.cliente_id).maybeSingle(); tel = String((r.data || {}).telefono || '').replace(/\D/g, ''); } catch (e) { }
+    if (tel.length === 9) tel = '34' + tel;
+    window.open('https://wa.me/' + tel + '?text=' + encodeURIComponent(texto), '_blank');
+    toast('PDF descargado. Adjúntalo en la conversación de WhatsApp.', 'ok');
+  } catch (e) { if (e && e.name === 'AbortError') return; toast('No se pudo preparar el PDF: ' + msgErr(e), 'err'); }
+}
+async function verFotoIncidencia(id) {
+  try {
+    const r = await sb.rpc('foto_incidencia', { p_id: id }); if (r.error) throw r.error;
+    if (!r.data) { toast('Esta incidencia no tiene foto', 'err'); return; }
+    hoja('Foto de la incidencia', h('img', { src: r.data, style: 'width:100%;border-radius:8px' }));
+  } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión para ver la foto' : msgErr(e), 'err'); }
+}
+function cajaIncidenciasAlb(d) {
+  const inc = d.incidencias || [];
+  const cl = Object.assign({ id: d.pedido.cliente_id }, uno(d.pedido.clientes) || {});
+  return h('div', { class: 'card', style: 'margin-bottom:10px' },
+    h('div', { class: 'nombre' }, '⚠ Incidencias de esta entrega' + (inc.length ? ' (' + inc.length + ')' : '')),
+    h('div', { class: 'sub' }, 'Producto rechazado, devuelto o en mal estado. Queda anotado con foto y sale escrito en el albarán.'),
+    ...inc.map(i => h('div', { class: 'fila', style: 'padding:6px 0;border-top:1px solid var(--borde)' }, h('div', {}, h('div', { class: 'nombre' }, TIPOS_INC[i.tipo] || i.tipo), h('div', { class: 'sub' }, i.nota)),
+      i.con_foto ? h('button', { class: 'ghost small', onclick: () => verFotoIncidencia(i.id) }, '📷 Foto') : null)),
+    h('button', { class: 'ghost', style: 'width:100%;margin-top:8px;min-height:44px', onclick: () => abrirIncidencia({ cliente: cl, pedido_id: d.pedido.id, tipo: 'devolucion' }, () => vistaAlbaran()) }, '+ Anotar incidencia con foto'));
+}
 async function cargarCobroAlbaran(pedidoId, caja) {
   try {
     const [r, c] = await Promise.all([sb.from('v_pedidos_importe').select('*').eq('pedido_id', pedidoId).maybeSingle(), sb.from('cobros').select('id,importe,forma,created_at,cobrado_por').eq('pedido_id', pedidoId).order('created_at', { ascending: true })]);
@@ -1629,6 +1756,7 @@ function htmlAlbaran(d, formato, opt) {
       (f.re ? '<tr><td></td><td></td><td>Rec. equiv. ' + esc(num(RE[f.t])) + ' %</td><td class="d">' + esc(eur(f.re)) + ' €</td></tr>' : '')).join('') +
     '</tbody></table><div class="totiva">TOTAL' + (cli.forma_pago === 'contado' ? ' A COBRAR' : '') + ': <b>' + esc(eur(totalIva)) + ' €</b> <span style="font-size:11px">(IVA incluido)</span></div>';
   const contado = cli.forma_pago === 'contado';
+  const incBloque = d.incidencias && d.incidencias.length ? '<div class="tz" style="margin:6px 0;text-align:left"><b>Incidencias anotadas en la entrega:</b><br>' + d.incidencias.map(i => '· ' + esc(TIPOS_INC[i.tipo] || i.tipo) + ': ' + esc(i.nota)).join('<br>') + '</div>' : '';
   const num7 = a.numero == null ? (a.estado === 'cerrado' ? 'ALBARÁN CERRADO' : 'BORRADOR · nº pendiente') : a.serie + ' ' + String(a.numero).padStart(7, '0');
   const COP = {
     BLANCA: { dest: 'CLIENTE', cls: 'blanca', nota: 'SE ENTREGA AL CLIENTE SOLO SI PAGA AL MOMENTO' },
@@ -1651,7 +1779,7 @@ function htmlAlbaran(d, formato, opt) {
       '<br>' + esc([cli.direccion, cli.localidad].filter(Boolean).join(' · ')) + (cli.nif ? '<br>NIF: ' + esc(cli.nif) : '') + '</div>' +
       '<table><thead><tr><th>Artículo</th><th class="d oc-ticket">Pedido</th><th class="d">Cantidad</th><th class="d">Precio</th><th class="d">Importe</th></tr></thead><tbody>' + filas + '</tbody></table>' +
       (hayPrecio ? '<div class="tot">' + desgloseIva + '</div>' : '') +
-      '<div class="cond">' + (contado ? 'PAGO AL CONTADO' : 'PENDIENTE DE FACTURA') + '</div>' + pie + '</div>';
+      incBloque + '<div class="cond">' + (contado ? 'PAGO AL CONTADO' : 'PENDIENTE DE FACTURA') + '</div>' + pie + '</div>';
   };
   return copia('BLANCA') + copia('AMARILLA') + copia('ROSA');
 }
@@ -3510,12 +3638,13 @@ function vistaCobros() {
   state.view = 'cobros';
   let dias = LS.get('fj_cobros_dias', {}); const plazoDe = f => dias[f.cliente_id] != null ? Number(dias[f.cliente_id]) : (f.forma_pago === 'contado' ? 0 : 30);
   const venceDe = f => { const d = new Date(String(f.fecha_entrega).slice(0, 10) + 'T12:00:00'); d.setDate(d.getDate() + plazoDe(f)); return hoy(d); };
-  let modo = esOficina() ? LS.get('fj_cobros_modo', 'pend') : 'pend', filtro = LS.get('fj_cobros_filtro', 'todos'), fecha = hoy(), filas = null, cache = false;
+  let modo = LS.get('fj_cobros_modo', 'pend'), filtro = LS.get('fj_cobros_filtro', 'todos'), fecha = hoy(), filas = null, cache = false;
+  if (modo === 'caja' && !esOficina()) modo = 'pend';
   const cont = h('div', {}); const buscar2 = h('input', { placeholder: 'Buscar cliente…', oninput: debounce(() => pintar(), 200) });
   const chipsModo = h('div', { class: 'chips' }); const chipsFiltro = h('div', { class: 'chips' });
   const inpFecha = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); cargar(); } });
   function pintarChips() {
-    chipsModo.replaceChildren(...(esOficina() ? [['pend', 'Pendientes de cobro'], ['caja', 'Caja del día']] : [['pend', 'Pendientes de cobro']]).map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_cobros_modo', m); filas = null; pintarChips(); cargar(); } }, n)));
+    chipsModo.replaceChildren(...(esOficina() ? [['pend', 'Pendientes de cobro'], ['mia', 'Mi caja'], ['caja', 'Caja del día']] : [['pend', 'Pendientes de cobro'], ['mia', 'Mi caja']]).map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_cobros_modo', m); filas = null; pintarChips(); cargar(); } }, n)));
     chipsFiltro.replaceChildren(...[['todos', 'Todos'], ['vencidos', 'Vencidos'], ['contado', 'Contado'], ['credito', 'Crédito']].map(([m, n]) => h('button', { class: 'chip' + (filtro === m ? ' on' : ''), onclick: () => { filtro = m; LS.set('fj_cobros_filtro', m); pintarChips(); pintar(); } }, n)));
   }
   async function cargar() {
@@ -3526,6 +3655,11 @@ function vistaCobros() {
         if (r.error) throw r.error; filas = r.data; cache = false; LS.set('fj_cobros_pend', filas);
         try { dias = {}; const idc = Array.from(new Set(filas.map(f => f.cliente_id))); for (let i = 0; i < idc.length; i += 80) { const q = await sb.from('clientes').select('id,dias_pago').in('id', idc.slice(i, i + 80)); if (q.error) throw q.error; q.data.forEach(c => { dias[c.id] = c.dias_pago; }); } LS.set('fj_cobros_dias', dias); } catch (e2) { dias = LS.get('fj_cobros_dias', {}); }
       } catch (e) { if (!isNetErr(e)) { cont.replaceChildren(h('p', { class: 'err' }, msgErr(e))); return; } filas = LS.get('fj_cobros_pend', []); cache = true; }
+    } else if (modo === 'mia') {
+      try {
+        const r = await sb.rpc('mi_caja', { p_fecha: fecha }); if (r.error) throw r.error;
+        filas = (r.data || []).map(x => ({ id: x.id, importe: x.importe, forma: x.forma, nota: x.nota, created_at: x.created_at, cobrado_por: state.user.id, pedido_id: x.pedido_id, clientes: { codigo: x.cliente_codigo, nombre: x.cliente_nombre, nombre_comercial: x.cliente_nombre_comercial } })); cache = false;
+      } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver tu caja.' : msgErr(e))); return; }
     } else {
       try {
         const a = new Date(fecha + 'T00:00:00'), b = new Date(a.getTime() + 86400000);
@@ -3537,7 +3671,7 @@ function vistaCobros() {
   }
   function pintar() {
     if (filas === null) return;
-    if (modo === 'caja') return pintarCaja();
+    if (modo === 'caja' || modo === 'mia') return pintarCaja();
     const t = sinTilde(buscar2.value);
     const ps = filas.map(f => Object.assign({}, f, { pend: pendienteLocal(f.pedido_id, f.pendiente), vence: venceDe(f), vencido: hoy() > venceDe(f) })).filter(f => f.pend > 0.009)
       .filter(f => filtro === 'todos' || (filtro === 'vencidos' ? f.vencido : f.forma_pago === filtro)).filter(f => !t || sinTilde(f.cliente_nombre + ' ' + f.cliente_codigo).includes(t));
@@ -3566,12 +3700,13 @@ function vistaCobros() {
   }
   function pintarCaja() {
     const tot = Math.round(filas.reduce((a, c) => a + Number(c.importe), 0) * 100) / 100;
-    const porForma = {}; const porPers = {};
-    filas.forEach(c => { porForma[c.forma] = (porForma[c.forma] || 0) + Number(c.importe); const n = (state.gente[c.cobrado_por] || {}).nombre || 'Otro'; porPers[n] = (porPers[n] || 0) + Number(c.importe); });
+    const porForma = {}; const porPers = {}; const porPF = {};
+    filas.forEach(c => { porForma[c.forma] = (porForma[c.forma] || 0) + Number(c.importe); const n = (state.gente[c.cobrado_por] || {}).nombre || 'Otro'; porPers[n] = (porPers[n] || 0) + Number(c.importe); (porPF[n] = porPF[n] || {})[c.forma] = (porPF[n][c.forma] || 0) + Number(c.importe); });
     const nombreForma = Object.fromEntries(FORMAS_COBRO);
     const lin = (t, v) => h('div', { class: 'fila', style: 'padding:3px 0' }, h('span', {}, t), h('b', {}, eur(v) + ' €'));
-    const kids = [h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', { class: 'nombre' }, 'Total cobrado'), h('div', { class: 'tot-num' }, eur(tot) + ' €')),
-      Object.keys(porForma).map(k => lin(nombreForma[k] || k, porForma[k])), Object.keys(porPers).length ? h('div', { class: 'sub', style: 'margin:8px 0 2px' }, 'Por persona') : null, Object.keys(porPers).sort().map(k => lin(k, porPers[k])))];
+    const kids = [h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', { class: 'nombre' }, modo === 'mia' ? 'Lo que has cobrado tú' : 'Total cobrado'), h('div', { class: 'tot-num' }, eur(tot) + ' €')),
+      Object.keys(porForma).map(k => lin(nombreForma[k] || k, porForma[k])), modo === 'caja' && Object.keys(porPers).length ? h('div', { class: 'sub', style: 'margin:8px 0 2px' }, 'Por repartidor o persona (lo que cada uno debe entregar en caja)') : null, ...(modo === 'caja' ? Object.keys(porPers).sort().map(k => h('div', { style: 'padding:4px 0;border-top:1px solid var(--borde)' }, lin(k, porPers[k]), h('div', { class: 'sub' }, Object.keys(porPF[k]).map(f => (nombreForma[f] || f) + ' ' + eur(porPF[k][f]) + ' €').join(' · ')))) : []))];
+    if (modo === 'mia') { kids.push(h('div', { class: 'aviso-card' }, 'Efectivo que debes entregar en la oficina: ' + eur(porForma.efectivo || 0) + ' €. Tarjeta, Bizum y transferencia no hay que entregarlos.')); if (getColaK().length) kids.push(h('div', { class: 'aviso-card' }, getColaK().length + ' cobro(s) pendientes de enviar: aparecerán aquí al recuperar la conexión.')); }
     if (!filas.length) kids.push(h('p', { class: 'vacio' }, 'No hay cobros este día.'));
     filas.forEach(c => { const cl = c.clientes ? (Array.isArray(c.clientes) ? c.clientes[0] : c.clientes) : null;
       kids.push(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, nombreCli(cl)), h('div', { class: 'sub' }, fmtHora(c.created_at) + ' · ' + (nombreForma[c.forma] || c.forma) + ' · ' + (((state.gente[c.cobrado_por] || {}).nombre) || '') + (c.nota ? ' · ' + c.nota : ''))), h('b', {}, eur(c.importe) + ' €')),
@@ -4503,7 +4638,13 @@ function vistaNuevo() {
       if (p.error || !p.data.length) { toast('Este cliente no tiene pedidos anteriores', 'err'); return; }
       const l = await sb.from('lineas_pedido').select('cantidad_pedida,unidad_pedida,unidad_precio,productos(id,codigo,nombre,unidad_venta,unidad_precio,activo)').eq('pedido_id', p.data[0].id);
       if (l.error) { toast(msgErr(l.error), 'err'); return; } await añadir(l.data.map(x => ({ producto: uno(x.productos), cantidad: x.cantidad_pedida, unidad: x.unidad_pedida, unidad_precio: x.unidad_precio })).filter(x => x.producto && x.producto.activo !== false)); toast('Líneas copiadas del pedido del ' + fechaES(p.data[0].fecha_entrega), 'ok');
-    } }, 'Repetir último pedido')];
+    } }, 'Repetir último pedido'), h('button', { class: 'ghost small', onclick: async () => {
+      const f7 = hoy(new Date(new Date(nuevo.fecha + 'T12:00:00').getTime() - 7 * 86400000));
+      const p = await sb.from('pedidos').select('id').eq('cliente_id', cid).eq('fecha_entrega', f7).neq('estado', 'anulado').neq('archivado', true).limit(1);
+      if (p.error || !p.data.length) { toast('Este cliente no pidió el ' + fechaES(f7), 'err'); return; }
+      const l = await sb.from('lineas_pedido').select('cantidad_pedida,unidad_pedida,unidad_precio,productos(id,codigo,nombre,unidad_venta,unidad_precio,activo)').eq('pedido_id', p.data[0].id);
+      if (l.error) { toast(msgErr(l.error), 'err'); return; } await añadir(l.data.map(x => ({ producto: uno(x.productos), cantidad: x.cantidad_pedida, unidad: x.unidad_pedida, unidad_precio: x.unidad_precio })).filter(x => x.producto && x.producto.activo !== false)); toast('Copiado el pedido del ' + fechaES(f7) + '. Revísalo.', 'ok');
+    } }, 'Igual que hace una semana')];
     try { const r = await sb.from('pedidos_habituales').select('id,nombre,lineas_habituales(cantidad,unidad,productos(id,codigo,nombre,unidad_venta,unidad_precio,activo))').eq('cliente_id', cid).eq('activo', true);
       (r.data || []).forEach(x => kids.push(h('button', { class: 'ghost small', onclick: () => añadir((x.lineas_habituales || []).map(l => ({ producto: uno(l.productos), cantidad: l.cantidad, unidad: l.unidad })).filter(l => l.producto && l.producto.activo !== false)) }, 'Habitual: ' + (x.nombre || 'pedido')))); } catch (e) { }
     atajos.replaceChildren(h('div', { class: 'sub' }, 'Cargar productos desde:'), h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;margin-top:4px' }, ...kids));
@@ -4739,7 +4880,7 @@ function vistaEntregas() {
     if (!suave) cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
     try {
       if (!navigator.onLine) throw new TypeError('network');
-      const r = await sb.from('pedidos').select('id,estado,clientes(codigo,nombre,nombre_comercial),entregas(entregado_at,entregado_por)').eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true);
+      const r = await sb.from('pedidos').select('id,estado,cliente_id,clientes(codigo,nombre,nombre_comercial),entregas(entregado_at,entregado_por)').eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true);
       if (r.error) throw r.error; datos = r.data; cache = false; LS.set(key, datos);
     } catch (e) { if (!isNetErr(e)) { cont.replaceChildren(h('p', { class: 'err' }, msgErr(e))); return; } datos = LS.get(key, []); cache = true; }
     pintar();
@@ -4754,7 +4895,8 @@ function vistaEntregas() {
       h('div', { class: 'sub' }, falta.length + ' terminados por entregar' + (sin ? ' · ' + sin + ' sin terminar de preparar' : ''))));
     if (falta.length) kids.push(h('div', { class: 'letra' }, 'Por entregar'));
     falta.forEach(p => kids.push(h('div', { class: 'card fila' }, h('div', { class: 'nombre' }, nombreCli(uno(p.clientes))),
-      h('button', { class: 'guardar small', onclick: async () => { await marcarEntregado(p.id); pintar(); cargar(true); } }, 'Entregado'))));
+      h('div', { style: 'display:flex;gap:6px' }, h('button', { class: 'ghost small', onclick: () => abrirIncidencia({ cliente: Object.assign({ id: p.cliente_id }, uno(p.clientes) || {}), pedido_id: p.id, tipo: 'devolucion' }, () => { }) }, '⚠ Incidencia'),
+        h('button', { class: 'guardar small', onclick: async () => { await marcarEntregado(p.id); pintar(); cargar(true); } }, 'Entregado')))));
     if (ent.length) kids.push(h('div', { class: 'letra' }, 'Entregados'));
     ent.forEach(p => { const i = info(p); kids.push(h('div', { class: 'card fila' },
       h('div', {}, h('div', { class: 'nombre' }, '✔ ' + nombreCli(uno(p.clientes))), h('div', { class: 'sub' }, 'El pedido de ' + nombreCli(uno(p.clientes)) + ' ya ha sido entregado' + (quienEs(i.por) ? ' · ' + quienEs(i.por) : '') + (i.pend ? ' · pendiente de enviar' : ''))),
@@ -4830,6 +4972,7 @@ function vistaCalendario() {
     const bs = [h('button', { class: 'ghost', style: 'flex:1', onclick: () => { state.fecha = sel; go('lista'); } }, 'Abrir en Preparar'), h('button', { class: 'ghost', style: 'flex:1', onclick: () => go('pedidos', { desde: mes + '-01', hasta: mover(mes, 1) + '-01' }) }, 'Ver como lista')];
     if (esOficina()) bs.unshift(h('button', { style: 'flex:1', onclick: () => go('nuevo', { fecha: sel }) }, '+ Añadir pedido'));
     if (esOficina()) kids.push(h('button', { class: 'ghost', style: 'width:100%;margin-bottom:8px', onclick: () => crearHabituales(sel, cargar) }, 'Crear pedidos habituales de este día'));
+    if (esOficina()) kids.push(h('button', { class: 'ghost', style: 'width:100%;margin-bottom:8px', onclick: () => crearDeSemanaPasada(sel, cargar) }, '↺ Repetir los pedidos de la semana pasada'));
     kids.push(h('div', { style: 'display:flex;gap:8px' }, ...bs));
     cont.replaceChildren(...kids);
   }
@@ -4842,7 +4985,8 @@ async function sincronizarInc() {
   if (sincI || !navigator.onLine) return; if (!colaI.get().length) return; sincI = true;
   try {
     for (const it of colaI.get().slice()) {
-      const r = await sb.from('incidencias').upsert(it, { onConflict: 'id', ignoreDuplicates: true });
+      let r = await sb.from('incidencias').upsert(it, { onConflict: 'id', ignoreDuplicates: true });
+      if (r.error && it.foto && /foto/.test(r.error.message || '')) { const { foto, ...sinFoto } = it; r = await sb.from('incidencias').upsert(sinFoto, { onConflict: 'id', ignoreDuplicates: true }); if (!r.error) toast('Incidencia guardada SIN la foto: falta ejecutar la Parte 53 en Supabase.', 'err'); }
       if (r.error) { if (isNetErr(r.error)) break; toast(msgErr(r.error), 'err'); }
       colaI.set(colaI.get().filter(x => x.id !== it.id));
     }
@@ -4867,15 +5011,20 @@ function abrirIncidencia(pref, alGuardar) {
   const tipo = h('select', {}, Object.keys(TIPOS_INC).map(k => h('option', { value: k }, TIPOS_INC[k])));
   const cli = selectorEntidad('clientes', 'Cliente', pref.cliente), pro = selectorEntidad('productos', 'Producto', pref.producto);
   const nota = h('textarea', { rows: 3, placeholder: 'Qué ha pasado. Ej.: «Los tomates llegaron malos» o «Florencio se queja de estos tomates»' });
+  if (pref.tipo && TIPOS_INC[pref.tipo]) tipo.value = pref.tipo;
+  let fotoData = null; const prev = h('img', { style: 'display:none;width:100%;border-radius:8px;margin-bottom:10px' });
+  const fotoInp = h('input', { type: 'file', accept: 'image/*', capture: 'environment', style: 'display:none', onchange: async e => { const f = e.target.files[0]; if (!f) return; try { fotoData = await blobADataURL(await reducirImagen(f, 1000, 0.7)); prev.src = fotoData; prev.style.display = 'block'; btnFoto.textContent = '📷 Cambiar la foto'; } catch (x) { toast('No se pudo leer la foto', 'err'); } } });
+  const btnFoto = h('button', { class: 'ghost', style: 'width:100%;margin-bottom:10px;min-height:44px', onclick: () => fotoInp.click() }, '📷 Hacer foto del producto');
   let cerrar;
   const guardar = async () => {
     const c = cli.get(), p = pro.get();
     if (!nota.value.trim()) { toast('Escribe qué ha pasado', 'err'); return; }
     if (!c && !p) { toast('Elige al menos un cliente o un producto', 'err'); return; }
-    colaI.set(colaI.get().concat([{ id: uuid(), tipo: tipo.value, nota: nota.value.trim(), cliente_id: c ? c.id : null, producto_id: p ? p.id : null, pedido_id: pref.pedido_id || null, linea_id: pref.linea_id || null, created_at: new Date().toISOString() }]));
+    const item = { id: uuid(), tipo: tipo.value, nota: nota.value.trim(), cliente_id: c ? c.id : null, producto_id: p ? p.id : null, pedido_id: pref.pedido_id || null, linea_id: pref.linea_id || null, created_at: new Date().toISOString() }; if (fotoData) item.foto = fotoData;
+    colaI.set(colaI.get().concat([item]));
     cerrar(); toast('Incidencia anotada', 'ok'); await sincronizarInc(); if (alGuardar) alGuardar();
   };
-  cerrar = hoja('Nueva incidencia', h('div', {}, h('label', { class: 'campo' }, 'Tipo', tipo), cli.node, pro.node, h('label', { class: 'campo' }, 'Detalle', nota), h('button', { class: 'guardar', style: 'width:100%', onclick: guardar }, 'Guardar incidencia')));
+  cerrar = hoja('Nueva incidencia', h('div', {}, h('label', { class: 'campo' }, 'Tipo', tipo), cli.node, pro.node, h('label', { class: 'campo' }, 'Detalle', nota), btnFoto, fotoInp, prev, pref.pedido_id ? h('div', { class: 'sub', style: 'margin-bottom:10px' }, 'Se anotará en el albarán de este pedido.') : null, h('button', { class: 'guardar', style: 'width:100%', onclick: guardar }, 'Guardar incidencia')));
 }
 function panelIncidencias(pref, opc) {
   pref = pref || {}; opc = opc || {}; let filtro = opc.filtros ? 'abiertas' : 'todas';
@@ -4884,16 +5033,19 @@ function panelIncidencias(pref, opc) {
   async function cargar() {
     lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
     try {
-      let q = sb.from('incidencias').select('id,tipo,nota,resuelta,created_at,creado_por,cliente_id,producto_id,clientes(nombre,nombre_comercial),productos(nombre)').neq('archivado', true).order('created_at', { ascending: false }).limit(100);
-      if (pref.cliente) q = q.eq('cliente_id', pref.cliente.id);
-      if (pref.producto) q = q.eq('producto_id', pref.producto.id);
-      if (filtro === 'abiertas') q = q.eq('resuelta', false); else if (filtro === 'resueltas') q = q.eq('resuelta', true);
-      const r = await q; if (r.error) throw r.error;
+      const SEL0 = 'id,tipo,nota,resuelta,created_at,creado_por,cliente_id,producto_id,clientes(nombre,nombre_comercial),productos(nombre)';
+      const mk = sel => { let q = sb.from('incidencias').select(sel).neq('archivado', true).order('created_at', { ascending: false }).limit(100);
+        if (pref.cliente) q = q.eq('cliente_id', pref.cliente.id);
+        if (pref.producto) q = q.eq('producto_id', pref.producto.id);
+        if (filtro === 'abiertas') q = q.eq('resuelta', false); else if (filtro === 'resueltas') q = q.eq('resuelta', true);
+        return q; };
+      let r = await mk(SEL0 + ',pedido_id,con_foto'); if (r.error && /con_foto|pedido_id/.test(r.error.message || '')) r = await mk(SEL0); if (r.error) throw r.error;
       const pend = colaI.get().filter(x => (!pref.cliente || x.cliente_id === pref.cliente.id) && (!pref.producto || x.producto_id === pref.producto.id));
-      const kids = pend.map(x => h('div', { class: 'card', style: 'border-style:dashed' }, h('div', { class: 'sub' }, TIPOS_INC[x.tipo] + ' · pendiente de enviar'), h('div', {}, x.nota)));
+      const kids = pend.map(x => h('div', { class: 'card', style: 'border-style:dashed' }, h('div', { class: 'sub' }, TIPOS_INC[x.tipo] + (x.foto ? ' · con foto' : '') + ' · pendiente de enviar'), h('div', {}, x.nota)));
       r.data.forEach(i => kids.push(h('div', { class: 'card' + (i.resuelta ? ' hecha' : '') },
         h('div', { class: 'fila' }, h('span', { class: 'badge ' + (i.resuelta ? 'fin' : 'prep') }, (i.resuelta ? '✔ ' : '') + TIPOS_INC[i.tipo]), h('span', { class: 'sub' }, fechaES(i.created_at) + ' ' + fmtHora(i.created_at))),
         h('div', { style: 'margin:6px 0' }, i.nota),
+        (i.con_foto || i.foto || i.pedido_id) ? h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px' }, (i.con_foto || i.foto) ? h('button', { class: 'ghost small', onclick: () => verFotoIncidencia(i.id) }, '📷 Ver foto') : null, i.pedido_id ? h('button', { class: 'ghost small', onclick: () => go('albaran', { id: i.pedido_id }) }, '🧾 Ver albarán') : null) : null,
         h('div', { class: 'sub' }, [i.clientes ? 'Cliente: ' + nombreCli(uno(i.clientes)) : '', i.productos ? 'Producto: ' + uno(i.productos).nombre : '', quienEs(i.creado_por) ? 'Anotó: ' + quienEs(i.creado_por) : ''].filter(Boolean).join(' · ')),
         esOficina() ? h('div', { style: 'display:flex;gap:8px;margin-top:8px' },
           h('button', { class: 'ghost small', onclick: async () => { const x = await sb.from('incidencias').update({ resuelta: !i.resuelta }).eq('id', i.id); if (x.error) toast(msgErr(x.error), 'err'); else cargar(); } }, i.resuelta ? 'Reabrir' : 'Marcar resuelta'),
@@ -5115,29 +5267,38 @@ function vistaResumen() {
   $app.replaceChildren(shell('Resumen del día', cont, { volver: () => go('inicio') })); renderBanner();
   async function cargar() {
     const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); cargar(); } });
-    const caja = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); cont.replaceChildren(h('div', { class: 'barra' }, inp), caja);
+    const caja = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); cont.replaceChildren(h('div', { class: 'barra' }, inp, h('button', { class: 'ghost', onclick: () => cargar() }, '↻')), caja);
     try {
+      try { await cargarGente(); } catch (e) { }
       const d0 = new Date(fecha + 'T00:00:00'), d1 = new Date(d0.getTime() + 86400000);
-      const [pe, im, en, co, cm, ic] = await Promise.all([
-        sb.from('pedidos').select('id,estado').eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true),
-        sb.from('v_pedidos_importe').select('total,cobrado,pendiente,estado').eq('fecha_entrega', fecha),
-        sb.from('entregas').select('pedido_id').gte('entregado_at', d0.toISOString()).lt('entregado_at', d1.toISOString()),
-        sb.from('cobros').select('importe,forma').gte('created_at', d0.toISOString()).lt('created_at', d1.toISOString()),
+      const [pe, im, co, cm, ic, ia] = await Promise.all([
+        sb.from('pedidos').select('id,estado,clientes(nombre,nombre_comercial),entregas(entregado_at,entregado_por)').eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true),
+        sb.from('v_pedidos_importe').select('pedido_id,cliente_nombre,total,cobrado,pendiente,estado').eq('fecha_entrega', fecha),
+        sb.from('cobros').select('importe,forma,cobrado_por').gte('created_at', d0.toISOString()).lt('created_at', d1.toISOString()),
         sb.from('compras').select('id').eq('fecha', fecha),
+        sb.from('incidencias').select('id,tipo,nota,resuelta,created_at,clientes(nombre,nombre_comercial)').gte('created_at', d0.toISOString()).lt('created_at', d1.toISOString()).neq('archivado', true),
         sb.from('incidencias').select('id', { count: 'exact', head: true }).eq('resuelta', false).neq('archivado', true)]);
-      const err = [pe, im, en, co, cm, ic].find(x => x.error); if (err) throw err.error;
+      const err = [pe, im, co, cm, ic, ia].find(x => x.error); if (err) throw err.error;
       const ls = cm.data.length ? await sb.from('lotes').select('cantidad_recibida,precio_compra').in('compra_id', cm.data.map(x => x.id)) : { data: [] };
       const suma = (a, k) => Math.round(a.reduce((s, x) => s + Number(x[k] || 0), 0) * 100) / 100;
       const coste = Math.round(ls.data.reduce((s, l) => s + (l.precio_compra != null ? l.cantidad_recibida * l.precio_compra : 0), 0) * 100) / 100;
-      const formas = {}; co.data.forEach(c => formas[c.forma] = (formas[c.forma] || 0) + Number(c.importe));
-      const fila = (t, v, s) => h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'nombre' }, t), s ? h('div', { class: 'sub' }, s) : null), h('b', { style: 'font-size:20px' }, v));
+      const nf = Object.fromEntries(FORMAS_COBRO); const formas = {}, pers = {}, persF = {};
+      co.data.forEach(c => { formas[c.forma] = (formas[c.forma] || 0) + Number(c.importe); const n = quienEs(c.cobrado_por) || 'Otro'; pers[n] = (pers[n] || 0) + Number(c.importe); (persF[n] = persF[n] || {})[c.forma] = (persF[n][c.forma] || 0) + Number(c.importe); });
+      const peds = pe.data, ent = peds.filter(p => uno(p.entregas)), noEnt = peds.filter(p => !uno(p.entregas)), sinTerm = noEnt.filter(p => p.estado !== 'terminado');
+      const pend = im.data.filter(x => Number(x.pendiente) > 0.009), nomP = p => nombreCli(uno(p.clientes));
+      const cobradoT = suma(co.data, 'importe'), pendT = suma(im.data, 'pendiente');
+      const bloque = (t, v, s, items, color) => h('details', { class: 'card', style: color ? 'border-left:6px solid ' + color : '' },
+        h('summary', { style: 'display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer' }, h('div', {}, h('div', { class: 'nombre' }, t), s ? h('div', { class: 'sub' }, s) : null), h('b', { style: 'font-size:20px' }, v)),
+        ...(items.length ? items.map(x => h('div', { class: 'fila', style: 'padding:5px 0;border-top:1px solid var(--borde)' }, h('span', {}, x[0]), x[1] ? h('span', { class: 'sub' }, x[1]) : null)) : [h('div', { class: 'sub', style: 'padding-top:6px' }, 'Nada que mostrar')]));
       caja.replaceChildren(
-        fila('Pedidos', String(pe.data.length), pe.data.filter(p => p.estado === 'terminado').length + ' terminados · ' + en.data.length + ' entregados hoy'),
-        fila('Vendido (con IVA)', eur(suma(im.data, 'total')), 'De los pedidos con peso ya anotado'),
-        fila('Cobrado en el día', eur(suma(co.data, 'importe')), Object.keys(formas).map(k => k + ' ' + eur(formas[k])).join(' · ') || 'Sin cobros'),
-        fila('Pendiente de cobro', eur(suma(im.data, 'pendiente')), 'De estos pedidos'),
-        fila('Comprado (coste)', eur(coste), cm.data.length + ' compras con precio anotado'),
-        fila('Incidencias abiertas', String(ic.count || 0), 'En total'));
+        bloque('Entregado', ent.length + ' de ' + peds.length, 'Pedidos del día ya entregados al cliente', ent.map(p => ['✔ ' + nomP(p), fmtHora(uno(p.entregas).entregado_at) + (quienEs(uno(p.entregas).entregado_por) ? ' · ' + quienEs(uno(p.entregas).entregado_por) : '')]), '#16a34a'),
+        bloque('Cobrado en el día', eur(cobradoT) + ' €', Object.keys(formas).map(k => (nf[k] || k) + ' ' + eur(formas[k])).join(' · ') || 'Sin cobros', Object.keys(pers).sort().map(k => [k + ' · ' + eur(pers[k]) + ' €', Object.keys(persF[k]).map(f => (nf[f] || f) + ' ' + eur(persF[k][f])).join(' · ')]), '#2563eb'),
+        bloque('Pendiente de cobro', eur(pendT) + ' €', 'De los pedidos de este día', pend.map(x => [x.cliente_nombre, eur(x.pendiente) + ' €']), '#b45309'),
+        bloque('No entregado', String(noEnt.length), sinTerm.length ? sinTerm.length + ' sin terminar de preparar' : 'Todo lo terminado está entregado', noEnt.map(p => [nomP(p), p.estado === 'terminado' ? 'terminado, sin entregar' : 'sin terminar de preparar']), noEnt.length ? '#dc2626' : '#16a34a'),
+        bloque('Incidencias del día', String(ic.data.length), (ia.count || 0) + ' abiertas en total', ic.data.map(i => [(TIPOS_INC[i.tipo] || i.tipo) + (i.clientes ? ' · ' + nombreCli(uno(i.clientes)) : ''), i.nota]), ic.data.length ? '#dc2626' : null),
+        bloque('Vendido (con IVA)', eur(suma(im.data, 'total')) + ' €', 'De los pedidos con peso y precio ya anotados', []),
+        bloque('Comprado (coste)', eur(coste) + ' €', cm.data.length + ' compras con precio anotado', []),
+        h('button', { class: 'ghost', style: 'width:100%;min-height:48px', onclick: () => compartirTexto('Resumen ' + fechaES(fecha) + ' · ' + EMPRESA.nombre + '\nEntregados: ' + ent.length + ' de ' + peds.length + '\nCobrado: ' + eur(cobradoT) + ' € (' + (Object.keys(formas).map(k => (nf[k] || k) + ' ' + eur(formas[k])).join(', ') || 'sin cobros') + ')\nPendiente de cobro: ' + eur(pendT) + ' €\nNo entregado: ' + noEnt.length + (noEnt.length ? ' (' + noEnt.map(nomP).join(', ') + ')' : '') + '\nIncidencias del día: ' + ic.data.length) }, '📤 Compartir el resumen'));
     } catch (e) { caja.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
   }
   cargar();
@@ -5545,6 +5706,32 @@ async function preciosPara(clienteId, productoIds) {
   try { const t = await sb.from('tarifas').select('producto_id,precio,cliente_id,desde').in('producto_id', productoIds).order('desde', { ascending: false });
     (t.data || []).forEach(x => { if (x.cliente_id === clienteId) { if (!m[x.producto_id] || m[x.producto_id].g) m[x.producto_id] = { p: x.precio, g: false }; } else if (!x.cliente_id && !m[x.producto_id]) m[x.producto_id] = { p: x.precio, g: true }; }); } catch (e) { }
   const o = {}; Object.keys(m).forEach(k => o[k] = m[k].p); return o;
+}
+async function crearDeSemanaPasada(fecha, alTerminar) {
+  const ant = hoy(new Date(new Date(fecha + 'T12:00:00').getTime() - 7 * 86400000));
+  try {
+    const pr = await sb.from('pedidos').select('id,cliente_id,clientes(nombre,nombre_comercial,activo),lineas_pedido(producto_id,cantidad_pedida,unidad_pedida,unidad_precio,productos(activo))').eq('fecha_entrega', ant).neq('estado', 'anulado').neq('archivado', true); if (pr.error) throw pr.error;
+    const ex = await sb.from('pedidos').select('cliente_id').eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true); if (ex.error) throw ex.error;
+    const ya = new Set(ex.data.map(x => x.cliente_id)); const por = {};
+    pr.data.forEach(x => { if (ya.has(x.cliente_id) || (uno(x.clientes) || {}).activo === false) return; const g = por[x.cliente_id] = por[x.cliente_id] || { cid: x.cliente_id, nombre: nombreCli(uno(x.clientes)), ls: [] }; (x.lineas_pedido || []).forEach(l => { if ((uno(l.productos) || {}).activo !== false) g.ls.push(l); }); });
+    const cand = Object.values(por).filter(g => g.ls.length).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+    if (!cand.length) { toast('No hay pedidos del ' + fechaES(ant) + ' por repetir (o ya existen en este día).', 'err'); return; }
+    const marcas = cand.map(g => h('input', { type: 'checkbox', checked: true }));
+    let cerrar;
+    cerrar = hoja('Repetir pedidos del ' + fechaES(ant), h('div', {}, h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Se crearán pedidos para el ' + fechaES(fecha) + ' con lo mismo que pidieron hace una semana. Quita la marca a los que no quieras. Los precios se ponen según la tarifa de hoy.'),
+      ...cand.map((g, i) => h('label', { class: 'interruptor', style: 'margin-bottom:6px' }, marcas[i], g.nombre + ' · ' + g.ls.length + (g.ls.length === 1 ? ' línea' : ' líneas'))),
+      h('button', { class: 'guardar', style: 'width:100%;margin-top:10px', onclick: async () => {
+        const el = cand.filter((g, i) => marcas[i].checked); if (!el.length) { toast('No has marcado ninguno', 'err'); return; }
+        let n = 0;
+        for (const g of el) {
+          const pr2 = await preciosPara(g.cid, g.ls.map(l => l.producto_id));
+          const ped = await sb.from('pedidos').insert({ cliente_id: g.cid, fecha_entrega: fecha }).select('id').single(); if (ped.error) { toast(msgErr(ped.error), 'err'); continue; }
+          const li = await sb.from('lineas_pedido').insert(g.ls.map(l => ({ pedido_id: ped.data.id, producto_id: l.producto_id, cantidad_pedida: l.cantidad_pedida, unidad_pedida: l.unidad_pedida, unidad_precio: l.unidad_precio || 'kg', precio: pr2[l.producto_id] != null ? pr2[l.producto_id] : null })));
+          if (li.error) { await sb.from('pedidos').update({ archivado: true, estado: 'anulado' }).eq('id', ped.data.id); toast(msgErr(li.error), 'err'); continue; } n++;
+        }
+        cerrar(); toast(n + (n === 1 ? ' pedido creado' : ' pedidos creados'), 'ok'); if (alTerminar) alTerminar();
+      } }, 'Crear los pedidos marcados')));
+  } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); }
 }
 async function crearHabituales(fecha, alTerminar) {
   const dow = new Date(fecha + 'T12:00:00').getDay();
