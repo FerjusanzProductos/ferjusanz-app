@@ -3327,7 +3327,8 @@ function vistaMas() {
   const c = (ico, t, f, color, badge) => h('button', { class: 'circ', onclick: f }, h('span', { class: 'c', style: '--c:' + color }, ico, badge ? h('span', { class: 'insig' }, badge) : null), h('span', { class: 'l' }, t));
   const CORTO = { 'A quién compramos hoy': 'A quién compramos', 'Facturas de proveedores': 'Facturas proveed.', 'Facturas de clientes': 'Facturas clientes', 'Histórico de Golden': 'Histórico Golden', 'Registro de cambios': 'Registro cambios', 'Copia de seguridad': 'Copia seguridad', 'Lista de pedidos': 'Lista pedidos', 'Escanear pedido': 'Escanear pedido', 'Hoja de carga': 'Hoja de carga', 'Hoja de compra': 'Hoja compra', 'Avisos y ofertas': 'Avisos y ofertas' };
   /* Cada grupo es UN rosco: círculos alrededor de un centro. Si hay muchos, un segundo anillo por dentro. Todo visible y pulsable. */
-  const g = (t, ...items) => {
+  const defs = []; const g = (t, ...items) => { defs.push([t, items.filter(Boolean)]); return []; };
+  const rosco = (t, ...items) => {
     const it = items.filter(Boolean); if (!it.length) return [];
     it.forEach((nodo, i) => { const cc = nodo.querySelector('.c'); if (cc) cc.append(h('span', { class: 'ord' }, String(i + 1))); });
     const n = it.length; const doble = n > 10; const nOut = doble ? Math.ceil(n * 0.62) : n; const nIn = n - nOut;
@@ -3356,6 +3357,17 @@ function vistaMas() {
     ...g('Compras y mercancía', c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('💶', 'Precios de compra', () => go('precios'), A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('❓', 'Ayuda y guía', () => go('ayuda'), T), c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
+  /* «Ver arriba»: cada uno elige qué círculo quiere primero (se recuerda en este móvil). Los círculos se MUEVEN, no se duplican. */
+  const ESPECIAL = { reparto: ['Preparar y repartir', ['Preparar', 'Hoja de carga', 'Reparto', 'Entregas', 'Albaranes', 'Ruta', 'Cobros']], compra: ['Compra en Mercamadrid', ['Compra de hoy', 'Hoja de compra', 'A quién compramos hoy', 'Compras', 'Facturas de proveedores', 'Precios de compra', 'Hoja de carga']] };
+  const modoV = LS.get('fj_vista', state.perfil.rol === 'compras' ? 'compra' : state.perfil.rol === 'preparador' ? 'reparto' : 'todo');
+  const lab = n => { const l = n.querySelector('.l'); return l ? (n.title || l.textContent) : ''; };
+  let lista = defs; const esp = ESPECIAL[modoV];
+  if (esp) {
+    const pool = {}; defs.forEach(([, it]) => it.forEach(n => { pool[lab(n)] = n; })); const sacados = esp[1].filter(x => pool[x]);
+    lista = [[esp[0], sacados.map(x => pool[x])]].concat(defs.map(([t, it]) => [t, it.filter(n => !sacados.includes(lab(n)))]));
+  }
+  lista.forEach(([t, it]) => k.push(...rosco(t, ...it)));
+  k.splice(1, 0, h('div', { class: 'chips', style: 'margin:6px 0 2px' }, h('span', { class: 'sub', style: 'align-self:center' }, 'Ver arriba:'), ...[['todo', 'Todo'], ['reparto', '🧑‍✈️ Preparar y repartir'], ['compra', '🛒 Compra']].map(([m, n]) => h('button', { class: 'chip' + (modoV === m ? ' on' : ''), onclick: () => { LS.set('fj_vista', m); vistaMas(); } }, n))));
   k.push(h('button', { class: 'peligro', style: 'width:100%;margin-top:20px', onclick: salir }, 'Cerrar sesión'));
   $app.replaceChildren(shell('Inicio', h('div', {}, ...k))); renderBanner();
   if (navigator.onLine) {
