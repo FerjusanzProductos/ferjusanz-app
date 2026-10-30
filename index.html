@@ -157,14 +157,14 @@ header .quien span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cgrid .pTabla{display:none}.cgrid.vt .pLista{display:none}.cgrid.vt .pTabla{display:block}
 @media(min-width:900px){.cvista{display:none}.cgrid{display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:14px;align-items:start}.cgrid .pLista,.cgrid .pTabla,.cgrid.vt .pLista,.cgrid.vt .pTabla{display:block}.cgrid .pTabla{position:sticky;top:8px}}
 .tabla-wrap{overflow:auto;max-height:68vh;border:1px solid #d1d5db;border-radius:10px;background:#fff;-webkit-overflow-scrolling:touch}
-table.mx{border-collapse:separate;border-spacing:0;font-size:13px;min-width:100%}
-table.mx th,table.mx td{border-right:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;padding:0 4px;height:30px;text-align:center;white-space:nowrap}
+table.mx{border-collapse:separate;border-spacing:0;font-size:var(--mxfs,13px);min-width:100%}
+table.mx th,table.mx td{border-right:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;padding:0 4px;height:var(--mxh,30px);text-align:center;white-space:nowrap}
 table.mx td{min-width:62px}
 table.mx td.v{background:#ecfdf3;font-weight:700}
 table.mx thead th{position:sticky;top:0;z-index:3;background:#f3f4f6;height:auto;padding:4px;white-space:normal;min-width:70px;max-width:90px;vertical-align:bottom}
-table.mx .np{font-size:11px;line-height:1.15;font-weight:700;word-break:break-word}
-table.mx .up{font-size:10px;font-weight:400;color:#6b7280}
-table.mx .c0{position:sticky;left:0;z-index:2;background:#f9fafb;text-align:left;min-width:120px;max-width:150px;white-space:normal;font-size:12px;line-height:1.15}
+table.mx .np{font-size:.85em;line-height:1.15;font-weight:700;word-break:break-word}
+table.mx .up{font-size:.77em;font-weight:400;color:#6b7280}
+table.mx .c0{position:sticky;left:0;z-index:2;background:#f9fafb;text-align:left;min-width:110px;max-width:150px;white-space:normal;font-size:.92em;line-height:1.1}
 table.mx thead th.c0{z-index:4}
 table.mx .c0 small{color:#6b7280;font-weight:400}
 table.mx tfoot td,table.mx tfoot th{position:sticky;z-index:3;font-weight:800;background:#e5e7eb}
@@ -172,7 +172,23 @@ table.mx tfoot th.c0{z-index:5}
 table.mx tfoot tr.ta td,table.mx tfoot tr.ta th{background:#d1fae5}
 table.mx tfoot tr.ta td.dif{color:#b45309}
 table.mx tfoot tr.ts td,table.mx tfoot tr.ts th{background:#f3f4f6;font-weight:600}
-.hoja table.mximp{font-size:9px}
+table.mx tr.hl-f td,table.mx tr.hl-f th.c0{background:#fef08a!important}
+table.mx td.hl-c{background:#fef9c3!important}
+table.mx tr.hl-f td.hl-c{background:#facc15!important}
+.tabla-wrap{max-height:72vh}
+.zoom-fila{display:flex;gap:8px;align-items:center;margin-bottom:6px}.zoom-b{display:flex;gap:6px}.zoom-b .small,.zoom-fila .small{min-height:38px}
+.mxfull{position:fixed;inset:0;z-index:80;background:#fff;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+.mxfull-b{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 10px}
+.tabla-wrap.fs{flex:1;max-height:none;border-radius:0;border-left:0;border-right:0}
+@page tabla{size:A4 landscape;margin:7mm}
+.hoja.apaisada{page:tabla}
+.hoja.apaisada .bloque{page-break-after:always;break-after:page}
+.hoja.apaisada .bloque:last-child{page-break-after:auto;break-after:auto}
+.hoja table.mximp{font-size:10px;table-layout:auto}
+.hoja table.mximp th,.hoja table.mximp td{padding:2px 3px;border:1px solid #999;text-align:center;line-height:1.15}
+.hoja table.mximp th:first-child,.hoja table.mximp td:first-child{text-align:left;width:42mm}
+.hoja table.mximp thead th{background:#e5e7eb;font-size:9px;vertical-align:bottom}
+.hoja table.mximp tr.tt td{font-weight:800;background:#e5e7eb}
 .saludo{margin:4px 4px 0}
 .rosco{position:relative;margin:4px auto 10px}
 .rosco .ctr{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:112px;text-align:center;font-weight:800;color:var(--verde-osc);font-size:15px;line-height:1.15}
@@ -3373,15 +3389,39 @@ function vistaCompras() {
       if (!colsL.length) pTabla.append(h('p', { class: 'vacio' }, 'No hay pedidos para esta fecha.'));
       else {
         const th = (c) => h('th', { class: 'cp' }, h('div', { class: 'np' }, c.producto), h('div', { class: 'up' }, c.unidad));
-        const thead = h('thead', {}, h('tr', {}, h('th', { class: 'c0' }, 'Cliente'), colsL.map(th)));
-        const tbody = h('tbody', {}, cliL.map(cl => h('tr', {}, h('th', { class: 'c0' }, cl.nombre, cl.ruta ? h('small', {}, ' · ' + cl.ruta) : null), colsL.map(c => { const v = cl.cel.get(c.k); return h('td', { class: v ? 'v' : '' }, v ? num(v) : ''); }))));
-        const tfoot = h('tfoot', {}, rowsTot.map(([nom, fn, cl], i) => h('tr', { class: cl }, h('th', { class: 'c0', style: 'bottom:' + ((nTot - 1 - i) * 30) + 'px' }, nom), colsL.map(c => { const v = fn(c); const dif = cl === 'ta' && porK[c.k] && porK[c.k].cambiado; return h('td', { style: 'bottom:' + ((nTot - 1 - i) * 30) + 'px', class: dif ? 'dif' : '' }, v || v === 0 && cl === 'ta' ? num(v) : ''); }))));
-        const tb = h('table', { class: 'mx' }, thead, tbody, tfoot);
+        const crearTb = () => {
+          const thead = h('thead', {}, h('tr', {}, h('th', { class: 'c0' }, 'Cliente'), colsL.map(th)));
+          const tbody = h('tbody', {}, cliL.map(cl => h('tr', {}, h('th', { class: 'c0' }, cl.nombre, cl.ruta ? h('small', {}, ' · ' + cl.ruta) : null), colsL.map(c => { const v = cl.cel.get(c.k); return h('td', { class: v ? 'v' : '' }, v ? num(v) : ''); }))));
+          const tfoot = h('tfoot', {}, rowsTot.map(([nom, fn, cl], i) => { const bt = 'bottom:calc(var(--mxh,30px)*' + (nTot - 1 - i) + ')'; return h('tr', { class: cl }, h('th', { class: 'c0', style: bt }, nom), colsL.map(c => { const v = fn(c); const dif = cl === 'ta' && porK[c.k] && porK[c.k].cambiado; return h('td', { style: bt, class: dif ? 'dif' : '' }, v || (v === 0 && cl === 'ta') ? num(v) : ''); })); }));
+          const t = h('table', { class: 'mx' }, thead, tbody, tfoot);
+          // Al tocar una casilla se marca su fila y su columna, para leer bien con muchos clientes y productos.
+          t.addEventListener('click', ev => { const td = ev.target.closest('td,th'); if (!td || td.parentNode.parentNode.tagName === 'THEAD') return; const ci = td.cellIndex, ri = td.parentNode;
+            const ya = ri.classList.contains('hl-f') && t.dataset.col == ci; t.querySelectorAll('.hl-f,.hl-c').forEach(x => x.classList.remove('hl-f', 'hl-c')); t.dataset.col = '';
+            if (ya || ci === 0 && ri.parentNode.tagName === 'TFOOT') return; ri.classList.add('hl-f'); if (ci > 0) { t.dataset.col = ci; [...t.rows].forEach(r => { if (r.cells[ci]) r.cells[ci].classList.add('hl-c'); }); } });
+          return t;
+        };
+        const fsLS = () => Math.min(18, Math.max(9, LS.get('fj_mx_fs', 13)));
+        const aplicaFs = el => { const f = fsLS(); el.style.setProperty('--mxfs', f + 'px'); el.style.setProperty('--mxh', Math.round(f * 2.3) + 'px'); };
+        const barraZoom = (envs) => h('div', { class: 'zoom-b' }, h('button', { class: 'ghost small', onclick: () => { LS.set('fj_mx_fs', Math.max(9, fsLS() - 1)); envs.forEach(aplicaFs); } }, 'A−'), h('button', { class: 'ghost small', onclick: () => { LS.set('fj_mx_fs', Math.min(18, fsLS() + 1)); envs.forEach(aplicaFs); } }, 'A+'));
+        const wrap = h('div', { class: 'tabla-wrap' }, crearTb()); aplicaFs(wrap);
+        const pantallaCompleta = () => {
+          const w2 = h('div', { class: 'tabla-wrap fs' }, crearTb()); aplicaFs(w2);
+          const ov = h('div', { class: 'mxfull' }, h('div', { class: 'mxfull-b' }, h('b', {}, 'Tabla · ' + fechaES(fecha)), barraZoom([w2, wrap]), h('button', { class: 'guardar small', onclick: () => ov.remove() }, 'Cerrar')),
+            h('div', { class: 'sub', style: 'padding:0 10px 4px' }, 'Gira el móvil en horizontal para ver más. Toca una casilla para marcar su fila y su columna.'), w2);
+          document.body.append(ov);
+        };
         const nomCol = c => c.producto + (multi[c.producto] > 1 ? ' (' + c.unidad + ')' : '');
         const csv = () => descargarCSV('tabla_compra_' + fecha + '.csv', [['Cliente'].concat(colsL.map(c => nomCol(c) + ' [' + c.unidad + ']')), ...cliL.map(cl => [cl.nombre].concat(colsL.map(c => cl.cel.get(c.k) || ''))), ...rowsTot.map(([nom, fn]) => [nom].concat(colsL.map(c => fn(c))))]);
-        const imp = () => imprimir('<div class="hoja"><h1>TABLA DE LA COMPRA · ' + esc(fechaES(fecha)) + '</h1><table class="mximp"><thead><tr><th>Cliente</th>' + colsL.map(c => '<th class="d">' + esc(nomCol(c)) + '</th>').join('') + '</tr></thead><tbody>' + cliL.map(cl => '<tr><td>' + esc(cl.nombre) + '</td>' + colsL.map(c => '<td class="d">' + (cl.cel.get(c.k) ? esc(num(cl.cel.get(c.k))) : '') + '</td>').join('') + '</tr>').join('') + rowsTot.map(([nom, fn]) => '<tr style="font-weight:700;background:#eee"><td>' + esc(nom) + '</td>' + colsL.map(c => '<td class="d">' + esc(num(fn(c))) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>');
-        pTabla.append(h('div', { class: 'aviso-card' }, 'Cada casilla es lo que pide ese cliente. Los totales suman cada columna. Desliza hacia los lados para ver todos los productos.'), h('div', { class: 'tabla-wrap' }, tb),
-          h('div', { style: 'display:flex;gap:8px;margin-top:8px' }, h('button', { class: 'ghost', style: 'flex:1', onclick: imp }, 'Imprimir tabla'), h('button', { class: 'ghost', style: 'flex:1', onclick: csv }, 'Descargar (Excel)')));
+        const imp = () => {
+          const nb = Math.max(1, Math.ceil(colsL.length / 12)), POR = Math.ceil(colsL.length / nb); let html = '<div class="hoja apaisada">';
+          for (let i = 0; i < nb; i++) { const cs = colsL.slice(i * POR, (i + 1) * POR);
+            html += '<div class="bloque"><h1>TABLA DE LA COMPRA · ' + esc(fechaES(fecha)) + (nb > 1 ? ' · parte ' + (i + 1) + ' de ' + nb : '') + '</h1><table class="mximp"><thead><tr><th>Cliente</th>' + cs.map(c => '<th class="d">' + esc(nomCol(c)) + '</th>').join('') + '</tr></thead><tbody>' +
+              cliL.map(cl => '<tr><td>' + esc(cl.nombre) + '</td>' + cs.map(c => '<td class="d">' + (cl.cel.get(c.k) ? '<b>' + esc(num(cl.cel.get(c.k))) + '</b>' : '') + '</td>').join('') + '</tr>').join('') +
+              rowsTot.map(([nom, fn]) => '<tr class="tt"><td>' + esc(nom) + '</td>' + cs.map(c => '<td class="d">' + esc(num(fn(c))) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>'; }
+          imprimir(html + '</div>');
+        };
+        pTabla.append(h('div', { class: 'aviso-card' }, 'Cada casilla es lo que pide ese cliente. Los totales suman cada columna. Desliza para ver todos. Toca una casilla para marcar su fila y su columna. Con muchos clientes usa «Pantalla completa».'), h('div', { class: 'zoom-fila' }, barraZoom([wrap]), h('button', { class: 'ghost small', onclick: pantallaCompleta }, '⛶ Pantalla completa')), wrap,
+          h('div', { style: 'display:flex;gap:8px;margin-top:8px' }, h('button', { class: 'ghost', style: 'flex:1', onclick: imp }, 'Imprimir (horizontal)'), h('button', { class: 'ghost', style: 'flex:1', onclick: csv }, 'Descargar (Excel)')));
         // Comprobación interna: el total de cada columna debe coincidir con el pedido de la lista.
         colsL.forEach(c => { const f = porK[c.k]; if (f && !f.extra && Math.abs(totCol(c) - f.pedido) > 0.001) console.warn('Tabla/lista no coinciden', c.k, totCol(c), f.pedido); });
       }
