@@ -313,7 +313,7 @@ function crearSbPractica(){
     albaranes:[], carga_lineas:[], sobrante:[], mensajes:[], fichajes:[], fotos_perfil:[], cobros:[], proveedores:[{id:'v1',codigo:'FRUTASSUR',nombre:'Frutas Sur (ejemplo)',activo:true},{id:'v2',codigo:'HORTALIZAS',nombre:'Hortalizas Norte (ejemplo)',activo:true}], compras:[], tarifas_compra:[{id:'tc1',producto_id:'p1',proveedor_id:'v1',precio:0.45,fecha:'2026-10-20',origen:'golden-factura'}], lotes:[], asignaciones_lote:[], entregas:[], incidencias:[], documentos_compra:[], seq:9000, log:[]
   };
   const __j=JSON.parse(localStorage.getItem('p_stub_db')||'null'); const __saved=(__j&&__j.dia===H())?__j:null;
-  const DB = window.__DB = __saved || __init; DB.dia=H(); DB.carga_lineas=DB.carga_lineas||[]; DB.sobrante=DB.sobrante||[]; DB.mensajes=DB.mensajes||[]; DB.fichajes=DB.fichajes||[]; DB.fotos_perfil=DB.fotos_perfil||[]; DB.cobros=DB.cobros||[]; DB.proveedores=DB.proveedores||[]; DB.compras=DB.compras||[]; DB.lotes=DB.lotes||[]; DB.asignaciones_lote=DB.asignaciones_lote||[]; DB.entregas=DB.entregas||[]; DB.incidencias=DB.incidencias||[]; DB.documentos_compra=DB.documentos_compra||[]; DB.facturas_recibidas=DB.facturas_recibidas||[]; DB.facturas_clientes=DB.facturas_clientes||[]; if(!DB.golden_facturas){DB.golden_facturas=[{id:'g1',numero:'P/20.001',serie:'P',fecha:'2026-09-10',tipo:'Serie PC',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:100,descuentos:0,gastos:0,base:100,total:104,borrador:false,n_lineas:2},{id:'g2',numero:'BOR/5',serie:'BOR',fecha:'2026-09-11',tipo:'Facturas borrador',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:50,descuentos:0,gastos:0,base:50,total:52,borrador:true,n_lineas:1},{id:'g3',numero:'F1/9.001',serie:'F1',fecha:'2026-08-01',tipo:'Facturas Fernando',cliente_codigo:'TABERNA',cliente_nombre:'Taberna El Enano',bruto:30,descuentos:0,gastos:0,base:30,total:31.2,borrador:false,n_lineas:1}];DB.golden_lineas=[{id:'l1',factura_numero:'P/20.001',orden:1,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:20,precio:2,iva:4,importe:41.6},{id:'l2',factura_numero:'P/20.001',orden:2,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'01',descripcion:'Patata Agria',cantidad:100,precio:0.6,iva:4,importe:62.4},{id:'l3',factura_numero:'BOR/5',orden:1,albaran:null,producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:25,precio:2,iva:4,importe:52},{id:'l4',factura_numero:'F1/9.001',orden:1,albaran:null,producto_codigo:'21',descripcion:'Cebollas Gordas',cantidad:30,precio:1,iva:4,importe:31.2}];} DB.alias_compra=DB.alias_compra||[]; DB.albaranes_facturados=DB.albaranes_facturados||[]; DB.compra_ajustes=DB.compra_ajustes||[]; DB.listas_precios=DB.listas_precios||[]; DB.listas_precios_items=DB.listas_precios_items||[]; DB.recomendaciones=DB.recomendaciones||[]; DB.prospectos=DB.prospectos||[]; DB.avisos=DB.avisos||[]; DB.pedidos_habituales=DB.pedidos_habituales||[]; DB.lineas_habituales=DB.lineas_habituales||[];
+  const DB = window.__DB = __saved || __init; DB.dia=H(); DB.carga_lineas=DB.carga_lineas||[]; DB.sobrante=DB.sobrante||[]; DB.mensajes=DB.mensajes||[]; DB.fichajes=DB.fichajes||[]; DB.fotos_perfil=DB.fotos_perfil||[]; DB.cobros=DB.cobros||[]; DB.proveedores=DB.proveedores||[]; DB.compras=DB.compras||[]; DB.lotes=DB.lotes||[]; DB.asignaciones_lote=DB.asignaciones_lote||[]; DB.entregas=DB.entregas||[]; DB.incidencias=DB.incidencias||[]; DB.documentos_compra=DB.documentos_compra||[]; DB.facturas_recibidas=DB.facturas_recibidas||[]; DB.facturas_clientes=DB.facturas_clientes||[]; if(!DB.golden_facturas){DB.golden_facturas=[{id:'g1',numero:'P/20.001',serie:'P',fecha:'2026-09-10',tipo:'Serie PC',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:100,descuentos:0,gastos:0,base:100,total:104,borrador:false,n_lineas:2},{id:'g2',numero:'BOR/5',serie:'BOR',fecha:'2026-09-11',tipo:'Facturas borrador',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:50,descuentos:0,gastos:0,base:50,total:52,borrador:true,n_lineas:1},{id:'g3',numero:'F1/9.001',serie:'F1',fecha:'2026-08-01',tipo:'Facturas Fernando',cliente_codigo:'TABERNA',cliente_nombre:'Taberna El Enano',bruto:30,descuentos:0,gastos:0,base:30,total:31.2,borrador:false,n_lineas:1}];DB.golden_lineas=[{id:'l1',factura_numero:'P/20.001',orden:1,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:20,precio:2,iva:4,importe:41.6},{id:'l2',factura_numero:'P/20.001',orden:2,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'01',descripcion:'Patata Agria',cantidad:100,precio:0.6,iva:4,importe:62.4},{id:'l3',factura_numero:'BOR/5',orden:1,albaran:null,producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:25,precio:2,iva:4,importe:52},{id:'l4',factura_numero:'F1/9.001',orden:1,albaran:null,producto_codigo:'21',descripcion:'Cebollas Gordas',cantidad:30,precio:1,iva:4,importe:31.2}];} DB.alias_compra=DB.alias_compra||[]; DB.albaranes_facturados=DB.albaranes_facturados||[]; DB.precios_compra_dia=DB.precios_compra_dia||[]; DB.compra_ajustes=DB.compra_ajustes||[]; DB.listas_precios=DB.listas_precios||[]; DB.listas_precios_items=DB.listas_precios_items||[]; DB.recomendaciones=DB.recomendaciones||[]; DB.prospectos=DB.prospectos||[]; DB.avisos=DB.avisos||[]; DB.pedidos_habituales=DB.pedidos_habituales||[]; DB.lineas_habituales=DB.lineas_habituales||[];
   const gv=(r,k)=>{if(k.includes('->>')){const [a,b]=k.split('->>');return r[a]?r[a][b]:undefined;}return r[k];};
   DB.historial=DB.historial||[];
   const AUD=['lineas_pedido','pedidos','albaranes','asignaciones_lote','cobros','productos','clientes'];
@@ -412,6 +412,7 @@ function crearSbPractica(){
       ls.filter(l=>['hecha','parcial'].includes(l.estado)&&kn(l)>0).forEach(l=>{const s=asig.filter(x=>x.linea_id===l.id).reduce((t,x)=>t+x.cantidad,0);if(!s)throw new Error('FALTA_TRAZABILIDAD');if(Math.abs(s-kn(l))>0.001)throw new Error('KILOS_NO_COINCIDEN');});
       const por={};asig.forEach(x=>{const l=ls.find(y=>y.id===x.linea_id);if(l.unidad_precio==='kg')por[x.lote_id]=(por[x.lote_id]||0)+x.cantidad;});
       Object.keys(por).forEach(id=>{const lo=DB.lotes.find(y=>y.id===id);if(lo.unidad!=='kg')return;const otros=DB.asignaciones_lote.filter(a=>a.lote_id===id&&!ls.some(l=>l.id===a.linea_id)).reduce((t,a)=>t+a.cantidad,0);if(por[id]>lo.cantidad_recibida+0.001-otros)throw new Error('LOTE_SIN_KILOS');});},
+    guardar_precio_compra_dia(a){DB.precios_compra_dia=DB.precios_compra_dia.filter(x=>!(x.fecha===a.p_fecha&&x.producto_id===a.p_producto&&x.unidad===a.p_unidad));if(a.p_precio!=null)DB.precios_compra_dia.push({id:'pc'+Math.random(),fecha:a.p_fecha,producto_id:a.p_producto,unidad:a.p_unidad,precio:a.p_precio,nota:a.p_nota});return null;},
     marcar_albaranes_facturados(a){if(!a.p_numero||!String(a.p_numero).trim())throw new Error('NUMERO_FACTURA_VACIO');(a.p_pedidos||[]).forEach(id=>{DB.albaranes_facturados=DB.albaranes_facturados.filter(x=>x.pedido_id!==id);DB.albaranes_facturados.push({pedido_id:id,numero_factura:a.p_numero,fecha_factura:a.p_fecha});});return a.p_pedidos.length;},
     desmarcar_albaranes_facturados(a){DB.albaranes_facturados=DB.albaranes_facturados.filter(x=>!(a.p_pedidos||[]).includes(x.pedido_id));return a.p_pedidos.length;},
     guardar_firma_albaran(a){const al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);if(!al)throw new Error('ALBARAN_NO_EXISTE');if(a.p_firma&&!/^data:image\/png;base64,/.test(a.p_firma))throw new Error('FIRMA_NO_VALIDA');al.firma_png=a.p_firma||null;al.firma_nombre=a.p_firma?(a.p_nombre||null):null;al.firma_at=a.p_firma?new Date().toISOString():null;return null;},
@@ -3325,7 +3326,7 @@ function vistaMas() {
   state.view = 'inicio';
   if (LS.get('fj_ir', null) === 'recib') { LS.set('fj_ir', null); LS.set('fj_compras_modo', 'recib'); setTimeout(() => go('compras'), 0); return; }
   const c = (ico, t, f, color, badge) => h('button', { class: 'circ', onclick: f }, h('span', { class: 'c', style: '--c:' + color }, ico, badge ? h('span', { class: 'insig' }, badge) : null), h('span', { class: 'l' }, t));
-  const CORTO = { 'A quién compramos hoy': 'A quién compramos', 'Facturas de proveedores': 'Facturas proveed.', 'Facturas de clientes': 'Facturas clientes', 'Histórico de Golden': 'Histórico Golden', 'Registro de cambios': 'Registro cambios', 'Copia de seguridad': 'Copia seguridad', 'Lista de pedidos': 'Lista pedidos', 'Escanear pedido': 'Escanear pedido', 'Hoja de carga': 'Hoja de carga', 'Hoja de compra': 'Hoja compra', 'Avisos y ofertas': 'Avisos y ofertas' };
+  const CORTO = { 'Hoja de compra para hoy': 'Hoja compra hoy', 'Precios de compra del día': 'Precios compra del día', 'A quién compramos hoy': 'A quién compramos', 'Facturas de proveedores': 'Facturas proveed.', 'Facturas de clientes': 'Facturas clientes', 'Histórico de Golden': 'Histórico Golden', 'Registro de cambios': 'Registro cambios', 'Copia de seguridad': 'Copia seguridad', 'Lista de pedidos': 'Lista pedidos', 'Escanear pedido': 'Escanear pedido', 'Hoja de carga': 'Hoja de carga', 'Hoja de compra': 'Hoja compra', 'Avisos y ofertas': 'Avisos y ofertas' };
   /* Cada grupo es UN rosco: círculos alrededor de un centro. Si hay muchos, un segundo anillo por dentro. Todo visible y pulsable. */
   const defs = []; const g = (t, ...items) => { defs.push([t, items.filter(Boolean)]); return []; };
   const rosco = (t, ...items) => {
@@ -3349,16 +3350,17 @@ function vistaMas() {
     (() => { const num = h('span', { class: 'num cero' }, '…'); const b = h('button', { class: 'bandeja-fac', onclick: () => go('preciosp') }, h('span', { class: 'ic' }, '💶'), h('span', { class: 'tt' }, 'Poner precios a los pedidos', h('small', {}, 'Por hacer, en preparación o terminados · sin esperar a la factura')), num);
       if (navigator.onLine) sb.from('lineas_pedido').select('pedido_id,precio,pedidos(estado,archivado)').is('precio', null).limit(1500).then(r => { if (r.error) { num.textContent = ''; return; } const ids = new Set((r.data || []).filter(l => { const p = uno(l.pedidos) || {}; return p.estado !== 'anulado' && !p.archivado; }).map(l => l.pedido_id)); num.textContent = String(ids.size); num.className = 'num' + (ids.size ? '' : ' cero'); marcaPend(/Poner precios/, ids.size); }).catch(() => { num.textContent = ''; }); else num.textContent = '';
       return b; })(),
-    ...g('Trabajo diario', c('✍️', 'Escribir pedido', () => go('importar'), V), c('🎤', 'Dictar pedido', () => go('importar', { modo: 'voz' }), V), c('📷', 'Escanear pedido', () => go('importar', { modo: 'escanear' }), V), c('➕', 'Nuevo pedido', () => go('nuevo'), V),
-      c('🛒', 'Compra de hoy', () => { if (puedeCompras()) { LS.set('fj_compras_modo', 'lista'); go('compras'); } else go('hojacompra'); }, V), c('🧺', 'Hoja de compra', () => go('hojacompra'), V), c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Hoja de carga', () => go('carga'), V), c('💶', 'Poner precios', () => go('preciosp'), V), c('🧑‍✈️', 'Reparto', () => go('reparto'), V)),
+    ...g('Trabajo diario', c('✍️', 'Apuntar pedido', () => go('importar'), V),
+      c('🧺', 'Hoja de compra para hoy', () => go('hojacompra'), V), c('🛒', 'Compra para hoy', () => { if (puedeCompras()) { LS.set('fj_compras_modo', 'lista'); go('compras'); } else go('hojacompra'); }, V),
+      c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Hoja de carga', () => go('carga'), V), puedeCompras() ? c('💲', 'Precios de compra del día', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, V) : null, c('💶', 'Poner precios', () => go('preciosp'), V), c('🧑‍✈️', 'Reparto', () => go('reparto'), V)),
         ...g('Entregas y pedidos', c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('📅', 'Calendario', () => go('calendario'), '#2f7d4a')),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
     ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null),
-    ...g('Compras y mercancía', c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('💶', 'Precios de compra', () => go('precios'), A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
+    ...g('Compras y mercancía', c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('💶', 'Precios de compra', () => { if (LS.get('fj_precios_modo', 'dia') === 'hoy') LS.set('fj_precios_modo', 'dia'); go('precios'); }, A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('❓', 'Ayuda y guía', () => go('ayuda'), T), c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
   /* «Ver arriba»: cada uno elige qué círculo quiere primero (se recuerda en este móvil). Los círculos se MUEVEN, no se duplican. */
-  const ESPECIAL = { reparto: ['Preparar y repartir', ['Preparar', 'Hoja de carga', 'Reparto', 'Entregas', 'Albaranes', 'Ruta', 'Cobros']], compra: ['Compra en Mercamadrid', ['Compra de hoy', 'Hoja de compra', 'A quién compramos hoy', 'Compras', 'Facturas de proveedores', 'Precios de compra', 'Hoja de carga']] };
+  const ESPECIAL = { reparto: ['Preparar y repartir', ['Preparar', 'Hoja de carga', 'Reparto', 'Entregas', 'Albaranes', 'Ruta', 'Cobros']], compra: ['Compra en Mercamadrid', ['Hoja de compra para hoy', 'Compra para hoy', 'A quién compramos hoy', 'Compras', 'Facturas de proveedores', 'Precios de compra del día', 'Precios de compra', 'Hoja de carga']] };
   const modoV = LS.get('fj_vista', state.perfil.rol === 'compras' ? 'compra' : state.perfil.rol === 'preparador' ? 'reparto' : 'todo');
   const lab = n => { const l = n.querySelector('.l'); return l ? (n.title || l.textContent) : ''; };
   let lista = defs; const esp = ESPECIAL[modoV];
@@ -4818,14 +4820,74 @@ function vistaPrecios() {
   state.view = 'precios'; if (!puedeCompras()) { go('inicio'); return; }
   let modo = LS.get('fj_precios_modo', 'dia'), fecha = hoy();
   const cont = h('div', {}), chips = h('div', { class: 'chips' });
-  const pintarChips = () => chips.replaceChildren(...[['dia', 'Por día'], ['producto', 'Por producto']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_precios_modo', m); pintarChips(); pintar(); } }, n)));
-  $app.replaceChildren(shell('Precios de compra', h('div', {}, chips, cont), { volver: () => go('inicio') })); renderBanner(); pintarChips();
-  const pintar = () => modo === 'dia' ? pDia() : pProducto();
+  const pintarChips = () => chips.replaceChildren(...[['hoy', 'Del día'], ['dia', 'Por día'], ['producto', 'Por producto']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { LS.set('fj_precios_modo', m); vistaPrecios(); } }, n)));
+  $app.replaceChildren(shell(modo === 'hoy' ? 'Precios de compra del día' : 'Precios de compra', h('div', {}, chips, cont), { volver: () => go('inicio') })); renderBanner(); pintarChips();
+  const pintar = () => modo === 'hoy' ? pHoy() : modo === 'dia' ? pDia() : pProducto();
   async function editarPrecio(l) {
     if (!puedeCompras()) return;
     const v = prompt('Precio de compra por ' + l.unidad + ' (€)', l.precio_compra != null ? String(l.precio_compra).replace('.', ',') : ''); if (v === null) return;
     const n = parseNum(v); if (n === null || n < 0) { toast('Precio no válido', 'err'); return; }
     const r = await sb.from('lotes').update({ precio_compra: n }).eq('id', l.id); if (r.error) toast(msgErr(r.error), 'err'); else { toast('Precio guardado', 'ok'); pintar(); }
+  }
+  async function pHoy() {
+    const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); pHoy(); } });
+    const lista = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
+    cont.replaceChildren(h('div', { class: 'aviso-card' }, 'Precios de lo que se ha comprado este día. Salen de las compras registradas y de las facturas de los proveedores. Si la factura todavía no ha llegado, apunta tú el precio: toca el producto.'), h('div', { class: 'barra' }, inp, h('button', { class: 'ghost', onclick: () => pHoy() }, '↻')), lista);
+    try {
+      const P = {};   /* producto -> { pid, producto, unidad, cant, prov, lote, fact, man } */
+      const it = (pid, nombre) => P[pid] || (P[pid] = { pid, producto: nombre || 'Producto', unidad: '', cant: 0, provs: new Set(), lote: null, fact: null, man: null });
+      /* 1) Compras registradas ese día */
+      const c = await sb.from('compras').select('id,proveedores(nombre)').eq('fecha', fecha); if (c.error) throw c.error;
+      if ((c.data || []).length) {
+        const ls = await sb.from('lotes').select('producto_id,cantidad_recibida,unidad,precio_compra,compra_id,productos(nombre)').in('compra_id', c.data.map(x => x.id)); if (ls.error) throw ls.error;
+        (ls.data || []).forEach(l => { const co = c.data.find(x => x.id === l.compra_id) || {}; const o = it(l.producto_id, (uno(l.productos) || {}).nombre); o.unidad = o.unidad || l.unidad; if (l.unidad === o.unidad) o.cant += Number(l.cantidad_recibida) || 0; const pv = (uno(co.proveedores) || {}).nombre; if (pv) o.provs.add(pv); if (l.precio_compra != null) o.lote = { precio: Number(l.precio_compra), unidad: l.unidad }; });
+      }
+      /* 2) Facturas de proveedores de ese día (precio que dejó la factura al leerla) */
+      let tf = await sb.from('tarifas_compra').select('producto_id,precio,unidad,fecha,proveedores(nombre)').eq('fecha', fecha);
+      if (tf.error) tf = await sb.from('tarifas_compra').select('producto_id,precio,fecha,proveedores(nombre)').eq('fecha', fecha);
+      const tfs = tf.error ? [] : (tf.data || []);
+      /* 3) Precios anotados a mano */
+      const man = {}; let sinP52 = false;
+      const m = await sb.from('precios_compra_dia').select('producto_id,unidad,precio,nota').eq('fecha', fecha);
+      if (m.error) sinP52 = true; else (m.data || []).forEach(x => { man[x.producto_id] = x; });
+      const faltan = Array.from(new Set(tfs.map(x => x.producto_id).concat(Object.keys(man)))).filter(id => !P[id]);
+      if (faltan.length) { const pr = await sb.from('productos').select('id,nombre').in('id', faltan); (pr.data || []).forEach(p => { it(p.id, p.nombre); }); }
+      tfs.forEach(t => { const o = it(t.producto_id); o.fact = { precio: Number(t.precio), unidad: t.unidad || '', prov: (uno(t.proveedores) || {}).nombre || '' }; });
+      Object.keys(man).forEach(id => { const o = it(id); o.man = man[id]; });
+      const filas = Object.values(P).sort((a, b) => a.producto.localeCompare(b.producto, 'es'));
+      const fuente = f => {
+        if (f.man) return { precio: Number(f.man.precio), unidad: f.man.unidad, txt: '✍ Anotado por ti' + (f.man.nota ? ' · ' + f.man.nota : '') };
+        if (f.lote) return { precio: f.lote.precio, unidad: f.lote.unidad, txt: '🛒 Precio de la compra' };
+        if (f.fact) return { precio: f.fact.precio, unidad: f.fact.unidad, txt: '🧾 Factura del proveedor' + (f.fact.prov ? ' · ' + f.fact.prov : '') };
+        return null;
+      };
+      function editar(f) {
+        const s = fuente(f); const ms = f.man;
+        const pr = h('input', { inputmode: 'decimal', placeholder: 'Precio (€)', value: s ? String(s.precio).replace('.', ',') : '' });
+        const un = h('select', {}, ...Array.from(new Set([ms && ms.unidad, f.unidad, s && s.unidad, 'kg', 'caja', 'saco', 'ud'].filter(Boolean))).map(u => h('option', { value: u, selected: u === ((ms && ms.unidad) || f.unidad || (s && s.unidad) || 'kg') }, u)));
+        const nt = h('input', { placeholder: 'Nota (proveedor, calidad…) opcional', value: (ms && ms.nota) || '' }); let cerrar;
+        const guardar = async (precio, ev) => {
+          if (ev) ev.target.disabled = true;
+          const r2 = await sb.rpc('guardar_precio_compra_dia', { p_fecha: fecha, p_producto: f.pid, p_unidad: un.value, p_precio: precio, p_nota: nt.value.trim() || null });
+          if (r2.error) { if (ev) ev.target.disabled = false; toast(/schema cache|does not exist|guardar_precio/i.test(r2.error.message || '') ? 'Falta ejecutar en Supabase la Parte 52.' : msgErr(r2.error), 'err'); return; }
+          cerrar(); toast(precio == null ? 'Apunte quitado' : 'Precio anotado', 'ok'); pHoy();
+        };
+        cerrar = hoja(f.producto, h('div', {}, h('p', { class: 'sub' }, (f.cant ? 'Comprado: ' + num(f.cant) + ' ' + f.unidad + '. ' : '') + (s ? s.txt : 'Todavía no hay precio.')), h('label', { class: 'campo' }, 'Precio de compra', pr), h('label', { class: 'campo' }, 'Por…', un), nt,
+          h('button', { class: 'guardar', style: 'width:100%', onclick: ev => { const n = parseNum(pr.value); if (n === null || n < 0) { toast('Escribe un precio válido', 'err'); return; } guardar(n, ev); } }, 'Guardar precio'),
+          ms ? h('button', { class: 'ghost', style: 'width:100%;margin-top:6px', onclick: ev => guardar(null, ev) }, 'Quitar mi apunte (volver al precio de la compra o de la factura)') : null));
+      }
+      let total = 0, sinP = 0;
+      const kids = filas.map(f => { const s = fuente(f); if (!s) sinP++; else if (f.cant && s.unidad === f.unidad) total += f.cant * s.precio;
+        return h('div', { class: 'card tap fila', style: s ? '' : 'border-left:6px solid #d97706', onclick: () => editar(f) }, h('div', {}, h('div', { class: 'nombre' }, f.producto), h('div', { class: 'sub' }, [f.cant ? num(f.cant) + ' ' + f.unidad : 'Sin cantidad registrada', f.provs.size ? Array.from(f.provs).join(', ') : '', s ? s.txt : '⚠ sin precio: toca para anotarlo'].filter(Boolean).join(' · '))), h('div', { style: 'text-align:right' }, h('b', {}, s ? eur(s.precio) + ' €' + (s.unidad ? '/' + s.unidad : '') : '—'))); });
+      const cab = [];
+      if (sinP52) cab.push(h('div', { class: 'aviso-card' }, 'Falta ejecutar la Parte 52 en Supabase para poder anotar precios a mano. Mientras tanto verás los de las compras y las facturas.'));
+      cab.push(h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'sub' }, 'Comprado el ' + fechaES(fecha)), h('div', { class: 'sub' }, sinP ? '⚠ ' + sinP + ' producto(s) sin precio' : (filas.length ? 'Todos con precio' : ''))), h('b', { style: 'font-size:20px' }, eur(Math.round(total * 100) / 100) + ' €')));
+      if (filas.length) cab.push(h('p', { class: 'sub' }, 'El total suma solo los productos con cantidad y precio en la misma unidad.'));
+      const mas = h('button', { class: 'ghost', style: 'width:100%;margin:8px 0', onclick: () => {
+        const res = h('div', {}); const bi = h('input', { placeholder: 'Buscar producto…', oninput: debounce(async () => { if (!bi.value.trim()) { res.replaceChildren(); return; } try { const rr = await buscar('productos', bi.value, false, 8); res.replaceChildren(h('div', { class: 'res' }, rr.map(p => h('button', { onclick: () => { cerr(); editar({ pid: p.id, producto: p.nombre, unidad: '', cant: 0, provs: new Set() }); } }, p.nombre + ' · ' + p.codigo)))); } catch (e) { } }, 250) });
+        const cerr = hoja('Añadir otro producto', h('div', {}, bi, res)); } }, '+ Añadir otro producto comprado');
+      lista.replaceChildren(...cab, ...(kids.length ? kids : [h('p', { class: 'vacio' }, 'Todavía no hay compras ni precios para este día. Cuando se registre la compra o llegue la factura del proveedor, saldrán aquí; también puedes añadir un producto y su precio a mano.')]), mas);
+    } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
   }
   async function pDia() {
     const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); pDia(); } });
@@ -7167,6 +7229,7 @@ function vistaImportar() {
     h('button', { class: modo === 'escanear' ? '' : 'ghost', style: 'flex:1', onclick: () => inFoto.click() }, '📷 Hacer foto'),
     h('button', { class: 'ghost', style: 'flex:1', onclick: () => inGal.click() }, '🖼️ Galería / captura'),
     h('button', { class: 'ghost', style: 'flex:1', onclick: () => inDoc.click() }, '📄 PDF / documento'),
+    S.anadir ? null : h('button', { class: 'ghost', style: 'width:100%', onclick: () => go('nuevo') }, '➕ Pedido manual (elegir cliente y productos a mano)'),
     esOficina() ? h('button', { class: 'ghost small', style: 'width:100%', onclick: abrirPanelAbrev }, '⚙️ Formatos y abreviaturas') : null, inFoto, inGal, inDoc);
   async function recordarAlias() {
     try {
@@ -7194,7 +7257,7 @@ function vistaImportar() {
   const btnInt = h('button', { style: 'width:100%;margin-top:8px', onclick: interpretar }, 'Interpretar pedido');
   const fijoBox = h('div', {}); waMemCargar().then(async () => { try { if (!S.prods) S.prods = await waProductos(); } catch (e) { } });
   $app.replaceChildren(shell(S.anadir ? 'Añadir al pedido' : modo === 'voz' ? 'Dictar pedido' : modo === 'escanear' ? 'Escanear pedido' : 'Escribir pedido', h('div', {}, h('p', { class: 'sub' }, S.anadir ? 'Escribe, dicta o escanea los productos que faltan. Se añadirán a este pedido; no se crea otro.' : 'Escribe, dicta o escanea el pedido. Reviso cliente, fecha, productos y cantidades y tú confirmas. Nada se guarda solo.'), barra, archBox, ta, btnInt,
-    fijoBox, h('div', { style: 'margin-top:12px' }, cliBox), fechaBox, horaBox, avisoBox, lineasBox, ignBox, pie), { volver: () => S.anadir ? go('pedido', { id: S.anadir }) : go('nuevo') })); renderBanner();
+    fijoBox, h('div', { style: 'margin-top:12px' }, cliBox), fechaBox, horaBox, avisoBox, lineasBox, ignBox, pie), { volver: () => S.anadir ? go('pedido', { id: S.anadir }) : go('inicio') })); renderBanner();
   pintarCliente(); pintarFecha(); pintarHora();
   if (S.anadir) {
     cliBox.style.display = 'none'; fechaBox.style.display = 'none'; horaBox.style.display = 'none';
