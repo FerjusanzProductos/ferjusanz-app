@@ -220,6 +220,7 @@ table.mx tr.hl-f td.hl-c{background:#facc15!important}
 .rosco .circ .c{width:52px;height:52px;font-size:24px;border-width:3.5px}
 .rosco .circ .l{font-size:11.5px;line-height:1.1;max-height:2.3em;overflow:hidden;font-weight:700}
 .rosco .circ .insig{top:-6px;right:-6px}
+.rosco .circ .ord{position:absolute;top:-7px;left:-7px;min-width:20px;height:20px;border-radius:50%;background:#1f2937;color:#fff;font-size:11.5px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #f3f4f6;line-height:1}
 .rosco.doble .circ .c{width:44px;height:44px;font-size:21px;border-width:3px}
 .rosco.doble .circ .l{font-size:10.5px}
 .rosco.doble .circ.dentro{width:64px}
@@ -1959,7 +1960,7 @@ async function sinArchivadosRapido(filas) {
 }
 const _cacheAsis = {};
 async function conCache(clave, f, seg) { const c = _cacheAsis[clave]; if (c && Date.now() - c.t < (seg || 60) * 1000) return c.v; const v = await f(); _cacheAsis[clave] = { t: Date.now(), v }; return v; }
-const CONS_PARAR = new Set('dime dame damelas damelos muestrame muestra ensename quiero quisiera ver saber necesito busca buscame mira mirame de del la las el los al a que cuales cual cuantas cuantos cuanto son hay tiene tienen tengo me mis mi por favor cliente clientes para con un una unos unas todas todos en y se le les lo he ha es esta estan hoy manana ayer semana mes ultima ultimas ultimo ultimos lista listado numero nº sus su ese esa esos esas pendientes pendiente quien quienes debo debes dinero euros cuenta total todo alguien algun alguno nadie ahora actualmente'.split(' '));
+const CONS_PARAR = new Set('tengas tienes tenga tengais tendras tendrias digas dices sepas sabes puedas podrias podria pueda pongas ponme ultimo ultima ultimos ultimas actual vigente reciente mas ahora mismo exacto exactamente tipo dime dame damelas damelos muestrame muestra ensename quiero quisiera ver saber necesito busca buscame mira mirame de del la las el los al a que cuales cual cuantas cuantos cuanto son hay tiene tienen tengo me mis mi por favor cliente clientes para con un una unos unas todas todos en y se le les lo he ha es esta estan hoy manana ayer semana mes ultima ultimas ultimo ultimos lista listado numero nº sus su ese esa esos esas pendientes pendiente quien quienes debo debes dinero euros cuenta total todo alguien algun alguno nadie ahora actualmente'.split(' '));
 /* Contexto de la conversación: el último cliente y el último tipo de consulta (para «¿y sus albaranes?») */
 const ctxAsis = { cli: null, tipo: null, fecha: null };
 function lev(a, b) { if (a === b) return 0; const m = a.length, n = b.length; if (Math.abs(m - n) > 2) return 9; const d = []; for (let i = 0; i <= m; i++) { d[i] = [i]; } for (let j = 0; j <= n; j++) d[0][j] = j; for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) { d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1); } return d[m][n]; }
@@ -2143,6 +2144,7 @@ async function consultarDatos(d, elegir) {
       if (!resto) { encontrados = ps; palabra = toks.slice(0, i).join(' '); break; }
       const cs = buscarCliLocal(todos, resto); if (cs.length) { encontrados = ps; clip = cs[0]; palabra = toks.slice(0, i).join(' '); }
     }
+    if (!encontrados.length) { for (let i = toks.length; i >= 1; i--) { const ps = buscarProdAsis(prods, toks.slice(0, i).join(' ')); if (ps.length) { encontrados = ps; palabra = toks.slice(0, i).join(' '); break; } } }   /* las palabras que sobran no son un cliente: se ignoran */
     if (!encontrados.length) return { nodos: [h('div', { class: 'aviso-card' }, 'No encuentro ese producto' + (d.nombre ? ' («' + d.nombre + '»)' : '') + '. Prueba con el nombre como sale en la app.')], voz: 'No encuentro ese producto.' };
     if (clip) { ctxAsis.cli = clip; ctxAsis.tipo = 'precio'; }
     const ids = encontrados.slice(0, 5).map(p => p.id);
@@ -3327,12 +3329,13 @@ function vistaMas() {
   /* Cada grupo es UN rosco: círculos alrededor de un centro. Si hay muchos, un segundo anillo por dentro. Todo visible y pulsable. */
   const g = (t, ...items) => {
     const it = items.filter(Boolean); if (!it.length) return [];
+    it.forEach((nodo, i) => { const cc = nodo.querySelector('.c'); if (cc) cc.append(h('span', { class: 'ord' }, String(i + 1))); });
     const n = it.length; const doble = n > 10; const nOut = doble ? Math.ceil(n * 0.62) : n; const nIn = n - nOut;
     const S = Math.min(380, (window.innerWidth || 360) - 16); const mitad = doble ? 38 : 46;
     const R = Math.round(S / 2 - mitad); const alto = 2 * R + 2 * mitad + 2;
     const Rin = doble ? Math.max(40, R - 78) : 0;
     const ro = h('div', { class: 'rosco' + (doble ? ' doble' : ''), style: 'width:' + S + 'px;height:' + alto + 'px' },
-      doble ? null : h('div', { class: 'ctr' }, t, h('small', {}, t === 'Trabajo diario' ? 'Empieza arriba y sigue hacia la derecha ↻' : n + (n === 1 ? ' opción' : ' opciones'))));
+      doble ? null : h('div', { class: 'ctr' }, t, h('small', {}, t === 'Trabajo diario' ? 'Sigue los números 1, 2, 3… ↻' : n + (n === 1 ? ' opción' : ' opciones'))));
     const pon = (nodo, a, r) => { nodo.style.left = Math.round(S / 2 + r * Math.cos(a)) + 'px'; nodo.style.top = Math.round(alto / 2 + r * Math.sin(a)) + 'px';
       const l = nodo.querySelector('.l'); if (l && CORTO[l.textContent]) { nodo.title = l.textContent; l.textContent = CORTO[l.textContent]; } ro.append(nodo); };
     it.slice(0, nOut).forEach((nodo, i) => pon(nodo, -Math.PI / 2 + i * 2 * Math.PI / nOut, R));
@@ -3346,9 +3349,10 @@ function vistaMas() {
       if (navigator.onLine) sb.from('lineas_pedido').select('pedido_id,precio,pedidos(estado,archivado)').is('precio', null).limit(1500).then(r => { if (r.error) { num.textContent = ''; return; } const ids = new Set((r.data || []).filter(l => { const p = uno(l.pedidos) || {}; return p.estado !== 'anulado' && !p.archivado; }).map(l => l.pedido_id)); num.textContent = String(ids.size); num.className = 'num' + (ids.size ? '' : ' cero'); marcaPend(/Poner precios/, ids.size); }).catch(() => { num.textContent = ''; }); else num.textContent = '';
       return b; })(),
     ...g('Trabajo diario', c('✍️', 'Escribir pedido', () => go('importar'), V), c('🎤', 'Dictar pedido', () => go('importar', { modo: 'voz' }), V), c('📷', 'Escanear pedido', () => go('importar', { modo: 'escanear' }), V), c('➕', 'Nuevo pedido', () => go('nuevo'), V),
-      c('🛒', 'Compra de hoy', () => { if (puedeCompras()) { LS.set('fj_compras_modo', 'lista'); go('compras'); } else go('hojacompra'); }, V), c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Hoja de carga', () => go('carga'), V), c('💶', 'Poner precios', () => go('preciosp'), V), c('🧑‍✈️', 'Reparto', () => go('reparto'), V)),
-    ...g('Entregas y cobros', c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('💰', 'Cobros', () => go('cobros'), '#2f7d4a'), c('🧮', 'Deudas', () => go('deudas'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a'), c('📅', 'Calendario', () => go('calendario'), '#2f7d4a'), c('🧺', 'Hoja de compra', () => go('hojacompra'), '#2f7d4a'), esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), '#2f7d4a') : null),
-    ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null),
+      c('🛒', 'Compra de hoy', () => { if (puedeCompras()) { LS.set('fj_compras_modo', 'lista'); go('compras'); } else go('hojacompra'); }, V), c('🧺', 'Hoja de compra', () => go('hojacompra'), V), c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Hoja de carga', () => go('carga'), V), c('💶', 'Poner precios', () => go('preciosp'), V), c('🧑‍✈️', 'Reparto', () => go('reparto'), V)),
+        ...g('Entregas y pedidos', c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('📅', 'Calendario', () => go('calendario'), '#2f7d4a')),
+    ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
+    ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null),
     ...g('Compras y mercancía', c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('💶', 'Precios de compra', () => go('precios'), A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('❓', 'Ayuda y guía', () => go('ayuda'), T), c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
