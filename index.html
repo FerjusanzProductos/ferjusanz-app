@@ -2196,6 +2196,7 @@ function detectaConsulta(q) {
   let tipo = null;
   if (/\b(resumen|como va el dia|que tal el dia|como vamos|balance del dia|que hay hoy)\b/.test(t)) tipo = 'resumen';
   else if ((/\b(ultim\w*|registros?|historial|movimientos)\b/.test(t) && /\b(compr\w*|vend\w*|ventas?|registros?|historial)\b/.test(t)) || /\ba cuanto (hemos |se |he |les |lo |la )?(compr|vend)\w*/.test(t)) tipo = 'historial';
+  else if (/\bprecios? (de )?compras?\b|\b(coste|costes|costo|costos)\b|\bprecios? (de )?(lo |los |las )?(que )?(he|hemos|se ha|han|ha|nos ha) compr\w*|\bcuanto (ha|han|hemos|he|nos ha|nos han) costado\b|\ba cuanto (hemos |he |se ha |han )?compr\w*/.test(t)) tipo = 'preciocompra';
   else if (/\b(precio|precios|cuesta|cuestan|vale|valen|a cuanto|tarifa)\b/.test(t)) tipo = 'precio';
   else if (/\bque (le )?(compra|vendo|lleva|pide|suele llevar|suele comprar)\b|\bproductos de\b|\blo habitual de\b/.test(t)) tipo = 'compra';
   else if (/\b(debe|deben|deuda|deudas|deudor|deudores|moroso|morosos|impagad\w*|por cobrar|cobrar|saldo|saldos)\b/.test(t)) tipo = 'deuda';
@@ -2208,7 +2209,7 @@ function detectaConsulta(q) {
   const nombre = t.split(/\s+/).filter(w => w && !parar.has(w) && !/^(factur|albaran|pedid|deb[ea]|deud|moros|cobr|impag|saldo|vend|compr|venta|resum|precio|cuest|cuanto|valen|vale$|tarifa|habitual|producto|lleva|pide|suele|llev|ultim|registr|histori|movimient|tanto|como$|veces|sido|hemos|se$|han$|sale|salio)/.test(w)).join(' ');
   const fecha = /\bhoy\b/.test(t) ? hoy() : /\bmanana\b/.test(t) ? hoy(new Date(Date.now() + 86400000)) : /\bayer\b/.test(t) ? hoy(new Date(Date.now() - 86400000)) : null;
   const d = { tipo, nombre, fecha, q };
-  if (tipo === 'precio' || tipo === 'historial') return d;
+  if (tipo === 'precio' || tipo === 'historial' || tipo === 'preciocompra') return d;
   if (tipo === 'resumen') return d;
   if (!nombre && ctxAsis.cli && (seg || fecha || tipo === 'compra' || (tipo === 'deuda' && /\bdebe\b/.test(t) && !/\b(quien|quienes|me debe|nos debe)\b/.test(t)))) d.cli = ctxAsis.cli;
   if ((tipo === 'albaran' || tipo === 'pedido') && !nombre && !fecha && !d.cli) return null;
@@ -2335,6 +2336,37 @@ async function consultarDatos(d, elegir) {
     if (esOficina()) nodos.push(tarjetaConsulta((varios ? palabra.charAt(0).toUpperCase() + palabra.slice(1) : p.nombre) + ' · ventas', resV + ' (pedidos de la app y facturas de Golden 2026)', filasV, null));
     if (varios) nodos.push(h('div', { class: 'sub' }, 'He mirado todos los productos con ese nombre: ' + lista.map(x => x.nombre).join(', ') + '.'));
     return { nodos, voz: voz.join(' ') };
+  }
+  if (d.tipo === 'preciocompra') {
+    if (!puedeCompras()) return sinPermiso('Los precios de compra los ve quien compra y la oficina.');
+    const fecha = d.fecha || hoy(); let prods; try { prods = await productosAsis(); } catch (e) { return { nodos: [h('p', { class: 'err' }, isNetErr(e) ? 'Necesito conexión.' : msgErr(e))], voz: '' }; }
+    const toks = d.nombre.split(/\s+/).filter(w => w && !/^(nos|costado|costo|costos|coste|costes|han|ha|hemos|he)$/.test(w)); let ids = null, palabra = '';
+    for (let i = toks.length; i >= 1 && !ids; i--) { const ps = buscarProdAsis(prods, toks.slice(0, i).join(' ')); if (ps.length) { ids = new Set(ps.map(x => x.id)); palabra = toks.slice(0, i).join(' '); } }
+    if (toks.length && !ids) return { nodos: [h('div', { class: 'aviso-card' }, 'No encuentro ese producto («' + d.nombre + '»). Prueba con el nombre como sale en la app.')], voz: 'No encuentro ese producto.' };
+    const nomDe = {}; prods.forEach(p => { nomDe[p.id] = p.nombre; }); const P = {};
+    const add = (pid, o) => { if (ids && !ids.has(pid)) return; (P[pid] = P[pid] || { pid, nombre: nomDe[pid] || 'Producto', f: [] }).f.push(o); };
+    const pn = r => (uno(r.proveedores) || {}).nombre || '';
+    try {
+      const c = await sb.from('compras').select('id,proveedores(nombre)').eq('fecha', fecha);
+      if (!c.error && (c.data || []).length) { const ls = await sb.from('lotes').select('producto_id,cantidad_recibida,unidad,precio_compra,compra_id').in('compra_id', c.data.map(x => x.id)); (ls.data || []).forEach(l => { if (l.precio_compra != null) add(l.producto_id, { prio: 2, precio: Number(l.precio_compra), unidad: l.unidad, txt: '🛒 Compra registrada' + (pn(c.data.find(x => x.id === l.compra_id) || {}) ? ' · ' + pn(c.data.find(x => x.id === l.compra_id)) : '') }); }); }
+      let tf = await sb.from('tarifas_compra').select('producto_id,precio,unidad,proveedores(nombre)').eq('fecha', fecha); if (tf.error) tf = await sb.from('tarifas_compra').select('producto_id,precio,proveedores(nombre)').eq('fecha', fecha);
+      (tf.data || []).forEach(t => add(t.producto_id, { prio: 3, precio: Number(t.precio), unidad: t.unidad || 'kg', txt: '🧾 Factura registrada' + (pn(t) ? ' · ' + pn(t) : '') }));
+      const mn = await sb.from('precios_compra_dia').select('producto_id,unidad,precio,nota').eq('fecha', fecha); (mn.data || []).forEach(m => add(m.producto_id, { prio: 1, precio: Number(m.precio), unidad: m.unidad, txt: '✍ Anotado a mano' + (m.nota ? ' · ' + m.nota : '') }));
+    } catch (e) { return { nodos: [h('p', { class: 'err' }, isNetErr(e) ? 'Necesito conexión.' : msgErr(e))], voz: '' }; }
+    let sinLeer = 0, nFac = 0;
+    try {
+      const fr = await sb.from('facturas_recibidas').select('id,recibido_en,fecha_factura,proveedores(nombre)').eq('estado', 'nueva').order('recibido_en', { ascending: false }).limit(300);
+      const facs = (fr.data || []).filter(f => String(f.recibido_en || '').slice(0, 10) === fecha || String(f.fecha_factura || '').slice(0, 10) === fecha); nFac = facs.length; const cache = LS.get('fj_fact_leidas', {});
+      facs.forEach(f => { const cc = cache[f.id]; if (!cc) { sinLeer++; return; } cc.lineas.forEach(r => add(r.pid, { prio: 4, precio: r.precio, unidad: r.unidad, txt: '🧾 Factura llegada' + (pn(f) ? ' · ' + pn(f) : '') + (r.dudoso ? ' (por confirmar)' : '') })); });
+    } catch (e) { }
+    const lista = Object.values(P).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+    const filas = lista.map(x => { x.f.sort((a, b) => a.prio - b.prio); const m = x.f[0]; return filaCons(x.nombre, m.txt + (x.f.length > 1 ? ' · hay ' + (x.f.length - 1) + ' precio(s) más' : ''), eur(m.precio) + ' €/' + m.unidad, () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }); });
+    const tit = 'Precios de compra' + (palabra ? ' · ' + palabra : '') + ' · ' + (fecha === hoy() ? 'hoy' : fechaES(fecha));
+    let res = lista.length ? lista.length + ' producto(s) con precio de compra ese día, ordenados de la A a la Z.' : 'No hay precios de compra anotados para ese día' + (palabra ? ' de «' + palabra + '»' : '') + '.';
+    if (sinLeer) res += ' Hay ' + sinLeer + ' factura(s) llegadas que la app todavía no ha leído: ábrelas en «Precios de compra del día» y saldrán aquí.';
+    const nodos = [tarjetaConsulta(tit, res, filas, { t: 'Abrir Precios de compra del día ›', f: () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); } })];
+    const voz = lista.length ? (lista.length <= 3 ? lista.map(x => x.nombre + ' a ' + eur(x.f[0].precio) + ' euros el ' + x.f[0].unidad).join('. ') : lista.length + ' productos con precio de compra.') : 'No hay precios de compra para ese día.';
+    return { nodos, voz };
   }
   if (d.tipo === 'precio') {
     if (!esOficina()) return sinPermiso('Los precios los ve la oficina.');
