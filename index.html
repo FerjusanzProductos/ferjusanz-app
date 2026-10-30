@@ -5086,10 +5086,10 @@ function vistaPrecios() {
   async function pHoy() {
     const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); pHoy(); } });
     const lista = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
-    cont.replaceChildren(h('div', { class: 'aviso-card' }, 'Precios de lo que se ha comprado este día. Salen de las compras registradas y de las facturas de los proveedores. Si la factura todavía no ha llegado, apunta tú el precio: toca el producto.'), h('div', { class: 'barra' }, inp, h('button', { class: 'ghost', onclick: () => pHoy() }, '↻')), lista);
+    cont.replaceChildren(h('div', { class: 'aviso-card' }, 'Todos los precios de compra del día, de la A a la Z. Salen de las facturas que han ido llegando por correo (la app las lee sola), de las compras registradas y de lo que apuntes tú. Toca un producto para corregir su precio.'), h('div', { class: 'barra' }, inp, h('button', { class: 'ghost', onclick: () => pHoy() }, '↻')), lista);
     try {
       const P = {};   /* producto -> { pid, producto, unidad, cant, prov, lote, fact, man } */
-      const it = (pid, nombre) => P[pid] || (P[pid] = { pid, producto: nombre || 'Producto', unidad: '', cant: 0, provs: new Set(), lote: null, fact: null, man: null });
+      const it = (pid, nombre) => P[pid] || (P[pid] = { pid, producto: nombre || 'Producto', unidad: '', cant: 0, provs: new Set(), lote: null, fact: null, man: null, leidas: [] });
       /* 1) Compras registradas ese día */
       const c = await sb.from('compras').select('id,proveedores(nombre)').eq('fecha', fecha); if (c.error) throw c.error;
       if ((c.data || []).length) {
@@ -5108,11 +5108,26 @@ function vistaPrecios() {
       if (faltan.length) { const pr = await sb.from('productos').select('id,nombre').in('id', faltan); (pr.data || []).forEach(p => { it(p.id, p.nombre); }); }
       tfs.forEach(t => { const o = it(t.producto_id); o.fact = { precio: Number(t.precio), unidad: t.unidad || '', prov: (uno(t.proveedores) || {}).nombre || '' }; });
       Object.keys(man).forEach(id => { const o = it(id); o.man = man[id]; });
-      const filas = Object.values(P).sort((a, b) => a.producto.localeCompare(b.producto, 'es'));
+      /* 4) Facturas de proveedores llegadas ese día por correo (aunque todavía no estén registradas): la app las lee y saca los precios */
+      let facs = [];
+      try {
+        const sel = (cols) => sb.from('facturas_recibidas').select(cols).eq('estado', 'nueva').order('recibido_en', { ascending: false }).limit(300);
+        let fr = await sel('id,recibido_en,fecha_factura,ruta,nombre,proveedor_id,proveedores(nombre)'); if (fr.error) fr = await sel('id,recibido_en,ruta,nombre,proveedor_id,proveedores(nombre)');
+        if (!fr.error) facs = (fr.data || []).filter(f => String(f.recibido_en || '').slice(0, 10) === fecha || String(f.fecha_factura || '').slice(0, 10) === fecha);
+      } catch (e) { }
+      const cacheF = LS.get('fj_fact_leidas', {});
+      const estado = h('div', { class: 'sub', style: 'margin:6px 0' });
+      const preparaFilas = () => {
+        Object.values(P).forEach(o => { if (o._c0 === undefined) { o._c0 = o.cant; o._u0 = o.unidad; } o.cant = o._c0; o.unidad = o._u0; o.leidas = []; });
+        facs.forEach(f => { const c = cacheF[f.id]; if (!c) return; const pv = (uno(f.proveedores) || {}).nombre || '';
+          c.lineas.forEach(r => { const o = it(r.pid, r.nombre); if (o._c0 === undefined) { o._c0 = 0; o._u0 = ''; o.cant = 0; o.unidad = ''; } o.leidas.push(Object.assign({ prov: pv }, r)); if (!o._c0) { if (!o.unidad) o.unidad = r.unidad; if (r.unidad === o.unidad) o.cant += r.cant || 0; } }); });
+        return Object.values(P).sort((a, b) => a.producto.localeCompare(b.producto, 'es'));
+      };
       const fuente = f => {
         if (f.man) return { precio: Number(f.man.precio), unidad: f.man.unidad, txt: '✍ Anotado por ti' + (f.man.nota ? ' · ' + f.man.nota : '') };
         if (f.lote) return { precio: f.lote.precio, unidad: f.lote.unidad, txt: '🛒 Precio de la compra' };
         if (f.fact) return { precio: f.fact.precio, unidad: f.fact.unidad, txt: '🧾 Factura del proveedor' + (f.fact.prov ? ' · ' + f.fact.prov : '') };
+        if (f.leidas && f.leidas.length) { const r = f.leidas[0]; return { precio: r.precio, unidad: r.unidad, txt: '🧾 Factura llegada' + (r.prov ? ' · ' + r.prov : '') + (r.dudoso ? ' (producto por confirmar)' : '') + (f.leidas.length > 1 ? ' · otros: ' + f.leidas.slice(1).map(x => (x.prov || 'otra') + ' ' + eur(x.precio) + '/' + x.unidad).join(', ') : '') }; }
         return null;
       };
       function editar(f) {
@@ -5130,6 +5145,8 @@ function vistaPrecios() {
           h('button', { class: 'guardar', style: 'width:100%', onclick: ev => { const n = parseNum(pr.value); if (n === null || n < 0) { toast('Escribe un precio válido', 'err'); return; } guardar(n, ev); } }, 'Guardar precio'),
           ms ? h('button', { class: 'ghost', style: 'width:100%;margin-top:6px', onclick: ev => guardar(null, ev) }, 'Quitar mi apunte (volver al precio de la compra o de la factura)') : null));
       }
+      const montar = () => {
+      const filas = preparaFilas();
       let total = 0, sinP = 0;
       const kids = filas.map(f => { const s = fuente(f); if (!s) sinP++; else if (f.cant && s.unidad === f.unidad) total += f.cant * s.precio;
         return h('div', { class: 'card tap fila', style: s ? '' : 'border-left:6px solid #d97706', onclick: () => editar(f) }, h('div', {}, h('div', { class: 'nombre' }, f.producto), h('div', { class: 'sub' }, [f.cant ? num(f.cant) + ' ' + f.unidad : 'Sin cantidad registrada', f.provs.size ? Array.from(f.provs).join(', ') : '', s ? s.txt : '⚠ sin precio: toca para anotarlo'].filter(Boolean).join(' · '))), h('div', { style: 'text-align:right' }, h('b', {}, s ? eur(s.precio) + ' €' + (s.unidad ? '/' + s.unidad : '') : '—'))); });
@@ -5139,8 +5156,31 @@ function vistaPrecios() {
       if (filas.length) cab.push(h('p', { class: 'sub' }, 'El total suma solo los productos con cantidad y precio en la misma unidad.'));
       const mas = h('button', { class: 'ghost', style: 'width:100%;margin:8px 0', onclick: () => {
         const res = h('div', {}); const bi = h('input', { placeholder: 'Buscar producto…', oninput: debounce(async () => { if (!bi.value.trim()) { res.replaceChildren(); return; } try { const rr = await buscar('productos', bi.value, false, 8); res.replaceChildren(h('div', { class: 'res' }, rr.map(p => h('button', { onclick: () => { cerr(); editar({ pid: p.id, producto: p.nombre, unidad: '', cant: 0, provs: new Set() }); } }, p.nombre + ' · ' + p.codigo)))); } catch (e) { } }, 250) });
-        const cerr = hoja('Añadir otro producto', h('div', {}, bi, res)); } }, '+ Añadir otro producto comprado');
-      lista.replaceChildren(...cab, ...(kids.length ? kids : [h('p', { class: 'vacio' }, 'Todavía no hay compras ni precios para este día. Cuando se registre la compra o llegue la factura del proveedor, saldrán aquí; también puedes añadir un producto y su precio a mano.')]), mas);
+        const cerr = hoja('Añadir otro producto', h('div', {}, bi, res)); } }, '✍ Apuntar un precio que no viene en las facturas (se compra después o la factura llega más tarde)');
+      const sinRec = []; facs.forEach(f => { const c = cacheF[f.id]; if (c && c.sin && c.sin.length) sinRec.push(h('details', { class: 'card' }, h('summary', {}, ((uno(f.proveedores) || {}).nombre || f.nombre || 'Factura') + ': ' + c.sin.length + ' línea(s) sin emparejar'), ...c.sin.map(x => h('div', { class: 'sub', style: 'padding:3px 0' }, x.texto + (x.precio != null ? ' · ' + eur(x.precio) + (x.unidad ? '/' + x.unidad : '') : ''))))); });
+      lista.replaceChildren(...cab, mas, estado, ...(kids.length ? kids : [h('p', { class: 'vacio' }, facs.length ? 'Hay ' + facs.length + ' factura(s) llegadas este día. Se están leyendo; los precios saldrán aquí.' : 'Todavía no hay compras, facturas ni precios para este día. También puedes apuntar un precio a mano con el botón de arriba.')]), ...sinRec);
+      };
+      montar();
+      const pend = facs.filter(f => !cacheF[f.id] && f.ruta);
+      if (facs.length) estado.textContent = '🧾 ' + facs.length + ' factura(s) llegada(s) este día' + (pend.length ? ' · leyendo ' + pend.length + '…' : ' · todas leídas');
+      if (pend.length && navigator.onLine && !window.__leyendoPH) (async () => {
+        window.__leyendoPH = true; let fallos = 0, n = 0;
+        try {
+          const prods = await waProductos(); const indice = waIndice(prods);
+          for (const f of pend) {
+            n++; estado.textContent = '🧾 Leyendo facturas… ' + n + ' de ' + pend.length;
+            try {
+              const file = await fcDescargar(f); const rd = await fcLeerFactura(file, () => { }); const al = f.proveedor_id ? await fcAliasCargar(f.proveedor_id) : { map: {} };
+              const lineas = [], sin = [];
+              rd.lineas.forEach(x => { const m = fcEmparejar(x, prods, indice, al.map); const pr = Number(x.precio);
+                if (m.producto && (m.estado === 'ok' || m.estado === 'dudoso') && isFinite(pr) && pr > 0) lineas.push({ pid: m.producto.id, nombre: m.producto.nombre, precio: pr, unidad: UNIDADES.includes(x.unidad) ? x.unidad : (m.producto.unidad_venta && UNIDADES.includes(m.producto.unidad_venta) ? m.producto.unidad_venta : 'kg'), cant: Number(x.cantidad) || 0, dudoso: m.estado === 'dudoso' });
+                else sin.push({ texto: x.texto, precio: isFinite(pr) ? pr : null, unidad: x.unidad || '' }); });
+              cacheF[f.id] = { lineas, sin, t: Date.now() }; LS.set('fj_fact_leidas', cacheF); montar();
+            } catch (e) { fallos++; }
+          }
+        } catch (e) { fallos = pend.length; }
+        finally { window.__leyendoPH = false; estado.textContent = '🧾 ' + facs.length + ' factura(s) llegada(s) este día' + (fallos ? ' · ' + fallos + ' no se han podido leer (se reintentará al volver a entrar; apunta el precio a mano si hace falta)' : ' · todas leídas'); montar(); }
+      })();
     } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
   }
   async function pDia() {
