@@ -217,6 +217,11 @@ table.mx tr.hl-f td.hl-c{background:#facc15!important}
 .saludo{margin:4px 4px 0}
 .rosco{position:relative;margin:4px auto 10px}
 .rosco .ctr{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:112px;text-align:center;font-weight:800;color:var(--verde-osc);font-size:15px;line-height:1.15}
+.rosco .ctr.cal{width:104px}
+.rosco .calbtn{background:none;border:0;padding:0;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--verde-osc);font:inherit;cursor:pointer;width:100%}
+.rosco .calbtn .calc{position:relative;width:64px;height:64px;border-radius:50%;background:#fff7ed;border:4px solid #ea580c;display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 2px 8px rgba(234,88,12,.35)}
+.rosco .calbtn .cal-ast{position:absolute;top:-8px;right:-6px;width:22px;height:22px;border-radius:50%;background:#ea580c;color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #f3f4f6}
+.rosco .calbtn b{font-size:15px}
 .rosco .ctr small{display:block;font-weight:600;color:var(--txt2);font-size:12px;margin-top:2px}
 .rosco .circ{position:absolute;width:76px;transform:translate(-50%,-50%);gap:3px}
 .rosco .circ .c{width:52px;height:52px;font-size:24px;border-width:3.5px}
@@ -3526,6 +3531,7 @@ function vistaMas() {
   const CORTO = { 'Hoja de compra para hoy': 'Hoja compra hoy', 'Precios de compra del día': 'Precios compra del día', 'A quién compramos hoy': 'A quién compramos', 'Facturas de proveedores': 'Facturas proveed.', 'Facturas de clientes': 'Facturas clientes', 'Histórico de Golden': 'Histórico Golden', 'Registro de cambios': 'Registro cambios', 'Copia de seguridad': 'Copia seguridad', 'Lista de pedidos': 'Lista pedidos', 'Escanear pedido': 'Escanear pedido', 'Hoja de carga': 'Hoja de carga', 'Hoja de compra': 'Hoja compra', 'Avisos y ofertas': 'Avisos y ofertas' };
   /* Cada grupo es UN rosco: círculos alrededor de un centro. Si hay muchos, un segundo anillo por dentro. Todo visible y pulsable. */
   const defs = []; const g = (t, ...items) => { defs.push([t, items.filter(Boolean)]); return []; };
+  let calUsado = false;
   const rosco = (t, ...items) => {
     const it = items.filter(Boolean); if (!it.length) return [];
     it.forEach((nodo, i) => { const cc = nodo.querySelector('.c'); if (cc) cc.append(h('span', { class: 'ord' }, String(i + 1))); });
@@ -3534,12 +3540,12 @@ function vistaMas() {
     const R = Math.round(S / 2 - mitad); const alto = 2 * R + 2 * mitad + 2;
     const Rin = doble ? Math.max(40, R - 78) : 0;
     const ro = h('div', { class: 'rosco' + (doble ? ' doble' : ''), style: 'width:' + S + 'px;height:' + alto + 'px' },
-      doble ? null : h('div', { class: 'ctr' }, t, h('small', {}, t === 'Trabajo diario' ? 'Sigue los números 1, 2, 3… ↻' : n + (n === 1 ? ' opción' : ' opciones'))));
+      doble ? null : (!calUsado && (calUsado = true) ? h('div', { class: 'ctr cal' }, h('button', { class: 'calbtn', onclick: () => go('calendario') }, h('span', { class: 'calc' }, '📅', h('span', { class: 'cal-ast' }, '✱')), h('b', {}, 'Calendario'), h('small', {}, 'Elige el día'))) : h('div', { class: 'ctr' }, t, h('small', {}, n + (n === 1 ? ' opción' : ' opciones')))));
     const pon = (nodo, a, r) => { nodo.style.left = Math.round(S / 2 + r * Math.cos(a)) + 'px'; nodo.style.top = Math.round(alto / 2 + r * Math.sin(a)) + 'px';
       const l = nodo.querySelector('.l'); if (l && CORTO[l.textContent]) { nodo.title = l.textContent; l.textContent = CORTO[l.textContent]; } ro.append(nodo); };
     it.slice(0, nOut).forEach((nodo, i) => pon(nodo, -Math.PI / 2 + i * 2 * Math.PI / nOut, R));
     it.slice(nOut).forEach((nodo, i) => { nodo.classList.add('dentro'); pon(nodo, -Math.PI / 2 + Math.PI / nOut + i * 2 * Math.PI / nIn, Rin); });
-    return [h('div', { class: 'grupo' }, t), ro];
+    return [h('div', { class: 'grupo' }, t, t === 'Trabajo diario' ? h('small', { style: 'font-weight:600;margin-left:8px;opacity:.75' }, 'sigue los números 1, 2, 3…') : null), ro];
   };
   const V = '#2f7d4a', A = '#d97706', Z = '#2563eb', M = '#7c3aed', R = '#dc2626', T = '#0d9488';
   const k = [
@@ -3550,7 +3556,7 @@ function vistaMas() {
     ...g('Trabajo diario', c('✍️', 'Apuntar pedido', () => go('importar'), V),
       c('🧺', 'Hoja de compra para hoy', () => go('hojacompra'), V), c('🛒', 'Compra para hoy', () => { if (puedeCompras()) { LS.set('fj_compras_modo', 'lista'); go('compras'); } else go('hojacompra'); }, V),
       c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Hoja de carga', () => go('carga'), V), puedeCompras() ? c('💲', 'Precios de compra del día', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, V) : null, c('💶', 'Poner precios', () => go('preciosp'), V), c('🧑‍✈️', 'Reparto', () => go('reparto'), V)),
-        ...g('Entregas y pedidos', c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('📅', 'Calendario', () => go('calendario'), '#2f7d4a')),
+        ...g('Entregas y pedidos', c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a')),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
     ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null),
     ...g('Compras y mercancía', c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('💶', 'Precios de compra', () => { if (LS.get('fj_precios_modo', 'dia') === 'hoy') LS.set('fj_precios_modo', 'dia'); go('precios'); }, A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
