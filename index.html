@@ -6414,6 +6414,23 @@ async function waOCR(canvas, progreso) {
   const r = await window.Tesseract.recognize(canvas, 'spa', { logger: m => { if (progreso && m.status) progreso(m.status === 'recognizing text' ? 'Leyendo… ' + Math.round((m.progress || 0) * 100) + '%' : 'Preparando el lector (solo la primera vez)…'); } });
   return { texto: (r.data.text || '').trim(), conf: r.data.confidence };
 }
+/* Facturas escaneadas: quita las rayas de las tablas (rompen la lectura de las columnas) y recorta el papel en blanco */
+function waQuitaRayas(canvas) {
+  try {
+    const w = canvas.width, hh = canvas.height, g = canvas.getContext('2d'); const im = g.getImageData(0, 0, w, hh), d = im.data;
+    const osc = new Uint8Array(w * hh); for (let i = 0; i < osc.length; i++) osc[i] = (d[i * 4] * 0.299 + d[i * 4 + 1] * 0.587 + d[i * 4 + 2] * 0.114) < 170 ? 1 : 0;
+    const mk = new Uint8Array(w * hh), minH = Math.round(w * 0.035), minV = Math.round(hh * 0.03);
+    for (let y = 0; y < hh; y++) { let ini = -1; for (let x = 0; x <= w; x++) { const on = x < w && osc[y * w + x]; if (on && ini < 0) ini = x; else if (!on && ini >= 0) { if (x - ini >= minH) for (let k = ini; k < x; k++) mk[y * w + k] = 1; ini = -1; } } }
+    for (let x = 0; x < w; x++) { let ini = -1; for (let y = 0; y <= hh; y++) { const on = y < hh && osc[y * w + x]; if (on && ini < 0) ini = y; else if (!on && ini >= 0) { if (y - ini >= minV) for (let k = ini; k < y; k++) mk[k * w + x] = 1; ini = -1; } } }
+    for (let y = 0; y < hh; y++) for (let x = 0; x < w; x++) { const i = y * w + x; if (mk[i] || (osc[i] && ((x > 0 && mk[i - 1]) || (x < w - 1 && mk[i + 1]) || (y > 0 && mk[i - w]) || (y < hh - 1 && mk[i + w])))) { d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = 255; d[i * 4 + 3] = 255; } }
+    g.putImageData(im, 0, 0);
+    let x0 = w, y0 = hh, x1 = 0, y1 = 0;
+    for (let y = 0; y < hh; y++) for (let x = 0; x < w; x++) { if (d[(y * w + x) * 4] < 200) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } }
+    if (x1 <= x0 || y1 <= y0) return canvas;
+    x0 = Math.max(0, x0 - 30); y0 = Math.max(0, y0 - 30); x1 = Math.min(w, x1 + 30); y1 = Math.min(hh, y1 + 30);
+    const c2 = document.createElement('canvas'); c2.width = x1 - x0; c2.height = y1 - y0; c2.getContext('2d').drawImage(canvas, x0, y0, x1 - x0, y1 - y0, 0, 0, x1 - x0, y1 - y0); return c2;
+  } catch (e) { return canvas; }
+}
 async function waLeerPdf(file, progreso) {
   await waCargarScript(WA_PDFJS);
   if (!window.__waPdfW) { const t = await (await fetch(WA_PDFW)).text(); window.__waPdfW = URL.createObjectURL(new Blob([t], { type: 'text/javascript' })); }
@@ -6424,7 +6441,8 @@ async function waLeerPdf(file, progreso) {
     tc.items.forEach(it => { const yy = Math.round(it.transform[5]); if (y !== null && Math.abs(yy - y) > 3) { filas.push(linea); linea = ''; } y = yy; linea += (linea ? ' ' : '') + it.str; }); if (linea) filas.push(linea);
     const txt = filas.join('\n').trim();
     if (txt.length > 25) { partes.push(txt); confs.push(100); continue; }
-    const vp = pg.getViewport({ scale: 2 }); const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height; await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    const vp = pg.getViewport({ scale: 4 }); const c0 = document.createElement('canvas'); c0.width = vp.width; c0.height = vp.height; await pg.render({ canvasContext: c0.getContext('2d'), viewport: vp }).promise;
+    const c = waQuitaRayas(c0);
     const o = await waOCR(c, progreso); partes.push(o.texto); confs.push(o.conf);
   }
   return { texto: partes.join('\n'), conf: Math.min(...confs), paginas: pdf.numPages };
@@ -6486,6 +6504,11 @@ function fcLinea(fila, descPrevia) {
     if (Math.abs(A * B - C) <= Math.max(0.011, C * 0.004) || pcts.some(d => Math.abs(A * B * (1 - d / 100) - C) <= Math.max(0.011, C * 0.004))) tri = { a: nums[a], b: nums[b], c: nums[c] };
   }
   let calculado = false;
+  if (!tri) {   /* tablas con lote, bruto y tara (p. ej. puestos de Mercamadrid): kilos e importe son los dos últimos números; el precio se calcula */
+    const ns = nums.filter(n => !(Number.isInteger(n.v) && String(tk[n.i]).replace(/\D/g, '').length >= 7));
+    if (ns.length >= 3 && tk.some(w => /^\d{7,}$/.test(w))) { const A = ns[ns.length - 2], C = ns[ns.length - 1]; const pr = C.v / A.v;
+      if (A.v > 0 && C.v > 0 && C.i === tk.length - 1 && A.i > 0 && pr > 0.05 && pr < 400 && (fila.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/g) || []).length >= 5 && /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]{3,}/.test(tk[0]) && !/^(total|bases?|cuota|iva|suma|importe|subtotal|base imponible)\b/i.test(fcNorm(tk.slice(0, A.i).join(' '))) && /,\d/.test(tk[A.i]) && /,\d/.test(tk[C.i])) { tri = { a: A, b: { i: A.i, v: Math.round(pr * 1000) / 1000 }, c: C }; calculado = true; } }
+  }
   if (!tri && nums.length === 2 && nums[0].v > 0 && nums[1].v > 0 && nums[1].i === tk.length - 1 && nums[0].i > 0 && !/\d{5,}/.test(tk.slice(0, nums[0].i).join(' '))) {
     /* Línea sin columna de precio: cantidad e importe → el precio se calcula (se marca para revisarlo) */
     const pr = nums[1].v / nums[0].v; if (pr > 0.05 && pr < 400 && (fila.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/g) || []).length >= 5) { tri = { a: nums[0], b: { i: nums[0].i, v: Math.round(pr * 1000) / 1000 }, c: nums[1] }; calculado = true; }
@@ -6494,7 +6517,8 @@ function fcLinea(fila, descPrevia) {
   let unidad = ''; for (let i = tri.a.i + 1; i < tri.b.i; i++) { const w = fcNorm(tk[i]); if (w in FC_UNI && FC_UNI[w]) { unidad = FC_UNI[w]; break; } }
   let corte = tri.a.i; for (let i = 0; i < tri.a.i; i++) if (/^\d+,\d{2}$/.test(tk[i]) || /^\d{1,3}(\.\d{3})+,\d{2}$/.test(tk[i])) { corte = i; break; }
   let ini = 0; if (corte > 1 && /\d{3,}/.test(tk[0]) && !/^\d{1,2}$/.test(tk[0])) ini = 1;
-  const dt = tk.slice(ini, corte);
+  let dt = tk.slice(ini, corte).filter(w => w !== '|' && !/^\d{7,}$/.test(w));
+  { const ic = dt.findIndex((w, i) => i > 0 && (/^(espa[nñf]a|espafia|spain|italia|francia|portugal|marruecos|holanda|peru|chile|egipto|turquia|grecia|alemania|belgica|argentina|ecuador|colombia|sudafrica|israel|mexico|brasil)$/i.test(w) || /^\d{1,2}$/.test(w))); if (ic > 0) dt = dt.slice(0, ic); }
   while (dt.length > 2 && /^\d{1,4}$/.test(dt[dt.length - 1]) && !/^(cal|calibre|x|n|no|nº|n°|num)$/i.test(dt[dt.length - 2])) dt.pop();   // «Uds» al final de la descripción
   let desc = dt.join(' ').trim(); if ((desc.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/g) || []).length < 3) { if (descPrevia) desc = descPrevia; else return null; }
   if (/^(total|bases?|cuota|iva|suma|importe|subtotal|base imponible)\b/i.test(desc)) return null;
@@ -6529,7 +6553,7 @@ function fcCabecera(filas) {
   const f2 = /fecha(?:\s+de)?(?:\s+factura)?\s*[:.]?\s*(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2})(?!\d)/i.exec(txt);
   r.fecha = (f2 ? iso(+f2[1], +f2[2], 2000 + +f2[3]) : '') || (mt ? iso(+mt[1], FC_MESES[mt[2].toLowerCase()], +mt[3]) : '');
   r.fecha = r.fecha || buscaFecha(/fecha(?:\s+de)?(?:\s+factura)?\s*[:.]?\s*(\d{1,2})[\/.-](\d{1,2})[\/.-](20\d{2})/i) || buscaFecha(/(\d{1,2})[\/.-](\d{1,2})[\/.-](20\d{2})/);
-  const n = /(?:n[º°o]\.?|num(?:ero)?\.?|n\.º)\s*(?:de\s+)?(?:factura|albar[aá]n|documento)\s*:?\s*([A-Za-z0-9][A-Za-z0-9\/.\-]{3,})/i.exec(txt) || /factura\s*(?:n[º°o]\.?|num(?:ero)?\.?)\s*:?\s*([A-Za-z0-9][A-Za-z0-9\/.\-]{3,})/i.exec(txt) || /factura\s*:\s*([A-Za-z0-9][A-Za-z0-9\/.\-]{3,})/i.exec(txt);
+  const n = /(?:n[º°o]\.?|num(?:ero)?\.?|n\.º)\s*(?:de\s+)?(?:factura|albar[aá]n|documento)\s*:?\s*([A-Za-z0-9][A-Za-z0-9\/.\-]{3,})/i.exec(txt) || /factura\s*(?:n[º°o]\.?|num(?:ero)?\.?)\s*:?\s*([A-Za-z0-9][A-Za-z0-9\/.\-]{3,})/i.exec(txt) || /factura\s*:\s*([A-Za-z0-9][A-Za-z0-9\/.\-]{3,})/i.exec(txt) || /\bfactura\s+([0-9]{5,})\b/i.exec(txt);
   r.numero = n ? n[1].replace(/[.\-\/]+$/, '') : '';
   return r;
 }
@@ -6538,6 +6562,7 @@ function fcTotales(filas) {
   const numsDe = t => String(t || '').split(/\s+/).map(w => w.replace(/[€:]/g, '')).filter(w => fcEsNum(w)).map(fcNum).filter(v => v !== null && v > 0);
   const base = [], total = [];
   filas.forEach((f, i) => {
+    { const mb = /base\s+imponible\s*[.…]*\s*([0-9][0-9.,]*)/i.exec(String(f).replace(/\u00a0/g, ' ')); const sv = mb ? mb[1].replace(/[.,]+$/, '') : ''; if (sv && fcEsNum(sv) && fcNum(sv) > 0) { base.push(fcNum(sv)); return; } }
     const t = fcNorm(f); let ns = numsDe(f); if (!ns.length && /base|total|subtotal|importe bruto/.test(t) && filas[i + 1]) ns = numsDe(filas[i + 1]);
     if (!ns.length) return;
     if (/\b(base imponible|total base|importe bruto|subtotal|total bruto|base)\b/.test(t) && !/total factura|a pagar/.test(t)) base.push(Math.max.apply(null, ns));
