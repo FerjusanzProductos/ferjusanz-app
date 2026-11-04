@@ -796,9 +796,9 @@ function vistaSinPerfil() {
 async function cargarPedidos(fecha) {
   const key = 'fj_pedidos_' + fecha;
   if (navigator.onLine) {
-    const { data, error } = await sb.from('pedidos')
-      .select('id,estado,fecha_entrega,notas,preparador_id,clientes(codigo,nombre,nombre_comercial,forma_pago),lineas_pedido(id,estado)')
-      .eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true);
+    const q = cols => sb.from('pedidos').select(cols).eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true);
+    let { data, error } = await q('id,estado,fecha_entrega,notas,preparador_id,repartidor_id,orden_reparto,clientes(codigo,nombre,nombre_comercial,forma_pago),lineas_pedido(id,estado)');
+    if (error && /repartidor_id|orden_reparto|does not exist|schema cache/i.test(error.message || '')) ({ data, error } = await q('id,estado,fecha_entrega,notas,preparador_id,clientes(codigo,nombre,nombre_comercial,forma_pago),lineas_pedido(id,estado)'));
     if (!error) { LS.set(key, data); return { datos: data, cache: false }; }
     if (!isNetErr(error)) throw error;
   }
@@ -817,16 +817,30 @@ function vistaLista() {
   if (state.pedidos.length) pintarLista(false);
   actualizarLista();
 }
+async function cargaRepartidores() {   // quién reparte (con su color), para ver en Preparar qué lleva cada empleado
+  try { if (navigator.onLine) { const r = await sb.from('perfiles').select('id,nombre,reparte,color_reparto').eq('activo', true).eq('reparte', true); if (!r.error) { state.reps = (r.data || []).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')); LS.set('fj_reps_lista', state.reps); return; } } } catch (e) { }
+  state.reps = LS.get('fj_reps_lista', state.reps || []);
+}
 async function actualizarLista() {
   const cont = document.getElementById('lista'); if (!cont) return;
-  try { const r = await cargarPedidos(state.fecha); state.pedidos = r.datos; pintarLista(r.cache); }
+  try { const [r] = await Promise.all([cargarPedidos(state.fecha), cargaRepartidores()]); state.pedidos = r.datos; pintarLista(r.cache); }
   catch (e) { cont.replaceChildren(h('p', { class: 'err' }, msgErr(e))); }
 }
 function pintarLista(cache) {
   const cont = document.getElementById('lista'); if (!cont) return;
   let ps = state.pedidos.slice().sort((a, b) => nombreCli(a.clientes).localeCompare(nombreCli(b.clientes), 'es'));
   if (state.filtro !== 'todos') ps = ps.filter(p => p.estado === state.filtro);
+  const reps = state.reps || []; const repDe = p => reps.find(r => r.id === p.repartidor_id) || null;
+  const hayReparto = state.pedidos.some(p => p.repartidor_id);
+  const fr = state.filtroRep || 'todos';
+  if (fr === 'sin') ps = ps.filter(p => !p.repartidor_id); else if (fr !== 'todos') ps = ps.filter(p => p.repartidor_id === fr);
+  if (fr !== 'todos' && fr !== 'sin') ps.sort((a, b) => (a.orden_reparto || 9999) - (b.orden_reparto || 9999) || nombreCli(a.clientes).localeCompare(nombreCli(b.clientes), 'es'));
   const kids = [];
+  if (reps.length && state.pedidos.length) {
+    const cuenta = id => state.pedidos.filter(p => id === 'sin' ? !p.repartidor_id : p.repartidor_id === id).length;
+    const chipR = (id, txt, col) => h('button', { class: 'chip' + (fr === id ? ' on' : ''), onclick: () => { state.filtroRep = id; pintarLista(cache); } }, col ? h('span', { style: 'display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;background:' + col }) : null, txt);
+    kids.push(h('div', { class: 'sub', style: 'margin:2px 2px 4px' }, '🚚 Quién reparte:'), h('div', { class: 'chips' }, chipR('todos', 'Todos (' + state.pedidos.length + ')'), ...reps.map(r => chipR(r.id, r.nombre.split(' ')[0] + ' (' + cuenta(r.id) + ')', r.color_reparto)), chipR('sin', 'Sin repartidor (' + cuenta('sin') + ')')));
+  }
   if (cache) kids.push(h('div', { class: 'aviso-card' }, 'Mostrando los últimos datos guardados en este móvil.'));
   if (!ps.length) kids.push(h('p', { class: 'vacio' }, 'No hay pedidos para esta fecha.'));
   for (const p of ps) {
@@ -834,7 +848,8 @@ function pintarLista(cache) {
     const pct = ls.length ? Math.round(hechas * 100 / ls.length) : 0;
     kids.push(h('div', { class: 'card tap', onclick: () => go('pedido', { id: p.id }) },
       h('div', { class: 'fila' },
-        h('div', {}, h('div', { class: 'nombre' }, nombreCli(p.clientes)), h('div', { class: 'sub' }, (p.clientes && p.clientes.codigo) || '')),
+        h('div', {}, h('div', { class: 'nombre' }, nombreCli(p.clientes)), h('div', { class: 'sub' }, (p.clientes && p.clientes.codigo) || ''),
+          (hayReparto || reps.length) ? (repDe(p) ? h('div', { class: 'sub', style: 'font-weight:700;color:#14532d' }, h('span', { style: 'display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;background:' + (repDe(p).color_reparto || '#2f7d4a') }), '🚚 Reparte ' + repDe(p).nombre.split(' ')[0] + (p.orden_reparto ? ' · nº ' + p.orden_reparto : '')) : h('div', { class: 'sub', style: 'color:#b45309' }, '🚚 Sin repartidor')) : null),
         h('div', { style: 'text-align:right' },
           h('span', { class: 'badge ' + CLASE_ESTADO[p.estado] }, ESTADO[p.estado]), ' ',
           p.clientes && p.clientes.forma_pago === 'contado' ? h('span', { class: 'badge cont' }, 'Contado') : null)),
@@ -1911,6 +1926,103 @@ function htmlHojaCompra(fecha, datos) {
   return '<div class="hoja"><h1>HOJA DE COMPRA · ' + esc(fechaES(fecha)) + '</h1><table><tr><th>Producto</th><th class="d">Pedido</th><th class="d">Sobrante</th><th class="d">A comprar</th><th>Proveedor</th><th class="d">Comprado</th></tr>' +
     t.map(g => '<tr><td><span class="caja"></span>' + esc(g.producto) + '</td><td class="d">' + esc(sumaUnidades(g.items, 'pedido')) + '</td><td class="d">' + esc(sumaUnidades(g.items, 'sobrante')) + '</td><td class="d"><b>' + esc(sumaUnidades(g.items, 'total') || '0') + '</b></td><td></td><td class="d">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>').join('') + '</table></div>';
 }
+/* ---------- Sobrante: pegar o escribir la lista de lo que sobró y guardarla de una vez. El sobrante del día D se descuenta de la hoja de compra del día D+1 ---------- */
+function vistaSobrante() {
+  state.view = 'sobrante';
+  const sumaDia = (f, n) => { const d = new Date(f + 'T12:00:00'); d.setDate(d.getDate() + n); return hoy(d); };
+  const S = { fecha: (state.params && state.params.fecha) || hoy(), lineas: [], prods: null, reps: [], rep: '', guardando: false };
+  const ta = h('textarea', { rows: 8, placeholder: 'Escribe o pega el sobrante, uno por línea:\n2 sacos de patata\nNaranja zumo 2 kilos\nUna pieza de piña\nUna caja de bananas\n5 piezas de iceberg' });
+  try { const b = LS.get('fj_borr_sobrante', null); if (b && b.texto && Date.now() - b.t < 86400000) { ta.value = b.texto; setTimeout(() => toast('Recuperado el texto que tenías escrito', 'ok'), 400); } } catch (e) { }
+  const infoBox = h('div', {}), lineasBox = h('div', {}), listaBox = h('div', {}), pie = h('div', {});
+  const fechaInp = h('input', { type: 'date', value: S.fecha, onchange: e => { S.fecha = e.target.value || hoy(); pintaInfo(); cargaLista(); } });
+  const setFecha = f => { S.fecha = f; fechaInp.value = f; pintaInfo(); cargaLista(); };
+  const hoyBtn = h('button', { class: 'ghost small', onclick: () => setFecha(hoy()) }, 'Hoy'), ayerBtn = h('button', { class: 'ghost small', onclick: () => setFecha(sumaDia(hoy(), -1)) }, 'Ayer');
+  const rsel = h('select', { onchange: () => { S.rep = rsel.value; } });
+  function pintaInfo() {
+    infoBox.replaceChildren(h('div', { class: 'aviso-card' }, h('b', {}, 'Sobrante del ' + fechaES(S.fecha)), ' → se descuenta de la ', h('b', {}, 'hoja de compra del ' + fechaES(sumaDia(S.fecha, 1))), ' (pedido − sobrante).'));
+  }
+  const indice = () => waIndice((S.prods || []).map(p => Object.assign({}, p, { alias: (Array.isArray(p.alias) ? p.alias : []).concat((LS.get('fj_wa_alias', {})[p.id]) || []) })));
+  function entender() {
+    try { LS.set('fj_borr_sobrante', { t: Date.now(), texto: ta.value }); } catch (e) { }
+    if (!S.prods) { lineasBox.replaceChildren(h('p', { class: 'sub' }, 'Cargando productos…')); return; }
+    if (!ta.value.trim()) { S.lineas = []; pintaLineas(); return; }
+    /* Se lee línea a línea («uno por línea»). «una caja de 26» es el calibre/tamaño: se guarda como nota, no como producto. */
+    const lineasT = ta.value.split(/\n+/).map(x => x.trim()).filter(x => x && !/^sobrantes?\s*:?$/i.test(x));
+    const ls = [], ign = [];
+    try {
+      lineasT.forEach(tx => {
+        let nota = ''; tx = tx.replace(/\b(caja|cajas|saco|sacos|bolsa|bolsas|bandeja|bandejas)\s+de\s+(\d+)\b(?!\s*(?:kg|kgs|kilos?|k\b|gr?\b|gramos|piezas?|unidades|uds?))/i, (m, u, n) => { nota = 'de ' + n; return u; });
+        const rs1 = waResolver(waInterpretar(tx), indice()); (rs1.ignorado || []).forEach(x => ign.push(x));
+        rs1.lineas.forEach(l => ls.push({ raw: tx, nombre: l.nombre, producto: l.producto || null, cand: (l.cand || []).map(c => c.p || c).slice(0, 8), ok: l.estado === 'ok', cantidad: l.cantidad != null ? l.cantidad : '', unidad: l.unidad || (l.producto && l.producto.unidad_venta) || 'kg', nota: [nota, l.detalle].filter(Boolean).join(' · ') }));
+      });
+    } catch (e) { lineasBox.replaceChildren(h('p', { class: 'err' }, 'No he podido leer el texto: ' + (e.message || e))); return; }
+    S.lineas = ls; const rs = { ignorado: ign };
+    S.ign = rs.ignorado || []; pintaLineas();
+  }
+  function pintaLineas() {
+    if (!S.lineas.length) { lineasBox.replaceChildren(h('p', { class: 'vacio' }, 'Pega o escribe la lista arriba y la entiendo yo.')); pintaPie(); return; }
+    lineasBox.replaceChildren(h('div', { class: 'sub', style: 'margin:6px 0' }, 'He entendido ' + S.lineas.length + ' producto(s). Revisa y guarda:'), ...S.lineas.map((l, i) => {
+      const quitar = h('button', { class: 'ghost small', 'aria-label': 'Quitar', onclick: () => { S.lineas.splice(i, 1); pintaLineas(); } }, '✕');
+      const cant = h('input', { type: 'text', inputmode: 'decimal', value: l.cantidad === '' ? '' : String(l.cantidad).replace('.', ','), placeholder: 'Cantidad', style: 'flex:1;min-width:0', oninput: () => { const v = parseNum(cant.value); l.cantidad = v === null ? '' : v; pintaPie(); } });
+      const uni = h('select', { style: 'flex:1;min-width:0', onchange: () => { l.unidad = uni.value; } }, UNIDADES.map(u => h('option', { value: u, selected: u === l.unidad }, u)));
+      let cuerpo;
+      if (l.producto && l.ok) cuerpo = h('div', { class: 'fila' }, h('div', { class: 'nombre' }, '✔ ' + l.producto.nombre + (l.producto.activo === false ? ' (inactivo)' : '')), h('button', { class: 'ghost small', onclick: () => { l.ok = false; l.producto = null; pintaLineas(); } }, 'Cambiar'));
+      else {
+        const res = h('div', { style: 'display:flex;flex-wrap:wrap;gap:6px;margin:6px 0' });
+        const eligir = p => { l.producto = p; l.ok = true; if (!UNIDADES.includes(l.unidad) || !l.cantidad) l.unidad = l.unidad || p.unidad_venta || 'kg'; pintaLineas(); };
+        const pintaCands = lista => res.replaceChildren(...lista.map(p => h('button', { class: 'chip', onpointerdown: e => e.preventDefault(), onclick: () => eligir(p) }, p.nombre + (p.activo === false ? ' (inactivo)' : ''))));
+        if (l.producto && !l.ok) { res.append(h('button', { class: 'chip on', onpointerdown: e => e.preventDefault(), onclick: () => eligir(l.producto) }, '✔ Sí, es «' + l.producto.nombre + '»')); l.cand.filter(p => p.id !== l.producto.id).forEach(p => res.append(h('button', { class: 'chip', onpointerdown: e => e.preventDefault(), onclick: () => eligir(p) }, p.nombre))); }
+        else pintaCands(l.cand);
+        const bus = h('input', { placeholder: 'Buscar producto…', value: '', oninput: debounce(() => { const t = bus.value.trim(); if (!t) { pintaCands(l.cand); return; } const r = waBuscarProducto(t, indice()); const c = (r.cand || (r.producto ? [{ p: r.producto }] : [])).map(x => x.p || x).slice(0, 10); res.replaceChildren(...(c.length ? c.map(p => h('button', { class: 'chip', onpointerdown: e => e.preventDefault(), onclick: () => eligir(p) }, p.nombre + (p.activo === false ? ' (inactivo)' : ''))) : [h('span', { class: 'sub' }, 'Sin resultados')])); }, 250) });
+        cuerpo = h('div', {}, h('div', { class: 'sub', style: 'color:#b45309;font-weight:700' }, l.producto ? '¿Es este producto?' : 'No sé qué producto es «' + (l.nombre || l.raw) + '»'), res, bus);
+      }
+      return h('div', { class: 'card', style: l.ok ? '' : 'border-color:#f59e0b;background:#fffbeb' }, h('div', { class: 'sub' }, '«' + l.raw + '»'), cuerpo, h('div', { style: 'display:flex;gap:6px;align-items:center;margin-top:6px' }, cant, uni, quitar));
+    }), ...((S.ign && S.ign.length) ? [h('div', { class: 'sub', style: 'margin-top:6px' }, 'No he usado: ' + S.ign.join(' · '))] : []));
+    pintaPie();
+  }
+  function pintaPie() {
+    const listos = S.lineas.length && S.lineas.every(l => l.producto && l.ok && Number(l.cantidad) > 0);
+    const b = h('button', { class: 'guardar', style: 'flex:1;margin:0;position:static;box-shadow:none', disabled: !listos || S.guardando, onclick: guardar }, S.guardando ? 'Guardando…' : '💾 Guardar sobrante' + (S.lineas.length ? ' (' + S.lineas.length + ')' : ''));
+    pie.replaceChildren(h('div', { class: 'barraG' }, b));
+    if (S.lineas.length && !listos) pie.append(h('div', { class: 'sub', style: 'text-align:center' }, 'Falta elegir el producto o la cantidad en alguna línea.'));
+  }
+  async function guardar() {
+    if (!navigator.onLine) { toast('Necesitas conexión para guardar el sobrante.', 'err'); return; }
+    if (!S.rep) { toast('Elige quién lo lleva (repartidor)', 'err'); return; }
+    S.guardando = true; pintaPie();
+    const filas = S.lineas.map(l => ({ fecha: S.fecha, producto_id: l.producto.id, cantidad: Number(l.cantidad), unidad: l.unidad, nota: l.nota || null, repartidor_id: S.rep }));
+    const r = await sb.from('sobrante').insert(filas); S.guardando = false;
+    if (r.error) { toast(msgErr(r.error), 'err'); pintaPie(); return; }
+    toast('Sobrante guardado ✔ · se descuenta de la compra del ' + fechaES(sumaDia(S.fecha, 1)), 'ok');
+    S.lineas = []; ta.value = ''; try { LS.set('fj_borr_sobrante', null); } catch (e) { } pintaLineas(); cargaLista();
+  }
+  async function cargaLista() {
+    listaBox.replaceChildren(h('p', { class: 'sub' }, 'Cargando…'));
+    try {
+      const r = await sb.from('sobrante').select('id,cantidad,unidad,nota,productos(nombre),perfiles(nombre)').eq('fecha', S.fecha);
+      if (r.error) throw r.error; const d = (r.data || []).slice().sort((a, b) => String((a.productos || {}).nombre).localeCompare(String((b.productos || {}).nombre), 'es'));
+      const txt = () => 'SOBRANTE ' + fechaES(S.fecha) + '\n' + d.map(s => '- ' + ((s.productos || {}).nombre || '') + ': ' + num(s.cantidad) + ' ' + uniPl(s.cantidad, s.unidad)).join('\n');
+      listaBox.replaceChildren(h('h3', {}, 'Ya anotado del ' + fechaES(S.fecha) + (d.length ? ' (' + d.length + ')' : '')),
+        ...(d.length ? d.map(s => h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'nombre' }, (s.productos || {}).nombre || 'Producto'), h('div', { class: 'sub' }, [(uno(s.perfiles) || {}).nombre, s.nota].filter(Boolean).join(' · '))), h('div', { style: 'display:flex;gap:8px;align-items:center' }, h('b', {}, num(s.cantidad) + ' ' + uniPl(s.cantidad, s.unidad)),
+          h('button', { class: 'peligro small', 'aria-label': 'Quitar', onclick: async () => { if (!await confirmar('¿Quitar este sobrante (' + ((s.productos || {}).nombre || '') + ')?')) return; const q = await sb.from('sobrante').delete().eq('id', s.id); if (q.error) { toast(msgErr(q.error), 'err'); return; } toast('Quitado', 'ok'); cargaLista(); } }, '✕')))) : [h('p', { class: 'vacio' }, 'Todavía no hay sobrante anotado ese día.')]),
+        d.length ? h('button', { class: 'ghost', style: 'width:100%', onclick: async () => { try { if (navigator.share) await navigator.share({ text: txt() }); else { await navigator.clipboard.writeText(txt()); toast('Lista copiada', 'ok'); } } catch (e) { } } }, '📋 Copiar / compartir lista') : null);
+    } catch (e) { listaBox.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+  }
+  ta.addEventListener('input', debounce(entender, 500));
+  $app.replaceChildren(shell('Sobrante', h('div', {},
+    h('label', { class: 'campo' }, 'Sobrante del día'), h('div', { style: 'display:flex;gap:6px;align-items:center' }, fechaInp, ayerBtn, hoyBtn), infoBox,
+    h('label', { class: 'campo' }, 'Lista del sobrante (escribe, pega o dicta)'), ta,
+    h('div', { style: 'display:flex;gap:6px;margin-top:6px' }, h('button', { class: 'ghost', style: 'flex:1', onclick: entender }, 'Entender la lista'), h('button', { class: 'ghost', style: 'flex:1', onclick: () => { ta.value = ''; S.lineas = []; try { LS.set('fj_borr_sobrante', null); } catch (e) { } pintaLineas(); } }, 'Borrar')),
+    h('label', { class: 'campo' }, 'Quién lo lleva', rsel), lineasBox, pie, listaBox), { volver: () => go('inicio') })); renderBanner();
+  pintaInfo(); pintaLineas(); cargaLista();
+  (async () => {
+    try { S.prods = await waProductos(); } catch (e) { lineasBox.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para cargar los productos.' : msgErr(e))); return; }
+    if (ta.value.trim()) entender();
+    try { const rp = await sb.from('perfiles').select('id,nombre,rol').eq('activo', true); S.reps = (rp.data || []).filter(x => x.rol === 'preparador' || x.rol === 'admin').sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')); } catch (e) { }
+    const yo = state.user && S.reps.find(r => r.id === state.user.id); S.rep = (yo || S.reps[0] || {}).id || '';
+    rsel.replaceChildren(...S.reps.map(r => h('option', { value: r.id, selected: r.id === S.rep }, r.nombre)));
+  })();
+}
 function vistaHojaCompra() {
   state.view = 'hojacompra'; let fecha = (state.params && state.params.fecha) || manana0(); const cont = h('div', {}); let datos = null;
   const fi = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || fecha; cargar(); } });
@@ -1918,8 +2030,9 @@ function vistaHojaCompra() {
     if (!datos) return; const t = agrupaCompra(totalesCarga(datos));
     const kids = [h('div', { class: 'aviso-card' }, 'Lo que hay que comprar para los pedidos de ' + fechaES(fecha) + ' (pedido − sobrante del día anterior). Elige otra fecha si los pedidos llegaron con días de antelación.')];
     if (!t.length) kids.push(h('p', { class: 'vacio' }, 'No hay pedidos para esta fecha.'));
-    t.forEach(g => kids.push(h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'nombre' }, g.producto), h('div', { class: 'sub' }, 'Pedido ' + sumaUnidades(g.items, 'pedido') + (sumaUnidades(g.items, 'sobrante') ? ' · Sobrante ' + sumaUnidades(g.items, 'sobrante') : ''))), h('div', { class: 'tot-num' }, sumaUnidades(g.items, 'total') || '0'))));
+    t.forEach(g => kids.push(h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'nombre' }, g.producto), h('div', { class: 'sub' }, 'Pedido ' + (sumaUnidades(g.items, 'pedido') || '0') + (sumaUnidades(g.items, 'sobrante') ? ' · Sobrante ' + sumaUnidades(g.items, 'sobrante') : ''))), h('div', { class: 'tot-num' }, sumaUnidades(g.items, 'total') || '0'))));
     if (t.length) kids.push(h('button', { style: 'width:100%;margin-top:6px', onclick: () => imprimir(htmlHojaCompra(fecha, datos)) }, 'Imprimir hoja de compra (A4)'));
+    kids.push(h('div', { class: 'aviso-card' }, datos.previoFecha ? '♻️ Ya descontado el sobrante del ' + fechaES(datos.previoFecha) + '.' : 'No hay sobrante anotado para descontar.', ' ', h('a', { href: '#', onclick: e => { e.preventDefault(); go('sobrante', { fecha: (() => { const d = new Date(fecha + 'T12:00:00'); d.setDate(d.getDate() - 1); return hoy(d); })() }); } }, 'Anotar el sobrante del día anterior ›')));
     kids.push(h('div', { style: 'display:flex;gap:8px;margin-top:8px' }, h('button', { class: 'ghost', style: 'flex:1', onclick: () => { state.fecha = fecha; go('carga'); } }, 'Hoja de carga'), h('button', { class: 'ghost', style: 'flex:1', onclick: () => go('quien', { fecha }) }, 'A quién hemos comprado')));
     cont.replaceChildren(...kids);
   }
@@ -3656,7 +3769,7 @@ function vistaMas() {
       if (navigator.onLine) sb.from('lineas_pedido').select('pedido_id,precio,pedidos(estado,archivado)').is('precio', null).limit(1500).then(r => { if (r.error) { num.textContent = ''; return; } const ids = new Set((r.data || []).filter(l => { const p = uno(l.pedidos) || {}; return p.estado !== 'anulado' && !p.archivado; }).map(l => l.pedido_id)); num.textContent = String(ids.size); num.className = 'num' + (ids.size ? '' : ' cero'); marcaPend(/Poner precios/, ids.size); }).catch(() => { num.textContent = ''; }); else num.textContent = '';
       return b; })(),
     ...g('Trabajo diario', c('✍️', 'Apuntar pedido', () => go('importar'), V),
-      c('🧺', 'Hoja de compra para hoy', () => go('hojacompra'), V), c('🛒', 'Compra para hoy', () => { if (puedeCompras()) { LS.set('fj_compras_modo', 'lista'); go('compras'); } else go('hojacompra'); }, V),
+      c('🧺', 'Hoja de compra para hoy', () => go('hojacompra'), V), c('♻️', 'Sobrante', () => go('sobrante'), V), c('🛒', 'Compra para hoy', () => { if (puedeCompras()) { LS.set('fj_compras_modo', 'lista'); go('compras'); } else go('hojacompra'); }, V),
       c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Hoja de carga', () => go('carga'), V), puedeCompras() ? c('💲', 'Precios de compra del día', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, V) : null, c('💶', 'Poner precios', () => go('preciosp'), V), c('🧑‍✈️', 'Reparto', () => go('reparto'), V)),
         ...g('Entregas y pedidos', c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a')),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
@@ -8104,7 +8217,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v();
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
 }
