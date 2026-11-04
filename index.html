@@ -70,6 +70,7 @@ nav.tabs button.on{background:var(--verde-cl);color:var(--verde-osc);border-colo
 .login{max-width:380px;margin:12vh auto 0;padding:0 18px;display:flex;flex-direction:column;gap:12px}
 .login h1{margin:0;color:var(--verde);font-size:34px}
 .login .sub{margin:0 0 6px}
+.visordoc{position:fixed;inset:0;z-index:80;background:#1f2937;display:flex;flex-direction:column}.visordoc .vcab{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#111827;color:#fff}.visordoc .vcab b{flex:1;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.visordoc .vcab button{min-height:48px;min-width:48px;font-size:18px;margin:0}.visordoc .vcuerpo{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:6px;text-align:center}.visordoc canvas,.visordoc img{max-width:none;background:#fff;margin:0 auto 8px;display:block}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:#fff;width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
 .sheet h2{margin:0;font-size:22px}
@@ -80,7 +81,8 @@ div[style*="display:flex"]:has(>button:nth-child(3)){flex-wrap:wrap}
 div[style*="display:flex"]:has(>button:nth-child(3))>button{flex:1 1 calc(50% - 8px)}
 div[style*="display:grid"]:has(>button:nth-child(3)){grid-template-columns:1fr 1fr!important}
 .sheet .acciones button{flex:1 1 calc(50% - 10px);min-height:48px}
-.sheet .guardar{min-height:68px;font-size:20px}
+.sheet .guardar{min-height:68px;font-size:20px;position:sticky;bottom:0;z-index:5;box-shadow:0 -6px 10px -4px rgba(0,0,0,.18)}
+.barraG{position:sticky;bottom:0;z-index:5;background:var(--bg,#fff);padding:8px 0;display:flex;gap:8px;box-shadow:0 -6px 10px -4px rgba(0,0,0,.15)}.barraG button{flex:1;margin:0;min-height:52px}
 label.campo{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--txt2);margin-bottom:10px}
 .res{background:#fff;border:1px solid var(--borde);border-radius:12px;margin-top:6px;overflow:hidden}
 .res button{display:block;width:100%;text-align:left;background:#fff;color:var(--txt);border-radius:0;border-bottom:1px solid var(--borde);min-height:48px;font-weight:500}
@@ -320,7 +322,7 @@ function crearSbPractica(){
     albaranes:[], carga_lineas:[], sobrante:[], mensajes:[], fichajes:[], fotos_perfil:[], cobros:[], proveedores:[{id:'v1',codigo:'FRUTASSUR',nombre:'Frutas Sur (ejemplo)',activo:true},{id:'v2',codigo:'HORTALIZAS',nombre:'Hortalizas Norte (ejemplo)',activo:true}], compras:[], tarifas_compra:[{id:'tc1',producto_id:'p1',proveedor_id:'v1',precio:0.45,fecha:'2026-10-20',origen:'golden-factura'}], lotes:[], asignaciones_lote:[], entregas:[], incidencias:[], documentos_compra:[], seq:9000, log:[]
   };
   const __j=JSON.parse(localStorage.getItem('p_stub_db')||'null'); const __saved=(__j&&__j.dia===H())?__j:null;
-  const DB = window.__DB = __saved || __init; DB.dia=H(); DB.carga_lineas=DB.carga_lineas||[]; DB.sobrante=DB.sobrante||[]; DB.mensajes=DB.mensajes||[]; DB.fichajes=DB.fichajes||[]; DB.fotos_perfil=DB.fotos_perfil||[]; DB.cobros=DB.cobros||[]; DB.proveedores=DB.proveedores||[]; DB.compras=DB.compras||[]; DB.lotes=DB.lotes||[]; DB.asignaciones_lote=DB.asignaciones_lote||[]; DB.entregas=DB.entregas||[]; DB.incidencias=DB.incidencias||[]; DB.documentos_compra=DB.documentos_compra||[]; DB.facturas_recibidas=DB.facturas_recibidas||[]; DB.facturas_clientes=DB.facturas_clientes||[]; if(!DB.golden_facturas){DB.golden_facturas=[{id:'g1',numero:'P/20.001',serie:'P',fecha:'2026-09-10',tipo:'Serie PC',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:100,descuentos:0,gastos:0,base:100,total:104,borrador:false,n_lineas:2},{id:'g2',numero:'BOR/5',serie:'BOR',fecha:'2026-09-11',tipo:'Facturas borrador',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:50,descuentos:0,gastos:0,base:50,total:52,borrador:true,n_lineas:1},{id:'g3',numero:'F1/9.001',serie:'F1',fecha:'2026-08-01',tipo:'Facturas Fernando',cliente_codigo:'TABERNA',cliente_nombre:'Taberna El Enano',bruto:30,descuentos:0,gastos:0,base:30,total:31.2,borrador:false,n_lineas:1}];DB.golden_lineas=[{id:'l1',factura_numero:'P/20.001',orden:1,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:20,precio:2,iva:4,importe:41.6},{id:'l2',factura_numero:'P/20.001',orden:2,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'01',descripcion:'Patata Agria',cantidad:100,precio:0.6,iva:4,importe:62.4},{id:'l3',factura_numero:'BOR/5',orden:1,albaran:null,producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:25,precio:2,iva:4,importe:52},{id:'l4',factura_numero:'F1/9.001',orden:1,albaran:null,producto_codigo:'21',descripcion:'Cebollas Gordas',cantidad:30,precio:1,iva:4,importe:31.2}];} DB.alias_compra=DB.alias_compra||[]; DB.albaranes_facturados=DB.albaranes_facturados||[]; DB.precios_compra_dia=DB.precios_compra_dia||[]; DB.compra_ajustes=DB.compra_ajustes||[]; DB.listas_precios=DB.listas_precios||[]; DB.listas_precios_items=DB.listas_precios_items||[]; DB.recomendaciones=DB.recomendaciones||[]; DB.prospectos=DB.prospectos||[]; DB.avisos=DB.avisos||[]; DB.pedidos_habituales=DB.pedidos_habituales||[]; DB.lineas_habituales=DB.lineas_habituales||[];
+  const DB = window.__DB = __saved || __init; DB.dia=H(); DB.carga_lineas=DB.carga_lineas||[]; DB.sobrante=DB.sobrante||[]; DB.mensajes=DB.mensajes||[]; DB.fichajes=DB.fichajes||[]; DB.fotos_perfil=DB.fotos_perfil||[]; DB.cobros=DB.cobros||[]; DB.proveedores=DB.proveedores||[]; DB.compras=DB.compras||[]; DB.lotes=DB.lotes||[]; DB.asignaciones_lote=DB.asignaciones_lote||[]; DB.entregas=DB.entregas||[]; DB.incidencias=DB.incidencias||[]; DB.documentos_compra=DB.documentos_compra||[]; DB.facturas_recibidas=DB.facturas_recibidas||[]; DB.facturas_clientes=DB.facturas_clientes||[]; if(!DB.golden_facturas){DB.golden_facturas=[{id:'g1',numero:'P/20.001',serie:'P',fecha:'2026-09-10',tipo:'Serie PC',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:100,descuentos:0,gastos:0,base:100,total:104,borrador:false,n_lineas:2},{id:'g2',numero:'BOR/5',serie:'BOR',fecha:'2026-09-11',tipo:'Facturas borrador',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:50,descuentos:0,gastos:0,base:50,total:52,borrador:true,n_lineas:1},{id:'g3',numero:'F1/9.001',serie:'F1',fecha:'2026-08-01',tipo:'Facturas Fernando',cliente_codigo:'TABERNA',cliente_nombre:'Taberna El Enano',bruto:30,descuentos:0,gastos:0,base:30,total:31.2,borrador:false,n_lineas:1}];DB.golden_lineas=[{id:'l1',factura_numero:'P/20.001',orden:1,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:20,precio:2,iva:4,importe:41.6},{id:'l2',factura_numero:'P/20.001',orden:2,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'01',descripcion:'Patata Agria',cantidad:100,precio:0.6,iva:4,importe:62.4},{id:'l3',factura_numero:'BOR/5',orden:1,albaran:null,producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:25,precio:2,iva:4,importe:52},{id:'l4',factura_numero:'F1/9.001',orden:1,albaran:null,producto_codigo:'21',descripcion:'Cebollas Gordas',cantidad:30,precio:1,iva:4,importe:31.2}];} DB.alias_compra=DB.alias_compra||[]; DB.albaranes_facturados=DB.albaranes_facturados||[]; DB.precios_compra_dia=DB.precios_compra_dia||[]; DB.lineas_factura_leida=DB.lineas_factura_leida||[]; DB.compra_ajustes=DB.compra_ajustes||[]; DB.listas_precios=DB.listas_precios||[]; DB.listas_precios_items=DB.listas_precios_items||[]; DB.recomendaciones=DB.recomendaciones||[]; DB.prospectos=DB.prospectos||[]; DB.avisos=DB.avisos||[]; DB.pedidos_habituales=DB.pedidos_habituales||[]; DB.lineas_habituales=DB.lineas_habituales||[];
   const gv=(r,k)=>{if(k.includes('->>')){const [a,b]=k.split('->>');return r[a]?r[a][b]:undefined;}return r[k];};
   DB.historial=DB.historial||[];
   const AUD=['lineas_pedido','pedidos','albaranes','asignaciones_lote','cobros','productos','clientes'];
@@ -422,6 +424,7 @@ function crearSbPractica(){
       ls.filter(l=>['hecha','parcial'].includes(l.estado)&&kn(l)>0).forEach(l=>{const s=asig.filter(x=>x.linea_id===l.id).reduce((t,x)=>t+x.cantidad,0);if(!s)throw new Error('FALTA_TRAZABILIDAD');if(Math.abs(s-kn(l))>0.001)throw new Error('KILOS_NO_COINCIDEN');});
       const por={};asig.forEach(x=>{const l=ls.find(y=>y.id===x.linea_id);if(l.unidad_precio==='kg')por[x.lote_id]=(por[x.lote_id]||0)+x.cantidad;});
       Object.keys(por).forEach(id=>{const lo=DB.lotes.find(y=>y.id===id);if(lo.unidad!=='kg')return;const otros=DB.asignaciones_lote.filter(a=>a.lote_id===id&&!ls.some(l=>l.id===a.linea_id)).reduce((t,a)=>t+a.cantidad,0);if(por[id]>lo.cantidad_recibida+0.001-otros)throw new Error('LOTE_SIN_KILOS');});},
+    guardar_lineas_factura(a){DB.lineas_factura_leida=DB.lineas_factura_leida.filter(x=>x.factura_id!==a.p_factura);(a.p_lineas||[]).forEach(l=>DB.lineas_factura_leida.push(Object.assign({id:'lf'+Math.random(),factura_id:a.p_factura,proveedor_id:a.p_proveedor,fecha:a.p_fecha},l)));return (a.p_lineas||[]).length;},
     guardar_precio_compra_dia(a){DB.precios_compra_dia=DB.precios_compra_dia.filter(x=>!(x.fecha===a.p_fecha&&x.producto_id===a.p_producto&&x.unidad===a.p_unidad));if(a.p_precio!=null)DB.precios_compra_dia.push({id:'pc'+Math.random(),fecha:a.p_fecha,producto_id:a.p_producto,unidad:a.p_unidad,precio:a.p_precio,nota:a.p_nota});return null;},
     marcar_albaranes_facturados(a){if(!a.p_numero||!String(a.p_numero).trim())throw new Error('NUMERO_FACTURA_VACIO');(a.p_pedidos||[]).forEach(id=>{DB.albaranes_facturados=DB.albaranes_facturados.filter(x=>x.pedido_id!==id);DB.albaranes_facturados.push({pedido_id:id,numero_factura:a.p_numero,fecha_factura:a.p_fecha});});return a.p_pedidos.length;},
     desmarcar_albaranes_facturados(a){DB.albaranes_facturados=DB.albaranes_facturados.filter(x=>!(a.p_pedidos||[]).includes(x.pedido_id));return a.p_pedidos.length;},
@@ -697,6 +700,8 @@ function go(view, params, opts) {
 }
 function atras(fallback) { if (NAV.d > 0) history.back(); else if (fallback) fallback(); else go('inicio', {}, { replace: true }); }
 window.addEventListener('popstate', e => {
+  const vd = document.querySelector('.visordoc');   // el visor de facturas va por encima: «atrás» solo lo cierra a él
+  if (vd) { vd.remove(); try { history.pushState(navSnap(NAV.d), ''); } catch (x) { } return; }
   const ov = document.querySelector('.overlay');
   if (ov) { ov.remove(); state.sheetAbierta = false; try { history.pushState(navSnap(NAV.d), ''); } catch (x) { } return; }
   const s = e.state; if (!s || !s.v) { NAV.d = 0; state.view = 'inicio'; state.params = {}; } else { NAV.d = s.d || 0; state.view = s.v; state.params = s.p || {}; }
@@ -989,10 +994,10 @@ async function abrirPrecios(pedidoId, alGuardar) {
     x.inp = inp; x.pinta = pintaImp;
     cuerpo.append(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, (x.l.productos || {}).nombre || '—'), h('div', { class: 'sub' }, cantTxt(x.l))),
       h('select', { onchange: e => { x.up = e.target.value; cc.act(); pintaImp(); } }, ['kg', 'unidad'].map(u => h('option', { value: u, selected: u === x.up }, 'por ' + (u === 'kg' ? 'kg' : x.l.unidad_pedida))))),
-      h('div', { style: 'display:flex;gap:8px;align-items:center;margin-top:6px' }, h('div', { style: 'flex:1' }, inp), tarifas[x.l.producto_id] != null && !x.precio ? h('button', { class: 'ghost small', onclick: () => { x.precio = String(tarifas[x.l.producto_id]).replace('.', ','); inp.value = x.precio; cc.act(); pintaImp(); } }, 'Usar ' + eur(tarifas[x.l.producto_id])) : null), imp, cc, sinInterna ? null : cajaInterna(x, pintaImp)));
+      h('div', { style: 'display:flex;gap:8px;align-items:center;margin-top:6px' }, h('div', { style: 'flex:1' }, inp), tarifas[x.l.producto_id] != null && !x.precio ? h('button', { class: 'ghost small', onpointerdown: e => e.preventDefault(), onclick: () => { x.precio = String(tarifas[x.l.producto_id]).replace('.', ','); inp.value = x.precio; cc.act(); pintaImp(); toast('Precio puesto: ' + x.precio + ' €', 'ok'); } }, 'Usar ' + eur(tarifas[x.l.producto_id])) : null), imp, cc, sinInterna ? null : cajaInterna(x, pintaImp)));
     pintaImp();
   });
-  async function guardar(btn) {
+  async function guardar(btn, seguir) {
     const cambios = []; let cambiaExistente = false;
     for (const x of R) {
       const nuevo = String(x.precio).trim() === '' ? null : parseNum(x.precio);
@@ -1014,12 +1019,18 @@ async function abrirPrecios(pedidoId, alGuardar) {
       if (r.error) { btn.disabled = false; toast(msgErr(r.error), 'err'); return; } }
     if (info.length) { const r2 = await sb.rpc('poner_info_interna', { p_pedido: ped.id, p_lineas: info });
       if (r2.error) { btn.disabled = false; toast(/poner_info_interna|schema cache|does not exist/i.test(r2.error.message || '') ? 'Falta ejecutar en Supabase la Parte 46 (información interna).' : msgErr(r2.error), 'err'); return; } }
+    if (seguir) {   // «Guardar y seguir»: se guarda y la hoja sigue abierta con lo ya guardado como punto de partida
+      R.forEach(x => { x.l.precio = String(x.precio).trim() === '' ? null : parseNum(x.precio); x.l.unidad_precio = x.up; if (!sinInterna) { x.l.precio_lista = String(x.lista).trim() === '' ? null : parseNum(x.lista); x.l.nota_interna = x.nota.trim() || null; } });
+      btn.disabled = false; btnG.disabled = false; btnGS.disabled = false; toast('Guardado ✔ (puedes seguir)', 'ok'); if (alGuardar) alGuardar(); return;
+    }
     cerrar(); toast('Precios guardados', 'ok'); if (alGuardar) alGuardar();
   }
   const btnLlenar = h('button', { class: 'ghost', style: 'width:100%;margin:6px 0', onclick: () => { R.forEach(x => { if (!x.precio && tarifas[x.l.producto_id] != null) { x.precio = String(tarifas[x.l.producto_id]).replace('.', ','); x.inp.value = x.precio; } x.pinta(); }); } }, 'Rellenar los que faltan con las tarifas del cliente');
-  const btnG = h('button', { class: 'guardar', style: 'width:100%;margin:8px 0', onclick: () => guardar(btnG) }, 'Guardar precios');
+  const btnG = h('button', { class: 'guardar', style: 'flex:1;margin:0', onclick: () => guardar(btnG) }, 'Guardar y cerrar');
+  const btnGS = h('button', { class: 'guardar', style: 'flex:1;margin:0;background:#166534;color:#fff', onclick: () => guardar(btnGS, true) }, '💾 Guardar y seguir');
+  const barraG = h('div', { class: 'barraG' }, btnGS, btnG);
   cerrar = hoja('💶 Precios · ' + nombreCli(uno(ped.clientes) || {}), h('div', {}, h('p', { class: 'sub' }, fechaES(ped.fecha_entrega) + ' · ' + (ped.estado === 'terminado' ? 'albarán cerrado' : 'albarán sin cerrar') + '. Puedes poner los precios ahora o más tarde: cerrar el albarán no depende de ellos.'),
-    Object.keys(tarifas).length ? btnLlenar : null, cuerpo, totalBox, vivoDet, btnG));
+    Object.keys(tarifas).length ? btnLlenar : null, cuerpo, totalBox, vivoDet, barraG));
 }
 async function vistaPreciosPend() {
   state.view = 'preciosp';
@@ -2162,7 +2173,7 @@ async function sinArchivadosRapido(filas) {
 }
 const _cacheAsis = {};
 async function conCache(clave, f, seg) { const c = _cacheAsis[clave]; if (c && Date.now() - c.t < (seg || 60) * 1000) return c.v; const v = await f(); _cacheAsis[clave] = { t: Date.now(), v }; return v; }
-const CONS_PARAR = new Set('tengas tienes tenga tengais tendras tendrias digas dices sepas sabes puedas podrias podria pueda pongas ponme ultimo ultima ultimos ultimas actual vigente reciente mas ahora mismo exacto exactamente tipo dime dame damelas damelos muestrame muestra ensename quiero quisiera ver saber necesito busca buscame mira mirame de del la las el los al a que cuales cual cuantas cuantos cuanto son hay tiene tienen tengo me mis mi por favor cliente clientes para con un una unos unas todas todos en y se le les lo he ha es esta estan hoy manana ayer semana mes ultima ultimas ultimo ultimos lista listado numero nº sus su ese esa esos esas pendientes pendiente quien quienes debo debes dinero euros cuenta total todo alguien algun alguno nadie ahora actualmente'.split(' '));
+const CONS_PARAR = new Set('tengas tienes tenga tengais tendras tendrias digas dices sepas sabes puedas podrias podria pueda pongas ponme ultimo ultima ultimos ultimas actual vigente reciente mas ahora mismo exacto exactamente tipo dime dame damelas damelos muestrame muestra ensename quiero quisiera ver saber necesito busca buscame mira mirame de del la las el los al a que cuales cual cuantas cuantos cuanto son hay tiene tienen tengo me mis mi por favor cliente clientes para con un una unos unas todas todos en y se le les lo he ha es esta estan hoy manana ayer semana mes ultima ultimas ultimo ultimos lista listado numero nº sus su ese esa esos esas pendientes pendiente quien quienes debo debes dinero euros cuenta total todo alguien algun alguno nadie ahora actualmente sin no pagar pagado pagan pagas pagado cobro cobros normalmente nos costado este esta vez suelo solemos'.split(' '));
 /* Contexto de la conversación: el último cliente y el último tipo de consulta (para «¿y sus albaranes?») */
 const ctxAsis = { cli: null, tipo: null, fecha: null };
 function lev(a, b) { if (a === b) return 0; const m = a.length, n = b.length; if (Math.abs(m - n) > 2) return 9; const d = []; for (let i = 0; i <= m; i++) { d[i] = [i]; } for (let j = 0; j <= n; j++) d[0][j] = j; for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) { d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1); } return d[m][n]; }
@@ -2188,28 +2199,33 @@ function detectaConsulta(q) {
   }
   /* Empezar un pedido dictado: «apunta un pedido para Florencio, 10 kilos de tomate» */
   if (/\b(apunta|apuntame|anota|anotame|pon|ponme|haz|hazme|crea|creame|mete|metele|prepara)\b/.test(t) && /\bpedido\b/.test(t) && !/\b(como|donde)\b/.test(t) && (/\d/.test(t) || /\b(uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|doce|medio|media)\b/.test(t) || /\bpara\b/.test(t) && /\b(kilo|kilos|kg|caja|cajas|saco|sacos|docena|docenas|bandeja|bandejas|manojo|manojos|bolsa|bolsas)\b/.test(t))) return { tipo: 'pedir', q };
-  if (/\b(como|donde|cuando|porque|puedo|puede|deja|funciona|falla|error|no me|no tengo|no ha llegado|no llega|sin factura|no sale|no veo|no puedo|paso|pasos|ayuda|explica|que es|para que|hago|hacer|imprim\w*|cambiar|activar|configur\w*|apunt\w*|anot\w*|crear|nuevo|nueva|meter|anadir|borrar|eliminar|equivoq\w*|olvid\w*)\b/.test(t)) return null;
+  if (/\b(como vamos|como va el dia|como llevamos|como llevo el dia|que tal vamos)\b/.test(t)) return { tipo: 'resumen', nombre: '', fecha: null, q };
+  if (/\bcuando fue la ultima vez que\b/.test(t)) t = t.replace(/cuando fue la ultima vez que/, 'ultima compra de');
+  if (/\b(como|donde|cuando|porque|puedo|puede|deja|funciona|falla|error|no me|no tengo|no ha llegado|no llega|sin factura|no sale|no veo|no puedo|paso|pasos|ayuda|explica|que es|para que|hago|hacer|imprim\w*|cambiar|activar|configur\w*|apunt\w*|anot\w*|crear|nuevo|nueva|meter|anadir|borrar|eliminar|equivoq\w*|olvid\w*)\b/.test(t) && !/\ba como\b|\bcomo (ha|han) (evolucionado|subido|bajado|estado|variado)\b/.test(t)) return null;
   const seg = /^(y|tambien|ademas)\b/.test(t) || /\b(sus|su|ese|esa|el mismo|ella|el)\b/.test(t);
   if (/\b(sin precio|sin precios|faltan? (los |el |por poner )?precios?|precios? pendientes?|pendientes? de precios?|por poner (el )?precio)\b/.test(t)) return { tipo: 'sinprecio', nombre: '', fecha: null, q };
   if (/\b(quejas?|se queja\w*|reclam\w*|incidencias? abiertas?|clientes? con (fallos|problemas))\b/.test(t)) return { tipo: 'quejas', nombre: '', fecha: null, q };
   if (/\b(prospectos?|a quien (tengo que |debo |hay que )?llamar|a quien llamo|contactos? pendientes?)\b/.test(t)) return { tipo: 'llamar', nombre: '', fecha: null, q };
   let tipo = null;
   if (/\b(resumen|como va el dia|que tal el dia|como vamos|balance del dia|que hay hoy)\b/.test(t)) tipo = 'resumen';
+  else if (/\b(ultim\w*|reciente\w*|actual\w*|vigente)\b/.test(t) && /\bprecios?\b/.test(t) && /\b(compr\w*|coste\w*|costo\w*)\b/.test(t)) tipo = 'ultimoprecio';
   else if ((/\b(ultim\w*|registros?|historial|movimientos)\b/.test(t) && /\b(compr\w*|vend\w*|ventas?|registros?|historial)\b/.test(t)) || /\ba cuanto (hemos |se |he |les |lo |la )?(compr|vend)\w*/.test(t)) tipo = 'historial';
   else if (/\bprecios? (de )?compras?\b|\b(coste|costes|costo|costos)\b|\bprecios? (de )?(lo |los |las )?(que )?(he|hemos|se ha|han|ha|nos ha) compr\w*|\bcuanto (ha|han|hemos|he|nos ha|nos han) costado\b|\ba cuanto (hemos |he |se ha |han )?compr\w*/.test(t)) tipo = 'preciocompra';
-  else if (/\b(precio|precios|cuesta|cuestan|vale|valen|a cuanto|tarifa)\b/.test(t)) tipo = 'precio';
-  else if (/\bque (le )?(compra|vendo|lleva|pide|suele llevar|suele comprar)\b|\bproductos de\b|\blo habitual de\b/.test(t)) tipo = 'compra';
-  else if (/\b(debe|deben|deuda|deudas|deudor|deudores|moroso|morosos|impagad\w*|por cobrar|cobrar|saldo|saldos)\b/.test(t)) tipo = 'deuda';
+  else if (/\b(evolucion\w*|ha subido|ha bajado|han subido|han bajado|subido|bajado)\b/.test(t) && /\bprecios?\b/.test(t)) tipo = 'historial';
+  else if (/\b(precio|precios|cuesta|cuestan|vale|valen|a cuanto|a como|tarifa)\b/.test(t)) tipo = 'precio';
+  else if (/\bque (le )?(compra|vendo|lleva|pide|suele llevar|suele comprar|suelo vender|solemos vender|suelo llevar)\b|\bproductos de\b|\blo habitual de\b/.test(t)) tipo = 'compra';
+  else if (/\b(debe|deben|deuda|deudas|deudor|deudores|moroso|morosos|impagad\w*|por cobrar|cobrar|cobro|cobros|sin pagar|pagado|pagar|pendiente de cobro|pendientes de cobro|saldo|saldos)\b/.test(t)) tipo = 'deuda';
   else if (/factur/.test(t) || /\b(vendido|vendi|ventas|ha comprado|ha facturado)\b/.test(t)) tipo = 'factura';
   else if (/albaran/.test(t)) tipo = 'albaran';
   else if (/pedido/.test(t)) tipo = 'pedido';
   if (!tipo && ctxAsis.tipo && /^(y )?(de |del |para |en )?(hoy|ayer|manana)\b/.test(t)) tipo = ctxAsis.tipo;
   if (!tipo) return null;
   const parar = CONS_PARAR;
-  const nombre = t.split(/\s+/).filter(w => w && !parar.has(w) && !/^(factur|albaran|pedid|deb[ea]|deud|moros|cobr|impag|saldo|vend|compr|venta|resum|precio|cuest|cuanto|valen|vale$|tarifa|habitual|producto|lleva|pide|suele|llev|ultim|registr|histori|movimient|tanto|como$|veces|sido|hemos|se$|han$|sale|salio)/.test(w)).join(' ');
+  const nombre = t.split(/\s+/).filter(w => w && !parar.has(w) && !/^(factur|albaran|pedid|deb[ea]|deud|moros|cobr|impag|saldo|vend|compr|venta|resum|precio|cuest|cuanto|valen|vale$|tarifa|habitual|producto|lleva|pide|suele|llev|ultim|evoluc|subid|bajad|registr|histori|movimient|tanto|como$|veces|sido|hemos|se$|han$|sale|salio)/.test(w)).join(' ');
   const fecha = /\bhoy\b/.test(t) ? hoy() : /\bmanana\b/.test(t) ? hoy(new Date(Date.now() + 86400000)) : /\bayer\b/.test(t) ? hoy(new Date(Date.now() - 86400000)) : null;
   const d = { tipo, nombre, fecha, q };
-  if (tipo === 'precio' || tipo === 'historial' || tipo === 'preciocompra') return d;
+  if (tipo === 'preciocompra' && nombre && !fecha) d.tipo = 'ultimoprecio';   // «cuánto nos ha costado el tomate»: el último precio, no el de hoy
+  if (tipo === 'precio' || tipo === 'historial' || tipo === 'preciocompra' || tipo === 'ultimoprecio') return d;
   if (tipo === 'resumen') return d;
   if (!nombre && ctxAsis.cli && (seg || fecha || tipo === 'compra' || (tipo === 'deuda' && /\bdebe\b/.test(t) && !/\b(quien|quienes|me debe|nos debe)\b/.test(t)))) d.cli = ctxAsis.cli;
   if ((tipo === 'albaran' || tipo === 'pedido') && !nombre && !fecha && !d.cli) return null;
@@ -2226,11 +2242,18 @@ function tarjetaConsulta(titulo, resumen, filas, ir) {
 const filaCons = (izq, sub, der, onclick) => h('div', { class: 'card' + (onclick ? ' tap' : ''), style: 'margin:6px 0;' + (onclick ? 'cursor:pointer;border-left:4px solid #166534' : ''), onclick }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:16px' }, izq), sub ? h('div', { class: 'sub' }, sub) : null), der != null || onclick ? h('b', { style: 'white-space:nowrap' }, (der != null ? der : '') + (onclick ? '  ›' : '')) : null));
 function buscarProdAsis(prods, texto) {
   const t = sinTilde(limpiaBusqueda(texto)); if (!t) return [];
-  const sing = w => w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w;
+  const sing = w => { w = (typeof FC_ABR !== 'undefined' && FC_ABR[w]) || w; return w.length > 4 && w.endsWith('es') ? w.slice(0, -2) : w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w; };
   const nm = p => sinTilde([p.nombre].concat(Array.isArray(p.alias) ? p.alias : []).join(' '));
   const act = (a, b) => (b.activo ? 1 : 0) - (a.activo ? 1 : 0);
-  const ex = prods.filter(p => t.split(/\s+/).every(w => nm(p).includes(sing(w)))).sort(act);
+  const SOBRA = new Set('extra primera segunda calidad categoria fresco fresca frescos frescas buen buena bueno nacional importacion de del la el los las un una kilo kilos kg caja cajas saco sacos'.split(' '));
+  const ws0 = t.split(/\s+/).filter(Boolean);
+  const ex = prods.filter(p => ws0.every(w => nm(p).includes(sing(w)))).sort(act);
   if (ex.length) return ex.slice(0, 6);
+  /* Sin palabras de relleno («pimiento verde extra» → «pimiento verde»; «tomates» → «tomate») */
+  const ws1 = ws0.filter(w => !SOBRA.has(w));
+  if (ws1.length && ws1.length < ws0.length) { const ex1 = prods.filter(p => ws1.every(w => nm(p).includes(sing(w)))).sort(act); if (ex1.length) return ex1.slice(0, 6); }
+  /* Sin la última palabra (color o variedad que no tenemos): se ofrecen los de la primera palabra */
+  if (ws1.length > 1) { const ex2 = prods.filter(p => nm(p).includes(sing(ws1[0]))).sort(act); if (ex2.length && ex2.length <= 12) return ex2.slice(0, 8); }
   let dif = [];
   try {
     const idx = waIndice(prods.map(p => ({ id: p.id, codigo: p.codigo, activo: p.activo, _c: p, nombre: p.nombre, alias: Array.isArray(p.alias) ? p.alias : [] })));
@@ -2336,6 +2359,21 @@ async function consultarDatos(d, elegir) {
     if (esOficina()) nodos.push(tarjetaConsulta((varios ? palabra.charAt(0).toUpperCase() + palabra.slice(1) : p.nombre) + ' · ventas', resV + ' (pedidos de la app y facturas de Golden 2026)', filasV, null));
     if (varios) nodos.push(h('div', { class: 'sub' }, 'He mirado todos los productos con ese nombre: ' + lista.map(x => x.nombre).join(', ') + '.'));
     return { nodos, voz: voz.join(' ') };
+  }
+  if (d.tipo === 'ultimoprecio') {
+    if (!puedeCompras()) return sinPermiso('Los precios de compra los ve quien compra y la oficina.');
+    let prods; try { prods = await productosAsis(); } catch (e) { return { nodos: [h('p', { class: 'err' }, isNetErr(e) ? 'Necesito conexión.' : msgErr(e))], voz: '' }; }
+    const toks = d.nombre.split(/\s+/).filter(w => w && !/^(nos|costado|costo|costos|coste|costes|han|ha|hemos|he)$/.test(w)); let ps = [];
+    for (let i = toks.length; i >= 1 && !ps.length; i--) ps = buscarProdAsis(prods, toks.slice(0, i).join(' '));
+    if (!ps.length) return { nodos: [h('div', { class: 'aviso-card' }, 'No encuentro ese producto («' + d.nombre + '»). Prueba con el nombre como sale en la app.')], voz: 'No encuentro ese producto.' };
+    let sinP54 = false; const voz = [];
+    for (const p of ps.slice(0, 4)) {
+      const r = await ultimosPreciosCompra(p, 6); sinP54 = sinP54 || r.sinP54; const a = r.lista[0];
+      nodos.push(tarjetaConsulta(p.nombre + ' · últimos precios de compra', a ? 'El más nuevo: ' + eur(a.precio) + ' €/' + a.unidad + ' · ' + fechaES(a.fecha) + (a.prov ? ' · ' + a.prov : '') : 'Todavía no hay ningún precio de compra de este producto.', filasUltimos(r.lista), null));
+      if (a) voz.push(p.nombre + ': ' + eur(a.precio) + ' euros el ' + a.unidad + (a.prov ? ', de ' + a.prov : ''));
+    }
+    nodos.push(sinP54 ? h('div', { class: 'aviso-card' }, 'Falta ejecutar la Parte 54 en Supabase para que la app guarde los precios de todas las facturas leídas, también las que no reconoce.') : botonLeerRecientes());
+    return { nodos, voz: voz.length ? voz.slice(0, 2).join('. ') : 'No hay precios de compra de ese producto.' };
   }
   if (d.tipo === 'preciocompra') {
     if (!puedeCompras()) return sinPermiso('Los precios de compra los ve quien compra y la oficina.');
@@ -3945,6 +3983,18 @@ function vistaCompras() {
       st.doc = String(pc.f.nombre || '').replace(/\.[A-Za-z0-9]{2,4}$/, '').slice(0, 60);
       st.recordar = !pc.f.proveedor_id && !!pc.f.remitente;
     }
+    const claveBorr = () => 'fj_borr_compra_' + (st.rec ? st.rec.id : 'manual');
+    let borrInfo = null;
+    try {
+      const bo = LS.get(claveBorr(), null);
+      if (bo && Array.isArray(bo.lineas) && (bo.lineas.length || (bo.pend || []).length) && Date.now() - (bo.t || 0) < 14 * 86400000) {
+        if (bo.prov && provs.some(p => p.id === bo.prov)) st.prov = bo.prov;
+        if (bo.fecha) st.fecha = bo.fecha; if (bo.doc) st.doc = bo.doc; st.fechaLeida = bo.fechaLeida || '';
+        st.lineas = bo.lineas.filter(l => l && l.producto && l.producto.id).map(l => Object.assign({}, l, { cambiando: false }));
+        st.pend = (bo.pend || []).filter(q => q && q.x); st.leida = !!bo.leida; borrInfo = bo.t;
+      }
+    } catch (e) { st.lineas = []; st.pend = []; }
+    const borrBox = h('div', {});
     const tcClave = l => st.prov + '|' + l.producto.id;
     async function cargarTarifa(l) { const k = tcClave(l); if (k in st.tc) return; st.tc[k] = null; try { const r = await sb.from('tarifas_compra').select('precio,fecha').eq('producto_id', l.producto.id).eq('proveedor_id', st.prov).maybeSingle(); if (!r.error && r.data) { st.tc[k] = r.data; pintarLineas(); } } catch (e) { } }
     const tarifaTexto = l => { const t = st.tc[tcClave(l)]; return t ? 'Último precio con este proveedor: ' + eur(t.precio) + (t.fecha ? ' (' + fechaES(t.fecha) + ')' : '') : null; };
@@ -3961,14 +4011,14 @@ function vistaCompras() {
     const codigoLote = pr => hoy().slice(2).replace(/-/g, '') + '-' + pr.codigo;
     function pintarLineas() {
       lineasBox.replaceChildren(...st.lineas.map((l, i) => h('div', { class: 'card' },
-        h('div', { class: 'fila' }, h('div', { class: 'nombre' }, l.producto.nombre), h('button', { class: 'peligro small', onclick: () => { st.lineas.splice(i, 1); pintarLineas(); } }, 'Quitar')),
+        h('div', { class: 'fila' }, h('div', { class: 'nombre' }, l.producto.nombre), h('div', { style: 'display:flex;gap:6px;flex-shrink:0' }, l.fact ? null : guardaBtn(), h('button', { class: 'peligro small', onclick: () => { st.lineas.splice(i, 1); pintarLineas(); } }, 'Quitar'))),
         infoFact(l),
         h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px' },
           h('label', { class: 'campo' }, 'Cantidad recibida', h('input', { type: 'text', inputmode: 'decimal', value: l.cantidad, oninput: e => l.cantidad = e.target.value })),
           h('label', { class: 'campo' }, 'Unidad', h('select', { onchange: e => l.unidad = e.target.value }, UNIDADES.map(u => h('option', { value: u, selected: u === l.unidad }, u)))),
           h('label', { class: 'campo' }, 'Origen', h('input', { value: l.origen, placeholder: 'Ej. Almería', oninput: e => l.origen = e.target.value })),
           h('label', { class: 'campo' }, 'Código de lote', h('input', { value: l.lote, oninput: e => l.lote = e.target.value })),
-          h('label', { class: 'campo' }, 'Precio de compra € por ' + l.unidad, h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Opcional', value: l.precio || '', oninput: e => l.precio = e.target.value }), tarifaTexto(l) ? h('div', { class: 'sub', style: 'margin-top:4px' }, tarifaTexto(l), ' ', h('button', { type: 'button', class: 'ghost small', onclick: () => { l.precio = String(st.tc[tcClave(l)].precio).replace('.', ','); pintarLineas(); } }, 'Usar')) : null)))));
+          h('label', { class: 'campo' }, 'Precio de compra € por ' + l.unidad, h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Opcional', value: l.precio || '', oninput: e => l.precio = e.target.value }), tarifaTexto(l) ? h('div', { class: 'sub', style: 'margin-top:4px' }, tarifaTexto(l), ' ', h('button', { type: 'button', class: 'ghost small', onpointerdown: e => e.preventDefault(), onclick: () => { const t0 = st.tc[tcClave(l)]; if (!t0) return; l.precio = String(t0.precio).replace('.', ','); pintarLineas(); toast('Precio puesto: ' + l.precio + ' €', 'ok'); } }, 'Usar')) : null)))));
     }
     function buscadorProd() {
       const res = h('div', {});
@@ -3979,6 +4029,24 @@ function vistaCompras() {
       }, 250) });
       prodBox.replaceChildren(inp, res);
     }
+    function guardaBtn() { return h('button', { type: 'button', class: 'small', style: 'background:#16a34a;flex-shrink:0', onclick: e => guardarBorrador(e.currentTarget) }, '💾 Guardar'); }
+    async function guardarBorrador(b) {
+      if (!st.lineas.length && !st.pend.length) { toast('Todavía no hay nada que guardar', 'err'); return; }
+      if (b) b.disabled = true;
+      let nAl = 0, falloAl = false;
+      if (st.prov) {
+        try {
+          const alr = st.lineas.filter(l => l.fact && !l.dudoso).map(l => ({ proveedor_id: st.prov, texto: l.fact.norm, producto_id: l.producto.id, actualizado: new Date().toISOString() }));
+          if (alr.length) { const r = await sb.from('alias_compra').upsert(alr, { onConflict: 'proveedor_id,texto' }); if (r && r.error) falloAl = true; else nAl = alr.length; }
+        } catch (e) { falloAl = true; }
+      }
+      LS.set(claveBorr(), { t: Date.now(), prov: st.prov, fecha: st.fecha, doc: st.doc, leida: st.leida, fechaLeida: st.fechaLeida,
+        lineas: st.lineas.map(l => ({ producto: l.producto, cantidad: l.cantidad, unidad: l.unidad, origen: l.origen, lote: l.lote, precio: l.precio, fact: l.fact || null, dudoso: !!l.dudoso })), pend: st.pend });
+      if (b) b.disabled = false;
+      toast('Guardado. Sigues en esta pantalla' + (nAl ? ' y la app recordará ' + nAl + ' producto(s) de este proveedor' : '') + (falloAl ? ' (sin conexión: los productos reconocidos se enviarán al registrar la compra)' : '') + '. La compra se registra con «Guardar compra».', falloAl ? 'warn' : 'ok');
+    }
+    window.__ctrlS = () => { if (!document.body.contains(caja)) return false; guardarBorrador(); return true; };
+    if (!window.__ctrlSOn) { window.__ctrlSOn = 1; document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 's' && window.__ctrlS && window.__ctrlS()) e.preventDefault(); }); }
     async function guardar(btn) {
       if (!st.prov) { toast('Elige un proveedor', 'err'); return; }
       if (!st.lineas.length) { toast('Añade al menos un producto', 'err'); return; }
@@ -4007,6 +4075,7 @@ function vistaCompras() {
         } catch (e) { fallos++; }
       }
       for (const fi of st.docs) { try { await subirDoc(fi, { fecha: st.fecha || hoy(), prov: st.prov, tipo: 'factura', importe: null, nota: null, compra: c.data.id }); } catch (e) { fallos++; } }
+      LS.set(claveBorr(), null);
       toast('Compra registrada con ' + filas.length + ' lote(s)' + (st.recOk ? ' y la factura de correo enlazada' : '') + (st.docs.length ? (fallos ? '. Algún archivo NO se subió: adjúntalo desde «Sin factura».' : ' y ' + st.docs.length + ' archivo(s) adjunto(s)') : '') + (tcOmitidos ? '. ' + tcOmitidos + ' precio(s) de compra sin cambiar: ya había uno de una factura más reciente' : ''), fallos ? 'err' : 'ok'); modo = 'lotes'; LS.set('fj_compras_modo', modo); pintarChips(); pintar(); try { contarBandeja(); } catch (e) { }
     }
     const pintarDocs = () => {
@@ -4014,8 +4083,8 @@ function vistaCompras() {
       const f2 = h('input', { type: 'file', accept: 'image/*,application/pdf', multiple: true, style: 'display:none', onchange: e => { st.docs.push(...Array.from(e.target.files || [])); pintarDocs(); } });
       docBox.replaceChildren(h('label', { class: 'campo' }, 'Factura o albarán del proveedor (foto o PDF)'),
         h('div', { class: 'fila', style: 'gap:6px;margin-bottom:6px' }, h('button', { class: 'ghost small', onclick: () => f1.click() }, '📷 Hacer foto'), h('button', { class: 'ghost small', onclick: () => f2.click() }, '📎 Elegir archivo')), f1, f2,
-        ...(st.rec ? [h('div', { class: 'card fila' }, h('div', { class: 'sub' }, '📥 ' + (st.rec.nombre || 'Factura recibida') + ' (de Facturas de proveedores)'), h('button', { class: 'ghost small', onclick: () => { st.rec = null; pintarDocs(); } }, 'Quitar'))] : []),
-        ...st.docs.map((f, i) => h('div', { class: 'card fila' }, h('div', { class: 'sub' }, '📎 ' + f.name), h('button', { class: 'ghost small', onclick: () => { st.docs.splice(i, 1); pintarDocs(); } }, 'Quitar'))),
+        ...(st.rec ? [h('div', { class: 'card fila' }, h('div', { class: 'sub' }, '📥 ' + (st.rec.nombre || 'Factura recibida') + ' (de Facturas de proveedores)'), h('div', { style: 'display:flex;gap:6px' }, st.rec.ruta ? h('button', { class: 'small', onclick: () => verDocumento(st.rec.ruta, st.rec.nombre || 'Factura') }, '👁 Ver') : null, h('button', { class: 'ghost small', onclick: () => { st.rec = null; pintarDocs(); } }, 'Quitar')))] : []),
+        ...st.docs.map((f, i) => h('div', { class: 'card fila' }, h('div', { class: 'sub' }, '📎 ' + f.name), h('div', { style: 'display:flex;gap:6px' }, h('button', { class: 'small', onclick: () => verArchivoLocal(f) }, '👁 Ver'), h('button', { class: 'ghost small', onclick: () => { st.docs.splice(i, 1); pintarDocs(); } }, 'Quitar')))),
         ...((st.docs.length || st.rec) ? [] : [h('div', { class: 'sub', style: 'margin-bottom:6px' }, 'Adjúntala para que quede enlazada a los lotes. Si no la tienes ahora, luego la verás en «Sin factura».')]));
     };
     const fmtN = n => String(Math.round(n * 1000) / 1000).replace('.', ',');
@@ -4038,8 +4107,12 @@ function vistaCompras() {
       if (!l.fact) return null;
       return [h('div', { class: 'sub' }, 'En la factura: ' + l.fact.texto),
         l.dudoso ? h('div', { class: 'sub', style: 'color:var(--ambar)' }, '⚠ Comprueba que es este producto') : null,
-        l.cambiando ? buscadorProducto(pr => { l.producto = pr; l.dudoso = false; l.cambiando = false; l.lote = codigoLote(pr); cargarTarifa(l); pintarLineas(); }, 'Buscar el producto correcto…')
-          : h('button', { class: 'ghost small', style: 'margin:4px 0', onclick: () => { l.cambiando = true; pintarLineas(); } }, 'Cambiar producto')];
+        l.dudoso && !l.cambiando ? h('button', { class: 'small', style: 'margin:4px 6px 4px 0;background:#16a34a', onpointerdown: e => e.preventDefault(), onclick: () => { l.dudoso = false; pintarLineas(); toast('Confirmado: ' + l.producto.nombre, 'ok'); } }, '✔ Sí, es este') : null,
+        l.cambiando ? h('div', {}, (l.cand || []).length ? h('div', { class: 'sub', style: 'margin-top:4px' }, 'Parecidos a «' + l.fact.texto + '»:') : null,
+          (l.cand || []).length ? h('div', { class: 'fila', style: 'gap:6px;flex-wrap:wrap;justify-content:flex-start;margin:4px 0' }, l.cand.map(pr => h('button', { class: 'ghost small', onpointerdown: e => e.preventDefault(), onclick: () => { l.producto = pr; l.dudoso = false; l.cambiando = false; l.lote = codigoLote(pr); cargarTarifa(l); pintarLineas(); } }, pr.nombre))) : null,
+          buscadorProducto(pr => { l.producto = pr; l.dudoso = false; l.cambiando = false; l.lote = codigoLote(pr); cargarTarifa(l); pintarLineas(); }, 'Buscar el producto correcto…'),
+          h('div', { class: 'fila', style: 'margin:4px 0' }, h('button', { class: 'ghost small', onclick: () => { l.cambiando = false; pintarLineas(); } }, 'Cancelar'), guardaBtn()))
+          : h('div', { class: 'fila', style: 'margin:4px 0' }, h('button', { class: 'ghost small', onclick: async () => { if (!l.cand) { try { const pr0 = await waProductos(); l.cand = fcCandidatos(l.fact.texto, waIndice(pr0), 14).map(c => c.p).filter(y => y.id !== l.producto.id); } catch (e) { l.cand = []; } } l.cambiando = true; pintarLineas(); } }, 'Cambiar producto'), guardaBtn())];
     }
     function pintarPend() {
       pendBox.replaceChildren(...st.pend.map(q => {
@@ -4047,10 +4120,10 @@ function vistaCompras() {
         return h('div', { class: 'card', style: 'border-left:4px solid var(--ambar)' },
           h('div', { class: 'nombre' }, 'No reconozco: ' + q.x.texto),
           h('div', { class: 'sub' }, fmtN(q.x.cantidad) + ' ' + (q.x.unidad || '') + ' · ' + eur(q.x.precio) + ' € = ' + eur(q.x.importe) + ' €'),
-          q.cand.length ? h('div', { class: 'sub', style: 'margin-top:6px' }, '¿Es alguno de estos?') : null,
-          h('div', { class: 'fila', style: 'gap:6px;flex-wrap:wrap;justify-content:flex-start;margin:4px 0' }, q.cand.map(pr => h('button', { class: 'ghost small', onclick: () => elegir(pr) }, pr.nombre))),
+          q.cand.length ? h('div', { class: 'sub', style: 'margin-top:6px' }, 'Parecidos (toca el correcto):') : null,
+          h('div', { class: 'fila', style: 'gap:6px;flex-wrap:wrap;justify-content:flex-start;margin:4px 0' }, q.cand.map(pr => h('button', { class: 'ghost small', onpointerdown: e => e.preventDefault(), onclick: () => elegir(pr) }, pr.nombre))),
           buscadorProducto(elegir, 'Buscar el producto…'),
-          h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: () => { st.pend.splice(st.pend.indexOf(q), 1); pintarPend(); } }, 'Ignorar esta línea'));
+          h('div', { class: 'fila', style: 'margin-top:6px' }, h('button', { class: 'ghost small', onclick: () => { st.pend.splice(st.pend.indexOf(q), 1); pintarPend(); } }, 'Ignorar esta línea'), guardaBtn()));
       }));
     }
     function pintarLeer(msg, aviso) {
@@ -4067,12 +4140,13 @@ function vistaCompras() {
         const file = await fcDescargar(st.rec);
         const rd = await fcLeerFactura(file, m => pintarLeer(m));
         const prods = await waProductos(); const indice = waIndice(prods); const al = await fcAliasCargar(st.prov);
+        guardarLineasLeidas(Object.assign({}, st.rec, { proveedor_id: st.rec.proveedor_id || st.prov }), rd, prods, indice, al.map);
         st.lineas = st.lineas.filter(l => !l.fact); st.pend = [];
         let ok = 0, dud = 0, suma = 0;
         rd.lineas.forEach(x => {
           suma += x.importe; const m = fcEmparejar(x, prods, indice, al.map);
-          if (m.producto && (m.estado === 'ok' || m.estado === 'dudoso')) { const nl = nuevaLineaFactura(x, m.producto, m.estado === 'dudoso'); st.lineas.push(nl); cargarTarifa(nl); if (m.estado === 'ok') ok++; else dud++; }
-          else st.pend.push({ x, cand: (m.cand || []).slice(0, 3).map(c => c.p) });
+          if (m.producto && (m.estado === 'ok' || m.estado === 'dudoso')) { const nl = nuevaLineaFactura(x, m.producto, m.estado === 'dudoso'); nl.cand = fcCandidatos(x.texto, indice, 14).map(c => c.p).filter(y => y.id !== m.producto.id); st.lineas.push(nl); cargarTarifa(nl); if (m.estado === 'ok') ok++; else dud++; }
+          else { const cs = fcCandidatos(x.texto, indice, 14).map(c => c.p); (m.cand || []).forEach(c => { if (cs.length < 14 && !cs.some(y => y.id === c.p.id)) cs.push(c.p); }); st.pend.push({ x, cand: cs }); }
         });
         if (rd.cab.fecha && !st.rec.fecha_factura) { st.fecha = rd.cab.fecha; st.fechaLeida = rd.cab.fecha; fechaInp.value = rd.cab.fecha; }
         if (rd.cab.numero) { st.doc = rd.cab.numero; docInp.value = rd.cab.numero; }
@@ -4081,11 +4155,19 @@ function vistaCompras() {
       } catch (e) { pintarLeer('No he podido leer la factura (' + (isNetErr(e) ? 'sin conexión' : (e && e.message) || 'error') + '). Añade los productos a mano.', true); }
       st.leyendo = false;
     }
-    const btn = h('button', { class: 'guardar', style: 'width:100%;margin-top:8px', onclick: () => guardar(btn) }, 'Guardar compra');
+    const btn = h('button', { class: 'guardar', style: 'flex:2;margin:0;position:static;box-shadow:none', onclick: () => guardar(btn) }, 'Guardar compra');
+    const barraC = h('div', { class: 'barraG', style: 'margin-top:8px' }, h('button', { type: 'button', class: 'ghost', style: 'flex:1', onclick: () => { if (st.rec && st.rec.ruta) verDocumento(st.rec.ruta, st.rec.nombre || 'Factura'); else if (st.docs.length) verArchivoLocal(st.docs[0]); else toast('Aún no has adjuntado ninguna factura', 'err'); } }, '👁 Factura'), h('button', { type: 'button', class: 'ghost', style: 'flex:1', onclick: e => guardarBorrador(e.currentTarget) }, '💾 Borrador'), btn);
     caja.replaceChildren(provBox, h('label', { class: 'campo' }, 'Fecha de la compra', fechaInp),
       h('label', { class: 'campo' }, 'Nº de albarán o factura del proveedor', docInp),
-      leerBox, h('label', { class: 'campo' }, 'Productos comprados'), pendBox, lineasBox, prodBox, docBox, btn);
-    pintarProv(); pintarLineas(); pintarDocs(); buscadorProd(); pintarLeer(st.prov ? '' : 'Elige el proveedor para que la app lea los productos y precios de la factura.'); if (st.rec && st.prov) leerFactura();
+      borrBox, leerBox, h('label', { class: 'campo' }, 'Productos comprados'), pendBox, lineasBox, prodBox, docBox, barraC);
+    pintarProv(); pintarLineas(); pintarPend(); pintarDocs(); buscadorProd(); pintarLeer(st.prov ? '' : 'Elige el proveedor para que la app lea los productos y precios de la factura.');
+    if (borrInfo) {
+      const hh = new Date(borrInfo); const hora = String(hh.getHours()).padStart(2, '0') + ':' + String(hh.getMinutes()).padStart(2, '0');
+      borrBox.replaceChildren(h('div', { class: 'aviso-card', style: 'margin-bottom:10px' }, h('div', { class: 'sub' }, '💾 He recuperado lo que guardaste (' + fechaES(hoy(hh)) + ' a las ' + hora + '). Sigue donde lo dejaste.'),
+        h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: async () => { if (!await confirmar('¿Descartar lo guardado y vaciar las líneas?')) return; LS.set(claveBorr(), null); st.lineas = []; st.pend = []; st.leida = false; borrBox.replaceChildren(); pintarLineas(); pintarPend(); pintarLeer(st.prov ? '' : 'Elige el proveedor para que la app lea los productos y precios de la factura.'); if (st.rec && st.prov) leerFactura(); } }, 'Descartar lo guardado')));
+      st.lineas.forEach(cargarTarifa);
+    }
+    if (st.rec && st.prov && !st.leida) leerFactura();
   }
 
   async function pRecibidas() {
@@ -4643,12 +4725,18 @@ function vistaNuevo() {
   state.view = 'nuevo';
   const nuevo = { cliente: null, fecha: state.params.fecha || hoy(), lineas: [], notas: '' };
   const raiz = h('div', {});
+  const BORR = 'fj_borr_pedido';
+  const guardaBorr = (aviso) => { try { if (nuevo.cliente || nuevo.lineas.length || nuevo.notas) { LS.set(BORR, { t: Date.now(), cliente: nuevo.cliente, fecha: nuevo.fecha, lineas: nuevo.lineas, notas: nuevo.notas }); if (aviso) toast('Borrador guardado ✔ (no se pierde si sales)', 'ok'); } else if (aviso) toast('Todavía no hay nada que guardar', 'err'); } catch (e) { } };
+  try { const b = LS.get(BORR, null); if (b && Date.now() - b.t < 86400000 && (b.cliente || (b.lineas || []).length || b.notas)) { nuevo.cliente = b.cliente || null; nuevo.fecha = state.params.fecha || b.fecha || nuevo.fecha; nuevo.lineas = b.lineas || []; nuevo.notas = b.notas || ''; setTimeout(() => toast('Recuperado el pedido que estabas apuntando', 'ok'), 400); } } catch (e) { }
+  const tBorr = setInterval(() => { if (!document.body.contains(raiz)) { clearInterval(tBorr); return; } guardaBorr(false); }, 2500);
   $app.replaceChildren(shell('Nuevo pedido', raiz)); renderBanner();
 
   const cliBox = h('div', {}); const lineasBox = h('div', {}); const prodBox = h('div', {}); const atajos = h('div', { style: 'margin:8px 0' });
   const fechaInp = h('input', { type: 'date', value: nuevo.fecha, onchange: e => nuevo.fecha = e.target.value });
-  const notas = h('textarea', { rows: 2, placeholder: 'Notas del pedido (opcional)', oninput: e => nuevo.notas = e.target.value });
-  const btnGuardar = h('button', { style: 'width:100%;margin-top:6px', onclick: guardarPedido }, 'Guardar pedido');
+  const notas = h('textarea', { rows: 2, placeholder: 'Notas del pedido (opcional)', oninput: e => nuevo.notas = e.target.value }); notas.value = nuevo.notas;
+  const btnGuardar = h('button', { class: 'guardar', style: 'flex:2;margin:0;min-height:56px;font-size:18px;position:static;box-shadow:none', onclick: guardarPedido }, 'Guardar pedido');
+  const btnBorr = h('button', { class: 'ghost', style: 'flex:1', onclick: () => guardaBorr(true) }, '💾 Borrador');
+  const barraN = h('div', { class: 'barraG' }, btnBorr, btnGuardar);
 
   function pintarCliente() {
     if (nuevo.cliente) {
@@ -4739,7 +4827,7 @@ function vistaNuevo() {
     if (ped.error) { btnGuardar.disabled = false; toast(msgErr(ped.error), 'err'); return; }
     const li = await sb.from('lineas_pedido').insert(filas.map(f => Object.assign({ pedido_id: ped.data.id }, f)));
     if (li.error) { await sb.from('pedidos').delete().eq('id', ped.data.id); btnGuardar.disabled = false; toast(msgErr(li.error), 'err'); return; }
-    toast('Pedido guardado', 'ok'); state.fecha = nuevo.fecha; go('lista');
+    toast('Pedido guardado', 'ok'); try { localStorage.removeItem(PRE + BORR); LS.set(BORR, null); } catch (e) { } clearInterval(tBorr); state.fecha = nuevo.fecha; go('lista');
   }
   raiz.append(
     h('button', { class: 'ghost', style: 'width:100%;margin-bottom:6px', onclick: () => go('importar') }, '✍️ Escribir pedido (texto o WhatsApp)'),
@@ -4747,7 +4835,8 @@ function vistaNuevo() {
     h('label', { class: 'campo' }, 'Cliente'), cliBox, atajos,
     h('label', { class: 'campo', style: 'margin-top:10px' }, 'Fecha de entrega', fechaInp),
     h('label', { class: 'campo' }, 'Productos'), lineasBox, prodBox,
-    h('div', { style: 'margin-top:12px' }, notas), btnGuardar, h('button', { class: 'ghost', style: 'width:100%;margin-top:8px', onclick: guardarHabitual }, 'Guardar como pedido habitual'));
+    h('div', { style: 'margin-top:12px' }, notas), barraN, h('button', { class: 'ghost', style: 'width:100%;margin-top:8px', onclick: guardarHabitual }, 'Guardar como pedido habitual'));
+  if (nuevo.fecha) fechaInp.value = nuevo.fecha;
   pintarCliente(); pintarLineas(); pintarBuscadorProducto();
 }
 
@@ -5190,7 +5279,8 @@ function vistaPrecios() {
         const res = h('div', {}); const bi = h('input', { placeholder: 'Buscar producto…', oninput: debounce(async () => { if (!bi.value.trim()) { res.replaceChildren(); return; } try { const rr = await buscar('productos', bi.value, false, 8); res.replaceChildren(h('div', { class: 'res' }, rr.map(p => h('button', { onclick: () => { cerr(); editar({ pid: p.id, producto: p.nombre, unidad: '', cant: 0, provs: new Set() }); } }, p.nombre + ' · ' + p.codigo)))); } catch (e) { } }, 250) });
         const cerr = hoja('Añadir otro producto', h('div', {}, bi, res)); } }, '✍ Apuntar un precio que no viene en las facturas (se compra después o la factura llega más tarde)');
       const sinRec = []; facs.forEach(f => { const c = cacheF[f.id]; if (c && c.sin && c.sin.length) sinRec.push(h('details', { class: 'card' }, h('summary', {}, ((uno(f.proveedores) || {}).nombre || f.nombre || 'Factura') + ': ' + c.sin.length + ' línea(s) sin emparejar'), ...c.sin.map(x => h('div', { class: 'sub', style: 'padding:3px 0' }, x.texto + (x.precio != null ? ' · ' + eur(x.precio) + (x.unidad ? '/' + x.unidad : '') : ''))))); });
-      lista.replaceChildren(...cab, mas, estado, ...(kids.length ? kids : [h('p', { class: 'vacio' }, facs.length ? 'Hay ' + facs.length + ' factura(s) llegadas este día. Se están leyendo; los precios saldrán aquí.' : 'Todavía no hay compras, facturas ni precios para este día. También puedes apuntar un precio a mano con el botón de arriba.')]), ...sinRec);
+      const verFacs = facs.filter(f => f.ruta).length ? h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:6px 0' }, ...facs.filter(f => f.ruta).map(f => h('button', { class: 'small ghost', onclick: () => verDocumento(f.ruta, (f.proveedores ? (uno(f.proveedores) || {}).nombre : '') || f.nombre || 'Factura') }, '👁 ' + (((f.proveedores ? (uno(f.proveedores) || {}).nombre : '') || f.nombre || 'Factura').slice(0, 22))))) : null;
+      lista.replaceChildren(...cab, mas, estado, ...(verFacs ? [verFacs] : []), ...(kids.length ? kids : [h('p', { class: 'vacio' }, facs.length ? 'Hay ' + facs.length + ' factura(s) llegadas este día. Se están leyendo; los precios saldrán aquí.' : 'Todavía no hay compras, facturas ni precios para este día. También puedes apuntar un precio a mano con el botón de arriba.')]), ...sinRec);
       };
       montar();
       const pend = facs.filter(f => !cacheF[f.id] && f.ruta);
@@ -5207,7 +5297,7 @@ function vistaPrecios() {
               rd.lineas.forEach(x => { const m = fcEmparejar(x, prods, indice, al.map); const pr = Number(x.precio);
                 if (m.producto && (m.estado === 'ok' || m.estado === 'dudoso') && isFinite(pr) && pr > 0) lineas.push({ pid: m.producto.id, nombre: m.producto.nombre, precio: pr, unidad: UNIDADES.includes(x.unidad) ? x.unidad : (m.producto.unidad_venta && UNIDADES.includes(m.producto.unidad_venta) ? m.producto.unidad_venta : 'kg'), cant: Number(x.cantidad) || 0, dudoso: m.estado === 'dudoso' });
                 else sin.push({ texto: x.texto, precio: isFinite(pr) ? pr : null, unidad: x.unidad || '' }); });
-              cacheF[f.id] = { lineas, sin, t: Date.now() }; LS.set('fj_fact_leidas', cacheF); montar();
+              cacheF[f.id] = { lineas, sin, t: Date.now() }; LS.set('fj_fact_leidas', cacheF); montar(); guardarLineasLeidas(f, rd, prods, indice, al.map);
             } catch (e) { fallos++; }
           }
         } catch (e) { fallos = pend.length; }
@@ -5282,10 +5372,38 @@ async function subirDoc(file, meta) {
   const r = await sb.from('documentos_compra').insert({ fecha: meta.fecha, proveedor_id: meta.prov || null, compra_id: meta.compra || null, tipo: meta.tipo, importe: meta.importe, nota: meta.nota || null, ruta, nombre: file.name });
   if (r.error) { await sb.storage.from('facturas').remove([ruta]); throw r.error; }
 }
-async function verDocumento(ruta) {
+/* Visor de facturas DENTRO de la app: se abre encima de la pantalla donde estás (no cambia de pantalla ni abre otra pestaña).
+   Se cierra con la X (o con «atrás» del móvil) y sigues exactamente donde estabas. */
+async function verDocumento(ruta, titulo) {
   const r = await sb.storage.from('facturas').createSignedUrl(ruta, 900);
   if (r.error) { toast(msgErr(r.error), 'err'); return; }
-  window.open(r.data.signedUrl, '_blank');
+  return visorDoc(r.data.signedUrl, /\.pdf(\?|$)/i.test(ruta), titulo);
+}
+function verArchivoLocal(file, titulo) { return visorDoc(URL.createObjectURL(file), file.type === 'application/pdf' || /\.pdf$/i.test(file.name || ''), titulo || file.name); }
+async function visorDoc(url, esPdf, titulo) {
+  document.querySelectorAll('.visordoc').forEach(x => x.remove());
+  let zoom = 100; const cuerpo = h('div', { class: 'vcuerpo' }, h('p', { style: 'color:#fff' }, 'Abriendo…'));
+  const cerrar = () => { v.remove(); };
+  const aplicaZoom = () => { cuerpo.querySelectorAll('canvas,img').forEach(c => { c.style.width = zoom + '%'; }); };
+  const bz = (t, d) => h('button', { type: 'button', class: 'ghost', style: 'background:#374151;color:#fff;border:0', onclick: () => { zoom = Math.max(50, Math.min(400, zoom + d)); aplicaZoom(); } }, t);
+  const v = h('div', { class: 'visordoc' }, h('div', { class: 'vcab' }, h('b', {}, titulo || 'Factura'), bz('−', -25), bz('+', 25), h('button', { type: 'button', style: 'background:#dc2626;color:#fff;border:0', onclick: cerrar }, '✕')), cuerpo);
+  document.body.append(v);
+  try { history.pushState(navSnap(NAV.d), ''); } catch (e) { }
+  try {
+    if (!esPdf) { cuerpo.replaceChildren(h('img', { src: url, style: 'width:100%' })); return; }
+    await waCargarScript(WA_PDFJS);
+    if (!window.__waPdfW) { const t = await (await fetch(WA_PDFW)).text(); window.__waPdfW = URL.createObjectURL(new Blob([t], { type: 'text/javascript' })); }
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.__waPdfW;
+    const buf = await (await fetch(url)).arrayBuffer();
+    const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+    cuerpo.replaceChildren();
+    for (let n = 1; n <= Math.min(pdf.numPages, 10); n++) {
+      const pg = await pdf.getPage(n); const vp = pg.getViewport({ scale: 2 }); const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height; cv.style.width = zoom + '%';
+      cuerpo.append(cv); await pg.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+    }
+  } catch (e) {
+    cuerpo.replaceChildren(h('p', { style: 'color:#fff;padding:14px' }, 'No he podido mostrar el archivo aquí.'), h('a', { href: url, target: '_blank', rel: 'noopener', style: 'color:#93c5fd;font-weight:700' }, 'Abrirlo en otra pestaña'));
+  }
 }
 const TIPOS_DOC = { factura: 'Factura', albaran: 'Albarán del proveedor', hoja: 'Hoja de compra', otro: 'Otro' };
 function vistaFacturas() {
@@ -6485,7 +6603,7 @@ function fcNum(t) {
    Una línea de producto es la que tiene «cantidad × precio = importe» entre sus números (se comprueba la multiplicación). */
 /* Limpia lo típico de facturas leídas con OCR o con formatos pegados: «10kg», «1,20€/kg», «1O,5», «x» entre cantidad y precio */
 function fcPreparaFila(fila) {
-  let t = String(fila || '').replace(/\u00a0/g, ' ').replace(/€\s*\/\s*[A-Za-z]+/g, ' ').replace(/€/g, ' ');
+  let t = String(fila || '').replace(/\u00a0/g, ' ').replace(/€\s*\/\s*([A-Za-z]+)\.?/g, ' $1 ').replace(/€/g, ' ');
   t = t.replace(/(\d)(kgs?|kilos?|uds?|ud|cajas?|sacos?|bolsas?|bandejas?|docenas?)(?![A-Za-z])/gi, '$1 $2');
   t = t.replace(/(\d)\s*[x×]\s*(?=\d)/gi, '$1 ');
   t = t.split(/\s+/).map(w => { if (/^[\dOoIl.,-]{3,}$/.test(w) && (w.match(/\d/g) || []).length >= 2 && /[Ool I]/.test(w)) return w.replace(/[Oo]/g, '0').replace(/[Il]/g, '1'); return w; }).join(' ');
@@ -6496,12 +6614,14 @@ function fcLinea(fila, descPrevia) {
   const pcts = []; (fila.match(/\b\d{1,2}(?:[.,]\d{1,2})?\s?%/g) || []).forEach(p => { const v = fcNum(p.replace('%', '').trim()); if (v && v > 0 && v < 100) pcts.push(v); });
   fila = fila.replace(/\b\d{1,2}(?:[.,]\d{1,2})?\s?%/g, ' ');
   const tk = String(fila || '').trim().split(/\s+/).filter(Boolean); if (tk.length < 3) return null;
-  const nums = []; tk.forEach((t, i) => { if (fcEsNum(t)) { const v = fcNum(t); if (v !== null) nums.push({ i, v }); } });
+  const nums = []; tk.forEach((t, i) => { if (fcEsNum(t)) { const v = fcNum(t); if (v !== null) nums.push({ i, v, alts: /^\d{1,3}\.\d{3}$/.test(t) ? [v, v / 1000] : [v] }); } });
   if (nums.length < 2) return null;
   let tri = null;
   for (let c = nums.length - 1; c >= 2 && !tri; c--) for (let b = c - 1; b >= 1 && !tri; b--) for (let a = b - 1; a >= 0 && !tri; a--) {
-    const A = nums[a].v, B = nums[b].v, C = nums[c].v; if (!(A > 0 && B > 0 && C > 0)) continue;
-    if (Math.abs(A * B - C) <= Math.max(0.011, C * 0.004) || pcts.some(d => Math.abs(A * B * (1 - d / 100) - C) <= Math.max(0.011, C * 0.004))) tri = { a: nums[a], b: nums[b], c: nums[c] };
+    for (const A of nums[a].alts) for (const B of nums[b].alts) for (const C of nums[c].alts) {
+      if (tri || !(A > 0 && B > 0 && C > 0)) continue;
+      if (Math.abs(A * B - C) <= Math.max(0.011, C * 0.004) || pcts.some(d => Math.abs(A * B * (1 - d / 100) - C) <= Math.max(0.011, C * 0.004))) tri = { a: { i: nums[a].i, v: A }, b: { i: nums[b].i, v: B }, c: { i: nums[c].i, v: C } };
+    }
   }
   let calculado = false;
   if (!tri) {   /* tablas con lote, bruto y tara (p. ej. puestos de Mercamadrid): kilos e importe son los dos últimos números; el precio se calcula */
@@ -6515,18 +6635,34 @@ function fcLinea(fila, descPrevia) {
   }
   if (!tri) return null;
   let unidad = ''; for (let i = tri.a.i + 1; i < tri.b.i; i++) { const w = fcNorm(tk[i]); if (w in FC_UNI && FC_UNI[w]) { unidad = FC_UNI[w]; break; } }
+  if (!unidad && !calculado) for (let i = tri.b.i + 1; i < Math.min(tk.length, tri.b.i + 4); i++) { const w = fcNorm(tk[i]); if (w in FC_UNI && FC_UNI[w]) { unidad = FC_UNI[w]; break; } if (w === 'un') { unidad = 'pieza'; break; } }
   let corte = tri.a.i; for (let i = 0; i < tri.a.i; i++) if (/^\d+,\d{2}$/.test(tk[i]) || /^\d{1,3}(\.\d{3})+,\d{2}$/.test(tk[i])) { corte = i; break; }
   let ini = 0; if (corte > 1 && /\d{3,}/.test(tk[0]) && !/^\d{1,2}$/.test(tk[0])) ini = 1;
-  let dt = tk.slice(ini, corte).filter(w => w !== '|' && !/^\d{7,}$/.test(w));
+  let dt = tk.slice(ini, corte).filter(w => w !== '|' && w !== '*' && !/^\d{7,}$/.test(w));
+  while (dt.length > 2 && /^\d{1,3}$/.test(dt[0]) && /^(bt|bto|btos|bulto|bultos|cj|caja|cajas|sc|saco|sacos|bol|malla|ud|uds)$/i.test(dt[1])) dt = dt.slice(2);
+  { const ii = dt.findIndex((w, i) => i > 0 && /^[Il|]$/.test(w)); if (ii > 0) dt = dt.slice(0, ii); }
   { const ic = dt.findIndex((w, i) => i > 0 && (/^(espa[nñf]a|espafia|spain|italia|francia|portugal|marruecos|holanda|peru|chile|egipto|turquia|grecia|alemania|belgica|argentina|ecuador|colombia|sudafrica|israel|mexico|brasil)$/i.test(w) || /^\d{1,2}$/.test(w))); if (ic > 0) dt = dt.slice(0, ic); }
   while (dt.length > 2 && /^\d{1,4}$/.test(dt[dt.length - 1]) && !/^(cal|calibre|x|n|no|nº|n°|num)$/i.test(dt[dt.length - 2])) dt.pop();   // «Uds» al final de la descripción
+  while (dt.length > 2 && fcNorm(dt[dt.length - 1]) in FC_UNI && FC_UNI[fcNorm(dt[dt.length - 1])]) dt.pop();
+  if (dt.length >= 3 && /^[A-Z]{1,2}$/.test(dt[0]) && !/^(EL|LA|LO|DE|UN|AL|Y|A|O|E)$/.test(dt[0]) && /^[A-ZÁÉÍÓÚÑa-záéíóúñ]{4,}$/.test(dt[1])) dt = dt.slice(1);   // código de artículo
   let desc = dt.join(' ').trim(); if ((desc.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/g) || []).length < 3) { if (descPrevia) desc = descPrevia; else return null; }
   if (/^(total|bases?|cuota|iva|suma|importe|subtotal|base imponible)\b/i.test(desc)) return null;
   let origen = ''; for (let i = corte; i < tri.a.i; i++) { const w = tk[i]; if (/^[A-ZÁÉÍÓÚÑ]{4,}$/.test(w) && !(fcNorm(w) in FC_UNI)) { origen = w.charAt(0) + w.slice(1).toLowerCase(); break; } }
   return { texto: desc, cantidad: tri.a.v, unidad, precio: tri.b.v, importe: tri.c.v, origen, calculado };
 }
+/* Solo cuenta la tabla de productos: desde la fila de cabecera (precio, importe, bultos, kilos…) hasta los totales. Si no se encuentra, se usa todo. */
+function fcRecorteTabla(filas) {
+  const cab = /\b(precio|importe|bultos?|kilos?|unidades|cantidad|articulo|descripcion|mercancia|concepto|neto|bruto|tara|lote|denominacion)\b/g;
+  let i0 = -1; for (let i = 0; i < filas.length; i++) { const t = fcNorm(filas[i]); if (t.length > 220) continue; const m = t.match(cab) || []; if (new Set(m).size >= 3 && /\b(importe|total)\b/.test(t)) { i0 = i; break; } }
+  if (i0 < 0) return filas;
+  let i1 = filas.length; for (let i = i0 + 1; i < filas.length; i++) { if (/^(totales?|base imponible|bases imponibles|cargo|observaciones|importe bruto|suma|forma de pago|vencimientos?|total)\b/.test(fcNorm(filas[i]))) { i1 = i; break; } }
+  let ini = i0 + 1; while (ini < i1 && /\b(envases|denominacion|origen|bruto|tara|neto|unidades)\b/.test(fcNorm(filas[ini])) && !/\d{2},\d{2}/.test(filas[ini])) ini++;
+  return filas.slice(ini, i1);
+}
+const FC_BASURA = /\b(tfno|tlfno|telefono|tel|fax|nif|cif|dni|iban|swift|mail|email|www|domicilio|direccion|poblacion|provincia|pais|codigo postal|cp|reclamaciones|observaciones)\b/;
 function fcTextoALineas(filas) {
   const out = []; out.noLeidas = []; let prev = '';
+  filas = filas.filter(f => !FC_BASURA.test(fcNorm(f)));
   filas.forEach(f => {
     const l = fcLinea(f, prev);
     if (l) { out.push(l); prev = ''; return; }
@@ -6563,7 +6699,11 @@ function fcTotales(filas) {
   const base = [], total = [];
   filas.forEach((f, i) => {
     { const mb = /base\s+imponible\s*[.…]*\s*([0-9][0-9.,]*)/i.exec(String(f).replace(/\u00a0/g, ' ')); const sv = mb ? mb[1].replace(/[.,]+$/, '') : ''; if (sv && fcEsNum(sv) && fcNum(sv) > 0) { base.push(fcNum(sv)); return; } }
-    const t = fcNorm(f); let ns = numsDe(f); if (!ns.length && /base|total|subtotal|importe bruto/.test(t) && filas[i + 1]) ns = numsDe(filas[i + 1]);
+    const t = fcNorm(f); let ns = numsDe(f);
+    if (/\bbase\b/.test(t) && /\bcuota\b/.test(t)) {   // cuadro «Base Imp. · % IVA · Cuota IVA»: la base es el número cuyo % de IVA da la cuota
+      for (let k = 1; k <= 3 && filas[i + k]; k++) { const v = numsDe(filas[i + k]); let hallada = null; v.forEach(n => v.forEach(pc => v.forEach(cu => { if (!hallada && n > 0 && pc >= 1 && pc <= 25 && cu > 0 && cu < n && Math.abs(n * pc / 100 - cu) <= 0.02) hallada = n; }))); if (hallada) { base.push(hallada); return; } }
+    }
+    if (!ns.length && /base|total|subtotal|importe bruto/.test(t) && filas[i + 1]) ns = numsDe(filas[i + 1]);
     if (!ns.length) return;
     if (/\b(base imponible|total base|importe bruto|subtotal|total bruto|base)\b/.test(t) && !/total factura|a pagar/.test(t)) base.push(Math.max.apply(null, ns));
     if (/\b(total factura|total a pagar|total eur|importe total|total documento|total albaran|total)\b/.test(t) && !/base|iva|cuota|bruto/.test(t)) total.push(Math.max.apply(null, ns));
@@ -6574,7 +6714,8 @@ const FC_MESES = { enero: 1, febrero: 2, marzo: 3, abril: 4, mayo: 5, junio: 6, 
 /* Clave para recordar un artículo de factura: texto sin acentos ni signos */
 const fcClave = t => fcNorm(t);
 /* Texto para buscar el producto: quita envases, medidas y números sueltos */
-function fcConsulta(t) { return fcNorm(t).split(' ').filter(w => w.length > 1 && !FC_RUIDO.has(w) && !/^\d+$/.test(w)).join(' '); }
+const FC_ABR = { nar: 'naranja', naran: 'naranja', nara: 'naranja', pim: 'pimiento', pimi: 'pimiento', pimien: 'pimiento', mand: 'mandarina', mandar: 'mandarina', lim: 'limon', limo: 'limon', mel: 'melon', sand: 'sandia', pat: 'patata', pata: 'patata', ceb: 'cebolla', cebo: 'cebolla', zan: 'zanahoria', zana: 'zanahoria', tom: 'tomate', toma: 'tomate', lech: 'lechuga', lec: 'lechuga', manz: 'manzana', manza: 'manzana', plat: 'platano', platan: 'platano', albar: 'albaricoque', calab: 'calabacin', calaba: 'calabacin', berenj: 'berenjena', pep: 'pepino', pepi: 'pepino', jud: 'judia', gui: 'guisante', fres: 'fresa', cer: 'cereza', ciru: 'ciruela', nect: 'nectarina', pom: 'pomelo', pomel: 'pomelo', mel: 'melon', cogo: 'cogollo', esparr: 'esparrago', champ: 'champinon', setas: 'seta', aguac: 'aguacate', agua: 'aguacate', coliflo: 'coliflor', brocol: 'brocoli', rabano: 'rabano', ajos: 'ajo', puerr: 'puerro', alcach: 'alcachofa', acelg: 'acelga', espin: 'espinaca', rem: 'remolacha', remol: 'remolacha', apio: 'apio', uvas: 'uva', peras: 'pera', kiwis: 'kiwi' };
+function fcConsulta(t) { return fcNorm(t).split(' ').map(w => FC_ABR[w] || w).filter(w => w.length > 1 && !FC_RUIDO.has(w) && !/^\d+$/.test(w)).join(' '); }
 
 async function fcDescargar(f) {
   const r = await sb.storage.from('facturas').createSignedUrl(f.ruta, 300); if (r.error) throw r.error;
@@ -6598,22 +6739,127 @@ async function fcLeerFactura(file, progreso) {
     const pdf = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
     for (let n = 1; n <= Math.min(pdf.numPages, 8); n++) {
       progreso && progreso('Leyendo página ' + n + ' de ' + pdf.numPages + '…');
-      const pg = await pdf.getPage(n); const tc = await pg.getTextContent(); const fp = fcFilasDePagina(tc.items); const lp = fcTextoALineas(fp);
+      const pg = await pdf.getPage(n); const tc = await pg.getTextContent(); const fp = fcFilasDePagina(tc.items); const lp = fcTextoALineas(fcRecorteTabla(fp));
       const firma = JSON.stringify(lp.map(x => [x.texto, x.cantidad, x.importe]));
       filas = filas.concat(fp); if (lp.length && vistas.has(firma)) continue;   // hoja repetida (original y copia): no se cuenta dos veces
       vistas.add(firma); lineas = lineas.concat(lp); noLeidas = noLeidas.concat(lp.noLeidas || []);
     }
   }
-  if (filas.join('').length < 40) { const o = await waLeerArchivo(file, progreso); filas = String(o.texto || '').split(/\n+/); lineas = fcTextoALineas(filas); noLeidas = lineas.noLeidas || []; }
+  if (filas.join('').length < 40) { const o = await waLeerArchivo(file, progreso); filas = String(o.texto || '').split(/\n+/); lineas = fcTextoALineas(fcRecorteTabla(filas)); noLeidas = lineas.noLeidas || []; }
   return { filas, lineas, noLeidas, cab: fcCabecera(filas), tot: fcTotales(filas) };
+}
+/* ---------- Precios de las facturas leídas: se guardan TODAS las líneas (también las que no se emparejan con un producto) ---------- */
+async function guardarLineasLeidas(f, rd, prods, indice, alias) {
+  try {
+    const lin = rd.lineas.map(x => { const m = fcEmparejar(x, prods, indice, alias || {}); const ok = m.producto && (m.estado === 'ok' || m.estado === 'dudoso');
+      return { texto: x.texto, cantidad: x.cantidad, unidad: x.unidad || null, precio: x.precio, importe: x.importe, producto_id: ok ? m.producto.id : null, dudoso: m.estado === 'dudoso' }; });
+    const fecha = (rd.cab && rd.cab.fecha) || String(f.fecha_factura || f.recibido_en || '').slice(0, 10) || hoy();
+    const r = await sb.rpc('guardar_lineas_factura', { p_factura: f.id, p_proveedor: f.proveedor_id || null, p_fecha: fecha, p_lineas: lin });
+    if (r && r.error) { window.__sinP54 = true; return false; } return true;
+  } catch (e) { return false; }
+}
+/* Lee las facturas llegadas en los últimos días que todavía no se han leído y guarda sus precios */
+async function leerFacturasRecientes(dias, progreso) {
+  if (window.__leyendoRec) return { ocupado: true };
+  window.__leyendoRec = true; const out = { leidas: 0, fallos: 0, total: 0, sinP54: false };
+  try {
+    const desde = hoy(new Date(Date.now() - dias * 86400000));
+    let fr = await sb.from('facturas_recibidas').select('id,recibido_en,fecha_factura,ruta,nombre,proveedor_id').order('recibido_en', { ascending: false }).limit(200);
+    if (fr.error) fr = await sb.from('facturas_recibidas').select('id,recibido_en,ruta,nombre,proveedor_id').order('recibido_en', { ascending: false }).limit(200);
+    if (fr.error) throw fr.error;
+    const facs = (fr.data || []).filter(f => f.ruta && String(f.fecha_factura || f.recibido_en || '').slice(0, 10) >= desde);
+    const ya = await sb.from('lineas_factura_leida').select('factura_id').limit(5000);
+    if (ya.error) { out.sinP54 = true; return out; }
+    const hechas = new Set((ya.data || []).map(x => x.factura_id)); const vacias = LS.get('fj_fact_vacias', {});
+    const pend = facs.filter(f => !hechas.has(f.id) && !vacias[f.id]); out.total = pend.length;
+    if (!pend.length) return out;
+    const prods = await waProductos(); const indice = waIndice(prods);
+    for (const f of pend) {
+      progreso && progreso(out.leidas + out.fallos + 1, pend.length);
+      try {
+        const file = await fcDescargar(f); const rd = await fcLeerFactura(file, () => { }); const al = f.proveedor_id ? await fcAliasCargar(f.proveedor_id) : { map: {} };
+        if (!rd.lineas.length) { vacias[f.id] = Date.now(); LS.set('fj_fact_vacias', vacias); out.leidas++; continue; }
+        if (await guardarLineasLeidas(f, rd, prods, indice, al.map)) out.leidas++; else out.fallos++;
+      } catch (e) { out.fallos++; }
+    }
+  } catch (e) { out.error = (e && e.message) || 'error'; }
+  finally { window.__leyendoRec = false; }
+  return out;
+}
+/* Últimos precios de compra de un producto, del más nuevo al más antiguo, de todas las fuentes */
+async function ultimosPreciosCompra(prod, n) {
+  const out = []; let sinP54 = false; const pid = prod.id; const pv = r => (uno(r.proveedores) || {}).nombre || '';
+  try { let r = await sb.from('tarifas_compra').select('precio,fecha,unidad,proveedores(nombre)').eq('producto_id', pid); if (r.error) r = await sb.from('tarifas_compra').select('precio,fecha,proveedores(nombre)').eq('producto_id', pid); (r.data || []).forEach(t => out.push({ fecha: String(t.fecha || '').slice(0, 10), precio: Number(t.precio), unidad: t.unidad || 'kg', prov: pv(t), fuente: '🧾 Factura registrada' })); } catch (e) { }
+  try { const r = await sb.from('lotes').select('precio_compra,unidad,compras(fecha,proveedores(nombre))').eq('producto_id', pid).limit(80); (r.data || []).forEach(l => { const c = uno(l.compras) || {}; if (l.precio_compra != null && c.fecha) out.push({ fecha: String(c.fecha).slice(0, 10), precio: Number(l.precio_compra), unidad: l.unidad || 'kg', prov: pv(c), fuente: '🛒 Compra registrada' }); }); } catch (e) { }
+  try { const r = await sb.from('precios_compra_dia').select('precio,fecha,unidad,nota').eq('producto_id', pid).limit(40); (r.data || []).forEach(m => out.push({ fecha: String(m.fecha || '').slice(0, 10), precio: Number(m.precio), unidad: m.unidad || 'kg', prov: '', fuente: '✍ Anotado a mano' + (m.nota ? ' · ' + m.nota : '') })); } catch (e) { }
+  try {
+    const r1 = await sb.from('lineas_factura_leida').select('precio,fecha,unidad,texto,dudoso,proveedores(nombre)').eq('producto_id', pid).limit(60);
+    if (r1.error) sinP54 = true; else (r1.data || []).forEach(l => out.push({ fecha: String(l.fecha || '').slice(0, 10), precio: Number(l.precio), unidad: l.unidad || 'kg', prov: pv(l), fuente: '🧾 Factura leída' + (l.dudoso ? ' (por confirmar)' : '') }));
+    if (!sinP54) {
+      const r2 = await sb.from('lineas_factura_leida').select('precio,fecha,unidad,texto,proveedores(nombre)').is('producto_id', null).gte('fecha', hoy(new Date(Date.now() - 90 * 86400000))).limit(1500); const ind = waIndice([{ nombre: prod.nombre }]);
+      (r2.data || []).forEach(l => { const c = fcCandidatos(l.texto, ind, 1)[0]; if (c && c.n >= 1 && (c.n === c.np || (c.n === c.nq && c.n >= 2))) out.push({ fecha: String(l.fecha || '').slice(0, 10), precio: Number(l.precio), unidad: l.unidad || 'kg', prov: pv(l), fuente: '🧾 Factura sin emparejar: «' + l.texto + '»' }); });
+    }
+  } catch (e) { sinP54 = true; }
+  const vistos = new Set();
+  const lista = out.filter(x => isFinite(x.precio) && x.precio > 0 && x.fecha).filter(x => { const k = [x.fecha, x.precio, x.unidad, x.prov].join('|'); if (vistos.has(k)) return false; vistos.add(k); return true; })
+    .sort((a, b) => b.fecha.localeCompare(a.fecha) || a.fuente.localeCompare(b.fuente));
+  return { lista: lista.slice(0, n || 8), sinP54 };
+}
+const filasUltimos = lista => lista.map((x, i) => filaCons(eur(x.precio) + ' €/' + x.unidad + (i === 0 ? '  ← el más nuevo' : ''), [fechaES(x.fecha), x.prov, x.fuente].filter(Boolean).join(' · '), null));
+function botonLeerRecientes(alTerminar) {
+  const b = h('button', { class: 'ghost', style: 'width:100%;margin-top:8px', onclick: async () => {
+    b.disabled = true; const r = await leerFacturasRecientes(15, (i, t) => { b.textContent = '🔄 Leyendo factura ' + i + ' de ' + t + '…'; });
+    b.disabled = false; b.textContent = '🔄 Leer las facturas de los últimos 15 días';
+    if (r.ocupado) { toast('Ya se están leyendo', 'warn'); return; }
+    if (r.sinP54) { toast('Falta ejecutar la Parte 54 en Supabase', 'err'); return; }
+    toast(r.total ? 'Leídas ' + r.leidas + ' de ' + r.total + ' factura(s)' + (r.fallos ? ' · ' + r.fallos + ' no se pudieron leer' : '') : 'No había facturas nuevas por leer', r.fallos ? 'warn' : 'ok'); if (alTerminar) alTerminar();
+  } }, '🔄 Leer las facturas de los últimos 15 días');
+  return b;
+}
+async function hojaUltimosPrecios(pid) {
+  let nombre = 'Producto'; try { const r = await sb.from('productos').select('id,nombre').eq('id', pid).maybeSingle(); if (r.data) nombre = r.data.nombre; } catch (e) { }
+  const cuerpo = h('div', {}, h('p', { class: 'vacio' }, 'Buscando…')); hoja('Últimos precios de compra · ' + nombre, cuerpo);
+  const pinta = async () => {
+    const r = await ultimosPreciosCompra({ id: pid, nombre }, 8);
+    cuerpo.replaceChildren(...(r.lista.length ? filasUltimos(r.lista) : [h('p', { class: 'vacio' }, 'Todavía no hay precios de compra de este producto.')]),
+      ...(r.sinP54 ? [h('div', { class: 'aviso-card' }, 'Falta ejecutar la Parte 54 en Supabase para que la app guarde los precios de todas las facturas leídas.')] : [botonLeerRecientes(pinta)]));
+  };
+  pinta();
 }
 async function fcAliasCargar(prov) {
   try { const r = await sb.from('alias_compra').select('texto,producto_id').eq('proveedor_id', prov).range(0, 4999); if (r.error || !r.data) return { map: {}, ok: false }; const m = {}; r.data.forEach(a => { m[a.texto] = a.producto_id; }); return { map: m, ok: true }; } catch (e) { return { map: {}, ok: false }; }
 }
+/* Todos los productos que se parecen a lo escrito en la factura, de más a menos parecido: cuenta cada palabra (también «verde», «rojo», «extra») y las abreviaturas */
+const FC_STOP_C = new Set(['cat', 'categoria', 'kg', 'kgs', 'caja', 'cajas', 'saco', 'sacos', 'bolsa', 'bolsas', 'malla', 'mallas', 'bandeja', 'mm', 'cal', 'calibre', 'gr', 'grs', 'env', 'i', 'ii', 'iii', 'bt', 'bto', 'btos', 'ud', 'uds', 'x', 'de', 'del', 'la', 'el', 'los', 'las', 'con', 'y', 'en']);
+function fcCandidatos(texto, indice, max) {
+  const q = []; fcNorm(texto).split(' ').forEach(w => { w = FC_ABR[w] || w; if (w.length > 1 && !/^\d+$/.test(w) && !FC_STOP_C.has(w)) { [w].concat(w === 'banana' ? ['platano'] : w === 'platano' ? ['banana'] : []).forEach(z => { const k = waLlave(z); if (k && !q.includes(k)) q.push(k); }); } });
+  if (!q.length) return [];
+  const res = [];
+  indice.forEach(it => {
+    let mejor = null;
+    it.vars.forEach(v => {
+      const usados = new Set(); let n = 0, suma = 0;
+      q.forEach(w => { let m = 0, bi = -1; v.ks.forEach((k, i) => { if (usados.has(i)) return; const sc = waSimTok(w, k); if (sc > m) { m = sc; bi = i; } }); if (m >= 0.66) { usados.add(bi); n++; suma += m; } });
+      if (n && (!mejor || n > mejor.n || (n === mejor.n && suma > mejor.suma))) mejor = { n, suma, np: v.ks.length };
+    });
+    if (mejor) res.push({ p: it.p, n: mejor.n, suma: mejor.suma, np: mejor.np });
+  });
+  res.sort((a, b) => b.n - a.n || b.suma - a.suma || ((b.p.activo === false ? 0 : 1) - (a.p.activo === false ? 0 : 1)) || a.np - b.np || String(a.p.nombre).length - String(b.p.nombre).length);
+  return res.slice(0, max || 14).map(x => ({ p: x.p, score: x.suma / q.length, n: x.n, np: x.np, nq: q.length }));
+}
 function fcEmparejar(lin, prods, indice, alias) {
   const pid = alias[fcClave(lin.texto)];
   if (pid) { const p = prods.find(x => x.id === pid); if (p) return { estado: 'ok', producto: p, cand: [] }; }
-  return waBuscarProducto(fcConsulta(lin.texto) || fcNorm(lin.texto), indice);
+  const cons = fcConsulta(lin.texto) || fcNorm(lin.texto);
+  const m = waBuscarProducto(cons, indice);
+  if (m.estado === 'noenc' || (m.estado === 'ambiguo' && !m.producto)) {
+    /* «KIWI HAYWARD»: si el nombre de un producto entero aparece dentro de la línea, se propone ese (a confirmar) */
+    const q = waPalabras(cons).map(waLlave).filter(Boolean);
+    const cont = indice.map(it => { let n = 0; it.vars.forEach(v => { if (v.ks.length && v.ks.every(k => q.some(x => waSimTok(x, k) >= 0.85))) n = Math.max(n, v.ks.length); }); return { p: it.p, n }; }).filter(x => x.n > 0)
+      .sort((a, b) => b.n - a.n || ((b.p.activo === false ? 0 : 1) - (a.p.activo === false ? 0 : 1)) || String(a.p.nombre).length - String(b.p.nombre).length);
+    if (cont.length) { const top = cont.filter(x => x.n === cont[0].n); const act = top.filter(x => x.p.activo !== false); return { estado: 'dudoso', producto: (act[0] || top[0]).p, cand: cont.slice(0, 6).map(x => ({ p: x.p, score: 0.5 })), score: 0.5 }; }
+  }
+  return m;
 }
 async function upsertTarifasCompra(tf) {
   Object.keys(COSTES).forEach(k => delete COSTES[k]);
@@ -6629,6 +6875,15 @@ async function costesCompra(ids) {
     if (r.error) r = await sb.from('tarifas_compra').select('producto_id,precio,fecha,proveedores(nombre)').in('producto_id', ids);
     if (r.error || !r.data) return out;
     r.data.forEach(t => { const o = out[t.producto_id]; if (!o || String(t.fecha || '') > String(o.fecha || '')) out[t.producto_id] = { precio: Number(t.precio), fecha: t.fecha, unidad: t.unidad || null, prov: t.proveedores ? (uno(t.proveedores) || {}).nombre || '' : '' }; });
+  } catch (e) { }
+  /* Lo más nuevo manda: también cuentan los precios anotados a mano y los de las facturas leídas */
+  try {
+    const mn = await sb.from('precios_compra_dia').select('producto_id,precio,fecha,unidad').in('producto_id', ids).limit(3000);
+    (mn.data || []).forEach(m => { if (!(Number(m.precio) > 0)) return; const o = out[m.producto_id]; if (!o || String(m.fecha || '') > String(o.fecha || '')) out[m.producto_id] = { precio: Number(m.precio), fecha: m.fecha, unidad: m.unidad || null, prov: 'anotado a mano' }; });
+  } catch (e) { }
+  try {
+    const lf = await sb.from('lineas_factura_leida').select('producto_id,precio,fecha,unidad,proveedores(nombre)').in('producto_id', ids).limit(3000);
+    if (!lf.error) (lf.data || []).forEach(m => { if (!(Number(m.precio) > 0)) return; const o = out[m.producto_id]; if (!o || String(m.fecha || '') > String(o.fecha || '')) out[m.producto_id] = { precio: Number(m.precio), fecha: m.fecha, unidad: m.unidad || null, prov: (uno(m.proveedores) || {}).nombre || '' }; });
   } catch (e) { }
   /* Sin factura registrada: vale el «Coste» que se anotó a mano en el producto (la factura puede llegar después) */
   try {
@@ -6679,7 +6934,7 @@ function cargaCoste(pid) {
   return COSTES_PEND[pid];
 }
 function cajaCoste(pid, getPrecio, getUP, getCant) {
-  const d = h('div', { class: 'sub', style: 'display:none;margin-top:4px;font-weight:600;color:#0f766e' });
+  const d = h('div', { class: 'sub', style: 'display:none;margin-top:4px;font-weight:600;color:#0f766e;cursor:pointer' }); d.addEventListener('click', () => { if (puedeCompras()) hojaUltimosPrecios(pid); });
   d.act = () => {
     const c = COSTES[pid]; if (!c) { d.style.display = 'none'; return; }
     d.style.display = '';
@@ -6689,7 +6944,7 @@ function cajaCoste(pid, getPrecio, getUP, getCant) {
     let gan = '';
     if (p !== null && !isNaN(p) && p > 0 && c.precio > 0 && ((up === 'kg' && (!c.unidad || c.unidad === 'kg')) || (up !== 'kg' && c.unidad && c.unidad !== 'kg'))) { const g = p - c.precio; gan = ' · Ganas ' + (g >= 0 ? '+' : '') + eur(g) + ' €/' + (up === 'kg' ? 'kg' : 'ud') + ' (' + num(Math.round(g / p * 1000) / 10, 1) + ' %)';
       if (getCant) { const k = Number(getCant()); if (k > 0) { const gt = Math.round(g * k * 100) / 100; gan += ' · EN TOTAL ' + (gt >= 0 ? '+' : '') + eur(gt) + ' € (' + num(k) + (up === 'kg' ? ' kg' : ' ud') + ')'; } else if (up === 'kg') gan += ' · el total saldrá al pesar'; } }
-    d.textContent = '💶 ' + textoCoste(c) + gan + (bajo ? ' · ⚠ Estás por debajo del coste' : '');
+    d.textContent = '💶 ' + textoCoste(c) + gan + (bajo ? ' · ⚠ Estás por debajo del coste' : '') + (puedeCompras() ? ' · últimos ›' : '');
   };
   cargaCoste(pid).then(() => d.act());
   return d;
@@ -7223,6 +7478,8 @@ function vistaImportar() {
   const S = { cliente: null, clienteEstado: null, clienteCand: [], clienteFrase: '', clienteManual: false, detectado: false, fecha: hoy(), fechaOk: false, fraseFecha: '', hora: { limite: '', desde: '', hasta: '' }, lineas: [], ignorado: [], avisos: [], interpretado: false, notas: '', repetir: null, guardando: false, prods: null, clis: null, hist: {}, aviso: '', archivos: [], origen: 'texto', anadir: (state.params && state.params.anadir) || null, anadirFecha: null, anadirPed: null };
   const modo = (state.params && state.params.modo) || 'texto';
   const ta = h('textarea', { rows: 6, placeholder: 'Escribe o pega el pedido como lo dirías:\n«Pedido para Florencio, para mañana. Dos sacos de patatas, cinco kilos de tomate pera y una caja de calabacines. Entregar antes de las 9.»\nTambién vale con # copiado de WhatsApp.' }); ta.value = (state.params && state.params.texto) || '';
+  try { if (!ta.value) { const b = LS.get('fj_borr_importar', null); if (b && b.texto && Date.now() - b.t < 86400000) { ta.value = b.texto; setTimeout(() => toast('Recuperado el texto que tenías escrito', 'ok'), 400); } } } catch (e) { }
+  ta.addEventListener('input', () => { try { LS.set('fj_borr_importar', { t: Date.now(), texto: ta.value }); } catch (e) { } });
   const cliBox = h('div', {}), fechaBox = h('div', {}), horaBox = h('div', {}), avisoBox = h('div', {}), lineasBox = h('div', {}), ignBox = h('div', {}), pie = h('div', {});
   const diaSem = f => ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'][new Date(f + 'T12:00:00').getDay()];
   const manana = () => { const d = new Date(); d.setDate(d.getDate() + 1); return hoy(d); };
@@ -7437,7 +7694,7 @@ function vistaImportar() {
     const pr = problemas();
     pie.replaceChildren(h('label', { class: 'campo', style: 'margin-top:10px' }, 'Observaciones', notasTa),
       pr.length ? h('div', { class: 'card', style: 'background:#fee2e2;border-color:#ef4444;margin-top:8px' }, h('div', { class: 'sub' }, 'Toca cada aviso para ir directo al fallo:'), pr.map(x => h('div', { class: 'irfalta', onclick: x.ir }, '• ' + x.t + '  →'))) : null,
-      h('button', { style: 'width:100%;margin-top:8px', disabled: pr.length > 0 || S.guardando, onclick: guardar }, 'Confirmar pedido'),
+      h('div', { class: 'barraG', style: 'margin-top:8px' }, h('button', { class: 'ghost', onclick: () => { try { LS.set('fj_borr_importar', { t: Date.now(), texto: ta.value }); toast('Texto guardado ✔ (no se pierde si sales)', 'ok'); } catch (e) { } } }, '💾 Guardar texto'), h('button', { style: 'flex:2', disabled: pr.length > 0 || S.guardando, onclick: guardar }, 'Confirmar pedido')),
       h('div', { style: 'display:flex;gap:8px;margin-top:8px' },
         h('button', { class: 'ghost', style: 'flex:1', onclick: () => { ta.scrollIntoView({ behavior: 'smooth', block: 'center' }); ta.focus(); } }, 'Editar pedido'),
         h('button', { class: 'ghost', style: 'flex:1', onclick: async () => { if (S.lineas.length && !await confirmar('¿Cancelar este pedido? Se pierde lo interpretado (no se ha guardado nada).')) return; go('nuevo'); } }, 'Cancelar')),
@@ -7480,7 +7737,7 @@ function vistaImportar() {
       if (li.error) { await sb.from('pedidos').delete().eq('id', ped.data.id); if (rutas.length) await sb.storage.from('pedidos-originales').remove(rutas.map(r => r.ruta)); S.guardando = false; pintarPie(); toast(msgErr(li.error), 'err'); return; }
       await aprenderFormatos();
       await recordarAlias();
-      toast((sinColumnas ? 'Pedido guardado (falta ejecutar la parte 15 del SQL: el texto original se guardó en las notas)' : 'Pedido guardado') + avisoArch, avisoArch ? 'err' : 'ok'); state.fecha = S.fecha; go('pedido', { id: ped.data.id });
+      try { LS.set('fj_borr_importar', null); } catch (e) { } toast((sinColumnas ? 'Pedido guardado (falta ejecutar la parte 15 del SQL: el texto original se guardó en las notas)' : 'Pedido guardado') + avisoArch, avisoArch ? 'err' : 'ok'); state.fecha = S.fecha; go('pedido', { id: ped.data.id });
     } catch (e) { S.guardando = false; pintarPie(); toast(msgErr(e), 'err'); }
   }
   async function guardarAnadir(texto) {
@@ -7741,6 +7998,8 @@ function vistaBuscar() {
   async function buscarTodo(texto) {
     const mi = ++seq; const t = sinTilde(limpiaBusqueda(texto)).trim();
     if (t.length < 2) { res.replaceChildren(); info.textContent = 'Escribe al menos 2 letras.'; return; }
+    { const dc = compras ? detectaConsulta(texto) : null;   // «último precio de compra del pimiento rojo»
+      if (dc && (dc.tipo === 'ultimoprecio' || dc.tipo === 'preciocompra')) { info.textContent = 'Buscando…'; try { const rs = await consultarDatos(dc); if (mi !== seq) return; info.textContent = ''; res.replaceChildren(...rs.nodos); } catch (e) { if (mi === seq) { info.textContent = ''; res.replaceChildren(h('p', { class: 'err' }, msgErr(e))); } } return; } }
     info.textContent = 'Buscando…';
     try {
       const base = await bgCargarBase(); if (mi !== seq) return;
