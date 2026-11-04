@@ -1881,20 +1881,44 @@ function totalesCarga(datos) {
   return [...m.values()].map(t => Object.assign(t, { pedido: r3(t.pedido), kg: r3(t.kg), sobrante: r3(t.sobrante), total: Math.max(0, r3(t.pedido - t.sobrante)) }))
     .sort((a, b) => a.producto.localeCompare(b.producto, 'es'));
 }
+/* ---------- Agrupar la compra por producto: en el puesto se pide «Mandarinas: 3 cajas + 25 unidades», no una línea por cada unidad ni por cada nombre ---------- */
+function famCompraKey(n) {
+  const s = sinTilde(String(n || '')).toLowerCase().replace(/\([^)]*\)/g, ' ').replace(/[^a-z0-9 ]+/g, ' ');
+  const ws = s.split(/\s+/).filter(w => w && !/^(caja|cajas|pieza|piezas|pza|pzas|kilo|kilos|kg|kgs|saco|sacos|unidad|unidades|ud|uds)$/.test(w)).map(w => w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w);
+  return ws.join(' ') || s.trim();
+}
+function lev1(a, b) {   // ¿se diferencian en una sola letra? («iceberg» / «icerberg»)
+  if (a === b) return true; if (Math.abs(a.length - b.length) > 1 || a.length < 8 || b.length < 8) return false;
+  let i = 0; while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  const A = a.slice(i), B = b.slice(i); if (A.length === B.length) return A.slice(1) === B.slice(1); return A.length > B.length ? A.slice(1) === B : B.slice(1) === A;
+}
+function agrupaCompra(items) {
+  const keys = [], m = new Map();
+  items.forEach(it => { let k = famCompraKey(it.producto); const ex = keys.find(x => lev1(x, k)); if (ex) k = ex; else keys.push(k); if (!m.has(k)) m.set(k, []); m.get(k).push(it); });
+  return [...m.values()].map(its => {
+    const nombres = [...new Set(its.map(i => i.producto))];
+    const limpio = n => String(n).replace(/\([^)]*\)/g, ' ').replace(/\b(cajas?|piezas?|kilos?|kgs?|sacos?|unidades?)\b/gi, ' ').replace(/\s+/g, ' ').trim();
+    const nombre = nombres.length > 1 ? (nombres.map(limpio).filter(Boolean).sort((a, b) => a.length - b.length)[0] || nombres[0]) : nombres[0];
+    const ORD = ['caja', 'saco', 'bandeja', 'bolsa', 'manojo', 'docena', 'kg', 'pieza']; its.sort((a, b) => (ORD.indexOf(a.unidad) - ORD.indexOf(b.unidad)) || String(a.producto).localeCompare(String(b.producto), 'es'));
+    return { producto: nombre, multi: nombres.length > 1, items: its };
+  }).sort((a, b) => a.producto.localeCompare(b.producto, 'es'));
+}
+const uniPl = (n, u) => (Math.abs(n) > 1 && ['pieza', 'caja', 'saco', 'bolsa', 'bandeja', 'manojo', 'docena'].includes(u)) ? u + 's' : u;   // «3 cajas», «25 piezas»
+const sumaUnidades = (items, campo) => items.filter(i => i[campo] > 0).map(i => num(i[campo]) + ' ' + uniPl(i[campo], i.unidad)).join(' + ');
 /* ---------- Hoja de compra (lista de lo que hay que comprar para los pedidos de una fecha) ---------- */
 function htmlHojaCompra(fecha, datos) {
-  const t = totalesCarga(datos);
+  const t = agrupaCompra(totalesCarga(datos));
   return '<div class="hoja"><h1>HOJA DE COMPRA · ' + esc(fechaES(fecha)) + '</h1><table><tr><th>Producto</th><th class="d">Pedido</th><th class="d">Sobrante</th><th class="d">A comprar</th><th>Proveedor</th><th class="d">Comprado</th></tr>' +
-    t.map(x => '<tr><td><span class="caja"></span>' + esc(x.producto) + '</td><td class="d">' + esc(num(x.pedido) + ' ' + x.unidad) + '</td><td class="d">' + (x.sobrante ? esc(num(x.sobrante) + ' ' + x.unidad) : '') + '</td><td class="d"><b>' + esc(num(x.total) + ' ' + x.unidad) + '</b></td><td></td><td class="d">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>').join('') + '</table></div>';
+    t.map(g => '<tr><td><span class="caja"></span>' + esc(g.producto) + '</td><td class="d">' + esc(sumaUnidades(g.items, 'pedido')) + '</td><td class="d">' + esc(sumaUnidades(g.items, 'sobrante')) + '</td><td class="d"><b>' + esc(sumaUnidades(g.items, 'total') || '0') + '</b></td><td></td><td class="d">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>').join('') + '</table></div>';
 }
 function vistaHojaCompra() {
   state.view = 'hojacompra'; let fecha = (state.params && state.params.fecha) || manana0(); const cont = h('div', {}); let datos = null;
   const fi = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || fecha; cargar(); } });
   function pintar() {
-    if (!datos) return; const t = totalesCarga(datos);
+    if (!datos) return; const t = agrupaCompra(totalesCarga(datos));
     const kids = [h('div', { class: 'aviso-card' }, 'Lo que hay que comprar para los pedidos de ' + fechaES(fecha) + ' (pedido − sobrante del día anterior). Elige otra fecha si los pedidos llegaron con días de antelación.')];
     if (!t.length) kids.push(h('p', { class: 'vacio' }, 'No hay pedidos para esta fecha.'));
-    t.forEach(x => kids.push(h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'nombre' }, x.producto), h('div', { class: 'sub' }, 'Pedido ' + num(x.pedido) + ' ' + x.unidad + (x.sobrante ? ' · Sobrante ' + num(x.sobrante) + ' ' + x.unidad : ''))), h('div', { class: 'tot-num' }, num(x.total) + ' ' + x.unidad))));
+    t.forEach(g => kids.push(h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'nombre' }, g.producto), h('div', { class: 'sub' }, 'Pedido ' + sumaUnidades(g.items, 'pedido') + (sumaUnidades(g.items, 'sobrante') ? ' · Sobrante ' + sumaUnidades(g.items, 'sobrante') : ''))), h('div', { class: 'tot-num' }, sumaUnidades(g.items, 'total') || '0'))));
     if (t.length) kids.push(h('button', { style: 'width:100%;margin-top:6px', onclick: () => imprimir(htmlHojaCompra(fecha, datos)) }, 'Imprimir hoja de compra (A4)'));
     kids.push(h('div', { style: 'display:flex;gap:8px;margin-top:8px' }, h('button', { class: 'ghost', style: 'flex:1', onclick: () => { state.fecha = fecha; go('carga'); } }, 'Hoja de carga'), h('button', { class: 'ghost', style: 'flex:1', onclick: () => go('quien', { fecha }) }, 'A quién hemos comprado')));
     cont.replaceChildren(...kids);
@@ -2115,7 +2139,15 @@ function vistaAyuda() {
       if (leerAuto.checked) { const o = ops[0]; leerVoz(o.tipo === 'prob' ? textoLeerProb(o.it) : textoLeer(o.it)); }
       };
       let det = detectaConsulta(q);
-      if (!det && !ops.length) { const nm = sinTilde(limpiaBusqueda(q)).toLowerCase().split(/\s+/).filter(w => w && !CONS_PARAR.has(w)).join(' '); if (nm && nm.split(' ').length <= 4) det = { tipo: 'cliente', nombre: nm, q }; }
+      if (!det) {
+        const nm = sinTilde(limpiaBusqueda(q)).toLowerCase().split(/\s+/).filter(w => w && !CONS_PARAR.has(w)).join(' ');
+        if (nm && nm.split(' ').length <= 4) {
+          /* Solo el nombre de un producto («Tomate bola», «lima», «pim verde»): se enseña el producto con sus últimos precios, aunque esté inactivo o la factura no lo reconociera. Vale para TODOS los productos del catálogo. */
+          let esProd = false; try { const PR = _prodsAsis || LS.get('fj_wa_prod', null); if (PR && buscarProdAsis(PR, nm).length && !(_clisAsis && buscarCliLocal(_clisAsis, nm).length)) esProd = true; } catch (e) { }
+          if (esProd) det = { tipo: puedeCompras() ? 'ultimoprecio' : 'precio', nombre: nm, fecha: null, q };
+          else if (!ops.length) det = { tipo: 'cliente', nombre: nm, q };
+        }
+      }
       if (det) {
         const correr = d2 => {
           salida.replaceChildren(h('p', { class: 'sub' }, 'Buscando…')); subir();
@@ -3854,7 +3886,11 @@ function vistaCompras() {
       Object.keys(mapa).forEach(k => { const a = mapa[k]; if (vacioAj(a) || filas.some(f => f.k === k)) return; filas.push({ k, pid: a.pid, producto: a.nombre || 'Producto', unidad: a.unidad, pedido: 0, sobrante: 0, calc: 0, aj: a, extra: true }); });
       filas.sort((a, b) => a.producto.localeCompare(b.producto, 'es'));
       filas.forEach(f => { f.final = f.aj && f.aj.cantidad != null ? f.aj.cantidad : f.calc; f.nota = (f.aj && f.aj.nota) || ''; f.cambiado = !!(f.aj && f.aj.cantidad != null && Math.abs(f.aj.cantidad - f.calc) > 0.0005); });
-      const texto = () => 'LISTA DE LA COMPRA ' + fechaES(fecha) + '\n' + filas.map(x => '- ' + x.producto + ': ' + num(x.final) + ' ' + x.unidad + (x.nota ? ' (' + x.nota + ')' : '')).join('\n');
+      /* Un solo renglón por PRODUCTO: lo que hay que pedir en el puesto («Mandarinas: 3 cajas + 25 unidades»), con el detalle por cliente aparte. */
+      const grupos = agrupaCompra(filas).map(g => ({ producto: g.producto, multi: g.multi, filas: g.items }));
+      const resumenG = g => g.filas.filter(f => f.final > 0).map(f => num(f.final) + ' ' + uniPl(f.final, f.unidad)).join(' + ') || '0';
+      const notasG = g => g.filas.map(f => f.nota).filter(Boolean).join(' · ');
+      const texto = () => 'LISTA DE LA COMPRA ' + fechaES(fecha) + '\n' + grupos.map(g => '- ' + g.producto + ': ' + resumenG(g) + (notasG(g) ? ' (' + notasG(g) + ')' : '')).join('\n');
       const refrescar = () => pLista();
 
       /* ---------- Tabla clientes × productos ---------- */
@@ -3863,7 +3899,7 @@ function vistaCompras() {
         for (const l of lineasCarga(p)) { const k = ((l.productos && l.productos.id) || l.id) + '|' + l.unidad_pedida; if (!cols.has(k)) cols.set(k, { k, producto: nomProd(l), unidad: l.unidad_pedida });
           const cel = clientes.get(ck).cel; cel.set(k, sumaR(cel.get(k) || 0, Number(l.cantidad_pedida) || 0)); } }
       filas.filter(f => f.extra).forEach(f => { if (!cols.has(f.k)) cols.set(f.k, { k: f.k, producto: f.producto, unidad: f.unidad }); });
-      const colsL = [...cols.values()].sort((a, b) => a.producto.localeCompare(b.producto, 'es') || a.unidad.localeCompare(b.unidad, 'es'));
+      const gruposCol = agrupaCompra([...cols.values()]); const colsL = gruposCol.flatMap(g => g.items); const iniGrupo = new Set(gruposCol.map(g => g.items[0].k));
       const multi = {}; colsL.forEach(c => { multi[c.producto] = (multi[c.producto] || 0) + 1; });
       const cliL = [...clientes.values()].sort((a, b) => (a.ruta || '￿').localeCompare(b.ruta || '￿', 'es') || a.nombre.localeCompare(b.nombre, 'es'));
       const totCol = c => cliL.reduce((t, cl) => sumaR(t, cl.cel.get(c.k) || 0), 0);
@@ -3874,10 +3910,10 @@ function vistaCompras() {
       const pTabla = h('div', { class: 'pTabla' });
       if (!colsL.length) pTabla.append(h('p', { class: 'vacio' }, 'No hay pedidos para esta fecha.'));
       else {
-        const th = (c) => h('th', { class: 'cp' }, h('div', { class: 'np' }, c.producto), h('div', { class: 'up' }, c.unidad));
+        const th = (c) => h('th', { class: 'cp', style: iniGrupo.has(c.k) ? 'border-left:3px solid #166534' : '' }, h('div', { class: 'np' }, c.producto), h('div', { class: 'up' }, c.unidad));
         const crearTb = () => {
           const thead = h('thead', {}, h('tr', {}, h('th', { class: 'c0' }, 'Cliente'), colsL.map(th)));
-          const tbody = h('tbody', {}, cliL.map(cl => h('tr', {}, h('th', { class: 'c0' }, cl.nombre, cl.ruta ? h('small', {}, ' · ' + cl.ruta) : null), colsL.map(c => { const v = cl.cel.get(c.k); return h('td', { class: v ? 'v' : '' }, v ? num(v) : ''); }))));
+          const tbody = h('tbody', {}, cliL.map(cl => h('tr', {}, h('th', { class: 'c0' }, cl.nombre, cl.ruta ? h('small', {}, ' · ' + cl.ruta) : null), colsL.map(c => { const v = cl.cel.get(c.k); return h('td', { class: v ? 'v' : '', style: iniGrupo.has(c.k) ? 'border-left:3px solid #166534' : '' }, v ? num(v) : ''); }))));
           const tfoot = h('tfoot', {}, rowsTot.map(([nom, fn, cl], i) => { const bt = 'bottom:calc(var(--mxh,30px)*' + (nTot - 1 - i) + ')'; return h('tr', { class: cl }, h('th', { class: 'c0', style: bt }, nom), colsL.map(c => { const v = fn(c); const dif = cl === 'ta' && porK[c.k] && porK[c.k].cambiado; return h('td', { style: bt, class: dif ? 'dif' : '' }, v || (v === 0 && cl === 'ta') ? num(v) : ''); })); }));
           const t = h('table', { class: 'mx' }, thead, tbody, tfoot);
           // Al tocar una casilla se marca su fila y su columna, para leer bien con muchos clientes y productos.
@@ -3918,17 +3954,26 @@ function vistaCompras() {
       if (A.falta) pLista_.append(h('div', { class: 'aviso-card' }, 'Falta ejecutar en Supabase la Parte 48: los ajustes se guardan solo en este móvil hasta entonces.'));
       pLista_.append(h('div', { class: 'aviso-card' }, 'A comprar = lo pedido por los clientes − el sobrante del último día con sobrante' + (r.datos.previoFecha ? ' (' + fechaES(r.datos.previoFecha) + ')' : '') + '. Toca ✎ para corregir la cantidad o añadir una nota.'));
       if (!filas.length) pLista_.append(h('p', { class: 'vacio' }, 'No hay pedidos para esta fecha.'));
-      filas.forEach(x => { const k = x.k;
-        pLista_.append(h('div', { class: 'card tap' + (hechos[k] ? ' hecha' : ''), onclick: () => { hechos[k] = !hechos[k]; LS.set(claveLS, hechos); refrescar(); } },
-          h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, (hechos[k] ? '✔ ' : '') + x.producto),
-            h('div', { class: 'sub' }, x.extra ? 'Añadido a mano' : 'Pedido ' + num(x.pedido) + ' ' + x.unidad + (x.sobrante ? ' · sobrante ' + num(x.sobrante) : '') + (x.cambiado ? ' · calculado ' + num(x.calc) : '')),
-            x.nota ? h('div', { class: 'nota-c' }, '📝 ' + x.nota) : null),
-            h('div', { style: 'display:flex;align-items:center;gap:8px' }, h('div', { class: 'tot-num' + (x.cambiado ? ' cambiado' : '') }, num(x.final) + ' ' + x.unidad),
-              h('button', { class: 'ghost small ed', 'aria-label': 'Editar ' + x.producto, onclick: ev => { ev.stopPropagation(); editarFila(x); } }, '✎'))))); });
+      grupos.forEach(g => {
+        const todos = g.filas.every(f => hechos[f.k]);
+        const porCli = h('div', { style: 'display:none;margin-top:6px;border-top:1px dashed var(--borde,#d1d5db);padding-top:6px' });
+        const filasCli = []; g.filas.forEach(f => cliL.forEach(cl => { const v = cl.cel.get(f.k); if (v) filasCli.push({ cl, v, u: f.unidad }); }));
+        filasCli.sort((a, b) => a.cl.nombre.localeCompare(b.cl.nombre, 'es'));
+        porCli.append(...(filasCli.length ? filasCli.map(x => h('div', { class: 'sub', style: 'display:flex;justify-content:space-between;gap:8px' }, h('span', {}, x.cl.nombre), h('b', {}, num(x.v) + ' ' + x.u))) : [h('div', { class: 'sub' }, 'Sin pedidos de clientes (añadido a mano).')]));
+        const btnDet = h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: ev => { ev.stopPropagation(); const on = porCli.style.display === 'none'; porCli.style.display = on ? 'block' : 'none'; btnDet.textContent = on ? 'Ocultar clientes ▴' : 'Ver quién lo lleva ▾'; } }, 'Ver quién lo lleva ▾');
+        pLista_.append(h('div', { class: 'card' + (todos ? ' hecha' : '') },
+          h('div', { class: 'nombre' }, (todos ? '✔ ' : '') + g.producto),
+          g.filas.length > 1 ? h('div', { style: 'font-weight:800;font-size:19px;color:#166534;margin:2px 0 4px' }, '👉 Pedir: ' + resumenG(g)) : null,
+          ...g.filas.map(x => { const k = x.k;
+            return h('div', { class: 'fila tap', style: 'padding:6px 0;border-top:1px solid var(--borde,#eee)' + (hechos[k] ? ';opacity:.55' : ''), onclick: () => { hechos[k] = !hechos[k]; LS.set(claveLS, hechos); refrescar(); } },
+              h('div', {}, h('div', { class: 'sub' }, (g.multi ? x.producto + ' · ' : '') + (x.extra ? 'Añadido a mano' : 'Pedido ' + num(x.pedido) + ' ' + x.unidad + (x.sobrante ? ' · sobrante ' + num(x.sobrante) : '') + (x.cambiado ? ' · calculado ' + num(x.calc) : ''))), x.nota ? h('div', { class: 'nota-c' }, '📝 ' + x.nota) : null),
+              h('div', { style: 'display:flex;align-items:center;gap:8px' }, h('div', { class: 'tot-num' + (x.cambiado ? ' cambiado' : '') }, (hechos[k] ? '✔ ' : '') + num(x.final) + ' ' + x.unidad),
+                h('button', { class: 'ghost small ed', 'aria-label': 'Editar ' + x.producto, onclick: ev => { ev.stopPropagation(); editarFila(x); } }, '✎'))); }),
+          btnDet, porCli)); });
       pLista_.append(h('button', { class: 'ghost', style: 'width:100%;margin:8px 0', onclick: () => anadirExtra() }, '➕ Añadir un producto a la lista'));
       if (filas.length) pLista_.append(h('div', { style: 'display:flex;gap:8px' },
         h('button', { class: 'ghost', style: 'flex:1', onclick: async () => { const tx = texto(); try { if (navigator.share) await navigator.share({ text: tx }); else { await navigator.clipboard.writeText(tx); toast('Lista copiada', 'ok'); } } catch (e) { } } }, 'Compartir lista'),
-        h('button', { class: 'ghost', style: 'flex:1', onclick: () => imprimir('<div class="hoja"><h1>LISTA DE LA COMPRA · ' + esc(fechaES(fecha)) + '</h1><table>' + filas.map(x => '<tr><td><span class="caja"></span>' + esc(x.producto) + (x.nota ? '<br><small>' + esc(x.nota) + '</small>' : '') + '</td><td class="d"><b>' + esc(num(x.final) + ' ' + x.unidad) + '</b></td></tr>').join('') + '</table></div>') }, 'Imprimir')));
+        h('button', { class: 'ghost', style: 'flex:1', onclick: () => imprimir('<div class="hoja"><h1>LISTA DE LA COMPRA · ' + esc(fechaES(fecha)) + '</h1><table>' + grupos.map(g => '<tr><td><span class="caja"></span>' + esc(g.producto) + (notasG(g) ? '<br><small>' + esc(notasG(g)) + '</small>' : '') + '</td><td class="d"><b>' + esc(resumenG(g)) + '</b></td></tr>').join('') + '</table></div>') }, 'Imprimir')));
 
       const tabs = h('div', { class: 'chips cvista' }, [['lista', '📋 Lista de la compra'], ['tabla', '🧮 Tabla clientes × productos']].map(([v, n]) => h('button', { class: 'chip' + (vista === v ? ' on' : ''), onclick: () => { vista = v; LS.set('fj_compra_vista', v); grid.classList.toggle('vt', v === 'tabla'); tabs.querySelectorAll('.chip').forEach((b, i) => b.classList.toggle('on', (i === 0) === (v === 'lista'))); } }, n)));
       const grid = h('div', { class: 'cgrid' + (vista === 'tabla' ? ' vt' : '') }, pLista_, pTabla);
@@ -6797,7 +6842,7 @@ async function ultimosPreciosCompra(prod, n) {
     if (r1.error) sinP54 = true; else (r1.data || []).forEach(l => out.push({ fecha: String(l.fecha || '').slice(0, 10), precio: Number(l.precio), unidad: l.unidad || 'kg', prov: pv(l), fuente: '🧾 Factura leída' + (l.dudoso ? ' (por confirmar)' : '') }));
     if (!sinP54) {
       const r2 = await sb.from('lineas_factura_leida').select('precio,fecha,unidad,texto,proveedores(nombre)').is('producto_id', null).gte('fecha', hoy(new Date(Date.now() - 90 * 86400000))).limit(1500); const ind = waIndice([{ nombre: prod.nombre }]);
-      (r2.data || []).forEach(l => { const c = fcCandidatos(l.texto, ind, 1)[0]; if (c && c.n >= 1 && (c.n === c.np || (c.n === c.nq && c.n >= 2))) out.push({ fecha: String(l.fecha || '').slice(0, 10), precio: Number(l.precio), unidad: l.unidad || 'kg', prov: pv(l), fuente: '🧾 Factura sin emparejar: «' + l.texto + '»' }); });
+      (r2.data || []).forEach(l => { const c = fcCandidatos(l.texto, ind, 1)[0]; if (c && c.n >= 1 && (c.n === c.np || (c.n === c.nq && c.n >= 2) || (c.n >= 2 && c.n >= c.np - 1))) out.push({ fecha: String(l.fecha || '').slice(0, 10), precio: Number(l.precio), unidad: l.unidad || 'kg', prov: pv(l), fuente: '🧾 Factura sin emparejar' + (c.n < c.np ? ' (parecida)' : '') + ': «' + l.texto + '»' }); });
     }
   } catch (e) { sinP54 = true; }
   const vistos = new Set();
