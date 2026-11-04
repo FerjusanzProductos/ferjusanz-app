@@ -2344,6 +2344,7 @@ function detectaConsulta(q) {
   }
   /* Empezar un pedido dictado: «apunta un pedido para Florencio, 10 kilos de tomate» */
   if (/\b(apunta|apuntame|anota|anotame|pon|ponme|haz|hazme|crea|creame|mete|metele|prepara)\b/.test(t) && /\bpedido\b/.test(t) && !/\b(como|donde)\b/.test(t) && (/\d/.test(t) || /\b(uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|doce|medio|media)\b/.test(t) || /\bpara\b/.test(t) && /\b(kilo|kilos|kg|caja|cajas|saco|sacos|docena|docenas|bandeja|bandejas|manojo|manojos|bolsa|bolsas)\b/.test(t))) return { tipo: 'pedir', q };
+  if (/\b(leer|lee|lea|leeme|actualiza\w*|importa\w*|cargar|carga|sincroniza\w*)\b.*\bfacturas?\b.*\b(ultim\w*|recientes?|dias?|semana|compra|proveedor\w*)\b|\bleer (las )?facturas\b/.test(t) && !/\b(cliente|clientes|albaran\w*)\b/.test(t)) return { tipo: 'leerfacturas', nombre: '', fecha: null, q };
   if (/\b(como vamos|como va el dia|como llevamos|como llevo el dia|que tal vamos)\b/.test(t)) return { tipo: 'resumen', nombre: '', fecha: null, q };
   if (/\bcuando fue la ultima vez que\b/.test(t)) t = t.replace(/cuando fue la ultima vez que/, 'ultima compra de');
   if (/\b(como|donde|cuando|porque|puedo|puede|deja|funciona|falla|error|no me|no tengo|no ha llegado|no llega|sin factura|no sale|no veo|no puedo|paso|pasos|ayuda|explica|que es|para que|hago|hacer|imprim\w*|cambiar|activar|configur\w*|apunt\w*|anot\w*|crear|nuevo|nueva|meter|anadir|borrar|eliminar|equivoq\w*|olvid\w*)\b/.test(t) && !/\ba como\b|\bcomo (ha|han) (evolucionado|subido|bajado|estado|variado)\b/.test(t)) return null;
@@ -2504,6 +2505,11 @@ async function consultarDatos(d, elegir) {
     if (esOficina()) nodos.push(tarjetaConsulta((varios ? palabra.charAt(0).toUpperCase() + palabra.slice(1) : p.nombre) + ' · ventas', resV + ' (pedidos de la app y facturas de Golden 2026)', filasV, null));
     if (varios) nodos.push(h('div', { class: 'sub' }, 'He mirado todos los productos con ese nombre: ' + lista.map(x => x.nombre).join(', ') + '.'));
     return { nodos, voz: voz.join(' ') };
+  }
+  if (d.tipo === 'leerfacturas') {
+    if (!puedeCompras()) return sinPermiso('Las facturas de proveedores las lee quien compra y la oficina.');
+    const b = botonLeerRecientes(); setTimeout(() => { try { b.click(); } catch (e) { } }, 400);
+    return { nodos: [h('p', { class: 'sub' }, 'Voy a leer las facturas de proveedores de los últimos 15 días y a guardar sus precios. Puede tardar un poco; no cierres esta pantalla.'), b], voz: 'Leyendo las facturas de los últimos quince días' };
   }
   if (d.tipo === 'ultimoprecio') {
     if (!puedeCompras()) return sinPermiso('Los precios de compra los ve quien compra y la oficina.');
