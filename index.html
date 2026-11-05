@@ -985,8 +985,8 @@ async function abrirPrecios(pedidoId, alGuardar) {
   let pe, ln;
   try {
     [pe, ln] = await Promise.all([sb.from('pedidos').select('id,estado,cliente_id,fecha_entrega,clientes(codigo,nombre,nombre_comercial,forma_pago,recargo_equivalencia,direccion,localidad)').eq('id', pedidoId).single(),
-      sb.from('lineas_pedido').select('id,producto_id,estado,notas,iva,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,precio_lista,nota_interna,productos(nombre,iva)').eq('pedido_id', pedidoId)]);
-    if (ln.error && /column|schema cache/i.test(ln.error.message || '')) { ln = await sb.from('lineas_pedido').select('id,producto_id,estado,notas,iva,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,productos(nombre,iva)').eq('pedido_id', pedidoId); ln.sinInterna = true; }
+      sb.from('lineas_pedido').select('id,producto_id,estado,notas,iva,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,precio_lista,nota_interna,formato_peso_kg,productos(nombre,iva)').eq('pedido_id', pedidoId)]);
+    if (ln.error && /column|schema cache/i.test(ln.error.message || '')) { ln = await sb.from('lineas_pedido').select('id,producto_id,estado,notas,iva,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,formato_peso_kg,productos(nombre,iva)').eq('pedido_id', pedidoId); ln.sinInterna = true; }
     if (pe.error) throw pe.error; if (ln.error) throw ln.error;
   } catch (e) { toast(msgErr(e), 'err'); return; }
   const ped = pe.data; if (ped.estado === 'anulado') { toast('Este pedido está anulado.', 'err'); return; }
@@ -994,22 +994,65 @@ async function abrirPrecios(pedidoId, alGuardar) {
   const R = lineas.map(l => ({ l, precio: l.precio != null ? String(l.precio).replace('.', ',') : '', up: l.unidad_precio, lista: l.precio_lista != null ? String(l.precio_lista).replace('.', ',') : '', nota: l.nota_interna || '' }));
   const sinInterna = !!ln.sinInterna;
   let tarifas = {}; try { tarifas = await preciosPara(ped.cliente_id, lineas.map(l => l.producto_id)); } catch (e) { }
-  const totalBox = h('div', { style: 'font-weight:700;margin:8px 0' }), cuerpo = h('div', {});
+  const totalBox = h('div', { style: 'position:sticky;top:0;z-index:5;background:#fff;border:1.5px solid #bbf7d0;border-radius:10px;padding:8px 10px;font-weight:700;margin:8px 0;white-space:pre-line;box-shadow:0 2px 6px rgba(0,0,0,.1)' }), cuerpo = h('div', {});
   const vivoDet = h('details', { style: 'margin:8px 0' }, h('summary', { style: 'font-weight:700;cursor:pointer;padding:8px 0' }, '📄 Ver el albarán con estos precios'), h('div', {}));
   function actVivo() { if (!vivoDet.open) return; const dv = { pedido: ped, lineas: R.map(x => Object.assign({}, x.l, { precio: String(x.precio).trim() === '' || isNaN(parseNum(x.precio)) ? null : parseNum(x.precio), unidad_precio: x.up })), albaran: ped.estado === 'terminado' ? { serie: 'F', numero: null, estado: 'cerrado', fecha: ped.fecha_entrega } : null }; vivoDet.lastChild.replaceChildren(cuerpoAlbaranVivo(dv)); }
   vivoDet.addEventListener('toggle', actVivo);
   let cerrar = () => { };
   const cantTxt = l => l.peso_real != null && l.unidad_precio === 'kg' ? num(l.peso_real) + ' kg' : num(l.cantidad_pedida) + ' ' + l.unidad_pedida;
   const importe = x => { const p = parseNum(x.precio); if (!(p >= 0) || x.precio === '') return null; const k = x.up === 'kg' ? x.l.peso_real : x.l.cantidad_pedida; return k == null ? null : Math.round(Number(k) * p * 100) / 100; };
-  function total() { let t = 0, falta = 0; R.forEach(x => { const i = importe(x); if (i == null) falta++; else t += i; }); totalBox.textContent = 'Total sin IVA: ' + eur(t) + ' €' + (falta ? ' · faltan ' + falta + ' línea(s)' : ' ✔'); actVivo(); }
+  function total() {
+    let t = 0, falta = 0, g = 0, tv = 0, bajos = 0;
+    R.forEach(x => { const i = importe(x); if (i == null) { falta++; return; } t += i; const cost = x.cu ? x.cu() : null, k = x.cant ? Number(x.cant()) : 0, p = parseNum(x.precio); if (cost != null && k > 0 && p > 0) { g += (p - cost) * k; tv += p * k; if (p < cost - 0.0004) bajos++; } });
+    totalBox.textContent = '💶 Total sin IVA: ' + eur(t) + ' €' + (falta ? ' · faltan ' + falta + ' línea(s)' : ' ✔') + (tv > 0 ? '\n📈 Ganancia estimada: ' + (g >= 0 ? '+' : '') + eur(Math.round(g * 100) / 100) + ' € (' + num(Math.round(g / tv * 1000) / 10, 1) + ' %)' : '') + (bajos ? '\n⚠ ' + bajos + ' línea(s) por debajo del coste' : '');
+    totalBox.style.borderColor = bajos ? '#fca5a5' : '#bbf7d0'; actVivo(); }
   R.forEach(x => {
-    const imp = h('div', { class: 'sub' }), cc = cajaCoste(x.l.producto_id, () => x.precio, () => x.up, () => x.up === 'kg' ? x.l.peso_real : x.l.cantidad_pedida);
-    const pintaImp = () => { const i = importe(x); imp.textContent = i != null ? 'Importe: ' + eur(i) + ' €' : (x.up === 'kg' && x.l.peso_real == null ? 'Sin pesar todavía: el importe saldrá al pesar' : ''); if (x.dto) x.dto(); total(); };
-    const inp = h('input', { type: 'text', inputmode: 'decimal', value: x.precio, placeholder: tarifas[x.l.producto_id] != null ? 'tarifa ' + eur(tarifas[x.l.producto_id]) : 'precio €', oninput: e => { x.precio = e.target.value; cc.act(); pintaImp(); } });
-    x.inp = inp; x.pinta = pintaImp;
-    cuerpo.append(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, (x.l.productos || {}).nombre || '—'), h('div', { class: 'sub' }, cantTxt(x.l))),
-      h('select', { onchange: e => { x.up = e.target.value; cc.act(); pintaImp(); } }, ['kg', 'unidad'].map(u => h('option', { value: u, selected: u === x.up }, 'por ' + (u === 'kg' ? 'kg' : x.l.unidad_pedida))))),
-      h('div', { style: 'display:flex;gap:8px;align-items:center;margin-top:6px' }, h('div', { style: 'flex:1' }, inp), tarifas[x.l.producto_id] != null && !x.precio ? h('button', { class: 'ghost small', onpointerdown: e => e.preventDefault(), onclick: () => { x.precio = String(tarifas[x.l.producto_id]).replace('.', ','); inp.value = x.precio; cc.act(); pintaImp(); toast('Precio puesto: ' + x.precio + ' €', 'ok'); } }, 'Usar ' + eur(tarifas[x.l.producto_id])) : null), imp, cc, sinInterna ? null : cajaInterna(x, pintaImp)));
+    const pid = x.l.producto_id; const idx = R.indexOf(x);
+    const imp = h('b', { style: 'font-size:19px;white-space:nowrap' }), est = h('div', { style: 'margin-top:8px;border-radius:10px;padding:7px 9px;font-size:14px;font-weight:600;line-height:1.35' }), chips = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' });
+    const card = h('div', { class: 'card', style: 'padding:10px;border-left:7px solid #9ca3af' });
+    /* Precio de compra expresado en la misma unidad en la que se vende esta línea (kg o unidad), o null si no se puede comparar */
+    const cu = () => { const c = COSTES[pid]; if (!c || !(c.precio > 0)) return null; const fk = Number(x.l.formato_peso_kg) > 0 ? Number(x.l.formato_peso_kg) : null;
+      if (x.up === 'kg') { if (!c.unidad || c.unidad === 'kg') return c.precio; if (fk && c.unidad === x.l.unidad_pedida) return c.precio / fk; return null; }
+      if (c.unidad && c.unidad === x.l.unidad_pedida) return c.precio; if (c.unidad === 'kg' && fk) return c.precio * fk; return null; };
+    const cant = () => x.up === 'kg' ? x.l.peso_real : x.l.cantidad_pedida;
+    x.cu = cu; x.cant = cant;
+    const pon = v => { x.precio = String(v).replace('.', ','); inp.value = x.precio; pintaImp(); };
+    const COL = { verde: ['#dcfce7', '#166534'], rojo: ['#fee2e2', '#b91c1c'], ambar: ['#fef3c7', '#92400e'], gris: ['#f3f4f6', '#374151'] };
+    const pintaImp = () => {
+      const i = importe(x); imp.textContent = i != null ? eur(i) + ' €' : '';
+      const c = COSTES[pid], cost = cu(), p = parseNum(x.precio), hayP = String(x.precio).trim() !== '' && p !== null && !isNaN(p) && p > 0, k = Number(cant()), uT = x.up === 'kg' ? 'kg' : 'ud';
+      let col = COL.gris, txt = '🛒 Todavía no hay precio de compra de este producto', bajo = false;
+      if (c && cost == null) { txt = '🛒 Compra ' + textoCoste(c).replace(/^Compra: /, '') + ' · está en otra unidad: compara a mano'; }
+      else if (c) {
+        txt = '🛒 COMPRA ' + eur(cost) + ' €/' + uT + (c.prov ? ' · ' + c.prov : '') + (c.fecha ? ' · ' + fechaES(String(c.fecha).slice(0, 10)).slice(0, 5) : '');
+        if (hayP) { const g = p - cost; const pct = Math.round(g / p * 1000) / 10; const tot = k > 0 ? Math.round(g * k * 100) / 100 : null;
+          if (g < -0.0004) { bajo = true; col = COL.rojo; txt += '\n⚠ POR DEBAJO DEL COSTE: pierdes ' + eur(-g) + ' €/' + uT + (tot != null ? ' · ' + eur(tot) + ' € en total' : ''); }
+          else if (g < 0.0004) { col = COL.ambar; txt += '\nSin ganancia: vendes al precio de compra'; }
+          else { col = COL.verde; txt += '\nGanas +' + eur(g) + ' €/' + uT + ' (' + num(pct, 1) + ' %)' + (tot != null ? ' · +' + eur(tot) + ' € en total (' + num(k) + ' ' + uT + ')' : ' · el total saldrá al pesar'); } }
+        else col = COL.gris;
+      }
+      est.style.background = col[0]; est.style.color = col[1]; est.style.whiteSpace = 'pre-line'; est.textContent = txt;
+      card.style.borderLeftColor = !hayP ? '#9ca3af' : bajo ? '#dc2626' : '#16a34a';
+      chips.replaceChildren(...(cost != null ? [20, 25, 30, 40].map(m => { const v = Math.round(cost / (1 - m / 100) * 100) / 100; return h('button', { type: 'button', class: 'ghost small', style: 'flex:1;min-width:70px;padding:6px 4px;line-height:1.2', onpointerdown: e => e.preventDefault(), onclick: () => pon(v) }, 'Ganar ' + m + ' %', h('br'), h('b', {}, eur(v))); }) : []));
+      if (x.dto) x.dto(); total();
+    };
+    const inp = h('input', { type: 'text', inputmode: 'decimal', enterkeyhint: 'next', value: x.precio, placeholder: tarifas[pid] != null ? 'tarifa ' + eur(tarifas[pid]) : 'precio €', style: 'font-size:22px;font-weight:700;min-height:50px',
+      oninput: e => { x.precio = e.target.value; pintaImp(); },
+      onkeydown: e => { if (e.key === 'Enter') { e.preventDefault(); const sig = R[idx + 1]; if (sig && sig.inp) { sig.inp.focus(); try { sig.inp.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (er) { } } else inp.blur(); } } });
+    x.inp = inp; x.pinta = pintaImp; x.card = card;
+    cargaCoste(pid).then(() => pintaImp());
+    const sinPesar = x.up === 'kg' && x.l.peso_real == null;
+    const interna = sinInterna ? null : h('details', { style: 'margin-top:8px' + ((x.lista || x.nota) ? '' : '') }, h('summary', { style: 'font-size:13px;font-weight:700;color:#92400e;cursor:pointer;padding:4px 0' }, '🔒 Info interna (opcional)' + ((x.lista || x.nota) ? ' · con datos' : '')), cajaInterna(x, pintaImp));
+    if (interna && (x.lista || x.nota)) interna.open = true;
+    card.append(
+      h('div', { class: 'fila', style: 'align-items:flex-start;gap:8px' }, h('div', { style: 'min-width:0' }, h('div', { class: 'nombre', style: 'font-size:17px' }, (x.l.productos || {}).nombre || '—'),
+        h('div', { style: 'display:inline-block;margin-top:4px;background:#e0f2fe;color:#075985;border-radius:8px;padding:2px 9px;font-weight:800;font-size:17px' }, cantTxt(x.l), sinPesar ? h('span', { style: 'font-weight:600;font-size:12px;color:#92400e' }, ' · sin pesar') : null)),
+        h('select', { style: 'max-width:42%', onchange: e => { x.up = e.target.value; pintaImp(); } }, ['kg', 'unidad'].map(u => h('option', { value: u, selected: u === x.up }, 'por ' + (u === 'kg' ? 'kg' : x.l.unidad_pedida))))),
+      h('div', { style: 'display:flex;gap:8px;align-items:center;margin-top:8px' }, h('div', { style: 'flex:1' }, inp),
+        tarifas[pid] != null && !x.precio ? h('button', { type: 'button', class: 'ghost small', onpointerdown: e => e.preventDefault(), onclick: () => { pon(tarifas[pid]); toast('Precio puesto: ' + x.precio + ' €', 'ok'); } }, 'Usar ' + eur(tarifas[pid])) : null,
+        h('div', { style: 'min-width:84px;text-align:right' }, imp)),
+      est, chips, interna);
+    cuerpo.append(card);
     pintaImp();
   });
   async function guardar(btn, seguir) {
@@ -1041,11 +1084,18 @@ async function abrirPrecios(pedidoId, alGuardar) {
     cerrar(); toast('Precios guardados', 'ok'); if (alGuardar) alGuardar();
   }
   const btnLlenar = h('button', { class: 'ghost', style: 'width:100%;margin:6px 0', onclick: () => { R.forEach(x => { if (!x.precio && tarifas[x.l.producto_id] != null) { x.precio = String(tarifas[x.l.producto_id]).replace('.', ','); x.inp.value = x.precio; } x.pinta(); }); } }, 'Rellenar los que faltan con las tarifas del cliente');
+  /* Barra rápida: un % de ganancia para todas las que faltan, y ver solo las que faltan */
+  let soloFaltan = false; const margen = h('input', { type: 'text', inputmode: 'decimal', value: LS.get('fj_margen_rapido', '25'), style: 'width:70px;text-align:center;font-size:18px;font-weight:700', oninput: e => LS.set('fj_margen_rapido', e.target.value) });
+  const btnSolo = h('button', { type: 'button', class: 'ghost small', style: 'flex:1', onclick: () => { soloFaltan = !soloFaltan; btnSolo.textContent = soloFaltan ? '👁 Ver todas' : '🔎 Solo las que faltan'; R.forEach(x => { const t = String(x.precio).trim() !== ''; x.card.style.display = soloFaltan && t ? 'none' : ''; }); } }, '🔎 Solo las que faltan');
+  const barraM = h('div', { style: 'display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0' }, h('span', { class: 'sub', style: 'font-weight:700' }, 'Ganar'), margen, h('span', { class: 'sub', style: 'font-weight:700' }, '%'),
+    h('button', { type: 'button', style: 'flex:2', onclick: () => { const m = parseNum(margen.value); if (m === null || isNaN(m) || m < 0 || m >= 95) { toast('Pon un % entre 0 y 95', 'err'); return; } let n = 0, sin = 0;
+      R.forEach(x => { if (String(x.precio).trim() !== '') return; const c = x.cu ? x.cu() : null; if (c == null) { sin++; return; } x.precio = String(Math.round(c / (1 - m / 100) * 100) / 100).replace('.', ','); x.inp.value = x.precio; x.pinta(); n++; });
+      toast(n + ' precio(s) puestos con ' + num(m) + ' % de ganancia' + (sin ? ' · ' + sin + ' sin precio de compra: ponlos a mano' : ''), n ? 'ok' : 'err'); } }, '✨ Rellenar las que faltan'), btnSolo);
   const btnG = h('button', { class: 'guardar', style: 'flex:1;margin:0', onclick: () => guardar(btnG) }, 'Guardar y cerrar');
   const btnGS = h('button', { class: 'guardar', style: 'flex:1;margin:0;background:#166534;color:#fff', onclick: () => guardar(btnGS, true) }, '💾 Guardar y seguir');
   const barraG = h('div', { class: 'barraG' }, btnGS, btnG);
   cerrar = hoja('💶 Precios · ' + nombreCli(uno(ped.clientes) || {}), h('div', {}, h('p', { class: 'sub' }, fechaES(ped.fecha_entrega) + ' · ' + (ped.estado === 'terminado' ? 'albarán cerrado' : 'albarán sin cerrar') + '. Puedes poner los precios ahora o más tarde: cerrar el albarán no depende de ellos.'),
-    Object.keys(tarifas).length ? btnLlenar : null, cuerpo, totalBox, vivoDet, barraG));
+    totalBox, barraM, Object.keys(tarifas).length ? btnLlenar : null, cuerpo, vivoDet, barraG));
 }
 async function vistaPreciosPend() {
   state.view = 'preciosp';
@@ -7344,10 +7394,13 @@ async function comPrecargar(alTerminar) {
   try {
     toast('Preparando las listas…', 'ok');
     const prods = await waProductos(); const ind = waIndice(prods.map(p => Object.assign({}, p, { alias: Array.isArray(p.alias) ? p.alias : [] })));
-    const ex = await sb.from('listas_precios').select('id,nombre'); if (ex.error) throw ex.error; const existentes = new Set((ex.data || []).map(x => sinTilde(x.nombre).toLowerCase()));
+    const ex = await sb.from('listas_precios').select('id,nombre'); if (ex.error) throw ex.error;
+    const cu = await sb.from('listas_precios_items').select('lista_id'); const nIt = {}; (cu.data || []).forEach(x => { nIt[x.lista_id] = (nIt[x.lista_id] || 0) + 1; });
+    const existentes = new Map((ex.data || []).map(x => [sinTilde(x.nombre).toLowerCase(), x]));   /* nombre -> lista */
     let creadas = 0, items = 0, vinculados = 0, conCoste = 0;
     for (const L of COM_PRECARGA) {
-      if (existentes.has(sinTilde(L.nombre).toLowerCase())) { toast('«' + L.nombre + '» ya existe: no la toco.', 'ok'); continue; }
+      const yaEx = existentes.get(sinTilde(L.nombre).toLowerCase());
+      if (yaEx && nIt[yaEx.id]) { toast('«' + L.nombre + '» ya existe con ' + nIt[yaEx.id] + ' productos: no la toco.', 'ok'); continue; }
       const claves = new Set(L.items.map(i => comLlave(i[0]))); const lineas = L.items.map(i => ({ nombre: i[0], unidad: i[1], nota: i[2] || null }));
       COM_EXTRAS.forEach(e => { const k = comLlave(e[0]); if (!claves.has(k)) { claves.add(k); lineas.push({ nombre: e[0], unidad: e[1], nota: null }); } });
       const uniProd = c => { const m = /\((kg|caja|saco|pieza|bandeja|manojo|docena|bolsa)\)/i.exec(c.nombre || ''); return m ? m[1].toLowerCase() : c.unidad_venta; };
@@ -7357,9 +7410,12 @@ async function comPrecargar(alTerminar) {
         l.producto_id = p ? p.id : null;
       });
       const cs = await costesCompra(lineas.map(l => l.producto_id).filter(Boolean)).catch(() => ({}));
-      const cab = await sb.from('listas_precios').insert({ nombre: L.nombre, tipo: L.tipo, titulo: L.titulo, subtitulo: L.subtitulo, pie: L.pie, presentacion: COM_INTRO, incluir_recomendaciones: false }).select('id').single(); if (cab.error) throw cab.error;
+      /* Si la lista existe pero está VACÍA (p. ej. una carga anterior que se cortó), se rellena en vez de crear otra */
+      let cab; if (yaEx) { cab = { data: { id: yaEx.id } }; try { await sb.from('listas_precios').update({ presentacion: COM_INTRO }).eq('id', yaEx.id).is('presentacion', null); } catch (e) { } }
+      else { cab = await sb.from('listas_precios').insert({ nombre: L.nombre, tipo: L.tipo, titulo: L.titulo, subtitulo: L.subtitulo, pie: L.pie, presentacion: COM_INTRO, incluir_recomendaciones: false }).select('id').single(); if (cab.error) throw cab.error; }
       const filas = lineas.map((l, i) => { const c = l.producto_id ? cs[l.producto_id] : null; const ok = c && c.precio > 0 && (l.unidad === 'kg' ? (!c.unidad || c.unidad === 'kg') : c.unidad === l.unidad); if (l.producto_id) vinculados++; if (ok) conCoste++; return { lista_id: cab.data.id, producto_id: l.producto_id, nombre: l.nombre, precio: null, coste: ok ? c.precio : null, unidad: l.unidad, nota: l.nota, orden: i }; });
-      const ins = await sb.from('listas_precios_items').insert(filas); if (ins.error) throw ins.error;
+      const ins = await sb.from('listas_precios_items').insert(filas);
+      if (ins.error) { if (!yaEx) { try { await sb.from('listas_precios').delete().eq('id', cab.data.id); } catch (e) { } } throw ins.error; }   /* no deja una lista vacía a medias */
       creadas++; items += filas.length;
     }
     toast(creadas ? creadas + ' lista(s) creadas · ' + items + ' productos · ' + vinculados + ' reconocidos · ' + conCoste + ' con precio de compra' : 'No había nada que crear.', 'ok');
