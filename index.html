@@ -3775,8 +3775,8 @@ function vistaMas() {
       if (navigator.onLine) sb.from('lineas_pedido').select('pedido_id,precio,pedidos(estado,archivado)').is('precio', null).limit(1500).then(r => { if (r.error) { num.textContent = ''; return; } const ids = new Set((r.data || []).filter(l => { const p = uno(l.pedidos) || {}; return p.estado !== 'anulado' && !p.archivado; }).map(l => l.pedido_id)); num.textContent = String(ids.size); num.className = 'num' + (ids.size ? '' : ' cero'); marcaPend(/Poner precios/, ids.size); }).catch(() => { num.textContent = ''; }); else num.textContent = '';
       return b; })(),
     ...g('Trabajo diario', c('✍️', 'Apuntar pedido', () => go('importar'), V),
-      c('🧺', 'Hoja de compra para hoy', () => go('hojacompra'), V), c('♻️', 'Sobrante', () => go('sobrante'), V), c('🛒', 'Compra para hoy', () => { if (puedeCompras()) { LS.set('fj_compras_modo', 'lista'); go('compras'); } else go('hojacompra'); }, V),
-      c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Hoja de carga', () => go('carga'), V), puedeCompras() ? c('💲', 'Precios de compra del día', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, V) : null, c('💶', 'Poner precios', () => go('preciosp'), V), c('🧑‍✈️', 'Reparto', () => go('reparto'), V)),
+      c('🧺', 'Hoja de compra para hoy', () => go('hojacompra'), V), c('🛒', 'Compra para hoy', () => { if (puedeCompras()) { LS.set('fj_compras_modo', 'lista'); go('compras'); } else go('hojacompra'); }, V),
+      c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Hoja de carga', () => go('carga'), V), puedeCompras() ? c('💲', 'Precios de compra del día', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, V) : null, c('💶', 'Poner precios', () => go('preciosp'), V), c('🧑‍✈️', 'Reparto', () => go('reparto'), V), c('♻️', 'Sobrante', () => go('sobrante'), V)),
         ...g('Entregas y pedidos', c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a')),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
     ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null),
@@ -5402,8 +5402,47 @@ function vistaPrecios() {
       } catch (e) { }
       const cacheF = LS.get('fj_fact_leidas', {});
       const estado = h('div', { class: 'sub', style: 'margin:6px 0' });
+      /* Líneas que la app ya dejó guardadas en la base al leer las facturas de ese día (también las de «Leer las facturas de los últimos 15 días») */
+      const extra = [], sinDB = [];
+      try {
+        let q = await sb.from('lineas_factura_leida').select('texto,cantidad,unidad,precio,producto_id,dudoso,factura_id,proveedor_id,proveedores(nombre),productos(nombre)').eq('fecha', fecha).limit(1500);
+        if (!q.error) {
+          const aliasProv = {}; const prodsMap = {};
+          for (const l of (q.data || [])) {
+            if (cacheF[l.factura_id]) continue;
+            const pr = Number(l.precio); const pv = (uno(l.proveedores) || {}).nombre || '';
+            let pid = l.producto_id, nom = (uno(l.productos) || {}).nombre;
+            if (!pid && l.proveedor_id) { if (!aliasProv[l.proveedor_id]) aliasProv[l.proveedor_id] = (await fcAliasCargar(l.proveedor_id)).map; const a = aliasProv[l.proveedor_id][fcClave(l.texto)]; if (a) { pid = a; if (!Object.keys(prodsMap).length) (await waProductos()).forEach(z => { prodsMap[z.id] = z; }); nom = (prodsMap[a] || {}).nombre; } }
+            if (pid && !nom) { if (!Object.keys(prodsMap).length) (await waProductos()).forEach(z => { prodsMap[z.id] = z; }); nom = (prodsMap[pid] || {}).nombre; }
+            if (pid && isFinite(pr) && pr > 0) { extra.push({ pid, nombre: nom || 'Producto', precio: pr, unidad: l.unidad || 'kg', cant: Number(l.cantidad) || 0, prov: pv, dudoso: !!l.dudoso }); }
+            else sinDB.push({ texto: l.texto, precio: isFinite(pr) && pr > 0 ? pr : null, unidad: l.unidad || '', cant: Number(l.cantidad) || 0, prov: pv, provId: l.proveedor_id, db: true });
+          }
+        }
+      } catch (e) { }
+      /* Elegir a qué producto corresponde una línea que la app no reconoció: se apunta en la lista y la app lo recuerda para ese proveedor */
+      async function vincularSin(origen) {
+        const x = origen.x; let prods, indice;
+        try { prods = await waProductos(); indice = waIndice(prods); } catch (e) { toast('Necesitas conexión', 'err'); return; }
+        const pr = h('input', { inputmode: 'decimal', placeholder: 'Precio (€)', value: x.precio != null ? String(x.precio).replace('.', ',') : '' });
+        const un = h('select', {}, ...Array.from(new Set([x.unidad, 'kg', 'caja', 'saco', 'ud', 'pieza'].filter(Boolean))).map(u => h('option', { value: u, selected: u === (x.unidad || 'kg') }, u)));
+        const res = h('div', {}); let cerrar;
+        const elegir = async p => {
+          const n = parseNum(pr.value); if (n === null || !(n > 0)) { toast('Escribe el precio de compra', 'err'); return; }
+          const linea = { pid: p.id, nombre: p.nombre, precio: n, unidad: un.value, cant: x.cant || 0, dudoso: false, prov: origen.prov || '' };
+          if (origen.f) { const c = cacheF[origen.f.id]; c.sin.splice(c.sin.indexOf(x), 1); c.lineas.push({ pid: p.id, nombre: p.nombre, precio: n, unidad: un.value, cant: x.cant || 0, dudoso: false }); LS.set('fj_fact_leidas', cacheF); }
+          else { sinDB.splice(sinDB.indexOf(x), 1); extra.push(linea); }
+          const provId = (origen.f && origen.f.proveedor_id) || x.provId;
+          if (provId && !x.sinLeer) { try { await sb.from('alias_compra').upsert([{ proveedor_id: provId, texto: fcClave(x.texto), producto_id: p.id, actualizado: new Date().toISOString() }], { onConflict: 'proveedor_id,texto' }); } catch (e) { } }
+          cerrar(); toast('Apuntado en ' + p.nombre + (provId && !x.sinLeer ? ' · lo recordaré con este proveedor' : ''), 'ok'); montar();
+        };
+        const cands = fcCandidatos(x.texto, indice, 8).map(c => c.p);
+        const bi = h('input', { placeholder: 'Buscar el producto…', oninput: debounce(async () => { if (!bi.value.trim()) { res.replaceChildren(); return; } try { const rr = await buscar('productos', bi.value, true, 8); res.replaceChildren(h('div', { class: 'res' }, rr.map(p => h('button', { onclick: () => elegir(p) }, p.nombre + ' · ' + p.codigo)))); } catch (e) { } }, 250) });
+        cerrar = hoja(x.texto, h('div', {}, h('p', { class: 'sub' }, (x.sinLeer ? 'Fila de la factura que no he sabido leer: escribe tú el precio y elige el producto. ' : 'Producto de la factura sin reconocer. ') + (origen.prov ? 'Proveedor: ' + origen.prov + '. ' : '')), h('label', { class: 'campo' }, 'Precio de compra', pr), h('label', { class: 'campo' }, 'Por…', un),
+          cands.length ? h('div', { class: 'sub' }, 'Parecidos (toca el correcto):') : null, h('div', { class: 'fila', style: 'gap:6px;flex-wrap:wrap;justify-content:flex-start;margin:4px 0' }, cands.map(p => h('button', { class: 'ghost small', onclick: () => elegir(p) }, p.nombre))), bi, res));
+      }
       const preparaFilas = () => {
         Object.values(P).forEach(o => { if (o._c0 === undefined) { o._c0 = o.cant; o._u0 = o.unidad; } o.cant = o._c0; o.unidad = o._u0; o.leidas = []; });
+        extra.forEach(r => { const o = it(r.pid, r.nombre); if (o._c0 === undefined) { o._c0 = 0; o._u0 = ''; o.cant = 0; o.unidad = ''; } o.leidas.push(r); if (!o._c0) { if (!o.unidad) o.unidad = r.unidad; if (r.unidad === o.unidad) o.cant += r.cant || 0; } });
         facs.forEach(f => { const c = cacheF[f.id]; if (!c) return; const pv = (uno(f.proveedores) || {}).nombre || '';
           c.lineas.forEach(r => { const o = it(r.pid, r.nombre); if (o._c0 === undefined) { o._c0 = 0; o._u0 = ''; o.cant = 0; o.unidad = ''; } o.leidas.push(Object.assign({ prov: pv }, r)); if (!o._c0) { if (!o.unidad) o.unidad = r.unidad; if (r.unidad === o.unidad) o.cant += r.cant || 0; } }); });
         return Object.values(P).sort((a, b) => a.producto.localeCompare(b.producto, 'es'));
@@ -5442,7 +5481,11 @@ function vistaPrecios() {
       const mas = h('button', { class: 'ghost', style: 'width:100%;margin:8px 0', onclick: () => {
         const res = h('div', {}); const bi = h('input', { placeholder: 'Buscar producto…', oninput: debounce(async () => { if (!bi.value.trim()) { res.replaceChildren(); return; } try { const rr = await buscar('productos', bi.value, false, 8); res.replaceChildren(h('div', { class: 'res' }, rr.map(p => h('button', { onclick: () => { cerr(); editar({ pid: p.id, producto: p.nombre, unidad: '', cant: 0, provs: new Set() }); } }, p.nombre + ' · ' + p.codigo)))); } catch (e) { } }, 250) });
         const cerr = hoja('Añadir otro producto', h('div', {}, bi, res)); } }, '✍ Apuntar un precio que no viene en las facturas (se compra después o la factura llega más tarde)');
-      const sinRec = []; facs.forEach(f => { const c = cacheF[f.id]; if (c && c.sin && c.sin.length) sinRec.push(h('details', { class: 'card' }, h('summary', {}, ((uno(f.proveedores) || {}).nombre || f.nombre || 'Factura') + ': ' + c.sin.length + ' línea(s) sin emparejar'), ...c.sin.map(x => h('div', { class: 'sub', style: 'padding:3px 0' }, x.texto + (x.precio != null ? ' · ' + eur(x.precio) + (x.unidad ? '/' + x.unidad : '') : ''))))); });
+      const sinRec = []; const pvDe = f => (uno(f.proveedores) || {}).nombre || f.nombre || 'Factura';
+      const filaSin = (x, origen) => h('div', { class: 'card tap fila', style: 'border-left:6px solid #dc2626', onclick: () => vincularSin(origen) }, h('div', {}, h('div', { class: 'nombre' }, x.texto), h('div', { class: 'sub' }, [x.cant ? num(x.cant) + ' ' + (x.unidad || '') : '', origen.prov, x.sinLeer ? '⚠ fila que no he sabido leer: toca para apuntarla' : '⚠ sin reconocer: toca para elegir qué producto es'].filter(Boolean).join(' · '))), h('div', { style: 'text-align:right' }, h('b', {}, x.precio != null ? eur(x.precio) + ' €' + (x.unidad ? '/' + x.unidad : '') : '—')));
+      facs.forEach(f => { const c = cacheF[f.id]; if (c && c.sin) c.sin.forEach(x => sinRec.push(filaSin(x, { x, f, prov: pvDe(f) }))); });
+      sinDB.forEach(x => sinRec.push(filaSin(x, { x, prov: x.prov })));
+      if (sinRec.length) sinRec.unshift(h('div', { class: 'aviso-card' }, '🔴 ' + sinRec.length + ' línea(s) de las facturas que la app no ha reconocido. Aquí las tienes con su precio: toca una para decir qué producto es (la app lo recordará con ese proveedor) o déjala así y apunta el precio tú.'));
       const verFacs = facs.filter(f => f.ruta).length ? h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:6px 0' }, ...facs.filter(f => f.ruta).map(f => h('button', { class: 'small ghost', onclick: () => verDocumento(f.ruta, (f.proveedores ? (uno(f.proveedores) || {}).nombre : '') || f.nombre || 'Factura') }, '👁 ' + (((f.proveedores ? (uno(f.proveedores) || {}).nombre : '') || f.nombre || 'Factura').slice(0, 22))))) : null;
       lista.replaceChildren(...cab, mas, estado, ...(verFacs ? [verFacs] : []), ...(kids.length ? kids : [h('p', { class: 'vacio' }, facs.length ? 'Hay ' + facs.length + ' factura(s) llegadas este día. Se están leyendo; los precios saldrán aquí.' : 'Todavía no hay compras, facturas ni precios para este día. También puedes apuntar un precio a mano con el botón de arriba.')]), ...sinRec);
       };
@@ -5460,7 +5503,8 @@ function vistaPrecios() {
               const lineas = [], sin = [];
               rd.lineas.forEach(x => { const m = fcEmparejar(x, prods, indice, al.map); const pr = Number(x.precio);
                 if (m.producto && (m.estado === 'ok' || m.estado === 'dudoso') && isFinite(pr) && pr > 0) lineas.push({ pid: m.producto.id, nombre: m.producto.nombre, precio: pr, unidad: UNIDADES.includes(x.unidad) ? x.unidad : (m.producto.unidad_venta && UNIDADES.includes(m.producto.unidad_venta) ? m.producto.unidad_venta : 'kg'), cant: Number(x.cantidad) || 0, dudoso: m.estado === 'dudoso' });
-                else sin.push({ texto: x.texto, precio: isFinite(pr) ? pr : null, unidad: x.unidad || '' }); });
+                else sin.push({ texto: x.texto, precio: isFinite(pr) ? pr : null, unidad: x.unidad || '', cant: Number(x.cantidad) || 0, importe: Number(x.importe) || 0 }); });
+              (rd.noLeidas || []).forEach(t => sin.push({ texto: String(t).slice(0, 120), precio: null, unidad: '', cant: 0, sinLeer: true }));
               cacheF[f.id] = { lineas, sin, t: Date.now() }; LS.set('fj_fact_leidas', cacheF); montar(); guardarLineasLeidas(f, rd, prods, indice, al.map);
             } catch (e) { fallos++; }
           }
@@ -6991,7 +7035,9 @@ async function hojaUltimosPrecios(pid) {
   pinta();
 }
 async function fcAliasCargar(prov) {
-  try { const r = await sb.from('alias_compra').select('texto,producto_id').eq('proveedor_id', prov).range(0, 4999); if (r.error || !r.data) return { map: {}, ok: false }; const m = {}; r.data.forEach(a => { m[a.texto] = a.producto_id; }); return { map: m, ok: true }; } catch (e) { return { map: {}, ok: false }; }
+  try { const r = await sb.from('alias_compra').select('texto,producto_id,proveedor_id').range(0, 4999); if (r.error || !r.data) return { map: {}, ok: false }; const m = {}, otros = {};
+    r.data.forEach(a => { if (a.proveedor_id === prov) m[a.texto] = a.producto_id; else if (!(a.texto in otros)) otros[a.texto] = a.producto_id; });
+    Object.defineProperty(m, '__otros', { value: otros, enumerable: false }); return { map: m, ok: true }; } catch (e) { return { map: {}, ok: false }; }
 }
 /* Todos los productos que se parecen a lo escrito en la factura, de más a menos parecido: cuenta cada palabra (también «verde», «rojo», «extra») y las abreviaturas */
 const FC_STOP_C = new Set(['cat', 'categoria', 'kg', 'kgs', 'caja', 'cajas', 'saco', 'sacos', 'bolsa', 'bolsas', 'malla', 'mallas', 'bandeja', 'mm', 'cal', 'calibre', 'gr', 'grs', 'env', 'i', 'ii', 'iii', 'bt', 'bto', 'btos', 'ud', 'uds', 'x', 'de', 'del', 'la', 'el', 'los', 'las', 'con', 'y', 'en']);
@@ -7014,6 +7060,8 @@ function fcCandidatos(texto, indice, max) {
 function fcEmparejar(lin, prods, indice, alias) {
   const pid = alias[fcClave(lin.texto)];
   if (pid) { const p = prods.find(x => x.id === pid); if (p) return { estado: 'ok', producto: p, cand: [] }; }
+  /* Lo que otro proveedor ya enseñó con el mismo texto: se propone, pero a confirmar */
+  const po = alias.__otros && alias.__otros[fcClave(lin.texto)]; if (po) { const p = prods.find(x => x.id === po); if (p) return { estado: 'dudoso', producto: p, cand: [], score: 0.6 }; }
   const cons = fcConsulta(lin.texto) || fcNorm(lin.texto);
   const m = waBuscarProducto(cons, indice);
   if (m.estado === 'noenc' || (m.estado === 'ambiguo' && !m.producto)) {
@@ -7213,6 +7261,7 @@ function pdfListaPrecios(d) {
   };
   const hayRecs = (d.recs || []).length > 0;
   cabecera(true);
+  if (d.presentacion) { const L = pdfLineas(d.presentacion, 10, false, W - 2 * M - 26).slice(0, 8); const alto = 14 + L.length * 13; doc.caja(M, y, W - 2 * M, alto, '#f0fdf4', '#86efac'); doc.rect(M, y, 4, alto, VERDE); L.forEach((l, k) => doc.texto(l, M + 14, y + 17 + k * 13, 10, { color: '#374151' })); y += alto + 12; }
   const tarjetas = () => {
     if (!hayRecs) return;
     doc.texto('NUESTRAS RECOMENDACIONES', M, y + 4, 12, { neg: true, color: VERDE }); y += 14;
@@ -7275,7 +7324,48 @@ function pdfListaPrecios(d) {
 
 /* ---------- COMERCIAL: listas de precios, recomendaciones, avisos, calculadora, guiones y web ---------- */
 const COM_WEB = 'https://www.ferjusanz-frutas-verduras.es/';
-const COM_UNIDADES = ['kg', 'unidad', 'caja', 'saco', 'bandeja', 'manojo', 'docena', 'malla'];
+const COM_UNIDADES = ['kg', 'unidad', 'pieza', 'caja', 'saco', 'bandeja', 'bolsa', 'paquete', 'manojo', 'docena', 'malla'];
+const COM_INTRO = 'Somos Ferjusanz, mayoristas de frutas y verduras con puesto en Mercamadrid y cosechas propias. Empresa familiar, ya en la tercera generación: distribuimos directamente a nuestros clientes con un servicio cercano y de confianza, y adaptamos formatos y calidades a las necesidades de cada negocio.';
+/* Productos de partida de las dos listas (de las tarifas anteriores). SIN precio de venta: lo pone la oficina. El precio de compra se rellena solo con el último que haya. */
+const COM_PRECARGA = [
+  { nombre: 'Colegios, residencias y escuelas infantiles', tipo: 'colectivos', titulo: 'Tarifa para colegios, residencias y escuelas infantiles', subtitulo: 'Frutas y verduras frescas · Suministro desde Mercamadrid',
+    pie: 'Precios sujetos a mercado y disponibilidad. Revisión cada 7-10 días. Formatos y calidades adaptables al centro. Patata pelada: varios cortes. Precios sin IVA salvo que se indique.',
+    items: [['Acelgas', 'manojo'], ['Ajo extra', 'kg'], ['Ajo pelado', 'kg'], ['Ajo pelado 1ª', 'kg'], ['Berenjena', 'kg'], ['Brócoli', 'kg'], ['Calabacín', 'kg'], ['Calabaza', 'kg'], ['Cebolla nueva', 'kg'], ['Cogollos (3 unidades)', 'bandeja'], ['Coliflor', 'pieza'], ['Lechuga (2 unidades)', 'bandeja'], ['Lechuga iceberg (10 piezas)', 'caja'], ['Patata especial para freír', 'kg'], ['Patata pelada (todos los cortes)', 'kg'], ['Perejil', 'manojo'], ['Pimiento italiano verde', 'kg'], ['Pimiento rojo', 'kg'], ['Pimiento verde', 'kg'], ['Puerro', 'kg'], ['Remolacha cocida (3 piezas)', 'paquete'], ['Repollo', 'kg'], ['Tomate ensalada', 'kg'], ['Tomate pera', 'kg'], ['Zanahoria', 'kg'],
+      ['Banana', 'kg'], ['Clementina', 'kg'], ['Clementina 2ª', 'kg'], ['Limón extra', 'kg'], ['Manzana Golden (cal. 26)', 'kg'], ['Melón', 'kg'], ['Naranja calibre 5', 'kg'], ['Naranja de zumo', 'kg'], ['Pera Conferencia (cal. 30)', 'kg'], ['Pera de agua', 'kg'], ['Plátano canario', 'kg']] },
+  { nombre: 'Hostelería', tipo: 'hosteleria', titulo: 'Lista de precios · Hostelería', subtitulo: 'Frutas y verduras frescas · Mayoristas desde Mercamadrid',
+    pie: 'Precios sujetos a variaciones de mercado y disponibilidad. Consulte condiciones y formatos especiales. Precios sin IVA salvo que se indique.',
+    items: [['Ajos extra', 'kg', 'en seco'], ['Acelgas', 'manojo'], ['Aguacate Hass maduro (extra)', 'caja', 'aprox. 4,5 kg'], ['Apio', 'kg'], ['Berenjena', 'kg'], ['Calabacín', 'kg'], ['Calabaza', 'kg'], ['Bananas / plátanos', 'kg'], ['Canónigos', 'bandeja'], ['Cebolleta', 'manojo'], ['Cebolla morada', 'kg'], ['Cebolla nueva', 'kg'], ['Cebollino', 'manojo'], ['Cilantro', 'manojo'], ['Cogollo', 'bandeja', 'bandeja de 3'], ['Coliflor', 'pieza'], ['Kiwi', 'kg'], ['Lechuga romana (x2)', 'bandeja', 'bandeja de 2'], ['Lechuga iceberg gorda', 'caja', 'caja de 10 piezas'], ['Lechuga mézclum 500 g', 'bolsa', 'bolsa 500 g'], ['Lechuga rúcula', 'bandeja'], ['Limones', 'kg'], ['Manzana Golden nueva cal. 24', 'kg'], ['Melón extra Brasil', 'kg'], ['Mandarinas', 'kg'], ['Naranjas de mesa', 'kg'], ['Naranjas de zumo', 'kg'], ['Patata pelada', 'kg'], ['Patata pelada corte casero freír', 'kg'], ['Pera conferencia cal. 24', 'kg'], ['Pera hercolina extra', 'kg'], ['Pepino', 'kg'], ['Patata nueva / agria', 'kg'], ['Manzana caja 7 kg', 'kg'], ['Repollo', 'kg'], ['Piña extra', 'kg'], ['Sandía sin pepita', 'kg'], ['Plátano canario', 'kg'], ['Pimiento verde italiano', 'kg'], ['Pimiento rojo 1ª especial para asar', 'kg'], ['Pimiento verde', 'kg'], ['Puerro', 'kg'], ['Pimiento Padrón gallego', 'kg'], ['Tomate ensalada', 'kg'], ['Tomate maduro', 'kg'], ['Tomate pera gordo', 'kg'], ['Tomate rama', 'kg'], ['Tomillo', 'kg'], ['Huevos (tamaño L)', 'docena'], ['Zanahoria', 'kg']] }
+];
+/* Productos que se compran mucho (de las tablas de compra) y se añaden a las dos listas si no están ya */
+const COM_EXTRAS = [['Aguacate', 'caja'], ['Ajo pelado', 'kg'], ['Apio verde', 'manojo'], ['Berenjena', 'kg'], ['Brote de lechuga', 'bolsa'], ['Calabacín', 'kg'], ['Cebolla gorda calibre 2-3', 'kg'], ['Cebolla pequeña calibre 5', 'kg'], ['Cebolla morada', 'kg'], ['Champiñón', 'caja'], ['Ciruela Claudia', 'kg'], ['Cilantro', 'manojo'], ['Huevos', 'docena'], ['Jengibre', 'kg'], ['Limas', 'kg'], ['Limones', 'kg'], ['Manzana', 'caja'], ['Melón piel de sapo', 'pieza'], ['Mix frutos del bosque', 'caja'], ['Naranja zumo', 'kg'], ['Patata agria', 'saco'], ['Patata nueva', 'kg'], ['Patatas peladas bastón', 'kg'], ['Pepino', 'kg'], ['Perejil', 'manojo'], ['Pimiento de padrón', 'kg'], ['Pimiento rojo extra', 'kg'], ['Pimiento verde extra', 'kg'], ['Plátano macho', 'kg'], ['Puerros', 'kg'], ['Tomate bola', 'kg'], ['Tomate pera', 'kg'], ['Tomate raf', 'caja'], ['Yuca', 'caja'], ['Zanahorias', 'kg']];
+const comLlave = n => famCompraKey(String(n).replace(/\([^)]*\)/g, ' ').replace(/\b(extra|gorda|gordo|nueva|nuevo|1ª|2ª|especial)\b/gi, ' '));
+async function comPrecargar(alTerminar) {
+  if (!await confirmar('Voy a crear las listas «Colegios, residencias y escuelas infantiles» y «Hostelería» con los productos de tus tarifas más los que más compráis. SIN precio de venta (lo pones tú) y con el último precio de compra al lado. Si una lista con ese nombre ya existe, no la toco. ¿Seguimos?')) return;
+  try {
+    toast('Preparando las listas…', 'ok');
+    const prods = await waProductos(); const ind = waIndice(prods.map(p => Object.assign({}, p, { alias: Array.isArray(p.alias) ? p.alias : [] })));
+    const ex = await sb.from('listas_precios').select('id,nombre'); if (ex.error) throw ex.error; const existentes = new Set((ex.data || []).map(x => sinTilde(x.nombre).toLowerCase()));
+    let creadas = 0, items = 0, vinculados = 0, conCoste = 0;
+    for (const L of COM_PRECARGA) {
+      if (existentes.has(sinTilde(L.nombre).toLowerCase())) { toast('«' + L.nombre + '» ya existe: no la toco.', 'ok'); continue; }
+      const claves = new Set(L.items.map(i => comLlave(i[0]))); const lineas = L.items.map(i => ({ nombre: i[0], unidad: i[1], nota: i[2] || null }));
+      COM_EXTRAS.forEach(e => { const k = comLlave(e[0]); if (!claves.has(k)) { claves.add(k); lineas.push({ nombre: e[0], unidad: e[1], nota: null }); } });
+      const uniProd = c => { const m = /\((kg|caja|saco|pieza|bandeja|manojo|docena|bolsa)\)/i.exec(c.nombre || ''); return m ? m[1].toLowerCase() : c.unidad_venta; };
+      lineas.forEach(l => {
+        const r = waBuscarProducto(String(l.nombre).replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim(), ind); let p = r.estado === 'ok' ? r.producto : null;
+        if (!p) { /* «Tomate pera» existe en kg y en caja: se elige el de la misma unidad */ const cs = (r.cand || []).map(c => c.p || c).concat(r.producto ? [r.producto] : []).filter((c, i, a2) => c && a2.findIndex(y => y.id === c.id) === i); const ex = cs.filter(c => comLlave(c.nombre) === comLlave(l.nombre)); const mu = ex.filter(c => uniProd(c) === l.unidad); p = mu.length === 1 ? mu[0] : (ex.length === 1 ? ex[0] : null); }
+        l.producto_id = p ? p.id : null;
+      });
+      const cs = await costesCompra(lineas.map(l => l.producto_id).filter(Boolean)).catch(() => ({}));
+      const cab = await sb.from('listas_precios').insert({ nombre: L.nombre, tipo: L.tipo, titulo: L.titulo, subtitulo: L.subtitulo, pie: L.pie, presentacion: COM_INTRO, incluir_recomendaciones: false }).select('id').single(); if (cab.error) throw cab.error;
+      const filas = lineas.map((l, i) => { const c = l.producto_id ? cs[l.producto_id] : null; const ok = c && c.precio > 0 && (l.unidad === 'kg' ? (!c.unidad || c.unidad === 'kg') : c.unidad === l.unidad); if (l.producto_id) vinculados++; if (ok) conCoste++; return { lista_id: cab.data.id, producto_id: l.producto_id, nombre: l.nombre, precio: null, coste: ok ? c.precio : null, unidad: l.unidad, nota: l.nota, orden: i }; });
+      const ins = await sb.from('listas_precios_items').insert(filas); if (ins.error) throw ins.error;
+      creadas++; items += filas.length;
+    }
+    toast(creadas ? creadas + ' lista(s) creadas · ' + items + ' productos · ' + vinculados + ' reconocidos · ' + conCoste + ' con precio de compra' : 'No había nada que crear.', 'ok');
+    if (alTerminar) alTerminar();
+  } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : /coste|presentacion|schema cache|column/i.test(e.message || '') ? 'Falta ejecutar en Supabase el archivo «Parte 55» (listas con precio de compra).' : msgErr(e), 'err'); }
+}
 const COM_TIPOS = [['hosteleria', 'Hostelería'], ['colectivos', 'Colectivos'], ['nuevos', 'Clientes nuevos'], ['ofertas', 'Ofertas'], ['otra', 'Otra']];
 const PRO_TIPOS = [['restaurante', 'Restaurante'], ['bar', 'Bar'], ['colegio', 'Colegio'], ['residencia', 'Residencia'], ['escuela_infantil', 'Escuela infantil'], ['catering', 'Catering'], ['otro', 'Otro']];
 const PRO_ESTADOS = [['nuevo', 'Nuevo'], ['contactado', 'Contactado'], ['interesado', 'Interesado'], ['cliente', 'Ya es cliente'], ['descartado', 'Descartado']];
@@ -7297,12 +7387,20 @@ async function comCargarRecs() { const r = await sb.from('recomendaciones').sele
 async function comDatosPdf(lista, soloRecs) {
   const dia = hoy(); const recs = (await comCargarRecs()).filter(r => comVigente(r, dia));
   let items = [];
-  if (!soloRecs) { const r = await sb.from('listas_precios_items').select('*').eq('lista_id', lista.id).order('orden').order('nombre'); if (r.error) throw r.error; items = r.data || []; }
+  let omitidos = 0;
+  if (!soloRecs) {
+    const r = await sb.from('listas_precios_items').select('*').eq('lista_id', lista.id).order('orden').order('nombre'); if (r.error) throw r.error; const filas = r.data || [];
+    const bajos = filas.filter(x => x.precio != null && x.coste != null && Number(x.precio) < Number(x.coste) - 0.0004);
+    if (bajos.length) throw new Error('Hay ' + bajos.length + ' producto(s) con la venta por debajo de la compra (' + bajos.slice(0, 3).map(x => x.nombre).join(', ') + (bajos.length > 3 ? '…' : '') + '). Corrígelos antes de enviar.');
+    omitidos = filas.filter(x => x.precio == null).length;
+    items = filas.filter(x => x.precio != null).map(x => ({ nombre: x.nombre, precio: x.precio, unidad: x.unidad, nota: x.nota }));   // el precio de compra NUNCA sale
+    if (omitidos) toast(omitidos + ' producto(s) sin precio de venta no salen en el documento.', 'ok');
+  }
   const hasta = recs.map(r => r.hasta).filter(Boolean).sort()[0];
   return {
     titulo: soloRecs ? 'Recomendaciones de la semana' : (lista.titulo || lista.nombre), subtitulo: soloRecs ? 'Lo mejor de temporada, seleccionado para ti' : lista.subtitulo,
     validez: soloRecs ? (hasta ? 'Válido hasta el ' + fechaES(hasta) : 'Actualizado el ' + fechaES(dia)) : 'Lista actualizada el ' + fechaES(dia),
-    pie: lista.pie, contacto: LS.get('fj_com_contacto', ''), soloRecs: !!soloRecs,
+    pie: lista.pie, presentacion: soloRecs ? '' : (lista.presentacion || ''), contacto: LS.get('fj_com_contacto', ''), soloRecs: !!soloRecs,
     recs: (soloRecs || lista.incluir_recomendaciones !== false) ? recs : [], items
   };
 }
@@ -7333,30 +7431,52 @@ function comBuscaProducto(alElegir) {
 
 /* ----- Listas ----- */
 async function abrirLista(id, alGuardar) {
-  let l = { nombre: '', tipo: 'otra', titulo: '', subtitulo: '', pie: 'Precios sin IVA salvo que se indique.', incluir_recomendaciones: true, activa: true }; let items = []; const orig = [];
+  let l = { nombre: '', tipo: 'otra', titulo: '', subtitulo: '', pie: 'Precios sin IVA salvo que se indique.', presentacion: '', incluir_recomendaciones: true, activa: true }; let items = []; const orig = [];
   if (id) {
     const [a, b] = await Promise.all([sb.from('listas_precios').select('*').eq('id', id).single(), sb.from('listas_precios_items').select('*').eq('lista_id', id).order('orden').order('nombre')]);
     if (a.error || b.error) { toast(msgErr(a.error || b.error), 'err'); return; }
     l = a.data; items = (b.data || []).map(x => Object.assign({}, x)); items.forEach(x => orig.push(x.id));
   }
   const nombre = comInput('text', l.nombre), tipo = comSelect(COM_TIPOS, l.tipo), titulo = comInput('text', l.titulo), sub = comInput('text', l.subtitulo);
+  const presentacion = h('textarea', { rows: 5, style: 'width:100%' }); presentacion.value = id ? (l.presentacion || '') : (l.presentacion || COM_INTRO);
   const pie = h('textarea', { rows: 2, style: 'width:100%' }); pie.value = l.pie || '';
   const inc = h('input', { type: 'checkbox', checked: l.incluir_recomendaciones !== false });
   const lista = h('div', {}); const resumen = h('div', { class: 'sub' });
+  const f2 = v => v == null ? '' : String(Math.round(Number(v) * 1000) / 1000).replace('.', ',');
   const pintar = () => {
-    resumen.textContent = items.length + ' producto(s)';
+    const bajos = items.filter(x => x.precio != null && x.coste != null && x.precio < x.coste - 0.0004).length, sinP = items.filter(x => x.precio == null).length;
+    resumen.textContent = items.length + ' producto(s)' + (sinP ? ' · ' + sinP + ' sin precio de venta' : '') + (bajos ? ' · ⚠️ ' + bajos + ' por debajo de la compra' : '');
     lista.replaceChildren(...items.map((it, i) => {
-      const pr = comInput('text', it.precio == null ? '' : String(it.precio).replace('.', ','), { inputmode: 'decimal', style: 'width:80px' });
-      pr.addEventListener('input', () => { const v = parseNum(pr.value); it.precio = v; });
-      const un = comSelect(COM_UNIDADES, it.unidad || 'kg'); un.style.width = '90px'; un.addEventListener('change', () => { it.unidad = un.value; });
-      it._pr = pr;
-      return h('div', { style: 'display:flex;gap:6px;align-items:center;padding:6px 0;border-top:1px solid #e5e7eb' }, h('div', { style: 'flex:1;font-size:14px' }, it.nombre, it._sin ? h('div', { class: 'sub', style: 'color:#b91c1c' }, 'sin precio general: ponlo tú') : null), pr, un, h('button', { class: 'ghost small', onclick: () => { items.splice(i, 1); pintar(); } }, '✕'));
+      const nom = comInput('text', it.nombre, { style: 'width:100%;font-weight:700' }); nom.addEventListener('input', () => { it.nombre = nom.value; });
+      const nota = h('div', { class: 'sub', style: 'min-height:16px' });
+      const estado = () => {
+        if (it.precio != null && it.coste != null && it.precio < it.coste - 0.0004) { nota.textContent = '⚠️ Por debajo de la compra'; nota.style.color = '#b91c1c'; pr.style.borderColor = '#ef4444'; }
+        else { pr.style.borderColor = ''; nota.style.color = ''; nota.textContent = it.precio != null && it.coste > 0 ? 'Margen ' + (Math.round((it.precio / it.coste - 1) * 1000) / 10).toString().replace('.', ',') + ' %  ·  ganas ' + f2(it.precio - it.coste) + ' €/' + (it.unidad || 'kg') : (it.coste == null ? 'Sin precio de compra: pónlo si lo sabes' : ''); }
+      };
+      const co = comInput('text', f2(it.coste), { inputmode: 'decimal', placeholder: 'compra', style: 'width:76px;background:#f3f4f6' }); co.addEventListener('input', () => { const v = co.value.trim() === '' ? null : parseNum(co.value); it.coste = v; estado(); });
+      const pr = comInput('text', f2(it.precio), { inputmode: 'decimal', placeholder: 'venta', style: 'width:84px;font-weight:700' });
+      pr.addEventListener('input', () => { it.precio = pr.value.trim() === '' ? null : parseNum(pr.value); estado(); });
+      pr.addEventListener('change', () => { if (it.precio != null && it.coste != null && it.precio < it.coste - 0.0004) { it.precio = it.coste; pr.value = f2(it.coste); toast('La venta no puede ser menor que la compra: la he puesto igual que la compra.', 'err'); } estado(); pintaResumen(); });
+      const un = comSelect(COM_UNIDADES, it.unidad || 'kg'); un.style.width = '86px'; un.addEventListener('change', () => { it.unidad = un.value; estado(); });
+      const enlace = it.producto_id ? null : h('button', { class: 'ghost small', onclick: () => { const bx = h('div', {}); bx.append(comBuscaProducto(async p => { it.producto_id = p.id; const cs = await costesCompra([p.id]).catch(() => ({})); const c = cs[p.id]; if (c && c.precio > 0 && it.coste == null) it.coste = c.precio; toast('Enlazado con «' + p.nombre + '»' + (c ? ' · compra ' + f2(c.precio) + ' €' : ''), 'ok'); pintar(); })); fila.append(bx); } }, '🔗 Enlazar con un producto de la app');
+      const fila = h('div', { style: 'padding:8px 0;border-top:1px solid #e5e7eb' },
+        h('div', { style: 'display:flex;gap:6px;align-items:center' }, nom, h('button', { class: 'ghost small', 'aria-label': 'Quitar', onclick: () => { items.splice(i, 1); pintar(); } }, '✕')),
+        h('div', { style: 'display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap' }, h('span', { class: 'sub' }, 'Compra'), co, h('span', { class: 'sub' }, 'Venta'), pr, un), nota, enlace);
+      estado(); return fila;
     }));
   };
+  const pintaResumen = () => { const bajos = items.filter(x => x.precio != null && x.coste != null && x.precio < x.coste - 0.0004).length, sinP = items.filter(x => x.precio == null).length; resumen.textContent = items.length + ' producto(s)' + (sinP ? ' · ' + sinP + ' sin precio de venta' : '') + (bajos ? ' · ⚠️ ' + bajos + ' por debajo de la compra' : ''); };
   const anadir = async p => {
     if (items.some(x => x.producto_id === p.id)) { toast('Ya está en la lista.', 'err'); return; }
-    const pg = await comPrecioGeneral(p.id).catch(() => null);
-    items.push({ producto_id: p.id, nombre: p.nombre, precio: pg, unidad: p.unidad_precio === 'unidad' ? 'unidad' : 'kg', _sin: pg == null }); pintar();
+    const cs = await costesCompra([p.id]).catch(() => ({})); const c = cs[p.id]; const u = p.unidad_precio === 'unidad' ? 'unidad' : 'kg';
+    items.push({ producto_id: p.id, nombre: p.nombre, precio: null, coste: c && c.precio > 0 && (!c.unidad || c.unidad === u) ? c.precio : null, unidad: u }); pintar();
+  };
+  const libre = comInput('text', '', { placeholder: 'Producto que no está en la app (escríbelo)' });
+  const anadirLibre = () => { const t = libre.value.trim(); if (!t) { toast('Escribe el nombre del producto.', 'err'); return; } items.push({ producto_id: null, nombre: t, precio: null, coste: null, unidad: 'kg' }); libre.value = ''; pintar(); };
+  const refrescaCostes = async () => {
+    const ids = items.map(x => x.producto_id).filter(Boolean); const cs = await costesCompra(ids).catch(() => ({})); let n = 0;
+    items.forEach(x => { const c = x.producto_id ? cs[x.producto_id] : null; if (c && c.precio > 0 && (x.unidad === 'kg' ? (!c.unidad || c.unidad === 'kg') : c.unidad === x.unidad)) { x.coste = c.precio; n++; } });
+    pintar(); toast(n + ' precios de compra actualizados' + (items.some(x => x.precio != null && x.coste != null && x.precio < x.coste - 0.0004) ? ' · ⚠️ revisa los que quedan en rojo' : ''), 'ok');
   };
   const ajuste = comInput('text', '', { inputmode: 'decimal', placeholder: '% (ej. 5 o -3)', style: 'width:110px' });
   const margen = comInput('text', '', { inputmode: 'decimal', placeholder: 'coste + % (ej. 25)', style: 'width:130px' });
@@ -7364,14 +7484,15 @@ async function abrirLista(id, alGuardar) {
   sb.from('listas_precios').select('id,nombre').then(r => { (r.data || []).filter(x => x.id !== id).forEach(x => otras.append(h('option', { value: x.id }, x.nombre))); });
   otras.addEventListener('change', async () => {
     if (!otras.value) return; const r = await sb.from('listas_precios_items').select('*').eq('lista_id', otras.value).order('orden');
-    (r.data || []).forEach(x => { if (!items.some(y => y.producto_id && y.producto_id === x.producto_id)) items.push({ producto_id: x.producto_id, nombre: x.nombre, precio: x.precio, unidad: x.unidad }); }); otras.value = ''; pintar();
+    (r.data || []).forEach(x => { if (!items.some(y => y.producto_id && y.producto_id === x.producto_id)) items.push({ producto_id: x.producto_id, nombre: x.nombre, precio: x.precio, coste: x.coste == null ? null : Number(x.coste), unidad: x.unidad, nota: x.nota }); }); otras.value = ''; pintar();
   });
   pintar();
   let cerrar;
   const guardar = async () => {
     if (!nombre.value.trim()) { toast('Pon un nombre a la lista.', 'err'); return; }
-    if (items.some(x => x.precio == null || isNaN(x.precio))) { toast('Hay productos sin precio. Pónselo o quítalos.', 'err'); return; }
-    const cab = { nombre: nombre.value.trim(), tipo: tipo.value, titulo: titulo.value.trim() || null, subtitulo: sub.value.trim() || null, pie: pie.value.trim() || null, incluir_recomendaciones: inc.checked, updated_at: new Date().toISOString() };
+    const bajosG = items.filter(x => x.precio != null && x.coste != null && x.precio < x.coste - 0.0004); if (bajosG.length) { toast('Hay ' + bajosG.length + ' producto(s) con la venta por debajo de la compra (' + bajosG[0].nombre + '…). Corrígelos.', 'err'); return; }
+    if (items.some(x => x.precio != null && isNaN(x.precio)) || items.some(x => x.coste != null && isNaN(x.coste))) { toast('Hay un precio que no es válido.', 'err'); return; }
+    const cab = { nombre: nombre.value.trim(), tipo: tipo.value, titulo: titulo.value.trim() || null, subtitulo: sub.value.trim() || null, pie: pie.value.trim() || null, presentacion: presentacion.value.trim() || null, incluir_recomendaciones: inc.checked, updated_at: new Date().toISOString() };
     try {
       let lid = id;
       if (id) { const r = await sb.from('listas_precios').update(cab).eq('id', id); if (r.error) throw r.error; }
@@ -7379,23 +7500,22 @@ async function abrirLista(id, alGuardar) {
       const quedan = items.filter(x => x.id).map(x => x.id);
       for (const oid of orig.filter(x => !quedan.includes(x))) { const r = await sb.from('listas_precios_items').delete().eq('id', oid); if (r.error) throw r.error; }
       for (let i = 0; i < items.length; i++) {
-        const x = items[i]; const fila = { lista_id: lid, producto_id: x.producto_id || null, nombre: x.nombre, precio: x.precio, unidad: x.unidad || 'kg', nota: x.nota || null, orden: i };
+        const x = items[i]; const fila = { lista_id: lid, producto_id: x.producto_id || null, nombre: (x.nombre || '').trim() || 'Producto', precio: x.precio == null ? null : x.precio, coste: x.coste == null ? null : x.coste, unidad: x.unidad || 'kg', nota: x.nota || null, orden: i };
         const r = x.id ? await sb.from('listas_precios_items').update(fila).eq('id', x.id) : await sb.from('listas_precios_items').insert(fila); if (r.error) throw r.error;
       }
       toast('Lista guardada', 'ok'); cerrar(); if (alGuardar) alGuardar();
-    } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); }
+    } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : /coste|presentacion|schema cache/i.test(e.message || '') ? 'Falta ejecutar en Supabase el archivo «Parte 55».' : msgErr(e), 'err'); }
   };
   const borrar = id ? h('button', { class: 'peligro', onclick: async () => { if (!await confirmar('¿Borrar la lista «' + l.nombre + '» y sus precios? No se puede deshacer.')) return; const r = await sb.from('listas_precios').delete().eq('id', id); if (r.error) { toast(msgErr(r.error), 'err'); return; } cerrar(); if (alGuardar) alGuardar(); } }, 'Borrar lista') : null;
   cerrar = hoja(id ? 'Editar lista' : 'Nueva lista', h('div', {},
-    comCampo('Nombre (solo lo ves tú)', nombre), comCampo('Tipo', tipo), comCampo('Título del PDF', titulo), comCampo('Subtítulo', sub), comCampo('Texto al pie (condiciones)', pie),
+    comCampo('Nombre (solo lo ves tú)', nombre), comCampo('Tipo', tipo), comCampo('Título del PDF', titulo), comCampo('Subtítulo', sub), comCampo('Quiénes somos (sale arriba en el PDF; edítalo cuando quieras)', presentacion), comCampo('Texto al pie (condiciones)', pie),
     h('label', { style: 'display:flex;gap:8px;align-items:center;margin:8px 0' }, inc, 'Incluir las recomendaciones vigentes en esta lista'),
-    h('h3', {}, 'Productos'), resumen, comBuscaProducto(anadir), otras, lista,
-    h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:10px 0' }, ajuste, h('button', { class: 'ghost small', onclick: () => { const p = parseNum(ajuste.value); if (p == null) { toast('Escribe un porcentaje.', 'err'); return; } items.forEach(x => { if (x.precio != null) x.precio = Math.round(x.precio * (1 + p / 100) * 100) / 100; }); pintar(); } }, 'Subir/bajar todos')),
+    h('h3', {}, 'Productos'), h('p', { class: 'sub' }, 'Compra (gris) = lo que nos cuesta; solo lo ves tú y NUNCA sale en el PDF. Venta = lo que tú pones; no puede ser menor que la compra.'), resumen, comBuscaProducto(anadir), h('div', { style: 'display:flex;gap:6px;margin:6px 0' }, libre, h('button', { class: 'small', onclick: anadirLibre }, '➕ Añadir')), h('button', { class: 'ghost small', style: 'margin-bottom:6px', onclick: refrescaCostes }, '↻ Actualizar precios de compra'), otras, lista,
+    h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:10px 0' }, ajuste, h('button', { class: 'ghost small', onclick: () => { const p = parseNum(ajuste.value); if (p == null) { toast('Escribe un porcentaje.', 'err'); return; } items.forEach(x => { if (x.precio != null) { x.precio = Math.round(x.precio * (1 + p / 100) * 100) / 100; if (x.coste != null && x.precio < x.coste) x.precio = x.coste; } }); pintar(); } }, 'Subir/bajar todos')),
     h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:10px 0' }, margen, h('button', { class: 'ghost small', onclick: async () => {
       const m = parseNum(margen.value); if (m == null) { toast('Escribe el % que quieres ganar sobre el coste.', 'err'); return; }
-      const ids = items.map(x => x.producto_id).filter(Boolean); const cs = await costesCompra(ids).catch(() => ({})); let n = 0, sin = 0;
-      items.forEach(x => { const c = cs[x.producto_id]; if (c && c.precio > 0 && (x.unidad === 'kg' ? (!c.unidad || c.unidad === 'kg') : c.unidad === x.unidad)) { x.precio = Math.round(c.precio * (1 + m / 100) * 100) / 100; n++; } else sin++; });
-      pintar(); toast(n + ' precios calculados' + (sin ? ' · ' + sin + ' sin coste comparable (déjalos como están)' : ''), 'ok');
+      let n = 0, sin = 0; items.forEach(x => { if (x.coste > 0) { x.precio = Math.round(x.coste * (1 + m / 100) * 100) / 100; n++; } else sin++; });
+      pintar(); toast(n + ' precios calculados (compra + ' + m + ' %)' + (sin ? ' · ' + sin + ' sin precio de compra: pónlos tú' : ''), 'ok');
     } }, 'Rellenar con coste + %')),
     h('button', { style: 'min-height:48px;width:100%', onclick: guardar }, 'Guardar lista'), borrar));
 }
@@ -7481,6 +7601,7 @@ function comHtml(d) {
   return '<div style="font-family:Arial,Helvetica,sans-serif;color:#111827;max-width:780px;margin:0 auto">' +
     '<div style="background:#166534;color:#fff;padding:16px 18px;border-bottom:5px solid #facc15"><div style="font-size:26px;font-weight:800">FERJUSANZ</div><div style="font-size:12px;color:#dcfce7">Frutas y verduras al por mayor · Mercamadrid</div><div style="font-size:20px;font-weight:800;margin-top:8px">' + esc(d.titulo || '') + '</div></div>' +
     (d.subtitulo ? '<div style="color:#6b7280;margin:10px 2px 0">' + esc(d.subtitulo) + '</div>' : '') + (d.validez ? '<div style="color:#166534;font-weight:700;font-size:13px;margin:4px 2px 12px">' + esc(d.validez) + '</div>' : '<div style="height:10px"></div>') +
+    (d.presentacion ? '<div style="border:1px solid #86efac;border-left:5px solid #166534;background:#f0fdf4;border-radius:6px;padding:8px 12px;margin:0 0 10px;font-size:13px;color:#374151">' + esc(d.presentacion) + '</div>' : '') +
     (recs ? '<div style="font-weight:800;color:#166534;margin:6px 0">NUESTRAS RECOMENDACIONES</div>' + recs : '') +
     (filas ? '<table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:14px"><thead><tr style="background:#166534;color:#fff"><th style="text-align:left;padding:7px 8px;font-size:12px">PRODUCTO</th><th style="text-align:right;padding:7px 8px;font-size:12px">PRECIO</th></tr></thead><tbody>' + filas + '</tbody></table>' : '') +
     '<div style="border-top:1px solid #d1d5db;margin-top:14px;padding-top:6px;font-size:11px;color:#6b7280">' + esc(d.pie || '') + '</div>' + (d.contacto ? '<div style="font-weight:700;color:#166534;font-size:13px;margin-top:4px">' + esc(d.contacto) + '</div>' : '') + '</div>';
@@ -7519,7 +7640,8 @@ async function tabListas(el) {
       ...(r.data || []).map(l => h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, l.nombre), h('div', { class: 'sub' }, comNombreDe(COM_TIPOS, l.tipo) + ' · ' + (cuenta[l.id] || 0) + ' productos')), h('button', { class: 'ghost small', onclick: () => abrirLista(l.id, () => tabListas(el)) }, '✏️ Editar')),
         h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' },
           h('button', { class: 'small', onclick: () => comVer(l, false) }, '👁️ Ver / imprimir'), h('button', { class: 'small', onclick: () => comPdf(l, false, 'bajar') }, '📄 Descargar PDF'), h('button', { class: 'small', onclick: () => comPdf(l, false, 'enviar') }, '📲 Enviar'), h('button', { class: 'ghost small', onclick: () => comVer(l, true) }, '👁️ Ver recomendaciones'), h('button', { class: 'ghost small', onclick: () => comPdf(l, true, 'enviar') }, '⭐ Solo recomendaciones')))),
-      h('button', { style: 'width:100%;min-height:48px;margin-top:10px', onclick: () => abrirLista(null, () => tabListas(el)) }, '➕ Nueva lista'));
+      h('button', { style: 'width:100%;min-height:48px;margin-top:10px', onclick: () => abrirLista(null, () => tabListas(el)) }, '➕ Nueva lista'),
+      h('button', { class: 'ghost', style: 'width:100%;min-height:48px;margin-top:8px', onclick: () => comPrecargar(() => tabListas(el)) }, '📥 Cargar las listas de colectividades y hostelería'));
   } catch (e) { el.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : /does not exist|schema cache|relation/i.test(e.message || '') ? 'Falta ejecutar en Supabase el archivo «Parte 43» (Comercial).' : msgErr(e))); }
 }
 async function tabRecs(el) {
