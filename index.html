@@ -1148,10 +1148,17 @@ async function abrirPrecios(pedidoId, alGuardar) {
     let base = 0, iva = 0; Object.keys(bases).forEach(t => { const b = Math.round(bases[t] * 100) / 100; base += b; iva += Math.round(b * Number(t)) / 100; });
     return { ok, base: Math.round(base * 100) / 100, iva: Math.round(iva * 100) / 100, total: Math.round((base + iva) * 100) / 100 }; };
   const precioActual = x => { const p = parseNum(x.precio); return String(x.precio).trim() === '' || isNaN(p) ? null : p; };
+  /* Base, IVA y total con IVA de lo que hay escrito ahora (con el descuento y el recargo si lo tiene), para verlo arriba sin bajar al albarán */
+  function resumenIvaVivo() { const bases = {}; let tot = 0, hay = false; R.forEach(x => { const i = importe(x); if (i == null) return; hay = true; tot += i; const t = ivaDe(x); bases[t] = (bases[t] || 0) + i; });
+    const D = descVal(); if (hay && D.descuento_base > 0) { bases[D.descuento_iva] = (bases[D.descuento_iva] || 0) - D.descuento_base; tot -= D.descuento_base; }
+    const RE = { 4: 0.5, 10: 1.4, 21: 5.2 }; const conRE = !!(uno(ped.clientes) || {}).recargo_equivalencia; let iva = 0, base = 0, re = 0;
+    Object.keys(bases).forEach(t => { const b = Math.round(bases[t] * 100) / 100; base += b; iva += Math.round(b * Number(t)) / 100; if (conRE && RE[t]) re += Math.round(b * RE[t]) / 100; });
+    base = Math.round(base * 100) / 100; iva = Math.round((iva + re) * 100) / 100; return { hay, base, iva, total: Math.round((base + iva) * 100) / 100 }; }
   function total() {
     let t = 0, falta = 0, g = 0, tv = 0, bajos = 0;
     R.forEach(x => { const i = importe(x); if (i == null) { falta++; return; } t += i; const cost = x.cu ? x.cu() : null, k = x.cant ? Number(x.cant()) : 0, p = parseNum(x.precio); if (cost != null && k > 0 && p > 0) { g += (p - cost) * k; tv += p * k; if (p < cost - 0.0004) bajos++; } });
-    totalBox.textContent = '💶 Total sin IVA: ' + eur(t) + ' €' + (falta ? ' · faltan ' + falta + ' línea(s)' : ' ✔') + (tv > 0 ? '\n📈 Ganancia estimada: ' + (g >= 0 ? '+' : '') + eur(Math.round(g * 100) / 100) + ' € (' + num(Math.round(g / tv * 1000) / 10, 1) + ' %)' : '') + (bajos ? '\n⚠ ' + bajos + ' línea(s) por debajo del coste' : '') + (descVal().descuento_base > 0 ? '\n🏷 Descuento: -' + eur(descVal().descuento_base) + ' € (sobre la base)' : '');
+    const RV = resumenIvaVivo();
+    totalBox.textContent = '💶 Total sin IVA: ' + eur(RV.base) + ' €' + (falta ? ' · faltan ' + falta + ' línea(s)' : ' ✔') + (RV.hay ? '\n🧾 IVA: ' + eur(RV.iva) + ' €  ·  Total con IVA: ' + eur(RV.total) + ' €' : '') + (tv > 0 ? '\n📈 Ganancia estimada: ' + (g >= 0 ? '+' : '') + eur(Math.round(g * 100) / 100) + ' € (' + num(Math.round(g / tv * 1000) / 10, 1) + ' %)' : '') + (bajos ? '\n⚠ ' + bajos + ' línea(s) por debajo del coste' : '') + (descVal().descuento_base > 0 ? '\n🏷 Descuento: -' + eur(descVal().descuento_base) + ' € (sobre la base)' : '');
     totalBox.style.borderColor = bajos ? '#fca5a5' : '#bbf7d0'; actVivo(); }
   R.forEach(x => {
     const pid = x.l.producto_id; const idx = R.indexOf(x);
@@ -1299,7 +1306,7 @@ async function abrirPrecios(pedidoId, alGuardar) {
   const btnGS = h('button', { class: 'guardar', style: 'flex:1;margin:0;background:#166534;color:#fff', onclick: () => guardar(btnGS, true) }, '💾 Guardar y seguir');
   const barraG = h('div', { class: 'barraG' }, btnGS, btnG);
   cerrar = hoja('💶 Precios · ' + nombreCli(uno(ped.clientes) || {}), h('div', {}, h('p', { class: 'sub' }, fechaES(ped.fecha_entrega) + ' · ' + (ped.estado === 'terminado' ? 'albarán cerrado' : 'albarán sin cerrar') + '. Puedes poner los precios ahora o más tarde: cerrar el albarán no depende de ellos.'),
-    totalBox, calcBox, descBox, barraM, Object.keys(tarifas).length ? btnLlenar : null, cuerpo, vivoDet, barraG));
+    totalBox, vivoDet, calcBox, descBox, barraM, Object.keys(tarifas).length ? btnLlenar : null, cuerpo, barraG));
 }
 async function vistaPreciosPend() {
   state.view = 'preciosp';
@@ -2206,6 +2213,7 @@ async function vistaPaginasClientes() {
   const tok = async (c, nuevo) => { const r = await sb.rpc('crear_enlace_cliente', { p_cliente: c.id, p_nuevo: !!nuevo }); if (r.error) throw r.error; return r.data; };
   const err = e => toast(/does not exist|schema cache|function/i.test(e.message || '') ? 'Falta ejecutar en Supabase el archivo «Parte 57».' : isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err');
   const fila = c => h('div', { class: 'card', style: 'padding:10px' }, h('div', { class: 'nombre' }, nombreCli(c)), h('div', { class: 'sub' }, [c.codigo, c.localidad, c.telefono].filter(Boolean).join(' · ')),
+    telCliente(c) ? h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' }, h('button', { class: 'small ghost', onclick: () => guardarContactoCliente(c) }, '💾 Guardar contacto'), h('a', { class: 'small ghost', href: 'tel:' + telCliente(c), style: 'display:inline-flex;align-items:center;min-height:36px;padding:0 10px;border:1.5px solid var(--borde);border-radius:10px;text-decoration:none;color:inherit;font-weight:700' }, '📞 Llamar')) : null,
     h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' },
       h('button', { class: 'small', onclick: async () => { try { const u = urlPortal(await tok(c)); hojaQrEnlace('📱 Página de ' + nombreCli(c), u, 'Es privada: solo enseña los albaranes de este cliente. Si la cámara no lo lee, copia el enlace.', () => { let t = String(c.telefono || '').replace(/\D/g, ''); if (t.length === 9) t = '34' + t; window.open('https://wa.me/' + t + '?text=' + encodeURIComponent('Hola, esta es tu página privada de ' + EMPRESA.nombre + ': aquí verás todos tus albaranes, siempre actualizados. Guárdala en favoritos: ' + u), '_blank'); }); } catch (e) { err(e); } } }, '📱 QR y enlace'),
       h('button', { class: 'small ghost', onclick: async () => { try { await navigator.clipboard.writeText(urlPortal(await tok(c))); toast('Enlace copiado', 'ok'); } catch (e) { err(e); } } }, '🔗 Copiar'),
@@ -2232,6 +2240,28 @@ function cajaPortal(d) {
 /* ===== Albarán por enlace: se envía a quien sea (cocinero, camarero, jefe, gestoría) y queda guardado en su móvil ===== */
 const albUrl = tok => location.origin + location.pathname.replace(/[^\/]*$/, '') + '?a=' + tok;
 function cargaScript(src) { return new Promise((ok, no) => { if (document.querySelector('script[src="' + src + '"]')) return ok(); const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => no(new Error('No se pudo cargar')); document.head.append(sc); }); }
+/* Contacto del cliente: ver el número, llamar, copiarlo y guardarlo en la agenda del móvil (archivo .vcf) para poder escribirle por WhatsApp */
+function telCliente(c) { let t = String((c && c.telefono) || '').replace(/[^\d+]/g, ''); if (/^\d{9}$/.test(t)) t = '+34' + t; else if (/^34\d{9}$/.test(t)) t = '+' + t; return t; }
+function vcardCliente(c) { const q = x => String(x == null ? '' : x).replace(/\\/g, '\\\\').replace(/;/g, '\;').replace(/,/g, '\\,').replace(/\r?\n/g, ' '); const nom = nombreCli(c) + ' (cliente Ferjusanz)'; const t = telCliente(c);
+  return ['BEGIN:VCARD', 'VERSION:3.0', 'FN:' + q(nom), 'N:' + q(nombreCli(c)) + ';;;;', 'ORG:' + q(nombreCli(c)), t ? 'TEL;TYPE=CELL:' + t : '', c.email ? 'EMAIL:' + q(c.email) : '', c.localidad ? 'ADR;TYPE=WORK:;;;' + q(c.localidad) + ';;;' : '', 'END:VCARD'].filter(Boolean).join('\r\n') + '\r\n'; }
+async function guardarContactoCliente(c) {
+  if (!telCliente(c)) { toast('Este cliente no tiene teléfono guardado.', 'err'); return; }
+  const nom = 'Contacto-' + sinTilde(nombreCli(c)).replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').slice(0, 40) + '.vcf';
+  const blob = new Blob([vcardCliente(c)], { type: 'text/vcard' });
+  try { const file = new File([blob], nom, { type: 'text/vcard' }); if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Contacto ' + nombreCli(c) }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+  const url = URL.createObjectURL(blob); const lk = h('a', { href: url, download: nom }); document.body.append(lk); lk.click(); lk.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
+  toast('Contacto descargado: ábrelo para guardarlo en tu agenda.', 'ok');
+}
+function bloqueContacto(c) {
+  const t = telCliente(c);
+  return h('div', { class: 'card', style: 'padding:10px;margin:8px 0;border-left:6px solid #2563eb' },
+    h('div', { class: 'nombre' }, '📇 ' + nombreCli(c)),
+    t ? h('div', { style: 'font-size:20px;font-weight:800;margin:4px 0;word-break:break-all' }, t.replace(/^\+34(\d{3})(\d{3})(\d{3})$/, '+34 $1 $2 $3')) : h('div', { class: 'sub', style: 'color:#b45309' }, 'Este cliente no tiene teléfono guardado. Escríbelo en el campo de WhatsApp de abajo.'),
+    t ? h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' },
+      h('button', { class: 'small', onclick: () => guardarContactoCliente(c) }, '💾 Guardar en mis contactos'),
+      h('a', { class: 'small ghost', href: 'tel:' + t, style: 'display:inline-flex;align-items:center;min-height:40px;padding:0 12px;border:1.5px solid var(--borde);border-radius:10px;text-decoration:none;color:inherit;font-weight:700' }, '📞 Llamar'),
+      h('button', { class: 'small ghost', onclick: async () => { try { await navigator.clipboard.writeText(t); toast('Número copiado', 'ok'); } catch (e) { toast(t, 'ok'); } } }, '📋 Copiar')) : null);
+}
 async function abrirEnvioAlbaran(d) {
   const a = d.albaran || {}, cli = uno(d.pedido.clientes) || {};
   if (a.numero == null) { toast('Cierra primero el albarán (terminar el pedido).', 'err'); return; }
@@ -2250,6 +2280,7 @@ async function abrirEnvioAlbaran(d) {
   cerrar = hoja('📲 Enviar albarán ' + num, h('div', {},
     h('p', { class: 'sub' }, 'Se manda un enlace: se abre en cualquier móvil sin instalar nada, se queda guardado en el chat o el correo y se puede descargar en PDF. Vale para el que recibe la mercancía, para el que paga, para el jefe o la gestoría.'),
     h('label', { style: 'display:flex;gap:8px;align-items:center;margin:8px 0;font-weight:700' }, h('input', { type: 'checkbox', onchange: e => { sinP = e.target.checked; } }), 'Enviar SIN precios (albarán sin valorar)'),
+    bloqueContacto(Object.assign({}, cli, cc)),
     historial, chips ? h('div', { class: 'sub', style: 'font-weight:700' }, 'Usados antes con este cliente:') : null, chips,
     comCampo('Nombre de quien lo recibe (opcional)', nom), comCampo('WhatsApp', tel), comCampo('Correo', mail),
     B('guardar', '📲 Enviar por WhatsApp', () => { let t = tel.value.replace(/\D/g, ''); if (t.length === 9) t = '34' + t; recordar('WhatsApp ' + (tel.value.trim() || '(elegido en WhatsApp)')); window.open('https://wa.me/' + t + '?text=' + encodeURIComponent(texto()), '_blank'); }),
