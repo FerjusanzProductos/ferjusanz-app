@@ -9509,6 +9509,13 @@ function vistaCopia() {
     info, btn, estado,
     h('div', { class: 'card', style: 'margin-top:12px' }, h('b', {}, 'Cómo guardarla bien'), h('div', { class: 'sub' }, '1) Hazla una vez por semana (la app te avisa con un «!» si pasan más de 7 días).  2) Se guarda en Descargas del móvil: súbela también a Google Drive o envíatela por correo.  3) No la compartas: contiene datos de clientes.  4) Las fotos de perfil y los archivos de facturas y pedidos escaneados no van dentro de este archivo.'))), { volver: () => go('inicio') })); renderBanner();
 }
+/* «día 4», «del 4», «04/11» → fecha AAAA-MM-DD (si el día aún no ha llegado este mes, el mes pasado) */
+function fechaDeTexto(t) {
+  const hd = new Date(), z = n => String(n).padStart(2, '0'); let m;
+  if ((m = t.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/))) { const y = m[3] ? (m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3])) : hd.getFullYear(); return y + '-' + z(m[2]) + '-' + z(m[1]); }
+  if ((m = t.match(/\bdia\s+(\d{1,2})\b/) || t.match(/\bdel\s+(\d{1,2})\b/))) { let y = hd.getFullYear(), mo = hd.getMonth() + 1; if (Number(m[1]) > hd.getDate()) { mo--; if (mo < 1) { mo = 12; y--; } } return y + '-' + z(mo) + '-' + z(m[1]); }
+  return null;
+}
 function vistaBuscar() {
   state.view = 'buscar'; const oficina = esOficina(), compras = puedeCompras();
   const res = h('div', {}); const info = h('p', { class: 'sub' }, 'Escribe un cliente, producto, proveedor, número de albarán… y busco en todos los apartados que puedes ver.');
@@ -9516,21 +9523,25 @@ function vistaBuscar() {
   const inp = h('input', { type: 'search', placeholder: '🔍 Florencio, tomate pera, F 5723…', autocomplete: 'off', oninput: debounce(() => buscarTodo(inp.value), 300) });
   inp.value = (state.params && state.params.q) || '';
   $app.replaceChildren(shell('Buscar', h('div', {}, inp, info, res), { volver: () => go('inicio') })); renderBanner();
-  const f = (a, t) => { const x = sinTilde([a.nombre, a.nombre_comercial, a.codigo].filter(Boolean).join(' ')); return t.split(/\s+/).every(w => x.includes(w)); };
+  const f = (a, t) => { const x = sinTilde([a.nombre, a.nombre_comercial, a.codigo].filter(Boolean).join(' ')); return t.split(/\s+/).every(w => x.includes(w) || (w.length > 3 && w.endsWith('s') && (x.includes(w.slice(0, -1)) || (w.endsWith('es') && x.includes(w.slice(0, -2)))))); };
   const grupo = (titulo, filas, mas) => filas.length ? h('div', {}, h('div', { class: 'letra' }, titulo + ' (' + filas.length + (mas ? '+' : '') + ')'), ...filas) : null;
   const fila = (t1, t2, onclick, badge) => h('div', { class: 'card tap', onclick }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:16px' }, t1), t2 ? h('div', { class: 'sub' }, t2) : null), badge ? h('span', { class: 'badge' }, badge) : null));
   const nc = c => nombreCli(c);
   async function buscarTodo(texto) {
     const mi = ++seq; const t = sinTilde(limpiaBusqueda(texto)).trim();
+    /* «factura de la ibérica día 4»: se quitan las palabras de relleno y la fecha para buscar solo el nombre */
+    const STOPB = new Set(['factura', 'facturas', 'albaran', 'albaranes', 'de', 'del', 'la', 'el', 'los', 'las', 'dia', 'y', 'a', 'en', 'con', 'para', 'mi', 'mis', 'un', 'una', 'ver', 'quiero', 'ensename', 'muestrame', 'dame', 'ultima', 'ultimas', 'compra', 'compras', 'proveedor', 'precio', 'precios', 'cuanto', 'cuesta', 'vale', 'que', 'hay', 'tienes', 'tengo', 'cliente', 'producto']);
+    const quiereFac = /\bfactur/.test(t), mFe = fechaDeTexto(t);
+    const tn = t.replace(/\bdia\s+\d{1,2}\b/g, ' ').replace(/\bdel\s+\d{1,2}\b/g, ' ').replace(/\b\d{1,2}\/\d{1,2}(\/\d{2,4})?\b/g, ' ').split(/\s+/).filter(w => w && !STOPB.has(w)).join(' ') || t;
     if (t.length < 2) { res.replaceChildren(); info.textContent = 'Escribe al menos 2 letras.'; return; }
     { const dc = compras ? detectaConsulta(texto) : null;   // «último precio de compra del pimiento rojo»
       if (dc && (dc.tipo === 'ultimoprecio' || dc.tipo === 'preciocompra')) { info.textContent = 'Buscando…'; try { const rs = await consultarDatos(dc); if (mi !== seq) return; info.textContent = ''; res.replaceChildren(...rs.nodos); } catch (e) { if (mi === seq) { info.textContent = ''; res.replaceChildren(h('p', { class: 'err' }, msgErr(e))); } } return; } }
     info.textContent = 'Buscando…';
     try {
       const base = await bgCargarBase(); if (mi !== seq) return;
-      const cl = base.clientes.filter(c => f(c, t)).sort((a, b) => (b.activo ? 1 : 0) - (a.activo ? 1 : 0)).slice(0, 30);
-      const pd = base.productos.filter(p => f(p, t)).sort((a, b) => (b.activo ? 1 : 0) - (a.activo ? 1 : 0)).slice(0, 30);
-      const pv = base.proveedores.filter(p => f(p, t)).slice(0, 20);
+      const cl = base.clientes.filter(c => f(c, tn)).sort((a, b) => (b.activo ? 1 : 0) - (a.activo ? 1 : 0)).slice(0, 30);
+      const pd = base.productos.filter(p => f(p, tn)).sort((a, b) => (b.activo ? 1 : 0) - (a.activo ? 1 : 0)).slice(0, 30);
+      const pv = base.proveedores.filter(p => f(p, tn)).slice(0, 20);
       const idC = cl.map(c => c.id), idP = pd.map(p => p.id), idV = pv.map(p => p.id); const mapC = Object.fromEntries(base.clientes.map(c => [c.id, c])), mapP = Object.fromEntries(base.productos.map(p => [p.id, p]));
       const dig = (t.match(/\d+/g) || []).join(''); const numero = /^(f\s*)?\d{3,}$/.test(t) ? Number(dig) : null;
       const q = [];
@@ -9544,9 +9555,10 @@ function vistaBuscar() {
       if (oficina && idC.length) add('cobros', sb.from('cobros').select('id,pedido_id,cliente_id,importe,forma,created_at').in('cliente_id', idC.slice(0, 30)).order('created_at', { ascending: false }).limit(15));
       if (idC.length) add('incC', sb.from('incidencias').select('id,tipo,nota,cliente_id,producto_id,resuelta,created_at').neq('archivado', true).in('cliente_id', idC.slice(0, 30)).order('created_at', { ascending: false }).limit(15));
       if (idP.length) add('incP', sb.from('incidencias').select('id,tipo,nota,cliente_id,producto_id,resuelta,created_at').neq('archivado', true).in('producto_id', idP.slice(0, 20)).order('created_at', { ascending: false }).limit(15));
-      if (compras && idP.length) add('lotes', sb.from('lotes').select('id,cantidad_recibida,unidad,precio_compra,producto_id,compras(fecha,proveedores(nombre))').in('producto_id', idP.slice(0, 20)).neq('archivado', true).order('created_at', { ascending: false }).limit(15));
+      if (compras && idP.length) add('lotes', sb.from('lotes').select('id,compra_id,cantidad_recibida,unidad,precio_compra,producto_id,compras(fecha,proveedores(nombre))').in('producto_id', idP.slice(0, 20)).neq('archivado', true).order('created_at', { ascending: false }).limit(15));
       if (compras && idV.length) add('comprasV', sb.from('compras').select('id,fecha,numero_documento,proveedor_id').in('proveedor_id', idV).order('fecha', { ascending: false }).limit(10));
-      if (compras) add('docs', sb.from('documentos_compra').select('id,fecha,tipo,importe,nota,pagada,proveedores(nombre)').neq('archivado', true).order('fecha', { ascending: false }).limit(200));
+      if (compras) add('docs', sb.from('documentos_compra').select('id,fecha,tipo,importe,nota,pagada,ruta,nombre,proveedores(nombre)').neq('archivado', true).order('fecha', { ascending: false }).limit(300));
+      if (compras && idV.length) add('frs', sb.from('facturas_recibidas').select('id,recibido_en,fecha_factura,ruta,nombre,proveedor_id').in('proveedor_id', idV).order('recibido_en', { ascending: false }).limit(80).then(r => r.error ? sb.from('facturas_recibidas').select('id,recibido_en,ruta,nombre,proveedor_id').in('proveedor_id', idV).order('recibido_en', { ascending: false }).limit(80) : r));
       if (idP.length) add('sobra', sb.from('sobrante').select('id,fecha,producto_id,cantidad,unidad').in('producto_id', idP.slice(0, 20)).order('fecha', { ascending: false }).limit(8));
       const out = Object.fromEntries(await Promise.all(q)); if (mi !== seq) return;
       const vistos = new Set(); const peds = [];
@@ -9564,10 +9576,18 @@ function vistaBuscar() {
       const incs = []; const vI = new Set(); [].concat(out.incC || [], out.incP || []).forEach(i => { if (!vI.has(i.id)) { vI.add(i.id); incs.push(i); } });
       kids.push(grupo('Incidencias', incs.slice(0, 8).map(i => fila((TIPOS_INC[i.tipo] || i.tipo) + (i.resuelta ? ' (resuelta)' : ''), [mapC[i.cliente_id] ? nc(mapC[i.cliente_id]) : '', mapP[i.producto_id] ? mapP[i.producto_id].nombre : '', i.nota].filter(Boolean).join(' · '), () => go('incidencias')))));
       if (compras) {
-        kids.push(grupo('Compras y precios de compra', (out.lotes || []).slice(0, 8).map(l => { const co = uno(l.compras) || {}; return fila((mapP[l.producto_id] ? mapP[l.producto_id].nombre : '') + ' · ' + num(l.cantidad_recibida) + ' ' + l.unidad + (l.precio_compra != null ? ' a ' + eur(l.precio_compra) + ' €' : ''), (uno(co.proveedores) || {}).nombre + ' · ' + fechaES(co.fecha), () => go('precios')); })));
+        kids.push(grupo('Compras y precios de compra', (out.lotes || []).slice(0, 8).map(l => { const co = uno(l.compras) || {}; return fila((mapP[l.producto_id] ? mapP[l.producto_id].nombre : '') + ' · ' + num(l.cantidad_recibida) + ' ' + l.unidad + (l.precio_compra != null ? ' a ' + eur(l.precio_compra) + ' €' : ''), (uno(co.proveedores) || {}).nombre + ' · ' + fechaES(co.fecha) + ' · toca para ver la factura', () => verFacturaDeCompra(l.compra_id, (uno(co.proveedores) || {}).nombre, co.fecha)); })));
         kids.push(grupo('Proveedores', pv.slice(0, 6).map(p => fila(p.nombre, p.codigo, () => go('compras')))));
-        const docs = (out.docs || []).filter(d => sinTilde([(uno(d.proveedores) || {}).nombre, d.nota, d.tipo].join(' ')).includes(t)).slice(0, 8);
-        kids.push(grupo('Facturas y documentos de compra', docs.map(d => fila(((uno(d.proveedores) || {}).nombre || 'Sin proveedor') + (d.importe != null ? ' · ' + eur(d.importe) + ' €' : ''), (TIPOS_DOC[d.tipo] || d.tipo) + ' · ' + fechaES(d.fecha) + (d.pagada ? ' · pagada' : ''), () => go('facturas')))));
+        /* Facturas de proveedores: se abren AQUÍ MISMO (visor), sin salir de la búsqueda */
+        const nomV = Object.fromEntries(base.proveedores.map(x => [x.id, x.nombre])), fv = [];
+        (out.frs || []).forEach(x => { if (x.ruta) fv.push({ fecha: String(x.fecha_factura || x.recibido_en || '').slice(0, 10), ruta: x.ruta, prov: nomV[x.proveedor_id] || '', nombre: x.nombre }); });
+        const docsV = (out.docs || []).filter(d => sinTilde([(uno(d.proveedores) || {}).nombre, d.nota, d.tipo].join(' ')).includes(tn));
+        docsV.forEach(d => { if (d.ruta && !fv.some(z => z.ruta === d.ruta)) fv.push({ fecha: String(d.fecha || '').slice(0, 10), ruta: d.ruta, prov: (uno(d.proveedores) || {}).nombre || '', nombre: d.nombre, imp: d.importe }); });
+        let lf = fv.sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))); const totalF = lf.length; if (mFe) lf = lf.filter(x => x.fecha === mFe);
+        if (lf.length) kids.push(grupo('📄 Facturas de proveedores · toca para verlas aquí', lf.slice(0, 10).map(x => fila((x.prov || 'Factura') + (x.imp != null ? ' · ' + eur(x.imp) + ' €' : ''), (x.nombre || 'Factura') + ' · ' + (x.fecha ? fechaES(x.fecha) : ''), () => verDocumento(x.ruta, (x.prov || 'Factura') + ' · ' + (x.fecha ? fechaES(x.fecha) : '')), '👁️ Ver')), lf.length > 10));
+        else if (mFe && totalF) kids.push(h('p', { class: 'sub' }, 'No hay facturas de ese proveedor con fecha ' + fechaES(mFe) + ' (hay ' + totalF + ' de otras fechas: quita el día para verlas).'));
+        const docsSin = docsV.filter(d => !d.ruta).slice(0, 8);
+        kids.push(grupo('Facturas y documentos de compra (sin archivo)', docsSin.map(d => fila(((uno(d.proveedores) || {}).nombre || 'Sin proveedor') + (d.importe != null ? ' · ' + eur(d.importe) + ' €' : ''), (TIPOS_DOC[d.tipo] || d.tipo) + ' · ' + fechaES(d.fecha) + (d.pagada ? ' · pagada' : ''), () => go('facturas')))));
       }
       kids.push(grupo('Sobrante (existencias sin vender)', (out.sobra || []).slice(0, 5).map(s => fila((mapP[s.producto_id] ? mapP[s.producto_id].nombre : '') + ' · ' + num(s.cantidad) + ' ' + s.unidad, fechaES(s.fecha), () => go('carga')))));
       const k = kids.filter(Boolean); info.textContent = k.length ? '' : 'Sin resultados para «' + texto.trim() + '».';
