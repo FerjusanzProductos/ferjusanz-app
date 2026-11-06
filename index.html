@@ -348,7 +348,8 @@ header .chatbtn{min-width:38px;padding:0 4px;font-size:16px}
 header .quien{padding:0 2px 0 4px;max-width:44px;margin-left:2px}
 header .quien span{display:none}
 header>.tit{font-size:15px}
-.portalbtn{background:linear-gradient(135deg,#2563eb,#06b6d4) !important;color:#fff;font-size:19px !important;box-shadow:0 0 0 2px rgba(255,255,255,.9),0 0 12px rgba(6,182,212,.9);animation:brilla 2.6s ease-in-out infinite}
+.portalbtn{font-size:19px !important}.portalbtn.nuevo{background:linear-gradient(135deg,#2563eb,#06b6d4) !important;color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.9),0 0 12px rgba(6,182,212,.9);animation:brilla 2.6s ease-in-out infinite}.portalbtn.nuevo::after{content:'';position:absolute;top:3px;right:3px;width:11px;height:11px;border-radius:50%;background:#ef4444;border:2px solid #fff}
+.bandeja-fac.portal:not(.nuevo){background:#fff;color:var(--txt);border:1px solid var(--borde);box-shadow:none}.bandeja-fac.portal:not(.nuevo) small{color:var(--txt2)}.bandeja-fac.portal:not(.nuevo) .num{background:var(--gris);color:var(--txt)}
 @keyframes brilla{50%{box-shadow:0 0 0 2px rgba(255,255,255,.9),0 0 18px rgba(6,182,212,1)}}
 button:not(.ghost):not(.peligro):not(.chip):not(.back):not(.chatbtn):not(.quien):not(.circ):not(.calbtn):not(.fichar-btn):not(.bandeja-fac):not(.portalbtn):not(nav button){background:linear-gradient(135deg,#22a04f,#17803c)}
 .chip.on,nav.tabs button.on{background:linear-gradient(135deg,#d9f2e1,#eaf7ee)}
@@ -386,8 +387,8 @@ html[data-tema=oscuro] .badge.fin{background:#a7d5c3;color:#005222}
 html[data-tema=oscuro] nav.tabs button.on{background:linear-gradient(135deg,#68b891,#4bb673);color:#000;border-color:transparent}
 html[data-tema=oscuro] .progreso{background:#bfcfe1}
 html[data-tema=oscuro] .bandeja-fac{background:linear-gradient(135deg,#67bf8f,#90d0ad);color:#000}
-html[data-tema=oscuro] .bandeja-fac.portal,html[data-tema=oscuro] .portalbtn{background:linear-gradient(135deg,#65a3ff,#169fdf) !important;color:#000 !important}
-html[data-tema=oscuro] .portalbtn{box-shadow:0 0 0 2px #000,0 0 12px rgba(0,0,0,.6)}
+html[data-tema=oscuro] .bandeja-fac.portal.nuevo,html[data-tema=oscuro] .portalbtn.nuevo{background:linear-gradient(135deg,#65a3ff,#169fdf) !important;color:#000 !important}
+html[data-tema=oscuro] .portalbtn.nuevo{box-shadow:0 0 0 2px #000,0 0 12px rgba(0,0,0,.6)}
 </style>
 </head>
 <body>
@@ -855,7 +856,7 @@ function shell(titulo, contenido, opts) {
       (opts.volver || state.view !== 'inicio') ? h('button', { class: 'back', onclick: opts.volver || (() => atras()) }, '← Volver') : h('span', { class: 'logo' }, 'Ferjusanz'),
       state.view !== 'inicio' ? h('button', { class: 'back', title: 'Menú principal', onclick: () => go('inicio') }, '🏠') : null,
       h('span', { class: 'tit' }, titulo || ''),
-      h('button', { class: 'chatbtn portalbtn', title: 'Portal de clientes', onclick: () => go('paginasclientes') }, '🌐'),
+      h('button', { class: 'chatbtn portalbtn' + (window.__PORTAL_PEND > 0 ? ' nuevo' : ''), title: window.__PORTAL_PEND > 0 ? 'Portal de clientes: hay albaranes nuevos por publicar' : 'Portal de clientes', onclick: () => go('paginasclientes') }, '🌐'),
       h('button', { class: 'chatbtn', title: 'Buscar', onclick: () => go('buscar') }, '🔍'),
       h('button', { class: 'chatbtn', title: 'Ayuda', onclick: () => go('ayuda', { desde: state.view }) }, '❓'),
       h('button', { class: 'chatbtn', title: 'Chat del equipo', onclick: () => go('chat') }, '💬', h('span', { id: 'chatBadge', class: 'insig' }, state.chatNoLeidos ? String(state.chatNoLeidos) : '')),
@@ -2220,7 +2221,9 @@ function pubAlbaranNodos(x, cargaFirma) {
     h('button', { class: 'ghost', style: 'width:100%;min-height:54px;margin-top:8px', onclick: pdf }, '📄 Descargar PDF')].filter(Boolean);
 }
 const pubCabecera = () => h('div', { class: 'pub-cab' }, h('div', { class: 'pub-emp' }, EMPRESA.nombre), h('div', { class: 'sub', style: 'color:#dcfce7' }, EMPRESA.tels));
-const pubPie = () => h('p', { class: 'sub', style: 'margin-top:14px' }, EMPRESA.dir + ' · ' + EMPRESA.email);
+const pubPie = () => h('div', {}, h('button', { class: 'ghost', style: 'width:100%;min-height:50px;margin-top:14px', onclick: async () => { const u = location.href, t = document.title; try { if (navigator.share) await navigator.share({ title: t, text: 'Enlace de ' + EMPRESA.nombre + ' (solo para quien lo necesite):', url: u }); else { await navigator.clipboard.writeText(u); toast('Enlace copiado: pégalo en WhatsApp o en un correo', 'ok'); } } catch (e) { if (!e || e.name !== 'AbortError') { try { await navigator.clipboard.writeText(u); toast('Enlace copiado', 'ok'); } catch (er) { prompt('Copia este enlace:', u); } } } } }, '📲 Mandar este enlace a otra persona (jefe, gestoría…)'),
+  h('p', { class: 'sub', style: 'margin-top:8px' }, 'Quien reciba el enlace lo abre en su móvil u ordenador, sin clave. Mándalo solo a personas de confianza.'),
+  h('p', { class: 'sub', style: 'margin-top:8px' }, EMPRESA.dir + ' · ' + EMPRESA.email));
 async function vistaAlbaranPublico(tok) {
   window.__PUBLICA = true; aplicarTema();
   document.title = 'Albarán · ' + EMPRESA.nombre;
@@ -3150,6 +3153,33 @@ async function consultarDatos(d, elegir) {
     return { nodos: [tarjetaConsulta(clip ? 'Precio a ' + nombreCli(clip) : 'Precios', clip ? 'Lo último que se le vendió (Golden 2026) y la tarifa de la app.' : null, filas, { t: 'Abrir Precios ›', f: () => go('precios') })], voz: voz.join('. '), cli: clip };
   }
   if ((d.tipo === 'factura') && !esOficina()) return sinPermiso('Las facturas de los clientes las ve la oficina. Si necesitas una, pídela a administración.');
+  /* «Factura ibérica día 4»: si lo escrito es un PROVEEDOR, se enseñan sus facturas de compra con un botón para verlas sin salir de aquí */
+  if (d.tipo === 'factura' && !d.cli && d.nombre) {
+    try {
+      const pr = await sb.from('proveedores').select('id,nombre').limit(800);
+      const toks = sinTilde(d.nombre).replace(/\b(dia|del|de|el)\b/g, ' ').replace(/\d+/g, ' ').split(/\s+/).filter(w => w.length > 2 && !/^(sl|sa|cb)$/.test(w));
+      const provs = toks.length && !pr.error ? (pr.data || []).filter(v => { const n = sinTilde(v.nombre); return toks.every(w => n.includes(w)); }) : [];
+      const cliIgual = toks.length ? (await clientesAsis().catch(() => [])).some(c => { const n = sinTilde(nombreCli(c)); return toks.every(w => n.includes(w)); }) : false;
+      if (provs.length && !cliIgual) {
+        const mDia = sinTilde(d.q || d.nombre).match(/\bdia\s+(\d{1,2})\b/) || sinTilde(d.q || d.nombre).match(/\bdel\s+(\d{1,2})\b/), mFe = String(d.q || '').match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/);
+        let fe = d.fecha || null; const hd = new Date();
+        if (mFe) { const y = mFe[3] ? (mFe[3].length === 2 ? 2000 + Number(mFe[3]) : Number(mFe[3])) : hd.getFullYear(); fe = y + '-' + String(mFe[2]).padStart(2, '0') + '-' + String(mFe[1]).padStart(2, '0'); }
+        else if (mDia) { let y = hd.getFullYear(), m = hd.getMonth() + 1; if (Number(mDia[1]) > hd.getDate()) { m--; if (m < 1) { m = 12; y--; } } fe = y + '-' + String(m).padStart(2, '0') + '-' + String(mDia[1]).padStart(2, '0'); }
+        const ids = provs.map(v => v.id), nomP = {}; provs.forEach(v => { nomP[v.id] = v.nombre; });
+        const docs = [];
+        const dc = await sb.from('documentos_compra').select('fecha,ruta,nombre,proveedor_id,tipo').in('proveedor_id', ids).order('fecha', { ascending: false }).limit(60);
+        (dc.data || []).forEach(x => docs.push({ fecha: x.fecha, ruta: x.ruta, nombre: x.nombre, prov: nomP[x.proveedor_id], tipo: x.tipo }));
+        let fr = await sb.from('facturas_recibidas').select('recibido_en,fecha_factura,ruta,nombre,proveedor_id').in('proveedor_id', ids).order('recibido_en', { ascending: false }).limit(60);
+        if (fr.error) fr = await sb.from('facturas_recibidas').select('recibido_en,ruta,nombre,proveedor_id').in('proveedor_id', ids).order('recibido_en', { ascending: false }).limit(60);
+        (fr.data || []).forEach(x => { const f = String(x.fecha_factura || x.recibido_en || '').slice(0, 10); if (!docs.some(z => z.ruta === x.ruta)) docs.push({ fecha: f, ruta: x.ruta, nombre: x.nombre, prov: nomP[x.proveedor_id], tipo: 'factura' }); });
+        let lista = docs.filter(x => x.ruta).sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+        const todas = lista.length; if (fe) lista = lista.filter(x => String(x.fecha).slice(0, 10) === fe); else lista = lista.slice(0, 12);
+        const filas = lista.map(x => filaCons(x.prov + ' · ' + (x.fecha ? fechaES(String(x.fecha).slice(0, 10)) : ''), (x.nombre || 'Factura') + ' · toca para verla', '👁️ Ver', () => verDocumento(x.ruta, x.prov + ' · ' + (x.nombre || 'Factura'))));
+        const tit = 'Facturas de ' + provs.map(v => v.nombre).slice(0, 2).join(' / ') + (fe ? ' · ' + fechaES(fe) : '');
+        return { nodos: [tarjetaConsulta(tit, lista.length ? lista.length + (lista.length === 1 ? ' factura. Tócala para verla aquí mismo.' : ' facturas. Toca una para verla aquí mismo.') : (fe ? 'No hay facturas de ese proveedor con fecha ' + fechaES(fe) + (todas ? ' (hay ' + todas + ' de otras fechas).' : '.') : 'Todavía no hay facturas de este proveedor.'), filas, { t: 'Abrir facturas de proveedores ›', f: () => go('compras') })], voz: lista.length ? lista.length + ' facturas encontradas.' : 'No hay facturas de ese proveedor para esa fecha.' };
+      }
+    } catch (e) { }
+  }
   let cli = d.cli || null, otros = null;
   if (d.nombre && !cli) {
     let todos; try { todos = await clientesAsis(); } catch (e) { return { nodos: [h('p', { class: 'err' }, isNetErr(e) ? 'Necesito conexión para buscar clientes.' : msgErr(e))], voz: '' }; }
@@ -4337,7 +4367,7 @@ function vistaMas() {
       if (navigator.onLine) sb.from('lineas_pedido').select('pedido_id,precio,pedidos(estado,archivado)').is('precio', null).limit(1500).then(r => { if (r.error) { num.textContent = ''; return; } const ids = new Set((r.data || []).filter(l => { const p = uno(l.pedidos) || {}; return p.estado !== 'anulado' && !p.archivado; }).map(l => l.pedido_id)); num.textContent = String(ids.size); num.className = 'num' + (ids.size ? '' : ' cero'); marcaPend(/Poner precios/, ids.size); }).catch(() => { num.textContent = ''; }); else num.textContent = '';
       return b; })(),
     (() => { const num = h('span', { class: 'num cero' }, '…'); const b = h('button', { class: 'bandeja-fac portal', onclick: () => go('paginasclientes') }, h('span', { class: 'ic' }, '🌐'), h('span', { class: 'tt' }, 'Portal de clientes', h('small', {}, 'Cargar los albaranes en la página de cada cliente · QR y enlace')), num);
-      if (navigator.onLine) albaranesSinPublicar(14).then(l => { num.textContent = String(l.length); num.className = 'num' + (l.length ? '' : ' cero'); }).catch(() => { num.textContent = ''; }); else num.textContent = '';
+      if (navigator.onLine) albaranesSinPublicar(14).then(l => { num.textContent = String(l.length); num.className = 'num' + (l.length ? '' : ' cero'); b.classList.toggle('nuevo', l.length > 0); window.__PORTAL_PEND = l.length; document.querySelectorAll('.portalbtn').forEach(x => x.classList.toggle('nuevo', l.length > 0)); }).catch(() => { num.textContent = ''; }); else num.textContent = '';
       return b; })(),
     ...g('Trabajo diario', c('✍️', 'Apuntar pedido', () => go('rapido'), V),
       c('🧺', 'Hoja de compra para hoy', () => go('hojacompra'), V), c('🛒', 'Compra para hoy', () => { if (puedeCompras()) { LS.set('fj_compras_modo', 'lista'); go('compras'); } else go('hojacompra'); }, V),
@@ -6147,7 +6177,7 @@ function vistaPrecios() {
     async function historial(p) {
       hist.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
       try {
-        const r = await sb.from('lotes').select('id,cantidad_recibida,unidad,precio_compra,origen,compras(fecha,proveedores(nombre))').eq('producto_id', p.id).order('created_at', { ascending: false }).limit(80); if (r.error) throw r.error;
+        const r = await sb.from('lotes').select('id,compra_id,cantidad_recibida,unidad,precio_compra,origen,compras(fecha,proveedores(nombre))').eq('producto_id', p.id).order('created_at', { ascending: false }).limit(80); if (r.error) throw r.error;
         const filas = r.data.map(l => ({ l, co: uno(l.compras) || {} })).sort((a, b) => String(b.co.fecha).localeCompare(String(a.co.fecha)));
         const con = filas.filter(x => x.l.precio_compra != null); const kids = [];
         if (con.length) {
@@ -6157,7 +6187,7 @@ function vistaPrecios() {
         }
         filas.forEach(({ l, co }) => { const pv = co.proveedores ? uno(co.proveedores) : null; kids.push(h('div', { class: 'card tap fila', onclick: () => editarPrecio(l) },
           h('div', {}, h('div', { class: 'nombre' }, co.fecha ? fechaES(co.fecha) : ''), h('div', { class: 'sub' }, [pv && pv.nombre, l.origen, num(l.cantidad_recibida) + ' ' + l.unidad].filter(Boolean).join(' · '))),
-          h('b', { style: 'font-size:18px' }, l.precio_compra != null ? eur(l.precio_compra) + '/' + l.unidad : 'sin precio'))); });
+          h('div', { style: 'text-align:right' }, h('b', { style: 'font-size:18px;display:block' }, l.precio_compra != null ? eur(l.precio_compra) + '/' + l.unidad : 'sin precio'), h('button', { class: 'ghost small', style: 'margin-top:4px', onclick: e => { e.stopPropagation(); verFacturaDeCompra(l.compra_id, pv && pv.nombre, co.fecha); } }, '📄 Ver factura')))); });
         if (!filas.length) kids.push(h('p', { class: 'vacio' }, 'Todavía no se ha comprado este producto.'));
         hist.replaceChildren(...kids);
       } catch (e) { hist.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
@@ -6182,6 +6212,18 @@ async function subirDoc(file, meta) {
   const up = await sb.storage.from('facturas').upload(ruta, blob, { contentType: ct }); if (up.error) throw up.error;
   const r = await sb.from('documentos_compra').insert({ fecha: meta.fecha, proveedor_id: meta.prov || null, compra_id: meta.compra || null, tipo: meta.tipo, importe: meta.importe, nota: meta.nota || null, ruta, nombre: file.name });
   if (r.error) { await sb.storage.from('facturas').remove([ruta]); throw r.error; }
+}
+/* Abre la factura de una compra (la enlazada a esa compra) encima de la pantalla actual */
+async function verFacturaDeCompra(cid, prov, fecha) {
+  if (!cid) { toast('Esta compra no tiene factura enlazada.', 'err'); return; }
+  try {
+    let docs = []; const d = await sb.from('documentos_compra').select('ruta,nombre,tipo').eq('compra_id', cid).limit(10); if (!d.error) docs = (d.data || []).filter(x => x.ruta);
+    if (!docs.length) { const f = await sb.from('facturas_recibidas').select('ruta,nombre').eq('compra_id', cid).limit(10); if (!f.error) docs = (f.data || []).filter(x => x.ruta); }
+    if (!docs.length) { toast('Esta compra no tiene ninguna factura guardada. Puedes enlazarla desde «Facturas de proveedores».', 'err'); return; }
+    const tit = (prov || 'Factura') + (fecha ? ' · ' + fechaES(fecha) : '');
+    if (docs.length === 1) { verDocumento(docs[0].ruta, tit); return; }
+    hoja('Facturas de esta compra', h('div', {}, docs.map(x => h('button', { class: 'ghost', style: 'width:100%;min-height:50px;margin-bottom:6px;text-align:left', onclick: () => verDocumento(x.ruta, tit) }, '📄 ' + (x.nombre || 'Factura')))));
+  } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); }
 }
 /* Visor de facturas DENTRO de la app: se abre encima de la pantalla donde estás (no cambia de pantalla ni abre otra pestaña).
    Se cierra con la X (o con «atrás» del móvil) y sigues exactamente donde estabas. */
@@ -9619,6 +9661,10 @@ function conectarSala() {
     SALA.canal = ch;
   } catch (e) { }
 }
+async function refrescaPortalPend() {
+  try { const t = Date.now(); if (!navigator.onLine || !state.user || !state.perfil || (window.__PORTAL_T && t - window.__PORTAL_T < 90000)) return; window.__PORTAL_T = t;
+    const l = await albaranesSinPublicar(14); window.__PORTAL_PEND = l.length; document.querySelectorAll('.portalbtn').forEach(x => x.classList.toggle('nuevo', l.length > 0)); } catch (e) { }
+}
 function pintaFlot() {
   let f = document.getElementById('fjflot'); if (!f) { f = document.createElement('div'); f.id = 'fjflot'; document.body.appendChild(f); }
   if (!state.user || !state.perfil) { f.style.display = 'none'; return; } f.style.display = '';
@@ -9635,7 +9681,7 @@ function render() {
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
   const v = { rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
-  v(); pintaFlot(); try { conectarSala();  } catch (e) { }
+  v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
 }
 function tick() {
