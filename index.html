@@ -4374,7 +4374,7 @@ function vistaMas() {
       c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Hoja de carga', () => go('carga'), V), puedeCompras() ? c('💲', 'Precios de compra del día', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, V) : null, c('💶', 'Poner precios', () => go('preciosp'), V), c('🧑‍✈️', 'Reparto', () => go('reparto'), V), c('♻️', 'Sobrante', () => go('sobrante'), V)),
         ...g('Entregas y pedidos', c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a')),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
-    ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z), esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null),
+    ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z), esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null),
     ...g('Compras y mercancía', c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('💶', 'Precios de compra', () => { if (LS.get('fj_precios_modo', 'dia') === 'hoy') LS.set('fj_precios_modo', 'dia'); go('precios'); }, A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('❓', 'Ayuda y guía', () => go('ayuda'), T), c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
@@ -9509,6 +9509,70 @@ function vistaCopia() {
     info, btn, estado,
     h('div', { class: 'card', style: 'margin-top:12px' }, h('b', {}, 'Cómo guardarla bien'), h('div', { class: 'sub' }, '1) Hazla una vez por semana (la app te avisa con un «!» si pasan más de 7 días).  2) Se guarda en Descargas del móvil: súbela también a Google Drive o envíatela por correo.  3) No la compartas: contiene datos de clientes.  4) Las fotos de perfil y los archivos de facturas y pedidos escaneados no van dentro de este archivo.'))), { volver: () => go('inicio') })); renderBanner();
 }
+/* ===== Productos que llegan en las facturas y no están dados de alta: lista para pasar a Golden Soft y botón para crearlos aquí ===== */
+async function vistaSinReconocer() {
+  state.view = 'sinreconocer'; if (!esOficina()) { go('inicio'); return; }
+  const cont = h('div', {}), IGN = () => LS.get('fj_sin_ign', {}); let grupos = [];
+  $app.replaceChildren(shell('Productos sin reconocer', cont, { volver: () => go('inicio') })); renderBanner();
+  const copiar = async txt => { try { await navigator.clipboard.writeText(txt); toast('Listado copiado: pégalo en WhatsApp o en un correo', 'ok'); } catch (e) { hoja('Copia este texto', h('div', {}, h('textarea', { readonly: true, style: 'width:100%;min-height:260px;font-size:14px', onfocus: e => e.target.select() }, txt))); } };
+  const textoGolden = () => {
+    const l = grupos.filter(g => !IGN()[g.clave]).sort((a, b) => a.texto.localeCompare(b.texto, 'es'));
+    return 'Productos que aparecen en las facturas de los proveedores y NO están dados de alta. Por favor, activarlos / darlos de alta en Golden Soft con este nombre (tal como viene en la factura):\n\n' +
+      l.map((g, i) => (i + 1) + '. ' + g.texto + '  —  ' + (g.prov || 'proveedor') + (g.precio != null ? '  (último precio ' + eur(g.precio) + ' €/' + (g.unidad || 'kg') + ', ' + g.n + (g.n === 1 ? ' vez' : ' veces') + ')' : '')).join('\n') + '\n\nGracias.';
+  };
+  function crear(g) {
+    let cerrar;
+    const base = String(g.texto).replace(/\s+/g, ' ').replace(/[.\s]+$/, '').toLowerCase().replace(/(^|[\s.\-/])([a-záéíóúñ])/g, (m, a, b) => a + b.toUpperCase());
+    const nombre = h('input', { value: base }), cod = h('input', { placeholder: 'Código', value: 'FA-' }), uv = h('select', {}, UNIDADES.map(u => h('option', { value: u, selected: u === (g.unidad || 'kg') }, 'Se vende en ' + u))), up = h('select', {}, ['kg', 'unidad'].map(u => h('option', { value: u }, 'Precio por ' + u))),
+      iva = h('select', {}, [h('option', { value: '' }, '— elegir IVA —')].concat([4, 10, 21, 0].map(v => h('option', { value: v }, 'IVA ' + v + ' %'))));
+    waProductos().then(ps => { let mx = 0; ps.forEach(p => { const m = /^FA-(\d+)$/.exec(p.codigo || ''); if (m) mx = Math.max(mx, Number(m[1])); }); if (cod.value === 'FA-') cod.value = 'FA-' + String(mx + 1).padStart(3, '0'); }).catch(() => { });
+    cerrar = hoja('➕ Crear en la app', h('div', {}, h('p', { class: 'sub' }, 'En la factura pone: «' + g.texto + '». El código FA-… es provisional: cuando Golden Soft le dé su código, puedes cambiarlo en Productos.'),
+      h('label', { class: 'campo' }, 'Nombre *', nombre), h('label', { class: 'campo' }, 'Código *', cod), h('label', { class: 'campo' }, 'Unidad de venta', uv), h('label', { class: 'campo' }, 'Precio por', up), h('label', { class: 'campo' }, 'IVA *', iva),
+      h('button', { class: 'guardar', style: 'width:100%', onclick: async () => {
+        if (!nombre.value.trim() || !cod.value.trim()) { toast('Escribe nombre y código', 'err'); return; } if (iva.value === '') { toast('Elige el IVA', 'err'); return; }
+        const np = { codigo: cod.value.trim(), nombre: nombre.value.trim(), unidad_venta: uv.value, unidad_precio: up.value, iva: Number(iva.value), activo: true };
+        let r = await sb.from('productos').insert(Object.assign({ iva_origen: 'manual' }, np)).select().single();
+        if (r.error && /iva_origen|column|schema cache/i.test(r.error.message || '')) r = await sb.from('productos').insert(np).select().single();
+        if (r.error) { toast(r.error.code === '23505' ? 'Ya existe un producto con ese código.' : msgErr(r.error), 'err'); return; }
+        await enlazar(g, r.data.id); cerrar(); toast('Producto creado y enlazado', 'ok');
+      } }, 'Crear producto')));
+  }
+  async function enlazar(g, pid) {
+    try { if (g.provId) await sb.from('alias_compra').upsert([{ proveedor_id: g.provId, texto: g.clave, producto_id: pid, actualizado: new Date().toISOString() }], { onConflict: 'proveedor_id,texto' }); } catch (e) { }
+    try { if (g.provId) await sb.from('lineas_factura_leida').update({ producto_id: pid }).eq('proveedor_id', g.provId).eq('texto', g.texto).is('producto_id', null); } catch (e) { }
+    try { productosCache = null; } catch (e) { }
+    grupos = grupos.filter(x => x !== g); pinta();
+  }
+  function vincular(g) {
+    const res = h('div', {}); const inp = h('input', { placeholder: 'Buscar el producto que ya existe…', oninput: debounce(async () => { if (!inp.value.trim()) { res.replaceChildren(); return; } try { const r = await buscar('productos', inp.value, false, 8); res.replaceChildren(h('div', { class: 'res' }, r.map(p => h('button', { onclick: async () => { await enlazar(g, p.id); cerrar(); toast('Enlazado con ' + p.nombre + ': la próxima vez lo reconocerá', 'ok'); } }, p.nombre + ' · ' + p.codigo)))); } catch (e) { } }, 250) });
+    const cerrar = hoja('🔗 Es un producto que ya existe', h('div', {}, h('p', { class: 'sub' }, '«' + g.texto + '» (' + (g.prov || '') + ')'), inp, res)); setTimeout(() => inp.focus(), 150);
+  }
+  function pinta() {
+    const ig = IGN(), vis = grupos.filter(g => !ig[g.clave]).sort((a, b) => a.texto.localeCompare(b.texto, 'es'));
+    cont.replaceChildren(
+      h('div', { class: 'aviso-card' }, vis.length ? '🔴 ' + vis.length + ' producto(s) de las facturas de los últimos 90 días no están dados de alta. Copia el listado y mándaselo a la chica de Golden Soft; mientras tanto puedes crearlos aquí.' : '✅ No hay productos sin reconocer en las facturas leídas de los últimos 90 días.'),
+      h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;margin:8px 0' },
+        vis.length ? h('button', { class: 'guardar', style: 'flex:1;min-height:50px', onclick: () => copiar(textoGolden()) }, '📋 Copiar el listado para Golden Soft') : null,
+        h('button', { class: 'ghost', style: 'flex:1;min-height:50px', onclick: async () => { toast('Leyendo facturas…'); try { const r = await leerFacturasRecientes(15, () => { }); toast(r && r.ocupado ? 'Ya se están leyendo' : 'Facturas leídas: ' + ((r && r.leidas) || 0), 'ok'); } catch (e) { toast(msgErr(e), 'err'); } cargar(); } }, '🔄 Leer facturas que aún no se han leído')),
+      ...vis.map(g => h('div', { class: 'card', style: 'border-left:6px solid #dc2626' }, h('div', { class: 'nombre' }, g.texto), h('div', { class: 'sub' }, (g.prov || 'Proveedor sin asignar') + ' · ' + g.n + (g.n === 1 ? ' vez' : ' veces') + ' · última ' + fechaES(g.fecha) + (g.precio != null ? ' · ' + eur(g.precio) + ' €/' + (g.unidad || 'kg') : '')),
+        h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' }, h('button', { class: 'small', onclick: () => crear(g) }, '➕ Crear en la app'), h('button', { class: 'ghost small', onclick: () => vincular(g) }, '🔗 Ya existe'), h('button', { class: 'ghost small', onclick: () => { const I = IGN(); I[g.clave] = true; LS.set('fj_sin_ign', I); pinta(); } }, '🚫 No es un producto')))),
+      (() => { const n = Object.keys(ig).length; return n ? h('button', { class: 'ghost small', style: 'margin-top:10px', onclick: () => { LS.set('fj_sin_ign', {}); pinta(); } }, 'Volver a mostrar los ' + n + ' que descarté') : null; })());
+  }
+  async function cargar() {
+    cont.replaceChildren(h('p', { class: 'vacio' }, 'Buscando en las facturas leídas…'));
+    try {
+      const desde = hoy(new Date(Date.now() - 90 * 86400000));
+      const q = await sb.from('lineas_factura_leida').select('texto,cantidad,unidad,precio,fecha,proveedor_id,proveedores(nombre)').is('producto_id', null).gte('fecha', desde).order('fecha', { ascending: false }).limit(3000);
+      if (q.error) throw q.error;
+      const al = await sb.from('alias_compra').select('texto,proveedor_id').range(0, 4999); const A = new Set((al.data || []).map(a => a.proveedor_id + '|' + a.texto));
+      const M = {};
+      (q.data || []).forEach(l => { const t = String(l.texto || '').replace(/\s+/g, ' ').trim(); if (!t || fcEsBasura(t)) return; const clave = fcClave(t); if (A.has(l.proveedor_id + '|' + clave)) return; const k = (l.proveedor_id || '') + '|' + clave;
+        const g = M[k] || (M[k] = { texto: t, clave, provId: l.proveedor_id, prov: (uno(l.proveedores) || {}).nombre || '', n: 0, fecha: l.fecha, precio: null, unidad: '' }); g.n++; if (g.precio == null && Number(l.precio) > 0) { g.precio = Number(l.precio); g.unidad = l.unidad || ''; g.fecha = l.fecha; } });
+      grupos = Object.values(M); pinta();
+    } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : /does not exist|schema cache/i.test(e.message || '') ? 'Falta ejecutar en Supabase el archivo de lectura de facturas (Parte 54).' : msgErr(e))); }
+  }
+  cargar();
+}
 /* «día 4», «del 4», «04/11» → fecha AAAA-MM-DD (si el día aún no ha llegado este mes, el mes pasado) */
 function fechaDeTexto(t) {
   const hd = new Date(), z = n => String(n).padStart(2, '0'); let m;
@@ -9700,7 +9764,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
 }
