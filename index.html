@@ -83,6 +83,18 @@ div[style*="display:grid"]:has(>button:nth-child(3)){grid-template-columns:1fr 1
 .sheet .acciones button{flex:1 1 calc(50% - 10px);min-height:48px}
 .sheet .guardar{min-height:68px;font-size:20px;position:sticky;bottom:0;z-index:5;box-shadow:0 -6px 10px -4px rgba(0,0,0,.18)}
 .barraG{position:sticky;bottom:0;z-index:5;background:var(--bg,#fff);padding:8px 0;display:flex;gap:8px;box-shadow:0 -6px 10px -4px rgba(0,0,0,.15)}.barraG button{flex:1;margin:0;min-height:52px}
+.pres-ov{position:fixed;inset:0;z-index:9999;background:#14532d;display:flex;flex-direction:column}.pres-sc{flex:1;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.pd{min-width:100vw;width:100vw;height:100%;scroll-snap-align:start;box-sizing:border-box;padding:70px 22px 40px;display:flex;align-items:center;justify-content:center;color:#fff;background:linear-gradient(160deg,#14532d,#166534 60%,#15803d);overflow-y:auto}
+.pd-texto,.pd-lista,.pd-productos,.pd-precios,.pd-ofertas{background:#f0fdf4;color:#0f172a}.pd-in{width:100%;max-width:760px}
+.pd h1{font-size:clamp(38px,11vw,72px);margin:6px 0 10px;line-height:1.02;color:#fff}.pd h2{font-size:clamp(26px,7vw,44px);margin:0 0 14px;color:#166534;border-bottom:5px solid #facc15;display:inline-block;padding-bottom:4px}
+.pd-contacto h2{color:#fff}.pd-logo{font-weight:900;letter-spacing:.2em;color:#facc15;font-size:clamp(14px,4vw,20px);margin-bottom:8px}.pd-raya{width:90px;height:6px;background:#facc15;margin:14px auto;border-radius:4px}
+.pd-sub{font-size:clamp(16px,4.6vw,24px);color:#dcfce7;margin:6px 0}.pd-pie{font-size:clamp(13px,3.6vw,18px);color:#facc15;font-weight:700;margin-top:14px}.pd-p{font-size:clamp(16px,4.4vw,24px);line-height:1.45;margin:6px 0}
+.pd-cifras{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.pd-cifra{flex:1;min-width:28%;background:#fff;border:2px solid #86efac;border-radius:14px;padding:12px;text-align:center}.pd-cifra b{display:block;font-size:clamp(20px,6vw,32px);color:#166534}.pd-cifra span{font-size:clamp(11px,3vw,14px);color:#374151}
+.pd-ol{list-style:none;padding:0;margin:0}.pd-ol li{display:flex;gap:12px;align-items:center;margin:12px 0;font-size:clamp(16px,4.4vw,24px)}.pd-ol i{flex-shrink:0;width:38px;height:38px;border-radius:50%;background:#166534;color:#fff;font-style:normal;font-weight:800;display:flex;align-items:center;justify-content:center}
+.pd-foto{background:#fff;border:2px solid #86efac;border-radius:12px;overflow:hidden;display:flex;flex-direction:column}.pd-foto img,.pd-sinfoto{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}.pd-sinfoto{background:#dcfce7;color:#86efac;font-weight:900;font-size:48px;display:flex;align-items:center;justify-content:center}.pd-foto span{padding:8px 6px;text-align:center;font-weight:800;font-size:clamp(13px,3.6vw,18px)}.pd-ofs{display:flex;flex-direction:column;gap:10px}.pd-of{background:#fefce8;border:2px solid #facc15;border-left:8px solid #facc15;border-radius:12px;padding:12px}.pd-of b{display:block;font-size:clamp(16px,4.6vw,22px)}.pd-of span{font-size:clamp(12px,3.4vw,15px);color:#374151}.pd-ofertas{background:#f0fdf4;color:#0f172a}.pd-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.pd-chip{background:#fff;border:2px solid #86efac;border-left:7px solid #166534;border-radius:12px;padding:14px 12px;font-weight:800;font-size:clamp(15px,4.2vw,22px)}
+.pd-tabla{display:block}.pd-fila{display:flex;justify-content:space-between;gap:10px;padding:10px 8px;border-bottom:1px solid #bbf7d0;font-size:clamp(14px,4vw,21px)}.pd-fila:nth-child(odd){background:#fff}.pd-fila b{color:#166534;white-space:nowrap}.pd-nota{font-size:13px;color:#6b7280;margin-top:10px}
+.pres-top span{white-space:nowrap}.pres-top{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:8px;padding:10px 12px;color:#fff;font-weight:700;background:linear-gradient(#0008,#0000)}.pres-x{background:#0008;color:#fff;border:0;border-radius:50%;width:44px;height:44px;font-size:22px;min-height:44px}.pres-b{background:#facc15;color:#14532d;border:0;border-radius:10px;padding:8px 12px;font-weight:800;min-height:44px}
+.pres-n{position:absolute;top:50%;transform:translateY(-50%);background:#0006;color:#fff;border:0;border-radius:50%;width:44px;height:44px;font-size:28px;min-height:44px;padding:0}.pres-izq{left:6px}.pres-der{right:6px}
 label.campo{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--txt2);margin-bottom:10px}
 .res{background:#fff;border:1px solid var(--borde);border-radius:12px;margin-top:6px;overflow:hidden}
 .res button{display:block;width:100%;text-align:left;background:#fff;color:var(--txt);border-radius:0;border-bottom:1px solid var(--borde);min-height:48px;font-weight:500}
@@ -839,7 +851,7 @@ function pintarLista(cache) {
   if (reps.length && state.pedidos.length) {
     const cuenta = id => state.pedidos.filter(p => id === 'sin' ? !p.repartidor_id : p.repartidor_id === id).length;
     const chipR = (id, txt, col) => h('button', { class: 'chip' + (fr === id ? ' on' : ''), onclick: () => { state.filtroRep = id; pintarLista(cache); } }, col ? h('span', { style: 'display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;background:' + col }) : null, txt);
-    kids.push(h('div', { class: 'sub', style: 'margin:2px 2px 4px' }, '🚚 Quién reparte:'), h('div', { class: 'chips' }, chipR('todos', 'Todos (' + state.pedidos.length + ')'), ...reps.map(r => chipR(r.id, r.nombre.split(' ')[0] + ' (' + cuenta(r.id) + ')', r.color_reparto)), chipR('sin', 'Sin repartidor (' + cuenta('sin') + ')')));
+    kids.push(h('button', { style: 'width:100%;min-height:52px;font-size:16px;margin:4px 0 8px', onclick: () => go('reparto') }, '🖌 Repartir los pedidos (elegir quién lleva a cada cliente)'), h('div', { class: 'sub', style: 'margin:2px 2px 4px' }, '🚚 Quién reparte:'), h('div', { class: 'chips' }, chipR('todos', 'Todos (' + state.pedidos.length + ')'), ...reps.map(r => chipR(r.id, r.nombre.split(' ')[0] + ' (' + cuenta(r.id) + ')', r.color_reparto)), chipR('sin', 'Sin repartidor (' + cuenta('sin') + ')')));
   }
   if (cache) kids.push(h('div', { class: 'aviso-card' }, 'Mostrando los últimos datos guardados en este móvil.'));
   if (!ps.length) kids.push(h('p', { class: 'vacio' }, 'No hay pedidos para esta fecha.'));
@@ -991,12 +1003,15 @@ async function abrirPrecios(pedidoId, alGuardar) {
   } catch (e) { toast(msgErr(e), 'err'); return; }
   const ped = pe.data; if (ped.estado === 'anulado') { toast('Este pedido está anulado.', 'err'); return; }
   const lineas = ln.data.slice().sort((a, b) => ((a.productos || {}).nombre || '').localeCompare(((b.productos || {}).nombre || ''), 'es'));
-  const R = lineas.map(l => ({ l, precio: l.precio != null ? String(l.precio).replace('.', ',') : '', up: l.unidad_precio, lista: l.precio_lista != null ? String(l.precio_lista).replace('.', ',') : '', nota: l.nota_interna || '' }));
+  const R = lineas.map(l => ({ l, precio0s: l.precio != null ? String(l.precio).replace('.', ',') : '', precio: l.precio != null ? String(l.precio).replace('.', ',') : '', up: l.unidad_precio, lista: l.precio_lista != null ? String(l.precio_lista).replace('.', ',') : '', nota: l.nota_interna || '' }));
   const sinInterna = !!ln.sinInterna;
   let tarifas = {}; try { tarifas = await preciosPara(ped.cliente_id, lineas.map(l => l.producto_id)); } catch (e) { }
   const totalBox = h('div', { style: 'position:sticky;top:0;z-index:5;background:#fff;border:1.5px solid #bbf7d0;border-radius:10px;padding:8px 10px;font-weight:700;margin:8px 0;white-space:pre-line;box-shadow:0 2px 6px rgba(0,0,0,.1)' }), cuerpo = h('div', {});
   const vivoDet = h('details', { style: 'margin:8px 0' }, h('summary', { style: 'font-weight:700;cursor:pointer;padding:8px 0' }, '📄 Ver el albarán con estos precios'), h('div', {}));
-  function actVivo() { if (!vivoDet.open) return; const dv = { pedido: ped, lineas: R.map(x => Object.assign({}, x.l, { precio: String(x.precio).trim() === '' || isNaN(parseNum(x.precio)) ? null : parseNum(x.precio), unidad_precio: x.up })), albaran: ped.estado === 'terminado' ? { serie: 'F', numero: null, estado: 'cerrado', fecha: ped.fecha_entrega } : null }; vivoDet.lastChild.replaceChildren(cuerpoAlbaranVivo(dv)); }
+  function actVivo() { if (!vivoDet.open) return; const dv = { pedido: ped, lineas: R.map(x => Object.assign({}, x.l, { precio: String(x.precio).trim() === '' || isNaN(parseNum(x.precio)) ? null : parseNum(x.precio), unidad_precio: x.up })), albaran: ped.estado === 'terminado' ? { serie: 'F', numero: null, estado: 'cerrado', fecha: ped.fecha_entrega } : null }; vivoDet.lastChild.replaceChildren(cuerpoAlbaranVivo(dv, accVivo)); }
+  const accVivo = {
+    precio: () => { const x = R.find(z => String(z.precio).trim() === ''); if (!x) { toast('Todas las líneas ya tienen precio', 'ok'); return; } x.card.style.display = ''; try { x.card.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { } setTimeout(() => { try { x.inp.focus(); } catch (e) { } }, 350); },
+    peso: async () => { const hayCambios = R.some(z => String(z.precio).trim() !== z.precio0s); if (hayCambios && !await confirmar('Tienes precios sin guardar. ¿Salir a pesar y perderlos?\n\n(Cancela, pulsa «Guardar y seguir» y vuelve a tocar.)')) return; cerrar(); go('pedido', { id: ped.id }); } };
   vivoDet.addEventListener('toggle', actVivo);
   let cerrar = () => { };
   const cantTxt = l => l.peso_real != null && l.unidad_precio === 'kg' ? num(l.peso_real) + ' kg' : num(l.cantidad_pedida) + ' ' + l.unidad_pedida;
@@ -1120,6 +1135,7 @@ async function vistaPreciosPend() {
     const totSin = filas.reduce((t, f) => t + (f.sin > 0 ? 1 : 0), 0);
     cont.replaceChildren(
       h('div', { class: 'card', style: 'background:#ecfdf5;border-left:5px solid #166534' }, h('div', { style: 'font-size:18px;font-weight:800' }, '💶 ' + (totSin ? totSin + ' pedido(s) con precios por poner' : 'Todos los pedidos tienen precio')), h('div', { class: 'sub' }, 'Vale para pedidos por hacer, en preparación o terminados. Toca un pedido y escribe los precios. No hace falta tener la factura del proveedor.')),
+      h('button', { style: 'width:100%;min-height:52px;margin:8px 0;font-size:17px', onclick: () => go('preciosdia', { dia: F.dia === 'todos' ? 'hoy' : F.dia }) }, '⚡ Poner precios por PRODUCTO (todos los pedidos de una vez)'),
       h('div', { class: 'sub', style: 'font-weight:700;margin-top:6px' }, 'Día de entrega'),
       h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px' }, [['hoy', 'Hoy'], ['ayer', 'Ayer'], ['manana', 'Mañana'], ['todos', 'Últimos días']].map(([k, t]) => chip(k, t, F.dia === k, () => { F.dia = k; cargar(); }))),
       h('div', { class: 'sub', style: 'font-weight:700' }, 'Estado del pedido'),
@@ -1131,6 +1147,140 @@ async function vistaPreciosPend() {
         h('button', { style: 'width:100%;min-height:48px;margin-top:8px;font-size:17px', onclick: e => { e.stopPropagation(); abrirPrecios(f.id, cargar); } }, f.sin ? '💶 Poner precios' : '💶 Ver / cambiar precios'),
         h('button', { class: 'ghost', style: 'width:100%;min-height:44px;margin-top:6px', onclick: e => { e.stopPropagation(); abrirAlbaranVivo(f.id); } }, '📄 Ver cómo queda el albarán')))
         : [h('p', { class: 'vacio' }, F.solo ? '✔ No hay pedidos con precios por poner en este filtro.' : 'No hay pedidos en este filtro.')]));
+  }
+  cargar();
+}
+/* ---------- Precios por producto: un precio de partida (por kg o por caja) y ajustes por cliente ---------- */
+/* Filas de factura que NO son productos (totales, bases, vencimientos, créditos…): no se muestran ni se guardan como «no reconocidas» */
+function fcEsBasura(t) {
+  t = String(t || '').trim(); if (!t) return true;
+  const letras = (t.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/g) || []).length, digitos = (t.match(/\d/g) || []).length;
+  if (letras < 4 || digitos > letras) return true;
+  return /b\.?\s*imponible|cred\.|cr[eé]dito|total|\bi\.?v\.?a\b|recargo|vencim|portes|\bbase\b|\bsuma\b|descuento|forma de pago|\bcuenta\b|\biban\b|\bsaldo\b|pendiente|r\.?e\.?\s*:|hoy:/i.test(t);
+}
+function costeEnUnidad(pid, up, l) {
+  const c = COSTES[pid]; if (!c || !(c.precio > 0)) return null; const fk = Number(l.fk) > 0 ? Number(l.fk) : null;
+  if (up === 'kg') { if (!c.unidad || c.unidad === 'kg') return c.precio; if (fk && c.unidad === l.unidad_pedida) return c.precio / fk; return null; }
+  if (c.unidad && c.unidad === l.unidad_pedida) return c.precio; if (c.unidad === 'kg' && fk) return c.precio * fk; return null;
+}
+async function vistaPreciosDia() {
+  state.view = 'preciosdia';
+  const F = Object.assign({ dia: 'hoy', solo: true, q: '' }, LS.get('fj_precios_dia_f', {}), { q: '' }); if (state.params && state.params.dia) F.dia = state.params.dia;
+  const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
+  $app.replaceChildren(shell('Precios por producto', cont, { volver: () => go('preciosp') })); renderBanner();
+  const UNI = LS.get('fj_precio_unidad', {});
+  let G = [];
+  const rango = () => { const t = hoy(); if (F.dia === 'hoy') return [t, t]; if (F.dia === 'ayer') { const a = hoy(new Date(Date.now() - 86400000)); return [a, a]; } if (F.dia === 'manana') { const m = hoy(new Date(Date.now() + 86400000)); return [m, m]; } return [hoy(new Date(Date.now() - 6 * 86400000)), hoy(new Date(Date.now() + 2 * 86400000))]; };
+  const fmt = v => String(v).replace('.', ',');
+  const uTxt = (up, g) => up === 'kg' ? 'kg' : (g.unidad || 'ud');
+  async function cargar() {
+    cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+    const [d1, d2] = rango();
+    try {
+      const r = await sb.from('pedidos').select('id,fecha_entrega,estado,archivado,cliente_id,clientes(codigo,nombre,nombre_comercial),lineas_pedido(id,producto_id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,formato_peso_kg,productos(nombre))').gte('fecha_entrega', d1).lte('fecha_entrega', d2).limit(600);
+      if (r.error) throw r.error;
+      const por = {};
+      (r.data || []).filter(p => p.estado !== 'anulado' && !p.archivado).forEach(p => (p.lineas_pedido || []).filter(l => l.estado !== 'no_disponible').forEach(l => {
+        const g = por[l.producto_id] = por[l.producto_id] || { pid: l.producto_id, nombre: (uno(l.productos) || {}).nombre || 'Producto', rows: [], base: '', unidad: l.unidad_pedida };
+        g.rows.push({ id: l.id, ped: p.id, estadoPed: p.estado, fecha: p.fecha_entrega, cli: nombreCli(uno(p.clientes)), cliId: p.cliente_id, pid: l.producto_id, cant: Number(l.cantidad_pedida) || 0, unidad_pedida: l.unidad_pedida, peso: l.peso_real != null ? Number(l.peso_real) : null, fk: l.formato_peso_kg,
+          up0: l.unidad_precio === 'unidad' ? 'unidad' : 'kg', precio0: l.precio != null ? Number(l.precio) : null, precio: l.precio != null ? fmt(l.precio) : '', ult: null, marca: false }); }));
+      G = Object.values(por).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+      G.forEach(g => { const conPrecio = g.rows.filter(x => x.precio0 != null); g.up = UNI[g.pid] || (conPrecio.length ? (conPrecio.filter(x => x.up0 === 'unidad').length > conPrecio.length / 2 ? 'unidad' : 'kg') : 'kg'); g.rows.forEach(x => { x.up = x.precio0 != null ? x.up0 : g.up; }); g.rows.sort((a, b) => a.cli.localeCompare(b.cli, 'es')); });
+    } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); return; }
+    pintar();
+    /* en segundo plano: precio de compra de cada producto y lo que pagó cada cliente la última vez */
+    Promise.all(G.map(g => cargaCoste(g.pid))).then(() => G.forEach(g => g.pinta && g.pinta())).catch(() => { });
+    try {
+      const ids = G.map(g => g.pid); const q = await sb.from('lineas_pedido').select('producto_id,precio,unidad_precio,pedidos(cliente_id,fecha_entrega,estado)').in('producto_id', ids).not('precio', 'is', null).limit(4000);
+      if (!q.error) { const H = {}; (q.data || []).forEach(l => { const p = uno(l.pedidos) || {}; if (p.estado === 'anulado' || !p.cliente_id) return; const k = p.cliente_id + '|' + l.producto_id; (H[k] = H[k] || []).push({ f: String(p.fecha_entrega || ''), p: Number(l.precio), up: l.unidad_precio === 'unidad' ? 'unidad' : 'kg' }); });
+        Object.keys(H).forEach(k => H[k].sort((a, b) => b.f.localeCompare(a.f)));
+        G.forEach(g => { g.rows.forEach(x => { const hs = H[x.cliId + '|' + x.pid] || []; x.ult = hs.find(z => z.f < x.fecha) || null; if (x.pintaUlt) x.pintaUlt(); }); }); }
+    } catch (e) { }
+  }
+  const totalBox = h('div', { style: 'position:sticky;top:0;z-index:5;background:var(--bg,#fff);border:1.5px solid #bbf7d0;border-radius:10px;padding:8px 10px;font-weight:700;margin:8px 0;white-space:pre-line;box-shadow:0 2px 6px rgba(0,0,0,.1)' });
+  const nuevo = x => String(x.precio).trim() === '' ? null : parseNum(x.precio);
+  const cambiada = x => { const n = nuevo(x); return n !== x.precio0 || (n != null && x.up !== x.up0); };
+  function resumen() {
+    let tot = 0, con = 0, cam = 0, g = 0, tv = 0;
+    G.forEach(gr => gr.rows.forEach(x => { tot++; const n = nuevo(x); if (n != null && !isNaN(n)) { con++; const c = costeEnUnidad(x.pid, x.up, x), k = x.up === 'kg' ? x.peso : x.cant; if (c != null && k > 0) { g += (n - c) * k; tv += n * k; } } if (cambiada(x)) cam++; }));
+    totalBox.textContent = '💶 ' + con + ' de ' + tot + ' líneas con precio' + (cam ? ' · ✏️ ' + cam + ' cambio(s) sin guardar' : '') + (tv > 0 ? '\n📈 Ganancia estimada: ' + (g >= 0 ? '+' : '') + eur(Math.round(g * 100) / 100) + ' € (' + num(Math.round(g / tv * 1000) / 10, 1) + ' %)' : '');
+    return cam;
+  }
+  function grupoCard(g) {
+    const rep = g.rows[0]; const card = h('div', { class: 'card', style: 'padding:10px;border-left:7px solid #9ca3af' });
+    const est = h('div', { style: 'margin-top:8px;border-radius:10px;padding:7px 9px;font-size:14px;font-weight:600;line-height:1.35;white-space:pre-line' }), chips = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' });
+    const COL = { verde: ['#dcfce7', '#166534'], rojo: ['#fee2e2', '#b91c1c'], gris: ['#f3f4f6', '#374151'] };
+    const base = h('input', { type: 'text', inputmode: 'decimal', enterkeyhint: 'done', placeholder: 'precio de partida €', value: g.base, style: 'font-size:22px;font-weight:700;min-height:50px', oninput: e => { g.base = e.target.value; g.pinta(); } });
+    const unSel = h('select', { style: 'max-width:46%', onchange: e => { g.up = e.target.value; UNI[g.pid] = g.up; LS.set('fj_precio_unidad', UNI); g.rows.forEach(x => { if (x.precio0 == null || String(x.precio).trim() === '') x.up = g.up; }); g.pinta(); g.rows.forEach(x => x.pinta()); } }, h('option', { value: 'kg', selected: g.up === 'kg' }, 'por kg'), h('option', { value: 'unidad', selected: g.up === 'unidad' }, 'por ' + (g.unidad || 'unidad') + (g.unidad && g.unidad !== 'kg' ? ' (entera)' : '')));
+    const cuG = () => costeEnUnidad(g.pid, g.up, rep);
+    g.pinta = () => {
+      const c = COSTES[g.pid], cost = cuG(), p = parseNum(g.base), hay = String(g.base).trim() !== '' && p !== null && !isNaN(p) && p > 0;
+      let col = COL.gris, t = c ? (cost == null ? '🛒 Compra ' + textoCoste(c).replace(/^Compra: /, '') + ' · en otra unidad: compara a mano' : '') : '🛒 Todavía no hay precio de compra de este producto';
+      if (c && cost != null) { t = '🛒 COMPRA ' + eur(cost) + ' €/' + uTxt(g.up, g) + (c.prov ? ' · ' + c.prov : '') + (c.fecha ? ' · ' + fechaES(String(c.fecha).slice(0, 10)).slice(0, 5) : '');
+        if (hay) { const d = p - cost; if (d < -0.0004) { col = COL.rojo; t += '\n⚠ POR DEBAJO DEL COSTE: pierdes ' + eur(-d) + ' €/' + uTxt(g.up, g); } else { col = COL.verde; t += '\nGanas +' + eur(d) + ' €/' + uTxt(g.up, g) + ' (' + num(Math.round(d / p * 1000) / 10, 1) + ' %)'; } } }
+      est.style.background = col[0]; est.style.color = col[1]; est.textContent = t;
+      chips.replaceChildren(...(cost != null ? [20, 25, 30, 40].map(m => { const v = Math.round(cost / (1 - m / 100) * 100) / 100; return h('button', { type: 'button', class: 'ghost small', style: 'flex:1;min-width:70px;padding:6px 4px;line-height:1.2', onpointerdown: e => e.preventDefault(), onclick: () => { g.base = fmt(v); base.value = g.base; g.pinta(); } }, 'Ganar ' + m + ' %', h('br'), h('b', {}, eur(v))); }) : []));
+      const falt = g.rows.filter(x => String(x.precio).trim() === '').length; card.style.borderLeftColor = falt ? '#d97706' : '#16a34a'; resumen();
+    };
+    const aplica = (filas, soloVacias) => { const p = parseNum(g.base); if (p === null || isNaN(p) || !(p > 0)) { toast('Escribe primero el precio de partida', 'err'); return false; } let n = 0; filas.forEach(x => { if (soloVacias && String(x.precio).trim() !== '') return; x.precio = fmt(p); x.up = g.up; x.inp.value = x.precio; x.pinta(); n++; }); g.pinta(); toast(n + ' línea(s) con ' + eur(p) + ' €/' + uTxt(g.up, g), n ? 'ok' : 'err'); return true; };
+    const btn = (t, fn, extra) => h('button', { type: 'button', class: 'ghost small', style: 'flex:1;min-width:46%;min-height:44px;' + (extra || ''), onclick: fn }, t);
+    const filasHtml = g.rows.map((x, i) => {
+      const imp = h('b', { style: 'white-space:nowrap' }), nota = h('div', { class: 'sub', style: 'margin-top:2px' }), ult = h('div', {});
+      const row = h('div', { style: 'border-top:1px solid #e5e7eb;padding:8px 0' });
+      const inp = h('input', { type: 'text', inputmode: 'decimal', enterkeyhint: 'next', value: x.precio, placeholder: 'precio €', style: 'font-size:19px;font-weight:700;min-height:46px', oninput: e => { x.precio = e.target.value; x.pinta(); g.pinta(); },
+        onkeydown: e => { if (e.key === 'Enter') { e.preventDefault(); const sig = g.rows[i + 1]; if (sig && sig.inp) sig.inp.focus(); else inp.blur(); } } });
+      x.inp = inp;
+      x.pintaUlt = () => { ult.replaceChildren(...(x.ult ? [h('button', { type: 'button', class: 'ghost small', style: 'margin-top:4px', onpointerdown: e => e.preventDefault(), onclick: () => { x.precio = fmt(x.ult.p); x.up = x.ult.up; inp.value = x.precio; x.pinta(); g.pinta(); } }, 'Como la última vez: ' + eur(x.ult.p) + ' €/' + (x.ult.up === 'kg' ? 'kg' : (x.unidad_pedida || 'ud')))] : [])); };
+      x.pinta = () => {
+        const n = nuevo(x), k = x.up === 'kg' ? x.peso : x.cant, c = costeEnUnidad(x.pid, x.up, x);
+        imp.textContent = n != null && !isNaN(n) && k > 0 ? eur(Math.round(n * k * 100) / 100) + ' €' : '';
+        let t = '', col = '#6b7280';
+        if (n != null && !isNaN(n) && n >= 0) { if (x.up === 'kg' && x.peso == null) t = 'Sin pesar: el importe saldrá al pesar'; if (c != null && n > 0) { const d = n - c; if (d < -0.0004) { col = '#b91c1c'; t = '⚠ por debajo del coste (' + eur(d) + ' €/' + uTxt(x.up, g) + ')'; } else { col = '#166534'; t = 'Ganas +' + eur(d) + ' €/' + uTxt(x.up, g) + ' (' + num(Math.round(d / n * 1000) / 10, 1) + ' %)' + (k > 0 ? ' · +' + eur(Math.round(d * k * 100) / 100) + ' € en total' : ''); } } if (x.precio0 != null && x.up !== x.up0 && !t) t = 'Antes por ' + (x.up0 === 'kg' ? 'kg' : (x.unidad_pedida || 'unidad')); }
+        nota.style.color = col; nota.textContent = t; row.style.background = cambiada(x) ? '#fffbeb' : '';
+      };
+      row.append(h('div', { class: 'fila', style: 'align-items:center;gap:8px' },
+        h('label', { style: 'display:flex;gap:8px;align-items:center;min-width:0;flex:1' }, h('input', { type: 'checkbox', checked: x.marca, style: 'width:22px;height:22px;flex-shrink:0', onchange: e => { x.marca = e.target.checked; } }),
+          h('div', { style: 'min-width:0' }, h('div', { class: 'nombre', style: 'font-size:16px' }, x.cli), h('div', { style: 'display:inline-block;background:#e0f2fe;color:#075985;border-radius:8px;padding:1px 8px;font-weight:800;font-size:15px' }, (x.peso != null && x.unidad_pedida !== 'kg' ? num(x.cant) + ' ' + x.unidad_pedida + ' · ' + num(x.peso) + ' kg' : num(x.cant) + ' ' + x.unidad_pedida)))),
+        h('div', { style: 'width:42%;flex-shrink:0' }, inp)),
+        h('div', { class: 'fila', style: 'margin-top:2px' }, nota, imp), ult);
+      x.pinta(); x.pintaUlt(); return row;
+    });
+    const kgTot = g.rows.reduce((t, x) => t + (x.peso != null ? x.peso : (x.unidad_pedida === 'kg' ? x.cant : 0)), 0); const porU = {}; g.rows.forEach(x => { if (x.unidad_pedida !== 'kg') porU[x.unidad_pedida] = (porU[x.unidad_pedida] || 0) + x.cant; });
+    const resTxt = [kgTot > 0 ? num(Math.round(kgTot * 100) / 100) + ' kg' : '', ...Object.keys(porU).map(u => num(porU[u]) + ' ' + u)].filter(Boolean).join(' + ') + ' · ' + g.rows.length + ' cliente(s)';
+    card.append(h('div', { class: 'fila', style: 'align-items:flex-start;gap:8px' }, h('div', { style: 'min-width:0' }, h('div', { class: 'nombre', style: 'font-size:18px' }, g.nombre), h('div', { style: 'display:inline-block;margin-top:4px;background:#e0f2fe;color:#075985;border-radius:8px;padding:2px 9px;font-weight:800;font-size:16px' }, resTxt)), unSel),
+      h('div', { style: 'margin-top:8px' }, base), est, chips,
+      h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' },
+        btn('✔ A las que faltan', () => aplica(g.rows, true), 'background:#166534;color:#fff;border:0'),
+        btn('A todos', async () => { if (g.rows.some(x => String(x.precio).trim() !== '') && !await confirmar('Algunos ya tienen precio. ¿Cambiarlos TODOS al precio de partida?')) return; aplica(g.rows, false); }),
+        btn('A los marcados', () => { const m = g.rows.filter(x => x.marca); if (!m.length) { toast('Marca primero con ☑ a qué clientes', 'err'); return; } aplica(m, false); }),
+        btn('Como la última vez', () => { let n = 0; g.rows.forEach(x => { if (String(x.precio).trim() === '' && x.ult) { x.precio = fmt(x.ult.p); x.up = x.ult.up; x.inp.value = x.precio; x.pinta(); n++; } }); g.pinta(); toast(n ? n + ' precio(s) como la última vez' : 'Nadie tiene precio anterior aquí', n ? 'ok' : 'err'); })),
+      h('div', { style: 'margin-top:8px' }, ...filasHtml));
+    g.pinta(); return card;
+  }
+  async function guardar(btn) {
+    const por = {}; let existente = false, cerrado = false;
+    for (const g of G) for (const x of g.rows) { if (!cambiada(x)) continue; const n = nuevo(x); if (n !== null && (isNaN(n) || n < 0)) { toast('Precio no válido en ' + g.nombre + ' · ' + x.cli, 'err'); return; } if (x.precio0 != null) { existente = true; if (x.estadoPed === 'terminado') cerrado = true; } (por[x.ped] = por[x.ped] || []).push({ x, l: { id: x.id, precio: n, unidad_precio: x.up } }); }
+    const peds = Object.keys(por); if (!peds.length) { toast('No has cambiado nada', 'err'); return; }
+    if (existente && !await confirmar('Vas a CAMBIAR precios que ya estaban puestos' + (cerrado ? ' (alguno en albaranes ya cerrados: si estaban en una factura de Golden habrá que corregirla allí)' : '') + '.\n\n¿Continuar?')) return;
+    btn.disabled = true; let ok = 0, fallo = 0, ultimo = '';
+    for (const pid of peds) { const r = await sb.rpc('poner_precios', { p_pedido: pid, p_lineas: por[pid].map(z => z.l) }); if (r.error) { fallo++; ultimo = msgErr(r.error); } else { ok++; por[pid].forEach(z => { z.x.precio0 = z.l.precio; z.x.up0 = z.l.unidad_precio; z.x.pinta(); }); } }
+    btn.disabled = false; G.forEach(g => g.pinta && g.pinta());
+    toast(fallo ? ok + ' pedido(s) guardados · ' + fallo + ' con error: ' + ultimo : '✔ Guardado en ' + ok + ' pedido(s)', fallo ? 'err' : 'ok');
+  }
+  function pintar() {
+    LS.set('fj_precios_dia_f', { dia: F.dia, solo: F.solo });
+    const chip = (t, on, fn) => h('button', { class: 'chip' + (on ? ' on' : ''), onclick: fn }, t);
+    const lista = h('div', {});
+    const dibuja = () => { const q = sinTilde(F.q).toLowerCase(); const vis = G.filter(g => (!F.solo || g.rows.some(x => String(x.precio).trim() === '')) && (!q || sinTilde(g.nombre).toLowerCase().includes(q)));
+      lista.replaceChildren(...(vis.length ? vis.map(grupoCard) : [h('p', { class: 'vacio' }, G.length ? (F.solo ? '✔ No hay productos con precios por poner.' : 'Nada que mostrar.') : 'No hay pedidos en este día.')])); resumen(); };
+    const guardarBtn = h('button', { class: 'guardar', onclick: () => guardar(guardarBtn) }, '💾 Guardar todos los precios');
+    cont.replaceChildren(
+      h('div', { class: 'aviso-card' }, 'Un producto cada vez: pon el precio de partida (por kg o por caja entera) y aplícalo a los clientes que quieras. Después ajusta a cada cliente su precio. No se guarda nada hasta que pulses «Guardar».'),
+      h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:6px 0' }, [['hoy', 'Hoy'], ['ayer', 'Ayer'], ['manana', 'Mañana'], ['todos', 'Últimos días']].map(([k, t]) => chip(t, F.dia === k, async () => { if (resumen() && !await confirmar('Tienes cambios sin guardar. ¿Descartarlos?')) return; F.dia = k; cargar(); }))),
+      h('label', { style: 'display:flex;gap:8px;align-items:center;margin:6px 0;font-size:16px' }, h('input', { type: 'checkbox', checked: F.solo, onchange: e => { F.solo = e.target.checked; dibuja(); } }), 'Solo productos con precios por poner'),
+      h('input', { placeholder: '🔍 Buscar producto…', oninput: debounce(e => { F.q = e.target.value; dibuja(); }, 200) }),
+      totalBox, lista, h('div', { class: 'barraG' }, guardarBtn));
+    dibuja();
   }
   cargar();
 }
@@ -1533,19 +1683,25 @@ function estadoLineaAlb(l) {
   }
   return { tipo, motivos };
 }
-function cuerpoAlbaranVivo(d) {
+function cuerpoAlbaranVivo(d, acc) {
+  acc = Object.assign({ precio: () => abrirPrecios(d.pedido.id), peso: () => go('pedido', { id: d.pedido.id }) }, acc || {});
   const ls = d.lineas || []; const est = ls.map(estadoLineaAlb); const nx = est.filter(e => e.tipo === 'fallo').length;
   const sinPeso = ls.filter(l => l.estado !== 'no_disponible' && l.peso_real == null).length, sinPrecio = ls.filter(l => l.estado !== 'no_disponible' && (l.precio == null || l.precio === '')).length;
   const despues = ls.filter(esDespues).length, nodisp = ls.filter(l => l.estado === 'no_disponible' && !esDespues(l)).length;
   const faltas = [sinPeso ? sinPeso + ' sin peso' : '', sinPrecio ? sinPrecio + ' sin precio' : '', despues ? despues + ' por comprar' : '', nodisp ? nodisp + ' no disponible' : ''].filter(Boolean);
+  const irFalta = () => { if (sinPrecio) acc.precio(); else if (sinPeso) acc.peso(); else toast('Lo que falta se resuelve comprando o preparando el producto en el pedido', 'ok'); };
+  const botFalta = (t, fn) => h('button', { type: 'button', style: 'display:block;width:100%;text-align:left;margin:5px 0;min-height:48px;font-size:16px;font-weight:700;background:#fef9c3;border:1.5px solid #facc15;color:#713f12', onclick: fn }, t);
   const prev = Object.assign({}, d, { albaran: d.albaran || { serie: 'F', numero: null, fecha: d.pedido.fecha_entrega, estado: 'borrador' }, traza: {} });
   const wrap = h('div', { class: 'alb-wrap' }); wrap.innerHTML = htmlAlbaran(prev, 'a4', { vivo: true }); const bl = wrap.querySelector('.copia.blanca'); if (bl) wrap.replaceChildren(bl);
   const completo = !faltas.length && !nx && ls.length;
   return h('div', {},
-    h('div', { class: 'ley-alb' }, h('span', { class: 'l-ok' }, '✅ Listo'), h('span', { class: 'l-f' }, '🟡 Falta algo: peso, precio o compra'), h('span', { class: 'l-x' }, '❌ Fallo: revisar')),
+    h('div', { class: 'ley-alb' }, h('span', { class: 'l-ok' }, '✅ Listo'), h('span', { class: 'l-f', style: 'cursor:pointer', onclick: irFalta }, '🟡 Falta algo: peso, precio o compra ›'), h('span', { class: 'l-x' }, '❌ Fallo: revisar')),
     h('div', { class: 'card', style: 'margin:6px 0;border-left:6px solid ' + (nx ? '#dc2626' : faltas.length ? '#facc15' : '#16a34a') },
       completo ? h('div', { class: 'nombre' }, '✅ Albarán completo: ya se puede cerrar') : h('div', {},
-        faltas.length ? h('div', { class: 'nombre' }, '🟡 Falta: ' + faltas.join(' · ')) : null, nx ? h('div', { class: 'nombre' }, '❌ ' + nx + (nx === 1 ? ' fallo' : ' fallos') + ' que revisar') : null,
+        faltas.length ? h('div', {}, h('div', { class: 'nombre' }, '🟡 Falta:'),
+          sinPrecio ? botFalta('💶 ' + sinPrecio + ' sin precio · toca para ponerlos ›', acc.precio) : null,
+          sinPeso ? botFalta('⚖️ ' + sinPeso + ' sin peso · toca para ir a pesar ›', acc.peso) : null,
+          despues ? h('div', { class: 'sub' }, '🛒 ' + despues + ' por comprar después') : null, nodisp ? h('div', { class: 'sub' }, '🚫 ' + nodisp + ' no disponible') : null) : null, nx ? h('div', { class: 'nombre' }, '❌ ' + nx + (nx === 1 ? ' fallo' : ' fallos') + ' que revisar') : null,
         !ls.length ? h('div', { class: 'sub' }, 'El pedido todavía no tiene líneas.') : null)),
     wrap);
 }
@@ -1555,7 +1711,7 @@ function abrirAlbaranVivo(id) {
   const pintar = async () => {
     try {
       const d = await cargarPedido(id); const f = JSON.stringify([d.lineas, d.pedido.estado, d.albaran && d.albaran.numero]); if (f === firma) return; firma = f;
-      cuerpo.replaceChildren(cuerpoAlbaranVivo(d), d.albaran ? h('button', { style: 'width:100%;margin:8px 0', onclick: () => { cerrar0(); go('albaran', { id }); } }, '🖨 Abrir el albarán cerrado e imprimir') : null);
+      cuerpo.replaceChildren(cuerpoAlbaranVivo(d, { precio: () => { cerrar0(); abrirPrecios(id); }, peso: () => { cerrar0(); go('pedido', { id }); } }), d.albaran ? h('button', { style: 'width:100%;margin:8px 0', onclick: () => { cerrar0(); go('albaran', { id }); } }, '🖨 Abrir el albarán cerrado e imprimir') : null);
     } catch (e) { cuerpo.replaceChildren(h('p', { class: 'err' }, msgErr(e))); }
   };
   pintar(); const t = setInterval(() => { if (!document.body.contains(cuerpo)) { clearInterval(t); return; } pintar(); }, 8000);
@@ -2078,13 +2234,12 @@ function vistaHojaCompra() {
   const fi = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || fecha; cargar(); } });
   function pintar() {
     if (!datos) return; const t = agrupaCompra(totalesCarga(datos));
-    const kids = [h('div', { class: 'aviso-card' }, 'Lo que hay que comprar para los pedidos de ' + fechaES(fecha) + ' (pedido − sobrante del día anterior). Elige otra fecha si los pedidos llegaron con días de antelación.')];
+    const kids = [t.length ? h('div', { style: 'display:flex;gap:8px' }, h('button', { style: 'flex:1;min-height:50px;font-size:16px', onclick: () => imprimir(htmlHojaCompra(fecha, datos)) }, '🖨 Imprimir A4'), h('button', { class: 'ghost', style: 'flex:1;min-height:50px;font-size:16px', onclick: () => abrirTermica('compra', fecha, datos) }, '🧾 Térmica')) : null, h('div', { class: 'aviso-card' }, 'Lo que hay que comprar para los pedidos de ' + fechaES(fecha) + ' (pedido − sobrante del día anterior). Elige otra fecha si los pedidos llegaron con días de antelación.')];
     if (!t.length) kids.push(h('p', { class: 'vacio' }, 'No hay pedidos para esta fecha.'));
     t.forEach(g => kids.push(h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'nombre' }, g.producto), h('div', { class: 'sub' }, 'Pedido ' + (sumaUnidades(g.items, 'pedido') || '0') + (sumaUnidades(g.items, 'sobrante') ? ' · Sobrante ' + sumaUnidades(g.items, 'sobrante') : ''))), h('div', { class: 'tot-num' }, sumaUnidades(g.items, 'total') || '0'))));
-    if (t.length) kids.push(h('button', { style: 'width:100%;margin-top:6px', onclick: () => imprimir(htmlHojaCompra(fecha, datos)) }, 'Imprimir hoja de compra (A4)'));
     kids.push(h('div', { class: 'aviso-card' }, datos.previoFecha ? '♻️ Ya descontado el sobrante del ' + fechaES(datos.previoFecha) + '.' : 'No hay sobrante anotado para descontar.', ' ', h('a', { href: '#', onclick: e => { e.preventDefault(); go('sobrante', { fecha: (() => { const d = new Date(fecha + 'T12:00:00'); d.setDate(d.getDate() - 1); return hoy(d); })() }); } }, 'Anotar el sobrante del día anterior ›')));
     kids.push(h('div', { style: 'display:flex;gap:8px;margin-top:8px' }, h('button', { class: 'ghost', style: 'flex:1', onclick: () => { state.fecha = fecha; go('carga'); } }, 'Hoja de carga'), h('button', { class: 'ghost', style: 'flex:1', onclick: () => go('quien', { fecha }) }, 'A quién hemos comprado')));
-    cont.replaceChildren(...kids);
+    cont.replaceChildren(...kids.filter(Boolean));
   }
   async function cargar() { cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); try { const r = await cargarCarga(fecha); datos = r.datos; pintar(); } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); } }
   $app.replaceChildren(shell('Hoja de compra', h('div', {}, h('div', { class: 'barra' }, fi, h('button', { class: 'ghost', onclick: cargar }, '↻')), cont), { volver: () => go('inicio') })); renderBanner(); cargar();
@@ -2896,6 +3051,9 @@ function vistaCarga() {
   const chips = modos.map(([m, n]) => h('button', { class: 'chip' + (state.cargaModo === m ? ' on' : ''), onclick: () => { state.cargaModo = m; vistaCarga(); } }, n));
   $app.replaceChildren(shell('Hoja de carga', h('div', {},
     h('div', { class: 'barra' }, fechaInp, h('button', { class: 'ghost', onclick: () => actualizarCarga(true) }, '↻')),
+    h('div', { style: 'display:flex;gap:8px;margin:6px 0' },
+      h('button', { style: 'flex:1;min-height:50px;font-size:16px', onclick: () => { if (!state.carga) { toast('Espera a que cargue', 'err'); return; } imprimir(htmlHoja(state.carga.datos)); } }, '🖨 Imprimir A4'),
+      h('button', { class: 'ghost', style: 'flex:1;min-height:50px;font-size:16px', onclick: () => { if (!state.carga) { toast('Espera a que cargue', 'err'); return; } abrirTermica('carga', state.fecha, state.carga.datos); } }, '🧾 Térmica')),
     h('div', { class: 'chips' }, chips),
     h('div', { id: 'carga' }, h('p', { class: 'vacio' }, 'Cargando…')))));
   renderBanner();
@@ -2918,7 +3076,6 @@ function pintarCarga() {
   if (state.cargaModo === 'clientes') pintarCargaClientes(datos, kids);
   else if (state.cargaModo === 'totales') pintarCargaTotales(datos, kids);
   else pintarSobrante(datos, kids);
-  kids.push(h('button', { class: 'ghost', style: 'width:100%;margin-top:6px', onclick: () => imprimir(htmlHoja(datos)) }, 'Imprimir hoja de carga (A4)'));
   kids.push(h('div', { style: 'display:flex;gap:8px;margin-top:8px' }, h('button', { class: 'ghost', style: 'flex:1', onclick: () => go('hojacompra', { fecha: state.fecha }) }, 'Hoja de compra'), h('button', { class: 'ghost', style: 'flex:1', onclick: () => go('quien', { fecha: state.fecha }) }, 'A quién hemos comprado')));
   cont.replaceChildren(...kids);
 }
@@ -3844,6 +4001,9 @@ function vistaMas() {
   }
   lista.forEach(([t, it]) => k.push(...rosco(t, ...it)));
   k.splice(1, 0, h('div', { class: 'chips', style: 'margin:6px 0 2px' }, h('span', { class: 'sub', style: 'align-self:center' }, 'Ver arriba:'), ...[['todo', 'Todo'], ['reparto', '🧑‍✈️ Preparar y repartir'], ['compra', '🛒 Compra']].map(([m, n]) => h('button', { class: 'chip' + (modoV === m ? ' on' : ''), onclick: () => { LS.set('fj_vista', m); vistaMas(); } }, n))));
+  /* Acceso directo: imprimir la hoja de carga o la de compra sin entrar en menús */
+  { const dia = LS.get('fj_imp_dia', 'hoy'); const tarj = h('div', { class: 'card', style: 'padding:10px;margin:6px 0' }); const pintaT = () => { const dd = LS.get('fj_imp_dia', 'hoy'); tarj.replaceChildren(h('div', { class: 'fila' }, h('div', { class: 'nombre' }, '🖨 Imprimir ahora'), h('div', { class: 'chips', style: 'margin:0' }, [['hoy', 'Hoy'], ['manana', 'Mañana']].map(([v, t]) => h('button', { class: 'chip' + (dd === v ? ' on' : ''), onclick: () => { LS.set('fj_imp_dia', v); pintaT(); } }, t)))),
+      h('div', { style: 'display:flex;gap:8px;margin-top:8px' }, h('button', { style: 'flex:1;min-height:54px;font-size:16px', onclick: () => impRapido('carga') }, '🚚 Hoja de carga'), h('button', { style: 'flex:1;min-height:54px;font-size:16px', onclick: () => impRapido('compra') }, '🛒 Hoja de compra'))); }; pintaT(); k.splice(2, 0, tarj); }
   k.push(h('button', { class: 'peligro', style: 'width:100%;margin-top:20px', onclick: salir }, 'Cerrar sesión'));
   $app.replaceChildren(shell('Inicio', h('div', {}, ...k))); renderBanner();
   if (navigator.onLine) {
@@ -5453,7 +5613,7 @@ function vistaPrecios() {
       const cacheF = LS.get('fj_fact_leidas', {});
       const estado = h('div', { class: 'sub', style: 'margin:6px 0' });
       /* Líneas que la app ya dejó guardadas en la base al leer las facturas de ese día (también las de «Leer las facturas de los últimos 15 días») */
-      const extra = [], sinDB = [];
+      const extra = [], sinDB = []; const IGN0 = LS.get('fj_sin_ign', {});
       try {
         let q = await sb.from('lineas_factura_leida').select('texto,cantidad,unidad,precio,producto_id,dudoso,factura_id,proveedor_id,proveedores(nombre),productos(nombre)').eq('fecha', fecha).limit(1500);
         if (!q.error) {
@@ -5488,6 +5648,7 @@ function vistaPrecios() {
         const cands = fcCandidatos(x.texto, indice, 8).map(c => c.p);
         const bi = h('input', { placeholder: 'Buscar el producto…', oninput: debounce(async () => { if (!bi.value.trim()) { res.replaceChildren(); return; } try { const rr = await buscar('productos', bi.value, true, 8); res.replaceChildren(h('div', { class: 'res' }, rr.map(p => h('button', { onclick: () => elegir(p) }, p.nombre + ' · ' + p.codigo)))); } catch (e) { } }, 250) });
         cerrar = hoja(x.texto, h('div', {}, h('p', { class: 'sub' }, (x.sinLeer ? 'Fila de la factura que no he sabido leer: escribe tú el precio y elige el producto. ' : 'Producto de la factura sin reconocer. ') + (origen.prov ? 'Proveedor: ' + origen.prov + '. ' : '')), h('label', { class: 'campo' }, 'Precio de compra', pr), h('label', { class: 'campo' }, 'Por…', un),
+          h('button', { type: 'button', class: 'ghost', style: 'width:100%;margin:6px 0', onclick: () => { const I = LS.get('fj_sin_ign', {}); I[fcClave(x.texto)] = 1; LS.set('fj_sin_ign', I); cerrar(); toast('Ignorado: no volverá a salir', 'ok'); montar(); } }, '🙈 No es un producto: ignorar'),
           cands.length ? h('div', { class: 'sub' }, 'Parecidos (toca el correcto):') : null, h('div', { class: 'fila', style: 'gap:6px;flex-wrap:wrap;justify-content:flex-start;margin:4px 0' }, cands.map(p => h('button', { class: 'ghost small', onclick: () => elegir(p) }, p.nombre))), bi, res));
       }
       const preparaFilas = () => {
@@ -5531,11 +5692,11 @@ function vistaPrecios() {
       const mas = h('button', { class: 'ghost', style: 'width:100%;margin:8px 0', onclick: () => {
         const res = h('div', {}); const bi = h('input', { placeholder: 'Buscar producto…', oninput: debounce(async () => { if (!bi.value.trim()) { res.replaceChildren(); return; } try { const rr = await buscar('productos', bi.value, false, 8); res.replaceChildren(h('div', { class: 'res' }, rr.map(p => h('button', { onclick: () => { cerr(); editar({ pid: p.id, producto: p.nombre, unidad: '', cant: 0, provs: new Set() }); } }, p.nombre + ' · ' + p.codigo)))); } catch (e) { } }, 250) });
         const cerr = hoja('Añadir otro producto', h('div', {}, bi, res)); } }, '✍ Apuntar un precio que no viene en las facturas (se compra después o la factura llega más tarde)');
-      const sinRec = []; const pvDe = f => (uno(f.proveedores) || {}).nombre || f.nombre || 'Factura';
+      const IGN = LS.get('fj_sin_ign', {}); const sinRec = []; const pvDe = f => (uno(f.proveedores) || {}).nombre || f.nombre || 'Factura';
       const filaSin = (x, origen) => h('div', { class: 'card tap fila', style: 'border-left:6px solid #dc2626', onclick: () => vincularSin(origen) }, h('div', {}, h('div', { class: 'nombre' }, x.texto), h('div', { class: 'sub' }, [x.cant ? num(x.cant) + ' ' + (x.unidad || '') : '', origen.prov, x.sinLeer ? '⚠ fila que no he sabido leer: toca para apuntarla' : '⚠ sin reconocer: toca para elegir qué producto es'].filter(Boolean).join(' · '))), h('div', { style: 'text-align:right' }, h('b', {}, x.precio != null ? eur(x.precio) + ' €' + (x.unidad ? '/' + x.unidad : '') : '—')));
-      facs.forEach(f => { const c = cacheF[f.id]; if (c && c.sin) c.sin.forEach(x => sinRec.push(filaSin(x, { x, f, prov: pvDe(f) }))); });
-      sinDB.forEach(x => sinRec.push(filaSin(x, { x, prov: x.prov })));
-      if (sinRec.length) sinRec.unshift(h('div', { class: 'aviso-card' }, '🔴 ' + sinRec.length + ' línea(s) de las facturas que la app no ha reconocido. Aquí las tienes con su precio: toca una para decir qué producto es (la app lo recordará con ese proveedor) o déjala así y apunta el precio tú.'));
+      facs.forEach(f => { const c = cacheF[f.id]; if (c && c.sin) c.sin.filter(x => !x.sinLeer && !fcEsBasura(x.texto) && x.precio != null && !IGN[fcClave(x.texto)]).forEach(x => sinRec.push(filaSin(x, { x, f, prov: pvDe(f) }))); });
+      sinDB.filter(x => !fcEsBasura(x.texto) && x.precio != null && !IGN[fcClave(x.texto)]).forEach(x => sinRec.push(filaSin(x, { x, prov: x.prov })));
+      if (sinRec.length) sinRec.unshift(h('div', { class: 'aviso-card' }, '🔴 ' + sinRec.length + ' producto(s) de las facturas sin reconocer. Toca uno para decir cuál es (la app lo recordará con ese proveedor) o ignóralo.'));
       const verFacs = facs.filter(f => f.ruta).length ? h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:6px 0' }, ...facs.filter(f => f.ruta).map(f => h('button', { class: 'small ghost', onclick: () => verDocumento(f.ruta, (f.proveedores ? (uno(f.proveedores) || {}).nombre : '') || f.nombre || 'Factura') }, '👁 ' + (((f.proveedores ? (uno(f.proveedores) || {}).nombre : '') || f.nombre || 'Factura').slice(0, 22))))) : null;
       lista.replaceChildren(...cab, mas, estado, ...(verFacs ? [verFacs] : []), ...(kids.length ? kids : [h('p', { class: 'vacio' }, facs.length ? 'Hay ' + facs.length + ' factura(s) llegadas este día. Se están leyendo; los precios saldrán aquí.' : 'Todavía no hay compras, facturas ni precios para este día. También puedes apuntar un precio a mano con el botón de arriba.')]), ...sinRec);
       };
@@ -5554,7 +5715,7 @@ function vistaPrecios() {
               rd.lineas.forEach(x => { const m = fcEmparejar(x, prods, indice, al.map); const pr = Number(x.precio);
                 if (m.producto && (m.estado === 'ok' || m.estado === 'dudoso') && isFinite(pr) && pr > 0) lineas.push({ pid: m.producto.id, nombre: m.producto.nombre, precio: pr, unidad: UNIDADES.includes(x.unidad) ? x.unidad : (m.producto.unidad_venta && UNIDADES.includes(m.producto.unidad_venta) ? m.producto.unidad_venta : 'kg'), cant: Number(x.cantidad) || 0, dudoso: m.estado === 'dudoso' });
                 else sin.push({ texto: x.texto, precio: isFinite(pr) ? pr : null, unidad: x.unidad || '', cant: Number(x.cantidad) || 0, importe: Number(x.importe) || 0 }); });
-              (rd.noLeidas || []).forEach(t => sin.push({ texto: String(t).slice(0, 120), precio: null, unidad: '', cant: 0, sinLeer: true }));
+              
               cacheF[f.id] = { lineas, sin, t: Date.now() }; LS.set('fj_fact_leidas', cacheF); montar(); guardarLineasLeidas(f, rd, prods, indice, al.map);
             } catch (e) { fallos++; }
           }
@@ -5886,7 +6047,7 @@ const enlaceMapas = (puntos, origen) => 'https://www.google.com/maps/dir/?api=1&
 const PALETA_REP = ['#2563eb', '#f97316', '#7c3aed', '#e11d48', '#0d9488', '#db2777', '#92400e', '#4b5563'];
 function vistaReparto() {
   state.view = 'reparto'; state.fecha = state.fecha || hoy();
-  let fecha = state.fecha, grupos = [], reps = [], cache = false, falta = false, marcados = {}, ocupado = false;
+  let fecha = state.fecha, grupos = [], reps = [], cache = false, falta = false, marcados = {}, ocupado = false, pincel = null;
   const gestor = esOficina();
   const cont = h('div', {}), cuerpo = h('div', {});
   const fechaInp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); state.fecha = fecha; marcados = {}; cargar(); } });
@@ -5970,7 +6131,7 @@ function vistaReparto() {
   function tarjeta(g, ctx) {   // ctx: { lista, i, editable, col }
     const [a, b] = ventanaCli(g); const sub = [g.localidad, g.pedidos.length + (g.pedidos.length === 1 ? ' pedido' : ' pedidos'), g.entregado ? '✔ entregado' : g.listo ? '✔ preparado' : '⏳ por preparar', a != null || b != null ? (a != null ? deMin(a) : '') + '–' + (b != null ? deMin(b) : '') : '', g.lat == null && !g.entregado ? '⚠ sin ubicación' : ''].filter(Boolean).join(' · ');
     const edit = ctx && ctx.editable && !g.entregado;
-    return h('div', { class: 'card parada' + (g.entregado ? ' hecha' : ''), style: ctx ? 'border-left:8px solid ' + ctx.col : 'border-left:8px solid #d1d5db' },
+    return h('div', { class: 'card parada' + (g.entregado ? ' hecha' : ''), style: (ctx ? 'border-left:8px solid ' + ctx.col : 'border-left:8px solid #d1d5db') + (pincel && !g.entregado ? ';cursor:pointer;outline:2px dashed ' + (pincel === 'suelto' ? '#6b7280' : color(repDe(pincel))) : ''), onclick: e => { if (!pincel || e.target.closest('button,a,input,label,select')) return; usarPincel(g); } },
       h('div', { class: 'fila', style: 'gap:8px' },
         !ctx && !g.rep && !g.entregado ? h('input', { type: 'checkbox', class: 'chk-g', checked: !!marcados[g.id], onchange: e => { marcados[g.id] = e.target.checked; if (!e.target.checked) delete marcados[g.id]; pintarBarra(); } }) : null,
         ctx ? h('div', { class: 'nparada', style: 'background:' + ctx.col }, String(ctx.i + 1)) : null,
@@ -5980,6 +6141,28 @@ function vistaReparto() {
       h('div', { style: 'display:flex;gap:8px;margin-top:6px;flex-wrap:wrap' }, g.pedidos.map((id, k) => { const t = (g.est || {})[id] === 'terminado'; const n = g.pedidos.length > 1 ? ' ' + (k + 1) : ''; return h('button', { class: (t ? 'small' : 'ghost small'), onclick: () => go(t ? 'albaran' : 'pedido', { id, desde: 'reparto' }) }, t ? '🧾 Albarán' + n : '📋 Pedido' + n + ' (aún sin albarán)'); }))
       );
   }
+  /* ---- Modo pincel: elige a quién y toca los clientes; se asignan al instante ---- */
+  async function usarPincel(g) {
+    if (g.entregado) { toast('Ese cliente ya está entregado', 'err'); return; }
+    const rep = pincel === 'suelto' ? null : pincel;
+    if (!gestor && (rep !== miId() || (g.rep && g.rep !== miId()))) { toast('Solo puedes coger clientes sin asignar', 'err'); return; }
+    if ((g.rep || null) === rep) return;
+    const antes = g.rep; g.rep = rep; pintar();
+    const ok = await llamar('asignar_reparto', { p_pedidos: g.pend, p_repartidor: rep }); if (!ok) { g.rep = antes; pintar(); }
+  }
+  async function pincelTodos() {
+    const rep = pincel === 'suelto' ? null : pincel; const lista = grupos.filter(g => !g.rep && !g.entregado); if (!rep || !lista.length) return;
+    if (!await confirmar('¿Asignar los ' + lista.length + ' clientes sin asignar a ' + corto((repDe(rep) || {}).nombre) + '?')) return;
+    const ok = await llamar('asignar_reparto', { p_pedidos: idsDe(lista), p_repartidor: rep }, lista.length + ' clientes asignados'); await cargar(true);
+  }
+  function barraPincel() {
+    const puedo = gestor ? reps : reps.filter(r => r.id === miId()); if (!puedo.length) return null;
+    const bt = (id, txt, col) => h('button', { type: 'button', style: 'flex:1;min-width:30%;min-height:52px;font-size:16px;font-weight:800;border-radius:12px;border:3px solid ' + col + ';background:' + (pincel === id ? col : '#fff') + ';color:' + (pincel === id ? '#fff' : '#111'), onclick: () => { pincel = pincel === id ? null : id; pintar(); } }, (pincel === id ? '🖌 ' : '') + txt);
+    return h('div', { style: 'position:sticky;top:0;z-index:6;background:var(--bg,#fff);padding:8px 0 6px;border-bottom:1px solid #e5e7eb;margin-bottom:8px' },
+      h('div', { class: 'sub', style: 'font-weight:800;margin-bottom:6px;color:#111' }, pincel ? (pincel === 'suelto' ? '🖌 Toca un cliente para SOLTARLO (queda sin asignar)' : '🖌 Pintando con ' + corto((repDe(pincel) || {}).nombre) + ': toca cada cliente que lleva') : '🖌 Elige con quién vas a repartir y luego toca los clientes:'),
+      h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap' }, puedo.map(r => bt(r.id, etiqueta(r), color(r))), gestor ? bt('suelto', '✖ Soltar', '#6b7280') : null),
+      pincel && pincel !== 'suelto' && grupos.some(g => !g.rep && !g.entregado) ? h('button', { type: 'button', class: 'ghost small', style: 'width:100%;margin-top:6px', onclick: pincelTodos }, 'Pasar TODOS los sin asignar a ' + corto((repDe(pincel) || {}).nombre)) : null);
+  }
   let barra = h('div', {});
   function pintarBarra() {
     const sel = grupos.filter(g => marcados[g.id] && !g.rep && !g.entregado);
@@ -5988,6 +6171,7 @@ function vistaReparto() {
   function pintar() {
     const kids = [];
     if (cache) kids.push(h('div', { class: 'aviso-card' }, 'Datos guardados en este móvil (sin conexión). No puedes coger pedidos hasta que vuelva.'));
+    { const bp = reps.length ? barraPincel() : null; if (bp) kids.push(bp); }
     if (!reps.length) kids.push(h('div', { class: 'card' }, h('div', { class: 'nombre' }, 'Todavía no hay repartidores elegidos'), h('div', { class: 'sub' }, gestor ? 'Elige quiénes reparten (cada uno tendrá su color).' : 'Pide a oficina o administración que elija quiénes reparten.'), gestor ? h('button', { class: 'guardar', style: 'margin-top:8px', onclick: configurar }, '⚙ Elegir repartidores') : null));
     const libres = grupos.filter(g => !g.rep).sort((x, y) => nombreCli(x).localeCompare(nombreCli(y), 'es'));
     // leyenda con colores y número de paradas
@@ -7247,11 +7431,12 @@ function pdfColor(hex, trazo) {
   return [1, 2, 3].map(i => (parseInt(m[i], 16) / 255).toFixed(3)).join(' ') + (trazo ? ' RG' : ' rg');
 }
 /* Documento A4. Origen arriba-izquierda (y hacia abajo) para pensar como en una hoja. */
-function pdfNuevo() {
-  const W = 595.28, H = 841.89; const paginas = [[]];
-  const P = () => paginas[paginas.length - 1];
+function pdfNuevo(W0, H0) {
+  const W = W0 || 595.28, H = H0 || 841.89; const paginas = [[]];
+  const P = () => paginas[paginas.length - 1]; const imgs = [];
   const f = n => (Math.round(n * 100) / 100).toString();
   const api = {
+    imagen(bytes, pw, ph, x, y, w, h) { let k = imgs.findIndex(i => i.bytes === bytes); if (k < 0) { imgs.push({ bytes, w: pw, h: ph }); k = imgs.length - 1; } P().push('q ' + f(w) + ' 0 0 ' + f(h) + ' ' + f(x) + ' ' + f(H - y - h) + ' cm /Im' + k + ' Do Q'); },
     W, H,
     pagina() { paginas.push([]); },
     numPaginas() { return paginas.length; },
@@ -7270,11 +7455,13 @@ function pdfNuevo() {
       add('<< /Type /Catalog /Pages 2 0 R >>'); add('PENDIENTE');
       const f1 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
       const f2 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+      const imRef = imgs.map(im => { let bin = ''; for (let i = 0; i < im.bytes.length; i += 8192) bin += String.fromCharCode.apply(null, im.bytes.subarray(i, i + 8192)); return add('<< /Type /XObject /Subtype /Image /Width ' + im.w + ' /Height ' + im.h + ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + im.bytes.length + ' >>\nstream\n' + bin + '\nendstream'); });
+      const xo = imRef.length ? ' /XObject << ' + imRef.map((r, i) => '/Im' + i + ' ' + r + ' 0 R').join(' ') + ' >>' : '';
       const kids = [];
       paginas.forEach(p => {
         const cont = p.join('\n');
         const c = add('<< /Length ' + cont.length + ' >>\nstream\n' + cont + '\nendstream');
-        const pg = add('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + f(W) + ' ' + f(H) + '] /Resources << /Font << /F1 ' + f1 + ' 0 R /F2 ' + f2 + ' 0 R >> >> /Contents ' + c + ' 0 R >>');
+        const pg = add('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + f(W) + ' ' + f(H) + '] /Resources << /Font << /F1 ' + f1 + ' 0 R /F2 ' + f2 + ' 0 R >>' + xo + ' >> /Contents ' + c + ' 0 R >>');
         kids.push(pg + ' 0 R');
       });
       objs[1] = '<< /Type /Pages /Kids [' + kids.join(' ') + '] /Count ' + kids.length + ' >>';
@@ -7287,6 +7474,83 @@ function pdfNuevo() {
     }
   };
   return api;
+}
+/* ===== Impresora térmica portátil (la app de la impresora): PDF al ancho del rollo; cada impresión sale con un nombre y número propios ===== */
+function termNombre(tipo, detalle) {
+  const n = (Number(LS.get('fj_term_n', 0)) || 0) + 1; LS.set('fj_term_n', n);
+  const d = new Date(); const mes = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][d.getMonth()];
+  const hm = String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0');
+  return 'FJ-' + String(n).padStart(4, '0') + '_' + tipo + '_' + String(d.getDate()).padStart(2, '0') + mes + '_' + hm + (detalle ? '_' + sinTilde(detalle).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24) : '') + '.pdf';
+}
+/* bl = [{k:'tit'|'sub'|'cli'|'fila'|'nota'|'sep', t, d}]  ·  pocas líneas → una tira corta; muchas → hojas de ~25 cm numeradas */
+function termPdf(bl, ancho) {
+  const mm = Number(ancho) || 58, W = mm / 25.4 * 72, M = 7, tam = mm <= 58 ? 9 : mm <= 80 ? 10.5 : 12, lh = tam * 1.35, pie = 14;
+  const maq = (LIM) => {
+    const pags = [[]]; let y = 12;
+    const nueva = () => { pags.push([]); y = 12; }; const op = o => pags[pags.length - 1].push(o);
+    const alto = n => { if (y + n > LIM - pie) nueva(); };
+    bl.forEach(b => {
+      if (b.k === 'sep') { alto(8); op({ s: 'l', y: y + 2 }); y += 8; return; }
+      const tt = b.k === 'tit' ? tam + 4 : b.k === 'cli' ? tam + 1 : b.k === 'nota' ? tam - 1.5 : tam, neg = b.k === 'tit' || b.k === 'cli' || b.k === 'fila' && b.neg;
+      if (b.k === 'fila') {
+        const dw = b.d ? pdfAncho(String(b.d), tam, true) + 6 : 0; const L = pdfLineas(b.t, tam, false, W - 2 * M - dw - tam - 6);
+        alto(L.length * lh + 2); op({ s: 'c', y }); L.forEach((l, i) => op({ s: 't', t: l, x: M + tam + 5, y: y + tam - 1 + i * lh, z: tam })); if (b.d) op({ s: 't', t: String(b.d), x: W - M, y: y + tam - 1, z: tam, neg: true, r: true }); y += L.length * lh + 2; return;
+      }
+      const L = pdfLineas(b.t, tt, neg, W - 2 * M); alto(L.length * (tt * 1.3) + 3);
+      L.forEach((l, i) => op({ s: 't', t: l, x: b.k === 'tit' ? W / 2 : M, y: y + tt - 1 + i * (tt * 1.3), z: tt, neg, c: b.k === 'tit', g: b.k === 'nota' })); y += L.length * (tt * 1.3) + 3;
+    });
+    return { pags, y };
+  };
+  let m = maq(1e9), unaSola = m.y + pie < 1000, LIM, r;
+  if (unaSola) { LIM = m.y + pie; r = m; } else { LIM = 700; r = maq(LIM); }
+  const H = unaSola ? LIM : LIM; const doc = pdfNuevo(W, H);
+  r.pags.forEach((ops, i) => {
+    if (i) doc.pagina();
+    ops.forEach(o => { if (o.s === 'l') doc.linea(M, o.y, W - M, o.y, '#000000', 0.8); else if (o.s === 'c') doc.caja(M, o.y + 1, tam - 1, tam - 1, null, '#000000'); else doc.texto(o.t, o.x, o.y, o.z, { neg: o.neg, align: o.r ? 'right' : o.c ? 'center' : 'left', color: o.g ? '#444444' : '#000000' }); });
+    if (r.pags.length > 1) doc.texto('Hoja ' + (i + 1) + ' de ' + r.pags.length, W / 2, H - 4, 7, { align: 'center', color: '#444444' });
+  });
+  return { bytes: doc.bytes(), paginas: r.pags.length, altoMm: Math.round(H / 72 * 25.4), unaSola };
+}
+function termCarga(datos, que) {
+  const bl = [{ k: 'tit', t: 'HOJA DE CARGA' }, { k: 'sub', t: fechaES(state.fecha) }, { k: 'sep' }];
+  if (que === 'totales' || que === 'ambas') { bl.push({ k: 'cli', t: 'TOTAL A CARGAR' }); totalesCarga(datos).forEach(t => { bl.push({ k: 'fila', t: t.producto, d: num(t.total) + ' ' + t.unidad }); if (t.sobrante) bl.push({ k: 'nota', t: '   incluye sobrante ' + num(t.sobrante) + ' ' + t.unidad }); }); bl.push({ k: 'sep' }); }
+  if (que === 'clientes' || que === 'ambas') pedidosOrdenados(datos).forEach(p => { const cli = p.clientes || {}; bl.push({ k: 'cli', t: nombreCli(cli) + (cli.ruta ? ' · R' + cli.ruta : '') + (cli.forma_pago === 'contado' ? ' · CONTADO' : '') }); lineasCarga(p).forEach(l => bl.push({ k: 'fila', t: nomProd(l), d: num(l.cantidad_pedida) + ' ' + l.unidad_pedida })); bl.push({ k: 'sep' }); });
+  return bl;
+}
+function termCompra(fecha, datos) {
+  const bl = [{ k: 'tit', t: 'HOJA DE COMPRA' }, { k: 'sub', t: fechaES(fecha) }, { k: 'sep' }];
+  agrupaCompra(totalesCarga(datos)).forEach(g => { bl.push({ k: 'fila', t: g.producto, d: sumaUnidades(g.items, 'total') || '0' }); const so = sumaUnidades(g.items, 'sobrante'); if (so) bl.push({ k: 'nota', t: '   pedido ' + sumaUnidades(g.items, 'pedido') + ' · sobrante ' + so }); });
+  return bl;
+}
+async function impRapido(tipo) {
+  const fecha = LS.get('fj_imp_dia', 'hoy') === 'manana' ? hoy(new Date(Date.now() + 86400000)) : hoy();
+  let datos; try { const r = await cargarCarga(fecha); datos = r.datos; } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); return; }
+  const hay = totalesCarga(datos).length; state.fecha = fecha; let cerrar;
+  cerrar = hoja((tipo === 'compra' ? '🛒 Hoja de compra · ' : '🚚 Hoja de carga · ') + fechaES(fecha), h('div', {},
+    hay ? null : h('p', { class: 'err' }, 'No hay pedidos para este día: la hoja saldría vacía.'),
+    h('button', { class: 'guardar', style: 'width:100%;min-height:54px', onclick: () => { cerrar(); imprimir(tipo === 'compra' ? htmlHojaCompra(fecha, datos) : htmlHoja(datos)); } }, '🖨 Imprimir en A4'),
+    h('button', { style: 'width:100%;min-height:54px;margin-top:8px', onclick: () => { cerrar(); abrirTermica(tipo, fecha, datos); } }, '🧾 Impresora térmica'),
+    h('button', { class: 'ghost', style: 'width:100%;margin-top:8px', onclick: () => { cerrar(); go(tipo === 'compra' ? 'hojacompra' : 'carga', { fecha }); } }, '👁 Verla en pantalla'),
+    ));
+}
+/* Hoja para sacar la impresión térmica: elige ancho del rollo y qué sale; descarga o comparte con la app de la impresora */
+function abrirTermica(tipo, fecha, datos) {
+  const T = Object.assign({ ancho: 58, que: 'totales' }, LS.get('fj_term', {})); const info = h('div', { class: 'sub', style: 'font-weight:700;margin:8px 0' }), chipsA = h('div', { class: 'chips' }), chipsQ = h('div', { class: 'chips' }), ult = h('div', { class: 'sub', style: 'margin-top:8px' });
+  const gen = () => termPdf(tipo === 'compra' ? termCompra(fecha, datos) : termCarga(datos, T.que), T.ancho);
+  const pinta = () => {
+    LS.set('fj_term', { ancho: T.ancho, que: T.que });
+    chipsA.replaceChildren(...[[58, '58 mm · rollo normal'], [80, '80 mm'], [100, '100 mm · etiqueta 4×6"']].map(([v, t]) => h('button', { class: 'chip' + (T.ancho === v ? ' on' : ''), onclick: () => { T.ancho = v; pinta(); } }, t)));
+    chipsQ.replaceChildren(...(tipo === 'compra' ? [] : [['totales', 'Totales del día'], ['clientes', 'Por cliente'], ['ambas', 'Las dos cosas']].map(([v, t]) => h('button', { class: 'chip' + (T.que === v ? ' on' : ''), onclick: () => { T.que = v; pinta(); } }, t))));
+    try { const r = gen(); info.textContent = r.unaSola ? '✔ Pocas líneas: sale en UNA tira de unos ' + Math.max(1, Math.round(r.altoMm / 10)) + ' cm.' : '✔ Muchas líneas: se parte en ' + r.paginas + ' hojas de unos 25 cm, numeradas «Hoja 1 de ' + r.paginas + '».'; } catch (e) { info.textContent = 'No se ha podido preparar: ' + msgErr(e); }
+  };
+  const nombreDet = () => tipo === 'compra' ? '' : (T.que === 'totales' ? 'totales' : T.que === 'clientes' ? 'clientes' : 'completa');
+  const hacer = async compartir => { const r = gen(); const nom = termNombre(tipo === 'compra' ? 'Compra' : 'Carga', nombreDet()); ult.textContent = 'Último archivo: ' + nom; if (compartir) await comCompartir(r.bytes, nom, nom); else { comDescargar(r.bytes, nom); toast('Descargado: ' + nom, 'ok'); } };
+  let cerrar; cerrar = hoja('🧾 Impresora térmica · ' + (tipo === 'compra' ? 'Hoja de compra' : 'Hoja de carga'), h('div', {},
+    h('p', { class: 'sub' }, 'Prepara un PDF al ancho de tu rollo para imprimirlo con la app de tu impresora térmica, sea cual sea. Cada vez se guarda con un número distinto (FJ-0001, FJ-0002…) para encontrarlo fácil.'),
+    h('div', { class: 'sub', style: 'font-weight:700' }, 'Ancho del papel'), chipsA, tipo === 'compra' ? null : h('div', { class: 'sub', style: 'font-weight:700;margin-top:6px' }, 'Qué imprimir'), chipsQ, info,
+    h('button', { class: 'guardar', style: 'width:100%;min-height:54px;margin-top:6px', onclick: () => hacer(true) }, '📲 Enviar a la app de la impresora (compartir)'),
+    h('button', { style: 'width:100%;min-height:50px;margin-top:8px', class: 'ghost', onclick: () => hacer(false) }, '⬇ Descargar el PDF'), ult,
+    )); pinta();
 }
 /* Hoja de precios con buen diseño.
    d = { titulo, subtitulo, pie, contacto, validez, recs:[{titulo,texto,precio,unidad}], items:[{nombre,precio,unidad,nota}], soloRecs } */
@@ -7675,12 +7939,179 @@ async function comVer(lista, soloRecs) {
 }
 
 /* ----- Pantalla Comercial ----- */
+/* =====================  PRESENTACIONES A CLIENTES (dentro de Comercial, en página aparte)  ===================== */
+const PRES_TIPOS = { portada: ['🎬', 'Portada'], texto: ['📝', 'Quiénes somos / texto'], lista: ['✅', 'Puntos (cómo trabajamos)'], productos: ['🥬', 'Productos (con fotos)'], ofertas: ['🏷️', 'Ofertas de la semana'], precios: ['💶', 'Lista de precios'], contacto: ['📞', 'Contacto'] };
+const PRES_MODELOS = { hosteleria: 'Hostelería (bares y restaurantes)', colectivos: 'Colectividades (colegios, residencias, escuelas infantiles)' };
+const PRES_CONTACTO = ['Habla directamente con tu comercial: sin intermediarios, sin centralitas.', EMPRESA.tels, EMPRESA.dir, EMPRESA.email];
+const PRES_CIFRAS = [['3ª', 'generación familiar'], ['Mercamadrid', 'nuestro puesto'], ['Propias', 'cosechas de nuestra tierra'], ['Gran', 'extensión de cultivo']];
+const presPlantilla = (tipo) => {
+  const hos = tipo !== 'colectivos';
+  return hos ? [
+    { t: 'portada', titulo: 'Frutas y verduras para tu hostelería', sub: 'Directos desde Mercamadrid y de nuestras propias cosechas', pie: 'Empresa familiar · Tercera generación' },
+    { t: 'texto', titulo: 'Quiénes somos', texto: COM_INTRO, cifras: PRES_CIFRAS },
+    { t: 'lista', titulo: 'Por qué elegirnos', puntos: ['Tres generaciones dedicadas a la fruta y la verdura', 'Mercancía fresca elegida cada mañana en Mercamadrid', 'Cosechas propias en una gran extensión: continuidad y calidad', 'Reparto puntual en tu local, con nuestros repartidores', 'Un comercial de contacto directo, siempre localizable'] },
+    { t: 'lista', titulo: 'Cómo trabajamos', puntos: ['Pides por WhatsApp o por teléfono, cuando te venga bien', 'Preparamos tu pedido con el producto del día', 'Te lo llevamos nosotros a tu local', 'Albarán con los pesos reales de cada entrega', 'Ajustamos calidades y formatos a tu cocina'] },
+    { t: 'productos', titulo: 'Verduras y hortalizas', items: ['Tomate', 'Lechuga', 'Cebolla', 'Pimiento', 'Calabacín', 'Berenjena'], fotos: {} },
+    { t: 'productos', titulo: 'Fruta fresca', items: ['Aguacate', 'Naranja de zumo', 'Limón', 'Manzana', 'Pera', 'Plátano'], fotos: {} },
+    { t: 'ofertas', titulo: 'Ofertas de la semana', texto: 'Cada semana tenemos productos en oferta. Pregúntale a tu comercial.' },
+    { t: 'contacto', titulo: 'Tu comercial directo', lineas: PRES_CONTACTO },
+    { t: 'precios', titulo: 'Lista de precios · Hostelería', lista_id: '', soloEnvio: true, nota: 'Precios sujetos a variaciones de mercado y disponibilidad. Precios sin IVA salvo que se indique.', _tipo: 'hosteleria' }
+  ] : [
+    { t: 'portada', titulo: 'Suministro de fruta y verdura para tu centro', sub: 'Colegios, residencias y escuelas infantiles', pie: 'Empresa familiar · Tercera generación · Mercamadrid' },
+    { t: 'texto', titulo: 'Quiénes somos', texto: COM_INTRO, cifras: PRES_CIFRAS },
+    { t: 'lista', titulo: 'Por qué elegirnos', puntos: ['Tres generaciones de experiencia en fruta y verdura', 'Volumen y continuidad para centros grandes, gracias a nuestras cosechas propias', 'Producto fresco de temporada desde Mercamadrid', 'Reparto regular y puntual en tu centro', 'Una persona de contacto directo para todo el centro'] },
+    { t: 'lista', titulo: 'Cómo trabajamos', puntos: ['Acordamos contigo días y horarios de entrega', 'Formatos y calidades adaptados al centro (patata pelada en varios cortes)', 'Albarán con los pesos reales de cada entrega', 'Revisión de la tarifa cada 7-10 días', 'Atención directa ante cualquier incidencia'] },
+    { t: 'productos', titulo: 'Verduras y hortalizas', items: ['Zanahoria', 'Calabacín', 'Brócoli', 'Coliflor', 'Judía verde', 'Patata pelada'], fotos: {} },
+    { t: 'productos', titulo: 'Fruta fresca', items: ['Banana', 'Clementina', 'Manzana Golden', 'Naranja de zumo', 'Pera Conferencia', 'Melón'], fotos: {} },
+    { t: 'ofertas', titulo: 'Ofertas de la semana', texto: 'Cada semana tenemos productos en oferta. Pregúntale a tu comercial.' },
+    { t: 'contacto', titulo: 'Tu comercial directo', lineas: PRES_CONTACTO },
+    { t: 'precios', titulo: 'Tarifa · Colegios, residencias y escuelas infantiles', lista_id: '', soloEnvio: true, nota: 'Precios sujetos a mercado y disponibilidad. Precios sin IVA salvo que se indique.', _tipo: 'colectivos' }
+  ];
+};
+/* Foto de un producto: se elige de la cámara o galería, se recorta a 4:3 y se reduce para que pese poco */
+function presFotoElegir(alTener) {
+  const inp = h('input', { type: 'file', accept: 'image/*', style: 'display:none' });
+  inp.addEventListener('change', () => { const f = inp.files && inp.files[0]; inp.remove(); if (!f) return; const url = URL.createObjectURL(f), im = new Image();
+    im.onload = () => { try { const W = 480, H = 360, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'); const r = Math.max(W / im.width, H / im.height), w = im.width * r, hh = im.height * r; g.fillStyle = '#fff'; g.fillRect(0, 0, W, H); g.drawImage(im, (W - w) / 2, (H - hh) / 2, w, hh); URL.revokeObjectURL(url); alTener({ u: c.toDataURL('image/jpeg', 0.72), w: W, h: H }); } catch (e) { toast('No se pudo preparar la foto', 'err'); } };
+    im.onerror = () => { URL.revokeObjectURL(url); toast('No se pudo leer esa foto', 'err'); }; im.src = url; });
+  document.body.append(inp); inp.click();
+}
+const presFotoBytes = (() => { const memo = new Map(); return f => { if (!f || !f.u) return null; if (memo.has(f.u)) return memo.get(f.u); const b = atob(f.u.split(',')[1] || ''), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); memo.set(f.u, u); return u; }; })();
+/* Pasa las diapositivas del editor a «láminas» listas para dibujar (la lista de precios se parte en varias) */
+async function presExpandir(slides, conLista) {
+  const out = []; let recs = null;
+  for (const d of slides) {
+    if (d.t === 'precios' && !conLista && d.soloEnvio) continue;
+    if (d.t === 'productos') { const it = (d.items || []).filter(Boolean), conFoto = it.some(x => d.fotos && d.fotos[x]), N = conFoto ? 6 : 18; if (!it.length) continue;
+      for (let i = 0; i < it.length; i += N) out.push(Object.assign({}, d, { items: it.slice(i, i + N), conFoto })); continue; }
+    if (d.t === 'ofertas') {
+      if (!recs) { try { const dia = hoy(); const r = await sb.from('recomendaciones').select('*').order('orden').order('created_at'); recs = (r.data || []).filter(x => x.activa !== false && (!x.desde || x.desde <= dia) && (!x.hasta || x.hasta >= dia)); } catch (e) { recs = []; } }
+      out.push(Object.assign({}, d, { items: recs.slice(0, 5).map(x => ({ n: x.titulo, t: x.texto || '' })) })); continue; }
+    if (d.t !== 'precios') { out.push(d); continue; }
+    let items = [], aviso = '';
+    let lid = d.lista_id;
+    if (!lid && d._tipo) { try { const r = await sb.from('listas_precios').select('id').eq('tipo', d._tipo).limit(1); if (r.data && r.data[0]) lid = r.data[0].id; } catch (e) { } }
+    if (!lid) aviso = 'Elige qué lista de precios va aquí (✏️ Editar esta lámina).';
+    else {
+      try { const r = await sb.from('listas_precios').select('*').eq('id', lid).single(); if (r.error) throw r.error; const dd = await comDatosPdf(r.data, false); items = (dd.items || []).filter(x => x.precio != null && x.precio !== ''); if (!items.length) aviso = 'Esta lista aún no tiene precios de venta puestos.'; }
+      catch (e) { aviso = 'No se pudo cargar la lista: ' + msgErr(e); }
+    }
+    const N = 9; if (!items.length) { out.push(Object.assign({}, d, { items: [], aviso, parte: 1, partes: 1 })); continue; }
+    const partes = Math.ceil(items.length / N); for (let i = 0; i < partes; i++) out.push(Object.assign({}, d, { items: items.slice(i * N, (i + 1) * N), aviso: '', parte: i + 1, partes }));
+  }
+  return out;
+}
+const presPrecio = (p, u) => Number(p).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 3 }).replace(/(,\d\d)0$/, '$1') + ' € / ' + (u || 'kg');
+function presLamina(d) {
+  const s = h('section', { class: 'pd pd-' + d.t });
+  const tit = t => h('h2', {}, t || '');
+  let c;
+  if (d.t === 'portada') c = h('div', { class: 'pd-in', style: 'text-align:center' }, h('div', { class: 'pd-logo' }, 'FERJUSANZ'), h('h1', {}, d.titulo), h('div', { class: 'pd-raya' }), h('p', { class: 'pd-sub' }, d.sub), d.pie ? h('p', { class: 'pd-pie' }, d.pie) : null);
+  else if (d.t === 'texto') c = h('div', { class: 'pd-in' }, tit(d.titulo), h('p', { class: 'pd-p' }, d.texto), (d.cifras || []).length ? h('div', { class: 'pd-cifras' }, d.cifras.filter(x => x && (x[0] || x[1])).map(x => h('div', { class: 'pd-cifra' }, h('b', {}, x[0]), h('span', {}, x[1])))) : null);
+  else if (d.t === 'lista') c = h('div', { class: 'pd-in' }, tit(d.titulo), h('ol', { class: 'pd-ol' }, (d.puntos || []).filter(Boolean).map((p, i) => h('li', {}, h('i', {}, String(i + 1)), h('span', {}, p)))));
+  else if (d.t === 'productos') c = h('div', { class: 'pd-in' }, tit(d.titulo), h('div', { class: 'pd-grid' }, (d.items || []).filter(Boolean).map(x => d.conFoto ? h('div', { class: 'pd-foto' }, (d.fotos || {})[x] ? h('img', { src: d.fotos[x].u, alt: x }) : h('div', { class: 'pd-sinfoto' }, x.charAt(0).toUpperCase()), h('span', {}, x)) : h('div', { class: 'pd-chip' }, x))));
+  else if (d.t === 'ofertas') c = h('div', { class: 'pd-in' }, tit(d.titulo), (d.items || []).length ? h('div', { class: 'pd-ofs' }, d.items.map(x => h('div', { class: 'pd-of' }, h('b', {}, '🏷️ ' + x.n), x.t ? h('span', {}, x.t) : null))) : h('p', { class: 'pd-p' }, d.texto || ''));
+  else if (d.t === 'precios') c = h('div', { class: 'pd-in' }, tit((d.titulo || 'Lista de precios') + (d.partes > 1 ? ' (' + d.parte + '/' + d.partes + ')' : '')), d.aviso ? h('p', { class: 'pd-p', style: 'color:#b45309' }, d.aviso) : h('div', { class: 'pd-tabla' }, d.items.map(x => h('div', { class: 'pd-fila' }, h('span', {}, x.nombre), h('b', {}, presPrecio(x.precio, x.unidad))))), d.nota ? h('p', { class: 'pd-nota' }, d.nota) : null);
+  else c = h('div', { class: 'pd-in', style: 'text-align:center' }, h('div', { class: 'pd-logo' }, 'FERJUSANZ'), tit(d.titulo), ...(d.lineas || []).filter(Boolean).map((l, i) => h('p', { class: i === 0 ? 'pd-p' : 'pd-sub', style: 'margin:6px 0' }, l)));
+  s.append(c); return s;
+}
+function pdfPresentacion(laminas, titulo) {
+  const doc = pdfNuevo(841.89, 595.28), W = 841.89, H = 595.28, V = '#166534', VO = '#14532d', AM = '#facc15', M = 56;
+  const pie = i => { doc.texto('FERJUSANZ · ' + EMPRESA.email, M, H - 22, 9, { color: '#6b7280' }); doc.texto(String(i + 1) + ' / ' + laminas.length, W - M, H - 22, 9, { color: '#6b7280', align: 'right' }); };
+  const banda = t => { doc.rect(0, 0, W, 96, V); doc.rect(0, 96, W, 5, AM); pdfLineas(t || '', 30, true, W - 2 * M).slice(0, 1).forEach(l => doc.texto(l, M, 62, 30, { neg: true, color: '#ffffff' })); };
+  laminas.forEach((d, i) => {
+    if (i) doc.pagina();
+    if (d.t === 'portada' || d.t === 'contacto') {
+      doc.rect(0, 0, W, H, VO); if (d.t === 'portada') doc.rect(0, 318, W, 6, AM);
+      doc.texto('FERJUSANZ', W / 2, d.t === 'portada' ? 150 : 90, 20, { neg: true, color: AM, align: 'center' });
+      if (d.t === 'portada') { pdfLineas(d.titulo || '', 58, true, W - 2 * M).slice(0, 2).forEach((l, k) => doc.texto(l, W / 2, 245 + k * 62, 58, { neg: true, color: '#ffffff', align: 'center' })); pdfLineas(d.sub || '', 20, false, W - 2 * M).slice(0, 2).forEach((l, k) => doc.texto(l, W / 2, 365 + k * 26, 20, { color: '#dcfce7', align: 'center' })); if (d.pie) doc.texto(d.pie, W / 2, 470, 14, { color: AM, align: 'center' }); }
+      else { doc.texto(d.titulo || '', W / 2, 160, 38, { neg: true, color: '#ffffff', align: 'center' }); let y = 230; (d.lineas || []).filter(Boolean).forEach((l, k) => { pdfLineas(l, k === 0 ? 20 : 17, k === 0, W - 2 * M).slice(0, 2).forEach(t => { doc.texto(t, W / 2, y, k === 0 ? 20 : 17, { neg: k === 0, color: k === 0 ? AM : '#dcfce7', align: 'center' }); y += 28; }); y += 8; }); }
+      return;
+    }
+    banda(d.t === 'precios' ? (d.titulo || 'Lista de precios') + (d.partes > 1 ? '  (' + d.parte + '/' + d.partes + ')' : '') : d.titulo);
+    if (d.t === 'texto') { let y = 160; pdfLineas(d.texto || '', 19, false, W - 2 * M).slice(0, 8).forEach(l => { doc.texto(l, M, y, 19, { color: '#111827' }); y += 28; });
+      const cf = (d.cifras || []).filter(x => x && (x[0] || x[1])).slice(0, 4); const cw = (W - 2 * M - (cf.length - 1) * 16) / Math.max(cf.length, 1); cf.forEach((x, k) => { const xx = M + k * (cw + 16); doc.caja(xx, 400, cw, 100, '#f0fdf4', '#86efac'); doc.texto(x[0] || '', xx + cw / 2, 444, 26, { neg: true, color: V, align: 'center' }); pdfLineas(x[1] || '', 12, false, cw - 16).slice(0, 2).forEach((l, q) => doc.texto(l, xx + cw / 2, 470 + q * 15, 12, { color: '#374151', align: 'center' })); }); }
+    else if (d.t === 'lista') { let y = 150; (d.puntos || []).filter(Boolean).slice(0, 7).forEach((p, k) => { doc.rect(M, y - 20, 34, 34, V); doc.texto(String(k + 1), M + 17, y + 4, 18, { neg: true, color: '#ffffff', align: 'center' }); const L = pdfLineas(p, 20, false, W - 2 * M - 60).slice(0, 2); L.forEach((l, q) => doc.texto(l, M + 52, y + 2 + q * 24, 20, { color: '#111827' })); y += Math.max(58, L.length * 24 + 26); }); }
+    else if (d.t === 'ofertas') { if (!(d.items || []).length) pdfLineas(d.texto || '', 22, false, W - 2 * M).slice(0, 5).forEach((l, k) => doc.texto(l, M, 170 + k * 32, 22, { color: '#111827' })); else { let y = 128; d.items.slice(0, 5).forEach(x => { doc.caja(M, y, W - 2 * M, 62, '#fefce8', '#facc15'); doc.rect(M, y, 6, 62, AM); doc.texto('OFERTA · ' + pdfLineas(x.n || '', 20, true, W - 2 * M - 120).slice(0, 1)[0], M + 20, y + 27, 20, { neg: true, color: '#111827' }); pdfLineas(x.t || '', 13, false, W - 2 * M - 40).slice(0, 1).forEach(l => doc.texto(l, M + 20, y + 49, 13, { color: '#374151' })); y += 74; }); } }
+    else if (d.t === 'productos' && d.conFoto) { const it = (d.items || []).filter(Boolean).slice(0, 6), cw = (W - 2 * M - 2 * 16) / 3, ch = 205; it.forEach((x, k) => { const xx = M + (k % 3) * (cw + 16), yy = 122 + Math.floor(k / 3) * (ch + 14); doc.caja(xx, yy, cw, ch, '#ffffff', '#86efac'); const ft = (d.fotos || {})[x], by = presFotoBytes(ft); const ih = (cw - 12) * 0.75; if (by) doc.imagen(by, ft.w, ft.h, xx + 6, yy + 6, cw - 12, ih); else { doc.rect(xx + 6, yy + 6, cw - 12, ih, '#dcfce7'); doc.texto(x.charAt(0).toUpperCase(), xx + cw / 2, yy + 6 + ih / 2 + 22, 60, { neg: true, color: '#86efac', align: 'center' }); } doc.texto(pdfLineas(x, 17, true, cw - 16).slice(0, 1)[0] || '', xx + cw / 2, yy + ch - 14, 17, { neg: true, color: '#111827', align: 'center' }); }); }
+    else if (d.t === 'productos') { const it = (d.items || []).filter(Boolean).slice(0, 18); const cols = 3, cw = (W - 2 * M - 2 * 16) / 3; it.forEach((x, k) => { const xx = M + (k % cols) * (cw + 16), yy = 135 + Math.floor(k / cols) * 72; doc.caja(xx, yy, cw, 58, '#f0fdf4', '#86efac'); doc.rect(xx, yy, 5, 58, V); pdfLineas(x, 17, true, cw - 30).slice(0, 2).forEach((l, q) => doc.texto(l, xx + 18, yy + 26 + q * 19 - (pdfLineas(x, 17, true, cw - 30).length > 1 ? 7 : 0), 17, { neg: true, color: '#111827' })); }); }
+    else if (d.t === 'precios') { if (d.aviso) doc.texto(d.aviso, M, 160, 16, { color: '#b45309' }); else { let y = 140; d.items.forEach((x, k) => { if (k % 2 === 0) doc.rect(M - 8, y - 22, W - 2 * M + 16, 38, '#f0fdf4'); pdfLineas(x.nombre || '', 17, false, W - 2 * M - 230).slice(0, 1).forEach(l => doc.texto(l, M, y, 17, { color: '#111827' })); doc.texto(presPrecio(x.precio, x.unidad), W - M, y, 17, { neg: true, color: V, align: 'right' }); y += 40; }); if (d.nota) doc.texto(d.nota, M, H - 50, 11, { color: '#6b7280' }); } }
+    pie(i);
+  });
+  return doc.bytes();
+}
+/* Presentar a pantalla completa: se pasa con el dedo (o con las flechas) y se cierra con la X */
+async function presPresentar(p) {
+  toast('Preparando la presentación…', 'ok');
+  const lam = await presExpandir(p.diapositivas || [], false); if (!lam.length) { toast('La presentación no tiene láminas', 'err'); return; }
+  const ov = h('div', { class: 'pres-ov' }); const sc = h('div', { class: 'pres-sc' }, lam.map(presLamina)); const cnt = h('span', {}, '1 / ' + lam.length);
+  const cerrar = () => { ov.remove(); document.removeEventListener('keydown', tecla); state.sheetAbierta = false; };
+  const ir = d => { const w = sc.clientWidth; sc.scrollBy({ left: d * w, behavior: 'smooth' }); };
+  const tecla = e => { if (e.key === 'Escape') cerrar(); else if (e.key === 'ArrowRight') ir(1); else if (e.key === 'ArrowLeft') ir(-1); };
+  sc.addEventListener('scroll', () => { const i = Math.round(sc.scrollLeft / sc.clientWidth); cnt.textContent = (i + 1) + ' / ' + lam.length; });
+  document.addEventListener('keydown', tecla);
+  ov.append(sc, h('div', { class: 'pres-top' }, h('button', { class: 'pres-x', 'aria-label': 'Cerrar', onclick: cerrar }, '✕'), cnt, h('span', { style: 'flex:1' }), h('button', { class: 'pres-b', onclick: () => presPdf(p, 'bajar') }, '📄 PDF'), h('button', { class: 'pres-b', onclick: () => presPdf(p, 'enviar') }, '📲 Enviar'), h('button', { class: 'pres-b', onclick: () => presPdf(p, 'enviar', true) }, '💶 + precios')),
+    h('button', { class: 'pres-n pres-izq', 'aria-label': 'Anterior', onclick: () => ir(-1) }, '‹'), h('button', { class: 'pres-n pres-der', 'aria-label': 'Siguiente', onclick: () => ir(1) }, '›'));
+  document.body.append(ov); state.sheetAbierta = true;
+}
+async function presPdf(p, accion, conLista) {
+  try { const lam = await presExpandir(p.diapositivas || [], !!conLista); const bytes = pdfPresentacion(lam, p.titulo); const nombre = (sinTilde(p.titulo || 'ferjusanz').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'ferjusanz') + (conLista ? '-con-precios' : '') + '-' + hoy() + '.pdf';
+    if (accion === 'enviar') await comCompartir(bytes, nombre, p.titulo); else { comDescargar(bytes, nombre); toast('PDF descargado', 'ok'); } }
+  catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); }
+}
+async function vistaPresentaciones() {
+  state.view = 'presentaciones';
+  if (!esOficina()) { $app.replaceChildren(shell('Presentaciones', h('p', { class: 'vacio' }, 'Solo la oficina puede entrar aquí.'), { volver: () => go('inicio') })); return; }
+  const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
+  $app.replaceChildren(shell('Presentaciones', cont, { volver: () => go('comercial') })); renderBanner();
+  async function cargar() {
+    try {
+      const r = await sb.from('presentaciones').select('*').order('updated_at', { ascending: false }); if (r.error) throw r.error;
+      cont.replaceChildren(
+        h('div', { class: 'aviso-card' }, 'Presentaciones para enseñar a clientes: quiénes somos, cómo trabajamos, productos y listas de precios. Se pasan con el dedo a pantalla completa y se envían en PDF. Los precios de compra NUNCA salen.'),
+        ...(r.data || []).map(p => h('div', { class: 'card' }, h('div', { class: 'nombre', style: 'font-size:18px' }, p.titulo), h('div', { class: 'sub' }, (p.diapositivas || []).length + ' láminas · cambiada ' + fechaES(String(p.updated_at || '').slice(0, 10))),
+          h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' }, h('button', { class: 'small', onclick: () => presPresentar(p) }, '▶ Presentar'), h('button', { class: 'small ghost', onclick: () => editar(p) }, '✏️ Editar'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'bajar') }, '📄 PDF'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'enviar') }, '📲 Enviar'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'enviar', true) }, '💶 Enviar con lista de precios'),
+            h('button', { class: 'small ghost', onclick: () => duplicar(p) }, '⧉ Copiar')))),
+        h('button', { class: 'guardar', style: 'width:100%;min-height:54px;margin-top:10px', onclick: () => editar(null, 'hosteleria') }, '➕ Nueva: ' + PRES_MODELOS.hosteleria), h('button', { class: 'guardar', style: 'width:100%;min-height:54px;margin-top:8px', onclick: () => editar(null, 'colectivos') }, '➕ Nueva: ' + PRES_MODELOS.colectivos));
+    } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : /does not exist|schema cache|relation/i.test(e.message || '') ? 'Falta ejecutar en Supabase el archivo «Parte 56» (presentaciones).' : msgErr(e))); }
+  }
+  async function duplicar(p) { const r = await sb.from('presentaciones').insert({ titulo: p.titulo + ' (copia)', diapositivas: p.diapositivas || [] }); if (r.error) { toast(msgErr(r.error), 'err'); return; } toast('Copia creada', 'ok'); cargar(); }
+  async function editar(p0, modelo) {
+    let listas = []; try { const r = await sb.from('listas_precios').select('id,nombre').order('created_at'); listas = r.data || []; } catch (e) { }
+    const P = { id: p0 ? p0.id : null, titulo: p0 ? p0.titulo : (modelo === 'colectivos' ? 'Presentación Colectividades' : 'Presentación Hostelería'), diapositivas: JSON.parse(JSON.stringify(p0 ? (p0.diapositivas || []) : presPlantilla(modelo))) };
+    const tit = comInput('text', P.titulo, { oninput: e => { P.titulo = e.target.value; } }); const lst = h('div', {}); let cerrar;
+    const resumen = d => ({ portada: d.titulo, texto: d.titulo, lista: (d.puntos || []).length + ' puntos', productos: (d.items || []).filter(Boolean).length + ' productos · ' + Object.keys(d.fotos || {}).filter(k => (d.items || []).includes(k)).length + ' con foto', ofertas: 'de «Recomendaciones» vigentes', precios: (d.soloEnvio ? 'solo al enviar · ' : '') +  (listas.find(l => l.id === d.lista_id) || {}).nombre || '⚠ sin lista elegida', contacto: (d.lineas || []).length + ' líneas' }[d.t] || '');
+    const pinta = () => lst.replaceChildren(...P.diapositivas.map((d, i) => h('div', { class: 'card', style: 'padding:10px' }, h('div', { class: 'fila', style: 'gap:8px' }, h('div', { style: 'min-width:0;flex:1' }, h('div', { class: 'nombre' }, (PRES_TIPOS[d.t] || ['', ''])[0] + ' ' + (d.titulo || (PRES_TIPOS[d.t] || [])[1])), h('div', { class: 'sub' }, (PRES_TIPOS[d.t] || [])[1] + ' · ' + resumen(d))),
+      h('div', { class: 'mov' }, h('button', { class: 'ghost small', disabled: i === 0, onclick: () => { [P.diapositivas[i - 1], P.diapositivas[i]] = [P.diapositivas[i], P.diapositivas[i - 1]]; pinta(); } }, '↑'), h('button', { class: 'ghost small', disabled: i === P.diapositivas.length - 1, onclick: () => { [P.diapositivas[i + 1], P.diapositivas[i]] = [P.diapositivas[i], P.diapositivas[i + 1]]; pinta(); } }, '↓'))),
+      h('div', { style: 'display:flex;gap:6px;margin-top:6px' }, h('button', { class: 'small', onclick: () => editaLamina(d, pinta, listas) }, '✏️ Editar esta lámina'), h('button', { class: 'small ghost', onclick: async () => { if (await confirmar('¿Quitar esta lámina de la presentación?')) { P.diapositivas.splice(i, 1); pinta(); } } }, '🗑 Quitar')))));
+    const nuevas = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:8px 0' }, Object.keys(PRES_TIPOS).map(k => h('button', { class: 'ghost small', onclick: () => { const base = { portada: { titulo: 'Título', sub: '', pie: '' }, texto: { titulo: 'Título', texto: '', cifras: [] }, lista: { titulo: 'Título', puntos: [''] }, productos: { titulo: 'Productos', items: [], fotos: {} }, ofertas: { titulo: 'Ofertas de la semana', texto: 'Pregúntale a tu comercial.' }, precios: { titulo: 'Lista de precios', lista_id: '', soloEnvio: true }, contacto: { titulo: 'Hablamos', lineas: [EMPRESA.nombre, EMPRESA.tels, EMPRESA.dir, EMPRESA.email] } }[k]; const d = Object.assign({ t: k }, JSON.parse(JSON.stringify(base))); P.diapositivas.push(d); pinta(); editaLamina(d, pinta, listas); } }, '➕ ' + PRES_TIPOS[k][0] + ' ' + PRES_TIPOS[k][1])));
+    const guardar = async btn => { if (!P.titulo.trim()) { toast('Pon un nombre a la presentación', 'err'); return false; } btn.disabled = true; try { const fila = { titulo: P.titulo.trim(), diapositivas: P.diapositivas, updated_at: new Date().toISOString() }; const r = P.id ? await sb.from('presentaciones').update(fila).eq('id', P.id).select('id').single() : await sb.from('presentaciones').insert(fila).select('id').single(); if (r.error) throw r.error; P.id = r.data.id; toast('Guardada ✔', 'ok'); return true; } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); return false; } finally { btn.disabled = false; } };
+    const bG = h('button', { class: 'guardar', style: 'flex:1;margin:0', onclick: async () => { if (await guardar(bG)) { cerrar(); cargar(); } } }, '💾 Guardar y cerrar'), bP = h('button', { class: 'ghost', style: 'flex:1;margin:0', onclick: async () => { if (await guardar(bP)) presPresentar(P); } }, '▶ Guardar y presentar');
+    pinta(); cerrar = hoja('✏️ Presentación', h('div', {}, comCampo('Nombre de la presentación', tit), h('div', { class: 'sub', style: 'font-weight:700' }, 'Láminas (en este orden):'), lst, h('div', { class: 'sub', style: 'font-weight:700' }, 'Añadir otra lámina:'), nuevas, h('div', { class: 'barraG' }, bP, bG),
+      p0 ? h('button', { class: 'ghost', style: 'width:100%;color:#b91c1c;margin-top:6px', onclick: async () => { if (await confirmar('¿Borrar la presentación «' + P.titulo + '» entera? No se puede deshacer.')) { const r = await sb.from('presentaciones').delete().eq('id', P.id); if (r.error) toast(msgErr(r.error), 'err'); else { toast('Borrada', 'ok'); cerrar(); cargar(); } } } }, '🗑 Borrar esta presentación') : null));
+  }
+  /* Edición de una lámina: cada tipo tiene sus campos; todo se puede cambiar */
+  function editaLamina(d, alCambiar, listas) {
+    const cam = [], campo = (et, key, o) => { const e = o && o.area ? h('textarea', { rows: o.rows || 4, style: 'width:100%' }) : comInput('text', ''); e.value = d[key] == null ? '' : d[key]; e.addEventListener('input', () => { d[key] = e.value; }); cam.push(comCampo(et, e)); };
+    const lineas = (et, key, ayuda) => { const e = h('textarea', { rows: 7, style: 'width:100%' }); e.value = (d[key] || []).join('\n'); e.addEventListener('input', () => { d[key] = e.value.split('\n'); }); cam.push(comCampo(et + (ayuda ? ' — ' + ayuda : ''), e)); return e; };
+    campo('Título', 'titulo');
+    if (d.t === 'portada') { campo('Subtítulo', 'sub'); campo('Frase de abajo', 'pie'); }
+    else if (d.t === 'texto') { campo('Texto', 'texto', { area: true, rows: 7 }); const cf = (d.cifras || []).slice(); while (cf.length < 3) cf.push(['', '']); d.cifras = cf; cf.forEach((x, k) => { const a = comInput('text', x[0], { placeholder: 'Dato (ej.: 3ª)' }), b = comInput('text', x[1], { placeholder: 'Qué es (ej.: generación familiar)' }); a.addEventListener('input', () => { x[0] = a.value; }); b.addEventListener('input', () => { x[1] = b.value; }); cam.push(h('div', { style: 'display:flex;gap:6px;margin:4px 0' }, h('div', { style: 'flex:1' }, a), h('div', { style: 'flex:2' }, b))); }); }
+    else if (d.t === 'lista') lineas('Puntos', 'puntos', 'uno por línea');
+    else if (d.t === 'ofertas') { campo('Texto si no hay ofertas puestas', 'texto', { area: true, rows: 3 }); cam.push(h('p', { class: 'sub' }, 'Aquí salen solas las ofertas vigentes de la pestaña «Recomendaciones» de Comercial, SIN precio. Si no hay ninguna, sale este texto.')); }
+    else if (d.t === 'productos') { d.fotos = d.fotos || {}; const ta = lineas('Productos', 'items', 'uno por línea'); const caja = h('div', {}); const pintaF = () => { caja.replaceChildren(h('div', { class: 'sub', style: 'font-weight:700;margin-top:6px' }, 'Fotos (toca para elegir de la cámara o galería):'), ...(d.items || []).filter(x => x && x.trim()).map(x => h('div', { class: 'fila', style: 'gap:8px;align-items:center;margin:4px 0' }, d.fotos[x] ? h('img', { src: d.fotos[x].u, style: 'width:56px;height:42px;object-fit:cover;border-radius:6px' }) : h('div', { style: 'width:56px;height:42px;border-radius:6px;background:#dcfce7' }), h('div', { style: 'flex:1;min-width:0;font-weight:700' }, x), h('button', { class: 'small ' + (d.fotos[x] ? 'ghost' : ''), onclick: () => presFotoElegir(f => { d.fotos[x] = f; pintaF(); }) }, d.fotos[x] ? '🔄 Cambiar' : '📷 Foto'), d.fotos[x] ? h('button', { class: 'small ghost', onclick: () => { delete d.fotos[x]; pintaF(); } }, '✕') : null))); }; ta.addEventListener('change', pintaF); ta.addEventListener('blur', pintaF); cam.push(caja); pintaF(); cam.push(h('div', { class: 'sub', style: 'font-weight:600;margin-top:6px' }, 'O añádelos del catálogo:'), comBuscaProducto(pr => { d.items = (d.items || []).filter(Boolean).concat([pr.nombre]); ta.value = d.items.join('\n'); toast('Añadido: ' + pr.nombre, 'ok'); })); }
+    else if (d.t === 'precios') { const s = comSelect([['', '— elige una lista —'], ...listas.map(l => [l.id, l.nombre])], d.lista_id || ''); s.addEventListener('change', () => { d.lista_id = s.value; }); const chk = h('input', { type: 'checkbox', checked: !!d.soloEnvio }); chk.addEventListener('change', () => { d.soloEnvio = chk.checked; }); cam.push(comCampo('Lista de precios que se enseña', s), h('label', { style: 'display:flex;gap:8px;align-items:center;margin:8px 0;font-weight:700' }, chk, 'Solo al enviar: no sale al presentar ni en el PDF normal'), h('p', { class: 'sub' }, 'Salen solo los productos con precio de VENTA puesto. El precio de compra nunca aparece. Si la lista es larga se reparte en varias láminas.')); campo('Nota al pie (opcional)', 'nota'); }
+    else if (d.t === 'contacto') lineas('Líneas', 'lineas', 'la primera sale destacada');
+    let c2; c2 = hoja('✏️ ' + (PRES_TIPOS[d.t] || [])[1], h('div', {}, ...cam, h('button', { class: 'guardar', style: 'width:100%;min-height:50px;margin-top:8px', onclick: () => { c2(); alCambiar(); } }, '✔ Listo')));
+  }
+  cargar();
+}
 function vistaComercial() {
   state.view = 'comercial';
   if (!esOficina()) { $app.replaceChildren(shell('Comercial', h('p', { class: 'vacio' }, 'Solo la oficina puede entrar aquí.'), { volver: () => go('inicio') })); return; }
   let tab = (state.params && state.params.tab) || LS.get('fj_com_tab', 'listas'); const cont = h('div', {}); const cuerpo = h('div', {});
-  const TABS = [['listas', '📄 Listas'], ['recs', '⭐ Recomendaciones'], ['avisos', '🔔 Avisos'], ['calc', '🧮 Calculadora'], ['guion', '🗣️ Guiones'], ['web', '🌐 Web y SEO']];
-  const pintarTabs = () => chips.replaceChildren(...TABS.map(([k, t]) => h('button', { class: 'chip' + (tab === k ? ' on' : ''), onclick: () => { tab = k; LS.set('fj_com_tab', k); pintarTabs(); pintar(); } }, t)));
+  const TABS = [['listas', '📄 Listas'], ['recs', '⭐ Recomendaciones'], ['avisos', '🔔 Avisos'], ['calc', '🧮 Calculadora'], ['pres', '🎬 Presentaciones'], ['guion', '🗣️ Guiones'], ['web', '🌐 Web y SEO']];
+  const pintarTabs = () => chips.replaceChildren(...TABS.map(([k, t]) => h('button', { class: 'chip' + (tab === k ? ' on' : ''), onclick: () => { if (k === 'pres') { go('presentaciones'); return; } tab = k; LS.set('fj_com_tab', k); pintarTabs(); pintar(); } }, t)));
   const chips = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px' });
   const pintar = () => { cuerpo.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); ({ listas: tabListas, recs: tabRecs, avisos: tabAvisos, calc: tabCalc, guion: tabGuion, web: tabWeb })[tab](cuerpo); };
   cont.append(chips, cuerpo); $app.replaceChildren(shell('Comercial', cont, { volver: () => go('inicio') })); renderBanner(); pintarTabs(); pintar();
@@ -8401,7 +8832,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v();
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
 }
