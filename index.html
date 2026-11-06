@@ -631,6 +631,30 @@ function sesionLocal() {
   return null;
 }
 const sb = PRACTICA ? crearSbPractica() : (window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { global: { fetch: fetchConTiempo } }) : null);
+/* Supabase devuelve como máximo 1000 filas por consulta, aunque la app pida 5000: con más de 1000 clientes los últimos (los nuevos) no salían.
+   Este parche hace que cualquier .range(0, N) con N>=1000 pida las páginas de 1000 en 1000 y junte todo. */
+function parchePaginas(cli) {
+  try {
+    let o = cli.from('clientes').select('id'); let proto = Object.getPrototypeOf(o);
+    while (proto && !Object.prototype.hasOwnProperty.call(proto, 'range')) proto = Object.getPrototypeOf(proto);
+    if (!proto || proto.__paginado) return; const orig = proto.range; proto.__paginado = true;
+    proto.range = function (a, b, opts) {
+      if (a !== 0 || !(b >= 1000)) return orig.call(this, a, b, opts);
+      const self = this;
+      return (async () => {
+        let todo = [], desde = 0; const PAG = 1000;
+        for (;;) {
+          const r = await orig.call(self, desde, Math.min(desde + PAG - 1, b), opts);
+          if (r.error || !Array.isArray(r.data)) return r;
+          todo = todo.concat(r.data);
+          if (r.data.length < PAG || todo.length >= b + 1) { r.data = todo; return r; }
+          desde += PAG;
+        }
+      })();
+    };
+  } catch (e) { }
+}
+if (!PRACTICA && window.supabase && sb) parchePaginas(sb);
 const $app = document.getElementById('app');
 const state = { user: null, perfil: null, view: 'inicio', params: {}, fecha: hoy(), filtro: 'todos', sheetAbierta: false, ped: null, pedidos: [], carga: null, cargaModo: 'clientes', gente: {}, chatNoLeidos: 0, chatTimer: null };
 
@@ -4056,8 +4080,9 @@ function vistaCliente() {
     const ubicTxt = h('div', { class: 'sub' }); const verUbic = () => { ubicTxt.textContent = ubic ? 'Ubicación guardada: ' + ubic.lat + ', ' + ubic.lng : 'Sin ubicación todavía'; }; verUbic();
     f.notas_reparto = h('input', { value: c.notas_reparto || '', placeholder: 'Ej.: entrada por la puerta de atrás' });
     async function guardar(btn) {
-      const nombre = f.nombre.value.trim();
-      if (!nombre) { toast('Escribe el nombre del cliente', 'err'); return; }
+      let nombre = f.nombre.value.trim();
+      if (!nombre && f.nombre_comercial.value.trim()) { nombre = f.nombre_comercial.value.trim(); f.nombre.value = nombre; } /* si solo pone el nombre comercial, sirve también de nombre */
+      if (!nombre) { f.nombre.style.borderColor = '#dc2626'; try { f.nombre.focus(); f.nombre.scrollIntoView({ block: 'center' }); } catch (e) { } toast('Falta el nombre del cliente (arriba, en rojo). No se ha guardado.', 'err'); return; }
       if (!navigator.onLine) { toast('Necesitas conexión para guardar el cliente.', 'err'); return; }
       let codigo = f.codigo.value.trim();
       if (!codigo) codigo = sinTilde(f.nombre_comercial.value.trim() || nombre).replace(/[^a-z0-9]/g, '').toUpperCase().slice(0, 10);
