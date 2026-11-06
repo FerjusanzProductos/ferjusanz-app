@@ -1057,6 +1057,7 @@ function pintarPedido() {
   if (d.cache) kids.push(h('div', { class: 'aviso-card' }, 'Datos guardados en este móvil; se actualizarán al volver la conexión.'));
   { const dd = ls.filter(esDespues); if (dd.length && !cerrado) kids.push(h('div', { class: 'aviso-card' }, '🛒 Se compra después: ' + dd.map(x => x.productos ? x.productos.nombre : '—').join(', ') + '. Puedes terminar el pedido, pero ese producto no saldrá en el albarán. Cuando llegue, toca la línea y anota la cantidad.')); }
   if (!ls.length) kids.push(h('p', { class: 'vacio' }, 'Este pedido no tiene líneas.'));
+  if (estado !== 'anulado') { const sinP = ls.filter(l => l.precio == null).length; kids.push(h('button', { class: sinP ? '' : 'ghost', style: 'width:100%;min-height:50px;margin-bottom:10px', onclick: () => abrirPrecios(d.pedido.id, () => actualizarPedido()) }, '💶 Poner / cambiar precios' + (sinP ? ' (' + sinP + ' sin precio)' : ''))); }
   for (const l of ls) {
     const u = udLinea(l);
     kids.push(h('div', {
@@ -1083,7 +1084,7 @@ function pintarPedido() {
     if (esOficina()) acciones.push(h('button', { class: 'peligro', onclick: () => anularPedido(d.pedido.id) }, 'Anular pedido'));
   }
   if (estado === 'terminado') acciones.push(h('button', { class: 'ghost', onclick: () => abrirVentaRuta(d) }, '➕ Venta en ruta (añadir producto después de entregar)'));
-  if (estado !== 'anulado') { const sinP = ls.filter(l => l.precio == null).length; if (sinP) acciones.push(h('div', { class: 'aviso-card' }, '💶 ' + textoSinPrecio(nombresSinPrecio(ls)) + '. ' + (estado === 'terminado' ? 'El albarán ya está cerrado: ponlos cuando los tengas.' : 'Puedes cerrar el albarán igualmente y ponerlos después.'))); acciones.push(h('button', { class: sinP ? '' : 'ghost', style: 'min-height:50px', onclick: () => abrirPrecios(d.pedido.id, () => actualizarPedido()) }, '💶 Poner / cambiar precios' + (sinP ? ' (' + sinP + ' sin precio)' : ''))); }
+  if (estado !== 'anulado') { const sinP = ls.filter(l => l.precio == null).length; if (sinP) acciones.push(h('div', { class: 'aviso-card' }, '💶 ' + textoSinPrecio(nombresSinPrecio(ls)) + '. ' + (estado === 'terminado' ? 'El albarán ya está cerrado: ponlos cuando los tengas.' : 'Puedes cerrar el albarán igualmente y ponerlos después.')));  }
   if (esOficina() && estado !== 'terminado' && estado !== 'anulado') acciones.push(h('button', { class: 'ghost', onclick: () => go('importar', { anadir: d.pedido.id }) }, '➕ Añadir productos (texto, voz o foto)'));
   if (esOficina()) acciones.push(h('button', { class: 'ghost', onclick: async () => { if (!await confirmar('¿Archivar este pedido? Dejará de verse en las listas.')) return; const r = await sb.from('pedidos').update({ archivado: true }).eq('id', d.pedido.id); if (r.error) toast(msgErr(r.error), 'err'); else { toast('Pedido archivado', 'ok'); go('lista'); } } }, 'Archivar pedido'));
   if (puedeCompras() && estado !== 'anulado') { const gb = h('div', {}); kids.push(gb); cajaGananciaPedido(ls).then(el => { if (el) gb.replaceChildren(el); }).catch(() => { }); }
@@ -2136,7 +2137,7 @@ function hojaQrEnlace(titulo, url, nota, wa) {
 /* ===== Páginas privadas de los clientes (solo la oficina entra aquí; cada cliente solo ve la suya) ===== */
 async function albaranesSinPublicar(dias) {
   const desde = hoy(new Date(Date.now() - dias * 86400000));
-  const r = await sb.from('v_pedidos_importe').select('pedido_id,fecha_entrega,cliente_nombre,serie,numero_albaran,estado').gte('fecha_entrega', desde).limit(1000); if (r.error) throw r.error;
+  const r = await sb.from('v_pedidos_importe').select('pedido_id,fecha_entrega,cliente_nombre,serie,numero_albaran,estado').gte('fecha_entrega', desde).order('fecha_entrega', { ascending: false }).limit(1000); if (r.error) throw r.error;
   const als = (r.data || []).filter(x => x.numero_albaran != null && x.estado !== 'anulado'); if (!als.length) return [];
   const pub = new Set(); const ids = als.map(x => x.pedido_id);
   for (let i = 0; i < ids.length; i += 150) { const q = await sb.from('albaran_portal').select('pedido_id').in('pedido_id', ids.slice(i, i + 150)); if (q.error) throw q.error; (q.data || []).forEach(z => pub.add(z.pedido_id)); }
@@ -2148,7 +2149,7 @@ async function vistaPaginasClientes() {
   const lista = h('div', {}), q = comInput('search', '', { placeholder: '🔍 Buscar cliente por nombre o código…' }), sinPub = h('div', {});
   $app.replaceChildren(shell('Portal de clientes', h('div', {}, sinPub, h('div', { class: 'aviso-card' }, 'Cada cliente tiene una página privada (su portal) con SUS albaranes (y solo los suyos). Aquí la encuentras, la copias, la mandas por WhatsApp o enseñas su QR. El cliente la guarda una vez y los albaranes de cada entrega aparecen solos. «Anular» crea un enlace nuevo y el anterior deja de funcionar.'), q, lista), { volver: volverIni })); renderBanner();
   const cargaSinPub = async () => {
-    try { const l = await albaranesSinPublicar(30);
+    try { const l = await albaranesSinPublicar(3650);
       if (!l.length) { sinPub.replaceChildren(h('div', { class: 'card', style: 'border-left:6px solid #166534' }, h('div', { class: 'nombre' }, '✔ Todos los albaranes de los últimos 30 días están en el portal de su cliente'))); return; }
       sinPub.replaceChildren(h('div', { class: 'card', style: 'border-left:6px solid #2563eb' }, h('div', { class: 'nombre', style: 'font-size:17px' }, '🌐 ' + l.length + ' albarán(es) por cargar en el portal'),
         h('div', { class: 'sub' }, 'Se cargan solos al marcar la entrega. Aquí puedes cargar los que falten (el cliente los verá en su página).'),
@@ -4403,7 +4404,7 @@ function vistaSecretaria() {
       const r = await sb.from('albaranes').select('id', { count: 'exact', head: true }).eq('estado', 'emitido').is('traza_estado', null);
       if (!r.error && typeof r.count === 'number') { nums.traza = r.count; pinta(); }
     } catch (e) { }
-    try { const l = await albaranesSinPublicar(14); nums.portal = l.length; } catch (e) { }
+    try { const l = await albaranesSinPublicar(3650); nums.portal = l.length; } catch (e) { }
   })();
 }
 
@@ -4438,14 +4439,15 @@ function vistaMas() {
       if (navigator.onLine) sb.from('lineas_pedido').select('pedido_id,precio,pedidos(estado,archivado)').is('precio', null).limit(1500).then(r => { if (r.error) { num.textContent = ''; return; } const ids = new Set((r.data || []).filter(l => { const p = uno(l.pedidos) || {}; return p.estado !== 'anulado' && !p.archivado; }).map(l => l.pedido_id)); num.textContent = String(ids.size); num.className = 'num' + (ids.size ? '' : ' cero'); marcaPend(/Poner precios/, ids.size); }).catch(() => { num.textContent = ''; }); else num.textContent = '';
       return b; })(),
     (() => { const num = h('span', { class: 'num cero' }, '…'); const b = h('button', { class: 'bandeja-fac portal', onclick: () => go('paginasclientes') }, h('span', { class: 'ic' }, '🌐'), h('span', { class: 'tt' }, 'Portal de clientes', h('small', {}, 'Cargar los albaranes en la página de cada cliente · QR y enlace')), num);
-      if (navigator.onLine) albaranesSinPublicar(14).then(l => { num.textContent = String(l.length); num.className = 'num' + (l.length ? '' : ' cero'); b.classList.toggle('nuevo', l.length > 0); window.__PORTAL_PEND = l.length; document.querySelectorAll('.portalbtn').forEach(x => x.classList.toggle('nuevo', l.length > 0)); }).catch(() => { num.textContent = ''; }); else num.textContent = '';
+      if (navigator.onLine) albaranesSinPublicar(3650).then(l => { num.textContent = String(l.length); num.className = 'num' + (l.length ? '' : ' cero'); b.classList.toggle('nuevo', l.length > 0); window.__PORTAL_PEND = l.length; document.querySelectorAll('.portalbtn').forEach(x => x.classList.toggle('nuevo', l.length > 0)); }).catch(() => { num.textContent = ''; }); else num.textContent = '';
       return b; })(),
     ...g('Trabajo diario', c('✍️', 'Apuntar pedido', () => go('rapido'), V),
       c('🧺', 'Hoja de compra para hoy', () => go('hojacompra'), V), c('🛒', 'Compra para hoy', () => { if (puedeCompras()) { LS.set('fj_compras_modo', 'lista'); go('compras'); } else go('hojacompra'); }, V),
       c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Hoja de carga', () => go('carga'), V), puedeCompras() ? c('💲', 'Precios de compra del día', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, V) : null, c('💶', 'Poner precios', () => go('preciosp'), V), c('🧑‍✈️', 'Reparto', () => go('reparto'), V), c('♻️', 'Sobrante', () => go('sobrante'), V)),
         ...g('Entregas y pedidos', c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a')),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
-    ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z), esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null),
+    ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z)),
+    ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null),
     ...g('Compras y mercancía', c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('💶', 'Precios de compra', () => { if (LS.get('fj_precios_modo', 'dia') === 'hoy') LS.set('fj_precios_modo', 'dia'); go('precios'); }, A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('❓', 'Ayuda y guía', () => go('ayuda'), T), c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
@@ -9947,7 +9949,7 @@ function conectarSala() {
 }
 async function refrescaPortalPend() {
   try { const t = Date.now(); if (!navigator.onLine || !state.user || !state.perfil || (window.__PORTAL_T && t - window.__PORTAL_T < 90000)) return; window.__PORTAL_T = t;
-    const l = await albaranesSinPublicar(14); window.__PORTAL_PEND = l.length; document.querySelectorAll('.portalbtn').forEach(x => x.classList.toggle('nuevo', l.length > 0)); } catch (e) { }
+    const l = await albaranesSinPublicar(3650); window.__PORTAL_PEND = l.length; document.querySelectorAll('.portalbtn').forEach(x => x.classList.toggle('nuevo', l.length > 0)); } catch (e) { }
 }
 function pintaFlot() {
   let f = document.getElementById('fjflot'); if (!f) { f = document.createElement('div'); f.id = 'fjflot'; document.body.appendChild(f); }
