@@ -567,6 +567,7 @@ function crearSbPractica(){
       DB.asignaciones_lote=DB.asignaciones_lote.filter(x=>x.linea_id!==l.id);if(a.p_lote)DB.asignaciones_lote.push({id:'as'+Math.random().toString(36).slice(2,8),linea_id:l.id,lote_id:a.p_lote,cantidad:l.unidad_precio==='kg'?(l.peso_real||0):l.cantidad_pedida});return null;},
     corregir_trazabilidad(a){const mot=(a.p_motivo||'').trim();if(!mot)throw new Error('MOTIVO_OBLIGATORIO');const ls=DB.lineas_pedido.filter(l=>l.pedido_id===a.p_pedido);this._vtz(a.p_pedido,a.p_asignaciones||[]);
       DB.asignaciones_lote=DB.asignaciones_lote.filter(x=>!ls.some(l=>l.id===x.linea_id));(a.p_asignaciones||[]).forEach(x=>DB.asignaciones_lote.push({id:'as'+Math.random().toString(36).slice(2,8),linea_id:x.linea_id,lote_id:x.lote_id,cantidad:x.cantidad}));const al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);al.traza_estado='confirmada';al.traza_motivo=mot;DB.log.push({accion:'CORREGIR_TRAZABILIDAD',motivo:mot});return null;},
+    poner_descuento(a){const ped=DB.pedidos.find(x=>x.id===a.p_pedido);if(!ped)throw new Error('PEDIDO_NO_EXISTE');if(a.p_base>0&&!(a.p_motivo||'').trim())throw new Error('MOTIVO_OBLIGATORIO');const suma=DB.lineas_pedido.filter(l=>l.pedido_id===ped.id&&l.peso_real!=null&&l.precio!=null).reduce((t,l)=>t+Math.round(l.peso_real*l.precio*100)/100,0);if(a.p_base>suma+0.001)throw new Error('DESCUENTO_MAYOR_QUE_EL_PEDIDO');ped.descuento_base=a.p_base;ped.descuento_iva=a.p_iva;ped.descuento_motivo=a.p_base>0?a.p_motivo:null;return null;},
     poner_precios(a){const ped=DB.pedidos.find(x=>x.id===a.p_pedido);if(!ped)throw new Error('PEDIDO_NO_EXISTE');if(ped.estado==='anulado')throw new Error('PEDIDO_ANULADO');
       (a.p_lineas||[]).forEach(x=>{const l=DB.lineas_pedido.find(y=>y.id===x.id&&y.pedido_id===a.p_pedido);if(!l)throw new Error('LINEA_NO_ES_DE_ESTE_PEDIDO');if('precio' in x)l.precio=x.precio;if(x.unidad_precio)l.unidad_precio=x.unidad_precio;});return (a.p_lineas||[]).length;},
     editar_pedido(a){const ped=DB.pedidos.find(x=>x.id===a.p_pedido);if(!ped)throw new Error('PEDIDO_NO_EXISTE');if(ped.estado==='terminado'||ped.estado==='anulado')throw new Error('PEDIDO_CERRADO');
@@ -993,10 +994,11 @@ async function cargarPedido(id) {
   const key = 'fj_pedido_' + id;
   if (navigator.onLine) {
     let [p, l, a, en] = await Promise.all([
-      sb.from('pedidos').select('id,cliente_id,estado,fecha_entrega,notas,preparador_id,clientes(codigo,nombre,nombre_comercial,forma_pago,direccion,localidad,recargo_equivalencia)').eq('id', id).single(),
+      sb.from('pedidos').select('id,cliente_id,estado,fecha_entrega,notas,preparador_id,descuento_base,descuento_iva,descuento_motivo,clientes(codigo,nombre,nombre_comercial,forma_pago,direccion,localidad,recargo_equivalencia)').eq('id', id).single(),
       sb.from('lineas_pedido').select('id,producto_id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,precio_lista,nota_interna,iva,version,notas,formato_peso_kg,peso_estimado,peso_variable,productos(codigo,nombre,iva,iva_origen)').eq('pedido_id', id),
       sb.from('albaranes').select('serie,numero,fecha,estado,firma_png,firma_nombre,firma_at').eq('pedido_id', id).maybeSingle(),
       sb.from('entregas').select('entregado_at,entregado_por').eq('pedido_id', id).maybeSingle()]);
+    if (p.error && /descuento|column|schema cache/i.test(p.error.message || '')) p = await sb.from('pedidos').select('id,cliente_id,estado,fecha_entrega,notas,preparador_id,clientes(codigo,nombre,nombre_comercial,forma_pago,direccion,localidad,recargo_equivalencia)').eq('id', id).single();
     if (l.error && /column|schema cache/i.test(l.error.message || '')) l = await sb.from('lineas_pedido').select('id,producto_id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,iva,version,notas,productos(codigo,nombre,iva)').eq('pedido_id', id);
     if (a.error && /firma_|column|schema cache/i.test(a.error.message || '')) a = await sb.from('albaranes').select('serie,numero,fecha,estado').eq('pedido_id', id).maybeSingle();
     const err = p.error || l.error || a.error;
@@ -1114,11 +1116,14 @@ async function abrirPrecios(pedidoId, alGuardar) {
   if (!navigator.onLine) { toast('Necesitas conexión para poner precios.', 'err'); return; }
   let pe, ln;
   try {
-    [pe, ln] = await Promise.all([sb.from('pedidos').select('id,estado,cliente_id,fecha_entrega,clientes(codigo,nombre,nombre_comercial,forma_pago,recargo_equivalencia,direccion,localidad)').eq('id', pedidoId).single(),
+    [pe, ln] = await Promise.all([sb.from('pedidos').select('id,estado,cliente_id,fecha_entrega,descuento_base,descuento_iva,descuento_motivo,clientes(codigo,nombre,nombre_comercial,forma_pago,recargo_equivalencia,direccion,localidad)').eq('id', pedidoId).single(),
       sb.from('lineas_pedido').select('id,producto_id,estado,notas,iva,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,precio_lista,nota_interna,formato_peso_kg,productos(nombre,iva)').eq('pedido_id', pedidoId)]);
     if (ln.error && /column|schema cache/i.test(ln.error.message || '')) { ln = await sb.from('lineas_pedido').select('id,producto_id,estado,notas,iva,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,formato_peso_kg,productos(nombre,iva)').eq('pedido_id', pedidoId); ln.sinInterna = true; }
+    if (pe.error && /descuento|column|schema cache/i.test(pe.error.message || '')) { pe = await sb.from('pedidos').select('id,estado,cliente_id,fecha_entrega,clientes(codigo,nombre,nombre_comercial,forma_pago,recargo_equivalencia,direccion,localidad)').eq('id', pedidoId).single(); pe.sinDescuento = true; }
     if (pe.error) throw pe.error; if (ln.error) throw ln.error;
   } catch (e) { toast(msgErr(e), 'err'); return; }
+  const sinDesc = !!pe.sinDescuento; const DS = { base: Number(pe.data.descuento_base) > 0 ? String(pe.data.descuento_base).replace('.', ',') : '', iva: pe.data.descuento_iva != null ? Number(pe.data.descuento_iva) : 4, motivo: pe.data.descuento_motivo || '' };
+  const descVal = () => { const b = String(DS.base).trim() === '' ? 0 : parseNum(DS.base); return { descuento_base: b === null || isNaN(b) ? 0 : b, descuento_iva: DS.iva, descuento_motivo: DS.motivo.trim() || null }; };
   const ped = pe.data; if (ped.estado === 'anulado') { toast('Este pedido está anulado.', 'err'); return; }
   const lineas = ln.data.slice().sort((a, b) => ((a.productos || {}).nombre || '').localeCompare(((b.productos || {}).nombre || ''), 'es'));
   const R = lineas.map(l => ({ l, precio0s: l.precio != null ? String(l.precio).replace('.', ',') : '', precio: l.precio != null ? String(l.precio).replace('.', ',') : '', up: l.unidad_precio, lista: l.precio_lista != null ? String(l.precio_lista).replace('.', ',') : '', nota: l.nota_interna || '' }));
@@ -1126,7 +1131,7 @@ async function abrirPrecios(pedidoId, alGuardar) {
   let tarifas = {}; try { tarifas = await preciosPara(ped.cliente_id, lineas.map(l => l.producto_id)); } catch (e) { }
   const totalBox = h('div', { style: 'position:sticky;top:0;z-index:5;background:#fff;border:1.5px solid #bbf7d0;border-radius:10px;padding:8px 10px;font-weight:700;margin:8px 0;white-space:pre-line;box-shadow:0 2px 6px rgba(0,0,0,.1)' }), cuerpo = h('div', {});
   const vivoDet = h('details', { style: 'margin:8px 0' }, h('summary', { style: 'font-weight:700;cursor:pointer;padding:8px 0' }, '📄 Ver el albarán con estos precios'), h('div', {}));
-  function actVivo() { if (!vivoDet.open) return; const dv = { pedido: ped, lineas: R.map(x => Object.assign({}, x.l, { precio: String(x.precio).trim() === '' || isNaN(parseNum(x.precio)) ? null : parseNum(x.precio), unidad_precio: x.up })), albaran: ped.estado === 'terminado' ? { serie: 'F', numero: null, estado: 'cerrado', fecha: ped.fecha_entrega } : null }; vivoDet.lastChild.replaceChildren(cuerpoAlbaranVivo(dv, accVivo)); }
+  function actVivo() { if (!vivoDet.open) return; const dv = { pedido: Object.assign({}, ped, descVal()), lineas: R.map(x => Object.assign({}, x.l, { precio: String(x.precio).trim() === '' || isNaN(parseNum(x.precio)) ? null : parseNum(x.precio), unidad_precio: x.up })), albaran: ped.estado === 'terminado' ? { serie: 'F', numero: null, estado: 'cerrado', fecha: ped.fecha_entrega } : null }; vivoDet.lastChild.replaceChildren(cuerpoAlbaranVivo(dv, accVivo)); }
   const accVivo = {
     precio: () => { const x = R.find(z => String(z.precio).trim() === ''); if (!x) { toast('Todas las líneas ya tienen precio', 'ok'); return; } x.card.style.display = ''; try { x.card.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { } setTimeout(() => { try { x.inp.focus(); } catch (e) { } }, 350); },
     peso: async () => { const hayCambios = R.some(z => String(z.precio).trim() !== z.precio0s); if (hayCambios && !await confirmar('Tienes precios sin guardar. ¿Salir a pesar y perderlos?\n\n(Cancela, pulsa «Guardar y seguir» y vuelve a tocar.)')) return; cerrar(); go('pedido', { id: ped.id }); } };
@@ -1146,7 +1151,7 @@ async function abrirPrecios(pedidoId, alGuardar) {
   function total() {
     let t = 0, falta = 0, g = 0, tv = 0, bajos = 0;
     R.forEach(x => { const i = importe(x); if (i == null) { falta++; return; } t += i; const cost = x.cu ? x.cu() : null, k = x.cant ? Number(x.cant()) : 0, p = parseNum(x.precio); if (cost != null && k > 0 && p > 0) { g += (p - cost) * k; tv += p * k; if (p < cost - 0.0004) bajos++; } });
-    totalBox.textContent = '💶 Total sin IVA: ' + eur(t) + ' €' + (falta ? ' · faltan ' + falta + ' línea(s)' : ' ✔') + (tv > 0 ? '\n📈 Ganancia estimada: ' + (g >= 0 ? '+' : '') + eur(Math.round(g * 100) / 100) + ' € (' + num(Math.round(g / tv * 1000) / 10, 1) + ' %)' : '') + (bajos ? '\n⚠ ' + bajos + ' línea(s) por debajo del coste' : '');
+    totalBox.textContent = '💶 Total sin IVA: ' + eur(t) + ' €' + (falta ? ' · faltan ' + falta + ' línea(s)' : ' ✔') + (tv > 0 ? '\n📈 Ganancia estimada: ' + (g >= 0 ? '+' : '') + eur(Math.round(g * 100) / 100) + ' € (' + num(Math.round(g / tv * 1000) / 10, 1) + ' %)' : '') + (bajos ? '\n⚠ ' + bajos + ' línea(s) por debajo del coste' : '') + (descVal().descuento_base > 0 ? '\n🏷 Descuento: -' + eur(descVal().descuento_base) + ' € (sobre la base)' : '');
     totalBox.style.borderColor = bajos ? '#fca5a5' : '#bbf7d0'; actVivo(); }
   R.forEach(x => {
     const pid = x.l.producto_id; const idx = R.indexOf(x);
@@ -1178,8 +1183,24 @@ async function abrirPrecios(pedidoId, alGuardar) {
       chips.replaceChildren(...(cost != null ? [20, 25, 30, 40].map(m => { const v = Math.round(cost / (1 - m / 100) * 100) / 100; return h('button', { type: 'button', class: 'ghost small', style: 'flex:1;min-width:70px;padding:6px 4px;line-height:1.2', onpointerdown: e => e.preventDefault(), onclick: () => pon(v) }, 'Ganar ' + m + ' %', h('br'), h('b', {}, eur(v))); }) : []));
       if (x.dto) x.dto(); total();
     };
+    const marca = h('div', { style: 'font-size:13px;font-weight:700;min-height:18px;margin-top:2px' });
+    x.marca = marca;
+    /* Guardado automático de ESTA línea al pasar a la siguiente o salir del campo (evita equivocarse de producto con el teclado) */
+    x.autoGuardar = async () => {
+      const txt = String(x.precio).trim(); if (txt === '') return;
+      const v = parseNum(txt); if (v === null || isNaN(v) || v < 0) { marca.style.color = '#b91c1c'; marca.textContent = '⚠ Precio no válido'; return; }
+      const antes = x.l.precio != null ? Number(x.l.precio) : null;
+      if (antes === v && x.up === x.l.unidad_precio) { if (antes != null) { marca.style.color = '#166534'; marca.textContent = '✔ Guardado'; } return; }
+      if (ped.estado === 'terminado' && antes != null) { marca.style.color = '#92400e'; marca.textContent = '● Precio cambiado: pulsa «Guardar» abajo para confirmarlo'; return; }
+      if (!navigator.onLine) { marca.style.color = '#92400e'; marca.textContent = '● Sin conexión: pulsa «Guardar» cuando vuelva'; return; }
+      marca.style.color = '#6b7280'; marca.textContent = 'Guardando…';
+      try { const r = await sb.rpc('poner_precios', { p_pedido: ped.id, p_lineas: [{ id: x.l.id, precio: v, unidad_precio: x.up }] });
+        if (r.error) throw r.error; x.l.precio = v; x.l.unidad_precio = x.up; x.precio0s = String(x.precio).trim(); marca.style.color = '#166534'; marca.textContent = '✔ Guardado'; if (alGuardar) alGuardar();
+      } catch (e) { marca.style.color = '#b91c1c'; marca.textContent = '⚠ No se ha guardado: pulsa «Guardar» abajo'; }
+    };
     const inp = h('input', { type: 'text', inputmode: 'decimal', enterkeyhint: 'next', value: x.precio, placeholder: tarifas[pid] != null ? 'tarifa ' + eur(tarifas[pid]) : 'precio €', style: 'font-size:22px;font-weight:700;min-height:50px',
-      oninput: e => { x.precio = e.target.value; pintaImp(); },
+      oninput: e => { x.precio = e.target.value; marca.textContent = ''; pintaImp(); },
+      onblur: () => { x.autoGuardar(); },
       onkeydown: e => { if (e.key === 'Enter') { e.preventDefault(); const sig = R[idx + 1]; if (sig && sig.inp) { sig.inp.focus(); try { sig.inp.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (er) { } } else inp.blur(); } } });
     x.inp = inp; x.pinta = pintaImp; x.card = card;
     cargaCoste(pid).then(() => pintaImp());
@@ -1190,7 +1211,7 @@ async function abrirPrecios(pedidoId, alGuardar) {
       h('div', { class: 'fila', style: 'align-items:flex-start;gap:8px' }, h('div', { style: 'min-width:0' }, h('div', { class: 'nombre', style: 'font-size:17px' }, (x.l.productos || {}).nombre || '—'),
         h('div', { style: 'display:inline-block;margin-top:4px;background:#e0f2fe;color:#075985;border-radius:8px;padding:2px 9px;font-weight:800;font-size:17px' }, cantTxt(x.l), sinPesar ? h('span', { style: 'font-weight:600;font-size:12px;color:#92400e' }, ' · sin pesar') : null)),
         h('select', { style: 'max-width:42%', onchange: e => { x.up = e.target.value; pintaImp(); } }, ['kg', 'unidad'].map(u => h('option', { value: u, selected: u === x.up }, 'por ' + (u === 'kg' ? 'kg' : x.l.unidad_pedida))))),
-      h('div', { style: 'display:flex;gap:8px;align-items:center;margin-top:8px' }, h('div', { style: 'flex:1' }, inp),
+      h('div', { style: 'display:flex;gap:8px;align-items:center;margin-top:8px' }, h('div', { style: 'flex:1' }, inp, marca),
         tarifas[pid] != null && !x.precio ? h('button', { type: 'button', class: 'ghost small', onpointerdown: e => e.preventDefault(), onclick: () => { pon(tarifas[pid]); toast('Precio puesto: ' + x.precio + ' €', 'ok'); } }, 'Usar ' + eur(tarifas[pid])) : null,
         h('div', { style: 'min-width:84px;text-align:right' }, imp)),
       h('label', { class: 'campo', style: 'margin:8px 0 0' }, 'O escribe el precio final con IVA incluido (' + num(ivaDe(x)) + ' %) €/' + (x.up === 'kg' ? 'kg' : 'ud'),
@@ -1214,11 +1235,17 @@ async function abrirPrecios(pedidoId, alGuardar) {
       const antesL = x.l.precio_lista != null ? Number(x.l.precio_lista) : null;
       if (li !== antesL || (x.nota.trim() || null) !== (x.l.nota_interna || null)) info.push({ id: x.l.id, precio_lista: li, nota_interna: x.nota.trim() || null });
     }
-    if (!cambios.length && !info.length) { toast('No has cambiado nada', 'err'); return; }
+    const DV = descVal(); const dAntes = Number(pe.data.descuento_base) || 0; const dCambia = !sinDesc && (DV.descuento_base !== dAntes || (DV.descuento_base > 0 && (DV.descuento_iva !== (pe.data.descuento_iva != null ? Number(pe.data.descuento_iva) : 4) || (DV.descuento_motivo || '') !== (pe.data.descuento_motivo || ''))));
+    if (dCambia && DV.descuento_base > 0 && !DV.descuento_motivo) { toast('El descuento necesita un motivo', 'err'); return; }
+    if (!cambios.length && !info.length && !dCambia) { toast('No has cambiado nada', 'err'); return; }
+    if (dCambia && ped.estado === 'terminado' && !await confirmar('El albarán ya está cerrado: poner o cambiar el descuento cambiará su importe.\n\nSi ya estaba en una factura de Golden, habrá que corregirla allí.\n\n¿Continuar?')) return;
     if (ped.estado === 'terminado' && cambiaExistente && !await confirmar('El albarán ya está cerrado y estás CAMBIANDO precios que ya tenía: su importe cambiará.\n\nSi ya estaba en una factura de Golden, habrá que corregirla allí.\n\n¿Continuar?')) return;
     btn.disabled = true;
     if (cambios.length) { const r = await sb.rpc('poner_precios', { p_pedido: ped.id, p_lineas: cambios });
       if (r.error) { btn.disabled = false; toast(msgErr(r.error), 'err'); return; } }
+    if (dCambia) { const rd = await sb.rpc('poner_descuento', { p_pedido: ped.id, p_base: DV.descuento_base, p_motivo: DV.descuento_motivo, p_iva: DV.descuento_iva });
+      if (rd.error) { btn.disabled = false; toast(/MOTIVO_OBLIGATORIO/.test(rd.error.message || '') ? 'El descuento necesita un motivo' : /DESCUENTO_MAYOR/.test(rd.error.message || '') ? 'El descuento no puede ser mayor que el pedido' : msgErr(rd.error), 'err'); return; }
+      pe.data.descuento_base = DV.descuento_base; pe.data.descuento_iva = DV.descuento_iva; pe.data.descuento_motivo = DV.descuento_motivo; }
     if (info.length) { const r2 = await sb.rpc('poner_info_interna', { p_pedido: ped.id, p_lineas: info });
       if (r2.error) { btn.disabled = false; toast(/poner_info_interna|schema cache|does not exist/i.test(r2.error.message || '') ? 'Falta ejecutar en Supabase la Parte 46 (información interna).' : msgErr(r2.error), 'err'); return; } }
     if (seguir) {   // «Guardar y seguir»: se guarda y la hoja sigue abierta con lo ya guardado como punto de partida
@@ -1257,11 +1284,22 @@ async function abrirPrecios(pedidoId, alGuardar) {
   const calcBox = h('details', { style: 'margin:8px 0' }, h('summary', { style: 'font-weight:700;cursor:pointer;padding:8px 0' }, '🧮 Total final con IVA incluido'),
     h('p', { class: 'sub' }, 'El IVA no se quita: sigue saliendo en el albarán y en la factura. Escribes lo que quieres que pague el cliente en total y la app calcula los precios sin IVA de todas las líneas, repartidos de forma proporcional. Primero te los enseña y no cambia nada hasta que aceptes. Ojo: la diferencia la asumís vosotros, y el IVA se ingresa igual.'),
     h('label', { class: 'campo' }, 'Total final con IVA incluido (€)', calcIn), h('button', { class: 'ghost', style: 'width:100%', onclick: calcular }, 'Calcular precios'), calcRes);
+  const dBase = h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Ej. 3,50', value: DS.base, oninput: e => { DS.base = e.target.value; dRes(); } });
+  const dMot = h('input', { type: 'text', placeholder: 'Motivo (obligatorio). Ej. producto en mal estado', value: DS.motivo, oninput: e => { DS.motivo = e.target.value; } });
+  const dIva = h('select', { onchange: e => { DS.iva = Number(e.target.value); dRes(); } }, [4, 10, 21, 0].map(t => h('option', { value: t, selected: t === DS.iva }, 'IVA ' + t + ' %')));
+  const dInfo = h('div', { class: 'sub', style: 'margin-top:6px;font-weight:600' });
+  function dRes() { const D = descVal(); const bases = {}; let tot = 0; R.forEach(x => { const i = importe(x); if (i == null) return; tot += i; const t = ivaDe(x); bases[t] = (bases[t] || 0) + i; });
+    if (!(D.descuento_base > 0)) { dInfo.textContent = ''; total(); return; }
+    const b2 = Object.assign({}, bases); b2[D.descuento_iva] = (b2[D.descuento_iva] || 0) - D.descuento_base; let iva = 0, base = 0; Object.keys(b2).forEach(t => { const b = Math.round(b2[t] * 100) / 100; base += b; iva += Math.round(b * Number(t)) / 100; });
+    dInfo.textContent = 'Base ' + eur(Math.round(base * 100) / 100) + ' € + IVA ' + eur(Math.round(iva * 100) / 100) + ' € = total ' + eur(Math.round((base + iva) * 100) / 100) + ' € (el IVA se recalcula sobre la base ya rebajada)'; total(); }
+  const descBox = sinDesc ? h('div', { class: 'aviso-card' }, 'Falta ejecutar en Supabase la Parte 58 para poder poner descuentos.') : h('details', { style: 'margin:8px 0' }, h('summary', { style: 'font-weight:700;cursor:pointer;padding:8px 0' }, '🏷 Descuento del pedido' + (Number(pe.data.descuento_base) > 0 ? ' · ' + eur(pe.data.descuento_base) + ' €' : '')),
+    h('p', { class: 'sub' }, 'Para cuando algo no llega bien (por ejemplo producto en mal estado). El descuento sale en el albarán y en la factura como una línea con su motivo, se resta de la base y el IVA se recalcula. Déjalo vacío si no hay descuento.'),
+    h('label', { class: 'campo' }, 'Descuento sobre la base (€)', dBase), h('label', { class: 'campo' }, 'Motivo', dMot), h('label', { class: 'campo' }, 'Tipo de IVA del descuento', dIva), dInfo);
   const btnG = h('button', { class: 'guardar', style: 'flex:1;margin:0', onclick: () => guardar(btnG) }, 'Guardar y cerrar');
   const btnGS = h('button', { class: 'guardar', style: 'flex:1;margin:0;background:#166534;color:#fff', onclick: () => guardar(btnGS, true) }, '💾 Guardar y seguir');
   const barraG = h('div', { class: 'barraG' }, btnGS, btnG);
   cerrar = hoja('💶 Precios · ' + nombreCli(uno(ped.clientes) || {}), h('div', {}, h('p', { class: 'sub' }, fechaES(ped.fecha_entrega) + ' · ' + (ped.estado === 'terminado' ? 'albarán cerrado' : 'albarán sin cerrar') + '. Puedes poner los precios ahora o más tarde: cerrar el albarán no depende de ellos.'),
-    totalBox, calcBox, barraM, Object.keys(tarifas).length ? btnLlenar : null, cuerpo, vivoDet, barraG));
+    totalBox, calcBox, descBox, barraM, Object.keys(tarifas).length ? btnLlenar : null, cuerpo, vivoDet, barraG));
 }
 async function vistaPreciosPend() {
   state.view = 'preciosp';
@@ -1993,6 +2031,9 @@ async function pdfFirmaJpeg(url) {
   const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0);
   return { bytes: pdfBytes(atob(c.toDataURL('image/jpeg', 0.92).split(',')[1])), w: c.width, h: c.height };
 }
+/* Descuento comercial del pedido (p. ej. producto en mal estado): se resta de la BASE y el IVA se recalcula sobre lo que queda */
+function descPedido(p) { const b = p ? Number(p.descuento_base) : 0; return b > 0 ? { base: Math.round(b * 100) / 100, iva: p.descuento_iva != null ? Number(p.descuento_iva) : 4, motivo: String(p.descuento_motivo || 'Descuento') } : null; }
+function restaDescuento(D, bases, total) { if (!D) return total; bases[D.iva] = Math.round(((bases[D.iva] || 0) - D.base) * 100) / 100; return Math.round((total - D.base) * 100) / 100; }
 async function pdfAlbaran(d) {
   const p = d.pedido, cli = uno(p.clientes) || {}, a = d.albaran || {};
   const lineas = d.lineas.slice().sort((x, y) => (x.productos ? x.productos.nombre : '').localeCompare(y.productos ? y.productos.nombre : '', 'es'));
@@ -2001,6 +2042,7 @@ async function pdfAlbaran(d) {
     if (imp != null) { total = Math.round((total + imp) * 100) / 100; const t = l.iva != null ? Number(l.iva) : (l.productos && l.productos.iva != null ? Number(l.productos.iva) : 4); bases[t] = Math.round(((bases[t] || 0) + imp) * 100) / 100; }
     return { n: l.productos ? l.productos.nombre : '', ped: num(l.cantidad_pedida) + ' ' + l.unidad_pedida, cant: l.peso_real != null ? num(l.peso_real) + ' ' + udLinea(l) : '—', pre: !d.sinPrecios && l.precio != null ? eur(l.precio) : '', imp: imp != null ? eur(imp) : '' };
   });
+  const DESC = d.sinPrecios ? null : descPedido(p); if (DESC && total > 0) total = restaDescuento(DESC, bases, total);
   const RE = { 4: 0.5, 10: 1.4, 21: 5.2 }; let sumaIva = 0, sumaRe = 0;
   const tipos = Object.keys(bases).map(Number).sort((x, y) => x - y).map(t => { const c = Math.round(bases[t] * t) / 100; sumaIva = Math.round((sumaIva + c) * 100) / 100; const re = cli.recargo_equivalencia && RE[t] ? Math.round(bases[t] * RE[t]) / 100 : 0; sumaRe = Math.round((sumaRe + re) * 100) / 100; return { t, base: bases[t], cuota: c, re }; });
   const totalIva = Math.round((total + sumaIva + sumaRe) * 100) / 100;
@@ -2029,6 +2071,7 @@ async function pdfAlbaran(d) {
   y -= 2; raya(y); y -= 16;
   if (y < 170) nueva(false);
   if (tipos.length) {
+    if (DESC) { txt(M, y, corta('Descuento: ' + DESC.motivo, 330, 9.5), 9.5, true); txt(W - M, y, '-' + eur(DESC.base) + ' €', 9.5, true, true); y -= 16; }
     for (const t of tipos) { txt(M, y, 'Base imponible ' + num(t.t) + ' %', 9); txt(215, y, eur(t.base) + ' €', 9, false, true); txt(260, y, 'IVA ' + num(t.t) + ' %', 9); txt(380, y, eur(t.cuota) + ' €', 9, false, true); y -= 12; if (t.re) { txt(260, y, 'Rec. equiv. ' + num(RE[t.t]) + ' %', 9); txt(380, y, eur(t.re) + ' €', 9, false, true); y -= 12; } }
     y -= 4; txt(W - M, y, 'TOTAL' + (cli.forma_pago === 'contado' ? ' A COBRAR' : '') + ': ' + eur(totalIva) + ' € (IVA incluido)', 12, true, true); y -= 20;
   } else { txt(M, y, d.sinPrecios ? 'Albarán sin valorar: los importes se facturarán aparte.' : 'Importes pendientes de poner precio.', 9); y -= 18; }
@@ -2221,33 +2264,34 @@ async function abrirEnvioAlbaran(d) {
     B('ghost', '🔗 Copiar solo el enlace', async () => { try { await navigator.clipboard.writeText(U()); toast('Enlace copiado', 'ok'); } catch (e) { hoja('Enlace', h('input', { value: U(), readonly: true, style: 'width:100%' })); } })));
 }
 /* Lo que ve quien abre el enlace: sin usuario ni contraseña, solo ese albarán */
-function pubTotales(lineas, cli) {
+function pubTotales(lineas, cli, desc) {
   let total = 0; const bases = {}; const RE = { 4: 0.5, 10: 1.4, 21: 5.2 };
   lineas.forEach(l => { const imp = l.precio != null && l.peso_real != null ? Math.round(l.peso_real * l.precio * 100) / 100 : null; l.imp = imp; if (imp != null) { total = Math.round((total + imp) * 100) / 100; const t = l.iva != null ? Number(l.iva) : (l.iva_producto != null ? Number(l.iva_producto) : 4); bases[t] = Math.round(((bases[t] || 0) + imp) * 100) / 100; } });
+  const hayLin = Object.keys(bases).length > 0; if (desc && hayLin) total = restaDescuento(desc, bases, total);
   let sumaIva = 0, sumaRe = 0; Object.keys(bases).forEach(t => { sumaIva = Math.round((sumaIva + Math.round(bases[t] * Number(t)) / 100) * 100) / 100; if (cli.recargo_equivalencia && RE[t]) sumaRe = Math.round((sumaRe + Math.round(bases[t] * RE[t]) / 100) * 100) / 100; });
-  return { base: total, iva: sumaIva, re: sumaRe, total: Math.round((total + sumaIva + sumaRe) * 100) / 100, hay: Object.keys(bases).length > 0 };
+  return { base: total, iva: sumaIva, re: sumaRe, total: Math.round((total + sumaIva + sumaRe) * 100) / 100, hay: hayLin, desc: desc && hayLin ? desc : null };
 }
 /* Albarán dibujado para el cliente (sirve para el enlace de un albarán y para la página del cliente) */
 function pubAlbaranNodos(x, cargaFirma) {
-  const SP = /[?&]sp=1/.test(location.search), cli = x.cliente || {}, lin = (x.lineas || []).map(l => SP ? Object.assign({}, l, { precio: null }) : Object.assign({}, l)), T = pubTotales(lin, cli), num = x.serie + ' ' + String(x.numero).padStart(7, '0');
-  const pdf = async () => { try { const xx = cargaFirma ? await cargaFirma() : x; const d = { sinPrecios: SP, pedido: { fecha_entrega: xx.fecha, clientes: cli }, lineas: (xx.lineas || []).map(l => Object.assign({}, l, { productos: { nombre: l.nombre, iva: l.iva_producto } })), albaran: { serie: xx.serie, numero: xx.numero, fecha: xx.fecha, firma_png: xx.firma_png, firma_nombre: xx.firma_nombre, firma_at: xx.firma_at }, incidencias: [] };
+  const SP = /[?&]sp=1/.test(location.search), cli = x.cliente || {}, lin = (x.lineas || []).map(l => SP ? Object.assign({}, l, { precio: null }) : Object.assign({}, l)), DESC = SP ? null : descPedido(x), T = pubTotales(lin, cli, DESC), num = x.serie + ' ' + String(x.numero).padStart(7, '0');
+  const pdf = async () => { try { const xx = cargaFirma ? await cargaFirma() : x; const d = { sinPrecios: SP, pedido: { fecha_entrega: xx.fecha, clientes: cli, descuento_base: xx.descuento_base, descuento_iva: xx.descuento_iva, descuento_motivo: xx.descuento_motivo }, lineas: (xx.lineas || []).map(l => Object.assign({}, l, { productos: { nombre: l.nombre, iva: l.iva_producto } })), albaran: { serie: xx.serie, numero: xx.numero, fecha: xx.fecha, firma_png: xx.firma_png, firma_nombre: xx.firma_nombre, firma_at: xx.firma_at }, incidencias: [] };
     const blob = await pdfAlbaran(d), nom = 'Albaran-' + x.serie + '-' + String(x.numero).padStart(7, '0') + '.pdf', file = new File([blob], nom, { type: 'application/pdf' }); if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return; } const u = URL.createObjectURL(blob), lk = h('a', { href: u, download: nom }); document.body.append(lk); lk.click(); lk.remove(); } catch (e) { if (!e || e.name !== 'AbortError') toast('No se pudo crear el PDF', 'err'); } };
   const ver = () => {
-    const bases = {}; lin.forEach(l => { if (l.imp != null) { const t = l.iva != null ? Number(l.iva) : (l.iva_producto != null ? Number(l.iva_producto) : 4); bases[t] = Math.round(((bases[t] || 0) + l.imp) * 100) / 100; } });
+    const bases = {}; lin.forEach(l => { if (l.imp != null) { const t = l.iva != null ? Number(l.iva) : (l.iva_producto != null ? Number(l.iva_producto) : 4); bases[t] = Math.round(((bases[t] || 0) + l.imp) * 100) / 100; } }); if (T.desc) restaDescuento(T.desc, bases, 0);
     const td = (t, d, b) => h('td', { style: 'padding:4px 3px;border-bottom:1px solid #e5e7eb;' + (d ? 'text-align:right;white-space:nowrap;' : '') + (b ? 'font-weight:700' : '') }, t);
     const papel = h('div', { style: 'background:#fff;color:#111;border:1px solid #d1d5db;border-radius:6px;padding:12px;font-size:13px;line-height:1.35;text-align:left' },
       h('div', { style: 'display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap' }, h('div', {}, h('b', {}, EMPRESA.nombre), h('div', { style: 'font-size:11px' }, EMPRESA.lema), h('div', { style: 'font-size:11px' }, EMPRESA.tels), h('div', { style: 'font-size:11px' }, EMPRESA.dir + ' · ' + EMPRESA.email)), h('div', { style: 'text-align:right' }, h('b', { style: 'font-size:18px' }, 'ALBARÁN'), h('div', { style: 'font-weight:700' }, num), h('div', {}, 'Fecha: ' + fechaES(x.fecha)))),
       h('div', { style: 'margin:10px 0;padding-top:8px;border-top:2px solid #111' }, h('b', {}, nombreCli(cli)), cli.nombre_comercial && cli.nombre ? h('div', {}, cli.nombre) : null, [cli.direccion, cli.localidad].filter(Boolean).length ? h('div', {}, [cli.direccion, cli.localidad].filter(Boolean).join(' · ')) : null, cli.nif ? h('div', {}, 'NIF: ' + cli.nif) : null),
       h('table', { style: 'width:100%;border-collapse:collapse' }, h('thead', {}, h('tr', {}, ['Artículo', 'Cantidad', 'Precio', 'Importe'].map((t, i) => h('th', { style: 'text-align:' + (i ? 'right' : 'left') + ';border-bottom:2px solid #111;padding:3px;font-size:12px' }, t)))),
         h('tbody', {}, lin.slice().sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es')).map(l => h('tr', {}, td(l.nombre), td(l.peso_real != null ? num_(l.peso_real) + ' ' + udLinea(l) : '—', 1, 1), td(l.precio != null ? eur(l.precio) : '', 1), td(l.imp != null ? eur(l.imp) : '', 1))))),
-      T.hay ? h('div', { style: 'margin-top:8px;text-align:right' }, Object.keys(bases).map(Number).sort((a, b) => a - b).map(t => h('div', { style: 'font-size:12px' }, 'Base ' + num_(t) + ' %: ' + eur(bases[t]) + ' € · IVA ' + eur(Math.round(bases[t] * t) / 100) + ' €')), T.re ? h('div', { style: 'font-size:12px' }, 'Rec. equiv.: ' + eur(T.re) + ' €') : null, h('div', { style: 'font-size:17px;font-weight:800;margin-top:4px' }, 'TOTAL' + (cli.forma_pago === 'contado' ? ' A COBRAR' : '') + ': ' + eur(T.total) + ' € (IVA incl.)')) : h('div', { style: 'margin-top:8px' }, SP ? 'Albarán sin valorar: los importes se facturarán aparte.' : 'Importes pendientes de poner precio.'),
+      T.hay ? h('div', { style: 'margin-top:8px;text-align:right' }, T.desc ? h('div', { style: 'font-size:12px;font-weight:700' }, 'Descuento (' + T.desc.motivo + '): -' + eur(T.desc.base) + ' €') : null, Object.keys(bases).map(Number).sort((a, b) => a - b).map(t => h('div', { style: 'font-size:12px' }, 'Base ' + num_(t) + ' %: ' + eur(bases[t]) + ' € · IVA ' + eur(Math.round(bases[t] * t) / 100) + ' €')), T.re ? h('div', { style: 'font-size:12px' }, 'Rec. equiv.: ' + eur(T.re) + ' €') : null, h('div', { style: 'font-size:17px;font-weight:800;margin-top:4px' }, 'TOTAL' + (cli.forma_pago === 'contado' ? ' A COBRAR' : '') + ': ' + eur(T.total) + ' € (IVA incl.)')) : h('div', { style: 'margin-top:8px' }, SP ? 'Albarán sin valorar: los importes se facturarán aparte.' : 'Importes pendientes de poner precio.'),
       h('div', { style: 'margin-top:8px;font-weight:700;font-size:12px' }, cli.forma_pago === 'contado' ? 'PAGO AL CONTADO' : 'PENDIENTE DE FACTURA'),
       x.firma_png ? h('div', { style: 'margin-top:8px;font-size:12px' }, 'Conforme: Recibí', h('br'), h('img', { src: x.firma_png, style: 'height:60px;border:1px solid #d1d5db;border-radius:6px' }), h('div', {}, 'Firmado' + (x.firma_nombre ? ' por ' + x.firma_nombre : '') + (x.firma_at ? ' el ' + fechaES(String(x.firma_at).slice(0, 10)) + ' ' + fmtHora(x.firma_at) : ''))) : null);
     hoja('👁️ Albarán ' + num, h('div', {}, papel, h('button', { class: 'guardar', style: 'width:100%;min-height:50px;margin:10px 0 6px', onclick: pdf }, '📄 Descargar PDF')));
   };
   return [h('h2', { style: 'margin:14px 0 2px' }, 'Albarán ' + num), h('div', { class: 'sub' }, fechaES(x.fecha) + ' · ' + nombreCli(cli) + (cli.localidad ? ' · ' + cli.localidad : '')),
     h('div', { class: 'pub-lin' }, lin.map(l => h('div', { class: 'pub-l' }, h('div', { style: 'flex:1;min-width:0' }, h('div', { class: 'nombre' }, l.nombre), h('div', { class: 'sub' }, l.peso_real != null ? num_(l.peso_real) + ' ' + udLinea(l) + (l.precio != null ? ' × ' + eur(l.precio) + ' €' : '') : 'sin pesar / no entregado')), h('b', {}, l.imp != null ? eur(l.imp) + ' €' : '')))),
-    T.hay ? h('div', { class: 'pub-tot' }, h('div', { class: 'sub' }, 'Base ' + eur(T.base) + ' € · IVA ' + eur(T.iva) + ' €' + (T.re ? ' · Rec. equiv. ' + eur(T.re) + ' €' : '')), h('div', { class: 'pub-total' }, 'TOTAL ' + eur(T.total) + ' €')) : h('div', { class: 'sub' }, SP ? 'Albarán sin valorar: los importes se facturarán aparte.' : 'Importes pendientes de poner precio.'),
+    T.hay ? h('div', { class: 'pub-tot' }, T.desc ? h('div', { class: 'sub', style: 'font-weight:700' }, 'Descuento (' + T.desc.motivo + '): -' + eur(T.desc.base) + ' €') : null, h('div', { class: 'sub' }, 'Base ' + eur(T.base) + ' € · IVA ' + eur(T.iva) + ' €' + (T.re ? ' · Rec. equiv. ' + eur(T.re) + ' €' : '')), h('div', { class: 'pub-total' }, 'TOTAL ' + eur(T.total) + ' €')) : h('div', { class: 'sub' }, SP ? 'Albarán sin valorar: los importes se facturarán aparte.' : 'Importes pendientes de poner precio.'),
     x.entregado_at ? h('div', { class: 'pub-ent' }, '📦 Entregado el ' + fechaES(String(x.entregado_at).slice(0, 10)) + ' a las ' + fmtHora(x.entregado_at) + (x.entrega_nota ? ' · ' + x.entrega_nota : '')) : null,
     x.firma_nombre || x.firma_png || x.firma_at ? h('div', { class: 'sub', style: 'margin:10px 0' }, '✍ Recibido y firmado' + (x.firma_nombre ? ' por ' + x.firma_nombre : '') + (x.firma_at ? ' el ' + fechaES(String(x.firma_at).slice(0, 10)) + ' ' + fmtHora(x.firma_at) : '')) : null,
     x.firma_png ? h('img', { src: x.firma_png, style: 'height:70px;border:1px solid #d1d5db;border-radius:8px;background:#fff' }) : null,
@@ -2292,7 +2336,7 @@ async function vistaPortalCliente(tok) {
       if (!x || !x.ok) { caja.replaceChildren(pubCabecera(), h('h2', {}, 'Este enlace ya no está disponible'), h('p', {}, 'Pide a ' + EMPRESA.nombre + ' tu enlace nuevo: ' + EMPRESA.tels)); return; }
       const cli = x.cliente || {}, als = (x.albaranes || []).filter(a => a && a.ok);
       const tot = { base: 0, iva: 0, re: 0, total: 0 };
-      als.forEach(a => { a._L = (a.lineas || []).map(l => Object.assign({}, l)); const T = pubTotales(a._L, a.cliente || cli); a._T = T; if (T.hay) { tot.base += T.base; tot.iva += T.iva; tot.re += T.re; tot.total += T.total; } });
+      als.forEach(a => { a._L = (a.lineas || []).map(l => Object.assign({}, l)); const T = pubTotales(a._L, a.cliente || cli, new URLSearchParams(location.search).get('sp') === '1' ? null : descPedido(a)); a._T = T; if (T.hay) { tot.base += T.base; tot.iva += T.iva; tot.re += T.re; tot.total += T.total; } });
       Object.keys(tot).forEach(k => { tot[k] = Math.round(tot[k] * 100) / 100; });
       const sinPrecio = als.filter(a => !a._T.hay).length;
       const filas = als.map(a => h('button', { class: 'pub-fila', onclick: () => detalle(a) }, h('div', { style: 'text-align:left;min-width:0;flex:1' }, h('div', { class: 'nombre' }, fechaES(a.fecha) + ' · ' + a.serie + ' ' + String(a.numero).padStart(7, '0')), h('div', { class: 'sub' }, (a.lineas || []).length + ' productos' + (a.entregado_at ? ' · 📦 ' + (a.entrega_nota && a.entrega_nota !== 'En mano' ? a.entrega_nota : 'entregado') : ' · pendiente de entrega') + (a.firma_nombre ? ' · firmado por ' + a.firma_nombre : (a.firma_at ? ' · firmado' : '')))), h('b', {}, a._T.hay ? eur(a._T.total) + ' €' : 'sin precio')));
@@ -2363,6 +2407,7 @@ function htmlAlbaran(d, formato, opt) {
       '<td class="d">' + esc(l.precio != null ? eur(l.precio) : '') + '</td>' +
       '<td class="d">' + esc(imp != null ? eur(imp) : '') + '</td></tr>';
   }).join('');
+  const DESC = descPedido(p); if (DESC && hayPrecio) total = restaDescuento(DESC, bases, total);
   const tipos = Object.keys(bases).map(Number).sort((x, y) => x - y);
   let sumaIva = 0, sumaRe = 0; const RE = { 4: 0.5, 10: 1.4, 21: 5.2 };
   const filasIva = tipos.map(t => {
@@ -2372,6 +2417,7 @@ function htmlAlbaran(d, formato, opt) {
   });
   const totalIva = Math.round((total + sumaIva + sumaRe) * 100) / 100;
   const desgloseIva = '<table class="iva"><tbody>' +
+    (DESC && hayPrecio ? '<tr><td colspan="3"><b>Descuento:</b> ' + esc(DESC.motivo) + '</td><td class="d"><b>-' + esc(eur(DESC.base)) + ' €</b></td></tr>' : '') +
     filasIva.map(f => '<tr><td>Base imponible ' + esc(num(f.t)) + ' %</td><td class="d">' + esc(eur(f.base)) + ' €</td><td>IVA ' + esc(num(f.t)) + ' %</td><td class="d">' + esc(eur(f.cuota)) + ' €</td></tr>' +
       (f.re ? '<tr><td></td><td></td><td>Rec. equiv. ' + esc(num(RE[f.t])) + ' %</td><td class="d">' + esc(eur(f.re)) + ' €</td></tr>' : '')).join('') +
     '</tbody></table><div class="totiva">TOTAL' + (cli.forma_pago === 'contado' ? ' A COBRAR' : '') + ': <b>' + esc(eur(totalIva)) + ' €</b> <span style="font-size:11px">(IVA incluido)</span></div>';
@@ -3769,9 +3815,10 @@ function totalesFact(ped) {
       bases[t] = Math.round(((bases[t] || 0) + imp) * 100) / 100;
     } else sinPrecio++;
   });
+  const DESC = descPedido(ped); if (DESC && Object.keys(bases).length) total = restaDescuento(DESC, bases, total);
   const RE = { 4: 0.5, 10: 1.4, 21: 5.2 }; let iva = 0, re = 0;
   Object.keys(bases).forEach(t => { iva = Math.round((iva + bases[t] * t / 100) * 100) / 100; if (cli.recargo_equivalencia && RE[t]) re = Math.round((re + bases[t] * RE[t] / 100) * 100) / 100; });
-  return { bases, base: total, iva, re, total: Math.round((total + iva + re) * 100) / 100, sinPrecio };
+  return { bases, base: total, iva, re, total: Math.round((total + iva + re) * 100) / 100, sinPrecio, desc: DESC && Object.keys(bases).length ? DESC : null };
 }
 function vistaPrefacturas() {
   state.view = 'prefacturas';
@@ -3796,6 +3843,7 @@ function vistaPrefacturas() {
       tot.map(t => { const al = albDe(t.x); return '<tr style="border-bottom:1px solid #ddd"><td>' + esc((al.serie || 'F') + ' ' + al.numero) + '</td><td>' + esc(fechaES(t.x.fecha_entrega)) + '</td><td style="text-align:right">' + eur(t.base) + '</td><td style="text-align:right">' + eur(r2(t.iva + t.re)) + '</td><td style="text-align:right">' + eur(t.total) + (t.sinPrecio ? ' ⚠' : '') + '</td></tr>'; }).join('') +
       '</tbody></table><table style="margin-top:10px;margin-left:auto">' + Object.keys(B).sort((a, b) => a - b).map(k => '<tr><td>Base ' + esc(k) + ' %</td><td style="text-align:right;padding-left:14px">' + eur(B[k]) + ' €</td><td style="padding-left:14px">IVA</td><td style="text-align:right;padding-left:8px">' + eur(r2(B[k] * k / 100)) + ' €</td></tr>').join('') +
       (re ? '<tr><td colspan="3">Recargo de equivalencia</td><td style="text-align:right">' + eur(re) + ' €</td></tr>' : '') + '<tr><td colspan="3"><b>TOTAL</b></td><td style="text-align:right"><b>' + eur(r2(total)) + ' €</b></td></tr></table>' +
+      (tot.some(t => t.desc) ? '<p><b>Descuentos incluidos:</b> ' + tot.filter(t => t.desc).map(t => esc((albDe(t.x).serie || 'F') + ' ' + albDe(t.x).numero) + ': -' + eur(t.desc.base) + ' € (' + esc(t.desc.motivo) + ')').join(' · ') + '. Las bases de arriba ya van con el descuento restado.</p>' : '') +
       (tot.some(t => t.sinPrecio) ? '<p>⚠ Hay albaranes con líneas sin precio o sin peso: su total está incompleto.</p>' : '') + '<p style="font-size:11px;color:#555">Documento de trabajo interno. La factura la emite Golden.</p></div>';
   }
   const albDe = x => { const a = arr(x.albaranes)[0]; return a || {}; };
@@ -3848,7 +3896,8 @@ function vistaPrefacturas() {
     cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
     try {
       if (!navigator.onLine) throw new TypeError('network');
-      const r = await sb.from('pedidos').select('id,cliente_id,fecha_entrega,estado,archivado,clientes(codigo,nombre,nombre_comercial,recargo_equivalencia),lineas_pedido(peso_real,precio,iva,productos(iva))').gte('fecha_entrega', desde).lte('fecha_entrega', hasta).neq('estado', 'anulado').limit(1500);
+      let r = await sb.from('pedidos').select('id,cliente_id,fecha_entrega,estado,archivado,descuento_base,descuento_iva,descuento_motivo,clientes(codigo,nombre,nombre_comercial,recargo_equivalencia),lineas_pedido(peso_real,precio,iva,productos(iva))').gte('fecha_entrega', desde).lte('fecha_entrega', hasta).neq('estado', 'anulado').limit(1500);
+      if (r.error && /descuento|column|schema cache/i.test(r.error.message || '')) r = await sb.from('pedidos').select('id,cliente_id,fecha_entrega,estado,archivado,clientes(codigo,nombre,nombre_comercial,recargo_equivalencia),lineas_pedido(peso_real,precio,iva,productos(iva))').gte('fecha_entrega', desde).lte('fecha_entrega', hasta).neq('estado', 'anulado').limit(1500);
       if (r.error) throw r.error; let ps = (r.data || []).filter(p => !p.archivado); const ids = ps.map(p => p.id); const alb = {}, ent = new Set();
       for (let i = 0; i < ids.length; i += 150) { const ch = ids.slice(i, i + 150);
         const [a, e] = await Promise.all([sb.from('albaranes').select('pedido_id,serie,numero,estado').in('pedido_id', ch), sb.from('entregas').select('pedido_id').in('pedido_id', ch)]);
