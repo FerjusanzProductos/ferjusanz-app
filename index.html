@@ -409,7 +409,7 @@ const EMPRESA = {
   email: 'ferjusanz@hotmail.com'
 };
 /* ---- Modo prácticas: base de datos de ejemplo dentro del móvil. Nunca toca Supabase ni los datos reales. ---- */
-const PRACTICA = (function () { try { return localStorage.getItem('fj_practica') === '1'; } catch (e) { return false; } })();
+const PRACTICA = (function () { try { const q = new URLSearchParams(location.search); if (q.has('a') || q.has('c')) return false; /* enlaces de clientes: SIEMPRE datos reales */ return localStorage.getItem('fj_practica') === '1'; } catch (e) { return false; } })();
 const PRE = PRACTICA ? 'p_' : '';
 // Servidor simulado de Supabase, solo para pruebas.
 function crearSbPractica(){
@@ -545,7 +545,7 @@ function crearSbPractica(){
     guardar_precio_compra_dia(a){DB.precios_compra_dia=DB.precios_compra_dia.filter(x=>!(x.fecha===a.p_fecha&&x.producto_id===a.p_producto&&x.unidad===a.p_unidad));if(a.p_precio!=null)DB.precios_compra_dia.push({id:'pc'+Math.random(),fecha:a.p_fecha,producto_id:a.p_producto,unidad:a.p_unidad,precio:a.p_precio,nota:a.p_nota});return null;},
     marcar_albaranes_facturados(a){if(!a.p_numero||!String(a.p_numero).trim())throw new Error('NUMERO_FACTURA_VACIO');(a.p_pedidos||[]).forEach(id=>{DB.albaranes_facturados=DB.albaranes_facturados.filter(x=>x.pedido_id!==id);DB.albaranes_facturados.push({pedido_id:id,numero_factura:a.p_numero,fecha_factura:a.p_fecha});});return a.p_pedidos.length;},
     desmarcar_albaranes_facturados(a){DB.albaranes_facturados=DB.albaranes_facturados.filter(x=>!(a.p_pedidos||[]).includes(x.pedido_id));return a.p_pedidos.length;},
-    crear_enlace_albaran(a){const al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);if(!al||al.numero==null)throw new Error('ALBARAN_NO_EXISTE');DB.albaran_enlaces=DB.albaran_enlaces||[];let e=DB.albaran_enlaces.find(x=>x.pedido_id===a.p_pedido);if(!e){e={pedido_id:a.p_pedido,token:('a1b2c3d4'.repeat(4)),envios:[]};DB.albaran_enlaces.push(e);}return{token:e.token,envios:e.envios};},
+    crear_enlace_albaran(a){const al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);if(!al||al.numero==null)throw new Error('ALBARAN_NO_EXISTE');DB.albaran_enlaces=DB.albaran_enlaces||[];let e=DB.albaran_enlaces.find(x=>x.pedido_id===a.p_pedido);if(!e){e={pedido_id:a.p_pedido,token:Array.from({length:32},()=>'0123456789abcdef'[Math.floor(Math.random()*16)]).join(''),envios:[]};DB.albaran_enlaces.push(e);}return{token:e.token,envios:e.envios};},
     crear_enlace_cliente(a){DB.cliente_enlaces=DB.cliente_enlaces||[];if(a.p_nuevo)DB.cliente_enlaces=DB.cliente_enlaces.filter(x=>x.cliente_id!==a.p_cliente);let e=DB.cliente_enlaces.find(x=>x.cliente_id===a.p_cliente);if(!e){e={cliente_id:a.p_cliente,token:(a.p_nuevo?'ffffffff':'c0c0c0c0').repeat(4)};DB.cliente_enlaces.push(e);}return e.token;},
     portal_cliente(a){const e=(DB.cliente_enlaces||[]).find(x=>x.token===a.p_token);if(!e)return{ok:false};const c=DB.clientes.find(x=>x.id===e.cliente_id);const als=DB.albaranes.filter(al=>{const p=DB.pedidos.find(x=>x.id===al.pedido_id);return p&&p.cliente_id===e.cliente_id&&al.numero!=null&&(DB.albaran_portal||[]).some(z=>z.pedido_id===al.pedido_id)&&(!a.p_desde||al.fecha>=a.p_desde)&&(!a.p_hasta||al.fecha<=a.p_hasta);}).map(al=>{const r=this.albaran_publico({p_token:(DB.albaran_enlaces||[]).find(z=>z.pedido_id===al.pedido_id)?.token||this._tmp(al.pedido_id)});delete r.firma_png;return r;});return{ok:true,cliente:c,albaranes:als};},
     _tmp(pid){DB.albaran_enlaces=DB.albaran_enlaces||[];let e=DB.albaran_enlaces.find(x=>x.pedido_id===pid);if(!e){e={pedido_id:pid,token:('t'+pid).padEnd(32,'0').slice(0,32),envios:[]};DB.albaran_enlaces.push(e);}return e.token;},
@@ -567,6 +567,7 @@ function crearSbPractica(){
       DB.asignaciones_lote=DB.asignaciones_lote.filter(x=>x.linea_id!==l.id);if(a.p_lote)DB.asignaciones_lote.push({id:'as'+Math.random().toString(36).slice(2,8),linea_id:l.id,lote_id:a.p_lote,cantidad:l.unidad_precio==='kg'?(l.peso_real||0):l.cantidad_pedida});return null;},
     corregir_trazabilidad(a){const mot=(a.p_motivo||'').trim();if(!mot)throw new Error('MOTIVO_OBLIGATORIO');const ls=DB.lineas_pedido.filter(l=>l.pedido_id===a.p_pedido);this._vtz(a.p_pedido,a.p_asignaciones||[]);
       DB.asignaciones_lote=DB.asignaciones_lote.filter(x=>!ls.some(l=>l.id===x.linea_id));(a.p_asignaciones||[]).forEach(x=>DB.asignaciones_lote.push({id:'as'+Math.random().toString(36).slice(2,8),linea_id:x.linea_id,lote_id:x.lote_id,cantidad:x.cantidad}));const al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);al.traza_estado='confirmada';al.traza_motivo=mot;DB.log.push({accion:'CORREGIR_TRAZABILIDAD',motivo:mot});return null;},
+    portal_meses(a){DB.ajustes=DB.ajustes||{portal_meses:6};if(a.p_meses!=null)DB.ajustes.portal_meses=a.p_meses;return DB.ajustes.portal_meses;},
     poner_descuento(a){const ped=DB.pedidos.find(x=>x.id===a.p_pedido);if(!ped)throw new Error('PEDIDO_NO_EXISTE');if(a.p_base>0&&!(a.p_motivo||'').trim())throw new Error('MOTIVO_OBLIGATORIO');const suma=DB.lineas_pedido.filter(l=>l.pedido_id===ped.id&&l.peso_real!=null&&l.precio!=null).reduce((t,l)=>t+Math.round(l.peso_real*l.precio*100)/100,0);if(a.p_base>suma+0.001)throw new Error('DESCUENTO_MAYOR_QUE_EL_PEDIDO');ped.descuento_base=a.p_base;ped.descuento_iva=a.p_iva;ped.descuento_motivo=a.p_base>0?a.p_motivo:null;return null;},
     poner_precios(a){const ped=DB.pedidos.find(x=>x.id===a.p_pedido);if(!ped)throw new Error('PEDIDO_NO_EXISTE');if(ped.estado==='anulado')throw new Error('PEDIDO_ANULADO');
       (a.p_lineas||[]).forEach(x=>{const l=DB.lineas_pedido.find(y=>y.id===x.id&&y.pedido_id===a.p_pedido);if(!l)throw new Error('LINEA_NO_ES_DE_ESTE_PEDIDO');if('precio' in x)l.precio=x.precio;if(x.unidad_precio)l.unidad_precio=x.unidad_precio;});return (a.p_lineas||[]).length;},
@@ -2197,10 +2198,17 @@ const urlPortal = tok => location.origin + location.pathname.replace(/[^\/]*$/, 
 async function vistaPaginasClientes() {
   state.view = 'paginasclientes';
   const lista = h('div', {}), q = comInput('search', '', { placeholder: '🔍 Buscar cliente por nombre o código…' }), sinPub = h('div', {});
-  $app.replaceChildren(shell('Portal de clientes', h('div', {}, sinPub, h('div', { class: 'aviso-card' }, 'Cada cliente tiene una página privada (su portal) con SUS albaranes (y solo los suyos). Aquí la encuentras, la copias, la mandas por WhatsApp o enseñas su QR. El cliente la guarda una vez y los albaranes de cada entrega aparecen solos. «Anular» crea un enlace nuevo y el anterior deja de funcionar.'), q, lista), { volver: volverIni })); renderBanner();
+  const ajusteMeses = h('div', { class: 'card', style: 'margin:8px 0;border-left:6px solid #7c3aed' }, h('div', { class: 'sub' }, 'Cargando ajuste…'));
+  const pintaAjuste = async () => {
+    if (!esOficina()) { ajusteMeses.style.display = 'none'; return; }
+    let m = null; try { const r = await sb.rpc('portal_meses', { p_meses: null }); if (r.error) throw r.error; m = Number(r.data); } catch (e) { ajusteMeses.replaceChildren(h('div', { class: 'sub' }, /does not exist|schema cache|function/i.test((e && e.message) || '') ? 'Falta ejecutar en Supabase la Parte 58c para poder elegir cuánto tiempo ven los clientes sus albaranes.' : 'No se pudo leer el ajuste.')); return; }
+    const sel = h('select', { onchange: async () => { const v = Number(sel.value); const r = await sb.rpc('portal_meses', { p_meses: v }); if (r.error) { toast(msgErr(r.error), 'err'); return; } toast(v ? 'Los clientes verán sus albaranes de los últimos ' + v + ' meses' : 'Los clientes verán todos sus albaranes', 'ok'); } }, [[3, '3 meses'], [6, '6 meses'], [12, '12 meses'], [24, '24 meses'], [36, '36 meses'], [0, 'Todos (sin límite)']].map(([v, t]) => h('option', { value: v, selected: v === m }, t)));
+    ajusteMeses.replaceChildren(h('div', { class: 'nombre' }, '⏳ Cuánto tiempo ven los clientes sus albaranes'), h('div', { class: 'sub' }, 'Cada cliente ve en su página los albaranes de este periodo. Los más antiguos dejan de verse en su portal, pero siguen guardados en la app. Se puede cambiar cuando quieras.'), h('label', { class: 'campo' }, 'Se ven los últimos', sel));
+  };
+  $app.replaceChildren(shell('Portal de clientes', h('div', {}, sinPub, ajusteMeses, h('div', { class: 'aviso-card' }, 'Cada cliente tiene una página privada (su portal) con SUS albaranes (y solo los suyos). Aquí la encuentras, la copias, la mandas por WhatsApp o enseñas su QR. El cliente la guarda una vez y los albaranes de cada entrega aparecen solos. «Anular» crea un enlace nuevo y el anterior deja de funcionar.'), q, lista), { volver: volverIni })); renderBanner();
   const cargaSinPub = async () => {
     try { const l = await albaranesSinPublicar(3650);
-      if (!l.length) { sinPub.replaceChildren(h('div', { class: 'card', style: 'border-left:6px solid #166534' }, h('div', { class: 'nombre' }, '✔ Todos los albaranes de los últimos 30 días están en el portal de su cliente'))); return; }
+      if (!l.length) { sinPub.replaceChildren(h('div', { class: 'card', style: 'border-left:6px solid #166534' }, h('div', { class: 'nombre' }, '✔ Todos los albaranes cerrados están en el portal de su cliente'))); return; }
       sinPub.replaceChildren(h('div', { class: 'card', style: 'border-left:6px solid #2563eb' }, h('div', { class: 'nombre', style: 'font-size:17px' }, '🌐 ' + l.length + ' albarán(es) por cargar en el portal'),
         h('div', { class: 'sub' }, 'Se cargan solos al marcar la entrega. Aquí puedes cargar los que falten (el cliente los verá en su página).'),
         h('button', { class: 'guardar', style: 'width:100%;min-height:52px;margin:8px 0', onclick: async () => { let n = 0; for (const x of l) if (await publicarEnPortal(x.pedido_id, true)) n++; toast(n + ' albarán(es) cargados en el portal', 'ok'); cargaSinPub(); } }, '🌐 Cargar todos en el portal'),
@@ -2208,7 +2216,7 @@ async function vistaPaginasClientes() {
         l.length > 25 ? h('div', { class: 'sub' }, 'Y ' + (l.length - 25) + ' más (usa «Cargar todos»).') : null));
     } catch (e) { sinPub.replaceChildren(h('div', { class: 'sub' }, /does not exist|schema cache|relation/i.test(e.message || '') ? 'Falta ejecutar en Supabase el archivo «Parte 57».' : '')); }
   };
-  cargaSinPub();
+  cargaSinPub(); pintaAjuste();
   let cls = []; try { let r = await sb.from('clientes').select('id,codigo,nombre,nombre_comercial,telefono,email,localidad,activo').range(0, 4999); if (r.error) r = await sb.from('clientes').select('id,codigo,nombre,nombre_comercial,activo').range(0, 4999); if (r.error) throw r.error; cls = (r.data || []).filter(c => c.activo !== false).sort((a, b) => nombreCli(a).localeCompare(nombreCli(b), 'es')); } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); return; }
   const tok = async (c, nuevo) => { const r = await sb.rpc('crear_enlace_cliente', { p_cliente: c.id, p_nuevo: !!nuevo }); if (r.error) throw r.error; return r.data; };
   const err = e => toast(/does not exist|schema cache|function/i.test(e.message || '') ? 'Falta ejecutar en Supabase el archivo «Parte 57».' : isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err');
@@ -2278,6 +2286,7 @@ async function abrirEnvioAlbaran(d) {
   let cerrar;
   const B = (cls, txt, fn) => h('button', { class: cls, style: 'width:100%;min-height:52px;margin-top:8px', onclick: fn }, txt);
   cerrar = hoja('📲 Enviar albarán ' + num, h('div', {},
+    PRACTICA ? h('div', { class: 'aviso-card', style: 'border-left:6px solid #b91c1c;font-weight:700' }, '⚠ MODO PRÁCTICAS: este enlace es de prueba y NO funciona fuera de este móvil. No lo mandes a un cliente: pulsa «Salir» arriba y hazlo con el pedido real.') : null,
     h('p', { class: 'sub' }, 'Se manda un enlace: se abre en cualquier móvil sin instalar nada, se queda guardado en el chat o el correo y se puede descargar en PDF. Vale para el que recibe la mercancía, para el que paga, para el jefe o la gestoría.'),
     h('label', { style: 'display:flex;gap:8px;align-items:center;margin:8px 0;font-weight:700' }, h('input', { type: 'checkbox', onchange: e => { sinP = e.target.checked; } }), 'Enviar SIN precios (albarán sin valorar)'),
     bloqueContacto(Object.assign({}, cli, cc)),
@@ -2350,8 +2359,8 @@ async function vistaPortalCliente(tok) {
   const caja = h('div', { class: 'pub' }, h('p', { class: 'sub' }, 'Cargando…')); $app.replaceChildren(caja);
   const hoyD = new Date(), pad = n => String(n).padStart(2, '0'), MESN = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const claveMes = (y, m) => y + '-' + pad(m + 1), MES = k => { const [y, mm] = k.split('-'); return MESN[Number(mm) - 1] + ' ' + y; };
-  const meses = []; for (let i = 0; i < 12; i++) { const d = new Date(hoyD.getFullYear(), hoyD.getMonth() - i, 1); meses.push(claveMes(d.getFullYear(), d.getMonth())); }
-  let mes = meses[0];
+  const meses = []; for (let i = 0; i < 36; i++) { const d = new Date(hoyD.getFullYear(), hoyD.getMonth() - i, 1); meses.push(claveMes(d.getFullYear(), d.getMonth())); }
+  let mes = meses[0], LIM = null;
   const rango = k => { const [y, m] = k.split('-').map(Number), fin = new Date(y, m, 0).getDate(); return [k + '-01', k + '-' + pad(fin)]; };
   const csvDe = (als, cli) => { const f = n => n == null ? '' : String(n).replace('.', ','), q = t => '"' + String(t == null ? '' : t).replace(/"/g, '""') + '"'; const filas = [['Fecha', 'Albarán', 'Producto', 'Cantidad', 'Unidad', 'Precio', 'Importe', 'IVA %'].join(';')];
     als.forEach(a => (a._L || []).forEach(l => filas.push([fechaES(a.fecha), a.serie + '-' + String(a.numero).padStart(7, '0'), q(l.nombre), f(l.peso_real), udLinea(l), f(l.precio), f(l.imp), f(l.iva != null ? l.iva : l.iva_producto)].join(';')))); return '﻿' + filas.join('\r\n'); };
@@ -2365,6 +2374,7 @@ async function vistaPortalCliente(tok) {
     try {
       const [d0, d1] = rango(mes); const r = await sb.rpc('portal_cliente', { p_token: tok, p_desde: d0, p_hasta: d1 }); if (r.error) throw r.error; const x = r.data;
       if (!x || !x.ok) { caja.replaceChildren(pubCabecera(), h('h2', {}, 'Este enlace ya no está disponible'), h('p', {}, 'Pide a ' + EMPRESA.nombre + ' tu enlace nuevo: ' + EMPRESA.tels)); return; }
+      LIM = x.limite || null;
       const cli = x.cliente || {}, als = (x.albaranes || []).filter(a => a && a.ok);
       const tot = { base: 0, iva: 0, re: 0, total: 0 };
       als.forEach(a => { a._L = (a.lineas || []).map(l => Object.assign({}, l)); const T = pubTotales(a._L, a.cliente || cli, new URLSearchParams(location.search).get('sp') === '1' ? null : descPedido(a)); a._T = T; if (T.hay) { tot.base += T.base; tot.iva += T.iva; tot.re += T.re; tot.total += T.total; } });
@@ -2373,7 +2383,7 @@ async function vistaPortalCliente(tok) {
       const filas = als.map(a => h('button', { class: 'pub-fila', onclick: () => detalle(a) }, h('div', { style: 'text-align:left;min-width:0;flex:1' }, h('div', { class: 'nombre' }, fechaES(a.fecha) + ' · ' + a.serie + ' ' + String(a.numero).padStart(7, '0')), h('div', { class: 'sub' }, (a.lineas || []).length + ' productos' + (a.entregado_at ? ' · 📦 ' + (a.entrega_nota && a.entrega_nota !== 'En mano' ? a.entrega_nota : 'entregado') : ' · pendiente de entrega') + (a.firma_nombre ? ' · firmado por ' + a.firma_nombre : (a.firma_at ? ' · firmado' : '')))), h('b', {}, a._T.hay ? eur(a._T.total) + ' €' : 'sin precio')));
       caja.replaceChildren(pubCabecera(), h('h2', { style: 'margin:14px 0 2px' }, 'Tus albaranes'), h('div', { class: 'sub' }, nombreCli(cli) + (cli.localidad ? ' · ' + cli.localidad : '')),
         h('p', { class: 'sub', style: 'margin-top:8px' }, 'Cada vez que te entregamos mercancía, el albarán aparece aquí solo. Esta página es privada: solo ves los tuyos. Guárdala en favoritos y no hace falta que nadie te mande nada.'),
-        h('div', { class: 'pub-meses' }, meses.map(k => h('button', { class: 'chip' + (k === mes ? ' on' : ''), onclick: () => { mes = k; lista(); } }, MES(k).replace(/ \d{4}$/, '') + (k.slice(0, 4) !== String(hoyD.getFullYear()) ? ' ' + k.slice(2, 4) : '')))),
+        h('div', { class: 'pub-meses' }, meses.filter(k => !LIM || rango(k)[1] >= LIM).map(k => h('button', { class: 'chip' + (k === mes ? ' on' : ''), onclick: () => { mes = k; lista(); } }, MES(k).replace(/ \d{4}$/, '') + (k.slice(0, 4) !== String(hoyD.getFullYear()) ? ' ' + k.slice(2, 4) : '')))),
         h('div', { class: 'pub-mes' }, h('span', {}, MES(mes).replace(/^./, c => c.toUpperCase()) + ' · ' + als.length + ' albaranes'), h('b', {}, eur(tot.total) + ' €')),
         als.length ? h('div', { class: 'sub' }, 'Base ' + eur(tot.base) + ' € · IVA ' + eur(tot.iva + tot.re) + ' €' + (sinPrecio ? ' · ' + sinPrecio + ' albarán(es) aún sin precio' : '')) : null,
         ...(filas.length ? filas : [h('p', { class: 'vacio' }, 'No hay albaranes en ' + MES(mes) + '.')]),
