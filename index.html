@@ -133,7 +133,7 @@ label.campo{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(
 .barra-sel{position:sticky;bottom:70px;z-index:5;display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#fff;border:2px solid var(--verde);border-radius:14px;padding:8px 10px;box-shadow:0 4px 16px rgba(0,0,0,.2)}
 .maps-btn{display:block;text-align:center;padding:14px;margin-bottom:8px;border-radius:14px;color:#fff;font-weight:800;text-decoration:none}
 .paleta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.paleta .col{width:34px;height:34px;min-height:34px;padding:0;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px #9ca3af}.paleta .col.on{box-shadow:0 0 0 3px #111}
-.firma-img{height:56px;max-width:60%;display:block;margin:2px 0}
+.pub{max-width:560px;margin:0 auto;padding:0 14px 30px;background:#fff;color:#111827;min-height:100vh}.pub-cab{background:#166534;margin:0 -14px;padding:16px 14px;border-bottom:5px solid #facc15}.pub-emp{color:#fff;font-weight:900;font-size:22px}.pub-lin{margin-top:10px}.pub-l{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid #e5e7eb}.pub-mes{display:flex;justify-content:space-between;margin-top:14px;padding:6px 0;border-bottom:2px solid #166534;color:#166534;font-weight:800}.pub-fila{display:flex;gap:10px;align-items:center;width:100%;background:#fff;color:#111827;border:0;border-bottom:1px solid #e5e7eb;padding:12px 2px;min-height:56px;border-radius:0}.pub-meses{display:flex;gap:6px;overflow-x:auto;margin-top:12px;padding-bottom:4px}.pub-meses .chip{white-space:nowrap;text-transform:capitalize}.pub-ent{background:#f0fdf4;border:2px solid #86efac;border-radius:12px;padding:10px;margin:10px 0;font-weight:700;color:#166534}.pub-tot{margin-top:12px;text-align:right}.pub-total{font-size:26px;font-weight:900;color:#166534}.firma-img{height:56px;max-width:60%;display:block;margin:2px 0}
 .firma-ov{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:10px}
 .firma-card{background:#fff;border-radius:16px;padding:14px;width:100%;max-width:640px;display:flex;flex-direction:column;gap:10px}
 .firma-card canvas{width:100%;height:230px;border:2px dashed #6b7280;border-radius:12px;touch-action:none;background:#fff}
@@ -427,7 +427,7 @@ function crearSbPractica(){
     guardar_foto(a){DB.fotos_perfil=DB.fotos_perfil.filter(x=>x.usuario_id!=='u1');if(a.p_foto)DB.fotos_perfil.push({usuario_id:'u1',foto:a.p_foto});return null;},
     fichar(a){const ab=DB.fichajes.find(f=>f.usuario_id==='u1'&&!f.salida);const t=a.p_cuando||new Date().toISOString();if(a.p_accion==='entrada'){if(ab)return ab;const r={id:'f'+Math.random().toString(36).slice(2,7),usuario_id:'u1',entrada:t,salida:null,sin_conexion:!!a.p_cuando,nota:null};DB.fichajes.push(r);return r;}if(!ab)throw new Error('SIN_ENTRADA');ab.salida=t;return ab;},
     guardar_ubicacion(a){const c=DB.clientes.find(x=>x.id===a.p_cliente);c.lat=a.p_lat;c.lng=a.p_lng;return null;},
-    marcar_entregado(a){const p=DB.pedidos.find(x=>x.id===a.p_pedido);if(p.estado!=='terminado')throw new Error('PEDIDO_NO_TERMINADO');if(!DB.entregas.some(e=>e.pedido_id===a.p_pedido))DB.entregas.push({pedido_id:a.p_pedido,entregado_por:'u1',entregado_at:a.p_at||new Date().toISOString(),created_at:new Date().toISOString()});return null;},
+    marcar_entregado(a){const p=DB.pedidos.find(x=>x.id===a.p_pedido);if(p.estado!=='terminado')throw new Error('PEDIDO_NO_TERMINADO');if(!DB.entregas.some(e=>e.pedido_id===a.p_pedido))DB.entregas.push({pedido_id:a.p_pedido,nota:a.p_nota||null,entregado_por:'u1',entregado_at:a.p_at||new Date().toISOString(),created_at:new Date().toISOString()});return null;},
     marcar_cargado(a){let c=DB.carga_lineas.find(x=>x.linea_id===a.p_linea);if(c)c.cargado=a.p_cargado;else DB.carga_lineas.push({linea_id:a.p_linea,cargado:a.p_cargado});return null;},
     empezar_pedido(a){const p=DB.pedidos.find(x=>x.id===a.p_pedido);p.estado='en_preparacion';p.preparador_id='u1';return null;},
     guardar_peso(a){const l=DB.lineas_pedido.find(x=>x.id===a.p_linea);if(l.version!==a.p_version)throw new Error('CONFLICTO');l.peso_real=a.p_peso;l.estado='hecha';l.version++;return l.version;},
@@ -440,6 +440,14 @@ function crearSbPractica(){
     guardar_precio_compra_dia(a){DB.precios_compra_dia=DB.precios_compra_dia.filter(x=>!(x.fecha===a.p_fecha&&x.producto_id===a.p_producto&&x.unidad===a.p_unidad));if(a.p_precio!=null)DB.precios_compra_dia.push({id:'pc'+Math.random(),fecha:a.p_fecha,producto_id:a.p_producto,unidad:a.p_unidad,precio:a.p_precio,nota:a.p_nota});return null;},
     marcar_albaranes_facturados(a){if(!a.p_numero||!String(a.p_numero).trim())throw new Error('NUMERO_FACTURA_VACIO');(a.p_pedidos||[]).forEach(id=>{DB.albaranes_facturados=DB.albaranes_facturados.filter(x=>x.pedido_id!==id);DB.albaranes_facturados.push({pedido_id:id,numero_factura:a.p_numero,fecha_factura:a.p_fecha});});return a.p_pedidos.length;},
     desmarcar_albaranes_facturados(a){DB.albaranes_facturados=DB.albaranes_facturados.filter(x=>!(a.p_pedidos||[]).includes(x.pedido_id));return a.p_pedidos.length;},
+    crear_enlace_albaran(a){const al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);if(!al||al.numero==null)throw new Error('ALBARAN_NO_EXISTE');DB.albaran_enlaces=DB.albaran_enlaces||[];let e=DB.albaran_enlaces.find(x=>x.pedido_id===a.p_pedido);if(!e){e={pedido_id:a.p_pedido,token:('a1b2c3d4'.repeat(4)),envios:[]};DB.albaran_enlaces.push(e);}return{token:e.token,envios:e.envios};},
+    crear_enlace_cliente(a){DB.cliente_enlaces=DB.cliente_enlaces||[];if(a.p_nuevo)DB.cliente_enlaces=DB.cliente_enlaces.filter(x=>x.cliente_id!==a.p_cliente);let e=DB.cliente_enlaces.find(x=>x.cliente_id===a.p_cliente);if(!e){e={cliente_id:a.p_cliente,token:(a.p_nuevo?'ffffffff':'c0c0c0c0').repeat(4)};DB.cliente_enlaces.push(e);}return e.token;},
+    portal_cliente(a){const e=(DB.cliente_enlaces||[]).find(x=>x.token===a.p_token);if(!e)return{ok:false};const c=DB.clientes.find(x=>x.id===e.cliente_id);const als=DB.albaranes.filter(al=>{const p=DB.pedidos.find(x=>x.id===al.pedido_id);return p&&p.cliente_id===e.cliente_id&&al.numero!=null&&(DB.albaran_portal||[]).some(z=>z.pedido_id===al.pedido_id)&&(!a.p_desde||al.fecha>=a.p_desde)&&(!a.p_hasta||al.fecha<=a.p_hasta);}).map(al=>{const r=this.albaran_publico({p_token:(DB.albaran_enlaces||[]).find(z=>z.pedido_id===al.pedido_id)?.token||this._tmp(al.pedido_id)});delete r.firma_png;return r;});return{ok:true,cliente:c,albaranes:als};},
+    _tmp(pid){DB.albaran_enlaces=DB.albaran_enlaces||[];let e=DB.albaran_enlaces.find(x=>x.pedido_id===pid);if(!e){e={pedido_id:pid,token:('t'+pid).padEnd(32,'0').slice(0,32),envios:[]};DB.albaran_enlaces.push(e);}return e.token;},
+    portal_albaran(a){const e=(DB.cliente_enlaces||[]).find(x=>x.token===a.p_token);if(!e)return{ok:false};const al=DB.albaranes.find(x=>x.numero===a.p_numero&&(DB.pedidos.find(p=>p.id===x.pedido_id)||{}).cliente_id===e.cliente_id);if(!al)return{ok:false};return this.albaran_publico({p_token:this._tmp(al.pedido_id)});},
+    publicar_albaran_portal(a){DB.albaran_portal=DB.albaran_portal||[];DB.albaran_portal=DB.albaran_portal.filter(x=>x.pedido_id!==a.p_pedido);if(a.p_publicar!==false)DB.albaran_portal.push({pedido_id:a.p_pedido,publicado_at:new Date().toISOString()});return null;},
+    registrar_envio_albaran(a){const e=(DB.albaran_enlaces||[]).find(x=>x.pedido_id===a.p_pedido);if(e)e.envios.push({a:a.p_destino,t:new Date().toISOString()});return null;},
+    albaran_publico(a){const e=(DB.albaran_enlaces||[]).find(x=>x.token===a.p_token);if(!e)return{ok:false};const p=DB.pedidos.find(x=>x.id===e.pedido_id),al=DB.albaranes.find(x=>x.pedido_id===e.pedido_id),c=DB.clientes.find(x=>x.id===p.cliente_id);const en=(DB.entregas||[]).find(z=>z.pedido_id===e.pedido_id);return{ok:true,entregado_at:en?en.entregado_at:null,entrega_nota:en?en.nota:null,serie:al.serie,numero:al.numero,fecha:al.fecha,firma_png:al.firma_png||null,firma_nombre:al.firma_nombre||null,firma_at:al.firma_at||null,cliente:c,lineas:DB.lineas_pedido.filter(l=>l.pedido_id===p.id).map(l=>{const pr=DB.productos.find(y=>y.id===l.producto_id)||{};return{nombre:pr.nombre,cantidad_pedida:l.cantidad_pedida,unidad_pedida:l.unidad_pedida,peso_real:l.peso_real,unidad_precio:l.unidad_precio,precio:l.precio,iva:l.iva,iva_producto:pr.iva};})};},
     guardar_firma_albaran(a){const al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);if(!al)throw new Error('ALBARAN_NO_EXISTE');if(a.p_firma&&!/^data:image\/png;base64,/.test(a.p_firma))throw new Error('FIRMA_NO_VALIDA');al.firma_png=a.p_firma||null;al.firma_nombre=a.p_firma?(a.p_nombre||null):null;al.firma_at=a.p_firma?new Date().toISOString():null;return null;},
     confirmar_trazabilidad(a){const ls=DB.lineas_pedido.filter(l=>l.pedido_id===a.p_pedido);if(DB.pedidos.find(p=>p.id===a.p_pedido).estado==='terminado')throw new Error('PEDIDO_YA_TERMINADO');if(ls.some(l=>l.estado==='pendiente'))throw new Error('LINEAS_PENDIENTES');
       const mot=(a.p_sin_motivo||'').trim();
@@ -956,7 +964,7 @@ function pintarPedido() {
   if (estado === 'terminado') {
     const enCola = colaE.get().find(x => x.pedido === d.pedido.id);
     if (d.entrega || enCola) acciones.push(h('div', { class: 'aviso-card' }, '✔ Entregado a las ' + fmtHora(d.entrega ? d.entrega.entregado_at : enCola.at) + (enCola && !d.entrega ? ' (pendiente de enviar)' : '')));
-    else acciones.push(h('button', { class: 'guardar', onclick: async () => { await marcarEntregado(d.pedido.id); pintarPedido(); actualizarPedido(); } }, 'Marcar como ENTREGADO'));
+    else acciones.push(h('button', { class: 'guardar', onclick: () => elegirEntrega(d.pedido.id, () => { pintarPedido(); actualizarPedido(); }) }, 'Marcar como ENTREGADO'));
     acciones.push(h('button', { onclick: () => go('albaran', { id: d.pedido.id }) }, 'Ver / imprimir albarán' + (d.albaran ? ' nº ' + d.albaran.numero : '')));
   } else if (estado !== 'anulado') {
     const faltan = ls.length - hechas;
@@ -1769,7 +1777,9 @@ async function vistaAlbaran() {
       cobroBox,
       d.pedido.estado === 'terminado' ? h('button', { class: 'ghost', style: 'width:100%;margin-bottom:10px;min-height:48px', onclick: () => abrirVentaRuta(d) }, '➕ Venta en ruta (el cliente se lleva algo más)') : null,
       cajaFirma(d),
-      h('button', { style: 'width:100%;margin-bottom:10px;min-height:48px;background:#16a34a', onclick: () => enviarAlbaranWhatsApp(d) }, '📲 Enviar al cliente por WhatsApp (PDF)'),
+      h('button', { style: 'width:100%;margin-bottom:6px;min-height:56px;background:#16a34a;font-size:17px', onclick: () => abrirEnvioAlbaran(d) }, '📲 Enviar albarán sin imprimir (WhatsApp, correo o QR)'),
+      cajaPortal(d),
+      h('button', { class: 'ghost', style: 'width:100%;margin-bottom:10px;min-height:44px', onclick: () => enviarAlbaranWhatsApp(d) }, '📄 Enviar el PDF adjunto'),
       cajaIncidenciasAlb(d),
       cajaTraza(d),
       gananciaBox,
@@ -1928,6 +1938,198 @@ async function enviarAlbaranWhatsApp(d) {
     toast('PDF descargado. Adjúntalo en la conversación de WhatsApp.', 'ok');
   } catch (e) { if (e && e.name === 'AbortError') return; toast('No se pudo preparar el PDF: ' + msgErr(e), 'err'); }
 }
+
+/* QR propio (nivel M, versiones 1-9, bytes UTF-8): sin librerías externas, funciona sin conexión */
+function qrMatriz(texto) {
+  const enc = new TextEncoder().encode(String(texto));
+  const DAT = [0, 16, 28, 44, 64, 86, 108, 124, 154, 182], EC = [0, 10, 16, 26, 18, 24, 16, 18, 22, 22], NB = [0, 1, 1, 1, 2, 2, 4, 4, 4, 5];
+  const ALI = [[], [], [6, 18], [6, 22], [6, 26], [6, 30], [6, 34], [6, 22, 38], [6, 24, 42], [6, 26, 46]];
+  let v = 1; while (v < 10 && Math.ceil((12 + 8 * enc.length) / 8) > DAT[v]) v++; if (v > 9) throw new Error('Texto demasiado largo para el QR');
+  const D = DAT[v], nb = NB[v], ec = EC[v], n = 17 + 4 * v;
+  const bits = []; const put = (val, len) => { for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1); };
+  put(4, 4); put(enc.length, 8); enc.forEach(b => put(b, 8)); for (let i = 0; i < 4 && bits.length < D * 8; i++) bits.push(0); while (bits.length % 8) bits.push(0);
+  const cw = []; for (let i = 0; i < bits.length; i += 8) { let b = 0; for (let k = 0; k < 8; k++) b = (b << 1) | bits[i + k]; cw.push(b); } for (let p = 0; cw.length < D; p++) cw.push(p % 2 ? 0x11 : 0xEC);
+  const EXP = new Array(512), LOG = new Array(256); { let x = 1; for (let i = 0; i < 255; i++) { EXP[i] = x; LOG[x] = i; x <<= 1; if (x & 256) x ^= 0x11d; } for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255]; }
+  const mul = (a, b) => a && b ? EXP[LOG[a] + LOG[b]] : 0;
+  let gen = [1]; for (let i = 0; i < ec; i++) { const g = new Array(gen.length + 1).fill(0); gen.forEach((c, j) => { g[j] ^= c; g[j + 1] ^= mul(c, EXP[i]); }); gen = g; }
+  const rs = datos => { const r = new Array(ec).fill(0); datos.forEach(d => { const f = d ^ r[0]; r.shift(); r.push(0); if (f) gen.slice(1).forEach((g, i) => { r[i] ^= mul(g, f); }); }); return r; };
+  const bloques = [], ecs = []; const corto = Math.floor(D / nb), largos = D % nb; let pos = 0;
+  for (let i = 0; i < nb; i++) { const len = corto + (i >= nb - largos ? 1 : 0); const bl = cw.slice(pos, pos + len); pos += len; bloques.push(bl); ecs.push(rs(bl)); }
+  const fin = []; for (let i = 0; i <= corto; i++) bloques.forEach(b => { if (i < b.length) fin.push(b[i]); }); for (let i = 0; i < ec; i++) ecs.forEach(e => fin.push(e[i]));
+  const M = Array.from({ length: n }, () => new Array(n).fill(0)), F = Array.from({ length: n }, () => new Array(n).fill(false));
+  const set = (r, c, val) => { if (r >= 0 && c >= 0 && r < n && c < n) { M[r][c] = val ? 1 : 0; F[r][c] = true; } };
+  const finder = (r, c) => { for (let i = -1; i <= 7; i++) for (let j = -1; j <= 7; j++) { const d = i >= 0 && i <= 6 && j >= 0 && j <= 6 && (i === 0 || i === 6 || j === 0 || j === 6 || (i >= 2 && i <= 4 && j >= 2 && j <= 4)); set(r + i, c + j, d); } };
+  finder(0, 0); finder(0, n - 7); finder(n - 7, 0);
+  for (let i = 8; i < n - 8; i++) { set(6, i, i % 2 === 0); set(i, 6, i % 2 === 0); }
+  const al = ALI[v]; al.forEach(r => al.forEach(c => { if ((r === 6 && c === 6) || (r === 6 && c === al[al.length - 1]) || (c === 6 && r === al[al.length - 1])) return; for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) set(r + i, c + j, Math.max(Math.abs(i), Math.abs(j)) !== 1); }));
+  set(n - 8, 8, 1);
+  for (let i = 0; i < 9; i++) { if (!F[8][i]) { F[8][i] = true; } if (!F[i][8]) { F[i][8] = true; } } for (let i = 0; i < 8; i++) { F[8][n - 1 - i] = true; F[n - 1 - i][8] = true; }
+  if (v >= 7) { let r = v; for (let i = 0; i < 12; i++) r = (r << 1) ^ ((r >> 11) ? 0x1f25 : 0); const vi = (v << 12) | r; for (let i = 0; i < 18; i++) { const b = (vi >> i) & 1, a = Math.floor(i / 3), c = i % 3 + n - 11; set(a, c, b); set(c, a, b); } }
+  const datos = []; fin.forEach(b => { for (let i = 7; i >= 0; i--) datos.push((b >> i) & 1); });
+  const colocar = () => { let k = 0, arriba = true; for (let c = n - 1; c > 0; c -= 2) { if (c === 6) c--; for (let i = 0; i < n; i++) { const r = arriba ? n - 1 - i : i; for (let j = 0; j < 2; j++) { const cc = c - j; if (!F[r][cc]) { M[r][cc] = k < datos.length ? datos[k] : 0; k++; } } } arriba = !arriba; } };
+  colocar();
+  const MASK = [(r, c) => (r + c) % 2 === 0, r => r % 2 === 0, (r, c) => c % 3 === 0, (r, c) => (r + c) % 3 === 0, (r, c) => (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0, (r, c) => (r * c) % 2 + (r * c) % 3 === 0, (r, c) => ((r * c) % 2 + (r * c) % 3) % 2 === 0, (r, c) => ((r + c) % 2 + (r * c) % 3) % 2 === 0];
+  const fmt = m => { let d = (0 << 3) | m, r = d; for (let i = 0; i < 10; i++) r = (r << 1) ^ ((r >> 9) ? 0x537 : 0); return ((d << 10) | r) ^ 0x5412; };
+  const armar = m => { const Q = M.map((f, r) => f.map((x, c) => (!F[r][c] || (false)) ? x : x)); const R = M.map(f => f.slice());
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (!isFun[r][c] && MASK[m](r, c)) R[r][c] ^= 1;
+    const f = fmt(m); for (let i = 0; i < 15; i++) { const b = (f >> i) & 1; const a = i < 6 ? i : i < 8 ? i + 1 : null; if (i < 8) { R[8][n - 1 - i] = b; } else { R[n - 15 + i][8] = b; } if (i < 6) R[i][8] = b; else if (i < 8) R[i + 1][8] = b; else if (i === 8) R[8][7] = b; else R[8][14 - i] = b; if (i < 6) { } }
+    R[n - 8][8] = 1; return R; };
+  const isFun = F.map(f => f.slice()); // las zonas de formato ya están marcadas como función
+  const pen = R => { let p = 0; for (let t = 0; t < 2; t++) { for (let i = 0; i < n; i++) { let run = 1; for (let j = 1; j < n; j++) { const a = t ? R[j][i] : R[i][j], b = t ? R[j - 1][i] : R[i][j - 1]; if (a === b) { run++; if (run === 5) p += 3; else if (run > 5) p++; } else run = 1; } } }
+    for (let r = 0; r < n - 1; r++) for (let c = 0; c < n - 1; c++) if (R[r][c] === R[r][c + 1] && R[r][c] === R[r + 1][c] && R[r][c] === R[r + 1][c + 1]) p += 3;
+    const pat = [1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0]; for (let t = 0; t < 2; t++) for (let i = 0; i < n; i++) for (let j = 0; j <= n - 11; j++) { let a = true, b = true; for (let k = 0; k < 11; k++) { const x = t ? R[j + k][i] : R[i][j + k]; if (x !== pat[k]) a = false; if (x !== pat[10 - k]) b = false; } if (a) p += 40; if (b) p += 40; }
+    let oscuros = 0; R.forEach(f => f.forEach(x => { oscuros += x; })); p += Math.floor(Math.abs(oscuros * 100 / (n * n) - 50) / 5) * 10; return p; };
+  let mejor = null, mp = 1e9; for (let m = 0; m < 8; m++) { const R = armar(m); const p = pen(R); if (p < mp) { mp = p; mejor = R; } } return mejor;
+}
+function qrDataUrl(texto, escala) { const R = qrMatriz(texto), q = 4, e = escala || 8, N = R.length + 2 * q, c = document.createElement('canvas'); c.width = c.height = N * e; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.fillStyle = '#000'; R.forEach((f, r) => f.forEach((x, k) => { if (x) g.fillRect((k + q) * e, (r + q) * e, e, e); })); return c.toDataURL('image/png'); }
+
+function hojaQrEnlace(titulo, url, nota, wa) {
+  const copiar = async () => { try { await navigator.clipboard.writeText(url); toast('Enlace copiado', 'ok'); } catch (e) { toast('Mantén pulsado el enlace de arriba para copiarlo', 'err'); } };
+  return hoja(titulo, h('div', { style: 'text-align:center' }, h('img', { src: qrDataUrl(url, 8), style: 'width:100%;max-width:320px;image-rendering:pixelated' }), h('p', { class: 'sub' }, nota || ''),
+    h('input', { value: url, readonly: true, style: 'width:100%;font-size:13px', onfocus: e => e.target.select() }),
+    h('button', { class: 'guardar', style: 'width:100%;min-height:50px;margin-top:8px', onclick: copiar }, '🔗 Copiar enlace'),
+    wa ? h('button', { class: 'ghost', style: 'width:100%;min-height:50px;margin-top:8px', onclick: wa }, '📲 Mandar por WhatsApp') : null));
+}
+/* ===== Páginas privadas de los clientes (solo la oficina entra aquí; cada cliente solo ve la suya) ===== */
+const urlPortal = tok => location.origin + location.pathname.replace(/[^\/]*$/, '') + '?c=' + tok;
+async function vistaPaginasClientes() {
+  state.view = 'paginasclientes';
+  if (!esOficina()) { $app.replaceChildren(shell('Páginas de clientes', h('p', { class: 'vacio' }, 'Solo la oficina puede entrar aquí.'), { volver: () => go('inicio') })); return; }
+  const lista = h('div', {}), q = comInput('search', '', { placeholder: '🔍 Buscar cliente por nombre o código…' });
+  $app.replaceChildren(shell('Portal de clientes', h('div', {}, h('div', { class: 'aviso-card' }, 'Cada cliente tiene una página privada (su portal) con SUS albaranes (y solo los suyos). Aquí la encuentras, la copias, la mandas por WhatsApp o enseñas su QR. El cliente la guarda una vez y los albaranes de cada entrega aparecen solos. «Anular» crea un enlace nuevo y el anterior deja de funcionar.'), q, lista), { volver: () => go('inicio') })); renderBanner();
+  let cls = []; try { const r = await sb.from('clientes').select('id,codigo,nombre,nombre_comercial,telefono,email,localidad,activo').range(0, 4999); if (r.error) throw r.error; cls = (r.data || []).filter(c => c.activo !== false).sort((a, b) => nombreCli(a).localeCompare(nombreCli(b), 'es')); } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); return; }
+  const tok = async (c, nuevo) => { const r = await sb.rpc('crear_enlace_cliente', { p_cliente: c.id, p_nuevo: !!nuevo }); if (r.error) throw r.error; return r.data; };
+  const err = e => toast(/does not exist|schema cache|function/i.test(e.message || '') ? 'Falta ejecutar en Supabase el archivo «Parte 57».' : isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err');
+  const fila = c => h('div', { class: 'card', style: 'padding:10px' }, h('div', { class: 'nombre' }, nombreCli(c)), h('div', { class: 'sub' }, [c.codigo, c.localidad, c.telefono].filter(Boolean).join(' · ')),
+    h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' },
+      h('button', { class: 'small', onclick: async () => { try { const u = urlPortal(await tok(c)); hojaQrEnlace('📱 Página de ' + nombreCli(c), u, 'Es privada: solo enseña los albaranes de este cliente. Si la cámara no lo lee, copia el enlace.', () => { let t = String(c.telefono || '').replace(/\D/g, ''); if (t.length === 9) t = '34' + t; window.open('https://wa.me/' + t + '?text=' + encodeURIComponent('Hola, esta es tu página privada de ' + EMPRESA.nombre + ': aquí verás todos tus albaranes, siempre actualizados. Guárdala en favoritos: ' + u), '_blank'); }); } catch (e) { err(e); } } }, '📱 QR y enlace'),
+      h('button', { class: 'small ghost', onclick: async () => { try { await navigator.clipboard.writeText(urlPortal(await tok(c))); toast('Enlace copiado', 'ok'); } catch (e) { err(e); } } }, '🔗 Copiar'),
+      h('button', { class: 'small ghost', onclick: async () => { try { window.open(urlPortal(await tok(c)), '_blank'); } catch (e) { err(e); } } }, '👁 Ver como cliente'),
+      h('button', { class: 'small ghost', style: 'color:#b91c1c', onclick: async () => { if (!await confirmar('El enlace de «' + nombreCli(c) + '» dejará de funcionar y se creará uno nuevo (habrá que dárselo otra vez). ¿Seguir?')) return; try { await tok(c, true); toast('Enlace anulado. Ya hay uno nuevo.', 'ok'); } catch (e) { err(e); } } }, '🔒 Anular')));
+  const pinta = () => { const t = sinTilde(q.value.trim()); const f = cls.filter(c => !t || sinTilde([c.nombre, c.nombre_comercial, c.codigo, c.localidad].join(' ')).includes(t)); lista.replaceChildren(...(f.length ? f.slice(0, 60).map(fila) : [h('p', { class: 'vacio' }, 'Ningún cliente con ese nombre.')]), ...(f.length > 60 ? [h('p', { class: 'sub' }, 'Hay más: escribe más letras para afinar.')] : [])); };
+  q.addEventListener('input', pinta); pinta();
+}
+/* Portal del cliente: el albarán se publica en la página privada del cliente (se publica solo al marcar la entrega; aquí se puede hacer o deshacer a mano) */
+async function publicarEnPortal(pedidoId, publicar) { try { const r = await sb.rpc('publicar_albaran_portal', { p_pedido: pedidoId, p_publicar: publicar !== false }); return !r.error; } catch (e) { return false; } }
+function cajaPortal(d) {
+  const box = h('div', { class: 'card', style: 'margin-bottom:10px;border-left:6px solid #166534' }, h('div', { class: 'sub' }, 'Portal del cliente: comprobando…'));
+  const pinta = async () => {
+    let pub = null, ok = true; try { const r = await sb.from('albaran_portal').select('publicado_at').eq('pedido_id', d.pedido.id).maybeSingle(); if (r.error) throw r.error; pub = r.data && r.data.publicado_at; } catch (e) { ok = false; }
+    if (!ok) { box.replaceChildren(h('div', { class: 'nombre' }, '🌐 Portal del cliente'), h('div', { class: 'sub' }, navigator.onLine ? 'Falta ejecutar en Supabase el archivo «Parte 57».' : 'Sin conexión.')); return; }
+    const cerrado = d.albaran && d.albaran.numero != null;
+    box.replaceChildren(h('div', { class: 'nombre' }, '🌐 Portal del cliente' + (pub ? ' · ✔ publicado' : '')),
+      h('div', { class: 'sub' }, pub ? 'Publicado el ' + new Date(pub).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) + '. El cliente lo ve en su página privada aunque no haya nadie para recibirlo ni firma.' : (cerrado ? 'Aún no está en la página privada del cliente. Se publica solo al marcar la entrega, o pulsa aquí.' : 'Se podrá publicar cuando el albarán esté cerrado.')),
+      h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;margin-top:6px' }, !pub && cerrado ? h('button', { class: 'guardar', style: 'min-height:48px', onclick: async () => { if (await publicarEnPortal(d.pedido.id, true)) { toast('Publicado en el portal del cliente', 'ok'); pinta(); } else toast('No se pudo publicar (¿conexión o Parte 57?)', 'err'); } }, '🌐 Publicar en el portal del cliente') : null,
+        pub ? h('button', { class: 'ghost small', onclick: async () => { if (!await confirmar('¿Quitar este albarán del portal del cliente? Dejará de verlo en su página.')) return; if (await publicarEnPortal(d.pedido.id, false)) { toast('Quitado del portal', 'ok'); pinta(); } } }, 'Quitar del portal') : null));
+  };
+  pinta(); return box;
+}
+/* ===== Albarán por enlace: se envía a quien sea (cocinero, camarero, jefe, gestoría) y queda guardado en su móvil ===== */
+const albUrl = tok => location.origin + location.pathname.replace(/[^\/]*$/, '') + '?a=' + tok;
+function cargaScript(src) { return new Promise((ok, no) => { if (document.querySelector('script[src="' + src + '"]')) return ok(); const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => no(new Error('No se pudo cargar')); document.head.append(sc); }); }
+async function abrirEnvioAlbaran(d) {
+  const a = d.albaran || {}, cli = uno(d.pedido.clientes) || {};
+  if (a.numero == null) { toast('Cierra primero el albarán (terminar el pedido).', 'err'); return; }
+  if (!navigator.onLine) { toast('Necesitas conexión para crear el enlace. Mientras, usa «Enviar el PDF adjunto».', 'err'); return; }
+  let cc = {}; try { const r = await sb.from('clientes').select('telefono,email').eq('id', d.pedido.cliente_id).maybeSingle(); cc = r.data || {}; } catch (e) { }
+  let info; try { const r = await sb.rpc('crear_enlace_albaran', { p_pedido: d.pedido.id }); if (r.error) throw r.error; info = r.data; } catch (e) { toast(/does not exist|schema cache|function/i.test(e.message || '') ? 'Falta ejecutar en Supabase el archivo «Parte 57».' : msgErr(e), 'err'); return; }
+  const url = albUrl(info.token), num = a.serie + ' ' + String(a.numero).padStart(7, '0'), clave = 'fj_cont_' + d.pedido.cliente_id;
+  let recientes = LS.get(clave, []); if (!Array.isArray(recientes)) recientes = [];
+  const nom = comInput('text', '', { placeholder: 'Nombre (ej.: Juan, el cocinero)' }), tel = comInput('tel', cc.telefono || '', { placeholder: 'Móvil con WhatsApp' }), mail = comInput('email', cc.email || '', { placeholder: 'Correo electrónico' });
+  const texto = () => 'Hola' + (nom.value.trim() ? ' ' + nom.value.trim() : '') + ', este es tu albarán ' + num + ' de ' + EMPRESA.nombre + ' del ' + fechaES(a.fecha || d.pedido.fecha_entrega) + '. Puedes verlo y descargarlo aquí (se queda guardado): ' + url;
+  const recordar = destino => { try { const t = tel.value.replace(/\D/g, ''), e = mail.value.trim(), n = nom.value.trim(); if (t || e) { recientes = [{ n, t: tel.value.trim(), e }].concat(recientes.filter(x => !(x.t === tel.value.trim() && x.e === e))).slice(0, 6); LS.set(clave, recientes); } } catch (er) { } sb.rpc('registrar_envio_albaran', { p_pedido: d.pedido.id, p_destino: destino + (nom.value.trim() ? ' (' + nom.value.trim() + ')' : '') }).catch(() => { }); };
+  const historial = (info.envios || []).length ? h('div', { class: 'sub', style: 'margin:4px 0' }, '✔ Ya enviado: ' + info.envios.slice(-3).map(x => x.a + ' · ' + new Date(x.t).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })).join(' · ')) : null;
+  const chips = recientes.length ? h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:6px 0' }, recientes.map(x => h('button', { class: 'ghost small', onclick: () => { nom.value = x.n || ''; tel.value = x.t || ''; mail.value = x.e || ''; } }, '👤 ' + (x.n || x.t || x.e)))) : null;
+  let cerrar;
+  const B = (cls, txt, fn) => h('button', { class: cls, style: 'width:100%;min-height:52px;margin-top:8px', onclick: fn }, txt);
+  cerrar = hoja('📲 Enviar albarán ' + num, h('div', {},
+    h('p', { class: 'sub' }, 'Se manda un enlace: se abre en cualquier móvil sin instalar nada, se queda guardado en el chat o el correo y se puede descargar en PDF. Vale para el que recibe la mercancía, para el que paga, para el jefe o la gestoría.'),
+    historial, chips ? h('div', { class: 'sub', style: 'font-weight:700' }, 'Usados antes con este cliente:') : null, chips,
+    comCampo('Nombre de quien lo recibe (opcional)', nom), comCampo('WhatsApp', tel), comCampo('Correo', mail),
+    B('guardar', '📲 Enviar por WhatsApp', () => { let t = tel.value.replace(/\D/g, ''); if (t.length === 9) t = '34' + t; recordar('WhatsApp ' + (tel.value.trim() || '(elegido en WhatsApp)')); window.open('https://wa.me/' + t + '?text=' + encodeURIComponent(texto()), '_blank'); }),
+    B('ghost', '✉️ Enviar por correo', () => { if (!mail.value.trim()) { toast('Escribe el correo.', 'err'); return; } recordar('Correo ' + mail.value.trim()); location.href = 'mailto:' + encodeURIComponent(mail.value.trim()) + '?subject=' + encodeURIComponent('Albarán ' + num + ' · ' + EMPRESA.nombre) + '&body=' + encodeURIComponent(texto()); }),
+    B('ghost', '📱 Enseñar QR (que lo escanee con su móvil)', async () => { try { const qs = qrDataUrl(url, 8); recordar('QR en mano'); hojaQrEnlace('📱 Escanea para ver el albarán', url, 'Albarán ' + num + ' · se queda guardado en su móvil. Si la cámara no lo lee, copia el enlace de abajo.'); } catch (e) { toast('No se pudo hacer el QR. Usa WhatsApp o copia el enlace.', 'err'); } }),
+    B('ghost', '📤 Compartir en otra app…', async () => { try { recordar('Compartido'); if (navigator.share) await navigator.share({ title: 'Albarán ' + num, text: texto() }); else { await navigator.clipboard.writeText(texto()); toast('Texto copiado', 'ok'); } } catch (e) { } }),
+    h('div', { class: 'sub', style: 'font-weight:800;margin-top:16px;border-top:2px solid var(--borde);padding-top:10px' }, '🏢 Página del cliente (todos SUS albaranes, solo los suyos)'),
+    h('p', { class: 'sub' }, 'Mejor que mandar cada albarán al móvil de alguien: el cliente guarda su página UNA vez (escanea el QR o la pone en favoritos) y los albaranes de cada entrega aparecen solos, con su total del mes. Nadie ve los de otros clientes.'),
+    B('ghost', '📱 QR de su página (se escanea una vez)', async () => { try { const tk = await sb.rpc('crear_enlace_cliente', { p_cliente: d.pedido.cliente_id, p_nuevo: false }); if (tk.error) throw tk.error; const u = location.origin + location.pathname.replace(/[^\/]*$/, '') + '?c=' + tk.data; const qs = qrDataUrl(u, 8); sb.rpc('registrar_envio_albaran', { p_pedido: d.pedido.id, p_destino: 'QR página del cliente' }).catch(() => { }); hojaQrEnlace('📱 Página de ' + nombreCli(cli), u, 'Que lo escanee con su móvil y lo guarde en favoritos. Es privado: solo enseña los albaranes de este cliente. Si la cámara no lo lee, copia el enlace de abajo.'); } catch (e) { toast(/does not exist|schema cache|function/i.test(e.message || '') ? 'Falta ejecutar en Supabase el archivo «Parte 57».' : msgErr(e), 'err'); } }),
+    B('ghost', '📲 Mandar su página por WhatsApp (una sola vez)', async () => { try { const tk = await sb.rpc('crear_enlace_cliente', { p_cliente: d.pedido.cliente_id, p_nuevo: false }); if (tk.error) throw tk.error; const u = location.origin + location.pathname.replace(/[^\/]*$/, '') + '?c=' + tk.data; let t = tel.value.replace(/\D/g, ''); if (t.length === 9) t = '34' + t; recordar('WhatsApp (página del cliente)'); window.open('https://wa.me/' + t + '?text=' + encodeURIComponent('Hola' + (nom.value.trim() ? ' ' + nom.value.trim() : '') + ', esta es tu página privada de ' + EMPRESA.nombre + ': aquí verás todos tus albaranes, siempre actualizados. Guárdala en favoritos: ' + u), '_blank'); } catch (e) { toast(msgErr(e), 'err'); } }),
+    B('ghost', '🔒 Anular su página y crear otra nueva', async () => { if (!await confirmar('El enlace de la página de este cliente dejará de funcionar y se creará uno nuevo (hay que dárselo otra vez). ¿Seguir?')) return; try { const tk = await sb.rpc('crear_enlace_cliente', { p_cliente: d.pedido.cliente_id, p_nuevo: true }); if (tk.error) throw tk.error; toast('Enlace anterior anulado. Ya puedes darle el QR nuevo.', 'ok'); } catch (e) { toast(msgErr(e), 'err'); } }),
+    B('ghost', '🔗 Copiar solo el enlace', async () => { try { await navigator.clipboard.writeText(url); toast('Enlace copiado', 'ok'); } catch (e) { hoja('Enlace', h('input', { value: url, readonly: true, style: 'width:100%' })); } })));
+}
+/* Lo que ve quien abre el enlace: sin usuario ni contraseña, solo ese albarán */
+function pubTotales(lineas, cli) {
+  let total = 0; const bases = {}; const RE = { 4: 0.5, 10: 1.4, 21: 5.2 };
+  lineas.forEach(l => { const imp = l.precio != null && l.peso_real != null ? Math.round(l.peso_real * l.precio * 100) / 100 : null; l.imp = imp; if (imp != null) { total = Math.round((total + imp) * 100) / 100; const t = l.iva != null ? Number(l.iva) : (l.iva_producto != null ? Number(l.iva_producto) : 4); bases[t] = Math.round(((bases[t] || 0) + imp) * 100) / 100; } });
+  let sumaIva = 0, sumaRe = 0; Object.keys(bases).forEach(t => { sumaIva = Math.round((sumaIva + Math.round(bases[t] * Number(t)) / 100) * 100) / 100; if (cli.recargo_equivalencia && RE[t]) sumaRe = Math.round((sumaRe + Math.round(bases[t] * RE[t]) / 100) * 100) / 100; });
+  return { base: total, iva: sumaIva, re: sumaRe, total: Math.round((total + sumaIva + sumaRe) * 100) / 100, hay: Object.keys(bases).length > 0 };
+}
+/* Albarán dibujado para el cliente (sirve para el enlace de un albarán y para la página del cliente) */
+function pubAlbaranNodos(x, cargaFirma) {
+  const cli = x.cliente || {}, lin = (x.lineas || []).map(l => Object.assign({}, l)), T = pubTotales(lin, cli), num = x.serie + ' ' + String(x.numero).padStart(7, '0');
+  const pdf = async () => { try { const xx = cargaFirma ? await cargaFirma() : x; const d = { pedido: { fecha_entrega: xx.fecha, clientes: cli }, lineas: (xx.lineas || []).map(l => Object.assign({}, l, { productos: { nombre: l.nombre, iva: l.iva_producto } })), albaran: { serie: xx.serie, numero: xx.numero, fecha: xx.fecha, firma_png: xx.firma_png, firma_nombre: xx.firma_nombre, firma_at: xx.firma_at }, incidencias: [] };
+    const blob = await pdfAlbaran(d), nom = 'Albaran-' + x.serie + '-' + String(x.numero).padStart(7, '0') + '.pdf', file = new File([blob], nom, { type: 'application/pdf' }); if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return; } const u = URL.createObjectURL(blob), lk = h('a', { href: u, download: nom }); document.body.append(lk); lk.click(); lk.remove(); } catch (e) { if (!e || e.name !== 'AbortError') toast('No se pudo crear el PDF', 'err'); } };
+  return [h('h2', { style: 'margin:14px 0 2px' }, 'Albarán ' + num), h('div', { class: 'sub' }, fechaES(x.fecha) + ' · ' + nombreCli(cli) + (cli.localidad ? ' · ' + cli.localidad : '')),
+    h('div', { class: 'pub-lin' }, lin.map(l => h('div', { class: 'pub-l' }, h('div', { style: 'flex:1;min-width:0' }, h('div', { class: 'nombre' }, l.nombre), h('div', { class: 'sub' }, l.peso_real != null ? num_(l.peso_real) + ' ' + udLinea(l) + (l.precio != null ? ' × ' + eur(l.precio) + ' €' : '') : 'sin pesar / no entregado')), h('b', {}, l.imp != null ? eur(l.imp) + ' €' : '')))),
+    T.hay ? h('div', { class: 'pub-tot' }, h('div', { class: 'sub' }, 'Base ' + eur(T.base) + ' € · IVA ' + eur(T.iva) + ' €' + (T.re ? ' · Rec. equiv. ' + eur(T.re) + ' €' : '')), h('div', { class: 'pub-total' }, 'TOTAL ' + eur(T.total) + ' €')) : h('div', { class: 'sub' }, 'Importes pendientes de poner precio.'),
+    x.entregado_at ? h('div', { class: 'pub-ent' }, '📦 Entregado el ' + fechaES(String(x.entregado_at).slice(0, 10)) + ' a las ' + fmtHora(x.entregado_at) + (x.entrega_nota ? ' · ' + x.entrega_nota : '')) : null,
+    x.firma_nombre || x.firma_png || x.firma_at ? h('div', { class: 'sub', style: 'margin:10px 0' }, '✍ Recibido y firmado' + (x.firma_nombre ? ' por ' + x.firma_nombre : '') + (x.firma_at ? ' el ' + fechaES(String(x.firma_at).slice(0, 10)) + ' ' + fmtHora(x.firma_at) : '')) : null,
+    x.firma_png ? h('img', { src: x.firma_png, style: 'height:70px;border:1px solid #d1d5db;border-radius:8px;background:#fff' }) : null,
+    h('button', { class: 'guardar', style: 'width:100%;min-height:54px;margin-top:14px', onclick: pdf }, '📄 Descargar PDF')].filter(Boolean);
+}
+const pubCabecera = () => h('div', { class: 'pub-cab' }, h('div', { class: 'pub-emp' }, EMPRESA.nombre), h('div', { class: 'sub', style: 'color:#dcfce7' }, EMPRESA.tels));
+const pubPie = () => h('p', { class: 'sub', style: 'margin-top:14px' }, EMPRESA.dir + ' · ' + EMPRESA.email);
+async function vistaAlbaranPublico(tok) {
+  document.title = 'Albarán · ' + EMPRESA.nombre;
+  const caja = h('div', { class: 'pub' }, h('p', { class: 'sub' }, 'Cargando tu albarán…')); $app.replaceChildren(caja);
+  try {
+    const r = await sb.rpc('albaran_publico', { p_token: tok }); if (r.error) throw r.error; const x = r.data;
+    if (!x || !x.ok) { caja.replaceChildren(pubCabecera(), h('h2', {}, 'Este enlace ya no está disponible'), h('p', {}, 'Pide a ' + EMPRESA.nombre + ' que te lo vuelva a enviar: ' + EMPRESA.tels)); return; }
+    caja.replaceChildren(pubCabecera(), ...pubAlbaranNodos(x), h('p', { class: 'sub', style: 'margin-top:12px' }, 'Guarda este mensaje o este enlace: podrás abrir el albarán siempre que lo necesites.'), pubPie());
+  } catch (e) { caja.replaceChildren(pubCabecera(), h('h2', {}, 'No se pudo abrir'), h('p', {}, isNetErr(e) ? 'Comprueba tu conexión a internet y vuelve a abrir el enlace.' : msgErr(e))); }
+}
+/* Página del cliente: todos SUS albaranes y nada más. Se guarda una vez (marcador / pantalla de inicio) y se actualiza sola */
+async function vistaPortalCliente(tok) {
+  document.title = 'Tus albaranes · ' + EMPRESA.nombre;
+  const caja = h('div', { class: 'pub' }, h('p', { class: 'sub' }, 'Cargando…')); $app.replaceChildren(caja);
+  const hoyD = new Date(), pad = n => String(n).padStart(2, '0'), MESN = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  const claveMes = (y, m) => y + '-' + pad(m + 1), MES = k => { const [y, mm] = k.split('-'); return MESN[Number(mm) - 1] + ' ' + y; };
+  const meses = []; for (let i = 0; i < 12; i++) { const d = new Date(hoyD.getFullYear(), hoyD.getMonth() - i, 1); meses.push(claveMes(d.getFullYear(), d.getMonth())); }
+  let mes = meses[0];
+  const rango = k => { const [y, m] = k.split('-').map(Number), fin = new Date(y, m, 0).getDate(); return [k + '-01', k + '-' + pad(fin)]; };
+  const csvDe = (als, cli) => { const f = n => n == null ? '' : String(n).replace('.', ','), q = t => '"' + String(t == null ? '' : t).replace(/"/g, '""') + '"'; const filas = [['Fecha', 'Albarán', 'Producto', 'Cantidad', 'Unidad', 'Precio', 'Importe', 'IVA %'].join(';')];
+    als.forEach(a => (a._L || []).forEach(l => filas.push([fechaES(a.fecha), a.serie + '-' + String(a.numero).padStart(7, '0'), q(l.nombre), f(l.peso_real), udLinea(l), f(l.precio), f(l.imp), f(l.iva != null ? l.iva : l.iva_producto)].join(';')))); return '﻿' + filas.join('\r\n'); };
+  const bajar = (contenido, nombre, tipo) => { const u = URL.createObjectURL(new Blob([contenido], { type: tipo })), lk = h('a', { href: u, download: nombre }); document.body.append(lk); lk.click(); lk.remove(); };
+  const pdfMes = (als, cli, tot) => { const doc = pdfNuevo(595.28, 841.89), M = 40; let y = 60;
+    const cab = () => { doc.rect(0, 0, 595.28, 70, '#166534'); doc.texto(EMPRESA.nombre, M, 30, 13, { neg: true, color: '#ffffff' }); doc.texto('Resumen de albaranes · ' + MES(mes), M, 54, 16, { neg: true, color: '#facc15' }); y = 100; doc.texto(nombreCli(cli) + (cli.nif ? ' · NIF ' + cli.nif : ''), M, y, 12, { neg: true }); y += 26; doc.texto('Fecha', M, y, 9, { neg: true }); doc.texto('Albarán', M + 80, y, 9, { neg: true }); doc.texto('Base', 400, y, 9, { neg: true, align: 'right' }); doc.texto('IVA', 470, y, 9, { neg: true, align: 'right' }); doc.texto('Total', 555, y, 9, { neg: true, align: 'right' }); y += 6; doc.linea(M, y, 555, y, '#9ca3af'); y += 16; };
+    cab(); als.slice().reverse().forEach(a => { if (y > 790) { doc.pagina(); cab(); } const T = a._T; doc.texto(fechaES(a.fecha), M, y, 10.5); doc.texto(a.serie + ' ' + String(a.numero).padStart(7, '0'), M + 80, y, 10.5); doc.texto(T.hay ? eur(T.base) : '—', 400, y, 10.5, { align: 'right' }); doc.texto(T.hay ? eur(T.iva + T.re) : '—', 470, y, 10.5, { align: 'right' }); doc.texto(T.hay ? eur(T.total) : 'sin precio', 555, y, 10.5, { align: 'right', neg: true }); y += 17; });
+    if (y > 760) { doc.pagina(); cab(); } y += 4; doc.linea(M, y, 555, y, '#9ca3af'); y += 20; doc.texto('TOTAL ' + MES(mes) + ' (' + als.length + ' albaranes)', M, y, 12, { neg: true }); doc.texto('Base ' + eur(tot.base) + ' · IVA ' + eur(tot.iva + tot.re), 400, y, 10.5, { align: 'right' }); doc.texto(eur(tot.total) + ' €', 555, y, 13, { neg: true, align: 'right', color: '#166534' });
+    y += 30; doc.texto('Importes con IVA incluido. Resumen informativo de los albaranes entregados; no es una factura.', M, y, 8.5, { color: '#6b7280' }); return doc.bytes(); };
+  const lista = async () => {
+    try {
+      const [d0, d1] = rango(mes); const r = await sb.rpc('portal_cliente', { p_token: tok, p_desde: d0, p_hasta: d1 }); if (r.error) throw r.error; const x = r.data;
+      if (!x || !x.ok) { caja.replaceChildren(pubCabecera(), h('h2', {}, 'Este enlace ya no está disponible'), h('p', {}, 'Pide a ' + EMPRESA.nombre + ' tu enlace nuevo: ' + EMPRESA.tels)); return; }
+      const cli = x.cliente || {}, als = (x.albaranes || []).filter(a => a && a.ok);
+      const tot = { base: 0, iva: 0, re: 0, total: 0 };
+      als.forEach(a => { a._L = (a.lineas || []).map(l => Object.assign({}, l)); const T = pubTotales(a._L, a.cliente || cli); a._T = T; if (T.hay) { tot.base += T.base; tot.iva += T.iva; tot.re += T.re; tot.total += T.total; } });
+      Object.keys(tot).forEach(k => { tot[k] = Math.round(tot[k] * 100) / 100; });
+      const sinPrecio = als.filter(a => !a._T.hay).length;
+      const filas = als.map(a => h('button', { class: 'pub-fila', onclick: () => detalle(a) }, h('div', { style: 'text-align:left;min-width:0;flex:1' }, h('div', { class: 'nombre' }, fechaES(a.fecha) + ' · ' + a.serie + ' ' + String(a.numero).padStart(7, '0')), h('div', { class: 'sub' }, (a.lineas || []).length + ' productos' + (a.entregado_at ? ' · 📦 ' + (a.entrega_nota && a.entrega_nota !== 'En mano' ? a.entrega_nota : 'entregado') : ' · pendiente de entrega') + (a.firma_nombre ? ' · firmado por ' + a.firma_nombre : (a.firma_at ? ' · firmado' : '')))), h('b', {}, a._T.hay ? eur(a._T.total) + ' €' : 'sin precio')));
+      caja.replaceChildren(pubCabecera(), h('h2', { style: 'margin:14px 0 2px' }, 'Tus albaranes'), h('div', { class: 'sub' }, nombreCli(cli) + (cli.localidad ? ' · ' + cli.localidad : '')),
+        h('p', { class: 'sub', style: 'margin-top:8px' }, 'Cada vez que te entregamos mercancía, el albarán aparece aquí solo. Esta página es privada: solo ves los tuyos. Guárdala en favoritos y no hace falta que nadie te mande nada.'),
+        h('div', { class: 'pub-meses' }, meses.map(k => h('button', { class: 'chip' + (k === mes ? ' on' : ''), onclick: () => { mes = k; lista(); } }, MES(k).replace(/ \d{4}$/, '') + (k.slice(0, 4) !== String(hoyD.getFullYear()) ? ' ' + k.slice(2, 4) : '')))),
+        h('div', { class: 'pub-mes' }, h('span', {}, MES(mes).replace(/^./, c => c.toUpperCase()) + ' · ' + als.length + ' albaranes'), h('b', {}, eur(tot.total) + ' €')),
+        als.length ? h('div', { class: 'sub' }, 'Base ' + eur(tot.base) + ' € · IVA ' + eur(tot.iva + tot.re) + ' €' + (sinPrecio ? ' · ' + sinPrecio + ' albarán(es) aún sin precio' : '')) : null,
+        ...(filas.length ? filas : [h('p', { class: 'vacio' }, 'No hay albaranes en ' + MES(mes) + '.')]),
+        als.length ? h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;margin-top:14px' }, h('button', { class: 'guardar', style: 'flex:1;min-height:50px', onclick: () => bajar(pdfMes(als, cli, tot), 'Albaranes-' + mes + '.pdf', 'application/pdf') }, '📄 Resumen del mes (PDF)'), h('button', { class: 'ghost', style: 'flex:1;min-height:50px', onclick: () => bajar(csvDe(als, cli), 'Albaranes-' + mes + '.csv', 'text/csv;charset=utf-8') }, '📊 Excel (CSV)')) : null,
+        pubPie());
+    } catch (e) { caja.replaceChildren(pubCabecera(), h('h2', {}, 'No se pudo abrir'), h('p', {}, isNetErr(e) ? 'Comprueba tu conexión a internet y vuelve a abrir el enlace.' : msgErr(e))); }
+  };
+  const detalle = a => { caja.replaceChildren(pubCabecera(), h('button', { class: 'ghost small', style: 'margin-top:10px', onclick: lista }, '← Todos mis albaranes'),
+    ...pubAlbaranNodos(a, async () => { const r = await sb.rpc('portal_albaran', { p_token: tok, p_numero: a.numero }); return r.data && r.data.ok ? r.data : a; }), pubPie()); window.scrollTo(0, 0); };
+  lista();
+}
+const num_ = n => num(n);
 async function verFotoIncidencia(id) {
   try {
     const r = await sb.rpc('foto_incidencia', { p_id: id }); if (r.error) throw r.error;
@@ -3986,7 +4188,7 @@ function vistaMas() {
       c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Hoja de carga', () => go('carga'), V), puedeCompras() ? c('💲', 'Precios de compra del día', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, V) : null, c('💶', 'Poner precios', () => go('preciosp'), V), c('🧑‍✈️', 'Reparto', () => go('reparto'), V), c('♻️', 'Sobrante', () => go('sobrante'), V)),
         ...g('Entregas y pedidos', c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a')),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
-    ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null),
+    ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z) : null, esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null),
     ...g('Compras y mercancía', c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('💶', 'Precios de compra', () => { if (LS.get('fj_precios_modo', 'dia') === 'hoy') LS.set('fj_precios_modo', 'dia'); go('precios'); }, A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('❓', 'Ayuda y guía', () => go('ayuda'), T), c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
@@ -4697,7 +4899,9 @@ function vistaAlbaranes() {
   const btnOrd = h('button', { class: 'ghost', onclick: () => { asc = !asc; LS.set('fj_alb_asc', asc); btnOrd.textContent = asc ? 'Nº ↑' : 'Nº ↓'; pintar(); } }, asc ? 'Nº ↑' : 'Nº ↓');
   const buscar_ = h('input', { placeholder: 'Buscar por cliente o nº…', oninput: debounce(() => { texto = limpiaBusqueda(buscar_.value).toLowerCase(); pintar(); }, 200) });
   $app.replaceChildren(shell('Albaranes', h('div', {}, chipsT, h('div', { class: 'barra' }, selDias, btnOrd, h('button', { class: 'ghost', onclick: () => cargar() }, '↻')), buscar_, cont))); renderBanner();
-  let datos = [], traza = {}, cache = false;
+  let datos = [], traza = {}, cache = false, ext = {}, repF = LS.get('fj_alb_rep', 'todos');
+  const nomG = id => id ? ((state.gente[id] || {}).nombre || 'Otro') : '';
+  const quien = x => { const e = ext[x.pedido_id] || {}; return e.ent || e.rep || null; };
   async function cargar() {
     cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
     const hasta = hoy(), desde = hoy(new Date(Date.now() - (dias - 1) * 86400000)), key = 'fj_albaranes_' + dias;
@@ -4707,6 +4911,10 @@ function vistaAlbaranes() {
       if (r.error) throw r.error; datos = r.data.filter(x => x.numero_albaran != null);
       const ids = datos.map(x => x.pedido_id); traza = {};
       if (ids.length) { const t = await sb.from('albaranes').select('pedido_id,traza_estado,estado').in('pedido_id', ids); (t.data || []).forEach(a => traza[a.pedido_id] = a); }
+      ext = {};
+      try { const get = async (tabla, cols, fn) => { for (let i = 0; i < ids.length; i += 150) { const r = await sb.from(tabla).select(cols).in(fn || 'pedido_id', ids.slice(i, i + 150)); if (!r.error) (r.data || []).forEach(z => { const k = z[fn || 'pedido_id'] || z.id; const e = ext[k] = ext[k] || { cobros: [], inc: [] }; if (tabla === 'pedidos') e.rep = z.repartidor_id; else if (tabla === 'entregas') { e.ent = z.entregado_por; e.entAt = z.entregado_at; e.entNota = z.nota; } else if (tabla === 'cobros') e.cobros.push(z); else if (tabla === 'incidencias') { if (!z.archivado) e.inc.push(z); } else if (tabla === 'albaran_portal') e.portal = z.publicado_at; }); } };
+        await Promise.all([get('pedidos', 'id,repartidor_id', 'id'), get('entregas', 'pedido_id,entregado_por,entregado_at,nota'), get('cobros', 'pedido_id,importe,forma,cobrado_por'), get('incidencias', 'pedido_id,tipo,archivado'), get('albaran_portal', 'pedido_id,publicado_at')]);
+        for (let i = 0; i < ids.length; i += 150) { const fr = await sb.from('albaranes').select('pedido_id,firma_at,firma_nombre').in('pedido_id', ids.slice(i, i + 150)); if (!fr.error) (fr.data || []).forEach(a => { const e = ext[a.pedido_id] = ext[a.pedido_id] || { cobros: [], inc: [] }; e.firma = a.firma_at || a.firma_nombre || null; e.firmaNom = a.firma_nombre; }); } } catch (e3) { }
       sinPr = {}; pend = [];
       try {
         for (let i = 0; i < ids.length; i += 150) { const lp = await sb.from('lineas_pedido').select('pedido_id,precio,estado').in('pedido_id', ids.slice(i, i + 150)); (lp.data || []).forEach(l => { if (l.precio == null && l.estado !== 'no_disponible') sinPr[l.pedido_id] = (sinPr[l.pedido_id] || 0) + 1; }); }
@@ -4714,12 +4922,12 @@ function vistaAlbaranes() {
         const pr = await sb.from('pedidos').select('id,fecha_entrega,estado,archivado,clientes(codigo,nombre,nombre_comercial),lineas_pedido(estado,precio,peso_real)').gte('fecha_entrega', desde).lte('fecha_entrega', man).in('estado', ['pendiente', 'en_preparacion']).limit(500);
         pend = pr.error ? [] : (pr.data || []).filter(p => !p.archivado);
       } catch (e2) { }
-      cache = false; LS.set(key, { datos, traza });
-    } catch (e) { if (!isNetErr(e)) { cont.replaceChildren(h('p', { class: 'err' }, msgErr(e))); return; } const c = LS.get(key, { datos: [], traza: {} }); datos = c.datos; traza = c.traza; cache = true; }
+      cache = false; LS.set(key, { datos, traza, ext });
+    } catch (e) { if (!isNetErr(e)) { cont.replaceChildren(h('p', { class: 'err' }, msgErr(e))); return; } const c = LS.get(key, { datos: [], traza: {}, ext: {} }); datos = c.datos; traza = c.traza; ext = c.ext || {}; cache = true; }
     pintar();
   }
   function pintarListos() {
-    const lista = datos.filter(x => !texto || String(x.cliente_nombre || '').toLowerCase().includes(texto) || String(x.numero_albaran).includes(texto))
+    const lista = datos.filter(x => !texto || String(x.cliente_nombre || '').toLowerCase().includes(texto) || String(x.numero_albaran).includes(texto) || sinTilde(nomG(quien(x))).includes(sinTilde(texto))).filter(x => repF === 'todos' || (repF === 'nadie' ? !quien(x) : quien(x) === repF))
       .sort((a, b) => String(b.fecha_entrega).localeCompare(String(a.fecha_entrega)) || (asc ? a.numero_albaran - b.numero_albaran : b.numero_albaran - a.numero_albaran));
     const kids = []; if (cache) kids.push(h('div', { class: 'aviso-card' }, 'Sin conexión: se muestra la última lista guardada.'));
     if (!lista.length) kids.push(h('p', { class: 'vacio' }, 'No hay albaranes en este periodo. Se crean al terminar un pedido.'));
@@ -4732,9 +4940,27 @@ function vistaAlbaranes() {
       const pagado = Number(x.pendiente) <= 0.009;
       kids.push(h('div', { class: 'card tap fila', style: anul ? 'opacity:.55' : '', onclick: () => go('albaran', { id: x.pedido_id }) },
         h('div', {}, h('div', { class: 'nombre' }, (x.serie || 'F') + ' ' + x.numero_albaran + ' · ' + (x.cliente_nombre || '')),
-          h('div', { class: 'sub' }, [sinPr[x.pedido_id] ? '⚠ ' + sinPr[x.pedido_id] + ' sin precio' : null, anul ? 'ANULADO' : (pagado ? '✔ Cobrado' : 'Pendiente de cobro ' + eur(x.pendiente)), esOficina() ? (t.traza_estado === 'confirmada' ? '✔ trazabilidad' : t.traza_estado === 'sin_trazabilidad' ? 'sin trazabilidad' : '⚠ trazabilidad pendiente') : null].filter(Boolean).join(' · '))),
+          h('div', { class: 'sub' }, [quien(x) ? '🚚 ' + nomG(quien(x)) : '🚚 sin repartidor', (ext[x.pedido_id] || {}).portal ? '🌐 en el portal' : '🌐 sin publicar', (ext[x.pedido_id] || {}).entNota && ext[x.pedido_id].entNota !== 'En mano' ? '📦 ' + ext[x.pedido_id].entNota : null, (ext[x.pedido_id] || {}).firma ? '✍ firmado' + ((ext[x.pedido_id] || {}).firmaNom ? ' (' + ext[x.pedido_id].firmaNom + ')' : '') : '✍ sin firma', ((ext[x.pedido_id] || {}).inc || []).length ? '⚠ ' + ext[x.pedido_id].inc.length + ' incidencia(s)' : null, sinPr[x.pedido_id] ? '⚠ ' + sinPr[x.pedido_id] + ' sin precio' : null, anul ? 'ANULADO' : (pagado ? '✔ Cobrado' : 'Pendiente de cobro ' + eur(x.pendiente)), esOficina() ? (t.traza_estado === 'confirmada' ? '✔ trazabilidad' : t.traza_estado === 'sin_trazabilidad' ? 'sin trazabilidad' : '⚠ trazabilidad pendiente') : null].filter(Boolean).join(' · '))),
         h('b', { style: 'font-size:18px' }, eur(x.total))));
     });
+    return kids;
+  }
+  /* Por repartidor: quién ha entregado qué, cuánto ha cobrado en mano, qué falta por firmar y las incidencias */
+  function pintarCaja() {
+    const kids = [h('div', { class: 'aviso-card' }, 'Cada repartidor con sus albaranes del periodo elegido arriba (Hoy, Ayer y hoy…): importe, lo que ha cobrado y lo que queda, albaranes sin firmar e incidencias. El efectivo se cuenta por quien lo cobró.')];
+    const G = {}; const g = id => G[id || 'nadie'] = G[id || 'nadie'] || { id, albs: [], total: 0, anul: 0, sinFirma: 0, inc: 0, pend: 0, efec: 0, otros: 0 };
+    datos.forEach(x => { const e = ext[x.pedido_id] || { cobros: [], inc: [] }, t = traza[x.pedido_id] || {}, G1 = g(quien(x)); G1.albs.push(x); if (t.estado === 'anulado') { G1.anul++; return; } G1.total += Number(x.total) || 0; G1.pend += Math.max(0, Number(x.pendiente) || 0); if (!e.firma) G1.sinFirma++; G1.inc += e.inc.length; });
+    Object.keys(ext).forEach(k => { (ext[k].cobros || []).forEach(c => { const G2 = g(c.cobrado_por); if (c.forma === 'efectivo') G2.efec += Number(c.importe) || 0; else G2.otros += Number(c.importe) || 0; }); });
+    const orden = Object.values(G).sort((a, b) => (a.id ? 0 : 1) - (b.id ? 0 : 1) || nomG(a.id).localeCompare(nomG(b.id), 'es')); let T = { n: 0, total: 0, efec: 0, otros: 0, pend: 0, inc: 0 };
+    if (!orden.length) kids.push(h('p', { class: 'vacio' }, 'No hay albaranes en este periodo.'));
+    orden.forEach(r => { T.n += r.albs.length; T.total += r.total; T.efec += r.efec; T.otros += r.otros; T.pend += r.pend; T.inc += r.inc;
+      kids.push(h('div', { class: 'card' }, h('div', { class: 'nombre', style: 'font-size:18px' }, r.id ? '🚚 ' + nomG(r.id) : '🚚 Sin repartidor asignado'),
+        h('div', { class: 'sub' }, r.albs.length + ' albaranes · importe ' + eur(r.total) + ' €' + (r.anul ? ' · ' + r.anul + ' anulado(s)' : '')),
+        h('div', { style: 'display:flex;gap:10px;flex-wrap:wrap;margin:6px 0;font-weight:800' }, h('span', { style: 'color:#166534' }, '💶 Efectivo en mano: ' + eur(r.efec) + ' €'), r.otros ? h('span', {}, 'Otros cobros: ' + eur(r.otros) + ' €') : null, h('span', { style: r.pend > 0.009 ? 'color:#b45309' : '' }, 'Pendiente: ' + eur(r.pend) + ' €')),
+        h('div', { class: 'sub' }, [(r.albs.length - r.anul) < 1 ? 'sin albaranes activos' : r.sinFirma ? '✍ ' + r.sinFirma + ' sin firma' : '✍ todos firmados', r.inc ? '⚠ ' + r.inc + ' incidencia(s)' : 'sin incidencias'].join(' · ')),
+        h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: () => { repF = r.id || 'nadie'; LS.set('fj_alb_rep', repF); tab = 'listos'; LS.set('fj_alb_tab', 'listos'); pintar(); } }, 'Ver sus albaranes')));
+    });
+    if (orden.length) kids.push(h('div', { class: 'card', style: 'border-left:6px solid #166534' }, h('div', { class: 'nombre' }, 'TOTAL · ' + T.n + ' albaranes · ' + eur(T.total) + ' €'), h('div', { class: 'sub' }, 'Efectivo ' + eur(T.efec) + ' € · otros cobros ' + eur(T.otros) + ' € · pendiente ' + eur(T.pend) + ' € · ' + T.inc + ' incidencia(s)')));
     return kids;
   }
   function pintarPend() {
@@ -4752,8 +4978,10 @@ function vistaAlbaranes() {
     return kids;
   }
   function pintar() {
-    chipsT.replaceChildren(...[['porhacer', 'Por hacer' + (pend.length ? ' (' + pend.length + ')' : '')], ['listos', 'Listos'], ['todos', 'Todos']].map(([m, n]) => h('button', { class: 'chip' + (tab === m ? ' on' : ''), onclick: () => { tab = m; LS.set('fj_alb_tab', m); pintar(); } }, n)));
-    cont.replaceChildren(...(tab === 'porhacer' ? pintarPend() : tab === 'todos' ? pintarPend().concat(pintarListos()) : pintarListos()));
+    chipsT.replaceChildren(...[['porhacer', 'Por hacer' + (pend.length ? ' (' + pend.length + ')' : '')], ['listos', 'Listos'], ['caja', '🚚 Por repartidor'], ['todos', 'Todos']].map(([m, n]) => h('button', { class: 'chip' + (tab === m ? ' on' : ''), onclick: () => { tab = m; LS.set('fj_alb_tab', m); pintar(); } }, n)));
+    const reps = [...new Set(datos.map(quien).filter(Boolean))];
+    const chipsR = (tab !== 'porhacer' && tab !== 'caja' && reps.length) ? h('div', { class: 'chips' }, [['todos', 'Todos los repartidores'], ...reps.map(r => [r, '🚚 ' + nomG(r)]), ['nadie', 'Sin repartidor']].map(([m, n]) => h('button', { class: 'chip' + (repF === m ? ' on' : ''), onclick: () => { repF = m; LS.set('fj_alb_rep', m); pintar(); } }, n))) : null;
+    cont.replaceChildren(...(chipsR ? [chipsR] : []), ...(tab === 'caja' ? pintarCaja() : tab === 'porhacer' ? pintarPend() : tab === 'todos' ? pintarPend().concat(pintarListos()) : pintarListos()));
   }
   pintar();
   cargar();
@@ -5365,9 +5593,17 @@ async function sincronizarEntregas() {
     }
   } finally { sincE = false; }
 }
-async function marcarEntregado(pedidoId) {
-  if (!colaE.get().some(x => x.pedido === pedidoId)) colaE.set(colaE.get().concat([{ pedido: pedidoId, at: new Date().toISOString() }]));
+async function marcarEntregado(pedidoId, nota) {
+  if (!colaE.get().some(x => x.pedido === pedidoId)) colaE.set(colaE.get().concat([{ pedido: pedidoId, at: new Date().toISOString(), nota: nota || null }]));
   toast('Entrega registrada', 'ok'); await sincronizarEntregas();
+  if (navigator.onLine) publicarEnPortal(pedidoId, true);
+}
+/* Cómo se ha entregado: en mano, en la puerta o en el almacén con llave. Queda anotado y el cliente lo ve en su página aunque no haya nadie */
+const MODOS_ENTREGA = [['En mano', '🤝 Entregado en mano', 'Había alguien y lo ha recibido (si quieres, recoge su firma).'], ['Dejado en la puerta', '🚪 Dejado en la puerta', 'No había nadie: se deja en la puerta.'], ['Metido en el almacén (con llave)', '🔑 Metido en el almacén (con llave)', 'No había nadie y lo hemos dejado dentro con nuestra llave.']];
+function elegirEntrega(ids, alTerminar) {
+  let c; const lista = Array.isArray(ids) ? ids : [ids];
+  c = hoja('¿Cómo se ha entregado?', h('div', {}, h('p', { class: 'sub' }, 'Queda anotado. Aunque no haya nadie ni firma, el cliente verá en su página que el albarán ya está entregado y cómo.'),
+    ...MODOS_ENTREGA.map(([nota, tit, expl]) => h('button', { class: nota === 'En mano' ? 'guardar' : 'ghost', style: 'width:100%;min-height:60px;margin-top:8px;text-align:left', onclick: async () => { c(); for (const id of lista) await marcarEntregado(id, nota); if (alTerminar) alTerminar(nota); } }, h('div', { style: 'font-size:17px;font-weight:800' }, tit), h('div', { class: 'sub', style: 'font-weight:400' }, expl)))));
 }
 function vistaEntregas() {
   state.view = 'entregas';
@@ -5397,7 +5633,7 @@ function vistaEntregas() {
     if (falta.length) kids.push(h('div', { class: 'letra' }, 'Por entregar'));
     falta.forEach(p => kids.push(h('div', { class: 'card fila' }, h('div', { class: 'nombre' }, nombreCli(uno(p.clientes))),
       h('div', { style: 'display:flex;gap:6px' }, h('button', { class: 'ghost small', onclick: () => abrirIncidencia({ cliente: Object.assign({ id: p.cliente_id }, uno(p.clientes) || {}), pedido_id: p.id, tipo: 'devolucion' }, () => { }) }, '⚠ Incidencia'),
-        h('button', { class: 'guardar small', onclick: async () => { await marcarEntregado(p.id); pintar(); cargar(true); } }, 'Entregado')))));
+        h('button', { class: 'guardar small', onclick: () => elegirEntrega(p.id, () => { pintar(); cargar(true); }) }, 'Entregado')))));
     if (ent.length) kids.push(h('div', { class: 'letra' }, 'Entregados'));
     ent.forEach(p => { const i = info(p); kids.push(h('div', { class: 'card fila' },
       h('div', {}, h('div', { class: 'nombre' }, '✔ ' + nombreCli(uno(p.clientes))), h('div', { class: 'sub' }, 'El pedido de ' + nombreCli(uno(p.clientes)) + ' ya ha sido entregado' + (quienEs(i.por) ? ' · ' + quienEs(i.por) : '') + (i.pend ? ' · pendiente de enviar' : ''))),
@@ -6271,7 +6507,7 @@ function vistaRuta() {
         h('a', { href: enlaceMapas([c]), target: '_blank', rel: 'noopener', style: 'padding:8px 12px;border:1px solid var(--borde);border-radius:12px;text-decoration:none;color:var(--verde-osc);font-weight:700' }, 'Navegar'),
         c.telefono ? h('a', { href: 'tel:' + c.telefono, style: 'padding:8px 12px;border:1px solid var(--borde);border-radius:12px;text-decoration:none;color:var(--verde-osc);font-weight:700' }, 'Llamar') : null,
         h('button', { class: 'ghost small', onclick: async () => { try { const u = await miUbicacion(); await guardarUbicacion(c.id, u); c.lat = u.lat; c.lng = u.lng; toast('Ubicación del cliente guardada aquí', 'ok'); } catch (e) { toast(msgErr(e), 'err'); } } }, '📍 Estoy aquí'),
-        !c.entregado && c.pedidos ? h('button', { class: 'guardar small', onclick: async () => { for (const id of c.pedidos) await marcarEntregado(id); c.entregado = true; toast('Entrega registrada', 'ok'); } }, 'Entregado') : null))); });
+        !c.entregado && c.pedidos ? h('button', { class: 'guardar small', onclick: () => elegirEntrega(c.pedidos, () => { c.entregado = true; }) }, 'Entregado') : null))); });
     if (faltan.length) kids.push(h('div', { class: 'aviso-card' }, 'Sin ubicación (no entran en la ruta): ' + faltan.map(nombreCli).join(', ') + '. Pulsa "📍 Estoy aquí" cuando estés en su puerta o escribe su dirección en la ficha del cliente.'));
     const pts = plan.det.map(x => x.p); const tramos = []; for (let i = 0; i < pts.length; i += 9) tramos.push(pts.slice(i, i + 9));
     tramos.forEach((t, k) => kids.push(h('a', { href: enlaceMapas(t, k === 0 ? ini : tramos[k - 1][tramos[k - 1].length - 1]), target: '_blank', rel: 'noopener', style: 'display:block;text-align:center;padding:14px;margin-bottom:8px;border-radius:14px;background:var(--verde);color:#fff;font-weight:700;text-decoration:none' }, tramos.length > 1 ? 'Abrir en Google Maps · tramo ' + (k + 1) : 'Abrir ruta completa en Google Maps')));
@@ -7951,6 +8187,7 @@ const presPlantilla = (tipo) => {
     { t: 'texto', titulo: 'Quiénes somos', texto: COM_INTRO, cifras: PRES_CIFRAS },
     { t: 'lista', titulo: 'Por qué elegirnos', puntos: ['Tres generaciones dedicadas a la fruta y la verdura', 'Mercancía fresca elegida cada mañana en Mercamadrid', 'Cosechas propias en una gran extensión: continuidad y calidad', 'Reparto puntual en tu local, con nuestros repartidores', 'Un comercial de contacto directo, siempre localizable'] },
     { t: 'lista', titulo: 'Cómo trabajamos', puntos: ['Pides por WhatsApp o por teléfono, cuando te venga bien', 'Preparamos tu pedido con el producto del día', 'Te lo llevamos nosotros a tu local', 'Albarán con los pesos reales de cada entrega', 'Ajustamos calidades y formatos a tu cocina'] },
+    { t: 'productos', titulo: 'Así trabajamos cada día', items: ['Mercamadrid', 'Cosechas propias', 'Reparto a tu puerta', 'Lista de precios'], fotos: {} },
     { t: 'productos', titulo: 'Verduras y hortalizas', items: ['Tomate', 'Lechuga', 'Cebolla', 'Pimiento', 'Calabacín', 'Berenjena'], fotos: {} },
     { t: 'productos', titulo: 'Fruta fresca', items: ['Aguacate', 'Naranja de zumo', 'Limón', 'Manzana', 'Pera', 'Plátano'], fotos: {} },
     { t: 'ofertas', titulo: 'Ofertas de la semana', texto: 'Cada semana tenemos productos en oferta. Pregúntale a tu comercial.' },
@@ -7961,6 +8198,7 @@ const presPlantilla = (tipo) => {
     { t: 'texto', titulo: 'Quiénes somos', texto: COM_INTRO, cifras: PRES_CIFRAS },
     { t: 'lista', titulo: 'Por qué elegirnos', puntos: ['Tres generaciones de experiencia en fruta y verdura', 'Volumen y continuidad para centros grandes, gracias a nuestras cosechas propias', 'Producto fresco de temporada desde Mercamadrid', 'Reparto regular y puntual en tu centro', 'Una persona de contacto directo para todo el centro'] },
     { t: 'lista', titulo: 'Cómo trabajamos', puntos: ['Acordamos contigo días y horarios de entrega', 'Formatos y calidades adaptados al centro (patata pelada en varios cortes)', 'Albarán con los pesos reales de cada entrega', 'Revisión de la tarifa cada 7-10 días', 'Atención directa ante cualquier incidencia'] },
+    { t: 'productos', titulo: 'Así trabajamos cada día', items: ['Mercamadrid', 'Cosechas propias', 'Reparto a tu puerta', 'Lista de precios'], fotos: {} },
     { t: 'productos', titulo: 'Verduras y hortalizas', items: ['Zanahoria', 'Calabacín', 'Brócoli', 'Coliflor', 'Judía verde', 'Patata pelada'], fotos: {} },
     { t: 'productos', titulo: 'Fruta fresca', items: ['Banana', 'Clementina', 'Manzana Golden', 'Naranja de zumo', 'Pera Conferencia', 'Melón'], fotos: {} },
     { t: 'ofertas', titulo: 'Ofertas de la semana', texto: 'Cada semana tenemos productos en oferta. Pregúntale a tu comercial.' },
@@ -7976,6 +8214,16 @@ function presFotoElegir(alTener) {
     im.onerror = () => { URL.revokeObjectURL(url); toast('No se pudo leer esa foto', 'err'); }; im.src = url; });
   document.body.append(inp); inp.click();
 }
+/* Dibujos automáticos (emoji sobre fondo de color) para las láminas hasta que pongas tus fotos reales */
+const PRES_EMOJI = [[/patata/, '🥔'], [/tomate/, '🍅'], [/lechuga|ensalada|canonigo|brote|escarola|endibia/, '🥬'], [/cebolla/, '🧅'], [/pimiento/, '🫑'], [/calabac|pepino/, '🥒'], [/berenjena/, '🍆'], [/aguacate/, '🥑'], [/naranja|clementina|mandarina/, '🍊'], [/limon/, '🍋'], [/manzana/, '🍎'], [/pera/, '🍐'], [/platano|banana/, '🍌'], [/zanahoria/, '🥕'], [/brocoli|coliflor|repollo|col\b/, '🥦'], [/ajo/, '🧄'], [/melon/, '🍈'], [/sandia/, '🍉'], [/fresa/, '🍓'], [/uva/, '🍇'], [/pina/, '🍍'], [/mango/, '🥭'], [/melocoton|nectarina/, '🍑'], [/kiwi/, '🥝'], [/maiz/, '🌽'], [/champi|seta/, '🍄'], [/judia|guisante|haba/, '🌱'], [/mercamadrid|puesto/, '🏪'], [/reparto|repartidor|camion|entrega/, '🚚'], [/cosecha|campo|finca|extension/, '🌾'], [/lista|precios|tarifa/, '📋'], [/comercial|contacto/, '🤝'], [/albaran/, '🧾']];
+const PRES_FONDOS = [['#dcfce7', '#bbf7d0'], ['#fef9c3', '#fde68a'], ['#ffedd5', '#fed7aa'], ['#fee2e2', '#fecaca'], ['#e0f2fe', '#bae6fd']];
+function presFotoEmoji(nombre, k) {
+  const n = sinTilde(String(nombre || '')), em = (PRES_EMOJI.find(x => x[0].test(n)) || [0, '🥗'])[1], W = 400, H = 300, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'), f = PRES_FONDOS[(k || 0) % PRES_FONDOS.length];
+  const gr = g.createLinearGradient(0, 0, W, H); gr.addColorStop(0, f[0]); gr.addColorStop(1, f[1]); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '190px "Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji",sans-serif'; g.fillText(em, W / 2, H / 2 + 12);
+  return { u: c.toDataURL('image/jpeg', 0.7), w: W, h: H, dib: 1 };
+}
+function presDibujos(d, todos) { d.fotos = d.fotos || {}; (d.items || []).filter(x => x && x.trim()).forEach((x, i) => { if (todos || !d.fotos[x]) d.fotos[x] = presFotoEmoji(x, i); }); }
 const presFotoBytes = (() => { const memo = new Map(); return f => { if (!f || !f.u) return null; if (memo.has(f.u)) return memo.get(f.u); const b = atob(f.u.split(',')[1] || ''), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); memo.set(f.u, u); return u; }; })();
 /* Pasa las diapositivas del editor a «láminas» listas para dibujar (la lista de precios se parte en varias) */
 async function presExpandir(slides, conLista) {
@@ -8079,6 +8327,7 @@ async function vistaPresentaciones() {
   async function editar(p0, modelo) {
     let listas = []; try { const r = await sb.from('listas_precios').select('id,nombre').order('created_at'); listas = r.data || []; } catch (e) { }
     const P = { id: p0 ? p0.id : null, titulo: p0 ? p0.titulo : (modelo === 'colectivos' ? 'Presentación Colectividades' : 'Presentación Hostelería'), diapositivas: JSON.parse(JSON.stringify(p0 ? (p0.diapositivas || []) : presPlantilla(modelo))) };
+    if (!p0) P.diapositivas.forEach(d => { if (d.t === 'productos') presDibujos(d); });
     const tit = comInput('text', P.titulo, { oninput: e => { P.titulo = e.target.value; } }); const lst = h('div', {}); let cerrar;
     const resumen = d => ({ portada: d.titulo, texto: d.titulo, lista: (d.puntos || []).length + ' puntos', productos: (d.items || []).filter(Boolean).length + ' productos · ' + Object.keys(d.fotos || {}).filter(k => (d.items || []).includes(k)).length + ' con foto', ofertas: 'de «Recomendaciones» vigentes', precios: (d.soloEnvio ? 'solo al enviar · ' : '') +  (listas.find(l => l.id === d.lista_id) || {}).nombre || '⚠ sin lista elegida', contacto: (d.lineas || []).length + ' líneas' }[d.t] || '');
     const pinta = () => lst.replaceChildren(...P.diapositivas.map((d, i) => h('div', { class: 'card', style: 'padding:10px' }, h('div', { class: 'fila', style: 'gap:8px' }, h('div', { style: 'min-width:0;flex:1' }, h('div', { class: 'nombre' }, (PRES_TIPOS[d.t] || ['', ''])[0] + ' ' + (d.titulo || (PRES_TIPOS[d.t] || [])[1])), h('div', { class: 'sub' }, (PRES_TIPOS[d.t] || [])[1] + ' · ' + resumen(d))),
@@ -8099,7 +8348,7 @@ async function vistaPresentaciones() {
     else if (d.t === 'texto') { campo('Texto', 'texto', { area: true, rows: 7 }); const cf = (d.cifras || []).slice(); while (cf.length < 3) cf.push(['', '']); d.cifras = cf; cf.forEach((x, k) => { const a = comInput('text', x[0], { placeholder: 'Dato (ej.: 3ª)' }), b = comInput('text', x[1], { placeholder: 'Qué es (ej.: generación familiar)' }); a.addEventListener('input', () => { x[0] = a.value; }); b.addEventListener('input', () => { x[1] = b.value; }); cam.push(h('div', { style: 'display:flex;gap:6px;margin:4px 0' }, h('div', { style: 'flex:1' }, a), h('div', { style: 'flex:2' }, b))); }); }
     else if (d.t === 'lista') lineas('Puntos', 'puntos', 'uno por línea');
     else if (d.t === 'ofertas') { campo('Texto si no hay ofertas puestas', 'texto', { area: true, rows: 3 }); cam.push(h('p', { class: 'sub' }, 'Aquí salen solas las ofertas vigentes de la pestaña «Recomendaciones» de Comercial, SIN precio. Si no hay ninguna, sale este texto.')); }
-    else if (d.t === 'productos') { d.fotos = d.fotos || {}; const ta = lineas('Productos', 'items', 'uno por línea'); const caja = h('div', {}); const pintaF = () => { caja.replaceChildren(h('div', { class: 'sub', style: 'font-weight:700;margin-top:6px' }, 'Fotos (toca para elegir de la cámara o galería):'), ...(d.items || []).filter(x => x && x.trim()).map(x => h('div', { class: 'fila', style: 'gap:8px;align-items:center;margin:4px 0' }, d.fotos[x] ? h('img', { src: d.fotos[x].u, style: 'width:56px;height:42px;object-fit:cover;border-radius:6px' }) : h('div', { style: 'width:56px;height:42px;border-radius:6px;background:#dcfce7' }), h('div', { style: 'flex:1;min-width:0;font-weight:700' }, x), h('button', { class: 'small ' + (d.fotos[x] ? 'ghost' : ''), onclick: () => presFotoElegir(f => { d.fotos[x] = f; pintaF(); }) }, d.fotos[x] ? '🔄 Cambiar' : '📷 Foto'), d.fotos[x] ? h('button', { class: 'small ghost', onclick: () => { delete d.fotos[x]; pintaF(); } }, '✕') : null))); }; ta.addEventListener('change', pintaF); ta.addEventListener('blur', pintaF); cam.push(caja); pintaF(); cam.push(h('div', { class: 'sub', style: 'font-weight:600;margin-top:6px' }, 'O añádelos del catálogo:'), comBuscaProducto(pr => { d.items = (d.items || []).filter(Boolean).concat([pr.nombre]); ta.value = d.items.join('\n'); toast('Añadido: ' + pr.nombre, 'ok'); })); }
+    else if (d.t === 'productos') { d.fotos = d.fotos || {}; const ta = lineas('Productos', 'items', 'uno por línea'); const caja = h('div', {}); const pintaF = () => { caja.replaceChildren(h('div', { class: 'sub', style: 'font-weight:700;margin-top:6px' }, 'Fotos (toca para elegir de la cámara o galería):'), ...(d.items || []).filter(x => x && x.trim()).map(x => h('div', { class: 'fila', style: 'gap:8px;align-items:center;margin:4px 0' }, d.fotos[x] ? h('img', { src: d.fotos[x].u, style: 'width:56px;height:42px;object-fit:cover;border-radius:6px' }) : h('div', { style: 'width:56px;height:42px;border-radius:6px;background:#dcfce7' }), h('div', { style: 'flex:1;min-width:0;font-weight:700' }, x), h('button', { class: 'small ' + (d.fotos[x] ? 'ghost' : ''), onclick: () => presFotoElegir(f => { d.fotos[x] = f; pintaF(); }) }, d.fotos[x] ? '🔄 Cambiar' : '📷 Foto'), d.fotos[x] ? h('button', { class: 'small ghost', onclick: () => { delete d.fotos[x]; pintaF(); } }, '✕') : null))); }; ta.addEventListener('change', pintaF); ta.addEventListener('blur', pintaF); cam.push(h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: () => { presDibujos(d); pintaF(); toast('Dibujos puestos a los que no tenían foto', 'ok'); } }, '🎨 Poner dibujos a los que no tengan foto'), caja); pintaF(); cam.push(h('div', { class: 'sub', style: 'font-weight:600;margin-top:6px' }, 'O añádelos del catálogo:'), comBuscaProducto(pr => { d.items = (d.items || []).filter(Boolean).concat([pr.nombre]); ta.value = d.items.join('\n'); toast('Añadido: ' + pr.nombre, 'ok'); })); }
     else if (d.t === 'precios') { const s = comSelect([['', '— elige una lista —'], ...listas.map(l => [l.id, l.nombre])], d.lista_id || ''); s.addEventListener('change', () => { d.lista_id = s.value; }); const chk = h('input', { type: 'checkbox', checked: !!d.soloEnvio }); chk.addEventListener('change', () => { d.soloEnvio = chk.checked; }); cam.push(comCampo('Lista de precios que se enseña', s), h('label', { style: 'display:flex;gap:8px;align-items:center;margin:8px 0;font-weight:700' }, chk, 'Solo al enviar: no sale al presentar ni en el PDF normal'), h('p', { class: 'sub' }, 'Salen solo los productos con precio de VENTA puesto. El precio de compra nunca aparece. Si la lista es larga se reparte en varias láminas.')); campo('Nota al pie (opcional)', 'nota'); }
     else if (d.t === 'contacto') lineas('Líneas', 'lineas', 'la primera sale destacada');
     let c2; c2 = hoja('✏️ ' + (PRES_TIPOS[d.t] || [])[1], h('div', {}, ...cam, h('button', { class: 'guardar', style: 'width:100%;min-height:50px;margin-top:8px', onclick: () => { c2(); alCambiar(); } }, '✔ Listo')));
@@ -8832,7 +9081,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v();
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
 }
@@ -8850,6 +9099,7 @@ async function init() {
       h('button', { onclick: () => location.reload() }, 'Reintentar')));
     return;
   }
+  { const q = new URLSearchParams(location.search), pa = q.get('a'), pc = q.get('c'); if (pa && /^[a-f0-9]{32}$/.test(pa)) { vistaAlbaranPublico(pa); return; } if (pc && /^[a-f0-9]{32}$/.test(pc)) { vistaPortalCliente(pc); return; } }
   let ses = null;
   try { const r = await Promise.race([sb.auth.getSession(), new Promise((_, no) => setTimeout(() => no(new Error('tiempo')), 5000))]); ses = r && r.data && r.data.session; } catch (e) { }
   if (ses) await cargarPerfil(ses.user);
