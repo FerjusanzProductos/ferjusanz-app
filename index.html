@@ -1133,6 +1133,15 @@ async function abrirPrecios(pedidoId, alGuardar) {
   let cerrar = () => { };
   const cantTxt = l => l.peso_real != null && l.unidad_precio === 'kg' ? num(l.peso_real) + ' kg' : num(l.cantidad_pedida) + ' ' + l.unidad_pedida;
   const importe = x => { const p = parseNum(x.precio); if (!(p >= 0) || x.precio === '') return null; const k = x.up === 'kg' ? x.l.peso_real : x.l.cantidad_pedida; return k == null ? null : Math.round(Number(k) * p * 100) / 100; };
+  /* Calculadora de IVA: el IVA NO se quita; se calcula el precio sin IVA para que el cliente pague el total pactado con IVA incluido */
+  const ivaDe = x => { const v = x.l.iva != null ? Number(x.l.iva) : (uno(x.l.productos) && uno(x.l.productos).iva != null ? Number(uno(x.l.productos).iva) : 4); return isNaN(v) ? 4 : v; };
+  const fmtP = v => String(Math.round(v * 10000) / 10000).replace('.', ',');
+  const cantDe = x => { const k = x.up === 'kg' ? x.l.peso_real : x.l.cantidad_pedida; return k == null ? null : Number(k); };
+  const totalConIva = precios => { const bases = {}; let ok = true;
+    R.forEach((x, i) => { const p = precios[i], k = cantDe(x); if (p == null || !(p >= 0) || k == null) { ok = false; return; } const t = ivaDe(x); bases[t] = (bases[t] || 0) + Math.round(k * p * 100) / 100; });
+    let base = 0, iva = 0; Object.keys(bases).forEach(t => { const b = Math.round(bases[t] * 100) / 100; base += b; iva += Math.round(b * Number(t)) / 100; });
+    return { ok, base: Math.round(base * 100) / 100, iva: Math.round(iva * 100) / 100, total: Math.round((base + iva) * 100) / 100 }; };
+  const precioActual = x => { const p = parseNum(x.precio); return String(x.precio).trim() === '' || isNaN(p) ? null : p; };
   function total() {
     let t = 0, falta = 0, g = 0, tv = 0, bajos = 0;
     R.forEach(x => { const i = importe(x); if (i == null) { falta++; return; } t += i; const cost = x.cu ? x.cu() : null, k = x.cant ? Number(x.cant()) : 0, p = parseNum(x.precio); if (cost != null && k > 0 && p > 0) { g += (p - cost) * k; tv += p * k; if (p < cost - 0.0004) bajos++; } });
@@ -1183,6 +1192,8 @@ async function abrirPrecios(pedidoId, alGuardar) {
       h('div', { style: 'display:flex;gap:8px;align-items:center;margin-top:8px' }, h('div', { style: 'flex:1' }, inp),
         tarifas[pid] != null && !x.precio ? h('button', { type: 'button', class: 'ghost small', onpointerdown: e => e.preventDefault(), onclick: () => { pon(tarifas[pid]); toast('Precio puesto: ' + x.precio + ' €', 'ok'); } }, 'Usar ' + eur(tarifas[pid])) : null,
         h('div', { style: 'min-width:84px;text-align:right' }, imp)),
+      h('label', { class: 'campo', style: 'margin:8px 0 0' }, 'O escribe el precio final con IVA incluido (' + num(ivaDe(x)) + ' %) €/' + (x.up === 'kg' ? 'kg' : 'ud'),
+        h('input', { type: 'text', inputmode: 'decimal', placeholder: 'opcional · la app calcula el precio sin IVA', oninput: e => { const v = parseNum(e.target.value); if (e.target.value.trim() === '' || isNaN(v) || v < 0) return; x.precio = fmtP(v / (1 + ivaDe(x) / 100)); inp.value = x.precio; pintaImp(); } })),
       est, chips, interna);
     cuerpo.append(card);
     pintaImp();
@@ -1223,11 +1234,33 @@ async function abrirPrecios(pedidoId, alGuardar) {
     h('button', { type: 'button', style: 'flex:2', onclick: () => { const m = parseNum(margen.value); if (m === null || isNaN(m) || m < 0 || m >= 95) { toast('Pon un % entre 0 y 95', 'err'); return; } let n = 0, sin = 0;
       R.forEach(x => { if (String(x.precio).trim() !== '') return; const c = x.cu ? x.cu() : null; if (c == null) { sin++; return; } x.precio = String(Math.round(c / (1 - m / 100) * 100) / 100).replace('.', ','); x.inp.value = x.precio; x.pinta(); n++; });
       toast(n + ' precio(s) puestos con ' + num(m) + ' % de ganancia' + (sin ? ' · ' + sin + ' sin precio de compra: ponlos a mano' : ''), n ? 'ok' : 'err'); } }, '✨ Rellenar las que faltan'), btnSolo);
+  const calcRes = h('div', { style: 'margin-top:8px' }), calcIn = h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Ej. 500,00' });
+  let previo = null;
+  const calcular = () => {
+    calcRes.replaceChildren(); const obj = parseNum(calcIn.value);
+    if (isNaN(obj) || !(obj > 0)) { calcRes.append(h('p', { class: 'err' }, 'Escribe el total final que debe pagar el cliente, con IVA incluido.')); return; }
+    const ant = R.map(precioActual);
+    if (ant.some(p => p == null) || R.some(x => cantDe(x) == null)) { calcRes.append(h('p', { class: 'err' }, 'Antes hay que poner el precio y el peso de todas las líneas.')); return; }
+    const cur = totalConIva(ant); if (!(cur.total > 0)) { calcRes.append(h('p', { class: 'err' }, 'El total actual es 0: no se puede repartir.')); return; }
+    const f = obj / cur.total; let nuevo = ant.map(p => Math.round(p * f * 10000) / 10000);
+    for (let it = 0; it < 8; it++) { const r = totalConIva(nuevo); const dif = Math.round((obj - r.total) * 100) / 100; if (Math.abs(dif) < 0.005) break;
+      let j = 0, mx = -1; R.forEach((x, i) => { const im = (cantDe(x) || 0) * nuevo[i]; if (im > mx) { mx = im; j = i; } });
+      const k = cantDe(R[j]), t = ivaDe(R[j]); if (!(k > 0)) break; nuevo[j] = Math.max(0, Math.round((nuevo[j] + dif / (1 + t / 100) / k) * 10000) / 10000); }
+    const fin = totalConIva(nuevo);
+    calcRes.append(h('div', { class: 'aviso-card' }, 'Antes: ' + eur(cur.total) + ' € con IVA. Después: ' + eur(fin.total) + ' € (base ' + eur(fin.base) + ' € + IVA ' + eur(fin.iva) + ' €).' + (Math.abs(fin.total - obj) >= 0.005 ? ' Queda a ' + eur(Math.abs(Math.round((obj - fin.total) * 100) / 100)) + ' € del total pedido por redondeo.' : ' El IVA sigue apareciendo en el albarán.')),
+      h('div', { class: 'sub' }, R.map((x, i) => ((x.l.productos || {}).nombre || '—') + ': ' + fmtP(ant[i]) + ' → ' + fmtP(nuevo[i]) + ' €').join('\n')),
+      h('div', { style: 'display:flex;gap:8px;margin-top:8px' },
+        h('button', { class: 'guardar', style: 'flex:1;margin:0', onclick: () => { previo = R.map(x => x.precio); R.forEach((x, i) => { x.precio = fmtP(nuevo[i]); x.inp.value = x.precio; x.pinta(); }); total(); calcRes.replaceChildren(h('div', { class: 'aviso-card' }, 'Precios cambiados (aún sin guardar). Revisa y pulsa «Guardar y seguir» o «Guardar y cerrar».'), h('button', { class: 'ghost', onclick: () => { if (previo) { R.forEach((x, i) => { x.precio = previo[i]; x.inp.value = x.precio; x.pinta(); }); total(); } calcRes.replaceChildren(h('div', { class: 'aviso-card' }, 'Vuelven los precios de antes.')); } }, '↩ Volver a los precios de antes')); } }, 'Aplicar estos precios'),
+        h('button', { class: 'ghost', style: 'flex:1;margin:0', onclick: () => calcRes.replaceChildren() }, 'Descartar')));
+  };
+  const calcBox = h('details', { style: 'margin:8px 0' }, h('summary', { style: 'font-weight:700;cursor:pointer;padding:8px 0' }, '🧮 Total final con IVA incluido'),
+    h('p', { class: 'sub' }, 'El IVA no se quita: sigue saliendo en el albarán y en la factura. Escribes lo que quieres que pague el cliente en total y la app calcula los precios sin IVA de todas las líneas, repartidos de forma proporcional. Primero te los enseña y no cambia nada hasta que aceptes. Ojo: la diferencia la asumís vosotros, y el IVA se ingresa igual.'),
+    h('label', { class: 'campo' }, 'Total final con IVA incluido (€)', calcIn), h('button', { class: 'ghost', style: 'width:100%', onclick: calcular }, 'Calcular precios'), calcRes);
   const btnG = h('button', { class: 'guardar', style: 'flex:1;margin:0', onclick: () => guardar(btnG) }, 'Guardar y cerrar');
   const btnGS = h('button', { class: 'guardar', style: 'flex:1;margin:0;background:#166534;color:#fff', onclick: () => guardar(btnGS, true) }, '💾 Guardar y seguir');
   const barraG = h('div', { class: 'barraG' }, btnGS, btnG);
   cerrar = hoja('💶 Precios · ' + nombreCli(uno(ped.clientes) || {}), h('div', {}, h('p', { class: 'sub' }, fechaES(ped.fecha_entrega) + ' · ' + (ped.estado === 'terminado' ? 'albarán cerrado' : 'albarán sin cerrar') + '. Puedes poner los precios ahora o más tarde: cerrar el albarán no depende de ellos.'),
-    totalBox, barraM, Object.keys(tarifas).length ? btnLlenar : null, cuerpo, vivoDet, barraG));
+    totalBox, calcBox, barraM, Object.keys(tarifas).length ? btnLlenar : null, cuerpo, vivoDet, barraG));
 }
 async function vistaPreciosPend() {
   state.view = 'preciosp';
