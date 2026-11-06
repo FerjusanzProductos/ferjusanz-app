@@ -849,7 +849,7 @@ function chipsHub() {
 function shell(titulo, contenido, opts) {
   opts = opts || {};
   const tabs = tabsRol(); const act = tabActiva(tabs);
-  const nav = h('nav', { class: 'tabs' }, tabs.map(([v, t]) => h('button', { class: act === v ? 'on' : '', onclick: () => go(v) }, t)));
+  const nav = h('nav', { class: 'tabs' }, tabs.map(([v, t]) => h('button', { class: act === v ? 'on' : '', onclick: () => { state.desdeSec = false; go(v); } }, t)));
   if (VISTAS_HUB.includes(state.view)) contenido = h('div', {}, chipsHub(), contenido);
   return h('div', { class: 'shell' },
     h('header', {},
@@ -1233,7 +1233,7 @@ async function vistaPreciosPend() {
   state.view = 'preciosp';
   const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
   const F = Object.assign({ dia: 'hoy', estado: 'todos', solo: true }, LS.get('fj_precios_f', {})); if (state.params && state.params.dia) F.dia = state.params.dia;
-  $app.replaceChildren(shell('Poner precios a los pedidos', cont, { volver: () => go('inicio') })); renderBanner();
+  $app.replaceChildren(shell('Poner precios a los pedidos', cont, { volver: volverIni })); renderBanner();
   let filas = [];
   const rango = () => { const t = hoy(); if (F.dia === 'hoy') return [t, t]; if (F.dia === 'ayer') { const a = hoy(new Date(Date.now() - 86400000)); return [a, a]; } if (F.dia === 'manana') { const m = hoy(new Date(Date.now() + 86400000)); return [m, m]; } return [hoy(new Date(Date.now() - 20 * 86400000)), hoy(new Date(Date.now() + 7 * 86400000))]; };
   async function cargar() {
@@ -2113,7 +2113,7 @@ const urlPortal = tok => location.origin + location.pathname.replace(/[^\/]*$/, 
 async function vistaPaginasClientes() {
   state.view = 'paginasclientes';
   const lista = h('div', {}), q = comInput('search', '', { placeholder: '🔍 Buscar cliente por nombre o código…' }), sinPub = h('div', {});
-  $app.replaceChildren(shell('Portal de clientes', h('div', {}, sinPub, h('div', { class: 'aviso-card' }, 'Cada cliente tiene una página privada (su portal) con SUS albaranes (y solo los suyos). Aquí la encuentras, la copias, la mandas por WhatsApp o enseñas su QR. El cliente la guarda una vez y los albaranes de cada entrega aparecen solos. «Anular» crea un enlace nuevo y el anterior deja de funcionar.'), q, lista), { volver: () => go('inicio') })); renderBanner();
+  $app.replaceChildren(shell('Portal de clientes', h('div', {}, sinPub, h('div', { class: 'aviso-card' }, 'Cada cliente tiene una página privada (su portal) con SUS albaranes (y solo los suyos). Aquí la encuentras, la copias, la mandas por WhatsApp o enseñas su QR. El cliente la guarda una vez y los albaranes de cada entrega aparecen solos. «Anular» crea un enlace nuevo y el anterior deja de funcionar.'), q, lista), { volver: volverIni })); renderBanner();
   const cargaSinPub = async () => {
     try { const l = await albaranesSinPublicar(30);
       if (!l.length) { sinPub.replaceChildren(h('div', { class: 'card', style: 'border-left:6px solid #166534' }, h('div', { class: 'nombre' }, '✔ Todos los albaranes de los últimos 30 días están en el portal de su cliente'))); return; }
@@ -2568,7 +2568,7 @@ function vistaSobrante() {
     h('label', { class: 'campo' }, 'Sobrante del día'), h('div', { style: 'display:flex;gap:6px;align-items:center' }, fechaInp, ayerBtn, hoyBtn), infoBox,
     h('label', { class: 'campo' }, 'Lista del sobrante (escribe, pega o dicta)'), ta,
     h('div', { style: 'display:flex;gap:6px;margin-top:6px' }, h('button', { class: 'ghost', style: 'flex:1', onclick: entender }, 'Entender la lista'), h('button', { class: 'ghost', style: 'flex:1', onclick: () => { ta.value = ''; S.lineas = []; try { LS.set('fj_borr_sobrante', null); } catch (e) { } pintaLineas(); } }, 'Borrar')),
-    h('label', { class: 'campo' }, 'Quién lo lleva', rsel), lineasBox, pie, listaBox), { volver: () => go('inicio') })); renderBanner();
+    h('label', { class: 'campo' }, 'Quién lo lleva', rsel), lineasBox, pie, listaBox), { volver: volverIni })); renderBanner();
   pintaInfo(); pintaLineas(); cargaLista();
   (async () => {
     try { S.prods = await waProductos(); } catch (e) { lineasBox.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para cargar los productos.' : msgErr(e))); return; }
@@ -2591,7 +2591,7 @@ function vistaHojaCompra() {
     cont.replaceChildren(...kids.filter(Boolean));
   }
   async function cargar() { cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); try { const r = await cargarCarga(fecha); datos = r.datos; pintar(); } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); } }
-  $app.replaceChildren(shell('Hoja de compra', h('div', {}, h('div', { class: 'barra' }, fi, h('button', { class: 'ghost', onclick: cargar }, '↻')), cont), { volver: () => go('inicio') })); renderBanner(); cargar();
+  $app.replaceChildren(shell('Hoja de compra', h('div', {}, h('div', { class: 'barra' }, fi, h('button', { class: 'ghost', onclick: cargar }, '↻')), cont), { volver: volverIni })); renderBanner(); cargar();
 }
 const manana0 = () => { const d = new Date(); d.setDate(d.getDate() + 1); return hoy(d); };
 /*GUIA_INICIO*/
@@ -2852,7 +2852,7 @@ function vistaAyuda() {
       h('button', { class: 'ghost', style: 'width:100%;margin-bottom:8px', onclick: async () => { aviso.style.display = 'none'; await diagnosticoApp(salida); subir(); } }, '🩺 Comprobar mi app (conexión, sesión, pendientes)'));
   }
   function pinta() { pararVoz(); chips.replaceChildren(...[['asistente', '🤖 Asistente'], ['guia', '📖 Guía paso a paso']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; pinta(); } }, n))); modo === 'asistente' ? pintaAsistente() : pintaGuia(); }
-  $app.replaceChildren(shell('Ayuda', h('div', {}, chips, cont), { volver: () => go('inicio') })); renderBanner(); pinta();
+  $app.replaceChildren(shell('Ayuda', h('div', {}, chips, cont), { volver: volverIni })); renderBanner(); pinta();
 }
 /* =====================  CONSULTAS DEL ASISTENTE: responde con los datos, sin pasos  ===================== */
 let _clisAsis = null, _prodsAsis = null;
@@ -3416,7 +3416,7 @@ function vistaGolden() {
   bus.addEventListener('input', () => { if (modo === 'productos') buscaProd(); });
   chips.addEventListener('click', () => { if (modo === 'productos') { cont.replaceChildren(h('p', { class: 'vacio' }, 'Escribe un producto arriba para ver cuánto se ha vendido.')); } });
   filtros.replaceChildren(h('div', { style: 'display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end' }, h('label', { class: 'campo' }, 'Periodo', selMes), h('label', { style: 'display:flex;gap:8px;align-items:center;font-size:14px;padding-bottom:12px' }, cb, h('span', {}, 'Con borradores'))));
-  $app.replaceChildren(shell('Histórico de Golden', h('div', {}, h('div', { class: 'aviso-card' }, 'Solo consulta: son las facturas que ya están hechas en Golden (2026). Aquí no se puede cambiar nada.'), chips, filtros, bus, info, cont), { volver: () => go('inicio') })); renderBanner(); pintar();
+  $app.replaceChildren(shell('Histórico de Golden', h('div', {}, h('div', { class: 'aviso-card' }, 'Solo consulta: son las facturas que ya están hechas en Golden (2026). Aquí no se puede cambiar nada.'), chips, filtros, bus, info, cont), { volver: volverIni })); renderBanner(); pintar();
   cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando facturas de Golden…'));
   cargarGolden().then(d => { datos = d; if (!d.length) { cont.replaceChildren(h('p', { class: 'vacio' }, 'Todavía no hay datos de Golden cargados. Hay que ejecutar la Parte 35 y subir los dos archivos CSV.')); return; } pintar(); if (modo === 'productos') cont.replaceChildren(h('p', { class: 'vacio' }, 'Escribe un producto arriba para ver cuánto se ha vendido.')); })
     .catch(e => cont.replaceChildren(h('p', { class: 'err' }, /golden_|relation|schema cache/i.test((e && e.message) || '') ? 'Falta la Parte 35 de Supabase (tablas del histórico).' : (isNetErr(e) ? 'Necesitas conexión para ver el histórico.' : msgErr(e)))));
@@ -3722,7 +3722,7 @@ function vistaFacturasCli() {
     try { fs = await cargarFacturasCli(null); const c = await sb.from('clientes').select('id,codigo,nombre,nombre_comercial').range(0, 4999); nombres = {}; (c.data || []).forEach(x => nombres[x.id] = nombreCli(x)); pintar(); }
     catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver las facturas.' : msgErr(e))); }
   }
-  $app.replaceChildren(shell('Facturas de clientes', h('div', {}, h('button', { style: 'width:100%;margin-bottom:10px', onclick: () => abrirNuevaFacturaCli(null, cargar) }, '+ Añadir factura'), chips, buscar_, info, cont), { volver: () => go('inicio') })); renderBanner(); pintar(); cargar();
+  $app.replaceChildren(shell('Facturas de clientes', h('div', {}, h('button', { style: 'width:100%;margin-bottom:10px', onclick: () => abrirNuevaFacturaCli(null, cargar) }, '+ Añadir factura'), chips, buscar_, info, cont), { volver: volverIni })); renderBanner(); pintar(); cargar();
 }
 /* ===== PREPARAR FACTURAS (para Golden) ===== */
 /* La factura legal la emite Golden. Aquí se agrupan los albaranes ENTREGADOS y sin facturar de cada cliente, con totales e IVA ya sumados. */
@@ -3829,7 +3829,7 @@ function vistaPrefacturas() {
   $app.replaceChildren(shell('Preparar facturas (para Golden)', h('div', {},
     h('div', { class: 'aviso-card' }, 'Aquí se prepara lo que hay que facturar: albaranes ya ENTREGADOS, agrupados por cliente, con base, IVA y total sumados. La factura oficial se hace en Golden; después se marca aquí como facturada.'),
     h('div', { class: 'barra' }, h('label', { class: 'campo' }, 'Desde', iDesde), h('label', { class: 'campo' }, 'Hasta', iHasta)), buscar_,
-    h('label', { class: 'campo', style: 'flex-direction:row;gap:8px;align-items:center' }, chkFact, ' Mostrar también los ya facturados'), info, cont), { volver: () => go('inicio') })); renderBanner(); cargar();
+    h('label', { class: 'campo', style: 'flex-direction:row;gap:8px;align-items:center' }, chkFact, ' Mostrar también los ya facturados'), info, cont), { volver: volverIni })); renderBanner(); cargar();
 }
 const arr = x => Array.isArray(x) ? x : (x ? [x] : []);
 function vistaClientes() {
@@ -4337,8 +4337,45 @@ function marcaPend(re, n) {
   if (!sp) { sp = h('span', { class: 'insig pend' }); c.append(sp); }
   sp.textContent = n > 99 ? '99+' : String(n);
 }
+
+/* ===== SECRETARÍA HOY (fase 1): una pantalla con las tareas de oficina; cada una abre la pantalla de siempre y "← Volver" regresa aquí ===== */
+function volverIni() { go(state.desdeSec ? 'secretaria' : 'inicio'); }
+function vistaSecretaria() {
+  state.view = 'secretaria'; state.desdeSec = true;
+  const tareas = [
+    { k: 'cuadre', ic: '🧮', t: 'Cuadre de ayer', s: 'Liquidación por repartidor: efectivo, datáfono y lo vendido', f: () => { LS.set('fj_alb_tab', 'caja'); LS.set('fj_alb_dias', 2); go('albaranes'); } },
+    { k: 'prov', ic: '📥', t: 'Facturas de proveedores', s: 'Repasar las que han llegado', f: () => { LS.set('fj_compras_modo', 'recib'); go('compras'); } },
+    { k: 'traza', ic: '🔎', t: 'Trazabilidad', s: 'Albaranes sin lote asignado', f: () => go('traza') },
+    { k: 'fact', ic: '📤', t: 'Pasar albaranes a factura', s: 'Facturas para Golden Soft', f: () => go('prefacturas') },
+    { k: 'env', ic: '📄', t: 'Imprimir o enviar facturas', s: 'Facturas de clientes', f: () => go('facturascli') },
+    { k: 'cobros', ic: '💰', t: 'Cobros y deudas', s: 'Quién ha pagado y quién debe', f: () => go('cobros') },
+    { k: 'precios', ic: '💶', t: 'Poner precios a los pedidos', s: 'Pedidos sin precio', f: () => go('preciosp') },
+    { k: 'sinrec', ic: '🔎', t: 'Productos sin reconocer', s: 'Nombres de las facturas que no están como producto', f: () => go('sinreconocer') }
+  ];
+  const nums = {};
+  const lista = h('div', { style: 'display:flex;flex-direction:column;gap:8px' });
+  const pinta = () => lista.replaceChildren(...tareas.map(t => {
+    const n = nums[t.k];
+    return h('button', { class: 'bandeja-fac', style: 'width:100%;text-align:left', onclick: t.f },
+      h('span', { class: 'ic' }, t.ic), h('span', { class: 'tt' }, t.t, h('small', {}, t.s)),
+      n == null ? null : h('span', { class: 'num' + (n ? '' : ' cero') }, String(n)));
+  }));
+  pinta();
+  $app.replaceChildren(shell('Secretaría hoy', h('div', {},
+    h('div', { class: 'aviso-card' }, 'Cada tarea abre su pantalla de siempre. Con «← Volver» regresas aquí. Los números solo aparecen donde se pueden calcular con seguridad.'),
+    lista))); renderBanner();
+  (async () => {
+    if (!navigator.onLine) return;
+    try {
+      const r = await sb.from('albaranes').select('id', { count: 'exact', head: true }).eq('estado', 'emitido').is('traza_estado', null);
+      if (!r.error && typeof r.count === 'number') { nums.traza = r.count; pinta(); }
+    } catch (e) { }
+    try { const l = await albaranesSinPublicar(14); nums.portal = l.length; } catch (e) { }
+  })();
+}
+
 function vistaMas() {
-  state.view = 'inicio';
+  state.view = 'inicio'; state.desdeSec = false;
   if (LS.get('fj_ir', null) === 'recib') { LS.set('fj_ir', null); LS.set('fj_compras_modo', 'recib'); setTimeout(() => go('compras'), 0); return; }
   const c = (ico, t, f, color, badge) => h('button', { class: 'circ', onclick: f }, h('span', { class: 'c', style: '--c:' + color }, ico, badge ? h('span', { class: 'insig' }, badge) : null), h('span', { class: 'l' }, t));
   const CORTO = { 'Hoja de compra para hoy': 'Hoja compra hoy', 'Precios de compra del día': 'Precios compra del día', 'A quién compramos hoy': 'A quién compramos', 'Facturas de proveedores': 'Facturas proveed.', 'Facturas de clientes': 'Facturas clientes', 'Histórico de Golden': 'Histórico Golden', 'Registro de cambios': 'Registro cambios', 'Copia de seguridad': 'Copia seguridad', 'Lista de pedidos': 'Lista pedidos', 'Escanear pedido': 'Escanear pedido', 'Hoja de carga': 'Hoja de carga', 'Hoja de compra': 'Hoja compra', 'Avisos y ofertas': 'Avisos y ofertas' };
@@ -4363,6 +4400,7 @@ function vistaMas() {
   const V = '#2f7d4a', A = '#d97706', Z = '#2563eb', M = '#7c3aed', R = '#dc2626', T = '#0d9488';
   const k = [
     h('div', { class: 'saludo' }, h('div', { style: 'font-size:20px;font-weight:800' }, 'Hola, ' + (state.perfil.nombre || '').split(' ')[0]), h('div', { class: 'sub' }, (d => d.charAt(0).toUpperCase() + d.slice(1))(fmtDiaLargo(new Date().toISOString())))),
+    esOficina() ? h('button', { class: 'bandeja-fac', onclick: () => go('secretaria') }, h('span', { class: 'ic' }, '🗂️'), h('span', { class: 'tt' }, 'Secretaría hoy', h('small', {}, 'Todas las tareas de oficina en una pantalla'))) : null,
     (() => { const num = h('span', { class: 'num cero' }, '…'); const b = h('button', { class: 'bandeja-fac', onclick: () => go('preciosp') }, h('span', { class: 'ic' }, '💶'), h('span', { class: 'tt' }, 'Poner precios a los pedidos', h('small', {}, 'Por hacer, en preparación o terminados · sin esperar a la factura')), num);
       if (navigator.onLine) sb.from('lineas_pedido').select('pedido_id,precio,pedidos(estado,archivado)').is('precio', null).limit(1500).then(r => { if (r.error) { num.textContent = ''; return; } const ids = new Set((r.data || []).filter(l => { const p = uno(l.pedidos) || {}; return p.estado !== 'anulado' && !p.archivado; }).map(l => l.pedido_id)); num.textContent = String(ids.size); num.className = 'num' + (ids.size ? '' : ' cero'); marcaPend(/Poner precios/, ids.size); }).catch(() => { num.textContent = ''; }); else num.textContent = '';
       return b; })(),
@@ -4560,7 +4598,7 @@ function vistaCompras() {
   const bandeja = h('button', { class: 'bandeja-fac', onclick: () => { modo = 'recib'; LS.set('fj_compras_modo', 'recib'); pintarChips(); pintar(); } });
   const pintarBandeja = (n) => { bandeja.className = 'bandeja-fac' + (modo === 'recib' ? ' on' : ''); bandeja.replaceChildren(h('span', { class: 'ic' }, '📥'), h('span', { class: 'tt' }, 'Facturas de proveedores', h('small', {}, n === null ? 'Las que llegan por correo, de la más reciente a la más antigua' : n > 0 ? n + ' por revisar · la más reciente arriba' : 'Todo al día · toca para ver')), h('span', { class: 'num' + (n ? '' : ' cero') }, n === null ? '…' : String(n))); };
   const contarBandeja = async () => { try { const q = await sb.from('facturas_recibidas').select('id', { count: 'exact', head: true }).eq('estado', 'nueva'); pintarBandeja(q.error ? null : (q.count || 0)); } catch (e) { pintarBandeja(null); } };
-  $app.replaceChildren(shell('Compras', h('div', {}, bandeja, chips, cont), { volver: () => go('inicio') })); renderBanner(); pintarChips(); pintarBandeja(null); contarBandeja();
+  $app.replaceChildren(shell('Compras', h('div', {}, bandeja, chips, cont), { volver: volverIni })); renderBanner(); pintarChips(); pintarBandeja(null); contarBandeja();
   function pintar() { (modo === 'lista' ? pLista : modo === 'registrar' ? pRegistrar : modo === 'sinfac' ? pSinFactura : modo === 'recib' ? pRecibidas : pLotes)(); }
 
   /* ---- Ajustes de la lista (cantidad corregida, nota, productos extra): se guardan en este móvil y en Supabase ---- */
@@ -5034,7 +5072,7 @@ function vistaCompras() {
 function vistaQuien() {
   state.view = 'quien'; let fecha = (state.params && state.params.fecha) || hoy();
   const cont = h('div', {});
-  $app.replaceChildren(shell('A quién hemos comprado hoy', cont, { volver: () => go('inicio') })); renderBanner();
+  $app.replaceChildren(shell('A quién hemos comprado hoy', cont, { volver: volverIni })); renderBanner();
   const num3 = n => num(Math.round(n * 1000) / 1000);
   async function cargar() {
     const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); cargar(); } });
@@ -5293,7 +5331,7 @@ async function vistaRegistro() {
   let grupo = LS.get('fj_reg_grupo', 'todo'); if (state.params && state.params.grupo) grupo = state.params.grupo;
   let dias = 1, persona = '', tope = 120;
   const chips = h('div', { class: 'chips' }), filtros = h('div', {}), lista = h('div', {});
-  $app.replaceChildren(shell('Registro de cambios', h('div', {}, h('div', { class: 'aviso-card' }, 'Aquí queda anotado quién cambió qué y cuándo (pesos, precios, albaranes, trazabilidad, cobros…). No se puede borrar desde la app.'), chips, filtros, lista), { volver: () => go('inicio') })); renderBanner();
+  $app.replaceChildren(shell('Registro de cambios', h('div', {}, h('div', { class: 'aviso-card' }, 'Aquí queda anotado quién cambió qué y cuándo (pesos, precios, albaranes, trazabilidad, cobros…). No se puede borrar desde la app.'), chips, filtros, lista), { volver: volverIni })); renderBanner();
   const pintarChips = () => chips.replaceChildren(...GRUPOS_REG.map(([m, n]) => h('button', { class: 'chip' + (grupo === m ? ' on' : ''), onclick: () => { grupo = m; LS.set('fj_reg_grupo', m); tope = 120; pintarChips(); cargar(); } }, n)));
   const selDias = h('select', { onchange: e => { dias = Number(e.target.value); tope = 120; cargar(); } }, ...[[1, 'Hoy'], [2, 'Ayer y hoy'], [7, 'Últimos 7 días'], [30, 'Últimos 30 días']].map(([v, n]) => h('option', { value: v }, n)));
   const selPers = h('select', { onchange: e => { persona = e.target.value; tope = 120; cargar(); } }, h('option', { value: '' }, 'Todas las personas'));
@@ -5350,9 +5388,9 @@ function vistaTraza() {
   if (!puedeCompras()) { go('lista'); return; }
   let modo = LS.get('fj_traza_modo', 'pend'), fecha = hoy();
   const cont = h('div', {}); const chips = h('div', { class: 'chips' });
-  const pintarChips = () => chips.replaceChildren(...[['pend', 'Confirmar trazabilidad'], ['lote', 'Por lote'], ['cliente', 'Por cliente'], ['factura', 'Para factura']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_traza_modo', m); pintarChips(); pintar(); } }, n)));
-  $app.replaceChildren(shell('Trazabilidad', h('div', {}, chips, cont), { volver: () => go('inicio') })); renderBanner(); pintarChips();
-  function pintar() { (modo === 'pend' ? pPend : modo === 'lote' ? pLote : modo === 'factura' ? pFactura : pCliente)(); }
+  const pintarChips = () => chips.replaceChildren(...[['pend', 'Confirmar trazabilidad'], ['lote', 'Por lote'], ['cliente', 'Por cliente'], ['factura', 'Para factura'], ['libro', '📚 Libro CSV/PDF']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_traza_modo', m); pintarChips(); pintar(); } }, n)));
+  $app.replaceChildren(shell('Trazabilidad', h('div', {}, chips, cont), { volver: volverIni })); renderBanner(); pintarChips();
+  function pintar() { (modo === 'pend' ? pPend : modo === 'lote' ? pLote : modo === 'factura' ? pFactura : modo === 'libro' ? pLibro : pCliente)(); }
   const filasTz = rows => rows.map(r => h('div', { class: 'fila', style: 'padding:5px 0;border-top:1px solid var(--borde)' },
     h('div', {}, h('div', {}, fechaES(r.fecha_entrega) + ' · ' + (r.cliente || r.producto)), h('div', { class: 'sub' }, [r.numero_albaran ? 'Albarán ' + r.serie + ' ' + r.numero_albaran : '', r.codigo_lote, r.proveedor, r.origen].filter(Boolean).join(' · '))),
     h('b', {}, num(r.cantidad_entregada))));
@@ -5425,6 +5463,92 @@ function vistaTraza() {
       resumir();
       lista.replaceChildren(h('div', { class: 'aviso-card' }, 'Lo que ya hayan anotado el jefe o los preparadores aparece puesto. Para el resto se propone empezar por la compra más antigua. Revisa los productos marcados en naranja (los que tienen varios proveedores) y cambia el proveedor donde no coincida. Luego pulsa Confirmar.'), resumen, ...tarj, btn);
     } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+  }
+  /* ===== Libro de trazabilidad: todo lo comprado desde una fecha (opcional) hasta hoy → de dónde viene, su lote y origen, y a quién se ha entregado. CSV y PDF ===== */
+  async function pLibro() {
+    let desde = LS.get('fj_libro_desde', ''), datos = null; const res = h('div', {});
+    const inpD = h('input', { type: 'date', value: desde, max: hoy(), onchange: e => { desde = e.target.value || ''; LS.set('fj_libro_desde', desde); } });
+    const btn = h('button', { class: 'guardar', style: 'width:100%;min-height:52px;margin:8px 0', onclick: generar }, '📚 Preparar el libro de trazabilidad');
+    cont.replaceChildren(h('div', { class: 'aviso-card' }, 'Saca TODO lo comprado desde la fecha que elijas (o desde el principio, si la dejas vacía) hasta hoy: proveedor, origen, lote, cantidad recibida y a qué clientes se ha entregado cada lote (con su albarán). Se descarga en CSV (Excel) y en PDF. Solo es tan completo como lo registrado en la app: avisa de las entregas que no tienen lote asignado.'),
+      h('label', { class: 'campo' }, 'Desde (opcional)', inpD), btn, res);
+    const chunk = (a, n) => { const o = []; for (let i = 0; i < a.length; i += n) o.push(a.slice(i, i + n)); return o; };
+    async function generar() {
+      btn.disabled = true; res.replaceChildren(h('p', { class: 'vacio' }, 'Preparando el libro… (puede tardar un poco)'));
+      try {
+        const hasta = hoy();
+        let qc = sb.from('compras').select('id,fecha,numero_documento,proveedor_id,proveedores(nombre,codigo)').lte('fecha', hasta).order('fecha', { ascending: true }).limit(5000); if (desde) qc = qc.gte('fecha', desde);
+        const rc = await qc; if (rc.error) throw rc.error; const compras = rc.data || []; const mc = Object.fromEntries(compras.map(c => [c.id, c]));
+        const lotes = []; for (const ids of chunk(compras.map(c => c.id), 100)) { const r = await sb.from('lotes').select('id,compra_id,producto_id,codigo_lote,origen,cantidad_recibida,unidad,archivado,productos(codigo,nombre)').in('compra_id', ids); if (r.error) throw r.error; lotes.push(...(r.data || [])); }
+        const asig = []; for (const ids of chunk(lotes.map(l => l.id), 150)) { const r = await sb.from('asignaciones_lote').select('lote_id,linea_id,cantidad').in('lote_id', ids); if (r.error) throw r.error; asig.push(...(r.data || [])); }
+        const lineas = {}; for (const ids of chunk([...new Set(asig.map(a => a.linea_id))], 150)) { const r = await sb.from('lineas_pedido').select('id,pedido_id').in('id', ids); if (r.error) throw r.error; (r.data || []).forEach(x => { lineas[x.id] = x; }); }
+        const peds = {}; for (const ids of chunk([...new Set(Object.values(lineas).map(l => l.pedido_id))], 100)) { const r = await sb.from('pedidos').select('id,fecha_entrega,estado,cliente_id,clientes(codigo,nombre,nombre_comercial,nif,direccion,localidad),albaranes(serie,numero)').in('id', ids); if (r.error) throw r.error; (r.data || []).forEach(x => { peds[x.id] = x; }); }
+        /* Cómo ponía la factura del proveedor cada producto (la denominación real): si no coincide con el producto de la app, se avisa para revisarlo */
+        const denom = {}; try { const pids = [...new Set(compras.map(c => c.proveedor_id).filter(Boolean))]; for (const ids of chunk(pids, 50)) { let q = sb.from('lineas_factura_leida').select('texto,producto_id,proveedor_id,fecha').in('proveedor_id', ids).not('producto_id', 'is', null).lte('fecha', hasta).limit(5000); if (desde) q = q.gte('fecha', desde); const r = await q; (r.data || []).forEach(x => { const k = x.proveedor_id + '|' + String(x.fecha).slice(0, 10) + '|' + x.producto_id; (denom[k] = denom[k] || new Set()).add(String(x.texto || '').replace(/\s+/g, ' ').trim()); }); } } catch (e) { }
+        const sinT = t => sinTilde(String(t || '')).toLowerCase().replace(/[^a-z0-9ñ ]/g, ' '), STP = new Set(['de', 'del', 'la', 'el', 'kg', 'saco', 'caja', 'bolsa', 'cal', 'sin', 'con', 'p', 'c']);
+        const coincide = (prod, textos) => { if (!textos.length) return true; const pw = sinT(prod).split(/\s+/).filter(w => w.length > 2 && !STP.has(w)); return textos.some(t => { const tw = sinT(t); return pw.every(w => tw.includes(w.replace(/s$/, ''))); }); };
+        const filas = [];
+        lotes.sort((a, b) => String((mc[a.compra_id] || {}).fecha).localeCompare(String((mc[b.compra_id] || {}).fecha)) || String((uno(a.productos) || {}).nombre).localeCompare(String((uno(b.productos) || {}).nombre), 'es')).forEach(lo => {
+          const co = mc[lo.compra_id] || {}, pv = uno(co.proveedores) || {}, pr = uno(lo.productos) || {};
+          const dn = [...(denom[co.proveedor_id + '|' + String(co.fecha).slice(0, 10) + '|' + lo.producto_id] || [])]; const base = { fcompra: co.fecha, prov: pv.nombre || '', provCod: pv.codigo || '', doc: co.numero_documento || '', prod: pr.nombre || '', prodCod: pr.codigo || '', denom: dn.join(' / '), revisar: dn.length > 0 && !coincide(pr.nombre || '', dn), lote: lo.codigo_lote || '', origen: lo.origen || '', rec: Number(lo.cantidad_recibida) || 0, un: lo.unidad || '' };
+          const sal = asig.filter(a => a.lote_id === lo.id).map(a => { const li = lineas[a.linea_id], pe = li ? peds[li.pedido_id] : null; return pe && pe.estado !== 'anulado' ? { fent: pe.fecha_entrega, cli: uno(pe.clientes) || {}, alb: ((pe.albaranes || [])[0]) || null, cant: Number(a.cantidad) || 0 } : null; }).filter(Boolean).sort((a, b) => String(a.fent).localeCompare(String(b.fent)));
+          if (!sal.length) filas.push(Object.assign({}, base, { estado: 'Sin salidas registradas', primera: true }));
+          else sal.forEach((x, i) => filas.push(Object.assign({}, base, { primera: i === 0, estado: 'Entregado', fent: x.fent, cli: nombreCli(x.cli), cliCod: x.cli.codigo || '', nif: x.cli.nif || '', dir: [x.cli.direccion, x.cli.localidad].filter(Boolean).join(', '), alb: x.alb ? x.alb.serie + ' ' + String(x.alb.numero).padStart(7, '0') : '', cant: x.cant })));
+        });
+        /* entregas del periodo sin lote asignado: la trazabilidad está incompleta */
+        const d0 = desde || (compras[0] ? compras[0].fecha : hasta); const sinLote = [];
+        try { const r = await sb.from('pedidos').select('id,fecha_entrega,estado,clientes(codigo,nombre,nombre_comercial),albaranes(serie,numero),lineas_pedido(id,estado,peso_real,unidad_precio,productos(nombre),asignaciones_lote(id))').eq('estado', 'terminado').gte('fecha_entrega', d0).lte('fecha_entrega', hasta).limit(1500);
+          (r.data || []).forEach(pe => (pe.lineas_pedido || []).filter(l => ['hecha', 'parcial'].includes(l.estado) && !(l.asignaciones_lote || []).length).forEach(l => { const al = (pe.albaranes || [])[0]; sinLote.push({ fent: pe.fecha_entrega, cli: nombreCli(uno(pe.clientes) || {}), alb: al ? al.serie + ' ' + String(al.numero).padStart(7, '0') : '', prod: (uno(l.productos) || {}).nombre || '', cant: l.peso_real }); })); } catch (e) { }
+        sinLote.sort((a, b) => String(a.fent).localeCompare(String(b.fent)));
+        datos = { desde, hasta, filas, sinLote, nLotes: lotes.length, nCompras: compras.length }; pintaRes();
+      } catch (e) { res.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+      btn.disabled = false;
+    }
+    const cabCSV = ['Fecha compra', 'Proveedor', 'Cód. proveedor', 'Nº documento proveedor', 'Código producto', 'Producto', 'Denominación en la factura del proveedor', 'Revisar nombre', 'Lote', 'Origen', 'Cantidad recibida', 'Unidad', 'Fecha entrega', 'Cliente', 'Cód. cliente', 'NIF cliente', 'Dirección cliente', 'Albarán', 'Cantidad entregada', 'Estado'];
+    const filaCSV = x => [x.fcompra ? fechaES(x.fcompra) : '', x.prov, x.provCod, x.doc, x.prodCod, x.prod, x.denom || '', x.revisar ? 'REVISAR: el nombre de la factura no coincide con el producto' : '', x.lote, x.origen, num(x.rec), x.un, x.fent ? fechaES(x.fent) : '', x.cli || '', x.cliCod || '', x.nif || '', x.dir || '', x.alb || '', x.cant != null ? num(x.cant) : '', x.estado];
+    const periodo = () => (datos.desde ? 'desde ' + fechaES(datos.desde) : 'desde el principio') + ' hasta ' + fechaES(datos.hasta);
+    const huella = async () => { try { const t = JSON.stringify(datos.filas.map(filaCSV).concat(datos.sinLote.map(x => [x.fent, x.cli, x.alb, x.prod, x.cant]))); const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join(''); } catch (e) { return ''; } };
+    async function csv() {
+      const hs = await huella(); const f = [cabCSV].concat(datos.filas.map(filaCSV));
+      if (datos.sinLote.length) { f.push([]); f.push(['ENTREGAS SIN LOTE ASIGNADO (trazabilidad incompleta)']); f.push(['Fecha entrega', 'Cliente', 'Albarán', 'Producto', 'Cantidad']); datos.sinLote.forEach(x => f.push([fechaES(x.fent), x.cli, x.alb, x.prod, x.cant != null ? num(x.cant) : ''])); }
+      f.push([]); f.push(['Generado el ' + new Date().toLocaleString('es-ES') + ' · ' + periodo() + (hs ? ' · Huella SHA-256 de los datos: ' + hs : '')]);
+      descargarCSV('libro_trazabilidad_' + (datos.desde || 'inicio') + '_a_' + datos.hasta + '.csv', f);
+    }
+    async function pdf() {
+      const doc = pdfNuevo(841.89, 595.28), M = 30, W = 841.89; let y = 0;
+      const corta = (t, max, sz, neg) => { t = String(t == null ? '' : t); if (pdfAncho(t, sz, neg) <= max) return t; while (t.length > 1 && pdfAncho(t + '…', sz, neg) > max) t = t.slice(0, -1); return t + '…'; };
+      const COL = [['F. compra', 30, 52], ['Proveedor · nº doc.', 84, 112], ['Producto', 204, 140], ['Lote', 346, 62], ['Origen', 410, 50], ['Recibido', 462, 56], ['F. entrega', 520, 52], ['Cliente (NIF)', 574, 130], ['Albarán', 706, 62], ['Entreg.', 770, 42]];
+      const cab = tit => { doc.rect(0, 0, W, 46, '#166534'); doc.texto(EMPRESA.nombre, M, 20, 11, { neg: true, color: '#ffffff' }); doc.texto('LIBRO DE REGISTRO DE TRAZABILIDAD · ' + periodo(), M, 38, 12, { neg: true, color: '#facc15' }); y = 64; if (tit) { doc.texto(tit, M, y, 10, { neg: true }); y += 14; }
+        COL.forEach(c => doc.texto(c[0], c[1], y, 7.5, { neg: true })); y += 3; doc.linea(M, y, W - M, y, '#111827', 0.8); y += 11; };
+      cab(null); const SZ = 7.5;
+      for (const x of datos.filas) {
+        if (y > 560) { doc.pagina(); cab(null); }
+        if (x.primera) { doc.texto(x.fcompra ? fechaES(x.fcompra) : '', COL[0][1], y, SZ); doc.texto(corta(x.prov + (x.doc ? ' · ' + x.doc : ''), COL[1][2], SZ), COL[1][1], y, SZ); doc.texto(corta(x.prod, COL[2][2], SZ, true), COL[2][1], y, SZ, { neg: true }); if (x.revisar) doc.texto(corta('⚠ factura: ' + x.denom, COL[2][2], 5.5), COL[2][1], y + 6.5, 5.5, { color: '#b45309' }); doc.texto(corta(x.lote || 'SIN CÓDIGO', COL[3][2], SZ), COL[3][1], y, SZ); doc.texto(corta(x.origen, COL[4][2], SZ), COL[4][1], y, SZ); doc.texto(num(x.rec) + ' ' + x.un, COL[5][1], y, SZ); }
+        else doc.texto('↳ mismo lote', COL[2][1], y, 6.5, { color: '#6b7280' });
+        if (x.estado === 'Entregado') { doc.texto(fechaES(x.fent), COL[6][1], y, SZ); doc.texto(corta(x.cli + (x.nif ? ' (' + x.nif + ')' : ''), COL[7][2], SZ), COL[7][1], y, SZ); doc.texto(x.alb, COL[8][1], y, SZ); doc.texto(num(x.cant), COL[9][1], y, SZ); }
+        else doc.texto('— sin salidas registradas —', COL[6][1], y, SZ, { color: '#92400e' });
+        y += x.primera && x.revisar ? 14 : 10.5; doc.linea(M, y - 7.5, W - M, y - 7.5, '#e5e7eb', 0.4);
+      }
+      if (!datos.filas.length) doc.texto('No hay compras registradas en este periodo.', M, y, 10);
+      if (datos.sinLote.length) { doc.pagina(); cab('ENTREGAS SIN LOTE ASIGNADO — la trazabilidad de estas entregas está INCOMPLETA y debe completarse'); y -= 14;
+        doc.rect(0, 0, 0, 0, '#fff'); datos.sinLote.forEach(x => { if (y > 560) { doc.pagina(); cab('ENTREGAS SIN LOTE ASIGNADO (continuación)'); y -= 14; } doc.texto(fechaES(x.fent), M, y, SZ); doc.texto(corta(x.cli, 220, SZ), 84, y, SZ); doc.texto(x.alb, 320, y, SZ); doc.texto(corta(x.prod, 260, SZ, true), 400, y, SZ, { neg: true }); doc.texto(x.cant != null ? num(x.cant) : '', 700, y, SZ); y += 10.5; }); }
+      const n = doc.numPaginas(); const ahora = new Date().toLocaleString('es-ES'); const hs = await huella();
+      for (let i = 0; i < n; i++) doc.enPagina(i, () => { doc.texto('Registro de trazabilidad (art. 18 del Reglamento (CE) 178/2002: proveedor y cliente de cada producto). Generado ' + ahora + ' · Página ' + (i + 1) + ' de ' + n, M, 586, 6.5, { color: '#6b7280' }); if (hs) doc.texto('Huella SHA-256 de los datos: ' + hs, M, 577, 5.5, { color: '#9ca3af' }); });
+      const blob = new Blob([doc.bytes()], { type: 'application/pdf' }), nom = 'libro_trazabilidad_' + (datos.desde || 'inicio') + '_a_' + datos.hasta + '.pdf', file = new File([blob], nom, { type: 'application/pdf' });
+      try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: nom }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+      const u = URL.createObjectURL(blob), lk = h('a', { href: u, download: nom }); document.body.append(lk); lk.click(); lk.remove();
+    }
+    function pintaRes() {
+      const f = datos.filas, ent = f.filter(x => x.estado === 'Entregado'), sinS = f.filter(x => x.primera && x.estado !== 'Entregado').length, kg = Object.values(f.filter(x => x.primera).reduce((o, x) => { o[x.un] = (o[x.un] || 0) + x.rec; return o; }, {}));
+      const por = {}; f.forEach(x => { const k = x.fcompra + '|' + x.prov + '|' + x.prod + '|' + x.lote; (por[k] = por[k] || []).push(x); });
+      res.replaceChildren(
+        h('div', { class: 'card' }, h('div', { class: 'nombre' }, 'Libro ' + periodo()), h('div', { class: 'sub' }, datos.nCompras + ' compras · ' + datos.nLotes + ' lotes · ' + ent.length + ' entregas a clientes' + (sinS ? ' · ' + sinS + ' lote(s) sin salidas registradas' : ''))),
+        datos.filas.some(x => x.revisar) ? h('div', { class: 'aviso-card', style: 'border-left:4px solid var(--ambar)' }, '⚠ ' + new Set(datos.filas.filter(x => x.revisar).map(x => x.prod + x.lote + x.fcompra)).size + ' lote(s) con un producto cuyo nombre NO coincide con el que pone la factura del proveedor (p. ej. se registró un producto parecido). Salen marcados «⚠ factura:». Corrígelos para que el libro refleje lo que realmente se compró.') : null,
+        datos.sinLote.length ? h('div', { class: 'aviso-card', style: 'border-left:4px solid var(--ambar)' }, '⚠ ' + datos.sinLote.length + ' entrega(s) de este periodo NO tienen lote asignado: la trazabilidad está incompleta. Complétalas en «Confirmar trazabilidad». Salen listadas al final del CSV y del PDF.') : h('div', { class: 'aviso-card' }, '✅ Todas las entregas de este periodo tienen lote asignado.'),
+        h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;margin:8px 0' }, h('button', { class: 'guardar', style: 'flex:1;min-height:50px', onclick: csv }, '⬇️ Descargar CSV (Excel)'), h('button', { class: 'guardar', style: 'flex:1;min-height:50px', onclick: pdf }, '📄 PDF (descargar / compartir)')),
+        ...Object.values(por).slice(0, 40).map(rows => { const x = rows[0]; return h('div', { class: 'card' }, h('div', { class: 'nombre' }, x.prod + ' · lote ' + (x.lote || 'sin código')), x.denom ? h('div', { class: 'sub', style: x.revisar ? 'color:var(--ambar);font-weight:700' : '' }, (x.revisar ? '⚠ ' : '') + 'En la factura: ' + x.denom) : null, h('div', { class: 'sub' }, [fechaES(x.fcompra), x.prov, x.doc ? 'doc. ' + x.doc : '', x.origen ? 'origen ' + x.origen : '', 'recibido ' + num(x.rec) + ' ' + x.un].filter(Boolean).join(' · ')),
+          ...rows.filter(r => r.estado === 'Entregado').map(r => h('div', { class: 'sub' }, '→ ' + fechaES(r.fent) + ' · ' + r.cli + ' · ' + (r.alb ? 'albarán ' + r.alb + ' · ' : '') + num(r.cant) + ' ' + x.un)), rows[0].estado !== 'Entregado' ? h('div', { class: 'sub', style: 'color:var(--ambar)' }, 'Sin salidas registradas') : null); }),
+        Object.keys(por).length > 40 ? h('p', { class: 'sub' }, 'Se muestran 40 lotes; el CSV y el PDF llevan todos (' + Object.keys(por).length + ').') : null);
+    }
   }
   async function pLote() {
     const lista = h('div', {}); const inp = h('input', { placeholder: 'Buscar por código de lote o producto…', oninput: debounce(buscarT, 300) });
@@ -5855,7 +5979,7 @@ function vistaPedidos() {
     catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver los pedidos.' : msgErr(e))); }
   }
   $app.replaceChildren(shell('Lista de pedidos', h('div', {}, h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px' }, h('label', { class: 'campo' }, 'Desde', fd), h('label', { class: 'campo' }, 'Hasta', fh)), chips, bus, info, cont,
-    h('button', { class: 'ghost', style: 'width:100%;margin-top:10px', onclick: () => go('calendario') }, '📅 Ver en el calendario')), { volver: () => go('inicio') })); renderBanner(); pintar(); cargar();
+    h('button', { class: 'ghost', style: 'width:100%;margin-top:10px', onclick: () => go('calendario') }, '📅 Ver en el calendario')), { volver: volverIni })); renderBanner(); pintar(); cargar();
 }
 function vistaCalendario() {
   state.view = 'calendario';
@@ -5983,16 +6107,44 @@ function panelIncidencias(pref, opc) {
 }
 function vistaIncidencias() {
   state.view = 'incidencias';
-  $app.replaceChildren(shell('Incidencias', panelIncidencias({}, { filtros: true }), { volver: () => go('inicio') })); renderBanner();
+  $app.replaceChildren(shell('Incidencias', panelIncidencias({}, { filtros: true }), { volver: volverIni })); renderBanner();
 }
 
 /* ---------- Precios de compra ---------- */
+/* Rellena el precio de compra de los lotes que se registraron SIN precio, usando las facturas ya leídas (mismo proveedor, misma fecha, mismo producto). Solo toca lotes sin precio y pide confirmar. */
+async function rellenarPreciosCompra(alTerminar) {
+  try {
+    toast('Buscando lotes sin precio…');
+    const desde = hoy(new Date(Date.now() - 45 * 86400000));
+    const lr = await sb.from('lotes').select('id,producto_id,unidad,compra_id,productos(nombre,codigo),compras(fecha,proveedor_id,proveedores(nombre))').is('precio_compra', null).neq('archivado', true).limit(1500); if (lr.error) throw lr.error;
+    const lotes = (lr.data || []).filter(l => { const c = uno(l.compras) || {}; return c.fecha && c.fecha >= desde && c.proveedor_id; });
+    if (!lotes.length) { toast('No hay lotes sin precio de compra en los últimos 45 días.', 'ok'); return; }
+    const provs = [...new Set(lotes.map(l => uno(l.compras).proveedor_id))]; const L = [];
+    for (let i = 0; i < provs.length; i += 40) { const r = await sb.from('lineas_factura_leida').select('texto,precio,unidad,fecha,proveedor_id,producto_id').in('proveedor_id', provs.slice(i, i + 40)).gte('fecha', desde).limit(5000); if (r.error) throw r.error; L.push(...(r.data || [])); }
+    const filas = [];
+    lotes.forEach(lo => {
+      const co = uno(lo.compras), pr = uno(lo.productos) || {}, mismas = L.filter(x => x.proveedor_id === co.proveedor_id && String(x.fecha).slice(0, 10) === String(co.fecha).slice(0, 10) && Number(x.precio) > 0);
+      const exactas = mismas.filter(x => x.producto_id === lo.producto_id), ind = waIndice([{ nombre: pr.nombre }]);
+      const parec = mismas.filter(x => !x.producto_id).map(x => ({ x, c: fcCandidatos(x.texto, ind, 1)[0] })).filter(o => o.c && o.c.n >= 1 && (o.c.n === o.c.np || (o.c.n >= 2 && o.c.n >= o.c.np - 1)));
+      const precios = [...new Set(exactas.map(x => Number(x.precio)))];
+      if (precios.length === 1) filas.push({ lo, co, pr, precio: precios[0], unidad: exactas[0].unidad || lo.unidad, texto: exactas[0].texto, ok: true, tipo: 'Factura leída' });
+      else if (!precios.length && parec.length && new Set(parec.map(o => Number(o.x.precio))).size === 1) filas.push({ lo, co, pr, precio: Number(parec[0].x.precio), unidad: parec[0].x.unidad || lo.unidad, texto: parec[0].x.texto, ok: false, tipo: 'Parecida (confirma tú)' });
+      else if (precios.length > 1) filas.push({ lo, co, pr, precio: null, texto: exactas.map(x => x.texto + ' ' + eur(x.precio)).join(' | '), ok: false, tipo: 'Varios precios: ponlo a mano', manual: true });
+    });
+    if (!filas.length) { toast('Hay ' + lotes.length + ' lote(s) sin precio, pero ninguna factura leída coincide todavía (proveedor, día y producto). Lee las facturas o pon el precio a mano.', 'err'); return; }
+    let cerrar; const marca = filas.map(f => h('input', { type: 'checkbox', checked: f.ok, disabled: !!f.manual, onchange: e => { f.ok = e.target.checked; } }));
+    cerrar = hoja('💶 Precios de compra que faltan', h('div', {}, h('p', { class: 'sub' }, 'Estos lotes se registraron sin precio. Marca los que quieres rellenar con el precio de la factura del proveedor (solo se rellenan lotes SIN precio; no se cambia ninguno que ya lo tenga).'),
+      ...filas.map((f, i) => h('label', { class: 'card', style: 'display:block;border-left:4px solid ' + (f.manual ? '#b45309' : f.ok ? '#166534' : '#ca8a04') }, h('div', { class: 'fila', style: 'gap:8px;justify-content:flex-start' }, marca[i], h('div', {}, h('div', { class: 'nombre' }, f.pr.nombre + ' · ' + fechaES(f.co.fecha)), h('div', { class: 'sub' }, (uno(f.co.proveedores) || {}).nombre + ' · ' + f.tipo))),
+        h('div', { class: 'sub' }, 'En la factura: ' + f.texto), f.precio != null ? h('b', {}, eur(f.precio) + ' €/' + (f.unidad || 'kg')) : null)),
+      h('button', { class: 'guardar', style: 'width:100%;margin-top:8px', onclick: async () => { const sel = filas.filter(f => f.ok && f.precio != null); if (!sel.length) { toast('No has marcado ninguno.', 'err'); return; } let n = 0; for (const f of sel) { const r = await sb.from('lotes').update({ precio_compra: f.precio }).eq('id', f.lo.id).is('precio_compra', null); if (!r.error) n++; } cerrar(); toast(n + ' precio(s) de compra rellenados', 'ok'); if (alTerminar) alTerminar(); } }, 'Rellenar los marcados')));
+  } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); }
+}
 function vistaPrecios() {
   state.view = 'precios'; if (!puedeCompras()) { go('inicio'); return; }
   let modo = LS.get('fj_precios_modo', 'dia'), fecha = hoy();
   const cont = h('div', {}), chips = h('div', { class: 'chips' });
   const pintarChips = () => chips.replaceChildren(...[['hoy', 'Del día'], ['dia', 'Por día'], ['producto', 'Por producto']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { LS.set('fj_precios_modo', m); vistaPrecios(); } }, n)));
-  $app.replaceChildren(shell(modo === 'hoy' ? 'Precios de compra del día' : 'Precios de compra', h('div', {}, chips, cont), { volver: () => go('inicio') })); renderBanner(); pintarChips();
+  $app.replaceChildren(shell(modo === 'hoy' ? 'Precios de compra del día' : 'Precios de compra', h('div', {}, chips, h('button', { class: 'ghost small', style: 'width:100%;margin:6px 0', onclick: () => rellenarPreciosCompra(() => vistaPrecios()) }, '💶 Rellenar con las facturas los precios que faltan'), cont), { volver: volverIni })); renderBanner(); pintarChips();
   const pintar = () => modo === 'hoy' ? pHoy() : modo === 'dia' ? pDia() : pProducto();
   async function editarPrecio(l) {
     if (!puedeCompras()) return;
@@ -6304,7 +6456,7 @@ function vistaFacturas() {
     h('label', { class: 'campo' }, 'Importe total €', f.importe), h('label', { class: 'campo' }, 'Nota', f.nota),
     h('div', { style: 'display:flex;gap:8px' }, h('button', { style: 'flex:1', onclick: () => foto.click() }, '📷 Hacer foto'), h('button', { class: 'ghost', style: 'flex:1', onclick: () => arch.click() }, '📎 Elegir archivos')), foto, arch),
     h('div', { class: 'barra' }, mesInp), lista);
-  $app.replaceChildren(shell('Facturas de compra', cont, { volver: () => go('inicio') })); renderBanner();
+  $app.replaceChildren(shell('Facturas de compra', cont, { volver: volverIni })); renderBanner();
   sb.from('proveedores').select('id,nombre').eq('activo', true).order('nombre').then(r => { provs = r.data || []; f.prov.replaceChildren(h('option', { value: '' }, '— sin elegir —'), ...provs.map(p => h('option', { value: p.id }, p.nombre))); });
   cargar();
 }
@@ -6313,7 +6465,7 @@ function vistaFacturas() {
 function vistaResumen() {
   state.view = 'resumen'; if (!esOficina()) { go('inicio'); return; }
   let fecha = hoy(); const cont = h('div', {});
-  $app.replaceChildren(shell('Resumen del día', cont, { volver: () => go('inicio') })); renderBanner();
+  $app.replaceChildren(shell('Resumen del día', cont, { volver: volverIni })); renderBanner();
   async function cargar() {
     const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); cargar(); } });
     const caja = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); cont.replaceChildren(h('div', { class: 'barra' }, inp, h('button', { class: 'ghost', onclick: () => cargar() }, '↻')), caja);
@@ -6375,7 +6527,7 @@ function vistaArchivo() {
     } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
   }
   cont.append(h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Lo archivado no se pierde: aquí se puede restaurar. Los clientes y productos se activan o desactivan en Catálogo.'), chips, lista);
-  $app.replaceChildren(shell('Archivo', cont, { volver: () => go('inicio') })); renderBanner(); pintarChips(); cargar();
+  $app.replaceChildren(shell('Archivo', cont, { volver: volverIni })); renderBanner(); pintarChips(); cargar();
 }
 
 /* ---------- Tablón de avisos y ofertas ---------- */
@@ -6419,7 +6571,7 @@ function vistaAvisos() {
     } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver los avisos.' : msgErr(e))); }
   }
   cont.append(esOficina() ? h('button', { style: 'width:100%;margin-bottom:10px', onclick: nuevo }, '+ Nuevo aviso u oferta') : null, chips, lista);
-  $app.replaceChildren(shell('Avisos y ofertas', cont, { volver: () => go('inicio') })); renderBanner(); pintarChips(); cargar();
+  $app.replaceChildren(shell('Avisos y ofertas', cont, { volver: volverIni })); renderBanner(); pintarChips(); cargar();
 }
 
 /* ---------- Rutas de reparto ---------- */
@@ -6768,7 +6920,7 @@ function vistaRentabilidad() {
     res.replaceChildren(...kids);
   }
   cont.append(chipsP, h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px' }, h('label', { class: 'campo' }, 'Desde', inpD), h('label', { class: 'campo' }, 'Hasta', inpH)), chipsM, res);
-  $app.replaceChildren(shell('Rentabilidad', cont, { volver: () => go('inicio') })); renderBanner(); pintarChips(); cargar();
+  $app.replaceChildren(shell('Rentabilidad', cont, { volver: volverIni })); renderBanner(); pintarChips(); cargar();
 }
 
 /* ---------- Pedidos habituales ---------- */
@@ -7377,7 +7529,7 @@ function waPanelFormatos(cont, ctx) {
 }
 function vistaFormatos() {
   state.view = 'formatos'; if (!esOficina()) { go('inicio'); return; }
-  const cont = h('div', {}); $app.replaceChildren(shell('Formatos y abreviaturas', cont, { volver: () => go('inicio') })); renderBanner(); waPanelFormatos(cont, {});
+  const cont = h('div', {}); $app.replaceChildren(shell('Formatos y abreviaturas', cont, { volver: volverIni })); renderBanner(); waPanelFormatos(cont, {});
 }
 
 /* ---------- Lectura de imágenes y PDF (gratis, dentro del móvil) ---------- */
@@ -7517,9 +7669,9 @@ function fcLinea(fila, descPrevia) {
   let dt = tk.slice(ini, corte).filter(w => w !== '|' && w !== '*' && !/^\d{7,}$/.test(w));
   while (dt.length > 2 && /^\d{1,3}$/.test(dt[0]) && /^(bt|bto|btos|bulto|bultos|cj|caja|cajas|sc|saco|sacos|bol|malla|ud|uds)$/i.test(dt[1])) dt = dt.slice(2);
   { const ii = dt.findIndex((w, i) => i > 0 && /^[Il|]$/.test(w)); if (ii > 0) dt = dt.slice(0, ii); }
-  { const ic = dt.findIndex((w, i) => i > 0 && (/^(espa[nñf]a|espafia|spain|italia|francia|portugal|marruecos|holanda|peru|chile|egipto|turquia|grecia|alemania|belgica|argentina|ecuador|colombia|sudafrica|israel|mexico|brasil)$/i.test(w) || /^\d{1,2}$/.test(w))); if (ic > 0) dt = dt.slice(0, ic); }
+  { const ic = dt.findIndex((w, i) => i > 0 && (/^(espa[nñf]a|espafia|spain|italia|francia|portugal|marruecos|holanda|peru|chile|egipto|turquia|grecia|alemania|belgica|argentina|ecuador|colombia|sudafrica|israel|mexico|brasil)$/i.test(w) || (/^\d{1,2}$/.test(w) && !/^(kg|kgs|kilo|kilos|g|gr|grs|mm|cm|l|lt|ud|uds|x|cal|calibre)$/i.test(dt[i + 1] || '') && !/^(cal|calibre|x|n|no|nº|n°|num|saco|sacos|caja|cajas|bolsa|bolsas|malla|mallas|bandeja|cj|sc|bto)$/i.test(dt[i - 1] || '')))); if (ic > 0) dt = dt.slice(0, ic); }
   while (dt.length > 2 && /^\d{1,4}$/.test(dt[dt.length - 1]) && !/^(cal|calibre|x|n|no|nº|n°|num)$/i.test(dt[dt.length - 2])) dt.pop();   // «Uds» al final de la descripción
-  while (dt.length > 2 && fcNorm(dt[dt.length - 1]) in FC_UNI && FC_UNI[fcNorm(dt[dt.length - 1])]) dt.pop();
+  while (dt.length > 2 && fcNorm(dt[dt.length - 1]) in FC_UNI && FC_UNI[fcNorm(dt[dt.length - 1])] && !/^\d+([.,]\d+)?$/.test(dt[dt.length - 2])) dt.pop();
   if (dt.length >= 3 && /^[A-Z]{1,2}$/.test(dt[0]) && !/^(EL|LA|LO|DE|UN|AL|Y|A|O|E)$/.test(dt[0]) && /^[A-ZÁÉÍÓÚÑa-záéíóúñ]{4,}$/.test(dt[1])) dt = dt.slice(1);   // código de artículo
   let desc = dt.join(' ').trim(); if ((desc.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/g) || []).length < 3) { if (descPrevia) desc = descPrevia; else return null; }
   if (/^(total|bases?|cuota|iva|suma|importe|subtotal|base imponible)\b/i.test(desc)) return null;
@@ -7539,9 +7691,15 @@ const FC_BASURA = /\b(tfno|tlfno|telefono|tel|fax|nif|cif|dni|iban|swift|mail|em
 function fcTextoALineas(filas) {
   const out = []; out.noLeidas = []; let prev = '';
   filas = filas.filter(f => !FC_BASURA.test(fcNorm(f)));
+  let ult = null;
   filas.forEach(f => {
     const l = fcLinea(f, prev);
-    if (l) { out.push(l); prev = ''; return; }
+    if (l) { out.push(l); prev = ''; ult = l; return; }
+    if (ult) {   /* la descripción sigue en la fila de debajo («…50 mm + BANDA» / «AZUL»): se une a la línea anterior */
+      const pal = fcPreparaFila(f).split(/\s+/).filter(w => w && !/^[\d\/.,-]{1,12}$/.test(w));
+      if (pal.length && pal.length <= 3 && pal.every(w => /^[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ.+\-]*$/.test(w)) && ult.texto.length + pal.join(' ').length < 110) { ult.texto = (ult.texto + ' ' + pal.join(' ')).trim(); ult = null; return; }
+    }
+    ult = null;
     const lim = fcPreparaFila(f); const letras = (lim.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/g) || []).length; const nn = lim.split(/\s+/).filter(w => fcEsNum(w)).length;
     if (letras >= 3 && nn === 0 && lim.length < 90) prev = lim;   // descripción partida en dos filas: la parte de arriba vale para la fila de números siguiente
     else { if (letras >= 3 && nn >= 2 && !/^(total|bases?|cuota|iva|suma|importe|subtotal|base imponible|vencim|forma de pago|tel|cif|nif|fax)/i.test(lim)) out.noLeidas.push(lim); prev = ''; }
@@ -7635,7 +7793,7 @@ async function guardarLineasLeidas(f, rd, prods, indice, alias) {
   } catch (e) { return false; }
 }
 /* Lee las facturas llegadas en los últimos días que todavía no se han leído y guarda sus precios */
-async function leerFacturasRecientes(dias, progreso) {
+async function leerFacturasRecientes(dias, progreso, forzar) {
   if (window.__leyendoRec) return { ocupado: true };
   window.__leyendoRec = true; const out = { leidas: 0, fallos: 0, total: 0, sinP54: false };
   try {
@@ -7647,7 +7805,7 @@ async function leerFacturasRecientes(dias, progreso) {
     const ya = await sb.from('lineas_factura_leida').select('factura_id').limit(5000);
     if (ya.error) { out.sinP54 = true; return out; }
     const hechas = new Set((ya.data || []).map(x => x.factura_id)); const vacias = LS.get('fj_fact_vacias', {});
-    const pend = facs.filter(f => !hechas.has(f.id) && !vacias[f.id]); out.total = pend.length;
+    const pend = forzar ? facs.slice() : facs.filter(f => !hechas.has(f.id) && !vacias[f.id]); out.total = pend.length;
     if (!pend.length) return out;
     const prods = await waProductos(); const indice = waIndice(prods);
     for (const f of pend) {
@@ -8598,7 +8756,7 @@ async function presPdf(p, accion, conLista) {
 }
 async function vistaPresentaciones() {
   state.view = 'presentaciones';
-  if (!esOficina()) { $app.replaceChildren(shell('Presentaciones', h('p', { class: 'vacio' }, 'Solo la oficina puede entrar aquí.'), { volver: () => go('inicio') })); return; }
+  if (!esOficina()) { $app.replaceChildren(shell('Presentaciones', h('p', { class: 'vacio' }, 'Solo la oficina puede entrar aquí.'), { volver: volverIni })); return; }
   const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
   $app.replaceChildren(shell('Presentaciones', cont, { volver: () => go('comercial') })); renderBanner();
   async function cargar() {
@@ -8646,13 +8804,13 @@ async function vistaPresentaciones() {
 }
 function vistaComercial() {
   state.view = 'comercial';
-  if (!esOficina()) { $app.replaceChildren(shell('Comercial', h('p', { class: 'vacio' }, 'Solo la oficina puede entrar aquí.'), { volver: () => go('inicio') })); return; }
+  if (!esOficina()) { $app.replaceChildren(shell('Comercial', h('p', { class: 'vacio' }, 'Solo la oficina puede entrar aquí.'), { volver: volverIni })); return; }
   let tab = (state.params && state.params.tab) || LS.get('fj_com_tab', 'listas'); const cont = h('div', {}); const cuerpo = h('div', {});
   const TABS = [['listas', '📄 Listas'], ['recs', '⭐ Recomendaciones'], ['avisos', '🔔 Avisos'], ['calc', '🧮 Calculadora'], ['pres', '🎬 Presentaciones'], ['guion', '🗣️ Guiones'], ['web', '🌐 Web y SEO']];
   const pintarTabs = () => chips.replaceChildren(...TABS.map(([k, t]) => h('button', { class: 'chip' + (tab === k ? ' on' : ''), onclick: () => { if (k === 'pres') { go('presentaciones'); return; } tab = k; LS.set('fj_com_tab', k); pintarTabs(); pintar(); } }, t)));
   const chips = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px' });
   const pintar = () => { cuerpo.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); ({ listas: tabListas, recs: tabRecs, avisos: tabAvisos, calc: tabCalc, guion: tabGuion, web: tabWeb })[tab](cuerpo); };
-  cont.append(chips, cuerpo); $app.replaceChildren(shell('Comercial', cont, { volver: () => go('inicio') })); renderBanner(); pintarTabs(); pintar();
+  cont.append(chips, cuerpo); $app.replaceChildren(shell('Comercial', cont, { volver: volverIni })); renderBanner(); pintarTabs(); pintar();
 }
 async function tabListas(el) {
   try {
@@ -8964,7 +9122,7 @@ function vistaRapido() {
       h('button', { class: 'ghost small', style: 'flex:1', onclick: () => go('importar') }, '📋 Pegar WhatsApp'), h('button', { class: 'ghost small', style: 'flex:1', onclick: () => go('importar', { modo: 'voz' }) }, '🎤 Dictar'), h('button', { class: 'ghost small', style: 'flex:1', onclick: () => go('importar', { modo: 'escanear' }) }, '📷 Foto')));
   }
   function pintaTodo() { pintaTop(); pintaHechos(); pintaCli(); pintaFecha(); pintaAcc(); pintaLista(); pintaPie(); }
-  $app.replaceChildren(shell('Apuntar pedido', h('div', {}, introP, topBox, hechosBox, cliBox, fechaBox, accBox, listaBox, masBox, pie, h('button', { class: 'ghost small', style: 'width:100%;margin-top:14px', onclick: () => go('nuevo') }, 'Pedido clásico (y guardar pedidos habituales)')), { volver: () => go('inicio') })); renderBanner();
+  $app.replaceChildren(shell('Apuntar pedido', h('div', {}, introP, topBox, hechosBox, cliBox, fechaBox, accBox, listaBox, masBox, pie, h('button', { class: 'ghost small', style: 'width:100%;margin-top:14px', onclick: () => go('nuevo') }, 'Pedido clásico (y guardar pedidos habituales)')), { volver: volverIni })); renderBanner();
   pintaTodo();
   if (R.cli && !R.mem) { const c = R.cli, ls = R.lineas; R.lineas = []; R.cargando = true; pintaAcc(); (async () => { try { R.mem = await memoriaCliente(c.id); await waCliCargar(c.id); } catch (e) { R.mem = { items: [], pedidos: 0, ultimo: null, error: isNetErr(e) ? 'Sin conexión: no puedo leer la memoria de este cliente.' : msgErr(e) }; } R.cargando = false; R.lineas = ls; const tengo = new Set(ls.map(l => l.producto.id)); cargaSugerencias(); pintaAcc(); pintaLista(); pintaPie(); })(); }
 }
@@ -9507,19 +9665,22 @@ function vistaCopia() {
   $app.replaceChildren(shell('Copia de seguridad', h('div', {},
     h('p', {}, 'Descarga un archivo con todos los datos de Ferjusanz (clientes, productos, pedidos, cobros, compras, etc.). Si algún día algo se borra o se rompe, con este archivo se pueden recuperar.'),
     info, btn, estado,
-    h('div', { class: 'card', style: 'margin-top:12px' }, h('b', {}, 'Cómo guardarla bien'), h('div', { class: 'sub' }, '1) Hazla una vez por semana (la app te avisa con un «!» si pasan más de 7 días).  2) Se guarda en Descargas del móvil: súbela también a Google Drive o envíatela por correo.  3) No la compartas: contiene datos de clientes.  4) Las fotos de perfil y los archivos de facturas y pedidos escaneados no van dentro de este archivo.'))), { volver: () => go('inicio') })); renderBanner();
+    h('div', { class: 'card', style: 'margin-top:12px' }, h('b', {}, 'Cómo guardarla bien'), h('div', { class: 'sub' }, '1) Hazla una vez por semana (la app te avisa con un «!» si pasan más de 7 días).  2) Se guarda en Descargas del móvil: súbela también a Google Drive o envíatela por correo.  3) No la compartas: contiene datos de clientes.  4) Las fotos de perfil y los archivos de facturas y pedidos escaneados no van dentro de este archivo.'))), { volver: volverIni })); renderBanner();
 }
 /* ===== Productos que llegan en las facturas y no están dados de alta: lista para pasar a Golden Soft y botón para crearlos aquí ===== */
 async function vistaSinReconocer() {
   state.view = 'sinreconocer'; if (!esOficina()) { go('inicio'); return; }
   const cont = h('div', {}), IGN = () => LS.get('fj_sin_ign', {}); let grupos = [];
-  $app.replaceChildren(shell('Productos sin reconocer', cont, { volver: () => go('inicio') })); renderBanner();
+  $app.replaceChildren(shell('Productos sin reconocer', cont, { volver: volverIni })); renderBanner();
   const copiar = async txt => { try { await navigator.clipboard.writeText(txt); toast('Listado copiado: pégalo en WhatsApp o en un correo', 'ok'); } catch (e) { hoja('Copia este texto', h('div', {}, h('textarea', { readonly: true, style: 'width:100%;min-height:260px;font-size:14px', onfocus: e => e.target.select() }, txt))); } };
   const textoGolden = () => {
-    const l = grupos.filter(g => !IGN()[g.clave]).sort((a, b) => a.texto.localeCompare(b.texto, 'es'));
+    const l = grupos.filter(g => !IGN()[g.clave]).sort((a, b) => a.texto.localeCompare(b.texto, 'es')); try { const E = LS.get('fj_sin_enviados', {}); l.forEach(g => { E[g.clave] = hoy(); }); LS.set('fj_sin_enviados', E); } catch (e) { }
     return 'Productos que aparecen en las facturas de los proveedores y NO están dados de alta. Por favor, activarlos / darlos de alta en Golden Soft con este nombre (tal como viene en la factura):\n\n' +
       l.map((g, i) => (i + 1) + '. ' + g.texto + '  —  ' + (g.prov || 'proveedor') + (g.precio != null ? '  (último precio ' + eur(g.precio) + ' €/' + (g.unidad || 'kg') + ', ' + g.n + (g.n === 1 ? ' vez' : ' veces') + ')' : '')).join('\n') + '\n\nGracias.';
   };
+  async function verFacturaDeLinea(g) {
+    try { const id = g.facturas[0]; if (!id) { toast('No sé de qué factura viene.', 'err'); return; } const r = await sb.from('facturas_recibidas').select('ruta,nombre').eq('id', id).maybeSingle(); if (r.error || !r.data || !r.data.ruta) { toast('No encuentro el archivo de esa factura.', 'err'); return; } verDocumento(r.data.ruta, (g.prov || 'Factura') + ' · ' + g.texto); } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); }
+  }
   function crear(g) {
     let cerrar;
     const base = String(g.texto).replace(/\s+/g, ' ').replace(/[.\s]+$/, '').toLowerCase().replace(/(^|[\s.\-/])([a-záéíóúñ])/g, (m, a, b) => a + b.toUpperCase());
@@ -9548,27 +9709,33 @@ async function vistaSinReconocer() {
     const cerrar = hoja('🔗 Es un producto que ya existe', h('div', {}, h('p', { class: 'sub' }, '«' + g.texto + '» (' + (g.prov || '') + ')'), inp, res)); setTimeout(() => inp.focus(), 150);
   }
   function pinta() {
-    const ig = IGN(), vis = grupos.filter(g => !ig[g.clave]).sort((a, b) => a.texto.localeCompare(b.texto, 'es'));
+    const ig = IGN(), env = LS.get('fj_sin_enviados', {}), vis = grupos.filter(g => !ig[g.clave]).sort((a, b) => (b.registrada ? 1 : 0) - (a.registrada ? 1 : 0) || a.texto.localeCompare(b.texto, 'es')), nReg = vis.filter(g => g.registrada).length;
     cont.replaceChildren(
-      h('div', { class: 'aviso-card' }, vis.length ? '🔴 ' + vis.length + ' producto(s) de las facturas de los últimos 90 días no están dados de alta. Copia el listado y mándaselo a la chica de Golden Soft; mientras tanto puedes crearlos aquí.' : '✅ No hay productos sin reconocer en las facturas leídas de los últimos 90 días.'),
+      h('div', { class: 'aviso-card' }, vis.length ? '🔴 ' + vis.length + ' producto(s) de las facturas de los últimos 90 días no están dados de alta' + (nReg ? ' (' + nReg + ' de facturas que YA registraste como compra y aun así no se reconocieron: salen primero, con la etiqueta «⚠ registrada»)' : '') + '. Copia el listado y mándaselo a la chica de Golden Soft; mientras tanto puedes crearlos aquí.' : '✅ No hay productos sin reconocer en las facturas leídas de los últimos 90 días.'),
       h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;margin:8px 0' },
         vis.length ? h('button', { class: 'guardar', style: 'flex:1;min-height:50px', onclick: () => copiar(textoGolden()) }, '📋 Copiar el listado para Golden Soft') : null,
-        h('button', { class: 'ghost', style: 'flex:1;min-height:50px', onclick: async () => { toast('Leyendo facturas…'); try { const r = await leerFacturasRecientes(15, () => { }); toast(r && r.ocupado ? 'Ya se están leyendo' : 'Facturas leídas: ' + ((r && r.leidas) || 0), 'ok'); } catch (e) { toast(msgErr(e), 'err'); } cargar(); } }, '🔄 Leer facturas que aún no se han leído')),
-      ...vis.map(g => h('div', { class: 'card', style: 'border-left:6px solid #dc2626' }, h('div', { class: 'nombre' }, g.texto), h('div', { class: 'sub' }, (g.prov || 'Proveedor sin asignar') + ' · ' + g.n + (g.n === 1 ? ' vez' : ' veces') + ' · última ' + fechaES(g.fecha) + (g.precio != null ? ' · ' + eur(g.precio) + ' €/' + (g.unidad || 'kg') : '')),
-        h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' }, h('button', { class: 'small', onclick: () => crear(g) }, '➕ Crear en la app'), h('button', { class: 'ghost small', onclick: () => vincular(g) }, '🔗 Ya existe'), h('button', { class: 'ghost small', onclick: () => { const I = IGN(); I[g.clave] = true; LS.set('fj_sin_ign', I); pinta(); } }, '🚫 No es un producto')))),
+        h('button', { class: 'ghost', style: 'flex:1;min-height:50px', onclick: async () => { toast('Leyendo facturas…'); try { const r = await leerFacturasRecientes(15, () => { }); toast(r && r.ocupado ? 'Ya se están leyendo' : 'Facturas leídas: ' + ((r && r.leidas) || 0), 'ok'); } catch (e) { toast(msgErr(e), 'err'); } cargar(); } }, '🔄 Leer facturas que aún no se han leído'),
+        h('button', { class: 'ghost', style: 'flex:1 1 100%;min-height:46px', onclick: async () => { if (!await confirmar('Se vuelven a leer TODAS las facturas de los últimos 30 días para que los nombres salgan completos (ej.: «P.C. SACO 25 KG AGRIA 50 mm + BANDA AZUL»). No se borra ninguna factura ni compra. Puede tardar unos minutos. ¿Seguir?')) return; toast('Releyendo facturas… no cierres la app'); try { const r = await leerFacturasRecientes(30, () => { }, true); toast(r && r.ocupado ? 'Ya se están leyendo' : 'Facturas releídas: ' + ((r && r.leidas) || 0) + ((r && r.fallos) ? ' · fallaron ' + r.fallos : ''), 'ok'); } catch (e) { toast(msgErr(e), 'err'); } cargar(); } }, '♻️ Releer las facturas de 30 días (nombres completos)')),
+      ...vis.map(g => h('div', { class: 'card', style: 'border-left:6px solid #dc2626' }, h('div', { class: 'nombre', style: 'word-break:break-word' }, g.texto), h('div', { class: 'sub' }, (g.prov || 'Proveedor sin asignar') + ' · ' + g.n + (g.n === 1 ? ' vez' : ' veces') + ' · última ' + fechaES(g.fecha) + (g.precio != null ? ' · ' + eur(g.precio) + ' €/' + (g.unidad || 'kg') : '')),
+        g.registrada ? h('div', { class: 'sub', style: 'color:#b45309;font-weight:700' }, '⚠ registrada: la factura ya se registró como compra y este producto no se reconoció') : null, env[g.clave] ? h('div', { class: 'sub' }, '📤 Pedido a Golden Soft el ' + fechaES(env[g.clave])) : null,
+        h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' }, h('button', { class: 'small', onclick: () => verFacturaDeLinea(g) }, '📄 Ver factura'), h('button', { class: 'small', onclick: () => crear(g) }, '➕ Crear en la app'), h('button', { class: 'ghost small', onclick: () => vincular(g) }, '🔗 Ya existe'), h('button', { class: 'ghost small', onclick: () => { const I = IGN(); I[g.clave] = true; LS.set('fj_sin_ign', I); pinta(); } }, '🚫 No es un producto')))),
       (() => { const n = Object.keys(ig).length; return n ? h('button', { class: 'ghost small', style: 'margin-top:10px', onclick: () => { LS.set('fj_sin_ign', {}); pinta(); } }, 'Volver a mostrar los ' + n + ' que descarté') : null; })());
   }
   async function cargar() {
     cont.replaceChildren(h('p', { class: 'vacio' }, 'Buscando en las facturas leídas…'));
     try {
       const desde = hoy(new Date(Date.now() - 90 * 86400000));
-      const q = await sb.from('lineas_factura_leida').select('texto,cantidad,unidad,precio,fecha,proveedor_id,proveedores(nombre)').is('producto_id', null).gte('fecha', desde).order('fecha', { ascending: false }).limit(3000);
+      const q = await sb.from('lineas_factura_leida').select('texto,cantidad,unidad,precio,fecha,factura_id,proveedor_id,proveedores(nombre)').is('producto_id', null).gte('fecha', desde).order('fecha', { ascending: false }).limit(3000);
       if (q.error) throw q.error;
       const al = await sb.from('alias_compra').select('texto,proveedor_id').range(0, 4999); const A = new Set((al.data || []).map(a => a.proveedor_id + '|' + a.texto));
       const M = {};
       (q.data || []).forEach(l => { const t = String(l.texto || '').replace(/\s+/g, ' ').trim(); if (!t || fcEsBasura(t)) return; const clave = fcClave(t); if (A.has(l.proveedor_id + '|' + clave)) return; const k = (l.proveedor_id || '') + '|' + clave;
-        const g = M[k] || (M[k] = { texto: t, clave, provId: l.proveedor_id, prov: (uno(l.proveedores) || {}).nombre || '', n: 0, fecha: l.fecha, precio: null, unidad: '' }); g.n++; if (g.precio == null && Number(l.precio) > 0) { g.precio = Number(l.precio); g.unidad = l.unidad || ''; g.fecha = l.fecha; } });
-      grupos = Object.values(M); pinta();
+        const g = M[k] || (M[k] = { texto: t, clave, provId: l.proveedor_id, prov: (uno(l.proveedores) || {}).nombre || '', n: 0, fecha: l.fecha, precio: null, unidad: '', facturas: [] }); g.n++; if (l.factura_id && !g.facturas.includes(l.factura_id)) g.facturas.push(l.factura_id); if (g.precio == null && Number(l.precio) > 0) { g.precio = Number(l.precio); g.unidad = l.unidad || ''; g.fecha = l.fecha; } });
+      grupos = Object.values(M);
+      /* ¿esa factura ya se registró como compra? (para dejar constancia de lo que se registró y aun así no se reconoció) */
+      try { const ids = [...new Set(grupos.flatMap(g => g.facturas))]; const reg = {}; for (let i = 0; i < ids.length; i += 100) { const fr = await sb.from('facturas_recibidas').select('id,estado,compra_id').in('id', ids.slice(i, i + 100)); (fr.data || []).forEach(x => { reg[x.id] = x; }); }
+        grupos.forEach(g => { g.registrada = g.facturas.some(id => reg[id] && (reg[id].estado === 'enlazada' || reg[id].compra_id)); }); } catch (e) { }
+      pinta();
     } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : /does not exist|schema cache/i.test(e.message || '') ? 'Falta ejecutar en Supabase el archivo de lectura de facturas (Parte 54).' : msgErr(e))); }
   }
   cargar();
@@ -9586,7 +9753,7 @@ function vistaBuscar() {
   let seq = 0;
   const inp = h('input', { type: 'search', placeholder: '🔍 Florencio, tomate pera, F 5723…', autocomplete: 'off', oninput: debounce(() => buscarTodo(inp.value), 300) });
   inp.value = (state.params && state.params.q) || '';
-  $app.replaceChildren(shell('Buscar', h('div', {}, inp, info, res), { volver: () => go('inicio') })); renderBanner();
+  $app.replaceChildren(shell('Buscar', h('div', {}, inp, info, res), { volver: volverIni })); renderBanner();
   const f = (a, t) => { const x = sinTilde([a.nombre, a.nombre_comercial, a.codigo].filter(Boolean).join(' ')); return t.split(/\s+/).every(w => x.includes(w) || (w.length > 3 && w.endsWith('s') && (x.includes(w.slice(0, -1)) || (w.endsWith('es') && x.includes(w.slice(0, -2)))))); };
   const grupo = (titulo, filas, mas) => filas.length ? h('div', {}, h('div', { class: 'letra' }, titulo + ' (' + filas.length + (mas ? '+' : '') + ')'), ...filas) : null;
   const fila = (t1, t2, onclick, badge) => h('div', { class: 'card tap', onclick }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:16px' }, t1), t2 ? h('div', { class: 'sub' }, t2) : null), badge ? h('span', { class: 'badge' }, badge) : null));
@@ -9764,7 +9931,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
 }
