@@ -28,7 +28,7 @@ Cuando la oficina te pregunte por prospectos, compáralos con estos perfiles y d
 
 Referencias que SÍ puedes nombrar ante clientes nuevos (son clientes nuestros y la oficina lo autoriza):
 - Hostelería en Madrid: Restaurante La Figal de Pablo (San Sebastián de los Reyes).
-- Hostelería en Segovia: Hotel Cándido.
+- Hostelería en Segovia: Hotel Cándido y Mesón de Cándido.
 - Colectividades: Colegio Reggio y Residencia El Pardo de Aravaca, además de otros colegios y residencias de Madrid (no inventes sus nombres).
 Usa la referencia más cercana al prospecto (por zona y tipo de negocio), una sola por mensaje y con naturalidad, por ejemplo: «Servimos a diario a la Residencia El Pardo de Aravaca y a otros colegios y residencias de Madrid». No nombres a ningún otro cliente.
 
