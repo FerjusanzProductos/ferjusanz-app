@@ -9067,7 +9067,9 @@ async function tabHarvey(el) {
   let conv = LS.get(HARVEY_CONV, []); if (!Array.isArray(conv)) conv = []; let pros = []; let foco = null; let ocupado = false;
   try { const c = await sb.from('prospectos').select('*').order('nombre').limit(500); pros = (c.data || []).filter(p => !['cliente', 'descartado'].includes(p.estado)); } catch (e) { }
   const selF = comSelect([['', '— Ningún contacto en concreto —']].concat(pros.map(p => [p.id, p.nombre + ' · ' + comNombreDe(PRO_TIPOS, p.tipo)])), '');
-  selF.addEventListener('change', () => { foco = pros.find(p => p.id === selF.value) || null; pintarAtajos(); pintarConv(); });
+  const avisoTel = h('div', { class: 'sub', style: 'margin:-4px 0 6px' });
+  const pintarAviso = () => { avisoTel.replaceChildren(!foco ? '' : telDe(foco) ? '📞 ' + foco.telefono + ' · el botón de WhatsApp abrirá su chat directamente.' : h('span', {}, '⚠️ Este contacto no tiene teléfono. Búscalo en Google Maps y apúntalo en ', h('a', { href: '#', onclick: e => { e.preventDefault(); go('comercial', { tab: 'avisos' }); } }, 'Comercial › Avisos'), ' (toca el contacto › Teléfono). Mientras tanto, WhatsApp te dejará elegir a quién enviarlo.')); };
+  selF.addEventListener('change', () => { foco = pros.find(p => p.id === selF.value) || null; pintarAviso(); pintarAtajos(); pintarConv(); });
   const lista = h('div', { class: 'chatlista', style: 'padding-bottom:0;margin:10px 0' });
   const ta = h('textarea', { rows: 3, style: 'width:100%', placeholder: 'Pídele algo a Harvey. Ej.: «Escríbeme un WhatsApp para el Bar Pepe ofreciendo las patatas de la semana»' });
   const btnEnv = h('button', { style: 'min-height:48px;flex:1' }, '📨 Enviar a Harvey');
@@ -9076,12 +9078,19 @@ async function tabHarvey(el) {
   const paraEnviar = t => { const i = t.search(/\n-{3,}\s*\n/); return (i > 0 ? t.slice(0, i) : t).trim(); };
   const telDe = p => { const d = String((p && p.telefono) || '').replace(/\D/g, ''); return d ? (d.length === 9 ? '34' : '') + d : ''; };
   const whatsapp = t => { const tel = telDe(foco); if (tel) window.open('https://wa.me/' + tel + '?text=' + encodeURIComponent(t), '_blank'); else guiaWhatsApp(t); };
+  /* Harvey marca cada mensaje listo para enviar entre [MENSAJE] y [FIN]; las notas para la oficina quedan fuera y nunca se copian ni se envían. */
+  const limpiar = t => String(t || '').replace(/\*\*(.+?)\*\*/g, '*$1*').trim();
+  const trozos = t => { const out = []; const re = /\[MENSAJE\]\s*\n?([\s\S]*?)\n?\s*\[FIN\]/gi; let i = 0, x; while ((x = re.exec(t))) { if (x.index > i) out.push({ nota: t.slice(i, x.index) }); out.push({ msg: x[1].trim() }); i = re.lastIndex; } if (i < t.length) out.push({ nota: t.slice(i) }); return out.some(p => p.msg) ? out : null; };
+  const botones = txt => h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' },
+    h('button', { class: 'ghost small', onclick: async () => { try { await navigator.clipboard.writeText(limpiar(txt)); toast('Copiado', 'ok'); } catch (e) { toast('No se pudo copiar', 'err'); } } }, '📋 Copiar'),
+    h('button', { class: 'ghost small', onclick: () => whatsapp(limpiar(txt)) }, foco && telDe(foco) ? '💬 WhatsApp a ' + foco.nombre : '💬 Enviar por WhatsApp'));
   const burbuja = m => {
     const mio = m.rol !== 'harvey';
-    const acc = !mio && !m.error ? h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' },
-      h('button', { class: 'ghost small', onclick: async () => { try { await navigator.clipboard.writeText(paraEnviar(m.texto)); toast('Copiado', 'ok'); } catch (e) { toast('No se pudo copiar', 'err'); } } }, '📋 Copiar'),
-      h('button', { class: 'ghost small', onclick: () => whatsapp(paraEnviar(m.texto)) }, foco && telDe(foco) ? '💬 WhatsApp a ' + foco.nombre : '💬 Enviar por WhatsApp')) : null;
-    return h('div', { class: 'msg' + (mio ? ' mio' : '') }, h('div', { class: 'burbuja', style: m.error ? 'border-color:#b91c1c;color:#b91c1c' : '' }, h('span', { class: 'quien2' }, mio ? 'Tú' : '🤵 Harvey'), m.texto, acc));
+    const partes = !mio && !m.error ? trozos(m.texto) : null;
+    let cuerpo;
+    if (partes) cuerpo = partes.map(p => p.msg ? h('div', { style: 'border:1px solid var(--verde);border-radius:10px;padding:8px 10px;margin:6px 0;background:rgba(27,127,59,.08)' }, h('div', { class: 'sub', style: 'font-weight:700;margin-bottom:4px' }, '✉️ Mensaje para enviar'), limpiar(p.msg), botones(p.msg)) : (p.nota.trim() ? h('div', { class: 'sub', style: 'white-space:pre-wrap' }, p.nota.trim()) : null));
+    else cuerpo = [m.texto, !mio && !m.error ? botones(paraEnviar(m.texto)) : null];
+    return h('div', { class: 'msg' + (mio ? ' mio' : '') }, h('div', { class: 'burbuja', style: m.error ? 'border-color:#b91c1c;color:#b91c1c' : '' }, h('span', { class: 'quien2' }, mio ? 'Tú' : '🤵 Harvey'), ...cuerpo));
   };
   const pintarConv = () => {
     lista.replaceChildren(...(conv.length ? conv.map(burbuja) : [h('div', { class: 'card' }, h('b', {}, '🤵 Hola, soy Harvey, vuestro comercial.'), h('p', { class: 'sub', style: 'margin:6px 0 0' }, 'Te preparo mensajes de WhatsApp y correos para captar clientes, guiones de llamada, respuestas a objeciones y a quejas, y ofertas con las recomendaciones de la semana. Conozco vuestras listas de precios, los contactos pendientes y las quejas abiertas. Tú revisas y envías: yo nunca mando nada solo.'))]));
@@ -9113,7 +9122,7 @@ async function tabHarvey(el) {
   ta.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); enviar(); } });
   el.replaceChildren(
     h('p', { class: 'sub' }, 'Harvey es vuestro comercial con inteligencia artificial: escribe mensajes, guiones y ofertas con vuestros datos. Revisa siempre lo que propone antes de enviarlo; los precios que no conozca los deja como [precio].'),
-    comCampo('¿Con qué contacto te ayudo? (opcional)', selF), atajos, lista, ta,
+    comCampo('¿Con qué contacto te ayudo? (opcional)', selF), avisoTel, atajos, lista, ta,
     h('div', { style: 'display:flex;gap:6px;margin-top:6px' }, btnEnv, h('button', { class: 'ghost', style: 'min-height:48px', onclick: async () => { if (!conv.length || ocupado) return; if (!await confirmar('¿Empezar una conversación nueva con Harvey? Se borra la actual de este móvil.')) return; conv = []; guardar(); pintarConv(); } }, '🗑️ Nueva')));
   pintarAtajos(); pintarConv();
 }
