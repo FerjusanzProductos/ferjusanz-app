@@ -40,6 +40,16 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
   cebolleta → 24 · cebolleta china → 24-A · cebollino → 23 · chalota/escalonia → 27-C. Lector de facturas: fcReglaCebolla.
 - 08/11/2026: corregido «CEBOLLA SACO 25 KG CAL 3» (estaba como Cebolla 1x1).
 
+## Más familias (lector de facturas: REGLAS_FAM)
+- **Naranja zumo** de la factura = fruta para zumo (**42**), NO el zumo embotellado (42-Z). Naranja mesa/navel/lane/late → 42-C · naranja 2ª → 42-B.
+- Limones → 40 · banana → 104-C · plátano extra/cuqui → 104 · resto de plátano → 104-B · plátano macho → 104-A.
+- Pimiento rojo/verde sin más = **extra** (111 / 110); 2ª solo si la factura lo dice (111-B / 110-B). Italiano 118 · padrón 151 · guernica 152.
+- **Ajos caja = ajos enteros (30)**, no pelados; ajo pelado → 34.
+- Aguacate (122) y lechuga iceberg (94-C) se compran **por caja**. Lechuga romana/bandeja → 168.
+- Zanahoria 159 · calabacín 108 · berenjena 251 · pepino 116 · melón 93 · sandía 96 · perejil 165 · manzana golden 105.
+- 08/11/2026: corregidos AJOS CAJA (sin producto / como pelado), PIMIENTO ROJO y VERDE (sin producto), NARANJA ZUMO (como zumo embotellado),
+  NARANJA MESA y LECHUGA ICEBERG (a productos desactivados), AGUACATE (sin producto); precios de compra recolocados.
+
 ## Pedidos
 - Los pedidos fijos generan **previstos** (2 semanas por delante, cada madrugada). Se confirman el día antes (✅) o se quitan (❌).
   Los previstos ya cuentan en la hoja de compra. Más allá de 2 semanas, el calendario los calcula al momento.

@@ -6322,7 +6322,13 @@ const reglasProd = () => [
   { fam: '🍅 Tomates', nota: 'La variedad (pera, bola, ensalada, Rambo…) se decide al comprar, según precio y calidad. Se pone la que de verdad se ha llevado el cliente: la misma en el albarán y en Golden.', filas: [
     ['Daniela · Long Life · ensalada', '91-EN'], ['Pera', '91-D'], ['Bola', '92'], ['Rambo (el de verdad)', '91-B'], ['Raf', '91-C'], ['Rosa', '91-G'], ['Rama', '91-E'], ['Mar Azul', '91-AZ'], ['Maduro (para salsa)', '91-M'], ['Cherry · cherry pera · cherry rama · mix', '166']] },
   { fam: '🧅 Cebollas', nota: 'La cebolla general es la «Cebolla gorda calibre 2-3» (código 21): la que se pone a todos salvo que pidan otra. En las facturas viene como «cebolla saco», «cebolla caja» o «cal. 3». Las demás, solo si el cliente las pide.', filas: [
-    ['Cebolla saco · caja · cal. 2-3 · blanca', '21'], ['Morada · roja', '25'], ['Dulce (Fuentes)', '27'], ['Pelada', '26'], ['Butis', '22'], ['Cebolla 1x1', '21-1'], ['Cebolleta', '24'], ['Cebolleta china', '24-A'], ['Cebollino', '23'], ['Chalota · escalonia', '27-C']] }
+    ['Cebolla saco · caja · cal. 2-3 · blanca', '21'], ['Morada · roja', '25'], ['Dulce (Fuentes)', '27'], ['Pelada', '26'], ['Butis', '22'], ['Cebolla 1x1', '21-1'], ['Cebolleta', '24'], ['Cebolleta china', '24-A'], ['Cebollino', '23'], ['Chalota · escalonia', '27-C']] },
+  { fam: '🍊 Naranjas, limones y plátanos', nota: '«Naranja zumo» de la factura es la fruta para hacer zumo (42), NO el zumo embotellado. Plátano «extra/cuqui» es el extra; el resto de plátano, 1ª.', filas: [
+    ['Naranja zumo', '42'], ['Naranja mesa · navel · lane · late', '42-C'], ['Naranja 2ª', '42-B'], ['Limones', '40'], ['Banana', '104-C'], ['Plátano extra · cuqui', '104'], ['Plátano (resto)', '104-B'], ['Plátano macho', '104-A']] },
+  { fam: '🫑 Pimientos, ajos, aguacates y lechugas', nota: 'Pimiento rojo o verde sin más = el extra; solo es 2ª si la factura lo dice. «Ajos caja» son ajos enteros (30), no pelados. Aguacate y lechuga iceberg se compran por CAJA.', filas: [
+    ['Pimiento rojo', '111'], ['Pimiento rojo 2ª', '111-B'], ['Pimiento verde', '110'], ['Pimiento verde 2ª', '110-B'], ['Pimiento italiano', '118'], ['Pimiento de padrón', '151'], ['Ajos caja', '30'], ['Ajo pelado', '34'], ['Aguacate (caja)', '122'], ['Lechuga iceberg (caja)', '94-C'], ['Lechuga romana · bandeja', '168']] },
+  { fam: '🥕 Otras verduras y frutas', nota: 'Estas ya venían bien; se dejan fijadas para que el lector de facturas no dude.', filas: [
+    ['Zanahoria', '159'], ['Calabacín', '108'], ['Berenjena', '251'], ['Pepino', '116'], ['Melón (piel de sapo, bodega)', '93'], ['Sandía', '96'], ['Perejil', '165'], ['Manzana golden', '105']] }
 ];
 async function vistaReglasProd() {
   state.view = 'reglasprod';
@@ -8377,10 +8383,29 @@ function fcReglaCebolla(texto, prods) {
   for (const [re, c] of R) if (re.test(n)) { const p = prods.find(x => x.codigo === c); if (p) return { estado: 'ok', producto: p, cand: [] }; }
   return null;
 }
+/* Reglas de más familias (Fernando, 08/11/2026). Ver docs/REGLAS_INTERNAS.md. El primer patrón que encaja decide. */
+const REGLAS_FAM = [
+  [/naranj[a-z]* zumo|zumo naranj|naranj[a-z]* de zumo/, '42'], [/naranj[a-z]* (2a?|ii|segund[a-z]*) /, '42-B'], [/naranj[a-z]* (mesa|navel|lane|late)/, '42-C'],
+  [/limon/, '40'],
+  [/banana/, '104-C'], [/platano macho/, '104-A'], [/platano[a-z]* .*(xtra|extra|cuqui)/, '104'], [/platano/, '104-B'],
+  [/padron/, '151'], [/guernica/, '152'], [/pimiento[a-z]* italian/, '118'], [/pimiento[a-z]* amarill/, '110-A'], [/pimiento[a-z]* (rojo[a-z]* )?baston/, '111-A'],
+  [/pimiento[a-z]* roj[a-z]* (2a?|ii|segund[a-z]*) /, '111-B'], [/pimiento[a-z]* roj/, '111'], [/pimiento[a-z]* verde[a-z]* (2a?|ii|segund[a-z]*) /, '110-B'], [/pimiento[a-z]* verde[a-z]* 1 ?x ?1/, '110-1'], [/pimiento[a-z]* verde/, '110'],
+  [/ajo[a-z]* pelad/, '34'], [/ ajos? /, '30'],
+  [/aguacate[a-z]* pieza/, '122-P'], [/aguacate/, '122'],
+  [/iceberg[a-z]* (caja|c ?\d)/, '94-C'], [/iceberg/, '94-C'], [/lechuga[a-z]* (romana|bandeja)/, '168'],
+  [/zanahori/, '159'], [/calabacin/, '108'], [/berenjen/, '251'], [/pepino/, '116'], [/melon/, '93'], [/sandia/, '96'], [/perejil/, '165'], [/manzana[a-z]* golden/, '105']
+];
+function fcReglaFamilias(texto, prods) {
+  const n = ' ' + fcNorm(texto) + ' ';
+  if (/zumo de naranja natural|botella|litro|brick|tarro|congelad|frito|asado/.test(n)) return null;
+  for (const [re, c] of REGLAS_FAM) if (re.test(n)) { const p = prods.find(x => x.codigo === c); if (p) return { estado: 'ok', producto: p, cand: [] }; }
+  return null;
+}
 function fcEmparejar(lin, prods, indice, alias) {
   { const rp = fcReglaPatata(lin.texto, prods); if (rp) return rp; }
   { const rt = fcReglaTomate(lin.texto, prods); if (rt) return rt; }
   { const rc = fcReglaCebolla(lin.texto, prods); if (rc) return rc; }
+  { const rf = fcReglaFamilias(lin.texto, prods); if (rf) return rf; }
   const pid = alias[fcClave(lin.texto)];
   if (pid) { const p = prods.find(x => x.id === pid); if (p) return { estado: 'ok', producto: p, cand: [] }; }
   /* Lo que otro proveedor ya enseñó con el mismo texto: se propone, pero a confirmar */
