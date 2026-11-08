@@ -1,0 +1,8 @@
+// Configuración de Cloudflare: publica la app Ferjusanz (archivos estáticos) en el Worker "ferjusanz-productos".
+{
+  "name": "ferjusanz-productos",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "."
+  }
+}

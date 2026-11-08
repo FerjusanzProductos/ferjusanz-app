@@ -1,0 +1,6 @@
+# Archivos que NO se publican en la web (código interno y configuración)
+.git
+supabase
+wrangler.jsonc
+.assetsignore
+README.md
