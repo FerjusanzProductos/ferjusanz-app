@@ -10,6 +10,7 @@ import paso2 from "../public/guia-img/paso2.jpg";
 import paso3 from "../public/guia-img/paso3.jpg";
 import paso4 from "../public/guia-img/paso4.jpg";
 import ejemplosHtml from "../public/ejemplos.html";
+import videoSinIva from "../public/guia-img/cobro_sin_iva.mp4";
 import ej7_siniva_boton from "../public/guia-img/ej7_siniva_boton.jpg";
 import ej8_siniva_calculado from "../public/guia-img/ej8_siniva_calculado.jpg";
 import ej9_albaran_descuento from "../public/guia-img/ej9_albaran_descuento.jpg";
@@ -36,6 +37,7 @@ const ARCHIVOS = {
   "/guia-img/paso3.jpg": [paso3, "image/jpeg"],
   "/guia-img/paso4.jpg": [paso4, "image/jpeg"],
   "/ejemplos.html": [ejemplosHtml, HTML],
+  "/guia-img/cobro_sin_iva.mp4": [videoSinIva, "video/mp4"],
   "/guia-img/ej7_siniva_boton.jpg": [ej7_siniva_boton, "image/jpeg"],
   "/guia-img/ej8_siniva_calculado.jpg": [ej8_siniva_calculado, "image/jpeg"],
   "/guia-img/ej9_albaran_descuento.jpg": [ej9_albaran_descuento, "image/jpeg"],
@@ -58,7 +60,7 @@ export default {
     const archivo = ARCHIVOS[ruta];
     if (!archivo) return new Response("No encontrado", { status: 404 });
     const [contenido, tipo] = archivo;
-    const imagen = tipo.startsWith("image/");
+    const imagen = tipo.startsWith("image/") || tipo.startsWith("video/");
     const headers = {
       "Content-Type": tipo,
       // La app y el service worker se revisan siempre para que las actualizaciones lleguen enseguida.
