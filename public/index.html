@@ -2607,7 +2607,7 @@ function htmlAlbaran(d, formato, opt) {
   /* Nombre del artículo: el cliente ve el «nombre para el albarán» (p. ej. «Patata esp. freír»); la copia ROSA (oficina) ve además el nombre interno y el código, para teclearlo bien en Golden */
   const nomArt = (l, interno) => { const pr = l.productos || {}; const ext = pr.nombre_albaran || pr.nombre || '';
     if (!interno) return esc(ext);
-    return esc(ext) + '<div class="tz">' + (pr.nombre_albaran && pr.nombre_albaran !== pr.nombre ? 'Interno: ' + esc(pr.nombre) + ' · ' : '') + (pr.codigo ? 'Golden: cód. <b>' + esc(pr.codigo) + '</b>' : '') + '</div>'; };
+    return esc(ext) + '<div class="tz">' + (pr.nombre_albaran && pr.nombre_albaran !== pr.nombre ? 'Interno: ' + esc(pr.nombre) + ' · ' : '') + (pr.codigo ? '<span style="display:inline-block;border:2px solid #000;border-radius:4px;padding:0 5px;margin-top:2px;font-weight:700;background:#fff">Golden: cód. ' + esc(pr.codigo) + '</span>' : '') + '</div>'; };
   const filasPara = interno => filas.replace(/@@NOM:([^@]+)@@/g, (m, id) => { const l = lineas.find(x => String(x.id) === id); return l ? nomArt(l, interno) : ''; });
   const copia = tipo => {
     const c = COP[tipo]; let pie = '';
@@ -6335,10 +6335,10 @@ async function vistaReglasProd() {
   cont.replaceChildren(
     h('div', { class: 'card', style: 'border-left:5px solid var(--verde)' }, h('b', {}, '👋 Para que todo cuadre'),
       h('p', { class: 'sub', style: 'margin:6px 0 0' }, 'Estamos poniendo cada producto con su nombre y código de verdad: el que se compra, el que se anota, el que sale en el albarán y el que se pone en Golden Soft. Así se entiende bien la compra y la venta, el precio y la ganancia de cada pedido. Si algún producto no lo solías poner así, no pasa nada: a partir de ahora, ponlo tal cual sale aquí. ¡Gracias!'),
-      h('p', { class: 'sub', style: 'margin:6px 0 0' }, '🩷 Truco: en la copia ROSA del albarán, debajo de cada producto, sale su código para Golden. Cópialo exactamente igual. Si un código no existe en Golden, dalo de alta con ese mismo código y nombre.')),
+      h('p', { class: 'sub', style: 'margin:6px 0 0' }, '🩷 En la copia ROSA del albarán (la que se queda la oficina), debajo de cada producto irá MARCADO en un recuadro su código para Golden («Golden: cód. …»). Es el que tienes que poner en Golden, exactamente igual. Si un código no existe en Golden, dalo de alta con ese mismo código y nombre.')),
     h('div', { class: 'card' }, h('b', { style: 'font-size:18px' }, '📸 Paso a paso'),
       ...[['guia-img/paso1.jpg', '1. Abre el pedido y toca «📄 Ver cómo queda el albarán». Desde ahí se imprime; la copia que se queda la oficina es la ROSA.'],
-          ['guia-img/paso2.jpg', '2. En la copia ROSA, debajo de cada producto pone «Golden: cód. …» (en rojo en la foto). Ese es el código que se teclea en Golden Soft, tal cual. Si además pone «Interno», es el nombre real del producto (el cliente ve el otro).'],
+          ['guia-img/paso2.jpg', '2. En la copia ROSA, debajo de cada producto, irá MARCADO en un recuadro «Golden: cód. …» (en la foto, señalado en rojo). Ese es el código que se teclea en Golden Soft, tal cual. Si además pone «Interno», es el nombre real del producto (el cliente ve el otro).'],
           ['guia-img/paso3.jpg', '3. Si tienes dudas con un producto, mira aquí abajo su familia: la columna AMARILLA es lo que se pone en Golden.'],
           ['guia-img/paso4.jpg', '4. Para cualquier otro producto, búscalo por nombre o por código en el buscador del final.']]
         .map(([src, txt]) => h('div', { style: 'margin:12px 0' }, h('p', { style: 'margin:0 0 6px;font-weight:600' }, txt), h('img', { src, alt: txt, loading: 'lazy', style: 'width:100%;max-width:420px;border-radius:10px;border:1px solid var(--borde);display:block' }))),
@@ -6351,7 +6351,8 @@ function avisoReglasSecretaria() {   // una sola vez por móvil, a quien es de o
   try { if (PRACTICA || !state.perfil || state.perfil.rol !== 'oficina' || LS.get('fj_aviso_reglasprod_v1', false)) return; } catch (e) { return; }
   const cerrar = hoja('📋 Una cosa importante', h('div', {},
     h('p', {}, 'Hola ' + String(state.perfil.nombre || '').split(' ')[0] + ' 👋. Hemos preparado una guía para poner cada producto igual en todos los sitios: lo que se compra, lo que se anota, lo que sale en el albarán y lo que se pone en Golden Soft.'),
-    h('p', { class: 'sub' }, 'Por ejemplo, la patata general ahora es «Patata nueva esp. freír» (código 09-F), y la agria solo para quien pide agria. Así cuadran bien la compra, la venta y la ganancia. Está siempre en Secretaría › «Cómo se pone cada producto».'),
+    h('p', { class: 'sub' }, 'Por ejemplo, la patata general ahora es «Patata nueva esp. freír» (código 09-F), y la agria solo para quien pide agria. Así cuadran bien la compra, la venta y la ganancia.'),
+    h('p', { class: 'sub', style: 'font-weight:700' }, '🩷 En la copia ROSA de cada albarán irá marcado en un recuadro el código de cada producto para Golden: ponlo exactamente igual. La guía está siempre en Secretaría › «Cómo se pone cada producto».'),
     h('button', { class: 'guardar', style: 'width:100%', onclick: () => { LS.set('fj_aviso_reglasprod_v1', true); cerrar(); state.desdeSec = false; go('reglasprod'); } }, 'Verla ahora'),
     h('button', { class: 'ghost', style: 'width:100%;margin-top:8px', onclick: () => { LS.set('fj_aviso_reglasprod_v1', true); cerrar(); } }, 'Entendido, la veo luego')));
 }
