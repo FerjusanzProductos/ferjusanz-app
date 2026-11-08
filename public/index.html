@@ -575,7 +575,7 @@ function crearSbPractica(){
     portal_albaran(a){const e=(DB.cliente_enlaces||[]).find(x=>x.token===a.p_token);if(!e)return{ok:false};const al=DB.albaranes.find(x=>x.numero===a.p_numero&&(DB.pedidos.find(p=>p.id===x.pedido_id)||{}).cliente_id===e.cliente_id);if(!al)return{ok:false};return this.albaran_publico({p_token:this._tmp(al.pedido_id)});},
     publicar_albaran_portal(a){DB.albaran_portal=DB.albaran_portal||[];DB.albaran_portal=DB.albaran_portal.filter(x=>x.pedido_id!==a.p_pedido);if(a.p_publicar!==false)DB.albaran_portal.push({pedido_id:a.p_pedido,publicado_at:new Date().toISOString()});return null;},
     registrar_envio_albaran(a){const e=(DB.albaran_enlaces||[]).find(x=>x.pedido_id===a.p_pedido);if(e)e.envios.push({a:a.p_destino,t:new Date().toISOString()});return null;},
-    albaran_publico(a){const e=(DB.albaran_enlaces||[]).find(x=>x.token===a.p_token);if(!e)return{ok:false};const p=DB.pedidos.find(x=>x.id===e.pedido_id),al=DB.albaranes.find(x=>x.pedido_id===e.pedido_id),c=DB.clientes.find(x=>x.id===p.cliente_id);const en=(DB.entregas||[]).find(z=>z.pedido_id===e.pedido_id);return{ok:true,entregado_at:en?en.entregado_at:null,entrega_nota:en?en.nota:null,serie:al.serie,numero:al.numero,fecha:al.fecha,firma_png:al.firma_png||null,firma_nombre:al.firma_nombre||null,firma_at:al.firma_at||null,cliente:c,lineas:DB.lineas_pedido.filter(l=>l.pedido_id===p.id).map(l=>{const pr=DB.productos.find(y=>y.id===l.producto_id)||{};return{nombre:pr.nombre,cantidad_pedida:l.cantidad_pedida,unidad_pedida:l.unidad_pedida,peso_real:l.peso_real,unidad_precio:l.unidad_precio,precio:l.precio,iva:l.iva,iva_producto:pr.iva};})};},
+    albaran_publico(a){const e=(DB.albaran_enlaces||[]).find(x=>x.token===a.p_token);if(!e)return{ok:false};const p=DB.pedidos.find(x=>x.id===e.pedido_id),al=DB.albaranes.find(x=>x.pedido_id===e.pedido_id),c=DB.clientes.find(x=>x.id===p.cliente_id);const en=(DB.entregas||[]).find(z=>z.pedido_id===e.pedido_id);return{ok:true,entregado_at:en?en.entregado_at:null,entrega_nota:en?en.nota:null,serie:al.serie,numero:al.numero,fecha:al.fecha,descuento_base:Number(p.descuento_base)>0?p.descuento_base:null,descuento_iva:p.descuento_iva,descuento_motivo:p.descuento_motivo,firma_png:al.firma_png||null,firma_nombre:al.firma_nombre||null,firma_at:al.firma_at||null,cliente:c,lineas:DB.lineas_pedido.filter(l=>l.pedido_id===p.id).map(l=>{const pr=DB.productos.find(y=>y.id===l.producto_id)||{};return{nombre:pr.nombre,cantidad_pedida:l.cantidad_pedida,unidad_pedida:l.unidad_pedida,peso_real:l.peso_real,unidad_precio:l.unidad_precio,precio:l.precio,iva:l.iva,iva_producto:pr.iva};})};},
     guardar_firma_albaran(a){const al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);if(!al)throw new Error('ALBARAN_NO_EXISTE');if(a.p_firma&&!/^data:image\/png;base64,/.test(a.p_firma))throw new Error('FIRMA_NO_VALIDA');al.firma_png=a.p_firma||null;al.firma_nombre=a.p_firma?(a.p_nombre||null):null;al.firma_at=a.p_firma?new Date().toISOString():null;return null;},
     confirmar_trazabilidad(a){const ls=DB.lineas_pedido.filter(l=>l.pedido_id===a.p_pedido);if(DB.pedidos.find(p=>p.id===a.p_pedido).estado==='terminado')throw new Error('PEDIDO_YA_TERMINADO');if(ls.some(l=>l.estado==='pendiente'))throw new Error('LINEAS_PENDIENTES');
       const mot=(a.p_sin_motivo||'').trim();
@@ -7581,7 +7581,24 @@ function waPuntua(qks, v) {
 }
 /* Devuelve { estado: ok|dudoso|ambiguo|noenc, producto, cand:[{p,score}] }.
    Los elementos con activo === false se ofrecen, pero nunca se eligen solos si hay uno activo igual de bueno. */
+/* Al apuntar un pedido se reconocen primero «nuestros» productos, con las mismas reglas que la guía de la secretaria:
+   «patatas» = la patata general (ahora 09-F), «cebolla» = 21, «pimiento rojo» = 111… Así no se elige uno parecido por error. */
+function fcReglaPedido(nombre, prods) {
+  const n = fcNormR(nombre);
+  if (/patat/.test(n) && !/pelad|brava|baston|dado|panader|prefrit|baby|violeta|roja|lavad|cocid|paja|microond/.test(n)) {
+    const c = /agria/.test(n) ? '01' : /monalisa/.test(n) ? 'COSAN01' : /guarnic|tornear/.test(n) ? '06' : PATATA_GENERAL;
+    const p = prods.find(x => x.codigo === c && x.activo !== false); return p ? { estado: 'ok', producto: p, cand: [] } : null;
+  }
+  const r = fcReglaTomate(nombre, prods) || fcReglaCebolla(nombre, prods) || fcReglaFamilias(nombre, prods);
+  return r && r.producto && r.producto.activo !== false ? r : null;
+}
 function waBuscarProducto(nombre, indice) {
+  const base = waBuscarProductoBase(nombre, indice);
+  try { const it0 = indice && indice[0] && indice[0].p; if (it0 && 'unidad_venta' in it0 && !('forma_pago' in it0)) {
+    const r = fcReglaPedido(nombre, indice.map(it => it.p)); if (r) return { estado: 'ok', producto: r.producto, cand: base.cand || [], score: 1, regla: true }; } } catch (e) { }
+  return base;
+}
+function waBuscarProductoBase(nombre, indice) {
   const qks = waPalabras(nombre).map(waLlave).filter(Boolean); if (!qks.length) return { estado: 'noenc', cand: [] };
   const res = indice.map(it => { let mejor = 0; it.vars.forEach(v => { const s = waPuntua(qks, v); if (s > mejor) mejor = s; }); return { p: it.p, score: mejor }; }).filter(x => x.score >= 0.45)
     .sort((a, b) => b.score - a.score || ((b.p.activo === false ? 0 : 1) - (a.p.activo === false ? 0 : 1)) || String(a.p.nombre).length - String(b.p.nombre).length);
@@ -8393,7 +8410,7 @@ function fcReglaCebolla(texto, prods) {
 /* Reglas de más familias (Fernando, 08/11/2026). Ver docs/REGLAS_INTERNAS.md. El primer patrón que encaja decide. */
 const REGLAS_FAM = [
   [/guarnic|tornear/, '06'],
-  [/patata pelada.*brava|patata[a-z]* brava/, '10-BR'], [/patata pelada.*baston/, '10-BA'], [/patata pelada.*dado/, '10-D'], [/patata pelada.*panader/, '10-P'], [/patata pelada/, '10'],
+  [/patatas? peladas?.*brava|patata[a-z]* brava/, '10-BR'], [/patatas? peladas?.*baston/, '10-BA'], [/patatas? peladas?.*dado/, '10-D'], [/patatas? peladas?.*panader/, '10-P'], [/patatas? peladas?/, '10'],
   [/clemenul[a-z]* (2a?|ii|segund[a-z]*) |clementina[a-z]* (2a?|ii) /, '45-B'], [/clementin|clemenul|primasole|oronul|mandarin|nadorcott|ortanique|tango/, '45'],
   [/kiwi/, '98'], [/cogollo/, '167'], [/ nuez | nueces /, '200'], [/manzana[a-z]* (r )?delic|starki|starking/, '153'], [/ lima /, '43'], [/remolacha/, '32'], [/frutos rojos|frutas del bosque|frutos del bosque/, '897-B'], [/ caqui | kaki /, '275'],
   [/naranj[a-z]* zumo|zumo naranj|naranj[a-z]* de zumo/, '42'], [/naranj[a-z]*( [a-z]+)? (2a?|ii|segund[a-z]*) /, '42-B'], [/naranj[a-z]* (mesa|navel|navelina|lane|late|valencia)/, '42-C'],

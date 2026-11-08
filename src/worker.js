@@ -10,6 +10,11 @@ import paso2 from "../public/guia-img/paso2.jpg";
 import paso3 from "../public/guia-img/paso3.jpg";
 import paso4 from "../public/guia-img/paso4.jpg";
 import ejemplosHtml from "../public/ejemplos.html";
+import ej7_siniva_boton from "../public/guia-img/ej7_siniva_boton.jpg";
+import ej8_siniva_calculado from "../public/guia-img/ej8_siniva_calculado.jpg";
+import ej9_albaran_descuento from "../public/guia-img/ej9_albaran_descuento.jpg";
+import ej10_cobrar from "../public/guia-img/ej10_cobrar.jpg";
+import ej11_portal from "../public/guia-img/ej11_portal.jpg";
 import ej1_preparar from "../public/guia-img/ej1_preparar.jpg";
 import ej2_preparar_bajo from "../public/guia-img/ej2_preparar_bajo.jpg";
 import ej3_pedido from "../public/guia-img/ej3_pedido.jpg";
@@ -31,6 +36,11 @@ const ARCHIVOS = {
   "/guia-img/paso3.jpg": [paso3, "image/jpeg"],
   "/guia-img/paso4.jpg": [paso4, "image/jpeg"],
   "/ejemplos.html": [ejemplosHtml, HTML],
+  "/guia-img/ej7_siniva_boton.jpg": [ej7_siniva_boton, "image/jpeg"],
+  "/guia-img/ej8_siniva_calculado.jpg": [ej8_siniva_calculado, "image/jpeg"],
+  "/guia-img/ej9_albaran_descuento.jpg": [ej9_albaran_descuento, "image/jpeg"],
+  "/guia-img/ej10_cobrar.jpg": [ej10_cobrar, "image/jpeg"],
+  "/guia-img/ej11_portal.jpg": [ej11_portal, "image/jpeg"],
   "/guia-img/ej1_preparar.jpg": [ej1_preparar, "image/jpeg"],
   "/guia-img/ej2_preparar_bajo.jpg": [ej2_preparar_bajo, "image/jpeg"],
   "/guia-img/ej3_pedido.jpg": [ej3_pedido, "image/jpeg"],
