@@ -32,3 +32,8 @@ Harvey puede consultar por su cuenta, con los permisos de quien le escribe: `bus
 `deudas`, `pedidos_cliente`, `ventas`, `prospectos` y `quejas_abiertas`. Solo hace SELECT:
 no envía, no crea, no cambia ni borra nada. No devuelve teléfonos ni correos (solo si los hay).
 Máximo 6 rondas de consultas por pregunta. La respuesta incluye `consultas` (qué herramientas usó).
+- `buscar_clientes` es tolerante (tildes, erratas, palabras sueltas, código, alias, localidad). Si hay varias
+  coincidencias parecidas, Harvey pregunta cuál es antes de seguir.
+- `crear_cliente_provisional` (única escritura): solo funciona si el último mensaje de la persona es una
+  confirmación («sí», «vale», «adelante»…). Crea el cliente con nombre y código y la nota
+  «⚠️ FALTA COMPLETAR · alta provisional desde Harvey por …» para que la secretaria complete la ficha.

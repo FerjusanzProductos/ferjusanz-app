@@ -50,7 +50,14 @@ Cómo trabajas:
 Consultas a la base de datos (herramientas de SOLO LECTURA):
 - Puedes consultar clientes, deudas, pedidos e importes, ventas por fechas, contactos pendientes (prospectos) y quejas abiertas. Úsalas cuando la pregunta necesite datos concretos y no estén ya en el CONTEXTO. Puedes hacer varias consultas seguidas.
 - Las cifras que des (importes, deudas, fechas) deben salir de esas consultas; si no lo encuentras, dilo. Los importes van con IVA y en euros, con coma decimal.
-- No puedes enviar mensajes, ni crear, cambiar o borrar nada. Si te piden apuntar algo (un contacto, un «volver a llamar», un cobro…), prepara el texto y di qué tiene que apuntar la oficina y en qué pantalla de la app.
+- No puedes enviar mensajes, ni cambiar o borrar nada. Si te piden apuntar algo (un contacto, un «volver a llamar», un cobro…), prepara el texto y di qué tiene que apuntar la oficina y en qué pantalla de la app. La ÚNICA excepción es dar de alta un cliente provisional (ver abajo).
+
+Clientes (muy importante):
+- Cuando te nombren un cliente, búscalo SIEMPRE con buscar_clientes, aunque el nombre no sea exacto: muchos clientes están registrados con su razón social, con erratas o con otro nombre. La búsqueda tolera tildes, erratas y palabras sueltas, y también busca por código y localidad.
+- Si sale UNA coincidencia clara (confianza «alta» y muy por encima de las demás), úsala y di entre paréntesis cuál has entendido: «(entiendo que es Asador de pollos Sadelia, código ADELIA)».
+- Si hay VARIAS parecidas, NO sigas: enumera las opciones (1, 2, 3…) con nombre comercial, razón social, código y localidad, y pregunta cuál es. Espera la respuesta.
+- Si NO aparece, dilo, enseña las más parecidas por si es alguna, y ofrece darlo de alta como cliente provisional: pide el nombre con el que lo conocen y el código que le quieran poner (y si se le cobra sin IVA, la localidad o alguna nota, si lo saben).
+- Alta provisional: primero resume exactamente lo que vas a crear (nombre, código, notas) y pregunta «¿Lo creo? Responde sí». Solo cuando la persona conteste que sí, usa crear_cliente_provisional. El cliente queda marcado «FALTA COMPLETAR» para que la secretaria rellene el resto de la ficha; recuérdalo al terminar.
 - Por privacidad, las consultas no traen teléfonos ni correos: solo si los hay. Remite a la ficha de la app para verlos.
 - Antes de un recordatorio de pago, comprueba la deuda con la herramienta. Tono siempre educado, sin amenazas, y recuerda que la oficina decide cuándo enviarlo.`;
 
@@ -59,11 +66,22 @@ Consultas a la base de datos (herramientas de SOLO LECTURA):
 const HERRAMIENTAS: Anthropic.Tool[] = [
   {
     name: "buscar_clientes",
-    description: "Busca clientes de Ferjusanz por nombre, nombre comercial, código o localidad. Devuelve id, código, nombre, localidad, forma de pago, si está activo y si tiene teléfono/correo (sin mostrarlos). Úsala para conseguir el cliente_id antes de mirar sus pedidos o deudas.",
+    description: "Busca clientes de Ferjusanz de forma tolerante (sin tildes, con erratas o palabras sueltas) por nombre comercial, razón social, alias, código o localidad. Devuelve las coincidencias ordenadas con una puntuación y una confianza (alta/media/baja), el id, código, nombres, localidad, forma de pago, si está activo y si tiene teléfono/correo (sin mostrarlos). Úsala SIEMPRE que te nombren un cliente, para conseguir el cliente_id antes de mirar sus pedidos o deudas.",
     input_schema: { type: "object", properties: {
       texto: { type: "string", description: "Parte del nombre, código o localidad. Vacío = clientes más recientes." },
       limite: { type: "integer", description: "Máximo de resultados (por defecto 15, máximo 50)." },
     }, required: ["texto"] },
+  },
+  {
+    name: "crear_cliente_provisional",
+    description: "Da de alta un cliente nuevo provisional, marcado «FALTA COMPLETAR» para que la secretaria complete la ficha. ÚSALA SOLO después de haber resumido los datos y de que la persona haya contestado «sí» en su último mensaje; si no, el alta se rechaza. Antes comprueba con buscar_clientes que no existe ya.",
+    input_schema: { type: "object", properties: {
+      nombre: { type: "string", description: "Nombre con el que conocen al cliente (se guarda como nombre y nombre comercial)." },
+      codigo: { type: "string", description: "Código que ha dicho la persona, tal cual (p. ej. «LUCAS» o «Falta poner 6»). Máximo 20 caracteres." },
+      localidad: { type: "string", description: "Opcional." },
+      sin_iva: { type: "boolean", description: "Opcional. true si han dicho que se le cobra sin IVA (solo se apunta en las notas)." },
+      notas: { type: "string", description: "Opcional. Otra información que hayan dado." },
+    }, required: ["nombre", "codigo"] },
   },
   {
     name: "deudas",
@@ -127,15 +145,90 @@ async function nombresClientes(sb: SB, ids: string[]) {
   return m;
 }
 
-async function ejecutar(sb: SB, nombre: string, a: any): Promise<unknown> {
+// ---------- Búsqueda tolerante de clientes ----------
+const VACIAS = new Set(["el", "la", "los", "las", "de", "del", "y", "e", "en", "a", "sl", "sa", "slu", "s", "l", "cb", "sc", "rest", "restaurante", "bar", "cafeteria", "cafe", "meson", "asador", "taberna", "cerveceria", "hotel", "colegio", "residencia", "grupo", "hosteleria", "distrib", "comercial"]);
+const norm = (t: unknown) => String(t ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9ñ]+/g, " ").trim();
+const tokens = (t: unknown) => norm(t).split(" ").filter(w => w && !VACIAS.has(w));
+function lev(a: string, b: string) {
+  if (a === b) return 0; const m = a.length, n = b.length; if (!m || !n) return m || n;
+  let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) { const cur = [i]; for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; }
+  return prev[n];
+}
+function simPalabra(q: string, c: string) {
+  if (q === c) return 1;
+  const c2 = c.replace(/\d+$/, "");
+  if (c2 && c2 !== c && q === c2) return 0.97;
+  if (q.length >= 3 && c.startsWith(q)) return 0.75 + 0.2 * (q.length / c.length);
+  if (c.length >= 4 && q.startsWith(c)) return 0.8;
+  const d = Math.min(lev(q, c), c2 ? lev(q, c2) + 0.5 : 99), l = Math.max(q.length, c.length);
+  const r = 1 - d / l; return q.length <= 3 ? (d === 0 ? 1 : 0) : r;
+}
+function puntuar(q: string, c: any) {
+  const qn = norm(q), cod = norm(c.codigo);
+  if (!qn) return 0;
+  if (qn === cod) return 1;
+  const textos = [c.nombre_comercial, c.nombre, ...(c.alias || [])].filter(Boolean);
+  let mejor = 0;
+  for (const t of textos) {
+    const tn = norm(t); if (tn === qn) return 0.98;
+    let base = tn.includes(qn) && qn.length >= 4 ? 0.9 : 0;
+    const qt = tokens(q), ct = tokens(t);
+    if (qt.length && ct.length) {
+      const media = qt.reduce((s, w) => s + Math.max(...ct.map(x => simPalabra(w, x))), 0) / qt.length;
+      base = Math.max(base, media * 0.95);
+    }
+    mejor = Math.max(mejor, base);
+  }
+  if (cod && qn.replace(/ /g, "").length >= 3 && cod.startsWith(qn.replace(/ /g, ""))) mejor = Math.max(mejor, 0.85);
+  if (cod && cod.length >= 3 && norm(q).split(" ").includes(cod)) mejor = Math.max(mejor, 0.92);
+  const loc = norm(c.localidad); if (loc && qn === loc) mejor = Math.max(mejor, 0.6);
+  return mejor;
+}
+async function todosClientes(sb: SB) {
+  const todos: any[] = [];
+  for (let desde = 0; desde < 20000; desde += 1000) {
+    const d = chk(await sb.from("clientes").select("id,codigo,nombre,nombre_comercial,alias,localidad,forma_pago,dias_pago,activo,telefono,email,notas").range(desde, desde + 999)) as any[];
+    todos.push(...d); if (d.length < 1000) break;
+  }
+  return todos;
+}
+const fichaCliente = (c: any) => ({ id: c.id, codigo: c.codigo, nombre_comercial: c.nombre_comercial || null, razon_social: c.nombre, alias: c.alias?.length ? c.alias : undefined,
+  localidad: c.localidad, forma_pago: c.forma_pago, dias_pago: c.dias_pago, activo: c.activo, tiene_telefono: !!c.telefono, tiene_email: !!c.email, notas: String(c.notas || "").slice(0, 200) });
+const AFIRMA = /^\s*(s[ií]+|vale|ok|okey|okay|de acuerdo|confirmo|confirmado|adelante|cr[eé]alo|hazlo|correcto|perfecto|dale)\b/i;
+
+type Ctx = { sb: SB; ultimoUsuario: string; autor: string };
+
+async function ejecutar(ctx: Ctx, nombre: string, a: any): Promise<unknown> {
+  const sb = ctx.sb;
   switch (nombre) {
     case "buscar_clientes": {
-      const t = limpia(a.texto), lim = Math.min(Math.max(Number(a.limite) || 15, 1), 50);
-      let q = sb.from("clientes").select("id,codigo,nombre,nombre_comercial,localidad,forma_pago,dias_pago,activo,telefono,email,notas");
-      if (t) q = q.or(`nombre.ilike.%${t}%,nombre_comercial.ilike.%${t}%,codigo.ilike.%${t}%,localidad.ilike.%${t}%`);
-      const d = chk(await q.order("created_at", { ascending: false }).limit(lim)) as any[];
-      return d.map(c => ({ id: c.id, codigo: c.codigo, nombre: c.nombre_comercial || c.nombre, razon_social: c.nombre, localidad: c.localidad,
-        forma_pago: c.forma_pago, dias_pago: c.dias_pago, activo: c.activo, tiene_telefono: !!c.telefono, tiene_email: !!c.email, notas: String(c.notas || "").slice(0, 200) }));
+      const lim = Math.min(Math.max(Number(a.limite) || 8, 1), 30);
+      const texto = String(a.texto || "").slice(0, 80);
+      if (!norm(texto)) {
+        const d = chk(await sb.from("clientes").select("id,codigo,nombre,nombre_comercial,alias,localidad,forma_pago,dias_pago,activo,telefono,email,notas").order("created_at", { ascending: false }).limit(lim)) as any[];
+        return { nota: "Sin texto: clientes dados de alta más recientemente.", clientes: d.map(fichaCliente) };
+      }
+      const res = (await todosClientes(sb)).map(c => ({ c, p: puntuar(texto, c) })).filter(x => x.p >= 0.55).sort((x, y) => y.p - x.p).slice(0, lim);
+      const conf = (p: number) => p >= 0.9 ? "alta" : p >= 0.72 ? "media" : "baja";
+      const clara = res.length > 0 && res[0].p >= 0.9 && (res.length === 1 || res[0].p - res[1].p >= 0.12);
+      return { buscado: texto, coincidencia_clara: clara, total: res.length,
+        aviso: clara ? undefined : res.length ? "Hay varias posibles o ninguna clara: pregunta cuál es antes de seguir." : "No aparece. Ofrece alta provisional.",
+        clientes: res.map(x => ({ puntuacion: Math.round(x.p * 100), confianza: conf(x.p), ...fichaCliente(x.c) })) };
+    }
+    case "crear_cliente_provisional": {
+      if (!AFIRMA.test(ctx.ultimoUsuario)) return { creado: false, motivo: "La persona no ha confirmado. Resume los datos y pregunta «¿Lo creo? Responde sí»." };
+      const nom = String(a.nombre || "").replace(/\s+/g, " ").trim().slice(0, 120);
+      const cod = String(a.codigo || "").replace(/\s+/g, " ").trim();
+      if (nom.length < 2) return { creado: false, motivo: "Falta el nombre." };
+      if (!/^[A-Za-z0-9ÑñÇç ._-]{1,20}$/.test(cod)) return { creado: false, motivo: "El código solo puede tener letras, números, espacios, punto o guion, y como mucho 20 caracteres." };
+      const ya = chk(await sb.from("clientes").select("id,codigo,nombre,nombre_comercial").ilike("codigo", cod.replace(/[%_]/g, "\\$&")).limit(1)) as any[];
+      if (ya.length) return { creado: false, motivo: `El código ${cod} ya lo tiene otro cliente: ${ya[0].nombre_comercial || ya[0].nombre}. Pide otro código.` };
+      const fecha = new Date().toLocaleDateString("es-ES", { timeZone: "Europe/Madrid" });
+      const notas = [`⚠️ FALTA COMPLETAR · alta provisional desde Harvey por ${ctx.autor || "la oficina"} el ${fecha}`, a.sin_iva ? "Se le cobra sin IVA" : "", String(a.notas || "").slice(0, 300)].filter(Boolean).join(" · ");
+      const r = await sb.from("clientes").insert({ codigo: cod, nombre: nom, nombre_comercial: nom, localidad: a.localidad ? String(a.localidad).slice(0, 80) : null, notas }).select("id,codigo,nombre").single();
+      if (r.error) return { creado: false, motivo: r.error.code === "23505" ? `El código ${cod} ya existe.` : "No se pudo crear: " + r.error.message };
+      return { creado: true, cliente: r.data, notas, recuerda: "Avisar a la secretaria para que complete la ficha (Clientes › buscar el código)." };
     }
     case "deudas": {
       let q = sb.from("v_pedidos_importe").select("pedido_id,cliente_id,cliente_nombre,fecha_entrega,serie,numero_albaran,total,cobrado,pendiente,forma_pago")
@@ -215,7 +308,7 @@ Deno.serve(async (req) => {
   });
   const { data: u } = await sb.auth.getUser();
   if (!u?.user) return json({ error: "Inicia sesión en la app para hablar con Harvey" }, 401);
-  const { data: perfil } = await sb.from("perfiles").select("rol,activo").eq("id", u.user.id).maybeSingle();
+  const { data: perfil } = await sb.from("perfiles").select("rol,activo,nombre").eq("id", u.user.id).maybeSingle();
   if (!perfil || perfil.activo === false || !["oficina", "admin"].includes(perfil.rol)) {
     return json({ error: "Harvey solo está disponible para la oficina" }, 403);
   }
@@ -244,6 +337,8 @@ Deno.serve(async (req) => {
 
   const client = new Anthropic({ apiKey: key });
   const consultas: string[] = [];
+  const ultimo = msgs[msgs.length - 1];
+  const ctx: Ctx = { sb, ultimoUsuario: typeof ultimo.content === "string" ? ultimo.content.split("\n\n").pop() || "" : "", autor: (perfil as any).nombre || "" };
   try {
     const conv: any[] = msgs;
     let r: any;
@@ -269,7 +364,7 @@ Deno.serve(async (req) => {
       const resultados = await Promise.all(usos.map(async (b: any) => {
         consultas.push(b.name);
         try {
-          const out = JSON.stringify(await ejecutar(sb, b.name, b.input || {}));
+          const out = JSON.stringify(await ejecutar(ctx, b.name, b.input || {}));
           return { type: "tool_result", tool_use_id: b.id, content: out.length > 15000 ? out.slice(0, 15000) + " …(recortado)" : out };
         } catch (e) {
           return { type: "tool_result", tool_use_id: b.id, content: "Error al consultar: " + String((e as Error)?.message || e), is_error: true };
