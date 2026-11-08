@@ -2606,7 +2606,8 @@ function htmlAlbaran(d, formato, opt) {
   };
   /* Nombre del artículo: el cliente ve el «nombre para el albarán» (p. ej. «Patata esp. freír»); la copia ROSA (oficina) ve además el nombre interno y el código, para teclearlo bien en Golden */
   const nomArt = (l, interno) => { const pr = l.productos || {}; const ext = pr.nombre_albaran || pr.nombre || '';
-    return interno && pr.nombre_albaran && pr.nombre_albaran !== pr.nombre ? esc(ext) + '<div class="tz">Interno: ' + esc(pr.nombre) + (pr.codigo ? ' · cód. ' + esc(pr.codigo) : '') + '</div>' : esc(ext); };
+    if (!interno) return esc(ext);
+    return esc(ext) + '<div class="tz">' + (pr.nombre_albaran && pr.nombre_albaran !== pr.nombre ? 'Interno: ' + esc(pr.nombre) + ' · ' : '') + (pr.codigo ? 'Golden: cód. <b>' + esc(pr.codigo) + '</b>' : '') + '</div>'; };
   const filasPara = interno => filas.replace(/@@NOM:([^@]+)@@/g, (m, id) => { const l = lineas.find(x => String(x.id) === id); return l ? nomArt(l, interno) : ''; });
   const copia = tipo => {
     const c = COP[tipo]; let pie = '';
@@ -4610,6 +4611,7 @@ function volverIni() { go(state.desdeSec ? 'secretaria' : 'inicio'); }
 function vistaSecretaria() {
   state.view = 'secretaria'; state.desdeSec = true;
   const tareas = [
+    { k: 'reglasprod', ic: '📋', t: 'Cómo se pone cada producto', s: 'Lo que se compra, se anota, sale en el albarán y se pone en Golden', f: () => go('reglasprod') },
     { k: 'cuadre', ic: '🧮', t: 'Cuadre de ayer', s: 'Liquidación por repartidor: efectivo, datáfono y lo vendido', f: () => { LS.set('fj_alb_tab', 'caja'); LS.set('fj_alb_dias', 2); go('albaranes'); } },
     { k: 'prov', ic: '📥', t: 'Facturas de proveedores', s: 'Repasar las que han llegado', f: () => { LS.set('fj_compras_modo', 'recib'); go('compras'); } },
     { k: 'traza', ic: '🔎', t: 'Trazabilidad', s: 'Albaranes sin lote asignado', f: () => go('traza') },
@@ -6305,6 +6307,46 @@ function vistaCalendario() {
     cont.replaceChildren(...kids);
   }
   cargar();
+}
+
+/* ===== CÓMO SE PONE CADA PRODUCTO (para la secretaria y la oficina): de la factura del proveedor a Golden Soft ===== */
+const reglasProd = () => [
+  { fam: '🥔 Patatas', nota: 'La patata general es la de más volumen, la que se compra a diario. AHORA es «Patata nueva esp. freír» (09-F). Dentro de unos meses, cuando la patata venga vieja, pasará a «Patata esp. freír» (01-F): os avisaremos. La agria solo para quien pide agria.', filas: [
+    ['P.C. · consumo · hostelería · nueva · jelly', PATATA_GENERAL], ['AGRIA', '01'], ['MONALISA', 'COSAN01']] },
+  { fam: '🍅 Tomates', nota: 'La variedad (pera, bola, ensalada, Rambo…) se decide al comprar, según precio y calidad. Se pone la que de verdad se ha llevado el cliente: la misma en el albarán y en Golden.', filas: [
+    ['Daniela · Long Life · ensalada', '91-EN'], ['Pera', '91-D'], ['Bola', '92'], ['Rambo (el de verdad)', '91-B'], ['Raf', '91-C'], ['Rosa', '91-G'], ['Rama', '91-E'], ['Mar Azul', '91-AZ'], ['Maduro (para salsa)', '91-M'], ['Cherry · cherry pera · cherry rama · mix', '166']] }
+];
+async function vistaReglasProd() {
+  state.view = 'reglasprod';
+  const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
+  $app.replaceChildren(shell('Cómo se pone cada producto', cont, { volver: () => go(state.desdeSec ? 'secretaria' : 'inicio') })); renderBanner();
+  let prods = [];
+  try { const r = await sb.from('productos').select('codigo,nombre,nombre_albaran,unidad_venta,activo').eq('activo', true).order('nombre'); if (r.error) throw r.error; prods = r.data || []; } catch (e) { if (!isNetErr(e)) toast(msgErr(e), 'err'); }
+  const P = c => prods.find(x => x.codigo === c) || { codigo: c, nombre: c };
+  const golden = p => p.nombre_albaran || String(p.nombre).replace(/\s*\((general|salsa)[^)]*\)\s*/i, ' ').trim();
+  const celda = (t, extra) => h('td', { style: 'padding:6px 6px;border-bottom:1px solid var(--borde);vertical-align:top;font-size:14px' + (extra || '') }, t);
+  const tabla = filas => h('div', { style: 'overflow-x:auto' }, h('table', { style: 'width:100%;border-collapse:collapse' },
+    h('thead', {}, h('tr', {}, ...['En la factura del proveedor', 'Se anota en la app', 'Sale en el albarán', 'Se pone en Golden'].map(t => h('th', { style: 'text-align:left;font-size:12px;padding:6px;background:#166534;color:#fff' }, t)))),
+    h('tbody', {}, ...filas.map(([prov, c]) => { const p = P(c); return h('tr', {}, celda(prov), celda(h('span', {}, h('b', {}, p.codigo), ' ', p.nombre)), celda(p.nombre_albaran || p.nombre), celda(h('span', {}, h('b', {}, p.codigo), ' · ', golden(p)), ';background:#fef9c3')); }))));
+  const bus = h('input', { placeholder: 'Buscar producto o código…' }); const res = h('div', {});
+  const pintaRes = () => { const t = sinTilde(bus.value.toLowerCase().trim()); const l = (t ? prods.filter(p => sinTilde((p.codigo + ' ' + p.nombre + ' ' + (p.nombre_albaran || '')).toLowerCase()).includes(t)) : prods).slice(0, 60);
+    res.replaceChildren(...l.map(p => h('div', { class: 'fila', style: 'padding:6px 2px;border-bottom:1px solid var(--borde)' }, h('div', {}, h('b', {}, p.codigo), ' · ', p.nombre, p.nombre_albaran && p.nombre_albaran !== p.nombre ? h('div', { class: 'sub' }, 'En el albarán: ' + p.nombre_albaran) : null), h('span', { class: 'sub' }, p.unidad_venta || '')))); };
+  bus.addEventListener('input', debounce(pintaRes, 200));
+  cont.replaceChildren(
+    h('div', { class: 'card', style: 'border-left:5px solid var(--verde)' }, h('b', {}, '👋 Para que todo cuadre'),
+      h('p', { class: 'sub', style: 'margin:6px 0 0' }, 'Estamos poniendo cada producto con su nombre y código de verdad: el que se compra, el que se anota, el que sale en el albarán y el que se pone en Golden Soft. Así se entiende bien la compra y la venta, el precio y la ganancia de cada pedido. Si algún producto no lo solías poner así, no pasa nada: a partir de ahora, ponlo tal cual sale aquí. ¡Gracias!'),
+      h('p', { class: 'sub', style: 'margin:6px 0 0' }, '🩷 Truco: en la copia ROSA del albarán, debajo de cada producto, sale su código para Golden. Cópialo exactamente igual. Si un código no existe en Golden, dalo de alta con ese mismo código y nombre.')),
+    ...reglasProd().map(f => h('div', { class: 'card' }, h('b', { style: 'font-size:18px' }, f.fam), h('p', { class: 'sub', style: 'margin:4px 0 8px' }, f.nota), tabla(f.filas))),
+    h('div', { class: 'card' }, h('b', {}, '🔎 Todos los productos y su código'), h('div', { style: 'margin:8px 0' }, bus), res));
+  pintaRes();
+}
+function avisoReglasSecretaria() {   // una sola vez por móvil, a quien es de oficina
+  try { if (PRACTICA || !state.perfil || state.perfil.rol !== 'oficina' || LS.get('fj_aviso_reglasprod_v1', false)) return; } catch (e) { return; }
+  const cerrar = hoja('📋 Una cosa importante', h('div', {},
+    h('p', {}, 'Hola ' + String(state.perfil.nombre || '').split(' ')[0] + ' 👋. Hemos preparado una guía para poner cada producto igual en todos los sitios: lo que se compra, lo que se anota, lo que sale en el albarán y lo que se pone en Golden Soft.'),
+    h('p', { class: 'sub' }, 'Por ejemplo, la patata general ahora es «Patata nueva esp. freír» (código 09-F), y la agria solo para quien pide agria. Así cuadran bien la compra, la venta y la ganancia. Está siempre en Secretaría › «Cómo se pone cada producto».'),
+    h('button', { class: 'guardar', style: 'width:100%', onclick: () => { LS.set('fj_aviso_reglasprod_v1', true); cerrar(); state.desdeSec = false; go('reglasprod'); } }, 'Verla ahora'),
+    h('button', { class: 'ghost', style: 'width:100%;margin-top:8px', onclick: () => { LS.set('fj_aviso_reglasprod_v1', true); cerrar(); } }, 'Entendido, la veo luego')));
 }
 
 /* ===== SEMANA: pedidos de lunes a sábado; se arrastran con el dedo (asa ☰) a otro día o para ordenar el reparto ===== */
@@ -10450,7 +10492,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
 }
@@ -10505,6 +10547,7 @@ async function init() {
   window.addEventListener('offline', renderBanner);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
   setInterval(tick, 8000);
+  setTimeout(() => { try { if (state.user) avisoReglasSecretaria(); } catch (e) { } }, 4000);
   if ('serviceWorker' in navigator) {
     // Aviso de versión nueva: cuando se publica una versión, el service worker nuevo toma el control y se ofrece recargar.
     const habiaVersion = !!navigator.serviceWorker.controller;
