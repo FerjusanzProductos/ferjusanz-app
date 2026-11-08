@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Así se ve la app · Ferjusanz</title>
+<style>
+:root{--verde:#166534;--fondo:#f4f4f0;--txt:#1f2937;--card:#fff;--borde:#e5e7eb}
+@media (prefers-color-scheme: dark){:root{--fondo:#111827;--txt:#e5e7eb;--card:#1f2937;--borde:#374151}}
+body{margin:0;background:var(--fondo);color:var(--txt);font:17px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:var(--verde);color:#fff;padding:18px 16px}
+header h1{margin:0;font-size:22px}
+main{max-width:520px;margin:0 auto;padding:12px 16px 40px}
+.aviso{background:#fef3c7;color:#78350f;border-left:6px solid #d97706;border-radius:10px;padding:12px 14px;margin:12px 0;font-weight:600}
+.paso{background:var(--card);border:1px solid var(--borde);border-radius:14px;padding:12px;margin:14px 0}
+.paso h2{font-size:18px;margin:0 0 6px}
+.paso p{margin:0 0 10px}
+.paso img{width:100%;border-radius:10px;border:1px solid var(--borde);display:block}
+ul{margin:6px 0 10px;padding-left:20px}
+</style></head><body>
+<header><h1>📸 Así se ve la app</h1><div>Ejemplos con clientes y pedidos inventados</div></header>
+<main>
+<div class="aviso">⚠️ No creéis pedidos de prueba en la app para ver si funciona: mirad aquí cómo se ve. Si queréis practicar, usad el «Modo prácticas» (Inicio › Modo prácticas): no toca nada real.</div>
+
+<div class="paso"><h2>1. Preparar: los pedidos del día</h2>
+<p>Arriba, quién reparte (cada uno con su color). Los pedidos fijos salen como <b>PREVISTO</b> con raya roja discontinua: se confirman el día antes (✅) o se quitan (❌).</p>
+<img src="guia-img/ej1_preparar.jpg" alt="Lista de Preparar con previstos" loading="lazy"></div>
+
+<div class="paso"><h2>2. Cada pedido con su estado</h2>
+<ul><li><b>Pendiente</b> (naranja): por hacer.</li><li><b>En preparación</b> (azul): con la barra de cuántas líneas van.</li><li><b>Terminado</b> (verde): albarán hecho.</li>
+<li>Nombre en <b style="color:#1d4ed8">azul</b> = sin IVA · en <b style="color:#a16207">dorado</b> = con IVA.</li><li><b>📄 Papel</b> = ese cliente quiere el albarán impreso.</li></ul>
+<img src="guia-img/ej2_preparar_bajo.jpg" alt="Pedidos en distintos estados" loading="lazy"></div>
+
+<div class="paso"><h2>3. Dentro de un pedido</h2>
+<p>Las líneas en verde ya tienen su peso. Toca «Anotar» en las que faltan. Cuando están todas, «Terminar».</p>
+<img src="guia-img/ej3_pedido.jpg" alt="Pedido en preparación" loading="lazy"></div>
+
+<div class="paso"><h2>4. Semana: mover y ordenar con el dedo</h2>
+<p>Arrastra desde ☰ a otro día o arriba/abajo para el orden del reparto. 🔒 = ya terminado.</p>
+<img src="guia-img/ej4_semana.jpg" alt="Pantalla Semana" loading="lazy"></div>
+
+<div class="paso"><h2>5. El albarán se ENVÍA, no se imprime</h2>
+<p>Se sube solo al portal del cliente al marcar la entrega. «📲 Enviar albarán» si lo quiere al momento. Solo se imprime a los clientes de 📄 papel.</p>
+<img src="guia-img/ej5_albaran.jpg" alt="Albarán con botón de enviar" loading="lazy"></div>
+
+<div class="paso"><h2>6. Calendario</h2>
+<p>Cada día con sus pedidos y previstos, y los clientes «si llama» como recordatorio.</p>
+<img src="guia-img/ej6_calendario.jpg" alt="Calendario con pedidos del día" loading="lazy"></div>
+
+<div class="aviso">¿Dudas? Botón ❓ dentro de la app, o pregunta a Fernando. Mejor preguntar que crear pedidos de prueba.</div>
+</main></body></html>

@@ -9,6 +9,13 @@ import paso1 from "../public/guia-img/paso1.jpg";
 import paso2 from "../public/guia-img/paso2.jpg";
 import paso3 from "../public/guia-img/paso3.jpg";
 import paso4 from "../public/guia-img/paso4.jpg";
+import ejemplosHtml from "../public/ejemplos.html";
+import ej1_preparar from "../public/guia-img/ej1_preparar.jpg";
+import ej2_preparar_bajo from "../public/guia-img/ej2_preparar_bajo.jpg";
+import ej3_pedido from "../public/guia-img/ej3_pedido.jpg";
+import ej4_semana from "../public/guia-img/ej4_semana.jpg";
+import ej5_albaran from "../public/guia-img/ej5_albaran.jpg";
+import ej6_calendario from "../public/guia-img/ej6_calendario.jpg";
 
 const HTML = "text/html; charset=utf-8";
 const ARCHIVOS = {
@@ -23,6 +30,13 @@ const ARCHIVOS = {
   "/guia-img/paso2.jpg": [paso2, "image/jpeg"],
   "/guia-img/paso3.jpg": [paso3, "image/jpeg"],
   "/guia-img/paso4.jpg": [paso4, "image/jpeg"],
+  "/ejemplos.html": [ejemplosHtml, HTML],
+  "/guia-img/ej1_preparar.jpg": [ej1_preparar, "image/jpeg"],
+  "/guia-img/ej2_preparar_bajo.jpg": [ej2_preparar_bajo, "image/jpeg"],
+  "/guia-img/ej3_pedido.jpg": [ej3_pedido, "image/jpeg"],
+  "/guia-img/ej4_semana.jpg": [ej4_semana, "image/jpeg"],
+  "/guia-img/ej5_albaran.jpg": [ej5_albaran, "image/jpeg"],
+  "/guia-img/ej6_calendario.jpg": [ej6_calendario, "image/jpeg"],
 };
 
 export default {
