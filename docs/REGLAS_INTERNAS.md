@@ -38,6 +38,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
   Los previstos ya cuentan en la hoja de compra. Más allá de 2 semanas, el calendario los calcula al momento.
 - Pantalla **Semana**: mover pedidos de día («solo esta vez» o «siempre») y ordenar el reparto.
 - **«Contador a cero»**: mientras la app está en pruebas, ver `supabase/contador_a_cero.sql`.
+- **Numeración de albaranes**: cuando se empiece de verdad, la app **sigue la numeración que ya se tenía** (Golden, serie F). Fernando avisará y dirá el último número; entonces `setval('public.albaran_f_seq', <último + 1>, false)` en lugar de empezar en 1.
 
 ## IVA y albaranes
 - Clientes **sin IVA = azul**, con IVA = dorado (solo en pantallas internas; el cliente nunca lo ve).

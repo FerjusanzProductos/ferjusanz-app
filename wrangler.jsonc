@@ -7,6 +7,6 @@
   "preview_urls": false,
   "rules": [
     { "type": "Text", "globs": ["**/*.html", "**/sw.js", "**/*.webmanifest"], "fallthrough": true },
-    { "type": "Data", "globs": ["**/*.png"], "fallthrough": true }
+    { "type": "Data", "globs": ["**/*.png", "**/*.jpg"], "fallthrough": true }
   ]
 }

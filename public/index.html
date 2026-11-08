@@ -6336,6 +6336,13 @@ async function vistaReglasProd() {
     h('div', { class: 'card', style: 'border-left:5px solid var(--verde)' }, h('b', {}, '👋 Para que todo cuadre'),
       h('p', { class: 'sub', style: 'margin:6px 0 0' }, 'Estamos poniendo cada producto con su nombre y código de verdad: el que se compra, el que se anota, el que sale en el albarán y el que se pone en Golden Soft. Así se entiende bien la compra y la venta, el precio y la ganancia de cada pedido. Si algún producto no lo solías poner así, no pasa nada: a partir de ahora, ponlo tal cual sale aquí. ¡Gracias!'),
       h('p', { class: 'sub', style: 'margin:6px 0 0' }, '🩷 Truco: en la copia ROSA del albarán, debajo de cada producto, sale su código para Golden. Cópialo exactamente igual. Si un código no existe en Golden, dalo de alta con ese mismo código y nombre.')),
+    h('div', { class: 'card' }, h('b', { style: 'font-size:18px' }, '📸 Paso a paso'),
+      ...[['guia-img/paso1.jpg', '1. Abre el pedido y toca «📄 Ver cómo queda el albarán». Desde ahí se imprime; la copia que se queda la oficina es la ROSA.'],
+          ['guia-img/paso2.jpg', '2. En la copia ROSA, debajo de cada producto pone «Golden: cód. …» (en rojo en la foto). Ese es el código que se teclea en Golden Soft, tal cual. Si además pone «Interno», es el nombre real del producto (el cliente ve el otro).'],
+          ['guia-img/paso3.jpg', '3. Si tienes dudas con un producto, mira aquí abajo su familia: la columna AMARILLA es lo que se pone en Golden.'],
+          ['guia-img/paso4.jpg', '4. Para cualquier otro producto, búscalo por nombre o por código en el buscador del final.']]
+        .map(([src, txt]) => h('div', { style: 'margin:12px 0' }, h('p', { style: 'margin:0 0 6px;font-weight:600' }, txt), h('img', { src, alt: txt, loading: 'lazy', style: 'width:100%;max-width:420px;border-radius:10px;border:1px solid var(--borde);display:block' }))),
+      h('p', { class: 'sub' }, '5. En Golden Soft: teclea el código de la copia rosa en la línea del albarán o factura y comprueba que sale el mismo nombre.')),
     ...reglasProd().map(f => h('div', { class: 'card' }, h('b', { style: 'font-size:18px' }, f.fam), h('p', { class: 'sub', style: 'margin:4px 0 8px' }, f.nota), tabla(f.filas))),
     h('div', { class: 'card' }, h('b', {}, '🔎 Todos los productos y su código'), h('div', { style: 'margin:8px 0' }, bus), res));
   pintaRes();

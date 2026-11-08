@@ -5,6 +5,10 @@ import swJs from "../public/sw.js";
 import manifest from "../public/manifest.webmanifest";
 import icon192 from "../public/icon-192.png";
 import icon512 from "../public/icon-512.png";
+import paso1 from "../public/guia-img/paso1.jpg";
+import paso2 from "../public/guia-img/paso2.jpg";
+import paso3 from "../public/guia-img/paso3.jpg";
+import paso4 from "../public/guia-img/paso4.jpg";
 
 const HTML = "text/html; charset=utf-8";
 const ARCHIVOS = {
@@ -15,6 +19,10 @@ const ARCHIVOS = {
   "/manifest.webmanifest": [manifest, "application/manifest+json; charset=utf-8"],
   "/icon-192.png": [icon192, "image/png"],
   "/icon-512.png": [icon512, "image/png"],
+  "/guia-img/paso1.jpg": [paso1, "image/jpeg"],
+  "/guia-img/paso2.jpg": [paso2, "image/jpeg"],
+  "/guia-img/paso3.jpg": [paso3, "image/jpeg"],
+  "/guia-img/paso4.jpg": [paso4, "image/jpeg"],
 };
 
 export default {

@@ -14,6 +14,8 @@ delete from public.cobros;
 delete from public.incidencias where pedido_id in (select id from public.pedidos where estado <> 'previsto');
 delete from public.albaranes;
 delete from public.pedidos where estado <> 'previsto';
+-- OJO (Fernando, 08/11/2026): al empezar de verdad se sigue la numeración que se tenía. Preguntar el último número y poner
+-- select setval('public.albaran_f_seq', <ULTIMO + 1>, false);   -- en vez de 1
 select setval('public.albaran_f_seq', 1, false);
 commit;
 select public.generar_previstos(14);
