@@ -15,3 +15,7 @@ Publicar (desde la sesión de Claude con las credenciales guardadas):
 - Programación en Build › Pipeline schedules. Los `git push` no lanzan nada.
 - Archivos: `…-datos.dump` (para restaurar), `…-datos.sql.gz` (lo mismo en texto), `…-usuarios.dump` (inicios de sesión).
 - Recuperar (lo haría Claude o un técnico): `pg_restore --no-owner --clean --if-exists -d "<dirección>" ferjusanz-AAAA-MM-DD-datos.dump`. Los PDF/fotos de Storage NO van en esta copia.
+
+## «Contador a cero» (mientras la app está en pruebas)
+Cuando Fernando diga «contador a cero», se quitan los pedidos de prueba ya tocados (no los previstos) y sus albaranes,
+y la numeración vuelve a empezar en F-1. Script: `supabase/contador_a_cero.sql` (enseñarle antes qué se borra).
