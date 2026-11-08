@@ -8269,7 +8269,21 @@ function fcCandidatos(texto, indice, max) {
   res.sort((a, b) => b.n - a.n || b.suma - a.suma || ((b.p.activo === false ? 0 : 1) - (a.p.activo === false ? 0 : 1)) || a.np - b.np || String(a.p.nombre).length - String(b.p.nombre).length);
   return res.slice(0, max || 14).map(x => ({ p: x.p, score: x.suma / q.length, n: x.n, np: x.np, nq: q.length }));
 }
+/* Regla de las patatas (Fernando, 08/11/2026): la AGRIA es siempre agria; MONALISA es Monalisa; y la patata general de más volumen
+   (P.C./patata consumo, hostelería, nueva, jelly) es siempre «09-F Patata nueva esp. freír (general)». «P.C. SACO» sin variedad: general, pero a confirmar. */
+function fcReglaPatata(texto, prods) {
+  const n = ' ' + fcNorm(texto) + ' ';
+  if (!/patat| p c |jelly|monalisa|consumo/.test(n)) return null;
+  if (/ p p |pelad|baston|dado|panader|brava|prefrit|guarnic|cocid|baby|violeta|roja|lavad|tornear|paja/.test(n)) return null;
+  const por = c => prods.find(x => x.codigo === c);
+  if (/monalisa/.test(n)) { const p = por('COSAN01'); return p ? { estado: 'ok', producto: p, cand: [] } : null; }
+  if (/agria/.test(n)) { const p = por('01'); return p ? { estado: 'ok', producto: p, cand: [] } : null; }
+  if (/jelly|consumo|hosteler|nueva/.test(n)) { const p = por('09-F'); return p ? { estado: 'ok', producto: p, cand: [] } : null; }
+  if (/ p c /.test(n)) { const p = por('09-F'); return p ? { estado: 'dudoso', producto: p, cand: ['09-F', '01', 'COSAN01'].map(por).filter(Boolean).map(x => ({ p: x, score: 0.6 })), score: 0.6 } : null; }
+  return null;
+}
 function fcEmparejar(lin, prods, indice, alias) {
+  { const rp = fcReglaPatata(lin.texto, prods); if (rp) return rp; }
   const pid = alias[fcClave(lin.texto)];
   if (pid) { const p = prods.find(x => x.id === pid); if (p) return { estado: 'ok', producto: p, cand: [] }; }
   /* Lo que otro proveedor ya enseñó con el mismo texto: se propone, pero a confirmar */
