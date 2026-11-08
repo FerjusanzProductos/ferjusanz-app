@@ -33,6 +33,13 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
   rambo → **91-B** · rama → **91-E** · beef → **91-BE** · pera → **91-D**.
 - 08/11/2026: corregidas compras mal apuntadas (380 kg de Daniela salían como «Berros»; Long Life/Mar Azul/Maduro como «Tomate 1ª»; cherry como pera/rama).
 
+## Cebollas
+- **Cebolla general = 21 «Cebollas Gordas Calibre 2-3»** (la que más se vende: 10.533 kg a 79 clientes jun–oct 2026). Se pone a todos salvo que pidan otra.
+  En las facturas: «cebolla saco», «cebolla caja», «cal. 3».
+- Especiales, solo si las piden: morada/roja → 25 · dulce (Fuentes) → 27 · pelada → 26 · butis → 22 · 1x1 → 21-1 ·
+  cebolleta → 24 · cebolleta china → 24-A · cebollino → 23 · chalota/escalonia → 27-C. Lector de facturas: fcReglaCebolla.
+- 08/11/2026: corregido «CEBOLLA SACO 25 KG CAL 3» (estaba como Cebolla 1x1).
+
 ## Pedidos
 - Los pedidos fijos generan **previstos** (2 semanas por delante, cada madrugada). Se confirman el día antes (✅) o se quitan (❌).
   Los previstos ya cuentan en la hoja de compra. Más allá de 2 semanas, el calendario los calcula al momento.
