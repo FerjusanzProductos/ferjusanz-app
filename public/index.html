@@ -6242,10 +6242,15 @@ function vistaPedidos() {
 }
 function vistaCalendario() {
   state.view = 'calendario';
-  let mes = (state.params.mes || state.fecha).slice(0, 7), sel = state.params.dia || state.fecha, datos = [], siLlama = LS.get('fj_si_llama', []);
+  let mes = (state.params.mes || state.fecha).slice(0, 7), sel = state.params.dia || state.fecha, datos = [], fijos = LS.get('fj_fijos_cal', []);
+  const siLlamaDe = () => (fijos || []).filter(x => x.tipo === 'si_llama');
+  /* Más allá de la ventana de previstos reales (2 semanas), el calendario calcula al momento qué pedidos fijos tocan ese día */
+  const LIM_PREV = 14;
+  const fijosDia = iso => { if (iso <= hoyMas(LIM_PREV)) return []; const dow = new Date(iso + 'T12:00:00').getDay(); const vistos = {};
+    return (fijos || []).filter(x => x.tipo !== 'si_llama' && x.activo !== false && (uno(x.clientes) || {}).activo !== false && (x.dias_semana || []).includes(dow) && !vistos[x.cliente_id] && (vistos[x.cliente_id] = 1)); };
   const cont = h('div', {});
   $app.replaceChildren(shell('Calendario', cont)); renderBanner();
-  sb.from('pedidos_habituales').select('dias_semana,tipo,clientes(nombre,nombre_comercial)').eq('tipo', 'si_llama').eq('activo', true).then(r => { if (r && !r.error) { siLlama = r.data || []; LS.set('fj_si_llama', siLlama); pintar(); } }).catch(() => { });
+  sb.from('pedidos_habituales').select('cliente_id,dias_semana,tipo,activo,clientes(nombre,nombre_comercial,activo,sin_iva)').eq('activo', true).then(r => { if (r && !r.error) { fijos = r.data || []; LS.set('fj_fijos_cal', fijos); pintar(); } }).catch(() => { });
   const mover = (m, d) => { const [y, mm] = m.split('-').map(Number); const dt = new Date(y, mm - 1 + d, 1); return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0'); };
   async function cargar() {
     datos = LS.get('fj_cal_' + mes, []); pintar();
@@ -6262,7 +6267,7 @@ function vistaCalendario() {
     const cel = ['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(x => h('div', { class: 'cal-h' }, x));
     for (let i = 0; i < primero; i++) cel.push(h('div', {}));
     for (let d = 1; d <= nd; d++) {
-      const iso = mes + '-' + String(d).padStart(2, '0'); const n = (por[iso] || []).length; const np = (por[iso] || []).filter(p => p.estado === 'previsto').length;
+      const iso = mes + '-' + String(d).padStart(2, '0'); const nf = fijosDia(iso).length; const n = (por[iso] || []).length + nf; const np = (por[iso] || []).filter(p => p.estado === 'previsto').length + nf;
       cel.push(h('button', { class: 'cal-d' + (iso === sel ? ' sel' : '') + (iso === hoy() ? ' hoy' : ''), onclick: () => { sel = iso; pintar(); } }, String(d), n ? h('i', { class: np ? 'prev' : '', title: np ? np + ' previstos sin confirmar' : '' }, String(n)) : null));
     }
     const titulo = new Date(y, m - 1, 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
@@ -6272,11 +6277,13 @@ function vistaCalendario() {
       h('b', { style: 'text-transform:capitalize;font-size:18px' }, titulo),
       h('button', { class: 'ghost small', onclick: () => { mes = mover(mes, 1); sel = mes + '-01'; cargar(); } }, '→')),
       h('div', { class: 'cal' }, ...cel),
-      h('div', { class: 'letra', style: 'text-transform:capitalize' }, fmtDiaLargo(sel + 'T12:00:00') + ' · ' + dia.length + ' pedidos')];
+      h('div', { class: 'letra', style: 'text-transform:capitalize' }, fmtDiaLargo(sel + 'T12:00:00') + ' · ' + (dia.length + fijosDia(sel).length) + ' pedidos')];
     const pvDia = dia.filter(p => p.estado === 'previsto');
     if (pvDia.length) kids.push(h('div', { class: 'card previsto' + (pvDia.some(prevRojo) ? ' roja' : '') }, h('b', {}, '📅 ' + pvDia.length + ' previstos sin confirmar'), h('div', { class: 'sub' }, 'Salen de los pedidos fijos. Tócalos para confirmar uno a uno, o confírmalos todos.'),
       h('button', { class: 'guardar', style: 'width:100%;margin-top:8px', onclick: () => decidirVarios(pvDia.map(p => p.id), cargar) }, '✅ Confirmar todos los de este día (' + pvDia.length + ')')));
-    { const dow = new Date(sel + 'T12:00:00').getDay(); const sl = (siLlama || []).filter(x => (x.dias_semana || []).includes(dow)); if (sl.length) kids.push(h('div', { class: 'aviso-card' }, '📞 Si llama (no se crea solo): ' + sl.map(x => nombreCli(uno(x.clientes))).join(', '))); }
+    { const fd = fijosDia(sel); if (fd.length) kids.push(h('div', { class: 'card previsto' }, h('b', {}, '📅 ' + fd.length + ' pedidos fijos este día'), h('div', { class: 'sub' }, 'Se crearán solos como previstos 2 semanas antes, para confirmarlos. Si cambias un pedido fijo, esto se actualiza.'),
+        ...fd.map(x => h('div', { class: 'nombre ' + claseIva(uno(x.clientes)), style: 'font-size:15px;margin-top:4px' }, '· ' + nombreCli(uno(x.clientes)) + (x.tipo === 'especifico' ? ' (específico)' : x.tipo === 'no_siempre' ? ' (no siempre)' : ''))))); }
+    { const dow = new Date(sel + 'T12:00:00').getDay(); const sl = siLlamaDe().filter(x => (x.dias_semana || []).includes(dow)); if (sl.length) kids.push(h('div', { class: 'aviso-card' }, '📞 Si llama (no se crea solo): ' + sl.map(x => nombreCli(uno(x.clientes))).join(', '))); }
     dia.forEach(p => { const e = uno(p.entregas); kids.push(h('div', { class: 'card tap fila' + (p.estado === 'previsto' ? ' previsto' + (prevRojo(p) ? ' roja' : '') : ''), onclick: () => go('pedido', { id: p.id }) },
       h('div', {}, h('div', { class: 'nombre ' + claseIva(uno(p.clientes)) }, nombreCli(uno(p.clientes))), e ? h('div', { class: 'sub' }, '✔ Entregado a las ' + fmtHora(e.entregado_at)) : null),
       h('span', { class: 'badge ' + claseEst(p) }, textoEst(p)))); });
