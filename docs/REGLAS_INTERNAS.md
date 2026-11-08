@@ -21,6 +21,18 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
    desactivar 09-F cuando ya no queden pedidos con ella. Copiar a 01-F el precio de compra vigente.
 3. Avisar a la secretaria para que use 01-F en Golden.
 
+## Tomates
+- **El tipo real lo decide la compra**: pera, bola, ensalada, Rambo… se elige en el mercado, cliente por cliente, según precio y calidad.
+  Los tomates de los pedidos fijos son una **estimación** (no fiarse); suele coincidir en volumen con la factura de compra.
+- La **hoja de compra** muestra un **total de tomate** para comprar por volumen.
+- El **albarán** puede llevar el tomate real (no es la factura); la secretaria lo pasa a Golden como corresponda.
+- **El Rambo existe** de verdad, pero muchas veces se apuntaba Rambo siendo tomate ensalada (y pera siendo bola).
+- Lector de facturas (fcReglaTomate), para cualquier proveedor:
+  cherry / cherry pera / cherry rama → **166 Tomate Cherri** · Daniela / Long Life / ensalada → **91-EN Tomate ensalada** ·
+  Mar Azul → **91-AZ Tomate Azul** · maduro → **91-M Tomate maduro (salsa)** · bola → **92** · raf → **91-C** · rosa → **91-G** ·
+  rambo → **91-B** · rama → **91-E** · beef → **91-BE** · pera → **91-D**.
+- 08/11/2026: corregidas compras mal apuntadas (380 kg de Daniela salían como «Berros»; Long Life/Mar Azul/Maduro como «Tomate 1ª»; cherry como pera/rama).
+
 ## Pedidos
 - Los pedidos fijos generan **previstos** (2 semanas por delante, cada madrugada). Se confirman el día antes (✅) o se quitan (❌).
   Los previstos ya cuentan en la hoja de compra. Más allá de 2 semanas, el calendario los calcula al momento.
