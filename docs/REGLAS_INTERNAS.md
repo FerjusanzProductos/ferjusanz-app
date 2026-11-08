@@ -8,6 +8,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
   - **Dentro de unos meses**, cuando la patata ya venga vieja y se sobreentienda que no es nueva: pasa a
     **01-F «Patata esp. freír»** — en el albarán: «Patata esp. freír». Fernando avisará («cambio de temporada patata»).
 - **01 Patata Agria**: SOLO para quien pide agria. Se compra como agria y se vende como agria, con su precio de compra original.
+- **Patata de guarnición** («P.C. SACO 10 KG GUARNICIÓN») = **06 Patatas de tornear**.
 - **Patata Monalisa** (COSAN01): aparte. Lavandera y El Rincón Banchero (Peninsular) llevan agria + Monalisa.
 - Hay clientes que en otra época del año pasan de patata nueva a agria: se cambia su pedido fijo.
 - No confundir códigos: 09-F nueva esp. freír · 01-F esp. freír (más adelante) · 01 agria.
@@ -57,7 +58,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
   Kiwi → 98 · red delicious/starking → 153 · lima → 43 · caqui/kaki → 275 · mix frutos rojos → 897-B · nuez → 200 · cogollo → 167 · remolacha → 32.
 - Patata pelada: bolsa → 10 · bravas → 10-BR · bastón → 10-BA · dado → 10-D · panaderas → 10-P. Ajo pelado bolsa → 34.
 - Corregido: «P.P. BOLSA BRAVA» estaba como Breva (fruta); «PIM. CALIF ROJO II … NEGRA» como Pimienta negra; «P.P. BASTÓN AGRIA» como Patata Agria;
-  32 textos de compra recolocados. Pendiente: «P.C. SACO 10 KG GUARNICIÓN» (no hay producto de patata de guarnición).
+  32 textos de compra recolocados.
 
 ## Pedidos
 - Los pedidos fijos generan **previstos** (2 semanas por delante, cada madrugada). Se confirman el día antes (✅) o se quitan (❌).

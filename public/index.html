@@ -6318,7 +6318,7 @@ function vistaCalendario() {
 /* ===== CÓMO SE PONE CADA PRODUCTO (para la secretaria y la oficina): de la factura del proveedor a Golden Soft ===== */
 const reglasProd = () => [
   { fam: '🥔 Patatas', nota: 'La patata general es la de más volumen, la que se compra a diario. AHORA es «Patata nueva esp. freír» (09-F). Dentro de unos meses, cuando la patata venga vieja, pasará a «Patata esp. freír» (01-F): os avisaremos. La agria solo para quien pide agria.', filas: [
-    ['P.C. · consumo · hostelería · nueva · jelly', PATATA_GENERAL], ['AGRIA', '01'], ['MONALISA', 'COSAN01']] },
+    ['P.C. · consumo · hostelería · nueva · jelly', PATATA_GENERAL], ['AGRIA', '01'], ['MONALISA', 'COSAN01'], ['GUARNICIÓN (saco 10 kg)', '06']] },
   { fam: '🍅 Tomates', nota: 'La variedad (pera, bola, ensalada, Rambo…) se decide al comprar, según precio y calidad. Se pone la que de verdad se ha llevado el cliente: la misma en el albarán y en Golden.', filas: [
     ['Daniela · Long Life · ensalada', '91-EN'], ['Pera', '91-D'], ['Bola', '92'], ['Rambo (el de verdad)', '91-B'], ['Raf', '91-C'], ['Rosa', '91-G'], ['Rama', '91-E'], ['Mar Azul', '91-AZ'], ['Maduro (para salsa)', '91-M'], ['Cherry · cherry pera · cherry rama · mix', '166']] },
   { fam: '🧅 Cebollas', nota: 'La cebolla general es la «Cebolla gorda calibre 2-3» (código 21): la que se pone a todos salvo que pidan otra. En las facturas viene como «cebolla saco», «cebolla caja» o «cal. 3». Las demás, solo si el cliente las pide.', filas: [
@@ -8392,6 +8392,7 @@ function fcReglaCebolla(texto, prods) {
 }
 /* Reglas de más familias (Fernando, 08/11/2026). Ver docs/REGLAS_INTERNAS.md. El primer patrón que encaja decide. */
 const REGLAS_FAM = [
+  [/guarnic|tornear/, '06'],
   [/patata pelada.*brava|patata[a-z]* brava/, '10-BR'], [/patata pelada.*baston/, '10-BA'], [/patata pelada.*dado/, '10-D'], [/patata pelada.*panader/, '10-P'], [/patata pelada/, '10'],
   [/clemenul[a-z]* (2a?|ii|segund[a-z]*) |clementina[a-z]* (2a?|ii) /, '45-B'], [/clementin|clemenul|primasole|oronul|mandarin|nadorcott|ortanique|tango/, '45'],
   [/kiwi/, '98'], [/cogollo/, '167'], [/ nuez | nueces /, '200'], [/manzana[a-z]* (r )?delic|starki|starking/, '153'], [/ lima /, '43'], [/remolacha/, '32'], [/frutos rojos|frutas del bosque|frutos del bosque/, '897-B'], [/ caqui | kaki /, '275'],
