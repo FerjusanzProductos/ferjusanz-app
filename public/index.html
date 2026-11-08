@@ -1232,7 +1232,7 @@ async function abrirPrecios(pedidoId, alGuardar) {
   if (!navigator.onLine) { toast('Necesitas conexión para poner precios.', 'err'); return; }
   let pe, ln;
   try {
-    [pe, ln] = await Promise.all([sb.from('pedidos').select('id,estado,cliente_id,fecha_entrega,descuento_base,descuento_iva,descuento_motivo,clientes(codigo,nombre,nombre_comercial,forma_pago,recargo_equivalencia,direccion,localidad)').eq('id', pedidoId).single(),
+    [pe, ln] = await Promise.all([sb.from('pedidos').select('id,estado,cliente_id,fecha_entrega,descuento_base,descuento_iva,descuento_motivo,clientes(codigo,nombre,nombre_comercial,forma_pago,recargo_equivalencia,direccion,localidad,sin_iva)').eq('id', pedidoId).single(),
       sb.from('lineas_pedido').select('id,producto_id,estado,notas,iva,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,precio_lista,nota_interna,formato_peso_kg,productos(nombre,iva)').eq('pedido_id', pedidoId)]);
     if (ln.error && /column|schema cache/i.test(ln.error.message || '')) { ln = await sb.from('lineas_pedido').select('id,producto_id,estado,notas,iva,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,formato_peso_kg,productos(nombre,iva)').eq('pedido_id', pedidoId); ln.sinInterna = true; }
     if (pe.error && /descuento|column|schema cache/i.test(pe.error.message || '')) { pe = await sb.from('pedidos').select('id,estado,cliente_id,fecha_entrega,clientes(codigo,nombre,nombre_comercial,forma_pago,recargo_equivalencia,direccion,localidad)').eq('id', pedidoId).single(); pe.sinDescuento = true; }
@@ -1418,11 +1418,29 @@ async function abrirPrecios(pedidoId, alGuardar) {
   const descBox = sinDesc ? h('div', { class: 'aviso-card' }, 'Falta ejecutar en Supabase la Parte 58 para poder poner descuentos.') : h('details', { style: 'margin:8px 0' }, h('summary', { style: 'font-weight:700;cursor:pointer;padding:8px 0' }, '🏷 Descuento del pedido' + (Number(pe.data.descuento_base) > 0 ? ' · ' + eur(pe.data.descuento_base) + ' €' : '')),
     h('p', { class: 'sub' }, 'Para cuando algo no llega bien (por ejemplo producto en mal estado). El descuento sale en el albarán y en la factura como una línea con su motivo, se resta de la base y el IVA se recalcula. Déjalo vacío si no hay descuento.'),
     h('label', { class: 'campo' }, 'Descuento sobre la base (€)', dBase), h('label', { class: 'campo' }, 'Motivo', dMot), h('label', { class: 'campo' }, 'Tipo de IVA del descuento', dIva), dInfo);
+  /* Cliente sin IVA (azul): la línea de descuento es igual al IVA, para que pague lo mismo que el total sin IVA. El IVA sigue saliendo en el albarán. */
+  const cliP = uno(ped.clientes) || {};
+  const sinIvaBox = (!sinDesc && cliP.sin_iva) ? (() => {
+    const res = h('div', { class: 'sub', style: 'margin-top:6px;white-space:pre-wrap' });
+    const calc = () => {
+      const bases = {}; let falta = 0; R.forEach(x => { const i = importe(x); if (i == null) { falta++; return; } const t = ivaDe(x); bases[t] = (bases[t] || 0) + i; });
+      const B = Object.values(bases).reduce((a, b) => a + b, 0); if (!(B > 0)) { res.textContent = 'Primero pon los precios de las líneas.'; return; }
+      const IVA = Object.keys(bases).reduce((a, t) => a + Math.round(bases[t] * Number(t)) / 100, 0);
+      const r = Number(Object.keys(bases).sort((a, b) => bases[b] - bases[a])[0]);
+      const D = Math.round(IVA / (1 + r / 100) * 100) / 100;
+      DS.base = String(D).replace('.', ','); DS.iva = r; DS.motivo = 'Descuento comercial';
+      dBase.value = DS.base; dIva.value = String(r); dMot.value = DS.motivo; descBox.open = true; dRes();
+      res.textContent = '✔ Descuento puesto: ' + eur(D) + ' € (IVA ' + r + ' %). Total sin IVA de las líneas: ' + eur(B) + ' € → el cliente paga ≈ ' + eur(B) + ' €.\nPulsa «Guardar» para guardarlo.' + (falta ? '\n⚠️ Faltan precios en ' + falta + ' línea(s): cuando los pongas, vuelve a pulsar el botón.' : '');
+    };
+    return h('div', { class: 'card', style: 'border:2px solid #1d4ed8;background:#eff6ff;margin:8px 0' }, h('b', { class: 'cli-siniva' }, '🔵 Cliente sin IVA'),
+      h('div', { class: 'sub' }, 'Se aplica la línea de descuento: igual al IVA, para que pague lo mismo que el total sin IVA. El IVA sigue saliendo en el albarán (la diferencia la asumís vosotros).'),
+      h('button', { class: 'guardar', style: 'width:100%;margin-top:8px;background:#1d4ed8;color:#fff', onclick: calc }, '🔵 Calcular y poner el descuento sin IVA'), res);
+  })() : null;
   const btnG = h('button', { class: 'guardar', style: 'flex:1;margin:0', onclick: () => guardar(btnG) }, 'Guardar y cerrar');
   const btnGS = h('button', { class: 'guardar', style: 'flex:1;margin:0;background:#166534;color:#fff', onclick: () => guardar(btnGS, true) }, '💾 Guardar y seguir');
   const barraG = h('div', { class: 'barraG' }, btnGS, btnG);
   cerrar = hoja('💶 Precios · ' + nombreCli(uno(ped.clientes) || {}), h('div', {}, h('p', { class: 'sub' }, fechaES(ped.fecha_entrega) + ' · ' + (ped.estado === 'terminado' ? 'albarán cerrado' : 'albarán sin cerrar') + '. Puedes poner los precios ahora o más tarde: cerrar el albarán no depende de ellos.'),
-    totalBox, vivoDet, calcBox, descBox, barraM, Object.keys(tarifas).length ? btnLlenar : null, cuerpo, barraG));
+    totalBox, vivoDet, sinIvaBox, calcBox, descBox, barraM, Object.keys(tarifas).length ? btnLlenar : null, cuerpo, barraG));
 }
 async function vistaPreciosPend() {
   state.view = 'preciosp';
