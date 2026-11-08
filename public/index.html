@@ -7715,7 +7715,16 @@ async function waOCR(canvas, progreso) {
   if (window.waOCRMotor) return window.waOCRMotor(canvas, progreso);
   await waCargarScript(WA_TESS);
   const r = await window.Tesseract.recognize(canvas, 'spa', { logger: m => { if (progreso && m.status) progreso(m.status === 'recognizing text' ? 'Leyendo… ' + Math.round((m.progress || 0) * 100) + '%' : 'Preparando el lector (solo la primera vez)…'); } });
-  return { texto: (r.data.text || '').trim(), conf: r.data.confidence };
+  return { texto: (r.data.text || '').trim(), conf: r.data.confidence, palabras: (r.data.words || []).map(w => ({ t: w.text, b: w.bbox })) };
+}
+/* Reconstruye las filas de una hoja escaneada por la altura de cada palabra (el OCR a veces trocea una fila de tabla en bloques) */
+function waFilasDePalabras(pal) {
+  const ps = (pal || []).filter(p => p && p.t && p.t.trim() && p.b).map(p => ({ t: p.t.trim(), x: p.b.x0, yc: (p.b.y0 + p.b.y1) / 2, h: Math.max(1, p.b.y1 - p.b.y0) }));
+  if (ps.length < 5) return null;
+  const hs = ps.map(p => p.h).sort((a, b) => a - b); const hm = hs[Math.floor(hs.length / 2)];
+  ps.sort((a, b) => a.yc - b.yc); const filas = [];
+  ps.forEach(p => { const f = filas.length ? filas[filas.length - 1] : null; if (f && Math.abs(p.yc - f.yc) <= hm * 0.6) { f.p.push(p); f.yc = (f.yc * (f.p.length - 1) + p.yc) / f.p.length; } else filas.push({ yc: p.yc, p: [p] }); });
+  return filas.map(f => f.p.sort((a, b) => a.x - b.x).map(p => p.t).join(' '));
 }
 /* Facturas escaneadas: quita las rayas de las tablas (rompen la lectura de las columnas) y recorta el papel en blanco */
 function waQuitaRayas(canvas) {
@@ -7734,7 +7743,7 @@ function waQuitaRayas(canvas) {
     const c2 = document.createElement('canvas'); c2.width = x1 - x0; c2.height = y1 - y0; c2.getContext('2d').drawImage(canvas, x0, y0, x1 - x0, y1 - y0, 0, 0, x1 - x0, y1 - y0); return c2;
   } catch (e) { return canvas; }
 }
-async function waLeerPdf(file, progreso) {
+async function waLeerPdf(file, progreso, porFilas) {
   await waCargarScript(WA_PDFJS);
   if (!window.__waPdfW) { const t = await (await fetch(WA_PDFW)).text(); window.__waPdfW = URL.createObjectURL(new Blob([t], { type: 'text/javascript' })); }
   window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.__waPdfW;
@@ -7746,7 +7755,7 @@ async function waLeerPdf(file, progreso) {
     if (txt.length > 25) { partes.push(txt); confs.push(100); continue; }
     const vp = pg.getViewport({ scale: 4 }); const c0 = document.createElement('canvas'); c0.width = vp.width; c0.height = vp.height; await pg.render({ canvasContext: c0.getContext('2d'), viewport: vp }).promise;
     const c = waQuitaRayas(c0);
-    const o = await waOCR(c, progreso); partes.push(o.texto); confs.push(o.conf);
+    const o = await waOCR(c, progreso); const fr = porFilas ? waFilasDePalabras(o.palabras) : null; partes.push(fr ? fr.join('\n') : o.texto); confs.push(o.conf);
   }
   return { texto: partes.join('\n'), conf: Math.min(...confs), paginas: pdf.numPages };
 }
@@ -7767,8 +7776,8 @@ function waPrepara(canvas) {
     x.putImageData(im, 0, 0); c.waOscuro = oscuro; return c;
   } catch (e) { return canvas; }
 }
-async function waLeerArchivo(file, progreso) {
-  if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) { const r = await waLeerPdf(file, progreso); r.nitidez = null; return r; }
+async function waLeerArchivo(file, progreso, porFilas) {
+  if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) { const r = await waLeerPdf(file, progreso, porFilas); r.nitidez = null; return r; }
   const c = await waImagenACanvas(file, 2200); const nit = waNitidez(c);
   let o = await waOCR(waPrepara(c), progreso);
   if ((o.conf == null || o.conf < 72) && !window.__waSinReintento) { progreso && progreso('Probando otra forma de leerla…'); try { const o2 = await waOCR(c, progreso); if ((o2.conf || 0) > (o.conf || 0)) o = o2; } catch (e) { } }
@@ -7940,7 +7949,7 @@ async function fcLeerFactura(file, progreso) {
       vistas.add(firma); lineas = lineas.concat(lp); noLeidas = noLeidas.concat(lp.noLeidas || []);
     }
   }
-  if (filas.join('').length < 40) { const o = await waLeerArchivo(file, progreso); filas = String(o.texto || '').split(/\n+/); lineas = fcTextoALineas(fcRecorteTabla(filas)); noLeidas = lineas.noLeidas || []; }
+  if (filas.join('').length < 40) { const o = await waLeerArchivo(file, progreso, true); filas = String(o.texto || '').split(/\n+/); lineas = fcTextoALineas(fcRecorteTabla(filas)); noLeidas = lineas.noLeidas || []; }
   return { filas, lineas, noLeidas, cab: fcCabecera(filas), tot: fcTotales(filas) };
 }
 /* ---------- Precios de las facturas leídas: se guardan TODAS las líneas (también las que no se emparejan con un producto) ---------- */
