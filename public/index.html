@@ -6342,7 +6342,18 @@ async function vistaReglasProd() {
           ['guia-img/paso3.jpg', '3. Si tienes dudas con un producto, mira aquí abajo su familia: la columna AMARILLA es lo que se pone en Golden.'],
           ['guia-img/paso4.jpg', '4. Para cualquier otro producto, búscalo por nombre o por código en el buscador del final.']]
         .map(([src, txt]) => h('div', { style: 'margin:12px 0' }, h('p', { style: 'margin:0 0 6px;font-weight:600' }, txt), h('img', { src, alt: txt, loading: 'lazy', style: 'width:100%;max-width:420px;border-radius:10px;border:1px solid var(--borde);display:block' }))),
-      h('p', { class: 'sub' }, '5. En Golden Soft: teclea el código de la copia rosa en la línea del albarán o factura y comprueba que sale el mismo nombre.')),
+      h('p', { style: 'margin:12px 0 6px;font-weight:600' }, '5. En Golden Soft, línea a línea: el código del recuadro va en el campo del artículo (código); después la cantidad y el precio, los mismos de la copia rosa.'),
+      h('div', { style: 'border:2px dashed #9ca3af;border-radius:10px;padding:10px;background:#fff;color:#111' },
+        h('div', { class: 'sub', style: 'margin-bottom:6px;color:#555' }, 'Esquema (no es la pantalla real de Golden):'),
+        h('div', { style: 'background:#fde2e4;border-radius:8px;padding:8px;font-size:14px' }, h('b', {}, 'Copia ROSA'), h('div', {}, 'Patata nueva esp. freír · 50 kg · 0,62 €'), h('span', { style: 'display:inline-block;border:2px solid #000;border-radius:4px;padding:0 5px;font-weight:700;background:#fff' }, 'Golden: cód. 09-F')),
+        h('div', { style: 'text-align:center;font-size:24px;margin:4px 0' }, '⬇'),
+        h('table', { style: 'width:100%;border-collapse:collapse;font-size:13px;background:#f3f4f6' },
+          h('tr', {}, ...['Código', 'Artículo', 'Cantidad', 'Precio'].map(t => h('th', { style: 'border:1px solid #9ca3af;padding:4px;background:#e5e7eb' }, t))),
+          h('tr', {}, ...[['09-F', true], ['Patata nueva esp. freír', false], ['50', false], ['0,62', false]].map(([t, m]) => h('td', { style: 'border:1px solid #9ca3af;padding:4px;' + (m ? 'outline:3px solid #e11d48;font-weight:700;background:#fef9c3' : '') }, t)))),
+        h('div', { class: 'sub', style: 'margin-top:6px;color:#555' }, 'Golden', ' rellena el nombre al poner el código: comprueba que coincide con la columna amarilla de esta guía.')),
+      h('p', { style: 'margin:12px 0 6px;font-weight:600' }, '6. Si Golden no encuentra el código (por ejemplo 09-F o 91-EN, que son nuevos), dalo de alta como artículo con ese mismo código y el nombre de la columna amarilla. Solo hace falta una vez.'),
+      h('p', { style: 'margin:12px 0 6px;font-weight:600' }, '7. Para facturar varios albaranes de un cliente: Secretaría › «📤 Pasar albaranes a factura». Ahí salen agrupados por cliente con los totales e IVA, para comprobar que la factura de Golden da lo mismo.'),
+      h('p', { class: 'sub' }, 'Cualquier duda con un producto: búscalo abajo. Mejor preguntar que poner uno parecido.')),
     ...reglasProd().map(f => h('div', { class: 'card' }, h('b', { style: 'font-size:18px' }, f.fam), h('p', { class: 'sub', style: 'margin:4px 0 8px' }, f.nota), tabla(f.filas))),
     h('div', { class: 'card' }, h('b', {}, '🔎 Todos los productos y su código'), h('div', { style: 'margin:8px 0' }, bus), res));
   pintaRes();
