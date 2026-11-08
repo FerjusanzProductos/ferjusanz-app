@@ -47,6 +47,11 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - **«Contador a cero»**: mientras la app está en pruebas, ver `supabase/contador_a_cero.sql`.
 - **Numeración de albaranes**: cuando se empiece de verdad, la app **sigue la numeración que ya se tenía** (Golden, serie F). Fernando avisará y dirá el último número; entonces `setval('public.albaran_f_seq', <último + 1>, false)` en lugar de empezar en 1.
 
+## Albaranes: ENVIADOS, no impresos
+- El **90-95 %** de los albaranes **ya no se imprime**: se envían al cliente por su **portal de clientes** (se carga solo al marcar la entrega) o por WhatsApp/correo/QR. Se dice «albarán enviado», no «albarán impreso».
+- Excepción: clientes marcados en su ficha con **«📄 Quiere el albarán en PAPEL»** (no se manejan con el móvil). En Preparar llevan la etiqueta «📄 Papel» y en su albarán sale abierta la opción de imprimir.
+- La copia **ROSA** (oficina, con el código de Golden) se ve **en pantalla**, sin imprimir.
+
 ## IVA y albaranes
 - Clientes **sin IVA = azul**, con IVA = dorado (solo en pantallas internas; el cliente nunca lo ve).
 - A los azules se les aplica la línea **«Descuento por productos»** (igual al IVA): pagan el total sin IVA; el IVA sigue en el albarán.

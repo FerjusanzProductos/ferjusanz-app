@@ -6,3 +6,6 @@
 --  · Precios de compra: 09-F 0,40 €/kg y Monalisa 0,55 €/kg (Ibérica Patatas Selectas, factura 06/11/2026).
 --  · 142 líneas de productos en los pedidos fijos (Excel «Productos_pedidos_fijos» + «Que_patata_es») y añadidas a los previstos sin líneas.
 -- El lector de facturas aplica la regla en fcReglaPatata (public/index.html).
+
+-- Albaranes enviados (no impresos): marca de cliente que quiere papel
+alter table public.clientes add column if not exists albaran_papel boolean not null default false;
