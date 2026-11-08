@@ -7840,7 +7840,7 @@ function fcRecorteTabla(filas) {
   const cab = /\b(precio|importe|bultos?|kilos?|unidades|cantidad|articulo|descripcion|mercancia|concepto|neto|bruto|tara|lote|denominacion)\b/g;
   let i0 = -1; for (let i = 0; i < filas.length; i++) { const t = fcNorm(filas[i]); if (t.length > 220) continue; const m = t.match(cab) || []; if (new Set(m).size >= 3 && /\b(importe|total)\b/.test(t)) { i0 = i; break; } }
   if (i0 < 0) return filas;
-  let i1 = filas.length; for (let i = i0 + 1; i < filas.length; i++) { if (/^(totales?|base imponible|bases imponibles|cargo|observaciones|importe bruto|suma|forma de pago|vencimientos?|total)\b/.test(fcNorm(filas[i]))) { i1 = i; break; } }
+  let i1 = filas.length; for (let i = i0 + 1; i < filas.length; i++) { const tn = fcNorm(filas[i]).replace(/^(?:[a-z0-9] )+(?=[a-z]{3,})/, ''); if (/^(totales?|base imponible|bases imponibles|cargo|observaciones|importe bruto|suma|forma de pago|vencimientos?|total)\b/.test(tn) || /\b(base imponible|bases imponibles|total factura)\b/.test(tn)) { i1 = i; break; } }
   let ini = i0 + 1; while (ini < i1 && /\b(envases|denominacion|origen|bruto|tara|neto|unidades)\b/.test(fcNorm(filas[ini])) && !/\d{2},\d{2}/.test(filas[ini])) ini++;
   return filas.slice(ini, i1);
 }
@@ -7848,9 +7848,12 @@ const FC_BASURA = /\b(tfno|tlfno|telefono|tel|fax|nif|cif|dni|iban|swift|mail|em
 function fcTextoALineas(filas) {
   const out = []; out.noLeidas = []; let prev = '';
   filas = filas.filter(f => !FC_BASURA.test(fcNorm(f)));
-  let ult = null;
-  filas.forEach(f => {
-    const l = fcLinea(f, prev);
+  let ult = null, saltar = false;
+  filas.forEach((f, idx) => {
+    if (saltar) { saltar = false; return; }
+    let l = fcLinea(f, prev);
+    if (!l && filas[idx + 1]) { const sig = fcPreparaFila(filas[idx + 1]); const letrasSig = (sig.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/g) || []).length; const numsSig = sig.split(/\s+/).filter(w => fcEsNum(w)).length;
+      if (letrasSig <= 2 && numsSig >= 2 && (fcPreparaFila(f).match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/g) || []).length >= 5) { const lj = fcLinea(f + ' ' + filas[idx + 1], prev); if (lj) { l = lj; saltar = true; } } }
     if (l) { out.push(l); prev = ''; ult = l; return; }
     if (ult) {   /* la descripción sigue en la fila de debajo («…50 mm + BANDA» / «AZUL»): se une a la línea anterior */
       const pal = fcPreparaFila(f).split(/\s+/).filter(w => w && !/^[\d\/.,-]{1,12}$/.test(w));
@@ -7880,16 +7883,16 @@ function fcCabecera(filas) {
   const f2 = /fecha(?:\s+de)?(?:\s+factura)?\s*[:.]?\s*(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2})(?!\d)/i.exec(txt);
   r.fecha = (f2 ? iso(+f2[1], +f2[2], 2000 + +f2[3]) : '') || (mt ? iso(+mt[1], FC_MESES[mt[2].toLowerCase()], +mt[3]) : '');
   r.fecha = r.fecha || buscaFecha(/fecha(?:\s+de)?(?:\s+factura)?\s*[:.]?\s*(\d{1,2})[\/.-](\d{1,2})[\/.-](20\d{2})/i) || buscaFecha(/(\d{1,2})[\/.-](\d{1,2})[\/.-](20\d{2})/);
-  const n = /(?:n[º°o]\.?|num(?:ero)?\.?|n\.º)\s*(?:de\s+)?(?:factura|albar[aá]n|documento)\s*:?\s*([A-Za-z0-9][A-Za-z0-9\/.\-]{3,})/i.exec(txt) || /factura\s*(?:n[º°o]\.?|num(?:ero)?\.?)\s*:?\s*([A-Za-z0-9][A-Za-z0-9\/.\-]{3,})/i.exec(txt) || /factura\s*:\s*([A-Za-z0-9][A-Za-z0-9\/.\-]{3,})/i.exec(txt) || /\bfactura\s+([0-9]{5,})\b/i.exec(txt);
+  const n = /(?:n[º°o]\.?|num(?:ero)?\.?|n\.º)\s*(?:de\s+)?(?:factura|albar[aá]n|documento)\s*:?\s*([A-Za-z0-9][A-Za-z0-9\/.\-]{3,})/i.exec(txt) || /factura\s*(?:n[º°o9]\.?|num(?:ero)?\.?)\s*:?\s*([A-Za-z0-9][A-Za-z0-9\/.\-]{3,})/i.exec(txt) || /factura\s*:\s*([A-Za-z0-9][A-Za-z0-9\/.\-]{3,})/i.exec(txt) || /\bfactura\s+([0-9]{5,})\b/i.exec(txt);
   r.numero = n ? n[1].replace(/[.\-\/]+$/, '') : '';
   return r;
 }
 /* Total sin IVA (base imponible) y total de la factura, para comprobar que la suma de líneas leídas cuadra */
 function fcTotales(filas) {
   const numsDe = t => String(t || '').split(/\s+/).map(w => w.replace(/[€:]/g, '')).filter(w => fcEsNum(w)).map(fcNum).filter(v => v !== null && v > 0);
-  const base = [], total = [];
+  const base = [], total = [], baseExplicita = [];
   filas.forEach((f, i) => {
-    { const mb = /base\s+imponible\s*[.…]*\s*([0-9][0-9.,]*)/i.exec(String(f).replace(/\u00a0/g, ' ')); const sv = mb ? mb[1].replace(/[.,]+$/, '') : ''; if (sv && fcEsNum(sv) && fcNum(sv) > 0) { base.push(fcNum(sv)); return; } }
+    { const mb = /base\s+imponible\s*[.…:]*\s*([0-9][0-9.,]*)/i.exec(String(f).replace(/\u00a0/g, ' ')); const sv = mb ? mb[1].replace(/[.,]+$/, '') : ''; if (sv && fcEsNum(sv) && fcNum(sv) > 0) { baseExplicita.push(fcNum(sv)); return; } }
     const t = fcNorm(f); let ns = numsDe(f);
     if (/\bbase\b/.test(t) && /\bcuota\b/.test(t)) {   // cuadro «Base Imp. · % IVA · Cuota IVA»: la base es el número cuyo % de IVA da la cuota
       for (let k = 1; k <= 3 && filas[i + k]; k++) { const v = numsDe(filas[i + k]); let hallada = null; v.forEach(n => v.forEach(pc => v.forEach(cu => { if (!hallada && n > 0 && pc >= 1 && pc <= 25 && cu > 0 && cu < n && Math.abs(n * pc / 100 - cu) <= 0.02) hallada = n; }))); if (hallada) { base.push(hallada); return; } }
@@ -7899,7 +7902,8 @@ function fcTotales(filas) {
     if (/\b(base imponible|total base|importe bruto|subtotal|total bruto|base)\b/.test(t) && !/total factura|a pagar/.test(t)) base.push(Math.max.apply(null, ns));
     if (/\b(total factura|total a pagar|total eur|importe total|total documento|total albaran|total)\b/.test(t) && !/base|iva|cuota|bruto/.test(t)) total.push(Math.max.apply(null, ns));
   });
-  return { base: base.length ? Math.max.apply(null, base) : null, total: total.length ? Math.max.apply(null, total) : null };
+  const bs = baseExplicita.length ? baseExplicita : base;
+  return { base: bs.length ? Math.max.apply(null, bs) : null, total: total.length ? Math.max.apply(null, total) : null };
 }
 const FC_MESES = { enero: 1, febrero: 2, marzo: 3, abril: 4, mayo: 5, junio: 6, julio: 7, agosto: 8, septiembre: 9, setiembre: 9, octubre: 10, noviembre: 11, diciembre: 12 };
 /* Clave para recordar un artículo de factura: texto sin acentos ni signos */
