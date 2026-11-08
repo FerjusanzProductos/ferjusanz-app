@@ -1428,7 +1428,7 @@ async function abrirPrecios(pedidoId, alGuardar) {
       const IVA = Object.keys(bases).reduce((a, t) => a + Math.round(bases[t] * Number(t)) / 100, 0);
       const r = Number(Object.keys(bases).sort((a, b) => bases[b] - bases[a])[0]);
       const D = Math.round(IVA / (1 + r / 100) * 100) / 100;
-      DS.base = String(D).replace('.', ','); DS.iva = r; DS.motivo = 'Descuento comercial';
+      DS.base = String(D).replace('.', ','); DS.iva = r; DS.motivo = 'Descuento por productos';
       dBase.value = DS.base; dIva.value = String(r); dMot.value = DS.motivo; descBox.open = true; dRes();
       res.textContent = '✔ Descuento puesto: ' + eur(D) + ' € (IVA ' + r + ' %). Total sin IVA de las líneas: ' + eur(B) + ' € → el cliente paga ≈ ' + eur(B) + ' €.\nPulsa «Guardar» para guardarlo.' + (falta ? '\n⚠️ Faltan precios en ' + falta + ' línea(s): cuando los pongas, vuelve a pulsar el botón.' : '');
     };
