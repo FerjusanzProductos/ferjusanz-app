@@ -50,12 +50,24 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - 08/11/2026: corregidos AJOS CAJA (sin producto / como pelado), PIMIENTO ROJO y VERDE (sin producto), NARANJA ZUMO (como zumo embotellado),
   NARANJA MESA y LECHUGA ICEBERG (a productos desactivados), AGUACATE (sin producto); precios de compra recolocados.
 
+## Abreviaturas y más familias (08/11/2026)
+- Abreviaturas de las facturas que entiende el lector: PIM. = pimiento · TTES. = tomates · NAR. = naranja · CEB = cebolla · A.P. = ajo pelado ·
+  MAN = manzana · CLEM. = clementina · CALIF = california · P.P. = patata pelada.
+- Pimiento lamuyo/california = pimiento rojo/verde (extra; «II» = 2ª). Mandarinas (Clemenules, Oronules, Primasole…) → 45 (2ª → 45-B).
+  Kiwi → 98 · red delicious/starking → 153 · lima → 43 · caqui/kaki → 275 · mix frutos rojos → 897-B · nuez → 200 · cogollo → 167 · remolacha → 32.
+- Patata pelada: bolsa → 10 · bravas → 10-BR · bastón → 10-BA · dado → 10-D · panaderas → 10-P. Ajo pelado bolsa → 34.
+- Corregido: «P.P. BOLSA BRAVA» estaba como Breva (fruta); «PIM. CALIF ROJO II … NEGRA» como Pimienta negra; «P.P. BASTÓN AGRIA» como Patata Agria;
+  32 textos de compra recolocados. Pendiente: «P.C. SACO 10 KG GUARNICIÓN» (no hay producto de patata de guarnición).
+
 ## Pedidos
 - Los pedidos fijos generan **previstos** (2 semanas por delante, cada madrugada). Se confirman el día antes (✅) o se quitan (❌).
   Los previstos ya cuentan en la hoja de compra. Más allá de 2 semanas, el calendario los calcula al momento.
 - Pantalla **Semana**: mover pedidos de día («solo esta vez» o «siempre») y ordenar el reparto.
 - **«Contador a cero»**: mientras la app está en pruebas, ver `supabase/contador_a_cero.sql`.
 - **Numeración de albaranes**: cuando se empiece de verdad, la app **sigue la numeración que ya se tenía** (Golden, serie F). Fernando avisará y dirá el último número; entonces `setval('public.albaran_f_seq', <último + 1>, false)` en lugar de empezar en 1.
+
+## Imprimir
+- **Lo único que se imprime es la hoja de COMPRA y la hoja de CARGA** (la de carga, con todos los clientes preparados).
 
 ## Albaranes: ENVIADOS, no impresos
 - El **90-95 %** de los albaranes **ya no se imprime**: se envían al cliente por su **portal de clientes** (se carga solo al marcar la entrega) o por WhatsApp/correo/QR. Se dice «albarán enviado», no «albarán impreso».
