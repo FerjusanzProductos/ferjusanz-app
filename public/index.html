@@ -328,6 +328,7 @@ input,select,textarea{min-height:48px}
 .badge.prev{background:#fef3c7;color:#92400e;border:1px dashed #d97706}
 .badge.prevroja{background:#fee2e2;color:#b91c1c;border:1px dashed #dc2626}
 .cal-d i.prev{background:#d97706}
+.arrastrando{opacity:.4}
 .card.previsto{border:2px dashed #d97706;background:#fffbeb}
 .card.previsto.roja{border-color:#dc2626;background:#fef2f2}
 /* clientes sin IVA en azul; con IVA en dorado */
@@ -919,7 +920,7 @@ window.addEventListener('popstate', e => {
   const s = e.state; if (!s || !s.v) { NAV.d = 0; state.view = 'inicio'; state.params = {}; } else { NAV.d = s.d || 0; state.view = s.v; state.params = s.p || {}; }
   render(); window.scrollTo(0, 0);
 });
-const VISTAS_HUB = ['lista', 'carga', 'entregas', 'albaranes', 'calendario', 'ruta', 'nuevo', 'importar'];
+const VISTAS_HUB = ['lista', 'semana', 'carga', 'entregas', 'albaranes', 'calendario', 'ruta', 'nuevo', 'importar'];
 const VISTAS_PEDIDOS = VISTAS_HUB.concat(['pedido', 'albaran', 'rapido']);
 function tabsRol() { return [['inicio', 'Inicio'], ['lista', 'Preparar'], ['carga', 'Carga'], ['preciosp', 'Precios'], ['cobros', 'Cobros']]; }
 function tabActiva(tabs) {
@@ -927,7 +928,7 @@ function tabActiva(tabs) {
   if (v === 'mas') return 'inicio'; if (VISTAS_PEDIDOS.includes(v)) return 'lista'; return 'inicio';
 }
 function chipsHub() {
-  const it = [['lista', 'Preparar'], ['reparto', 'Reparto'], ['carga', 'Carga'], ['entregas', 'Entregas'], ['albaranes', 'Albaranes'], ['calendario', 'Calendario'], ['ruta', 'Ruta']]; it.push(['rapido', '⚡ Apuntar pedido']);
+  const it = [['lista', 'Preparar'], ['semana', '🗓 Semana'], ['reparto', 'Reparto'], ['carga', 'Carga'], ['entregas', 'Entregas'], ['albaranes', 'Albaranes'], ['calendario', 'Calendario'], ['ruta', 'Ruta']]; it.push(['rapido', '⚡ Apuntar pedido']);
   const bx = h('div', { class: 'chips hub' }, it.map(([v, t]) => h('button', { class: 'chip' + (state.view === v ? ' on' : ''), onclick: () => go(v) }, t))); setTimeout(() => { try { const on = bx.querySelector('.on'); if (on) bx.scrollLeft = Math.max(0, on.offsetLeft - 20); } catch (e) { } }, 0); return bx;
 }
 function shell(titulo, contenido, opts) {
@@ -6298,6 +6299,102 @@ function vistaCalendario() {
   cargar();
 }
 
+/* ===== SEMANA: pedidos de lunes a sábado; se arrastran con el dedo (asa ☰) a otro día o para ordenar el reparto ===== */
+let _sortable = null;
+function cargarSortable() {
+  if (window.Sortable) return Promise.resolve(window.Sortable);
+  if (_sortable) return _sortable;
+  _sortable = new Promise((ok, ko) => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js'; sc.onload = () => ok(window.Sortable); sc.onerror = () => { _sortable = null; ko(new Error('No se pudo cargar el arrastre (sin conexión)')); }; document.head.append(sc); });
+  return _sortable;
+}
+function lunesDe(iso) { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return hoy(d); }
+function sumaDias(iso, n) { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return hoy(d); }
+function vistaSemana() {
+  state.view = 'semana';
+  let lunes = lunesDe((state.params && state.params.desde) || state.fecha || hoy()); let datos = []; let reps = state.reps || [];
+  const cont = h('div', {});
+  $app.replaceChildren(shell('Semana', cont)); renderBanner();
+  const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  const movible = p => !['terminado', 'anulado'].includes(p.estado);
+  const habDe = p => { const m = /^fijo:([^:]+):/.exec(p.hash_origen || ''); return m ? m[1] : null; };
+  async function cargar() {
+    cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+    try {
+      await generarPrevistos(); await cargaRepartidores(); reps = state.reps || [];
+      const r = await sb.from('pedidos').select('id,cliente_id,estado,fecha_entrega,orden_reparto,repartidor_id,notas,hash_origen,clientes(codigo,nombre,nombre_comercial,sin_iva)')
+        .gte('fecha_entrega', lunes).lte('fecha_entrega', sumaDias(lunes, 5)).neq('estado', 'anulado').neq('archivado', true);
+      if (r.error) throw r.error; datos = r.data || []; pintar();
+    } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+  }
+  function tarjeta(p) {
+    const c = uno(p.clientes) || {}; const rp = reps.find(r => r.id === p.repartidor_id);
+    return h('div', { class: 'card fila' + (p.estado === 'previsto' ? ' previsto' + (prevRojo(p) ? ' roja' : '') : '') + (movible(p) ? ' mov' : ''), 'data-id': p.id, style: 'margin:6px 0;padding:10px;gap:8px;align-items:center' },
+      movible(p) ? h('span', { class: 'asa', style: 'font-size:26px;padding:6px 10px;cursor:grab;touch-action:none;user-select:none;color:#6b7280' }, '☰') : h('span', { style: 'padding:6px 10px;color:#9ca3af' }, '🔒'),
+      h('div', { style: 'flex:1;min-width:0', onclick: () => go('pedido', { id: p.id }) },
+        h('div', { class: 'nombre ' + claseIva(c), style: 'font-size:16px' }, (p.orden_reparto ? p.orden_reparto + '. ' : '') + nombreCli(c)),
+        rp ? h('div', { class: 'sub' }, h('span', { style: 'display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;background:' + (rp.color_reparto || '#2f7d4a') }), rp.nombre.split(' ')[0]) : null),
+      h('span', { class: 'badge ' + claseEst(p) }, textoEst(p)));
+  }
+  function pintar() {
+    const kids = [h('div', { class: 'fila', style: 'margin-bottom:6px' },
+      h('button', { class: 'ghost small', onclick: () => { lunes = sumaDias(lunes, -7); cargar(); } }, '← Anterior'),
+      h('b', {}, 'Semana del ' + fechaES(lunes)),
+      h('button', { class: 'ghost small', onclick: () => { lunes = sumaDias(lunes, 7); cargar(); } }, 'Siguiente →')),
+      h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Arrastra con el dedo desde ☰: a otro día para cambiarlo de fecha, o arriba/abajo para ordenar el reparto. 🔒 = ya terminado.')];
+    const listas = [];
+    DIAS.forEach((nd, i) => {
+      const f = sumaDias(lunes, i);
+      const ps = datos.filter(p => p.fecha_entrega === f).sort((a, b) => (a.orden_reparto || 9999) - (b.orden_reparto || 9999) || nombreCli(uno(a.clientes)).localeCompare(nombreCli(uno(b.clientes)), 'es'));
+      const ul = h('div', { 'data-fecha': f, style: 'min-height:54px;border:2px dashed #d1d5db;border-radius:12px;padding:4px 6px;background:rgba(0,0,0,.02)' }, ...ps.map(tarjeta));
+      listas.push(ul);
+      kids.push(h('div', { class: 'letra', style: 'margin-top:12px' + (f === hoy() ? ';color:var(--verde)' : '') }, nd + ' ' + fechaES(f).slice(0, 5) + ' · ' + ps.length + (ps.length === 1 ? ' pedido' : ' pedidos')), ul);
+    });
+    cont.replaceChildren(...kids);
+    cargarSortable().then(S => listas.forEach(ul => S.create(ul, { group: 'semana', handle: '.asa', draggable: '.mov', animation: 150, ghostClass: 'arrastrando', onEnd: alSoltar })))
+      .catch(e => toast(e.message, 'err'));
+  }
+  const ordenar = async ul => {   // guarda el orden de reparto (1, 2, 3…) de un día
+    const ids = [...ul.querySelectorAll('[data-id]')].map(x => x.getAttribute('data-id'));
+    const cambios = ids.map((id, i) => ({ id, n: i + 1 })).filter(x => { const p = datos.find(d => d.id === x.id); return p && p.orden_reparto !== x.n; });
+    const rs = await Promise.all(cambios.map(x => sb.from('pedidos').update({ orden_reparto: x.n }).eq('id', x.id)));
+    const err = rs.find(r => r.error); if (err) throw err.error;
+    cambios.forEach(x => { const p = datos.find(d => d.id === x.id); if (p) p.orden_reparto = x.n; });
+  };
+  async function alSoltar(ev) {
+    const id = ev.item.getAttribute('data-id'); const p = datos.find(d => d.id === id); if (!p) return;
+    const de = ev.from.getAttribute('data-fecha'), a = ev.to.getAttribute('data-fecha');
+    if (!navigator.onLine) { toast('Necesitas conexión para mover pedidos.', 'err'); cargar(); return; }
+    try {
+      if (de !== a) {
+        const hid = habDe(p);
+        const modo = await new Promise(res => { let hecho = false; const fin = v => { if (hecho) return; hecho = true; cerrar(); res(v); };
+          const cerrar = hoja('Mover el pedido de ' + nombreCli(uno(p.clientes)), h('div', {},
+            h('p', {}, 'Del ' + fechaES(de) + ' al ' + DIAS[(new Date(a + 'T12:00:00').getDay() + 6) % 7].toLowerCase() + ' ' + fechaES(a) + '.'),
+            datos.some(x => x.id !== p.id && x.cliente_id === p.cliente_id && x.fecha_entrega === a) ? h('div', { class: 'aviso-card' }, '⚠️ Este cliente ya tiene otro pedido ese día.') : null,
+            h('button', { class: 'guardar', style: 'width:100%;margin-bottom:8px', onclick: () => fin('una') }, 'Solo esta vez'),
+            hid ? h('button', { style: 'width:100%;margin-bottom:8px', onclick: () => fin('siempre') }, 'Siempre (cambiar su pedido fijo a ese día)') : null,
+            h('button', { class: 'ghost', style: 'width:100%', onclick: () => fin(null) }, 'Cancelar')));
+          const t = setInterval(() => { if (!state.sheetAbierta) { clearInterval(t); fin(null); } }, 300); });
+        if (!modo) { cargar(); return; }
+        const u = await sb.from('pedidos').update({ fecha_entrega: a }).eq('id', id); if (u.error) throw u.error; p.fecha_entrega = a;
+        if (modo === 'siempre') {
+          const dDe = new Date(de + 'T12:00:00').getDay(), dA = new Date(a + 'T12:00:00').getDay();
+          const hb = await sb.from('pedidos_habituales').select('id,dias_semana').eq('id', hid).maybeSingle(); if (hb.error) throw hb.error;
+          if (hb.data) { const dias = Array.from(new Set((hb.data.dias_semana || []).filter(x => x !== dDe).concat([dA]))).sort();
+            const uh = await sb.from('pedidos_habituales').update({ dias_semana: dias }).eq('id', hid); if (uh.error) throw uh.error;
+            /* los previstos futuros de ese pedido fijo que caían en el día antiguo pasan al nuevo */
+            const fut = await sb.from('pedidos').select('id,fecha_entrega,hash_origen').eq('estado', 'previsto').gt('fecha_entrega', de); if (fut.error) throw fut.error;
+            for (const x of (fut.data || []).filter(x => String(x.hash_origen || '').startsWith('fijo:' + hid + ':') && new Date(x.fecha_entrega + 'T12:00:00').getDay() === dDe)) await sb.from('pedidos').update({ fecha_entrega: sumaDias(x.fecha_entrega, dA - dDe) }).eq('id', x.id); }
+          toast('Movido. A partir de ahora sale los ' + DIAS[(dA + 6) % 7].toLowerCase(), 'ok');
+        } else toast('Movido al ' + fechaES(a), 'ok');
+        await ordenar(ev.to); await ordenar(ev.from);
+      } else { await ordenar(ev.to); toast('Orden de reparto guardado', 'ok'); }
+    } catch (e) { toast(msgErr(e), 'err'); }
+    cargar();
+  }
+  cargar();
+}
+
 /* ---------- Incidencias ---------- */
 let sincI = false;
 async function sincronizarInc() {
@@ -10317,7 +10414,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
 }
