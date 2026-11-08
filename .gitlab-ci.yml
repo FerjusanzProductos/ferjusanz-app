@@ -1,0 +1,13 @@
+# GitLab: copia de seguridad diaria de Supabase.
+# Solo se ejecuta con la programación (Build › Pipeline schedules) o al pulsar "Run pipeline";
+# los "git push" normales NO lanzan nada.
+copia_supabase:
+  image: postgres:17-alpine
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web"'
+  script:
+    - sh scripts/copia-supabase.sh copia
+  artifacts:
+    name: "copia-supabase-$CI_PIPELINE_ID"
+    paths: [copia/]
+    expire_in: 90 days
