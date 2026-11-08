@@ -1,6 +1,5 @@
 // Sirve la app Ferjusanz (archivos de public/) desde un Worker de Cloudflare.
 import indexHtml from "../public/index.html";
-import index1Html from "../public/index-1.html";
 import guiaHtml from "../public/guia.html";
 import swJs from "../public/sw.js";
 import manifest from "../public/manifest.webmanifest";
@@ -11,7 +10,6 @@ const HTML = "text/html; charset=utf-8";
 const ARCHIVOS = {
   "/": [indexHtml, HTML],
   "/index.html": [indexHtml, HTML],
-  "/index-1.html": [index1Html, HTML],
   "/guia.html": [guiaHtml, HTML],
   "/sw.js": [swJs, "application/javascript; charset=utf-8"],
   "/manifest.webmanifest": [manifest, "application/manifest+json; charset=utf-8"],

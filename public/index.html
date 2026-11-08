@@ -395,7 +395,7 @@ html[data-tema=oscuro] .portalbtn.nuevo{box-shadow:0 0 0 2px #000,0 0 12px rgba(
 <div id="app"></div>
 <div id="printArea"></div>
 <div id="toast"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0" crossorigin="anonymous"></script>
 <script>
 'use strict';
 /* =====================  CONFIGURACIÓN  ===================== */
@@ -9885,7 +9885,11 @@ async function bgCargarBase() {
 }
 
 /* =====================  COPIA DE SEGURIDAD (solo admin)  ===================== */
-const COPIA_TABLAS = ['perfiles', 'clientes', 'productos', 'tarifas', 'pedidos', 'lineas_pedido', 'albaranes', 'entregas', 'cobros', 'incidencias', 'sobrante', 'proveedores', 'compras', 'lotes', 'asignaciones_lote', 'documentos_compra', 'pedidos_habituales', 'lineas_habituales', 'avisos', 'fichajes', 'mensajes', 'historial'];
+const COPIA_TABLAS = ['perfiles', 'clientes', 'productos', 'tarifas', 'pedidos', 'lineas_pedido', 'albaranes', 'entregas', 'cobros', 'incidencias', 'sobrante', 'proveedores', 'compras', 'lotes', 'asignaciones_lote', 'documentos_compra', 'pedidos_habituales', 'lineas_habituales', 'avisos', 'fichajes', 'mensajes', 'historial',
+  // Comercial, precios y compras (antes no entraban en la copia)
+  'prospectos', 'recomendaciones', 'listas_precios', 'listas_precios_items', 'facturas', 'facturas_clientes', 'albaranes_facturados', 'albaran_portal', 'cliente_enlaces',
+  'tarifas_compra', 'precios_compra_dia', 'compra_ajustes', 'facturas_recibidas', 'lineas_factura_leida', 'golden_facturas', 'golden_lineas', 'alias_compra', 'abreviaturas',
+  'presentaciones', 'formatos_producto', 'formatos_cliente', 'carga_lineas', 'fotos_perfil'];
 function copiaVieja() { const u = LS.get('fj_ult_copia', null); return !u || (Date.now() - u) > 7 * 86400000; }
 function vistaCopia() {
   state.view = 'copia';
@@ -10235,7 +10239,23 @@ async function init() {
   window.addEventListener('offline', renderBanner);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
   setInterval(tick, 8000);
-  if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(() => { }); navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.ir === 'recib' && state.user) { LS.set('fj_compras_modo', 'recib'); go('compras'); } }); }
+  if ('serviceWorker' in navigator) {
+    // Aviso de versión nueva: cuando se publica una versión, el service worker nuevo toma el control y se ofrece recargar.
+    const habiaVersion = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (habiaVersion) avisoVersionNueva(); });
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      const revisar = () => { if (navigator.onLine) reg.update().catch(() => { }); };
+      setInterval(revisar, 15 * 60000); document.addEventListener('visibilitychange', () => { if (!document.hidden) revisar(); });
+    }).catch(() => { }); navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.ir === 'recib' && state.user) { LS.set('fj_compras_modo', 'recib'); go('compras'); } }); }
+}
+/* Barra «Hay una versión nueva» (no recarga sola para no perder lo que se esté escribiendo; lo pendiente de enviar queda guardado en el móvil) */
+function avisoVersionNueva() {
+  if (document.getElementById('aviso-version')) return;
+  const bar = h('div', { id: 'aviso-version', style: 'position:fixed;left:8px;right:8px;top:calc(8px + env(safe-area-inset-top));z-index:99999;background:#166534;color:#fff;border-radius:12px;padding:10px 12px;display:flex;gap:8px;align-items:center;box-shadow:0 4px 16px rgba(0,0,0,.3);font-size:15px' },
+    h('span', { style: 'flex:1' }, '🆕 Hay una versión nueva de la app'),
+    h('button', { style: 'width:auto;flex:none;margin:0;min-height:0;white-space:nowrap;background:#fff;color:#166534;border:0;border-radius:8px;padding:8px 12px;font-weight:700;font-size:15px', onclick: () => location.reload() }, 'Actualizar'),
+    h('button', { 'aria-label': 'Más tarde', style: 'width:auto;flex:none;margin:0;min-height:0;background:transparent;color:#fff;border:0;box-shadow:none;font-size:20px;padding:4px 6px', onclick: () => bar.remove() }, '✕'));
+  document.body.append(bar);
 }
 init();
 </script>
