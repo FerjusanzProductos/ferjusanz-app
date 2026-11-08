@@ -928,7 +928,7 @@ function tabActiva(tabs) {
   if (v === 'mas') return 'inicio'; if (VISTAS_PEDIDOS.includes(v)) return 'lista'; return 'inicio';
 }
 function chipsHub() {
-  const it = [['lista', 'Preparar'], ['semana', '🗓 Semana'], ['reparto', 'Reparto'], ['carga', 'Carga'], ['entregas', 'Entregas'], ['albaranes', 'Albaranes'], ['calendario', 'Calendario'], ['ruta', 'Ruta']]; it.push(['rapido', '⚡ Apuntar pedido']);
+  const it = [['lista', 'Preparar'], ['reparto', 'Reparto'], ['carga', 'Carga'], ['calendario', '📅 Calendario'], ['semana', '🗓 Semana'], ['entregas', 'Entregas'], ['albaranes', 'Albaranes'], ['ruta', 'Ruta']]; it.push(['rapido', '⚡ Apuntar pedido']);
   const bx = h('div', { class: 'chips hub' }, it.map(([v, t]) => h('button', { class: 'chip' + (state.view === v ? ' on' : ''), onclick: () => go(v) }, t))); setTimeout(() => { try { const on = bx.querySelector('.on'); if (on) bx.scrollLeft = Math.max(0, on.offsetLeft - 20); } catch (e) { } }, 0); return bx;
 }
 function shell(titulo, contenido, opts) {
@@ -1025,7 +1025,7 @@ function vistaLista() {
   const nombres = { todos: 'Todos', previsto: '📅 Previstos', pendiente: 'Pendientes', en_preparacion: 'En preparación', terminado: 'Terminados' };
   const chips = Object.keys(nombres).map(f => h('button', { class: 'chip' + (state.filtro === f ? ' on' : ''), onclick: () => { state.filtro = f; vistaLista(); } }, nombres[f]));
   $app.replaceChildren(shell('Pedidos', h('div', {},
-    h('div', { class: 'barra' }, fechaInp, h('button', { class: 'ghost', onclick: () => actualizarLista() }, '↻'), h('button', { class: 'ghost', onclick: () => go('calendario') }, '📅')),
+    h('div', { class: 'barra' }, fechaInp, h('button', { class: 'ghost', onclick: () => actualizarLista() }, '↻'), h('button', { class: 'ghost', title: 'Calendario', onclick: () => go('calendario') }, '📅'), h('button', { class: 'ghost', title: 'Semana: mover y ordenar pedidos', onclick: () => go('semana', { desde: state.fecha }) }, '🗓')),
     h('div', { class: 'chips' }, chips),
     h('div', { id: 'lista' }, h('p', { class: 'vacio' }, 'Cargando…')))));
   renderBanner();
