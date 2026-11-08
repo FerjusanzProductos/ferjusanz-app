@@ -39,7 +39,7 @@ Cómo trabajas:
 - Escribe siempre en español de España, con trato de «usted» hacia los clientes salvo que te pidan tutear.
 - Tono cercano, seguro y honesto, de empresa familiar. Nada de exageraciones ni promesas vacías.
 - Mensajes de WhatsApp cortos (4-7 líneas), listos para copiar y enviar.
-- MUY IMPORTANTE: cada mensaje que el cliente vaya a recibir (WhatsApp, correo o frase de llamada) escríbelo entre una línea que diga exactamente [MENSAJE] y otra que diga exactamente [FIN]. Dentro va solo el texto para el cliente, sin títulos ni comentarios. Las explicaciones y notas para la oficina van siempre fuera de esas marcas. Si preparas varios mensajes, cada uno con sus propias marcas.
+- MUY IMPORTANTE: cada mensaje que el cliente vaya a recibir (WhatsApp, correo o frase de llamada) escríbelo entre una línea que diga exactamente [MENSAJE] y otra que diga exactamente [FIN]. Si el mensaje es para un cliente concreto cuyo código conoces (por buscar_clientes), abre con [MENSAJE para=CÓDIGO] (por ejemplo [MENSAJE para=FIGAL]); si es para un contacto pendiente (prospecto) cuyo id conoces, con [MENSAJE para=P:id]. Así la app pone su teléfono en el botón de WhatsApp. Dentro va solo el texto para el cliente, sin títulos ni comentarios. Las explicaciones y notas para la oficina van siempre fuera de esas marcas. Si preparas varios mensajes, cada uno con sus propias marcas.
 - Usa solo los productos, precios y datos que aparecen en el CONTEXTO. Si falta un precio, no lo inventes: pon «[precio]» para que la oficina lo rellene.
 - Nunca prometas descuentos, plazos de pago, crédito ni pedidos mínimos: eso lo decide la oficina. Di que se estudia de forma personalizada.
 - Ante una queja: escuchar, reconocer, pedir detalles (producto, día, albarán, foto) y proponer solución concreta; nunca culpar al transportista ni al mercado.
@@ -55,6 +55,7 @@ Consultas a la base de datos (herramientas de SOLO LECTURA):
 Clientes (muy importante):
 - Cuando te nombren un cliente, búscalo SIEMPRE con buscar_clientes, aunque el nombre no sea exacto: muchos clientes están registrados con su razón social, con erratas o con otro nombre. La búsqueda tolera tildes, erratas y palabras sueltas, y también busca por código y localidad.
 - Si sale UNA coincidencia clara (confianza «alta» y muy por encima de las demás), úsala y di entre paréntesis cuál has entendido: «(entiendo que es Asador de pollos Sadelia, código ADELIA)».
+- Las fichas desactivadas suelen ser antiguas o duplicadas: menciónalas solo si no hay otra activa que encaje.
 - Si hay VARIAS parecidas, NO sigas: enumera las opciones (1, 2, 3…) con nombre comercial, razón social, código y localidad, y pregunta cuál es. Espera la respuesta.
 - Si NO aparece, dilo, enseña las más parecidas por si es alguna, y ofrece darlo de alta como cliente provisional: pide el nombre con el que lo conocen y el código que le quieran poner (y si se le cobra sin IVA, la localidad o alguna nota, si lo saben).
 - Alta provisional: primero resume exactamente lo que vas a crear (nombre, código, notas) y pregunta «¿Lo creo? Responde sí». Solo cuando la persona conteste que sí, usa crear_cliente_provisional. El cliente queda marcado «FALTA COMPLETAR» para que la secretaria rellene el resto de la ficha; recuérdalo al terminar.
@@ -209,7 +210,7 @@ async function ejecutar(ctx: Ctx, nombre: string, a: any): Promise<unknown> {
         const d = chk(await sb.from("clientes").select("id,codigo,nombre,nombre_comercial,alias,localidad,forma_pago,dias_pago,activo,telefono,email,notas").order("created_at", { ascending: false }).limit(lim)) as any[];
         return { nota: "Sin texto: clientes dados de alta más recientemente.", clientes: d.map(fichaCliente) };
       }
-      const res = (await todosClientes(sb)).map(c => ({ c, p: puntuar(texto, c) })).filter(x => x.p >= 0.55).sort((x, y) => y.p - x.p).slice(0, lim);
+      const res = (await todosClientes(sb)).map(c => ({ c, p: puntuar(texto, c) * (c.activo === false ? 0.85 : 1) })).filter(x => x.p >= 0.55).sort((x, y) => y.p - x.p).slice(0, lim);
       const conf = (p: number) => p >= 0.9 ? "alta" : p >= 0.72 ? "media" : "baja";
       const clara = res.length > 0 && res[0].p >= 0.9 && (res.length === 1 || res[0].p - res[1].p >= 0.12);
       return { buscado: texto, coincidencia_clara: clara, total: res.length,

@@ -324,6 +324,12 @@ input,select,textarea{min-height:48px}
 .badge.prep{background:var(--prep-cl);color:#1e40af}
 .badge.fin{background:var(--fin-cl);color:#166534}
 .badge.cont{background:#ede9fe;color:#5b21b6}
+/* pedidos previstos (pedidos fijos sin confirmar): ámbar con raya discontinua; en rojo si ya toca confirmarlos */
+.badge.prev{background:#fef3c7;color:#92400e;border:1px dashed #d97706}
+.badge.prevroja{background:#fee2e2;color:#b91c1c;border:1px dashed #dc2626}
+.cal-d i.prev{background:#d97706}
+.card.previsto{border:2px dashed #d97706;background:#fffbeb}
+.card.previsto.roja{border-color:#dc2626;background:#fef2f2}
 .card:has(.badge.pend){border-left:6px solid var(--pend)}
 .card:has(.badge.prep){border-left:6px solid var(--prep)}
 .card:has(.badge.fin){border-left:6px solid var(--fin)}
@@ -438,7 +444,10 @@ function crearSbPractica(){
       __init.lineas_pedido=[]; ps.forEach((x,k)=>{const o=cs.length?(k%cs.length):0; if(cs.length) __init.lineas_pedido.push({id:'l'+(k+1),pedido_id:'o'+(o+1),producto_id:x.id,cantidad_pedida:1+(k%3),unidad_pedida:x.unidad_venta||'kg',peso_real:null,unidad_precio:x.unidad_precio||'kg',precio:tp(x.id),estado:'pendiente',version:1});});
     } } catch(e) {}
   const __j=JSON.parse(localStorage.getItem('p_stub_db')||'null'); const __saved=(__j&&__j.dia===H()&&__j.__reales===__init.__reales)?__j:null;
-  const DB = window.__DB = __saved || __init; DB.dia=H(); ['presentaciones','formatos_producto','formatos_cliente','abreviaturas','albaran_portal','albaran_enlaces','cliente_enlaces'].forEach(k=>{DB[k]=DB[k]||[];}); DB.carga_lineas=DB.carga_lineas||[]; DB.sobrante=DB.sobrante||[]; DB.mensajes=DB.mensajes||[]; DB.fichajes=DB.fichajes||[]; DB.fotos_perfil=DB.fotos_perfil||[]; DB.cobros=DB.cobros||[]; DB.proveedores=DB.proveedores||[]; DB.compras=DB.compras||[]; DB.lotes=DB.lotes||[]; DB.asignaciones_lote=DB.asignaciones_lote||[]; DB.entregas=DB.entregas||[]; DB.incidencias=DB.incidencias||[]; DB.documentos_compra=DB.documentos_compra||[]; DB.facturas_recibidas=DB.facturas_recibidas||[]; DB.facturas_clientes=DB.facturas_clientes||[]; if(!DB.golden_facturas){DB.golden_facturas=[{id:'g1',numero:'P/20.001',serie:'P',fecha:'2026-09-10',tipo:'Serie PC',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:100,descuentos:0,gastos:0,base:100,total:104,borrador:false,n_lineas:2},{id:'g2',numero:'BOR/5',serie:'BOR',fecha:'2026-09-11',tipo:'Facturas borrador',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:50,descuentos:0,gastos:0,base:50,total:52,borrador:true,n_lineas:1},{id:'g3',numero:'F1/9.001',serie:'F1',fecha:'2026-08-01',tipo:'Facturas Fernando',cliente_codigo:'TABERNA',cliente_nombre:'Taberna El Enano',bruto:30,descuentos:0,gastos:0,base:30,total:31.2,borrador:false,n_lineas:1}];DB.golden_lineas=[{id:'l1',factura_numero:'P/20.001',orden:1,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:20,precio:2,iva:4,importe:41.6},{id:'l2',factura_numero:'P/20.001',orden:2,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'01',descripcion:'Patata Agria',cantidad:100,precio:0.6,iva:4,importe:62.4},{id:'l3',factura_numero:'BOR/5',orden:1,albaran:null,producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:25,precio:2,iva:4,importe:52},{id:'l4',factura_numero:'F1/9.001',orden:1,albaran:null,producto_codigo:'21',descripcion:'Cebollas Gordas',cantidad:30,precio:1,iva:4,importe:31.2}];} DB.alias_compra=DB.alias_compra||[]; DB.albaranes_facturados=DB.albaranes_facturados||[]; DB.precios_compra_dia=DB.precios_compra_dia||[]; DB.lineas_factura_leida=DB.lineas_factura_leida||[]; DB.compra_ajustes=DB.compra_ajustes||[]; DB.listas_precios=DB.listas_precios||[]; DB.listas_precios_items=DB.listas_precios_items||[]; DB.recomendaciones=DB.recomendaciones||[]; DB.prospectos=DB.prospectos||[]; DB.avisos=DB.avisos||[]; DB.pedidos_habituales=DB.pedidos_habituales||[]; DB.lineas_habituales=DB.lineas_habituales||[];
+  const DB = window.__DB = __saved || __init; DB.dia=H(); ['presentaciones','formatos_producto','formatos_cliente','abreviaturas','albaran_portal','albaran_enlaces','cliente_enlaces'].forEach(k=>{DB[k]=DB[k]||[];}); DB.carga_lineas=DB.carga_lineas||[]; DB.sobrante=DB.sobrante||[]; DB.mensajes=DB.mensajes||[]; DB.fichajes=DB.fichajes||[]; DB.fotos_perfil=DB.fotos_perfil||[]; DB.cobros=DB.cobros||[]; DB.proveedores=DB.proveedores||[]; DB.compras=DB.compras||[]; DB.lotes=DB.lotes||[]; DB.asignaciones_lote=DB.asignaciones_lote||[]; DB.entregas=DB.entregas||[]; DB.incidencias=DB.incidencias||[]; DB.documentos_compra=DB.documentos_compra||[]; DB.facturas_recibidas=DB.facturas_recibidas||[]; DB.facturas_clientes=DB.facturas_clientes||[]; if(!DB.golden_facturas){DB.golden_facturas=[{id:'g1',numero:'P/20.001',serie:'P',fecha:'2026-09-10',tipo:'Serie PC',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:100,descuentos:0,gastos:0,base:100,total:104,borrador:false,n_lineas:2},{id:'g2',numero:'BOR/5',serie:'BOR',fecha:'2026-09-11',tipo:'Facturas borrador',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:50,descuentos:0,gastos:0,base:50,total:52,borrador:true,n_lineas:1},{id:'g3',numero:'F1/9.001',serie:'F1',fecha:'2026-08-01',tipo:'Facturas Fernando',cliente_codigo:'TABERNA',cliente_nombre:'Taberna El Enano',bruto:30,descuentos:0,gastos:0,base:30,total:31.2,borrador:false,n_lineas:1}];DB.golden_lineas=[{id:'l1',factura_numero:'P/20.001',orden:1,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:20,precio:2,iva:4,importe:41.6},{id:'l2',factura_numero:'P/20.001',orden:2,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'01',descripcion:'Patata Agria',cantidad:100,precio:0.6,iva:4,importe:62.4},{id:'l3',factura_numero:'BOR/5',orden:1,albaran:null,producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:25,precio:2,iva:4,importe:52},{id:'l4',factura_numero:'F1/9.001',orden:1,albaran:null,producto_codigo:'21',descripcion:'Cebollas Gordas',cantidad:30,precio:1,iva:4,importe:31.2}];} DB.alias_compra=DB.alias_compra||[]; DB.albaranes_facturados=DB.albaranes_facturados||[]; DB.precios_compra_dia=DB.precios_compra_dia||[]; DB.lineas_factura_leida=DB.lineas_factura_leida||[]; DB.compra_ajustes=DB.compra_ajustes||[]; DB.listas_precios=DB.listas_precios||[]; DB.listas_precios_items=DB.listas_precios_items||[]; DB.recomendaciones=DB.recomendaciones||[]; DB.prospectos=DB.prospectos||[]; DB.avisos=DB.avisos||[]; DB.pedidos_habituales=DB.pedidos_habituales||[]; if(!DB.__fijosEj){DB.__fijosEj=1; const cs=DB.clientes.filter(c=>c.activo!==false); const c3=cs.slice(-3); const dl=[1,2,3,4,5,6,0];
+    if(c3[0]) DB.pedidos_habituales.push({id:'hf1',cliente_id:c3[0].id,nombre:'Fijo (ejemplo)',dias_semana:dl,notas:'2 sacos patatas, cebollas',activo:true,tipo:'fijo',repartidor_id:'u1',created_at:'2026-01-01'});
+    if(c3[1]) DB.pedidos_habituales.push({id:'hf2',cliente_id:c3[1].id,nombre:'Fijo (ejemplo)',dias_semana:dl,notas:'',activo:true,tipo:'especifico',repartidor_id:'u1',created_at:'2026-01-02'});
+    if(c3[2]) DB.pedidos_habituales.push({id:'hf3',cliente_id:c3[2].id,nombre:'Si llama (ejemplo)',dias_semana:dl,notas:'',activo:true,tipo:'si_llama',repartidor_id:'u1',created_at:'2026-01-03'});} DB.lineas_habituales=DB.lineas_habituales||[];
   const gv=(r,k)=>{if(k.includes('->>')){const [a,b]=k.split('->>');return r[a]?r[a][b]:undefined;}return r[k];};
   DB.historial=DB.historial||[];
   const AUD=['lineas_pedido','pedidos','albaranes','asignaciones_lote','cobros','productos','clientes'];
@@ -534,6 +543,14 @@ function crearSbPractica(){
     guardar_ubicacion(a){const c=DB.clientes.find(x=>x.id===a.p_cliente);c.lat=a.p_lat;c.lng=a.p_lng;return null;},
     marcar_entregado(a){const p=DB.pedidos.find(x=>x.id===a.p_pedido);if(p.estado!=='terminado')throw new Error('PEDIDO_NO_TERMINADO');if(!DB.entregas.some(e=>e.pedido_id===a.p_pedido))DB.entregas.push({pedido_id:a.p_pedido,nota:a.p_nota||null,entregado_por:'u1',entregado_at:a.p_at||new Date().toISOString(),created_at:new Date().toISOString()});return null;},
     marcar_cargado(a){let c=DB.carga_lineas.find(x=>x.linea_id===a.p_linea);if(c)c.cargado=a.p_cargado;else DB.carga_lineas.push({linea_id:a.p_linea,cargado:a.p_cargado});return null;},
+    generar_previstos(a){let n=0;const H0=new Date();for(let k=0;k<=Math.min(a.p_dias||14,31);k++){const dt=new Date(H0.getFullYear(),H0.getMonth(),H0.getDate()+k);const f=new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,10);const dow=dt.getDay();
+      DB.pedidos_habituales.filter(h=>h.activo!==false&&(h.tipo||'fijo')!=='si_llama'&&(h.dias_semana||[]).includes(dow)).forEach(h=>{const c=DB.clientes.find(x=>x.id===h.cliente_id);if(!c||c.activo===false)return;const marca='fijo:'+h.id+':'+f;
+        if(DB.pedidos.some(p=>p.hash_origen===marca))return;if(DB.pedidos.some(p=>p.cliente_id===h.cliente_id&&p.fecha_entrega===f&&p.estado!=='anulado'&&!p.archivado))return;
+        const id='prev'+Math.random().toString(36).slice(2,10);const tipo=h.tipo||'fijo';const notas=[tipo==='no_siempre'?'Fijo «no siempre»: confirmar si lo quiere':tipo==='especifico'?'Pedido específico: preguntar qué quiere':'Pedido fijo',(h.notas||'').trim()?'Suele llevar: '+h.notas.trim():''].filter(Boolean).join(' · ');
+        DB.pedidos.push({id,cliente_id:h.cliente_id,fecha_entrega:f,estado:'previsto',notas,preparador_id:null,repartidor_id:h.repartidor_id||null,origen:'fijo',hash_origen:marca,archivado:false});
+        DB.lineas_habituales.filter(l=>l.habitual_id===h.id).forEach((l,i)=>{const pr=DB.productos.find(x=>x.id===l.producto_id);if(pr&&pr.activo!==false)DB.lineas_pedido.push({id:id+'l'+i,pedido_id:id,producto_id:l.producto_id,cantidad_pedida:l.cantidad,unidad_pedida:l.unidad,peso_real:null,unidad_precio:pr.unidad_precio||'kg',precio:null,estado:'pendiente',version:1});});n++;});}
+      return n;},
+    confirmar_previsto(a){const p=DB.pedidos.find(x=>x.id===a.p_pedido);if(!p)throw new Error('PEDIDO_NO_EXISTE');if(p.estado!=='previsto')throw new Error('NO_ES_PREVISTO');p.estado=a.p_hacer?'pendiente':'anulado';return p.estado;},
     empezar_pedido(a){const p=DB.pedidos.find(x=>x.id===a.p_pedido);p.estado='en_preparacion';p.preparador_id='u1';return null;},
     guardar_peso(a){const l=DB.lineas_pedido.find(x=>x.id===a.p_linea);if(l.version!==a.p_version)throw new Error('CONFLICTO');l.peso_real=a.p_peso;l.estado='hecha';l.version++;return l.version;},
     _vtz(ped,asig){const ls=DB.lineas_pedido.filter(l=>l.pedido_id===ped);const kn=l=>l.unidad_precio==='kg'?(l.peso_real||0):l.cantidad_pedida;
@@ -696,6 +713,7 @@ const ERR = {
   CLIENTE_DUPLICADO: 'Ya existe un cliente con ese código. Cambia el código.',
   CONFLICTO: 'Otra persona ha cambiado esta línea. Se ha recargado.',
   PEDIDO_CERRADO: 'El pedido ya está cerrado.',
+  NO_ES_PREVISTO: 'Ese pedido ya estaba confirmado o anulado. Se ha actualizado.',
   SIN_PERMISO: 'No tienes permiso para hacer esto.',
   LINEAS_PENDIENTES: 'Faltan líneas por preparar.',
   PESO_NO_VALIDO: 'El peso no es válido.',
@@ -726,7 +744,31 @@ function isNetErr(e) {
 }
 const esOficina = () => !!state.perfil && ['oficina', 'admin'].includes(state.perfil.rol);
 const ESTADO = { pendiente: 'Pendiente', en_preparacion: 'En preparación', terminado: 'Terminado', anulado: 'Anulado' };
-const CLASE_ESTADO = { pendiente: 'pend', en_preparacion: 'prep', terminado: 'fin', anulado: 'pend' };
+const CLASE_ESTADO = { pendiente: 'pend', en_preparacion: 'prep', terminado: 'fin', anulado: 'pend', previsto: 'prev' };
+ESTADO.previsto = 'Previsto';
+/* ===== Pedidos previstos: salen solos de los pedidos fijos (Habituales) y hay que confirmarlos el día antes ===== */
+function hoyMas(n) { const d = new Date(); d.setDate(d.getDate() + n); return hoy(d); }
+const prevRojo = p => !!p && p.estado === 'previsto' && !!p.fecha_entrega && p.fecha_entrega <= hoyMas(1);
+const claseEst = p => p.estado === 'previsto' ? (prevRojo(p) ? 'prevroja' : 'prev') : (CLASE_ESTADO[p.estado] || 'pend');
+const textoEst = p => p.estado === 'previsto' ? (prevRojo(p) ? '⚠️ Previsto sin confirmar' : '📅 Previsto') : (ESTADO[p.estado] || p.estado);
+async function decidirPrevisto(id, hacer, alTerminar) {
+  if (!navigator.onLine) { toast('Necesitas conexión para confirmar.', 'err'); return; }
+  if (!hacer && !await confirmar('¿Este pedido NO se hace? Se quitará de ese día (no se vuelve a crear).')) return;
+  try { const r = await sb.rpc('confirmar_previsto', { p_pedido: id, p_hacer: hacer }); if (r.error) throw r.error; toast(hacer ? '✅ Pedido confirmado' : 'Quitado: ese día no se hace', 'ok'); }
+  catch (e) { toast(msgErr(e), 'err'); }
+  if (alTerminar) alTerminar();
+}
+async function decidirVarios(ids, alTerminar) {
+  if (!ids.length) return; if (!navigator.onLine) { toast('Necesitas conexión para confirmar.', 'err'); return; }
+  if (!await confirmar('¿Confirmar los ' + ids.length + ' pedidos previstos? Pasarán a pedidos normales.')) return;
+  let ok = 0; for (const id of ids) { const r = await sb.rpc('confirmar_previsto', { p_pedido: id, p_hacer: true }); if (!r.error) ok++; }
+  toast(ok + ' pedidos confirmados', 'ok'); if (alTerminar) alTerminar();
+}
+let _prevGen = false;
+async function generarPrevistos() {   // una vez al día por móvil (además lo hace Supabase cada madrugada)
+  if (_prevGen || !navigator.onLine || !state.user || LS.get('fj_prev_gen', '') === hoy()) return;
+  _prevGen = true; try { const r = await sb.rpc('generar_previstos', { p_dias: 14 }); if (!r.error) LS.set('fj_prev_gen', hoy()); } catch (e) { } _prevGen = false;
+}
 const VISTAS_MAS_OLD = ['mas', 'clientes', 'cliente', 'catalogo', 'compras', 'traza', 'perfil', 'fichajes', 'entregas', 'calendario', 'incidencias', 'precios', 'facturas', 'resumen', 'archivo', 'avisos', 'ruta', 'rentabilidad', 'registro', 'quien', 'facturascli', 'pedidos', 'hojacompra', 'ayuda', 'golden'];
 const puedeCompras = () => !!state.perfil && ['compras', 'oficina', 'admin'].includes(state.perfil.rol);
 const UNIDADES = ['kg', 'pieza', 'caja', 'saco', 'bolsa', 'bandeja', 'manojo', 'docena'];
@@ -962,7 +1004,7 @@ async function cargarPedidos(fecha) {
 function vistaLista() {
   state.view = 'lista';
   const fechaInp = h('input', { type: 'date', value: state.fecha, onchange: e => { state.fecha = e.target.value || hoy(); actualizarLista(); } });
-  const nombres = { todos: 'Todos', pendiente: 'Pendientes', en_preparacion: 'En preparación', terminado: 'Terminados' };
+  const nombres = { todos: 'Todos', previsto: '📅 Previstos', pendiente: 'Pendientes', en_preparacion: 'En preparación', terminado: 'Terminados' };
   const chips = Object.keys(nombres).map(f => h('button', { class: 'chip' + (state.filtro === f ? ' on' : ''), onclick: () => { state.filtro = f; vistaLista(); } }, nombres[f]));
   $app.replaceChildren(shell('Pedidos', h('div', {},
     h('div', { class: 'barra' }, fechaInp, h('button', { class: 'ghost', onclick: () => actualizarLista() }, '↻'), h('button', { class: 'ghost', onclick: () => go('calendario') }, '📅')),
@@ -978,7 +1020,7 @@ async function cargaRepartidores() {   // quién reparte (con su color), para ve
 }
 async function actualizarLista() {
   const cont = document.getElementById('lista'); if (!cont) return;
-  try { const [r] = await Promise.all([cargarPedidos(state.fecha), cargaRepartidores()]); state.pedidos = r.datos; pintarLista(r.cache); }
+  try { await generarPrevistos(); const [r] = await Promise.all([cargarPedidos(state.fecha), cargaRepartidores()]); state.pedidos = r.datos; pintarLista(r.cache); }
   catch (e) { cont.replaceChildren(h('p', { class: 'err' }, msgErr(e))); }
 }
 function pintarLista(cache) {
@@ -998,7 +1040,22 @@ function pintarLista(cache) {
   }
   if (cache) kids.push(h('div', { class: 'aviso-card' }, 'Mostrando los últimos datos guardados en este móvil.'));
   if (!ps.length) kids.push(h('p', { class: 'vacio' }, 'No hay pedidos para esta fecha.'));
+  { const pv = ps.filter(p => p.estado === 'previsto'); if (pv.length) kids.push(h('div', { class: 'card previsto' + (pv.some(prevRojo) ? ' roja' : '') },
+      h('b', {}, '📅 ' + pv.length + (pv.length === 1 ? ' pedido previsto' : ' pedidos previstos') + ' sin confirmar'),
+      h('div', { class: 'sub' }, 'Salen solos de los pedidos fijos. Confírmalos el día antes (o quita los que no se hagan). Hasta entonces no se preparan.'),
+      h('button', { class: 'guardar', style: 'width:100%;margin-top:8px;min-height:48px', onclick: () => decidirVarios(pv.map(p => p.id), actualizarLista) }, '✅ Confirmar todos (' + pv.length + ')'))); }
   for (const p of ps) {
+    if (p.estado === 'previsto') {
+      const rep2 = repDe(p);
+      kids.push(h('div', { class: 'card tap previsto' + (prevRojo(p) ? ' roja' : ''), onclick: () => go('pedido', { id: p.id }) },
+        h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, nombreCli(p.clientes)), h('div', { class: 'sub' }, ((p.clientes && p.clientes.codigo) || '') + (rep2 ? ' · 🚚 ' + rep2.nombre.split(' ')[0] : ''))),
+          h('span', { class: 'badge ' + claseEst(p) }, textoEst(p))),
+        p.notas ? h('div', { class: 'sub', style: 'margin-top:6px' }, '📝 ' + p.notas) : null,
+        h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px' },
+          h('button', { class: 'guardar small', onclick: e => { e.stopPropagation(); decidirPrevisto(p.id, true, actualizarLista); } }, '✅ Confirmar'),
+          h('button', { class: 'ghost small', onclick: e => { e.stopPropagation(); decidirPrevisto(p.id, false, actualizarLista); } }, '❌ No se hace'))));
+      continue;
+    }
     const ls = p.lineas_pedido || []; const hechas = ls.filter(l => l.estado !== 'pendiente').length;
     const pct = ls.length ? Math.round(hechas * 100 / ls.length) : 0;
     kids.push(h('div', { class: 'card tap', onclick: () => go('pedido', { id: p.id }) },
@@ -1006,7 +1063,7 @@ function pintarLista(cache) {
         h('div', {}, h('div', { class: 'nombre' }, nombreCli(p.clientes)), h('div', { class: 'sub' }, (p.clientes && p.clientes.codigo) || ''),
           (hayReparto || reps.length) ? (repDe(p) ? h('div', { class: 'sub', style: 'font-weight:700;color:#14532d' }, h('span', { style: 'display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;background:' + (repDe(p).color_reparto || '#2f7d4a') }), '🚚 Reparte ' + repDe(p).nombre.split(' ')[0] + (p.orden_reparto ? ' · nº ' + p.orden_reparto : '')) : h('div', { class: 'sub', style: 'color:#b45309' }, '🚚 Sin repartidor')) : null),
         h('div', { style: 'text-align:right' },
-          h('span', { class: 'badge ' + CLASE_ESTADO[p.estado] }, ESTADO[p.estado]), ' ',
+          h('span', { class: 'badge ' + claseEst(p) }, textoEst(p)), ' ',
           p.clientes && p.clientes.forma_pago === 'contado' ? h('span', { class: 'badge cont' }, 'Contado') : null)),
       h('div', { class: 'sub', style: 'margin-top:6px' }, hechas + ' de ' + ls.length + ' líneas'),
       h('div', { class: 'progreso' }, h('i', { style: 'width:' + pct + '%' }))));
@@ -1071,10 +1128,16 @@ function pintarPedido() {
   const kids = [];
   kids.push(h('div', { class: 'card' },
     h('div', { class: 'fila' }, h('div', { class: 'nombre' }, nombreCli(cli)),
-      h('span', { class: 'badge ' + CLASE_ESTADO[estado] }, ESTADO[estado])),
+      h('span', { class: 'badge ' + claseEst(d.pedido) }, textoEst(d.pedido))),
     h('div', { class: 'sub' }, (cli.codigo || '') + ' · ' + fechaES(d.pedido.fecha_entrega) + ' · ' + (cli.forma_pago === 'contado' ? 'Pago al contado' : 'Crédito')),
     d.pedido.notas ? h('div', { style: 'margin-top:6px' }, '📝 ' + d.pedido.notas) : null,
     h('div', { class: 'sub', style: 'margin-top:6px' }, hechas + ' de ' + ls.length + ' líneas preparadas')));
+  if (estado === 'previsto') kids.push(h('div', { class: 'card previsto' + (prevRojo(d.pedido) ? ' roja' : '') },
+    h('b', {}, prevRojo(d.pedido) ? '⚠️ Pedido previsto SIN CONFIRMAR' : '📅 Pedido previsto (pedido fijo)'),
+    h('div', { class: 'sub', style: 'margin-top:4px' }, 'Sale solo de los pedidos fijos del cliente. Casi siempre se hace, pero hay que confirmarlo el día antes. Antes de confirmar puedes añadir o cambiar productos (➕ Añadir).'),
+    h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px' },
+      h('button', { class: 'guardar', style: 'min-height:52px', onclick: () => decidirPrevisto(d.pedido.id, true, () => actualizarPedido()) }, '✅ Confirmar'),
+      h('button', { class: 'peligro', style: 'min-height:52px', onclick: () => decidirPrevisto(d.pedido.id, false, () => go('lista')) }, '❌ No se hace'))));
   if (!cerrado) kids.push(h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px' },
     h('button', { class: 'ghost', style: 'min-height:48px', onclick: () => abrirEdicionPedido(d) }, '✏️ Editar'),
     h('button', { class: 'ghost', style: 'min-height:48px', onclick: () => abrirAnadirProducto(d) }, '➕ Añadir'),
@@ -1103,6 +1166,8 @@ function pintarPedido() {
     if (d.entrega || enCola) acciones.push(h('div', { class: 'aviso-card' }, '✔ Entregado a las ' + fmtHora(d.entrega ? d.entrega.entregado_at : enCola.at) + (enCola && !d.entrega ? ' (pendiente de enviar)' : '')));
     else acciones.push(h('button', { class: 'guardar', onclick: () => elegirEntrega(d.pedido.id, () => { pintarPedido(); actualizarPedido(); }) }, 'Marcar como ENTREGADO'));
     acciones.push(h('button', { onclick: () => go('albaran', { id: d.pedido.id }) }, 'Ver / imprimir albarán' + (d.albaran ? ' nº ' + d.albaran.numero : '')));
+  } else if (estado === 'previsto') {
+    acciones.push(h('div', { class: 'aviso-card' }, 'Primero confírmalo (arriba). Después se prepara como cualquier pedido.'));
   } else if (estado !== 'anulado') {
     const faltan = ls.length - hechas;
     acciones.push(h('button', { disabled: faltan > 0 || !ls.length, onclick: () => terminarPedido(d.pedido.id) },
@@ -4178,7 +4243,7 @@ function vistaCliente() {
             h('div', { class: 'fila' },
               h('div', {}, h('div', { class: 'nombre' }, fechaES(p.fecha_entrega)),
                 h('div', { class: 'sub' }, alb && alb.estado !== 'anulado' ? 'Albarán ' + alb.serie + ' ' + alb.numero : 'Sin albarán')),
-              h('div', { style: 'text-align:right' }, h('span', { class: 'badge ' + (CLASE_ESTADO[p.estado] || 'pend') }, ESTADO[p.estado] || p.estado),
+              h('div', { style: 'text-align:right' }, h('span', { class: 'badge ' + (claseEst(p) || 'pend') }, textoEst(p)),
                 h('div', { class: 'sub', style: 'margin-top:4px' }, completo && total ? eur(total) + ' € con IVA' : ''))));
         }));
       } catch (e) { caja.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver los pedidos.' : msgErr(e))); }
@@ -6127,7 +6192,7 @@ function vistaPedidos() {
     info.textContent = r.length + (r.length === 1 ? ' pedido' : ' pedidos');
     const kids = []; let dia = '';
     r.forEach(p => { if (p.fecha_entrega !== dia) { dia = p.fecha_entrega; kids.push(h('div', { class: 'letra', style: 'text-transform:capitalize' }, fmtDiaLargo(dia + 'T12:00:00'))); }
-      kids.push(h('div', { class: 'card tap fila', onclick: () => go('pedido', { id: p.id }) }, h('div', {}, h('div', { class: 'nombre' }, nombreCli(uno(p.clientes)))), h('span', { class: 'badge ' + CLASE_ESTADO[p.estado] }, ESTADO[p.estado]))); });
+      kids.push(h('div', { class: 'card tap fila', onclick: () => go('pedido', { id: p.id }) }, h('div', {}, h('div', { class: 'nombre' }, nombreCli(uno(p.clientes)))), h('span', { class: 'badge ' + claseEst(p) }, textoEst(p)))); });
     if (!r.length) kids.push(h('p', { class: 'vacio' }, 'No hay pedidos con estos filtros.'));
     cont.replaceChildren(...kids);
   }
@@ -6140,13 +6205,15 @@ function vistaPedidos() {
 }
 function vistaCalendario() {
   state.view = 'calendario';
-  let mes = (state.params.mes || state.fecha).slice(0, 7), sel = state.params.dia || state.fecha, datos = [];
+  let mes = (state.params.mes || state.fecha).slice(0, 7), sel = state.params.dia || state.fecha, datos = [], siLlama = LS.get('fj_si_llama', []);
   const cont = h('div', {});
   $app.replaceChildren(shell('Calendario', cont)); renderBanner();
+  sb.from('pedidos_habituales').select('dias_semana,tipo,clientes(nombre,nombre_comercial)').eq('tipo', 'si_llama').eq('activo', true).then(r => { if (r && !r.error) { siLlama = r.data || []; LS.set('fj_si_llama', siLlama); pintar(); } }).catch(() => { });
   const mover = (m, d) => { const [y, mm] = m.split('-').map(Number); const dt = new Date(y, mm - 1 + d, 1); return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0'); };
   async function cargar() {
     datos = LS.get('fj_cal_' + mes, []); pintar();
     try {
+      await generarPrevistos();
       const r = await sb.from('pedidos').select('id,estado,fecha_entrega,clientes(codigo,nombre,nombre_comercial),entregas(entregado_at)').gte('fecha_entrega', mes + '-01').lt('fecha_entrega', mover(mes, 1) + '-01').neq('estado', 'anulado').neq('archivado', true).range(0, 4999);
       if (r.error) throw r.error; datos = r.data; LS.set('fj_cal_' + mes, datos);
     } catch (e) { if (!isNetErr(e)) toast(msgErr(e), 'err'); }
@@ -6158,8 +6225,8 @@ function vistaCalendario() {
     const cel = ['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(x => h('div', { class: 'cal-h' }, x));
     for (let i = 0; i < primero; i++) cel.push(h('div', {}));
     for (let d = 1; d <= nd; d++) {
-      const iso = mes + '-' + String(d).padStart(2, '0'); const n = (por[iso] || []).length;
-      cel.push(h('button', { class: 'cal-d' + (iso === sel ? ' sel' : '') + (iso === hoy() ? ' hoy' : ''), onclick: () => { sel = iso; pintar(); } }, String(d), n ? h('i', {}, String(n)) : null));
+      const iso = mes + '-' + String(d).padStart(2, '0'); const n = (por[iso] || []).length; const np = (por[iso] || []).filter(p => p.estado === 'previsto').length;
+      cel.push(h('button', { class: 'cal-d' + (iso === sel ? ' sel' : '') + (iso === hoy() ? ' hoy' : ''), onclick: () => { sel = iso; pintar(); } }, String(d), n ? h('i', { class: np ? 'prev' : '', title: np ? np + ' previstos sin confirmar' : '' }, String(n)) : null));
     }
     const titulo = new Date(y, m - 1, 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
     const dia = sel.startsWith(mes) ? (por[sel] || []) : [];
@@ -6169,9 +6236,13 @@ function vistaCalendario() {
       h('button', { class: 'ghost small', onclick: () => { mes = mover(mes, 1); sel = mes + '-01'; cargar(); } }, '→')),
       h('div', { class: 'cal' }, ...cel),
       h('div', { class: 'letra', style: 'text-transform:capitalize' }, fmtDiaLargo(sel + 'T12:00:00') + ' · ' + dia.length + ' pedidos')];
-    dia.forEach(p => { const e = uno(p.entregas); kids.push(h('div', { class: 'card tap fila', onclick: () => go('pedido', { id: p.id }) },
+    const pvDia = dia.filter(p => p.estado === 'previsto');
+    if (pvDia.length) kids.push(h('div', { class: 'card previsto' + (pvDia.some(prevRojo) ? ' roja' : '') }, h('b', {}, '📅 ' + pvDia.length + ' previstos sin confirmar'), h('div', { class: 'sub' }, 'Salen de los pedidos fijos. Tócalos para confirmar uno a uno, o confírmalos todos.'),
+      h('button', { class: 'guardar', style: 'width:100%;margin-top:8px', onclick: () => decidirVarios(pvDia.map(p => p.id), cargar) }, '✅ Confirmar todos los de este día (' + pvDia.length + ')')));
+    { const dow = new Date(sel + 'T12:00:00').getDay(); const sl = (siLlama || []).filter(x => (x.dias_semana || []).includes(dow)); if (sl.length) kids.push(h('div', { class: 'aviso-card' }, '📞 Si llama (no se crea solo): ' + sl.map(x => nombreCli(uno(x.clientes))).join(', '))); }
+    dia.forEach(p => { const e = uno(p.entregas); kids.push(h('div', { class: 'card tap fila' + (p.estado === 'previsto' ? ' previsto' + (prevRojo(p) ? ' roja' : '') : ''), onclick: () => go('pedido', { id: p.id }) },
       h('div', {}, h('div', { class: 'nombre' }, nombreCli(uno(p.clientes))), e ? h('div', { class: 'sub' }, '✔ Entregado a las ' + fmtHora(e.entregado_at)) : null),
-      h('span', { class: 'badge ' + CLASE_ESTADO[p.estado] }, ESTADO[p.estado]))); });
+      h('span', { class: 'badge ' + claseEst(p) }, textoEst(p)))); });
     if (!dia.length) kids.push(h('p', { class: 'vacio' }, 'No hay pedidos este día.'));
     const bs = [h('button', { class: 'ghost', style: 'flex:1', onclick: () => { state.fecha = sel; go('lista'); } }, 'Abrir en Preparar'), h('button', { class: 'ghost', style: 'flex:1', onclick: () => go('pedidos', { desde: mes + '-01', hasta: mover(mes, 1) + '-01' }) }, 'Ver como lista')];
     if (esOficina()) bs.unshift(h('button', { style: 'flex:1', onclick: () => go('nuevo', { fecha: sel }) }, '+ Añadir pedido'));
@@ -6878,7 +6949,7 @@ function vistaReparto() {
       h('div', { class: 'fila', style: 'gap:8px' },
         !ctx && !g.rep && !g.entregado ? h('input', { type: 'checkbox', class: 'chk-g', checked: !!marcados[g.id], onchange: e => { marcados[g.id] = e.target.checked; if (!e.target.checked) delete marcados[g.id]; pintarBarra(); } }) : null,
         ctx ? h('div', { class: 'nparada', style: 'background:' + ctx.col }, String(ctx.i + 1)) : null,
-        h('div', { style: 'flex:1;min-width:0' }, h('div', { class: 'nombre' }, nombreCli(g)), h('div', { class: 'sub' }, sub), g.notas_reparto ? h('div', { class: 'sub' }, '📝 ' + g.notas_reparto) : null),
+        h('div', { style: 'flex:1;min-width:0' }, h('div', { class: 'nombre' }, nombreCli(g), g.est && Object.values(g.est).some(e => e === 'previsto') ? h('span', { class: 'badge prev', style: 'margin-left:6px;font-size:12px' }, '📅 previsto') : null), h('div', { class: 'sub' }, sub), g.notas_reparto ? h('div', { class: 'sub' }, '📝 ' + g.notas_reparto) : null),
         edit ? h('div', { class: 'mov' }, h('button', { class: 'ghost small', 'aria-label': 'Subir', disabled: ctx.i === 0, onclick: () => mover(ctx.lista, ctx.i, -1) }, '↑'), h('button', { class: 'ghost small', 'aria-label': 'Bajar', disabled: ctx.i === ctx.lista.length - 1, onclick: () => mover(ctx.lista, ctx.i, 1) }, '↓'), h('button', { class: 'ghost small', 'aria-label': 'Soltar', onclick: () => asignar([g], null) }, '✕')) : null),
       !ctx && !g.entregado ? h('div', { style: 'display:flex;gap:8px;margin-top:6px;flex-wrap:wrap' }, soyRep() ? h('button', { class: 'guardar small', onclick: () => asignar([g], miId()) }, '🙋 Lo cojo yo') : null, gestor ? h('button', { class: 'ghost small', onclick: () => elegirRepartidor([g], 'Asignar «' + nombreCli(g) + '» a…') }, 'Asignar a…') : null) : null,
       h('div', { style: 'display:flex;gap:8px;margin-top:6px;flex-wrap:wrap' }, g.pedidos.map((id, k) => { const t = (g.est || {})[id] === 'terminado'; const n = g.pedidos.length > 1 ? ' ' + (k + 1) : ''; return h('button', { class: (t ? 'small' : 'ghost small'), onclick: () => go(t ? 'albaran' : 'pedido', { id, desde: 'reparto' }) }, t ? '🧾 Albarán' + n : '📋 Pedido' + n + ' (aún sin albarán)'); }))
@@ -6971,7 +7042,7 @@ function vistaRuta() {
   }
   function armar(peds) {
     const m = {};
-    peds.forEach(p => { const c = uno(p.clientes); if (!c) return; const x = m[c.id] || (m[c.id] = Object.assign({}, c, { pedidos: [], entregado: true })); x.pedidos.push(p.id); if (p.estado !== 'terminado' || !uno(p.entregas)) x.entregado = false; if (p.estado !== 'terminado') x.sinTerminar = true; });
+    peds.forEach(p => { const c = uno(p.clientes); if (!c) return; const x = m[c.id] || (m[c.id] = Object.assign({}, c, { pedidos: [], entregado: true })); x.pedidos.push(p.id); if (p.estado === 'previsto') x.prev = true; if (p.estado !== 'terminado' || !uno(p.entregas)) x.entregado = false; if (p.estado !== 'terminado') x.sinTerminar = true; });
     clientes = Object.values(m).sort((a, b) => nombreCli(a).localeCompare(nombreCli(b), 'es'));
     clientes.forEach(c => { if (!(c.id in sel)) sel[c.id] = !c.entregado; });
   }
@@ -6983,7 +7054,7 @@ function vistaRuta() {
       const [a, b] = ventanaCli(c);
       kids.push(h('label', { class: 'card fila', style: 'cursor:pointer' }, h('div', { style: 'display:flex;gap:10px;align-items:center' },
         h('input', { type: 'checkbox', style: 'width:24px;min-height:24px;height:24px', checked: !!sel[c.id], onchange: e => { sel[c.id] = e.target.checked; } }),
-        h('div', {}, h('div', { class: 'nombre' }, (c.entregado ? '✔ ' : '') + nombreCli(c)), h('div', { class: 'sub' }, [c.localidad, a != null || b != null ? (a != null ? deMin(a) : '') + '–' + (b != null ? deMin(b) : '') : 'sin horario', c.lat == null ? '⚠ sin ubicación' : ''].filter(Boolean).join(' · '))))));
+        h('div', {}, h('div', { class: 'nombre' }, (c.entregado ? '✔ ' : '') + nombreCli(c), c.prev ? h('span', { class: 'badge prev', style: 'margin-left:6px;font-size:12px' }, '📅 previsto') : null), h('div', { class: 'sub' }, [c.localidad, a != null || b != null ? (a != null ? deMin(a) : '') + '–' + (b != null ? deMin(b) : '') : 'sin horario', c.lat == null ? '⚠ sin ubicación' : ''].filter(Boolean).join(' · '))))));
     });
     if (!clientes.length) kids.push(h('p', { class: 'vacio' }, 'No hay pedidos para este día.'));
     kids.push(h('button', { class: 'guardar', style: 'width:100%;margin:8px 0', onclick: calcular }, 'Calcular la mejor ruta'));
@@ -9093,16 +9164,34 @@ async function tabHarvey(el) {
   const whatsapp = t => { const tel = telDe(foco); if (tel) window.open('https://wa.me/' + tel + '?text=' + encodeURIComponent(t), '_blank'); else guiaWhatsApp(t); };
   /* Harvey marca cada mensaje listo para enviar entre [MENSAJE] y [FIN]; las notas para la oficina quedan fuera y nunca se copian ni se envían. */
   const limpiar = t => String(t || '').replace(/\*\*(.+?)\*\*/g, '*$1*').trim();
-  const trozos = t => { const out = []; const re = /\[MENSAJE\]\s*\n?([\s\S]*?)\n?\s*\[FIN\]/gi; let i = 0, x; while ((x = re.exec(t))) { if (x.index > i) out.push({ nota: t.slice(i, x.index) }); out.push({ msg: x[1].trim() }); i = re.lastIndex; } if (i < t.length) out.push({ nota: t.slice(i) }); return out.some(p => p.msg) ? out : null; };
-  const botones = txt => h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' },
-    h('button', { class: 'ghost small', onclick: async () => { try { await navigator.clipboard.writeText(limpiar(txt)); toast('Copiado', 'ok'); } catch (e) { toast('No se pudo copiar', 'err'); } } }, '📋 Copiar'),
-    h('button', { class: 'ghost small', onclick: () => whatsapp(limpiar(txt)) }, foco && telDe(foco) ? '💬 WhatsApp a ' + foco.nombre : '💬 Enviar por WhatsApp'));
+  const trozos = t => { const out = []; const re = /\[MENSAJE(?:\s+para=([^\]\s]+))?\]\s*\n?([\s\S]*?)\n?\s*\[FIN\]/gi; let i = 0, x; while ((x = re.exec(t))) { if (x.index > i) out.push({ nota: t.slice(i, x.index) }); out.push({ msg: x[2].trim(), para: x[1] || null }); i = re.lastIndex; } if (i < t.length) out.push({ nota: t.slice(i) }); return out.some(p => p.msg) ? out : null; };
+  /* Destinatario del mensaje: Harvey lo indica con [MENSAJE para=CÓDIGO] (cliente) o [MENSAJE para=P:id] (contacto). El teléfono lo pone la app; no pasa por la IA. */
+  const destCache = {};
+  const destinoDe = async para => {
+    if (!para) return null; if (para in destCache) return destCache[para]; let r = null;
+    try { if (/^P:/i.test(para)) { const q = await sb.from('prospectos').select('nombre,telefono').eq('id', para.slice(2)).maybeSingle(); if (q.data) r = q.data; }
+      else { const q = await sb.from('clientes').select('nombre,nombre_comercial,telefono').eq('codigo', para).maybeSingle(); if (q.data) r = { nombre: q.data.nombre_comercial || q.data.nombre, telefono: q.data.telefono }; } } catch (e) { }
+    destCache[para] = r; return r;
+  };
+  const nueveDig = t => { let d = String(t || '').replace(/\D/g, ''); if (d.length >= 11 && d.startsWith('34')) d = d.slice(2); return d.length >= 9 ? d.slice(0, 9) : ''; };
+  const copiarBtn = txt => h('button', { class: 'ghost small', onclick: async () => { try { await navigator.clipboard.writeText(limpiar(txt)); toast('Copiado', 'ok'); } catch (e) { toast('No se pudo copiar', 'err'); } } }, '📋 Copiar');
+  const botones = (txt, para) => {
+    const caja = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' }, copiarBtn(txt),
+      h('button', { class: 'ghost small', onclick: () => whatsapp(limpiar(txt)) }, foco && telDe(foco) ? '💬 WhatsApp a ' + foco.nombre : '💬 Enviar por WhatsApp'));
+    if (para) destinoDe(para).then(d => { const tel = d && nueveDig(d.telefono); if (!tel) return; const nom = String(d.nombre || '').slice(0, 30);
+      const movil = /^[67]/.test(tel);
+      caja.replaceChildren(copiarBtn(txt),
+        movil ? h('button', { class: 'guardar small', onclick: () => window.open('https://wa.me/34' + tel + '?text=' + encodeURIComponent(limpiar(txt)), '_blank') }, '💬 WhatsApp a ' + nom)
+              : h('button', { class: 'ghost small', onclick: () => { location.href = 'tel:' + tel; } }, '📞 Llamar a ' + nom + ' (fijo)'),
+        movil ? null : h('button', { class: 'ghost small', onclick: () => guiaWhatsApp(limpiar(txt)) }, '💬 WhatsApp (elegir chat)')); });
+    return caja;
+  };
   const burbuja = m => {
     const mio = m.rol !== 'harvey';
     const partes = !mio && !m.error ? trozos(m.texto) : null;
     let cuerpo;
-    if (partes) cuerpo = partes.map(p => p.msg ? h('div', { style: 'border:1px solid var(--verde);border-radius:10px;padding:8px 10px;margin:6px 0;background:rgba(27,127,59,.08)' }, h('div', { class: 'sub', style: 'font-weight:700;margin-bottom:4px' }, '✉️ Mensaje para enviar'), limpiar(p.msg), botones(p.msg)) : (p.nota.trim() ? h('div', { class: 'sub', style: 'white-space:pre-wrap' }, p.nota.trim()) : null));
-    else cuerpo = [m.texto, !mio && !m.error ? botones(paraEnviar(m.texto)) : null];
+    if (partes) cuerpo = partes.map(p => p.msg ? h('div', { style: 'border:1px solid var(--verde);border-radius:10px;padding:8px 10px;margin:6px 0;background:rgba(27,127,59,.08)' }, h('div', { class: 'sub', style: 'font-weight:700;margin-bottom:4px' }, '✉️ Mensaje para enviar'), limpiar(p.msg), botones(p.msg, p.para)) : (p.nota.trim() ? h('div', { class: 'sub', style: 'white-space:pre-wrap' }, p.nota.trim()) : null));
+    else cuerpo = [m.texto, !mio && !m.error ? h('div', { style: 'margin-top:6px' }, copiarBtn(paraEnviar(m.texto))) : null];
     return h('div', { class: 'msg' + (mio ? ' mio' : '') }, h('div', { class: 'burbuja', style: m.error ? 'border-color:#b91c1c;color:#b91c1c' : '' }, h('span', { class: 'quien2' }, mio ? 'Tú' : '🤵 Harvey'), ...cuerpo));
   };
   const pintarConv = () => {
