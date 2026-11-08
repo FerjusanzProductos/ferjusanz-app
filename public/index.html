@@ -1095,7 +1095,7 @@ async function cargarPedido(id) {
   if (navigator.onLine) {
     let [p, l, a, en] = await Promise.all([
       sb.from('pedidos').select('id,cliente_id,estado,fecha_entrega,notas,preparador_id,descuento_base,descuento_iva,descuento_motivo,clientes(codigo,nombre,nombre_comercial,forma_pago,direccion,localidad,recargo_equivalencia,sin_iva)').eq('id', id).single(),
-      sb.from('lineas_pedido').select('id,producto_id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,precio_lista,nota_interna,iva,version,notas,formato_peso_kg,peso_estimado,peso_variable,productos(codigo,nombre,iva,iva_origen)').eq('pedido_id', id),
+      sb.from('lineas_pedido').select('id,producto_id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,precio_lista,nota_interna,iva,version,notas,formato_peso_kg,peso_estimado,peso_variable,productos(codigo,nombre,nombre_albaran,iva,iva_origen)').eq('pedido_id', id),
       sb.from('albaranes').select('serie,numero,fecha,estado,firma_png,firma_nombre,firma_at').eq('pedido_id', id).maybeSingle(),
       sb.from('entregas').select('entregado_at,entregado_por').eq('pedido_id', id).maybeSingle()]);
     if (p.error && /descuento|column|schema cache/i.test(p.error.message || '')) p = await sb.from('pedidos').select('id,cliente_id,estado,fecha_entrega,notas,preparador_id,clientes(codigo,nombre,nombre_comercial,forma_pago,direccion,localidad,recargo_equivalencia)').eq('id', id).single();
@@ -2576,7 +2576,7 @@ function htmlAlbaran(d, formato, opt) {
     const tz = (d.traza || {})[l.id] || [];
     const tzTxt = tz.length ? '<div class="tz">Lote: ' + tz.map(t => esc([t.lote.codigo_lote || 'sin código', t.lote.origen ? 'Origen ' + t.lote.origen : null].filter(Boolean).join(' · ') + (tz.length > 1 ? ' (' + num(t.cant) + ')' : ''))).join(' &nbsp;|&nbsp; ') + '</div>' : '';
     const ev = vivo ? estadoLineaAlb(l) : null; const ico = ev ? (ev.tipo === 'fallo' ? '❌ ' : ev.tipo === 'falta' ? '🟡 ' : '✅ ') : ''; const mot = ev && ev.motivos.length ? '<div class="vr">' + esc(ev.motivos.join(' · ')) + '</div>' : '';
-    return '<tr' + (ev && ev.tipo !== 'ok' ? ' class="' + (ev.tipo === 'fallo' ? 'vx' : 'vf') + '"' : '') + '><td>' + ico + esc(l.productos ? l.productos.nombre : '') + mot + tzTxt + '</td>' +
+    return '<tr' + (ev && ev.tipo !== 'ok' ? ' class="' + (ev.tipo === 'fallo' ? 'vx' : 'vf') + '"' : '') + '><td>' + ico + '@@NOM:' + l.id + '@@' + mot + tzTxt + '</td>' +
       '<td class="d oc-ticket">' + esc(num(l.cantidad_pedida) + ' ' + l.unidad_pedida) + '</td>' +
       '<td class="d"><b>' + esc(l.peso_real != null ? num(l.peso_real) + ' ' + u : '—') + '</b></td>' +
       '<td class="d">' + esc(l.precio != null ? eur(l.precio) : '') + '</td>' +
@@ -2604,6 +2604,10 @@ function htmlAlbaran(d, formato, opt) {
     AMARILLA: { dest: 'CLIENTE', cls: 'amarilla', nota: 'SE ENTREGA AL CLIENTE SOLO SI NO PAGA AL MOMENTO (transferencia o a deber) y la firma' },
     ROSA: { dest: 'OFICINA', cls: 'rosa', nota: 'Para la oficina: esta copia siempre vuelve a la oficina' }
   };
+  /* Nombre del artículo: el cliente ve el «nombre para el albarán» (p. ej. «Patata esp. freír»); la copia ROSA (oficina) ve además el nombre interno y el código, para teclearlo bien en Golden */
+  const nomArt = (l, interno) => { const pr = l.productos || {}; const ext = pr.nombre_albaran || pr.nombre || '';
+    return interno && pr.nombre_albaran && pr.nombre_albaran !== pr.nombre ? esc(ext) + '<div class="tz">Interno: ' + esc(pr.nombre) + (pr.codigo ? ' · cód. ' + esc(pr.codigo) : '') + '</div>' : esc(ext); };
+  const filasPara = interno => filas.replace(/@@NOM:([^@]+)@@/g, (m, id) => { const l = lineas.find(x => String(x.id) === id); return l ? nomArt(l, interno) : ''; });
   const copia = tipo => {
     const c = COP[tipo]; let pie = '';
     const cobro = '<div class="pie">Cobrado: &#9744; Sí &nbsp; &#9744; No &nbsp;&nbsp; Forma de pago: ____________________</div>';
@@ -2618,7 +2622,7 @@ function htmlAlbaran(d, formato, opt) {
       '<div class="num">ALBARÁN<b>' + esc(num7) + '</b>Fecha: ' + esc(fechaES(a.fecha || p.fecha_entrega)) + '<br><span class="tipo">COPIA ' + tipo + ' · ' + c.dest + '</span><div class="tz">' + esc(c.nota) + '</div></div></div>' +
       '<div class="cli"><b>' + esc(nombreCli(cli)) + '</b>' + (cli.nombre_comercial && cli.nombre ? '<br>' + esc(cli.nombre) : '') +
       '<br>' + esc([cli.direccion, cli.localidad].filter(Boolean).join(' · ')) + (cli.nif ? '<br>NIF: ' + esc(cli.nif) : '') + '</div>' +
-      '<table><thead><tr><th>Artículo</th><th class="d oc-ticket">Pedido</th><th class="d">Cantidad</th><th class="d">Precio</th><th class="d">Importe</th></tr></thead><tbody>' + filas + '</tbody></table>' +
+      '<table><thead><tr><th>Artículo</th><th class="d oc-ticket">Pedido</th><th class="d">Cantidad</th><th class="d">Precio</th><th class="d">Importe</th></tr></thead><tbody>' + filasPara(tipo === 'ROSA') + '</tbody></table>' +
       (hayPrecio ? '<div class="tot">' + desgloseIva + '</div>' : '') +
       incBloque + '<div class="cond">' + (contado ? 'PAGO AL CONTADO' : 'PENDIENTE DE FACTURA') + '</div>' + pie + '</div>';
   };
