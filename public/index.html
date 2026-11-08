@@ -330,6 +330,11 @@ input,select,textarea{min-height:48px}
 .cal-d i.prev{background:#d97706}
 .card.previsto{border:2px dashed #d97706;background:#fffbeb}
 .card.previsto.roja{border-color:#dc2626;background:#fef2f2}
+/* clientes sin IVA en azul; con IVA en dorado */
+.cli-siniva{color:#1d4ed8 !important}
+.cli-coniva{color:#a16207 !important}
+.chip-iva{font-size:13px;padding:4px 10px;min-height:0;border-radius:999px;border:1px solid currentColor;background:#fef3c7 !important;background-image:none !important;box-shadow:none !important;font-weight:700;width:auto;margin:0}
+.chip-iva.cli-siniva{background:#dbeafe !important}
 .card:has(.badge.pend){border-left:6px solid var(--pend)}
 .card:has(.badge.prep){border-left:6px solid var(--prep)}
 .card:has(.badge.fin){border-left:6px solid var(--fin)}
@@ -764,6 +769,17 @@ async function decidirVarios(ids, alTerminar) {
   let ok = 0; for (const id of ids) { const r = await sb.rpc('confirmar_previsto', { p_pedido: id, p_hacer: true }); if (!r.error) ok++; }
   toast(ok + ' pedidos confirmados', 'ok'); if (alTerminar) alTerminar();
 }
+/* ===== Clientes sin IVA (azul) / con IVA (dorado) ===== */
+const claseIva = c => (c && c.sin_iva) ? 'cli-siniva' : 'cli-coniva';
+function chipIva(c, clienteId, alTerminar) {
+  const sin = !!(c && c.sin_iva);
+  return h('button', { class: 'chip-iva ' + claseIva(c), title: 'Tocar para cambiar', onclick: async e => { e.stopPropagation();
+    if (!clienteId) return; if (!navigator.onLine) { toast('Necesitas conexión.', 'err'); return; }
+    if (!await confirmar(sin ? '¿Pasar a ' + nombreCli(c) + ' a CON IVA (dorado)?' : '¿Marcar a ' + nombreCli(c) + ' como SIN IVA (azul)? A sus pedidos se les aplicará la línea de descuento.')) return;
+    const r = await sb.from('clientes').update({ sin_iva: !sin }).eq('id', clienteId); if (r.error) { toast(msgErr(r.error), 'err'); return; }
+    toast(!sin ? '🔵 Marcado como sin IVA' : '🟡 Marcado como con IVA', 'ok'); if (alTerminar) alTerminar(); } }, sin ? '🔵 Sin IVA' : '🟡 Con IVA');
+}
+const avisoSinIva = c => (c && c.sin_iva) ? h('div', { class: 'sub cli-siniva', style: 'font-weight:700;margin-top:4px' }, '🔵 Sin IVA: se aplica la línea de descuento') : null;
 let _prevGen = false;
 async function generarPrevistos() {   // una vez al día por móvil (además lo hace Supabase cada madrugada)
   if (_prevGen || !navigator.onLine || !state.user || LS.get('fj_prev_gen', '') === hoy()) return;
@@ -994,7 +1010,8 @@ async function cargarPedidos(fecha) {
   const key = 'fj_pedidos_' + fecha;
   if (navigator.onLine) {
     const q = cols => sb.from('pedidos').select(cols).eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true);
-    let { data, error } = await q('id,estado,fecha_entrega,notas,preparador_id,repartidor_id,orden_reparto,clientes(codigo,nombre,nombre_comercial,forma_pago),lineas_pedido(id,estado)');
+    let { data, error } = await q('id,cliente_id,estado,fecha_entrega,notas,preparador_id,repartidor_id,orden_reparto,clientes(codigo,nombre,nombre_comercial,forma_pago,sin_iva),lineas_pedido(id,estado)');
+    if (error && /sin_iva/i.test(error.message || '')) ({ data, error } = await q('id,cliente_id,estado,fecha_entrega,notas,preparador_id,repartidor_id,orden_reparto,clientes(codigo,nombre,nombre_comercial,forma_pago),lineas_pedido(id,estado)'));
     if (error && /repartidor_id|orden_reparto|does not exist|schema cache/i.test(error.message || '')) ({ data, error } = await q('id,estado,fecha_entrega,notas,preparador_id,clientes(codigo,nombre,nombre_comercial,forma_pago),lineas_pedido(id,estado)'));
     if (!error) { LS.set(key, data); return { datos: data, cache: false }; }
     if (!isNetErr(error)) throw error;
@@ -1048,7 +1065,7 @@ function pintarLista(cache) {
     if (p.estado === 'previsto') {
       const rep2 = repDe(p);
       kids.push(h('div', { class: 'card tap previsto' + (prevRojo(p) ? ' roja' : ''), onclick: () => go('pedido', { id: p.id }) },
-        h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, nombreCli(p.clientes)), h('div', { class: 'sub' }, ((p.clientes && p.clientes.codigo) || '') + (rep2 ? ' · 🚚 ' + rep2.nombre.split(' ')[0] : ''))),
+        h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre ' + claseIva(p.clientes) }, nombreCli(p.clientes)), h('div', { class: 'sub' }, ((p.clientes && p.clientes.codigo) || '') + (rep2 ? ' · 🚚 ' + rep2.nombre.split(' ')[0] : '')), h('div', { style: 'margin-top:4px' }, chipIva(p.clientes, p.cliente_id, actualizarLista)), avisoSinIva(p.clientes)),
           h('span', { class: 'badge ' + claseEst(p) }, textoEst(p))),
         p.notas ? h('div', { class: 'sub', style: 'margin-top:6px' }, '📝 ' + p.notas) : null,
         h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px' },
@@ -1060,7 +1077,7 @@ function pintarLista(cache) {
     const pct = ls.length ? Math.round(hechas * 100 / ls.length) : 0;
     kids.push(h('div', { class: 'card tap', onclick: () => go('pedido', { id: p.id }) },
       h('div', { class: 'fila' },
-        h('div', {}, h('div', { class: 'nombre' }, nombreCli(p.clientes)), h('div', { class: 'sub' }, (p.clientes && p.clientes.codigo) || ''),
+        h('div', {}, h('div', { class: 'nombre ' + claseIva(p.clientes) }, nombreCli(p.clientes)), h('div', { class: 'sub' }, (p.clientes && p.clientes.codigo) || ''), h('div', { style: 'margin:3px 0' }, chipIva(p.clientes, p.cliente_id, actualizarLista)), avisoSinIva(p.clientes),
           (hayReparto || reps.length) ? (repDe(p) ? h('div', { class: 'sub', style: 'font-weight:700;color:#14532d' }, h('span', { style: 'display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;background:' + (repDe(p).color_reparto || '#2f7d4a') }), '🚚 Reparte ' + repDe(p).nombre.split(' ')[0] + (p.orden_reparto ? ' · nº ' + p.orden_reparto : '')) : h('div', { class: 'sub', style: 'color:#b45309' }, '🚚 Sin repartidor')) : null),
         h('div', { style: 'text-align:right' },
           h('span', { class: 'badge ' + claseEst(p) }, textoEst(p)), ' ',
@@ -1076,7 +1093,7 @@ async function cargarPedido(id) {
   const key = 'fj_pedido_' + id;
   if (navigator.onLine) {
     let [p, l, a, en] = await Promise.all([
-      sb.from('pedidos').select('id,cliente_id,estado,fecha_entrega,notas,preparador_id,descuento_base,descuento_iva,descuento_motivo,clientes(codigo,nombre,nombre_comercial,forma_pago,direccion,localidad,recargo_equivalencia)').eq('id', id).single(),
+      sb.from('pedidos').select('id,cliente_id,estado,fecha_entrega,notas,preparador_id,descuento_base,descuento_iva,descuento_motivo,clientes(codigo,nombre,nombre_comercial,forma_pago,direccion,localidad,recargo_equivalencia,sin_iva)').eq('id', id).single(),
       sb.from('lineas_pedido').select('id,producto_id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,precio_lista,nota_interna,iva,version,notas,formato_peso_kg,peso_estimado,peso_variable,productos(codigo,nombre,iva,iva_origen)').eq('pedido_id', id),
       sb.from('albaranes').select('serie,numero,fecha,estado,firma_png,firma_nombre,firma_at').eq('pedido_id', id).maybeSingle(),
       sb.from('entregas').select('entregado_at,entregado_por').eq('pedido_id', id).maybeSingle()]);
@@ -1127,14 +1144,16 @@ function pintarPedido() {
   const editable = !cerrado || esOficina();
   const kids = [];
   kids.push(h('div', { class: 'card' },
-    h('div', { class: 'fila' }, h('div', { class: 'nombre' }, nombreCli(cli)),
+    h('div', { class: 'fila' }, h('div', { class: 'nombre ' + claseIva(cli) }, nombreCli(cli)),
       h('span', { class: 'badge ' + claseEst(d.pedido) }, textoEst(d.pedido))),
+    h('div', { style: 'margin:4px 0' }, chipIva(cli, d.pedido.cliente_id, () => actualizarPedido())), avisoSinIva(cli),
     h('div', { class: 'sub' }, (cli.codigo || '') + ' · ' + fechaES(d.pedido.fecha_entrega) + ' · ' + (cli.forma_pago === 'contado' ? 'Pago al contado' : 'Crédito')),
     d.pedido.notas ? h('div', { style: 'margin-top:6px' }, '📝 ' + d.pedido.notas) : null,
     h('div', { class: 'sub', style: 'margin-top:6px' }, hechas + ' de ' + ls.length + ' líneas preparadas')));
   if (estado === 'previsto') kids.push(h('div', { class: 'card previsto' + (prevRojo(d.pedido) ? ' roja' : '') },
     h('b', {}, prevRojo(d.pedido) ? '⚠️ Pedido previsto SIN CONFIRMAR' : '📅 Pedido previsto (pedido fijo)'),
     h('div', { class: 'sub', style: 'margin-top:4px' }, 'Sale solo de los pedidos fijos del cliente. Casi siempre se hace, pero hay que confirmarlo el día antes. Antes de confirmar puedes añadir o cambiar productos (➕ Añadir).'),
+    h('div', { class: 'sub', style: 'margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap' }, '¿Con o sin IVA? ', chipIva(cli, d.pedido.cliente_id, () => actualizarPedido())),
     h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px' },
       h('button', { class: 'guardar', style: 'min-height:52px', onclick: () => decidirPrevisto(d.pedido.id, true, () => actualizarPedido()) }, '✅ Confirmar'),
       h('button', { class: 'peligro', style: 'min-height:52px', onclick: () => decidirPrevisto(d.pedido.id, false, () => go('lista')) }, '❌ No se hace'))));
@@ -6214,7 +6233,7 @@ function vistaCalendario() {
     datos = LS.get('fj_cal_' + mes, []); pintar();
     try {
       await generarPrevistos();
-      const r = await sb.from('pedidos').select('id,estado,fecha_entrega,clientes(codigo,nombre,nombre_comercial),entregas(entregado_at)').gte('fecha_entrega', mes + '-01').lt('fecha_entrega', mover(mes, 1) + '-01').neq('estado', 'anulado').neq('archivado', true).range(0, 4999);
+      const r = await sb.from('pedidos').select('id,cliente_id,estado,fecha_entrega,clientes(codigo,nombre,nombre_comercial,sin_iva),entregas(entregado_at)').gte('fecha_entrega', mes + '-01').lt('fecha_entrega', mover(mes, 1) + '-01').neq('estado', 'anulado').neq('archivado', true).range(0, 4999);
       if (r.error) throw r.error; datos = r.data; LS.set('fj_cal_' + mes, datos);
     } catch (e) { if (!isNetErr(e)) toast(msgErr(e), 'err'); }
     pintar();
@@ -6241,7 +6260,7 @@ function vistaCalendario() {
       h('button', { class: 'guardar', style: 'width:100%;margin-top:8px', onclick: () => decidirVarios(pvDia.map(p => p.id), cargar) }, '✅ Confirmar todos los de este día (' + pvDia.length + ')')));
     { const dow = new Date(sel + 'T12:00:00').getDay(); const sl = (siLlama || []).filter(x => (x.dias_semana || []).includes(dow)); if (sl.length) kids.push(h('div', { class: 'aviso-card' }, '📞 Si llama (no se crea solo): ' + sl.map(x => nombreCli(uno(x.clientes))).join(', '))); }
     dia.forEach(p => { const e = uno(p.entregas); kids.push(h('div', { class: 'card tap fila' + (p.estado === 'previsto' ? ' previsto' + (prevRojo(p) ? ' roja' : '') : ''), onclick: () => go('pedido', { id: p.id }) },
-      h('div', {}, h('div', { class: 'nombre' }, nombreCli(uno(p.clientes))), e ? h('div', { class: 'sub' }, '✔ Entregado a las ' + fmtHora(e.entregado_at)) : null),
+      h('div', {}, h('div', { class: 'nombre ' + claseIva(uno(p.clientes)) }, nombreCli(uno(p.clientes))), e ? h('div', { class: 'sub' }, '✔ Entregado a las ' + fmtHora(e.entregado_at)) : null),
       h('span', { class: 'badge ' + claseEst(p) }, textoEst(p)))); });
     if (!dia.length) kids.push(h('p', { class: 'vacio' }, 'No hay pedidos este día.'));
     const bs = [h('button', { class: 'ghost', style: 'flex:1', onclick: () => { state.fecha = sel; go('lista'); } }, 'Abrir en Preparar'), h('button', { class: 'ghost', style: 'flex:1', onclick: () => go('pedidos', { desde: mes + '-01', hasta: mover(mes, 1) + '-01' }) }, 'Ver como lista')];
