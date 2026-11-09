@@ -8966,7 +8966,7 @@ async function comDatosPdf(lista, soloRecs) {
   let items = [];
   let omitidos = 0;
   if (!soloRecs) {
-    const r = await sb.from('listas_precios_items').select('*').eq('lista_id', lista.id).order('orden').order('nombre'); if (r.error) throw r.error; const filas = r.data || [];
+    const r = await sb.from('listas_precios_items').select('*').eq('lista_id', lista.id).order('nombre'); if (r.error) throw r.error; const filas = (r.data || []).sort((x, y) => String(x.nombre || '').localeCompare(String(y.nombre || ''), 'es', { sensitivity: 'base' }));
     const bajos = filas.filter(x => x.precio != null && x.coste != null && Number(x.precio) < Number(x.coste) - 0.0004);
     if (bajos.length && !await confirmar('Hay ' + bajos.length + ' producto(s) por debajo de la compra (' + bajos.slice(0, 3).map(x => x.nombre).join(', ') + (bajos.length > 3 ? '…' : '') + '). ¿Es a propósito (regalo u oferta)? Si sigues, salen con el precio que tienen.')) throw new Error('Cancelado: revisa los precios en rojo.');
     omitidos = filas.filter(x => x.precio == null).length;
@@ -9012,7 +9012,7 @@ async function abrirLista(id, alGuardar) {
   if (id) {
     const [a, b] = await Promise.all([sb.from('listas_precios').select('*').eq('id', id).single(), sb.from('listas_precios_items').select('*').eq('lista_id', id).order('orden').order('nombre')]);
     if (a.error || b.error) { toast(msgErr(a.error || b.error), 'err'); return; }
-    l = a.data; items = (b.data || []).map(x => Object.assign({}, x)); items.forEach(x => orig.push(x.id));
+    l = a.data; items = (b.data || []).map(x => Object.assign({}, x)).sort((x, y) => String(x.nombre || '').localeCompare(String(y.nombre || ''), 'es', { sensitivity: 'base' })); items.forEach(x => orig.push(x.id));
   }
   const nombre = comInput('text', l.nombre), tipo = comSelect(COM_TIPOS, l.tipo), titulo = comInput('text', l.titulo), sub = comInput('text', l.subtitulo);
   const presentacion = h('textarea', { rows: 5, style: 'width:100%' }); presentacion.value = id ? (l.presentacion || '') : (l.presentacion || COM_INTRO);
@@ -9046,7 +9046,7 @@ async function abrirLista(id, alGuardar) {
   const anadir = async p => {
     if (items.some(x => x.producto_id === p.id)) { toast('Ya está en la lista.', 'err'); return; }
     const cs = await costesCompra([p.id]).catch(() => ({})); const c = cs[p.id]; const u = p.unidad_precio === 'unidad' ? 'unidad' : 'kg';
-    items.push({ producto_id: p.id, nombre: p.nombre, precio: null, coste: c && c.precio > 0 && (!c.unidad || c.unidad === u) ? c.precio : null, unidad: u }); pintar();
+    items.push({ producto_id: p.id, nombre: p.nombre, precio: null, coste: c && c.precio > 0 && (!c.unidad || c.unidad === u) ? c.precio : null, unidad: u }); items.sort((x, y) => String(x.nombre || '').localeCompare(String(y.nombre || ''), 'es', { sensitivity: 'base' })); pintar(); toast('Añadido «' + p.nombre + '» (por orden alfabético)', 'ok');
   };
   const libre = comInput('text', '', { placeholder: 'Producto que no está en la app (escríbelo)' });
   const anadirLibre = () => { const t = libre.value.trim(); if (!t) { toast('Escribe el nombre del producto.', 'err'); return; } items.push({ producto_id: null, nombre: t, precio: null, coste: null, unidad: 'kg' }); libre.value = ''; pintar(); };
@@ -9663,12 +9663,13 @@ async function h2Tarifas(el) {
     const ck = h('input', { type: 'checkbox', checked: marcados.has(k), disabled: sinPrecio && ajustes[k] == null, onchange: e => { e.target.checked ? marcados.add(k) : marcados.delete(k); pintarBoton(); } });
     const gana = h('td', { style: 'padding:4px;text-align:right;white-space:nowrap' });
     const pintaGana = () => { const p = precioDe(i); if (p == null || i.coste == null) { gana.replaceChildren(h('span', { class: 'sub' }, '—')); return; } const g = p - Number(i.coste);
-      gana.replaceChildren(h('b', { style: 'color:' + (g < 0 ? '#b91c1c' : 'var(--verde)') }, (g >= 0 ? '+' : '') + eur(g)), h('div', { class: 'sub' }, '€/kg'), h('div', { class: 'sub' }, p ? Math.round(g / p * 100) + ' %' : '')); };
+      const ud = i.unidad || 'kg'; const otraUd = i.coste_unidad && String(i.coste_unidad).toLowerCase() !== String(ud).toLowerCase();
+      gana.replaceChildren(...[h('b', { style: 'color:' + (g < 0 ? '#b91c1c' : 'var(--verde)') }, (g >= 0 ? '+' : '') + eur(g)), h('div', { class: 'sub' }, '€/' + ud), h('div', { class: 'sub' }, p ? Math.round(g / p * 100) + ' %' : ''), otraUd ? h('div', { class: 'sub', style: 'color:#b36b00' }, '⚠ compra por ' + i.coste_unidad) : null].filter(Boolean)); };
     const inp = h('input', { type: 'number', step: '0.01', min: '0', inputmode: 'decimal', value: precioDe(i) != null ? Number(precioDe(i)).toFixed(2) : '', placeholder: 'precio', style: 'width:72px;text-align:right;font-weight:700;padding:4px' });
-    const marca = h('div', { class: 'sub' });
+    const marca = h('div', { class: 'sub' }, '€/' + (i.unidad || 'kg'));
     const fijar = p => { if (p == null || isNaN(p) || p <= 0) { delete ajustes[k]; } else { p = Math.round(p * 100) / 100; if (i.nuevo != null && Math.abs(p - i.nuevo) < 0.001) delete ajustes[k]; else ajustes[k] = p; }
       if (ajustes[k] != null || i.nuevo != null) { ck.disabled = false; if (ajustes[k] != null) { ck.checked = true; marcados.add(k); } } else { ck.checked = false; ck.disabled = true; marcados.delete(k); }
-      marca.textContent = ajustes[k] != null ? '✋ a mano' : ''; pintaGana(); pintarBoton(); };
+      marca.textContent = '€/' + (i.unidad || 'kg') + (ajustes[k] != null ? ' · ✋ a mano' : ''); pintaGana(); pintarBoton(); };
     inp.addEventListener('change', () => fijar(parseFloat(String(inp.value).replace(',', '.'))));
     const mueve = dlt => { const base = precioDe(i) != null ? precioDe(i) : (i.coste != null ? Number(i.coste) + mActual : 0); const p = Math.max(0.05, Math.round((base + dlt) * 100) / 100); inp.value = p.toFixed(2); fijar(p); };
     const bt = (t, dlt) => h('button', { class: 'ghost', style: 'min-height:30px;min-width:40px;padding:0 6px;margin:0;font-size:13px;line-height:1', onclick: () => mueve(dlt) }, t);
@@ -9676,7 +9677,7 @@ async function h2Tarifas(el) {
     const tr = h('tr', { 'data-n': sinTilde(String(i.nombre || '').toLowerCase()), style: 'border-top:1px solid var(--borde)' + (sinPrecio ? ';opacity:.7' : '') + (i.aviso ? ';background:#fff3d6;color:#5b3a00' : '') },
       h('td', { style: 'padding:4px' }, ck),
       h('td', { style: 'padding:4px' }, h('b', {}, i.nombre), i.nuevo_producto ? h('span', { class: 'sub' }, ' ⭐') : null,
-        h('div', { class: 'sub' }, i.coste != null ? 'compra ' + eu(i.coste) + ' €' + (i.coste_fecha ? ' (' + fechaES(String(i.coste_fecha).slice(0, 10)).slice(0, 5) + ')' : '') + (i.proveedor ? ' · ' + String(i.proveedor).replace(/\s+(S\.?L\.?|S\.?A\.?).*$/i, '') : '') : ''),
+        h('div', { class: 'sub' }, i.coste != null ? 'compra ' + eu(i.coste) + ' €' + (i.coste_unidad ? '/' + i.coste_unidad : '') + (i.coste_fecha ? ' (' + fechaES(String(i.coste_fecha).slice(0, 10)).slice(0, 5) + ')' : '') + (i.proveedor ? ' · ' + String(i.proveedor).replace(/\s+(S\.?L\.?|S\.?A\.?).*$/i, '') : '') : ''),
         i.venta_media != null ? h('div', { class: 'sub', style: precioDe(i) != null && precioDe(i) < i.venta_media * 0.85 ? 'color:#b36b00' : '' }, 'vendéis a ' + eu(i.venta_media) + ' €') : null,
         i.antes != null ? h('div', { class: 'sub' }, 'ahora en la lista: ' + eu(i.antes) + ' €') : null,
         i.duda && sinPrecio ? h('div', { class: 'sub' }, i.duda + ' · escribe el precio a mano') : null, i.aviso ? h('div', { class: 'sub', style: 'color:#b36b00' }, '⚠️ ' + i.aviso) : null,
@@ -9684,26 +9685,30 @@ async function h2Tarifas(el) {
       h('td', { style: 'padding:4px;text-align:right;white-space:nowrap' }, h('div', { style: 'display:flex;flex-direction:column;align-items:flex-end;gap:2px' }, bt('▲', 0.05), inp, bt('▼', -0.05)), marca),
       gana);
     return tr; };
-  const tabla = h('table', { style: 'width:100%;font-size:13px;border-collapse:collapse;margin-top:6px' }, h('tr', { class: 'sub' }, h('th', {}), h('th', { style: 'text-align:left' }, 'Producto'), h('th', { style: 'text-align:right' }, 'Precio €'), h('th', { style: 'text-align:right' }, 'Ganas')), ...items.map(fila));
+  const tabla = h('table', { style: 'width:100%;font-size:13px;border-collapse:collapse;margin-top:6px' }, h('tr', { class: 'sub' }, h('th', {}), h('th', { style: 'text-align:left' }, 'Producto'), h('th', { style: 'text-align:right' }, 'Precio €'), h('th', { style: 'text-align:right' }, 'Ganas')), ...items.slice().sort((a, b) => String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es', { sensitivity: 'base' })).map(fila));
   const buscar = comInput('text', '', { placeholder: '🔎 Buscar producto en la lista…' });
   buscar.addEventListener('input', () => { const t = sinTilde(buscar.value.trim().toLowerCase()); tabla.querySelectorAll('tr[data-n]').forEach(tr => { tr.style.display = !t || tr.dataset.n.includes(t) ? '' : 'none'; }); });
-  const bAplicar = h('button', { class: 'guardar', style: 'flex:1;min-height:52px' }); const pintarBoton = () => { bAplicar.textContent = '✅ Aplicar ' + marcados.size + ' precio(s)'; bAplicar.disabled = !marcados.size; };
+  const bAplicar = h('button', { class: 'guardar', style: 'flex:1.4;min-height:52px' }); const bAplicar2 = h('button', { class: 'guardar', style: 'flex:1.4;min-height:48px' });
+  const pintarBoton = () => [bAplicar, bAplicar2].forEach(b => { b.textContent = '💾 Guardar ' + marcados.size + ' precio(s)'; b.disabled = !marcados.size; });
+  bAplicar2.onclick = () => bAplicar.onclick();
   bAplicar.onclick = async () => { if (!await confirmar('¿Guardar ' + marcados.size + ' precio(s) en la lista «' + L.nombre + '»? Se podrá deshacer.')) return; bAplicar.disabled = true;
     try { const precios = {}; [...marcados].forEach(x => { if (ajustes[x] != null) precios[x] = ajustes[x]; }); const r = await h2('tarifa_aplicar', { id: bo.id, elegidos: [...marcados], precios }); toast(r.cambios + ' precio(s) guardados en la lista', 'ok'); h2Tarifas(el); } catch (e) { toast(e.message, 'err'); bAplicar.disabled = false; } };
   pintarBoton();
   const lista = async () => { const r = await sb.from('listas_precios').select('*').eq('id', L.lista_id).single(); if (r.error) throw r.error; return r.data; };
-  const textoWa = async () => { const l = await lista(); const r = await sb.from('listas_precios_items').select('nombre,precio,unidad,orden').eq('lista_id', L.lista_id).not('precio', 'is', null).order('orden', { nullsFirst: false }).order('nombre'); if (r.error) throw r.error;
+  const textoWa = async () => { const l = await lista(); const r = await sb.from('listas_precios_items').select('nombre,precio,unidad,orden').eq('lista_id', L.lista_id).not('precio', 'is', null).order('nombre'); if (r.error) throw r.error; (r.data || []).sort((x, y) => String(x.nombre || '').localeCompare(String(y.nombre || ''), 'es', { sensitivity: 'base' }));
     return '*' + (l.titulo || l.nombre) + '*\n' + (l.subtitulo ? l.subtitulo + '\n' : '') + '\n' + (r.data || []).map(x => '• ' + x.nombre + ': ' + eur(x.precio) + ' €/' + (x.unidad || 'kg')).join('\n') + (l.pie ? '\n\n' + l.pie : '') + '\n\nFERJUSANZ · Mercamadrid · 609 100 690 · 616 439 157 · 609 567 354'; };
   const enviarWa = async () => { try { const t = await textoWa(); if (navigator.share) { try { await navigator.share({ text: t }); return; } catch (e) { if (e && e.name === 'AbortError') return; } } window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank'); } catch (e) { toast(e.message || String(e), 'err'); } };
   caja.append(
-    h('div', { class: 'nombre' }, L.etiqueta), h('div', { class: 'sub' }, 'Precio de compra + margen por kg. ' + (bo ? 'Borrador del ' + fechaES(String(bo.created_at).slice(0, 10)) + '. ' : '') + 'La lista no cambia hasta que pulsas «Aplicar».'),
+    h('div', { class: 'nombre' }, L.etiqueta), h('div', { class: 'sub' }, 'Precio de compra + margen (por kg; lo que va por caja, bandeja o pieza se pone a mano). ' + (bo ? 'Borrador del ' + fechaES(String(bo.created_at).slice(0, 10)) + '. ' : '') + 'La lista no cambia hasta que pulsas «Aplicar».'),
     h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;align-items:center' }, h('span', { class: 'sub' }, 'Margen:'), ...margenes.map(m => h('button', { class: 'chip' + (Math.abs(m - mActual) < 0.001 ? ' on' : ''), style: 'width:auto;flex:0 0 auto;min-width:64px', onclick: () => recalcular(m) }, '+' + eur(m))), h('button', { class: 'ghost small', style: 'width:auto;flex:0 0 auto', onclick: () => recalcular(mActual) }, '🔄 Recalcular')),
+    bo ? h('div', { style: 'display:flex;gap:6px;margin:4px 0 8px' }, bAplicar2, h('button', { class: 'ghost', style: 'flex:1;min-height:48px', onclick: () => h2TarifaProductos(L, () => recalcular(mActual)) }, '➕ Añadir producto')) : null,
     h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap' }, h('button', { class: 'small', onclick: () => h2TarifaProductos(L, () => recalcular(mActual)) }, '➕ Añadir productos'),
       h('button', { class: 'ghost small', onclick: async () => { try { comPdf(await lista(), false, 'enviar'); } catch (e) { toast(e.message, 'err'); } } }, '📄 Enviar PDF'),
       h('button', { class: 'ghost small', onclick: enviarWa }, '💬 Enviar por WhatsApp')),
     h('div', { class: 'sub', style: 'margin-top:4px' }, 'Enviar manda la lista tal como está GUARDADA (después de «Aplicar»), sin costes ni ganancias.'),
     bo ? h('div', {}, buscar, h('div', { style: 'overflow-x:auto' }, tabla)) : h('p', { class: 'vacio' }, 'No hay borrador. Pulsa «🔄 Recalcular».'),
-    bo ? h('div', { style: 'display:flex;gap:6px;margin-top:8px;position:sticky;bottom:64px;background:var(--fondo,#fff);padding:6px 0' }, bAplicar, h('button', { class: 'ghost', onclick: async () => { if (!await confirmar('¿Descartar este borrador?')) return; try { await h2('tarifa_descartar', { id: bo.id }); h2Tarifas(el); } catch (e) { toast(e.message, 'err'); } } }, 'Descartar')) : null,
+    bo ? h('button', { class: 'ghost small', style: 'margin-top:8px', onclick: async () => { if (!await confirmar('¿Descartar este borrador?')) return; try { await h2('tarifa_descartar', { id: bo.id }); h2Tarifas(el); } catch (e) { toast(e.message, 'err'); } } }, '🗑️ Descartar este borrador') : null,
+    bo ? h('div', { style: 'display:flex;gap:6px;margin-top:8px;position:sticky;bottom:64px;background:var(--card,var(--fondo,#fff));border-top:1px solid var(--borde,#e5e7eb);padding:6px 0;z-index:5' }, h('button', { class: 'ghost', style: 'flex:1;min-height:52px', onclick: () => h2TarifaProductos(L, () => recalcular(mActual)) }, '➕ Añadir producto'), bAplicar) : null,
     L.ultimo_aplicado ? h('button', { class: 'ghost small', style: 'margin-top:8px', onclick: async () => { if (!await confirmar('¿Devolver la lista a como estaba antes de la última actualización (' + fechaES(String(L.ultimo_aplicado.resuelto_en).slice(0, 10)) + ')?')) return; try { await h2('tarifa_deshacer', { id: L.ultimo_aplicado.id }); toast('Lista devuelta a como estaba', 'ok'); h2Tarifas(el); } catch (e) { toast(e.message, 'err'); } } }, '↩️ Deshacer la última actualización') : null);
   el.replaceChildren(h('p', { class: 'sub' }, 'Solo listas de CLIENTES NUEVOS. Cada mañana se prepara un borrador con el último precio de compra + margen (patata pelada: El Parleño). Ajusta con ▲ ▼ o escribe el precio, y pulsa «Aplicar».'), chips, caja);
 }
