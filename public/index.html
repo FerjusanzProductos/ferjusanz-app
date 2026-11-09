@@ -9635,9 +9635,9 @@ async function h2Hoy(el) {
         it.prospecto_id || it.motivo === 'sin_pedir' ? h('button', { class: 'ghost small', onclick: e => h2ListaPara(it, e.currentTarget) }, '📄 Lista de precios') : null),
       caja); };
   const porHora = a => a.slice().sort((x, y) => (x.hora || '99') < (y.hora || '99') ? -1 : (x.hora || '99') > (y.hora || '99') ? 1 : 0);
-  const grupo = (titulo, items, ayuda) => items.length ? [h('h3', {}, titulo + ' (' + items.length + ')'), ayuda ? h('p', { class: 'sub', style: 'margin-top:-6px' }, ayuda) : null, ...porHora(items).map(tarjeta)] : [];
+  const grupo = (titulo, items, ayuda) => items.length ? [h('h3', {}, titulo + ' (' + items.length + ')'), ayuda ? h('p', { class: 'sub', style: 'margin-top:-6px' }, ayuda) : null, ...porHora(items).map(tarjeta)].filter(Boolean) : [];
   const cl = d.clientes || [];
-  el.replaceChildren(
+  el.replaceChildren(...[
     comCampo('Pedidos para el día', selF),
     h('p', { class: 'sub' }, 'Historial de ventas hasta el ' + fechaES(d.historial_hasta) + '. No salen los clientes que ya tienen pedido para ese día, ni los que han pedido no recibir mensajes.' + (d.excluidos_por_preferencias ? ' (' + d.excluidos_por_preferencias + ' excluido(s) por sus preferencias.)' : '')),
     ...grupo('📅 Suelen pedir este día', cl.filter(x => x.motivo === 'suele_pedir' || x.motivo === 'habitual')),
@@ -9646,7 +9646,7 @@ async function h2Hoy(el) {
     ...grupo('🔻 Han dejado de pedir un producto', d.productos_dejados || [], 'Siguen comprando, pero ya no este producto. Harvey prepara una oferta de ese producto (compra + 0,25 €).'),
     ...grupo('🎯 Leads para contactar hoy', d.leads || []),
     (d.sin_movil || []).length ? h('div', { class: 'card tap', style: 'border-left:4px solid #b36b00', onclick: () => { LS.set('fj_h2_sub', 'moviles'); tabHarvey(el.parentNode); } }, h('b', {}, '📱 Harvey te pide ' + d.sin_movil.length + ' móviles de clientes'), h('div', { class: 'sub' }, 'Clientes del último año sin móvil apuntado. Sin móvil no se les puede escribir por WhatsApp. Toca para completarlos.')) : null,
-    !cl.length && !(d.leads || []).length ? h('p', { class: 'vacio' }, 'Nadie pendiente para ese día. 👌') : null);
+    !cl.length && !(d.leads || []).length && !(d.con_pedido || []).length ? h('p', { class: 'vacio' }, 'Nadie pendiente para ese día. 👌') : null].filter(Boolean));
 }
 
 /* --- 🎬 Presentación personalizada y 📄 lista de precios para un lead o cliente --- */
