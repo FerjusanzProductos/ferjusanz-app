@@ -75,30 +75,18 @@ async function recomendacionesVigentes(fecha: string) {
     order by r.orden nulls last limit 8`;
 }
 
-/** Último precio de COMPRA (máx. 30 días) de cada producto: precio del día, facturas de proveedor y lotes. */
-async function costesCompra(productoIds: string[]) {
-  if (!productoIds.length) return new Map<string, any>();
-  const filas = await sql`
-    select distinct on (producto_id) producto_id, precio::float as precio, fecha, fuente, unidad from (
-      select producto_id, precio, fecha, 'precio de compra del día' as fuente, unidad from public.precios_compra_dia
-      union all select producto_id, precio, fecha, 'factura de proveedor', unidad from public.tarifas_compra
-      union all select producto_id, precio, fecha, 'factura leída', unidad from public.lineas_factura_leida where not coalesce(dudoso, false)
-      union all select producto_id, precio_compra, created_at::date, 'lote', unidad from public.lotes where precio_compra is not null
-    ) x where producto_id = any(${productoIds}) and precio > 0 and fecha > current_date - 30
-    order by producto_id, fecha desc`;
-  return new Map((filas as any[]).map(f => [f.producto_id as string, f]));
-}
 const MARGEN_OFERTA = 0.25;
 /** Ofertas para recuperar un cliente: coste de compra + 0,25 €. Se descarta si la unidad no cuadra o el precio sale raro frente a lo que pagaba. */
 async function ofertasRecuperar(prods: any[]) {
-  const costes = await costesCompra(prods.map(p => p.id)); const out: any[] = []; const dudas: string[] = [];
+  const out: any[] = []; const dudas: string[] = [];
   for (const p of prods) {
-    const c = costes.get(p.id); if (!c) { dudas.push(`${p.nombre}: no hay precio de compra de los últimos 30 días`); continue; }
+    const [c0] = await sql`select precio::float as precio, fecha, fuente, unidad, proveedor, aviso from harvey.coste_compra(${p.id})`; const c: any = c0;
+    if (!c) { dudas.push(`${p.nombre}: no hay precio de compra de los últimos 30 días${/patat.*pelad/i.test(p.nombre) ? " de El Parleño" : ""}`); continue; }
     const ud = String(c.unidad || "").toLowerCase().trim(); const udP = String(p.unidad_precio || "kg").toLowerCase().trim();
     if (ud && ud !== udP && !(udP === "kg" && /^(kg|kilo|kilos|k)$/.test(ud))) { dudas.push(`${p.nombre}: el precio de compra va por ${ud} y la venta por ${udP}`); continue; }
     const oferta = Math.round((c.precio + MARGEN_OFERTA) * 100) / 100; const antes = p.precio_medio ? Number(p.precio_medio) : null;
     if (antes && (oferta > antes * 1.6 || oferta < antes * 0.5)) { dudas.push(`${p.nombre}: la oferta (${oferta.toFixed(2)} €) sale muy distinta de lo que pagaba (${antes.toFixed(2)} €); revísalo`); continue; }
-    out.push({ producto: p.nombre, codigo: p.codigo, unidad: udP, coste: c.precio, coste_fecha: c.fecha, coste_fuente: c.fuente, oferta, precio_antes: antes });
+    out.push({ producto: p.nombre, codigo: p.codigo, unidad: udP, coste: c.precio, coste_fecha: c.fecha, coste_fuente: c.fuente + (c.proveedor ? " de " + c.proveedor : ""), aviso: c.aviso || null, oferta, precio_antes: antes });
   }
   return { ofertas: out, dudas };
 }
@@ -214,6 +202,8 @@ async function mensaje(u: { id: string; nombre: string }, b: any) {
   const fecha = fechaValida(b.fecha) || sumaDias(hoyMadrid(), 1); let datos = ""; let clienteId: string | null = null;
   let ofertas: any[] = []; let dudasOferta: string[] = [];
   const recs = await recomendacionesVigentes(fecha);
+  const notas = await sql`select texto from harvey.notas where activa order by id`;
+  const txtNotas = (notas as any[]).map(n => "- " + n.texto).join("\n");
   const txtRecs = (recs as any[]).map(r => `- ${r.titulo}${r.producto ? " (" + r.producto + ")" : ""}${r.texto ? " · " + r.texto : ""}`).join("\n");
   if (b.cliente_id) {
     clienteId = String(b.cliente_id);
@@ -247,7 +237,7 @@ RECOMENDACIONES VIGENTES:
 ${txtRecs || "(ninguna)"}
 OBJETIVO: primer contacto o seguimiento para presentarnos y ofrecer enviar la tarifa.`;
   } else return json({ error: "Falta el cliente" }, 400);
-  const texto = await llamarIA(SISTEMA_MSG, `${datos}\n\nQUIEN ESCRIBE: ${u.nombre || "(nombre de la persona de la oficina)"}\nPrepara el mensaje.`, 900);
+  const texto = await llamarIA(SISTEMA_MSG, `${datos}\n\nNOTAS INTERNAS DE LA EMPRESA (para que decidas bien; NO las cuentes al cliente):\n${txtNotas || "(ninguna)"}\n\nQUIEN ESCRIBE: ${u.nombre || "(nombre de la persona de la oficina)"}\nPrepara el mensaje.`, 900);
   await registrar(u.id, "mensaje_preparado", clienteId, { prospecto_id: b.prospecto_id || null, motivo: b.motivo || null, fecha, ofertas: ofertas.map(o => ({ producto: o.producto, oferta: o.oferta, coste: o.coste })), con_precios: !!b.con_precios });
   return json({ texto, ofertas, dudas_oferta: dudasOferta });
 }
@@ -368,6 +358,8 @@ const ACCIONES: Record<string, string> = {
   mensaje_preparado: "✍️ Preparó un mensaje", contacto_apuntado: "✔ Contacto apuntado", contacto_duplicado_evitado: "🛑 Evitó un mensaje repetido",
   borrador_creado: "📥 Interpretó un pedido", borrador_pasado: "➡️ Borrador pasado a pedido", borrador_descartado: "🗑️ Borrador descartado",
   borrador_pendiente: "↩️ Borrador reabierto", preferencias_guardadas: "⚙️ Preferencias cambiadas",
+  precio_solicitado: "📲 Pidió aprobación de un precio", precio_aprobado: "✅ Precio aprobado", tarifa_recalculada: "🔄 Tarifa recalculada",
+  tarifa_aplicada: "💶 Tarifa nueva aplicada", tarifa_deshecha: "↩️ Tarifa deshecha", tarifa_descartada: "🗑️ Borrador de tarifa descartado",
 };
 async function actividad(b: any) {
   const dias = Math.min(60, Math.max(1, Number(b.dias) || 7));
@@ -384,6 +376,61 @@ async function actividad(b: any) {
       count(*) filter (where accion = 'contacto_duplicado_evitado')::int as repetidos_evitados
     from harvey.registro where created_at > now() - make_interval(days => ${dias})`;
   return json({ dias, resumen: resumen[0], acciones: (filas as any[]).map(f => ({ ...f, texto: ACCIONES[f.accion] || f.accion })) });
+}
+/* ---------- 4. Tarifas para clientes nuevos (borradores que se confirman a mano) ---------- */
+async function tarifas() {
+  const listas = await sql`select a.lista_id, a.etiqueta, a.margen::float, a.margen_min::float, a.margen_max::float, l.nombre, l.updated_at,
+      (select row_to_json(b) from (select id, created_at, margen::float, estado, automatico, items from harvey.listas_borrador b where b.lista_id = a.lista_id and b.estado = 'pendiente' order by created_at desc limit 1) b) as borrador,
+      (select row_to_json(b) from (select id, resuelto_en, estado, jsonb_array_length(coalesce(aplicados, '[]')) as n from harvey.listas_borrador b where b.lista_id = a.lista_id and b.estado = 'aplicado' order by resuelto_en desc limit 1) b) as ultimo_aplicado
+    from harvey.listas_auto a join public.listas_precios l on l.id = a.lista_id order by a.etiqueta desc`;
+  return json({ listas });
+}
+async function tarifaRecalcular(u: { id: string }, b: any) {
+  const [a] = await sql`select * from harvey.listas_auto where lista_id = ${String(b.lista_id || "")}`; if (!a) return json({ error: "Lista no válida" }, 400);
+  const m = Math.min(Number(a.margen_max), Math.max(Number(a.margen_min), Number(b.margen) || Number(a.margen)));
+  const [r] = await sql`select harvey.proponer_lista(${a.lista_id}, ${m}, true) as id`;
+  await sql`update harvey.listas_borrador set automatico = false where id = ${r.id}`;
+  await registrar(u.id, "tarifa_recalculada", null, { lista_id: a.lista_id, margen: m });
+  return json({ ok: true, id: r.id });
+}
+async function tarifaAplicar(u: { id: string }, b: any) {
+  const [bo] = await sql`select * from harvey.listas_borrador where id = ${String(b.id || "")} and estado = 'pendiente'`; if (!bo) return json({ error: "Ese borrador ya no está pendiente" }, 400);
+  const elegidos = new Set((Array.isArray(b.elegidos) ? b.elegidos : []).map(String));
+  const aplicados: any[] = [];
+  await sql.begin(async (tx: any) => {
+    for (const it of bo.items as any[]) {
+      if (it.nuevo == null) continue; const clave = it.item_id || ("p:" + it.producto_id); if (!elegidos.has(clave)) continue;
+      if (it.item_id) { await tx`update public.listas_precios_items set precio = ${it.nuevo}, coste = ${it.coste} where id = ${it.item_id} and lista_id = ${bo.lista_id}`; aplicados.push({ item_id: it.item_id, antes: it.antes, coste_antes: it.coste_antes, nuevo: it.nuevo }); }
+      else { const [n] = await tx`insert into public.listas_precios_items (lista_id, producto_id, nombre, precio, unidad, coste, orden) values (${bo.lista_id}, ${it.producto_id}, ${it.nombre}, ${it.nuevo}, ${it.unidad || "kg"}, ${it.coste}, 999) returning id`; aplicados.push({ item_id: n.id, insertado: true, nuevo: it.nuevo }); }
+    }
+    await tx`update public.listas_precios set updated_at = now() where id = ${bo.lista_id}`;
+    await tx`update harvey.listas_borrador set estado = 'aplicado', resuelto_en = now(), resuelto_por = ${u.id}, aplicados = ${sql.json(aplicados)} where id = ${bo.id}`;
+  });
+  await registrar(u.id, "tarifa_aplicada", null, { lista_id: bo.lista_id, borrador: bo.id, cambios: aplicados.length, margen: bo.margen });
+  return json({ ok: true, cambios: aplicados.length });
+}
+async function tarifaDeshacer(u: { id: string }, b: any) {
+  const [bo] = await sql`select * from harvey.listas_borrador where id = ${String(b.id || "")} and estado = 'aplicado'`; if (!bo) return json({ error: "No hay nada que deshacer" }, 400);
+  await sql.begin(async (tx: any) => {
+    for (const a of (bo.aplicados || []) as any[]) {
+      if (a.insertado) await tx`delete from public.listas_precios_items where id = ${a.item_id} and lista_id = ${bo.lista_id}`;
+      else await tx`update public.listas_precios_items set precio = ${a.antes}, coste = ${a.coste_antes} where id = ${a.item_id} and lista_id = ${bo.lista_id}`;
+    }
+    await tx`update harvey.listas_borrador set estado = 'deshecho', resuelto_en = now(), resuelto_por = ${u.id} where id = ${bo.id}`;
+  });
+  await registrar(u.id, "tarifa_deshecha", null, { lista_id: bo.lista_id, borrador: bo.id });
+  return json({ ok: true });
+}
+async function tarifaDescartar(u: { id: string }, b: any) {
+  const r = await sql`update harvey.listas_borrador set estado = 'descartado', resuelto_en = now(), resuelto_por = ${u.id} where id = ${String(b.id || "")} and estado = 'pendiente' returning lista_id`;
+  await registrar(u.id, "tarifa_descartada", null, { borrador: b.id });
+  return json({ ok: r.length > 0 });
+}
+/** Apuntes sueltos en el registro (petición y aprobación de precios). */
+async function anotar(u: { id: string }, b: any) {
+  const ok = ["precio_solicitado", "precio_aprobado"]; if (!ok.includes(b.que)) return json({ error: "No válido" }, 400);
+  await registrar(u.id, b.que, b.cliente_id || null, { a_quien: b.a_quien || null, ofertas: b.ofertas || null });
+  return json({ ok: true });
 }
 async function buscarClientes(b: any) {
   const q = String(b.q || "").trim(); if (q.length < 2) return json({ clientes: [] });
@@ -409,6 +456,12 @@ Deno.serve(async (req) => {
       case "prefs_set": return await prefsSet(u, b);
       case "buscar_clientes": return await buscarClientes(b);
       case "actividad": return await actividad(b);
+      case "tarifas": return await tarifas();
+      case "tarifa_recalcular": return await tarifaRecalcular(u, b);
+      case "tarifa_aplicar": return await tarifaAplicar(u, b);
+      case "tarifa_deshacer": return await tarifaDeshacer(u, b);
+      case "tarifa_descartar": return await tarifaDescartar(u, b);
+      case "anotar": return await anotar(u, b);
       default: return json({ error: "Acción desconocida" }, 400);
     }
   } catch (e) {
