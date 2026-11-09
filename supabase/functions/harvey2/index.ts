@@ -400,6 +400,7 @@ async function tarifaAplicar(u: { id: string }, b: any) {
   await sql.begin(async (tx: any) => {
     for (const it of bo.items as any[]) {
       if (it.nuevo == null) continue; const clave = it.item_id || ("p:" + it.producto_id); if (!elegidos.has(clave)) continue;
+      const aMano = Number((b.precios || {})[clave]); if (aMano > 0 && aMano < 1000) it.nuevo = Math.round(aMano * 100) / 100;   // precio subido o bajado con ▲ ▼
       if (it.item_id) { await tx`update public.listas_precios_items set precio = ${it.nuevo}, coste = ${it.coste} where id = ${it.item_id} and lista_id = ${bo.lista_id}`; aplicados.push({ item_id: it.item_id, antes: it.antes, coste_antes: it.coste_antes, nuevo: it.nuevo }); }
       else { const [n] = await tx`insert into public.listas_precios_items (lista_id, producto_id, nombre, precio, unidad, coste, orden) values (${bo.lista_id}, ${it.producto_id}, ${it.nombre}, ${it.nuevo}, ${it.unidad || "kg"}, ${it.coste}, 999) returning id`; aplicados.push({ item_id: n.id, insertado: true, nuevo: it.nuevo }); }
     }
