@@ -256,6 +256,16 @@ table.mx tr.hl-f td.hl-c{background:#facc15!important}
 .chatbtn{background:rgba(255,255,255,.18);min-height:40px;padding:0 10px;font-size:18px;position:relative}
 .chatbtn .insig{position:absolute;top:-2px;right:-2px;margin:0}
 header .tit{font-size:15px}
+/* Menú de Inicio en rejilla (sustituye a los círculos en corro; los círculos siguen disponibles) */
+.rej{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 4px;margin:2px 0 6px}
+.rej .circ{gap:4px}
+.rej .circ .c{width:56px;height:56px;font-size:26px;border-width:3.5px}
+.rej .circ .l{font-size:12.5px;line-height:1.15}
+.rej.grande{grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 10px}
+.rej.grande .circ{flex-direction:row;justify-content:flex-start;gap:10px;background:var(--card,#fff);border:1px solid var(--borde);border-radius:16px;padding:10px;min-height:76px;box-shadow:0 2px 6px rgba(0,0,0,.06);text-align:left}
+.rej.grande .circ .c{width:52px;height:52px;font-size:26px;flex-shrink:0}
+.rej.grande .circ .l{font-size:17px;text-align:left;line-height:1.15}
+.rej.grande .circ:active{background:var(--verde-cl)}
 .grupo{font-size:13px;font-weight:800;color:var(--verde-osc);text-transform:uppercase;letter-spacing:.6px;margin:16px 4px 6px}
 .item{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--borde);border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer}
 .item:active{background:var(--verde-cl)}
@@ -386,7 +396,7 @@ html[data-tema=oscuro] header{background:linear-gradient(135deg,#c7e2da,#a9d3c2)
 html[data-tema=oscuro] button:not(.ghost):not(.peligro):not(.chip):not(.back):not(.chatbtn):not(.quien):not(.small.ghost):not(.circ):not(.calbtn):not(.fichar-btn):not(.bandeja-fac):not(.portalbtn):not(nav button){background:linear-gradient(135deg,#1b9d55,#4bb673);color:#000}
 html[data-tema=oscuro] button.ghost,html[data-tema=oscuro] .chip,html[data-tema=oscuro] .res button{background:linear-gradient(145deg,#cfdbe9,#c5d4e5);color:var(--txt);border-color:var(--borde)}
 html[data-tema=oscuro] .chip.on,html[data-tema=oscuro] nav.tabs button.on{background:linear-gradient(135deg,#1b9d55,#4bb673);color:#000;border-color:transparent}
-html[data-tema=oscuro] .card,html[data-tema=oscuro] .linea,html[data-tema=oscuro] .res,html[data-tema=oscuro] .sheet,html[data-tema=oscuro] .rap-fila{background:linear-gradient(145deg,#d9e2ee,#cddae8);border-color:var(--borde)}
+html[data-tema=oscuro] .card,html[data-tema=oscuro] .rej.grande .circ,html[data-tema=oscuro] .linea,html[data-tema=oscuro] .res,html[data-tema=oscuro] .sheet,html[data-tema=oscuro] .rap-fila{background:linear-gradient(145deg,#d9e2ee,#cddae8);border-color:var(--borde)}
 html[data-tema=oscuro] .rap-fila.on,html[data-tema=oscuro] .linea.hecha{background:linear-gradient(145deg,#b3d9cc,#9fd0be);border-color:#1b9d55}
 html[data-tema=oscuro] input,html[data-tema=oscuro] select,html[data-tema=oscuro] textarea{background:#dfe8f2;color:var(--txt);border-color:var(--borde)}
 html[data-tema=oscuro] nav.tabs{background:linear-gradient(180deg,#dfe8f2,#e8eff7);border-top-color:var(--borde)}
@@ -3045,7 +3055,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v148';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v150';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -4742,11 +4752,27 @@ function vistaMas() {
     const pool = {}; defs.forEach(([, it]) => it.forEach(n => { pool[lab(n)] = n; })); const sacados = esp[1].filter(x => pool[x]);
     lista = [[esp[0], sacados.map(x => pool[x])]].concat(defs.map(([t, it]) => [t, it.filter(n => !sacados.includes(lab(n)))]));
   }
-  lista.forEach(([t, it]) => k.push(...rosco(t, ...it)));
-  k.splice(1, 0, h('div', { class: 'chips', style: 'margin:6px 0 2px' }, h('span', { class: 'sub', style: 'align-self:center' }, 'Ver arriba:'), ...[['todo', 'Todo'], ['reparto', '🧑‍✈️ Preparar y repartir'], ['compra', '🛒 Compra']].map(([m, n]) => h('button', { class: 'chip' + (modoV === m ? ' on' : ''), onclick: () => { LS.set('fj_vista', m); vistaMas(); } }, n))));
+  /* Menú nuevo (por defecto): arriba, en grande, lo de cada día; debajo, todo lo demás en una rejilla compacta. Nada se quita: los botones se MUEVEN.
+     Quien prefiera los círculos de antes puede volver a ellos (se recuerda en cada móvil). */
+  const enCirculos = LS.get('fj_menu_circ', false); let bloqueGrande = null;
+  const cambiaMenu = h('button', { class: 'ghost', style: 'width:100%;min-height:48px;margin-top:14px', onclick: () => { LS.set('fj_menu_circ', !enCirculos); vistaMas(); } }, enCirculos ? '▦ Ver el menú nuevo, más corto' : '◯ Ver el menú en círculos, como antes');
+  if (enCirculos) lista.forEach(([t, it]) => k.push(...rosco(t, ...it)));
+  else {
+    const pool = {}; lista.forEach(([, it]) => it.forEach(n => { pool[lab(n)] = n; }));
+    pool['Calendario'] = c('📅', 'Calendario', () => go('calendario'), '#ea580c');
+    const PRINC = modoV === 'reparto' ? ['Preparar', 'Hoja de carga', 'Reparto', 'Entregas', 'Cobros', 'Albaranes', 'Ruta', 'Calendario']
+      : modoV === 'compra' ? ['Hoja de compra para hoy', 'Compra para hoy', 'A quién compramos hoy', 'Facturas de proveedores', 'Precios de compra del día', 'Calendario']
+      : ['Apuntar pedido', 'Calendario', 'Preparar', 'Hoja de carga', 'Reparto', 'Cobros'];
+    const grandes = PRINC.filter(x => pool[x]).map(x => pool[x]);
+    bloqueGrande = h('div', { class: 'rej grande' }, ...grandes);
+    lista.forEach(([t, it]) => { const r = it.filter(n => !grandes.includes(n)); if (r.length) k.push(h('div', { class: 'grupo' }, t), h('div', { class: 'rej' }, ...r)); });
+  }
+  k.push(cambiaMenu);
+  k.splice(1, 0, h('div', { class: 'chips', style: 'margin:6px 0 2px' }, h('span', { class: 'sub', style: 'align-self:center' }, 'Lo de arriba:'), ...[['todo', 'Todo'], ['reparto', '🧑‍✈️ Preparar y repartir'], ['compra', '🛒 Compra']].map(([m, n]) => h('button', { class: 'chip' + (modoV === m ? ' on' : ''), onclick: () => { LS.set('fj_vista', m); vistaMas(); } }, n))));
   /* Acceso directo: imprimir la hoja de carga o la de compra sin entrar en menús */
   { const dia = LS.get('fj_imp_dia', 'hoy'); const tarj = h('div', { class: 'card', style: 'padding:10px;margin:6px 0' }); const pintaT = () => { const dd = LS.get('fj_imp_dia', 'hoy'); tarj.replaceChildren(h('div', { class: 'fila' }, h('div', { class: 'nombre' }, '🖨 Imprimir ahora'), h('div', { class: 'chips', style: 'margin:0' }, [['hoy', 'Hoy'], ['manana', 'Mañana']].map(([v, t]) => h('button', { class: 'chip' + (dd === v ? ' on' : ''), onclick: () => { LS.set('fj_imp_dia', v); pintaT(); } }, t)))),
       h('div', { style: 'display:flex;gap:8px;margin-top:8px' }, h('button', { style: 'flex:1;min-height:54px;font-size:16px', onclick: () => impRapido('carga') }, '🚚 Hoja de carga'), h('button', { style: 'flex:1;min-height:54px;font-size:16px', onclick: () => impRapido('compra') }, '🛒 Hoja de compra'))); }; pintaT(); k.splice(2, 0, tarj); }
+  if (bloqueGrande) k.splice(2, 0, bloqueGrande);
   { const ver = h('div', { class: 'sub', style: 'text-align:center;margin-top:18px' }, 'Versión de la app: ' + APP_VERSION.replace('ferjusanz-', ''));
     const bVer = h('button', { class: 'ghost', style: 'width:100%;min-height:48px;margin-top:6px', onclick: async () => { if (await confirmar('Se cargará la última versión de la app. No se pierde ningún dato. ¿Seguir?')) actualizarApp(); } }, '🔄 Buscar versión nueva');
     k.push(ver, bVer);
