@@ -9090,7 +9090,7 @@ async function h2(accion, extra) {
 const h2Err = (el, e) => el.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : (e && e.message) || String(e)));
 const h2Mensaje = t => { const m = /\[MENSAJE\]\s*\n?([\s\S]*?)\n?\s*\[FIN\]/i.exec(t || ''); return { msg: (m ? m[1] : t || '').replace(/\*\*(.+?)\*\*/g, '*$1*').trim(), nota: m ? (t.slice(0, m.index) + t.slice(m.index + m[0].length)).trim() : '' }; };
 const h2Wa = (num, txt) => 'https://wa.me/' + (num || '') + '?text=' + encodeURIComponent(txt);
-const H2_MOTIVO = { habitual: '📋 Pedido habitual por confirmar', suele_pedir: '📅 Suele pedir este día', sin_pedir: '💤 Lleva tiempo sin pedir' };
+const H2_MOTIVO = { habitual: '📋 Pedido habitual por confirmar', suele_pedir: '📅 Suele pedir este día', sin_pedir: '💤 Lleva tiempo sin pedir', producto_dejado: '🔻 Ha dejado de pedir un producto' };
 const H2_DIAS = [[1, 'L'], [2, 'M'], [3, 'X'], [4, 'J'], [5, 'V'], [6, 'S'], [7, 'D']];
 
 async function tabHarvey(el) {
@@ -9104,19 +9104,26 @@ async function tabHarvey(el) {
 }
 
 /* --- Preparar y enviar un mensaje (cliente o lead) --- */
-async function h2Preparar(caja, item, fecha) {
+async function h2Preparar(caja, item, fecha, conPrecios) {
   caja.replaceChildren(h('p', { class: 'sub' }, '✍️ Harvey está preparando el mensaje…'));
+  const recuperar = item.motivo === 'sin_pedir' || item.motivo === 'producto_dejado';
   try {
-    const r = await h2('mensaje', item.prospecto_id ? { prospecto_id: item.prospecto_id, fecha } : { cliente_id: item.cliente_id, motivo: H2_MOTIVO[item.motivo] || item.motivo, detalle: item.detalle, fecha });
+    const r = await h2('mensaje', item.prospecto_id ? { prospecto_id: item.prospecto_id, fecha } : { cliente_id: item.cliente_id, motivo: H2_MOTIVO[item.motivo] || item.motivo, tipo: item.motivo, producto_codigo: item.producto_codigo || null, detalle: item.detalle, fecha, con_precios: !!conPrecios });
+    const ofertas = r.ofertas || []; const dOf = r.dudas_oferta || [];
+    const cajaOferta = ofertas.length || dOf.length ? h('div', { class: 'card', style: 'background:#eef7f0;border-color:var(--verde);margin:0 0 6px' }, h('b', {}, '💶 Oferta para recuperarlo (compra + 0,25 €)'),
+      ...ofertas.map(o => h('div', { class: 'sub' }, o.producto + ': comprado a ' + eur(o.coste) + ' € (' + o.coste_fuente + ', ' + fechaES(String(o.coste_fecha).slice(0, 10)) + ') → oferta ' + eur(o.oferta) + ' €/' + o.unidad + (o.precio_antes ? ' · antes pagaba unos ' + eur(o.precio_antes) + ' €' : ''))),
+      ...dOf.map(t => h('div', { class: 'sub', style: 'color:#b36b00' }, '⚠️ ' + t + ' (sin precio en el mensaje)')), h('div', { class: 'sub' }, 'Solo tú ves el precio de compra. Revisa la oferta antes de enviarla.')) : null;
+    const bPrecios = !item.prospecto_id && !recuperar ? h('button', { class: 'ghost small', onclick: () => h2Preparar(caja, item, fecha, !conPrecios) }, conPrecios ? '🚫 Rehacer sin precios' : '💶 Rehacer con su tarifa') : null;
     const { msg, nota } = h2Mensaje(r.texto); const ta = h('textarea', { rows: 5, style: 'width:100%' }); ta.value = msg;
     const tipo = item.prospecto_id ? 'captacion' : (item.motivo === 'sin_pedir' ? 'seguimiento' : 'recordatorio');
     const marcar = async btn => { btn.disabled = true; try { const x = await h2('contactado', { cliente_id: item.cliente_id || null, prospecto_id: item.prospecto_id || null, tipo, mensaje: ta.value }); toast(x.duplicado ? 'Ya estaba apuntado hoy: no se duplica' : 'Apuntado como contactado', 'ok'); item.contactado_hoy = true; btn.textContent = '✔ Contactado hoy'; } catch (e) { btn.disabled = false; toast(e.message, 'err'); } };
     const bEnv = h('button', { class: 'ghost small', onclick: e => marcar(e.currentTarget) }, '✔ Marcar como enviado');
-    caja.replaceChildren(nota ? h('div', { class: 'sub', style: 'white-space:pre-wrap;margin-bottom:4px' }, nota) : null, ta,
+    caja.replaceChildren(cajaOferta, nota ? h('div', { class: 'sub', style: 'white-space:pre-wrap;margin-bottom:4px' }, nota) : null, ta,
       h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' },
         item.whatsapp ? h('a', { class: 'btn-link', href: '#', style: 'display:inline-block;padding:8px 12px;border-radius:10px;background:var(--verde);color:#fff;text-decoration:none;font-weight:600', onclick: e => { e.preventDefault(); window.open(h2Wa(item.whatsapp, ta.value), '_blank'); } }, '💬 Abrir WhatsApp') : h('span', { class: 'sub' }, '⚠️ Sin móvil apuntado.'),
         h('button', { class: 'ghost small', onclick: async () => { try { await navigator.clipboard.writeText(ta.value); toast('Copiado', 'ok'); } catch (e) { toast('No se pudo copiar', 'err'); } } }, '📋 Copiar'),
-        bEnv));
+        bEnv, bPrecios),
+      !item.prospecto_id && !recuperar ? h('div', { class: 'sub', style: 'margin-top:4px' }, conPrecios ? 'Con los precios de su tarifa.' : 'Sin precios: a los clientes que siguen comprando no se les ponen precios salvo que tú lo pidas.') : null);
   } catch (e) { h2Err(caja, e); }
 }
 
@@ -9130,20 +9137,23 @@ async function h2Hoy(el) {
     return h('div', { class: 'card', style: it.contactado_hoy ? 'opacity:.6' : '' },
       h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, it.nombre), h('div', { class: 'sub' }, (H2_MOTIVO[it.motivo] || (it.prospecto_id ? '🎯 Lead: ' + (it.tipo || '') : '')) + (it.detalle ? ' · ' + it.detalle : '') + (it.notas ? ' · ' + it.notas : ''))),
         it.contactado_hoy ? h('span', { style: 'color:var(--verde);font-weight:700' }, '✔ hoy') : null),
-      h('div', { class: 'sub' }, it.whatsapp ? '📱 +' + it.whatsapp : (it.telefono ? '☎️ ' + it.telefono + ' (no es móvil)' : '⚠️ Sin teléfono')),
+      (it.compraba || []).length ? h('div', { class: 'sub' }, '🛒 Compraba: ' + it.compraba.join(' · ')) : null,
+      h('div', { class: 'sub' }, (it.hora ? '🕘 Escribir a las ' + it.hora + ' · ' : '') + (it.whatsapp ? '📱 +' + it.whatsapp : (it.telefono ? '☎️ ' + it.telefono + ' (no es móvil)' : '⚠️ Sin móvil: pídelo y apúntalo en ⚙️'))),
       h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' },
         h('button', { class: 'small', onclick: () => h2Preparar(caja, it, fecha) }, '✍️ Preparar mensaje'),
         it.cliente_id ? h('button', { class: 'ghost small', onclick: () => h2Prefs(it.cliente_id, () => h2Hoy(el)) }, '⚙️ Preferencias') : null),
       caja); };
-  const grupo = (titulo, items) => items.length ? [h('h3', {}, titulo + ' (' + items.length + ')'), ...items.map(tarjeta)] : [];
+  const porHora = a => a.slice().sort((x, y) => (x.hora || '99') < (y.hora || '99') ? -1 : (x.hora || '99') > (y.hora || '99') ? 1 : 0);
+  const grupo = (titulo, items, ayuda) => items.length ? [h('h3', {}, titulo + ' (' + items.length + ')'), ayuda ? h('p', { class: 'sub', style: 'margin-top:-6px' }, ayuda) : null, ...porHora(items).map(tarjeta)] : [];
   const cl = d.clientes || [];
   el.replaceChildren(
     comCampo('Pedidos para el día', selF),
     h('p', { class: 'sub' }, 'Historial de ventas hasta el ' + fechaES(d.historial_hasta) + '. No salen los clientes que ya tienen pedido para ese día, ni los que han pedido no recibir mensajes.' + (d.excluidos_por_preferencias ? ' (' + d.excluidos_por_preferencias + ' excluido(s) por sus preferencias.)' : '')),
     ...grupo('📅 Suelen pedir este día', cl.filter(x => x.motivo === 'suele_pedir' || x.motivo === 'habitual')),
-    ...grupo('💤 Llevan tiempo sin pedir', cl.filter(x => x.motivo === 'sin_pedir')),
+    ...grupo('💤 Clientes perdidos: llevan tiempo sin pedir', cl.filter(x => x.motivo === 'sin_pedir'), 'Harvey les recuerda lo que compraban y les ofrece su producto principal a precio de compra + 0,25 €.'),
+    ...grupo('🔻 Han dejado de pedir un producto', d.productos_dejados || [], 'Siguen comprando, pero ya no este producto. Harvey prepara una oferta de ese producto (compra + 0,25 €).'),
     ...grupo('🎯 Leads para contactar hoy', d.leads || []),
-    (d.sin_movil || []).length ? h('div', { class: 'card tap', style: 'border-left:4px solid #b36b00', onclick: () => { LS.set('fj_h2_sub', 'moviles'); tabHarvey(el.parentNode); } }, h('b', {}, '📱 ' + d.sin_movil.length + ' de vuestros mejores clientes no tienen móvil apuntado'), h('div', { class: 'sub' }, 'Sin móvil no se les puede escribir por WhatsApp. Toca para completarlos.')) : null,
+    (d.sin_movil || []).length ? h('div', { class: 'card tap', style: 'border-left:4px solid #b36b00', onclick: () => { LS.set('fj_h2_sub', 'moviles'); tabHarvey(el.parentNode); } }, h('b', {}, '📱 Harvey te pide ' + d.sin_movil.length + ' móviles de clientes'), h('div', { class: 'sub' }, 'Clientes del último año sin móvil apuntado. Sin móvil no se les puede escribir por WhatsApp. Toca para completarlos.')) : null,
     !cl.length && !(d.leads || []).length ? h('p', { class: 'vacio' }, 'Nadie pendiente para ese día. 👌') : null);
 }
 
@@ -9201,10 +9211,10 @@ async function h2Borradores(el) {
 async function h2Moviles(el) {
   let d; try { d = await h2('hoy', { fecha: comSumaDias(hoy(), 1) }); } catch (e) { h2Err(el, e); return; }
   const lista = d.sin_movil || [];
-  el.replaceChildren(h('p', { class: 'sub' }, 'Vuestros mejores clientes (por ventas de los últimos 90 días) que no tienen un móvil apuntado. Escribe su WhatsApp para que Harvey pueda prepararles mensajes. No cambia la ficha del cliente.'),
+  el.replaceChildren(h('p', { class: 'sub' }, lista.length + ' clientes que han comprado en el último año y no tienen un móvil apuntado, de más a menos ventas. Consigue su WhatsApp y apúntalo aquí para que Harvey pueda prepararles mensajes. No cambia la ficha del cliente.'),
     ...(lista.length ? lista.map(s => { const inp = comInput('tel', '', { placeholder: 'Móvil (6xx xxx xxx)', inputmode: 'tel' }); const ok = h('input', { type: 'checkbox' });
-      return h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, s.nombre), h('div', { class: 'sub' }, s.codigo + ' · ' + eur(s.importe_90d) + ' € en 90 días' + (s.telefono ? ' · tel. ' + s.telefono : '')))),
-        h('div', { style: 'display:flex;gap:6px;align-items:center;margin-top:6px' }, inp, h('button', { class: 'small', onclick: async e => { const b = e.currentTarget; b.disabled = true; try { await h2('prefs_set', { cliente_id: s.cliente_id, whatsapp: inp.value, acepta_whatsapp: ok.checked, max_semana: 3 }); toast('Guardado', 'ok'); b.textContent = '✔'; } catch (x) { b.disabled = false; toast(x.message, 'err'); } } }, 'Guardar')),
+      return h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, s.nombre), h('div', { class: 'sub' }, s.codigo + ' · ' + eur(s.importe_12m) + ' € en 12 meses' + (s.telefono ? ' · tel. ' + s.telefono : '')))),
+        h('div', { style: 'display:flex;gap:6px;align-items:center;margin-top:6px' }, inp, h('button', { class: 'small', onclick: async e => { const b = e.currentTarget; b.disabled = true; try { await h2('prefs_set', { cliente_id: s.cliente_id, whatsapp: inp.value, acepta_whatsapp: ok.checked, solo_whatsapp: true }); toast('Guardado', 'ok'); b.textContent = '✔'; } catch (x) { b.disabled = false; toast(x.message, 'err'); } } }, 'Guardar')),
         h('label', { class: 'sub', style: 'display:flex;gap:6px;align-items:center;margin-top:4px' }, ok, 'Ha aceptado recibir mensajes de Ferjusanz por WhatsApp')); }) : [h('p', { class: 'vacio' }, '✔ Todos vuestros mejores clientes tienen móvil.')]));
 }
 
@@ -9228,13 +9238,14 @@ async function h2Prefs(clienteId, alGuardar) {
   let dias = Array.isArray(p.dias) ? p.dias.slice() : []; const diasBox = h('div', { style: 'display:flex;gap:4px;flex-wrap:wrap' });
   const pintarDias = () => diasBox.replaceChildren(...H2_DIAS.map(([n, t]) => h('button', { type: 'button', class: 'chip' + (dias.includes(n) ? ' on' : ''), onclick: () => { dias = dias.includes(n) ? dias.filter(x => x !== n) : dias.concat(n); pintarDias(); } }, t))); pintarDias();
   const max = comSelect([['1', '1 por semana'], ['2', '2 por semana'], ['3', '3 por semana'], ['5', '5 por semana'], ['7', 'Cada día']], String(p.max_semana || 3));
+  const horaI = comInput('time', p.hora ? String(p.hora).slice(0, 5) : '');
   const pausa = comInput('date', p.pausado_hasta ? String(p.pausado_hasta).slice(0, 10) : ''); const notas = h('textarea', { rows: 2, style: 'width:100%' }); notas.value = p.notas || '';
   let cerrar;
   cerrar = hoja('Preferencias de ' + p.nombre, h('div', {},
     comCampo('WhatsApp', wa), h('label', { class: 'card', style: 'display:flex;gap:8px;align-items:center' }, acepta, 'Ha aceptado recibir mensajes por WhatsApp'),
     h('label', { class: 'card', style: 'display:flex;gap:8px;align-items:center;border-color:#b91c1c' }, no, 'NO quiere recibir mensajes (Harvey no lo propondrá)'),
-    comCampo('Días en que se le puede escribir (vacío = cualquiera)', diasBox), comCampo('Máximo de mensajes', max), comCampo('No escribir hasta el', pausa), comCampo('Notas', notas),
-    h('button', { style: 'width:100%;min-height:48px', onclick: async () => { try { await h2('prefs_set', { cliente_id: clienteId, whatsapp: wa.value, no_contactar: no.checked, acepta_whatsapp: acepta.checked, dias, max_semana: Number(max.value), pausado_hasta: pausa.value || null, notas: notas.value }); toast('Preferencias guardadas', 'ok'); cerrar(); alGuardar && alGuardar(); } catch (e) { toast(e.message, 'err'); } } }, 'Guardar')));
+    comCampo('Días en que se le puede escribir (vacío = cualquiera)', diasBox), comCampo('Hora a la que hay que escribirle', horaI), comCampo('Máximo de mensajes', max), comCampo('No escribir hasta el', pausa), comCampo('Notas', notas),
+    h('button', { style: 'width:100%;min-height:48px', onclick: async () => { try { await h2('prefs_set', { cliente_id: clienteId, whatsapp: wa.value, no_contactar: no.checked, acepta_whatsapp: acepta.checked, dias, max_semana: Number(max.value), pausado_hasta: pausa.value || null, hora: horaI.value || null, notas: notas.value }); toast('Preferencias guardadas', 'ok'); cerrar(); alGuardar && alGuardar(); } catch (e) { toast(e.message, 'err'); } } }, 'Guardar')));
 }
 async function tabHarveyChat(el) {
   let conv = LS.get(HARVEY_CONV, []); if (!Array.isArray(conv)) conv = []; let pros = []; let foco = null; let ocupado = false;

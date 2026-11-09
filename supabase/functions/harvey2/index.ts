@@ -48,14 +48,15 @@ async function registrar(usuarioId: string, accion: string, clienteId: string | 
 }
 
 /* ---------- Datos de un cliente ---------- */
-async function productosHabituales(clienteId: string, limite = 12) {
+async function productosHabituales(clienteId: string, limite = 12, dias = 120) {
   return await sql`
     with c as (select codigo from public.clientes where id = ${clienteId}),
     ref as (select max(fecha) r from harvey.entregas where fecha <= current_date)
     select p.id, p.codigo, p.nombre, p.unidad_venta, p.unidad_precio,
-           count(distinct e.fecha)::int as veces, round(avg(e.cantidad)::numeric, 1) as cantidad_media, max(e.fecha) as ultima
+           count(distinct e.fecha)::int as veces, round(avg(e.cantidad)::numeric, 1) as cantidad_media, max(e.fecha) as ultima,
+           round(avg(e.precio) filter (where e.precio > 0)::numeric, 2) as precio_medio, round(sum(e.cantidad)::numeric) as cantidad_total
     from harvey.entregas e join c on e.cliente_codigo = c.codigo join public.productos p on p.codigo = e.producto_codigo, ref
-    where e.fecha > ref.r - 120
+    where e.fecha > ref.r - ${dias}
     group by p.id, p.codigo, p.nombre, p.unidad_venta, p.unidad_precio
     order by veces desc, max(e.fecha) desc limit ${limite}`;
 }
@@ -74,6 +75,34 @@ async function recomendacionesVigentes(fecha: string) {
     order by r.orden nulls last limit 8`;
 }
 
+/** Último precio de COMPRA (máx. 30 días) de cada producto: precio del día, facturas de proveedor y lotes. */
+async function costesCompra(productoIds: string[]) {
+  if (!productoIds.length) return new Map<string, any>();
+  const filas = await sql`
+    select distinct on (producto_id) producto_id, precio::float as precio, fecha, fuente, unidad from (
+      select producto_id, precio, fecha, 'precio de compra del día' as fuente, unidad from public.precios_compra_dia
+      union all select producto_id, precio, fecha, 'factura de proveedor', unidad from public.tarifas_compra
+      union all select producto_id, precio, fecha, 'factura leída', unidad from public.lineas_factura_leida where not coalesce(dudoso, false)
+      union all select producto_id, precio_compra, created_at::date, 'lote', unidad from public.lotes where precio_compra is not null
+    ) x where producto_id = any(${productoIds}) and precio > 0 and fecha > current_date - 30
+    order by producto_id, fecha desc`;
+  return new Map((filas as any[]).map(f => [f.producto_id as string, f]));
+}
+const MARGEN_OFERTA = 0.25;
+/** Ofertas para recuperar un cliente: coste de compra + 0,25 €. Se descarta si la unidad no cuadra o el precio sale raro frente a lo que pagaba. */
+async function ofertasRecuperar(prods: any[]) {
+  const costes = await costesCompra(prods.map(p => p.id)); const out: any[] = []; const dudas: string[] = [];
+  for (const p of prods) {
+    const c = costes.get(p.id); if (!c) { dudas.push(`${p.nombre}: no hay precio de compra de los últimos 30 días`); continue; }
+    const ud = String(c.unidad || "").toLowerCase().trim(); const udP = String(p.unidad_precio || "kg").toLowerCase().trim();
+    if (ud && ud !== udP && !(udP === "kg" && /^(kg|kilo|kilos|k)$/.test(ud))) { dudas.push(`${p.nombre}: el precio de compra va por ${ud} y la venta por ${udP}`); continue; }
+    const oferta = Math.round((c.precio + MARGEN_OFERTA) * 100) / 100; const antes = p.precio_medio ? Number(p.precio_medio) : null;
+    if (antes && (oferta > antes * 1.6 || oferta < antes * 0.5)) { dudas.push(`${p.nombre}: la oferta (${oferta.toFixed(2)} €) sale muy distinta de lo que pagaba (${antes.toFixed(2)} €); revísalo`); continue; }
+    out.push({ producto: p.nombre, codigo: p.codigo, unidad: udP, coste: c.precio, coste_fecha: c.fecha, coste_fuente: c.fuente, oferta, precio_antes: antes });
+  }
+  return { ofertas: out, dudas };
+}
+
 /* ---------- 1. A quién escribir hoy ---------- */
 async function aQuienEscribir(fechaPedido: string) {
   const hoy = hoyMadrid(); const dow = isoDow(fechaPedido); const dowHoy = isoDow(hoy);
@@ -90,11 +119,11 @@ async function aQuienEscribir(fechaPedido: string) {
            group by c.id having count(distinct e.fecha) >= 4),
     dor as (select c.id, 'sin_pedir' as motivo, 'última entrega el ' || to_char(max(e.fecha), 'DD/MM') || '; antes pedía a menudo (' || count(distinct e.fecha) || ' entregas)' as detalle, 3 as orden, sum(e.importe) as peso
             from cli c join harvey.entregas e on e.cliente_codigo = c.codigo, p
-            where e.fecha > p.ref - 160 and c.id not in (select cliente_id from con_pedido)
-            group by c.id, p.ref having max(e.fecha) < p.ref - 35 and count(distinct e.fecha) >= 6),
+            where e.fecha > p.ref - 365 and c.id not in (select cliente_id from con_pedido)
+            group by c.id, p.ref having max(e.fecha) < p.ref - 35 and max(e.fecha) > p.ref - 330 and count(distinct e.fecha) >= 6),
     todos as (select distinct on (id) * from (select * from hab union all select * from sp union all select * from dor) z order by id, orden)
     select t.id, t.motivo, t.detalle, t.orden, t.peso, c.codigo, coalesce(c.nombre_comercial, c.nombre) as nombre, c.telefono, c.localidad,
-           pr.whatsapp, coalesce(pr.no_contactar, false) as no_contactar, coalesce(pr.acepta_whatsapp, false) as acepta, pr.dias, pr.max_semana, pr.pausado_hasta,
+           pr.whatsapp, coalesce(pr.no_contactar, false) as no_contactar, coalesce(pr.acepta_whatsapp, false) as acepta, pr.dias, pr.max_semana, pr.pausado_hasta, to_char(pr.hora, 'HH24:MI') as hora,
            (select count(*) from harvey.contactos k where k.cliente_id = t.id and k.fecha > ${hoy}::date - 7)::int as contactos_semana,
            exists(select 1 from harvey.contactos k where k.cliente_id = t.id and k.fecha = ${hoy}::date) as contactado_hoy,
            (select max(fecha) from harvey.entregas e where e.cliente_codigo = c.codigo) as ultima_entrega
@@ -103,10 +132,34 @@ async function aQuienEscribir(fechaPedido: string) {
   const out: any[] = []; let excluidos = 0;
   for (const f of filas as any[]) {
     if (f.no_contactar || (f.pausado_hasta && String(f.pausado_hasta) >= hoy) || (Array.isArray(f.dias) && f.dias.length && !f.dias.includes(dowHoy)) || (!f.contactado_hoy && f.contactos_semana >= (f.max_semana || 3))) { excluidos++; continue; }
-    if (f.motivo === "sin_pedir" && out.filter(x => x.motivo === "sin_pedir").length >= 15) continue;
-    out.push({ cliente_id: f.id, codigo: f.codigo, nombre: f.nombre, localidad: f.localidad, motivo: f.motivo, detalle: f.detalle,
+    if (f.motivo === "sin_pedir" && out.filter(x => x.motivo === "sin_pedir").length >= 30) continue;
+    out.push({ cliente_id: f.id, codigo: f.codigo, nombre: f.nombre, localidad: f.localidad, motivo: f.motivo, detalle: f.detalle, hora: f.hora,
       whatsapp: movil(f.whatsapp, f.telefono), telefono: f.telefono, acepta: f.acepta, contactado_hoy: f.contactado_hoy, ultima_entrega: f.ultima_entrega });
   }
+  // Lo que compraban los que han dejado de pedir
+  const perdidos = out.filter(x => x.motivo === "sin_pedir");
+  if (perdidos.length) {
+    const comp = await sql`
+      with ref as (select max(fecha) r from harvey.entregas where fecha <= current_date)
+      select * from (select c.id, p.nombre, count(distinct e.fecha)::int as veces, round(sum(e.cantidad)::numeric) as total, coalesce(p.unidad_venta, 'kg') as ud,
+             row_number() over (partition by c.id order by count(distinct e.fecha) desc, sum(e.importe) desc) as n
+        from public.clientes c join harvey.entregas e on e.cliente_codigo = c.codigo join public.productos p on p.codigo = e.producto_codigo, ref
+        where c.id = any(${perdidos.map(x => x.cliente_id)}) and e.fecha > ref.r - 365 group by c.id, p.nombre, p.unidad_venta) z where n <= 3`;
+    for (const x of perdidos) x.compraba = (comp as any[]).filter(r => r.id === x.cliente_id).map(r => `${r.nombre} (${r.veces} veces, ${r.total} ${r.ud})`);
+  }
+  // Clientes que siguen comprando pero han dejado de pedir un producto que pedían a menudo
+  const dejados = await sql`
+    with ref as (select max(fecha) r from harvey.entregas where fecha <= current_date),
+    act as (select e.cliente_codigo from harvey.entregas e, ref group by e.cliente_codigo, ref.r having max(e.fecha) > ref.r - 21),
+    x as (select e.cliente_codigo, e.producto_codigo, count(distinct e.fecha) as veces, max(e.fecha) as ultima, round(sum(e.cantidad)::numeric) as total, sum(e.importe) as importe
+          from harvey.entregas e, ref where e.fecha > ref.r - 365 and e.cliente_codigo in (select cliente_codigo from act)
+          group by e.cliente_codigo, e.producto_codigo, ref.r having count(distinct e.fecha) >= 6 and max(e.fecha) < ref.r - 45),
+    temporada as (select e.producto_codigo from harvey.entregas e, ref where e.fecha > ref.r - 30 group by e.producto_codigo having count(distinct e.fecha) >= 5)
+    select c.id, coalesce(c.nombre_comercial, c.nombre) as nombre, c.codigo, c.telefono, c.localidad, p.codigo as producto_codigo, p.nombre as producto, coalesce(p.unidad_venta, 'kg') as ud,
+           x.veces::int, x.total, x.ultima, pr.whatsapp, coalesce(pr.no_contactar, false) as no_contactar, to_char(pr.hora, 'HH24:MI') as hora
+    from x join public.clientes c on c.codigo = x.cliente_codigo join public.productos p on p.codigo = x.producto_codigo left join harvey.preferencias pr on pr.cliente_id = c.id
+    where c.activo is not false and coalesce(c.nombre_comercial, c.nombre) not ilike '%varios%' and x.producto_codigo in (select producto_codigo from temporada)
+    order by x.importe desc limit 25`;
   const leads = await sql`
     select p.id, p.nombre, p.tipo, p.localidad, p.telefono, p.estado, p.proximo_contacto, left(p.notas, 160) as notas,
            exists(select 1 from harvey.contactos k where k.prospecto_id = p.id and k.fecha > ${hoy}::date - 3) as reciente
@@ -117,14 +170,17 @@ async function aQuienEscribir(fechaPedido: string) {
     with ref as (select max(fecha) r from harvey.entregas where fecha <= current_date)
     select c.id, coalesce(c.nombre_comercial, c.nombre) as nombre, c.codigo, c.telefono, pr.whatsapp, round(sum(e.importe)) as importe_90d
     from public.clientes c join harvey.entregas e on e.cliente_codigo = c.codigo left join harvey.preferencias pr on pr.cliente_id = c.id, ref
-    where c.activo is not false and e.fecha > ref.r - 90 and coalesce(c.nombre_comercial, c.nombre) not ilike '%varios%'
-    group by c.id, c.nombre_comercial, c.nombre, c.codigo, c.telefono, pr.whatsapp order by importe_90d desc limit 60`;
+    where c.activo is not false and e.fecha > ref.r - 365 and coalesce(c.nombre_comercial, c.nombre) not ilike '%varios%'
+    group by c.id, c.nombre_comercial, c.nombre, c.codigo, c.telefono, pr.whatsapp order by importe_90d desc limit 400`;
   const [ref] = await sql`select max(fecha) as r from harvey.entregas where fecha <= current_date`;
   return {
     fecha_pedido: fechaPedido, hoy, historial_hasta: ref?.r ?? null, excluidos_por_preferencias: excluidos,
     clientes: out,
+    productos_dejados: (dejados as any[]).filter(d => !d.no_contactar).map(d => ({ cliente_id: d.id, nombre: d.nombre, codigo: d.codigo, localidad: d.localidad, motivo: "producto_dejado",
+      producto_codigo: d.producto_codigo, detalle: `dejó de pedir ${d.producto} (lo pidió ${d.veces} veces, ${d.total} ${d.ud}; última vez el ${fechaES(String(d.ultima instanceof Date ? d.ultima.toISOString() : d.ultima).slice(0, 10))})`,
+      hora: d.hora, whatsapp: movil(d.whatsapp, d.telefono), telefono: d.telefono })),
     leads: (leads as any[]).filter(l => !l.reciente).map(l => ({ prospecto_id: l.id, nombre: l.nombre, tipo: l.tipo, localidad: l.localidad, telefono: l.telefono, whatsapp: movil(l.telefono), estado: l.estado, proximo_contacto: l.proximo_contacto, notas: l.notas })),
-    sin_movil: (sinMovil as any[]).filter(s => !movil(s.whatsapp, s.telefono)).slice(0, 20).map(s => ({ cliente_id: s.id, nombre: s.nombre, codigo: s.codigo, telefono: s.telefono, importe_90d: Number(s.importe_90d) })),
+    sin_movil: (sinMovil as any[]).filter(s => !movil(s.whatsapp, s.telefono)).slice(0, 200).map(s => ({ cliente_id: s.id, nombre: s.nombre, codigo: s.codigo, telefono: s.telefono, importe_12m: Number(s.importe_90d) })),
   };
 }
 
@@ -148,26 +204,38 @@ Reglas:
 - Escribe el mensaje para el cliente entre una línea que diga exactamente [MENSAJE] y otra que diga exactamente [FIN]. Fuera de esas marcas, como mucho 2 líneas de nota para la oficina.
 - Mensaje corto (2-5 líneas), cercano y natural, como lo escribiría alguien del equipo. A clientes habituales, trato cercano en plural («¿necesitáis…?»); a negocios que aún no son clientes, «usted».
 - Firma con el nombre de quien escribe si se indica. Nunca te presentes como Harvey ni como una IA.
-- Usa SOLO los productos y precios que aparecen en los DATOS. Nunca inventes precios, ofertas, disponibilidad ni condiciones. Si no hay precio, no menciones precio.
+- Usa SOLO los productos y datos que aparecen en los DATOS. Nunca inventes precios, ofertas, disponibilidad ni condiciones.
+- PRECIOS: solo puedes poner un precio si aparece en «OFERTA PARA RECUPERARLO» o en «PRECIOS AUTORIZADOS». Si no aparece ninguno de esos apartados, NO menciones ningún precio ni cifra de dinero.
+- Si hay OFERTA PARA RECUPERARLO: recuérdale con naturalidad lo que nos compraba y ofrécele ese producto a ese precio, sin presionar y sin decir que es «nuestro coste».
 - Como mucho una o dos sugerencias de producto, y solo si encajan con lo que el cliente suele comprar o con una recomendación vigente. Nada de insistir ni de varias preguntas: termina con una sola pregunta fácil de contestar.
 - Español de España, sin markdown ni emojis en exceso (uno como mucho).`;
 
 async function mensaje(u: { id: string; nombre: string }, b: any) {
   const fecha = fechaValida(b.fecha) || sumaDias(hoyMadrid(), 1); let datos = ""; let clienteId: string | null = null;
+  let ofertas: any[] = []; let dudasOferta: string[] = [];
   const recs = await recomendacionesVigentes(fecha);
-  const txtRecs = (recs as any[]).map(r => `- ${r.titulo}${r.producto ? " (" + r.producto + ")" : ""}${r.precio != null ? ": " + Number(r.precio).toFixed(2).replace(".", ",") + " €/" + (r.unidad || "kg") : ""}${r.texto ? " · " + r.texto : ""}`).join("\n");
+  const txtRecs = (recs as any[]).map(r => `- ${r.titulo}${r.producto ? " (" + r.producto + ")" : ""}${r.texto ? " · " + r.texto : ""}`).join("\n");
   if (b.cliente_id) {
     clienteId = String(b.cliente_id);
     const [c] = await sql`select id, codigo, coalesce(nombre_comercial, nombre) as nombre, localidad from public.clientes where id = ${clienteId}`;
     if (!c) return json({ error: "Cliente no encontrado" }, 404);
-    const prods = await productosHabituales(clienteId, 10) as any[];
-    const precios = await preciosCliente(clienteId, prods.map(p => p.id));
+    const recuperar = b.tipo === "sin_pedir" || b.tipo === "producto_dejado";
+    const prods = await productosHabituales(clienteId, 10, recuperar ? 365 : 120) as any[];
+    if (recuperar) {
+      let objetivo = b.producto_codigo ? prods.filter(p => p.codigo === b.producto_codigo) : prods.slice(0, 2);
+      if (b.producto_codigo && !objetivo.length) objetivo = (await sql`select p.id, p.codigo, p.nombre, p.unidad_venta, p.unidad_precio, null as precio_medio from public.productos p where codigo = ${String(b.producto_codigo)}`) as any[];
+      const r = await ofertasRecuperar(objetivo); ofertas = r.ofertas; dudasOferta = r.dudas;
+    }
+    const precios = b.con_precios ? await preciosCliente(clienteId, prods.map(p => p.id)) : new Map<string, number>();
+    const euros = (n: number) => n.toFixed(2).replace(".", ",");
     datos = `CLIENTE: ${c.nombre}${c.localidad ? " (" + c.localidad + ")" : ""}
 MOTIVO DEL CONTACTO: ${b.motivo || "recordar pedido"}${b.detalle ? " — " + b.detalle : ""}
-PEDIDO PARA: ${DIAS[isoDow(fecha)]} ${fechaES(fecha)}
-LO QUE SUELE COMPRAR (últimos meses):
-${prods.map(p => `- ${p.nombre}: ${p.veces} veces, unos ${p.cantidad_media} ${p.unidad_venta || "kg"}${precios.has(p.id) ? ", su precio: " + precios.get(p.id)!.toFixed(2).replace(".", ",") + " €/" + (p.unidad_precio || "kg") : ""}`).join("\n") || "(sin historial)"}
-RECOMENDACIONES VIGENTES DE LA SEMANA:
+${recuperar ? "OBJETIVO: recuperar al cliente (o el producto que ha dejado de pedir). Mensaje cercano, sin reproches." : `PEDIDO PARA: ${DIAS[isoDow(fecha)]} ${fechaES(fecha)}`}
+LO QUE ${recuperar ? "COMPRABA" : "SUELE COMPRAR"} (${recuperar ? "último año" : "últimos meses"}):
+${prods.map(p => `- ${p.nombre}: ${p.veces} veces, unos ${p.cantidad_media} ${p.unidad_venta || "kg"} cada vez`).join("\n") || "(sin historial)"}
+${ofertas.length ? "OFERTA PARA RECUPERARLO (precios que SÍ puedes poner):\n" + ofertas.map(o => `- ${o.producto}: ${euros(o.oferta)} €/${o.unidad}`).join("\n") : ""}
+${precios.size ? "PRECIOS AUTORIZADOS por la oficina (tarifa de este cliente):\n" + prods.filter(p => precios.has(p.id)).map(p => `- ${p.nombre}: ${euros(precios.get(p.id)!)} €/${p.unidad_precio || "kg"}`).join("\n") : ""}
+RECOMENDACIONES VIGENTES DE LA SEMANA (sin precio):
 ${txtRecs || "(ninguna)"}`;
   } else if (b.prospecto_id) {
     const [p] = await sql`select nombre, tipo, localidad, notas from public.prospectos where id = ${String(b.prospecto_id)}`;
@@ -180,8 +248,8 @@ ${txtRecs || "(ninguna)"}
 OBJETIVO: primer contacto o seguimiento para presentarnos y ofrecer enviar la tarifa.`;
   } else return json({ error: "Falta el cliente" }, 400);
   const texto = await llamarIA(SISTEMA_MSG, `${datos}\n\nQUIEN ESCRIBE: ${u.nombre || "(nombre de la persona de la oficina)"}\nPrepara el mensaje.`, 900);
-  await registrar(u.id, "mensaje_preparado", clienteId, { prospecto_id: b.prospecto_id || null, motivo: b.motivo || null, fecha });
-  return json({ texto });
+  await registrar(u.id, "mensaje_preparado", clienteId, { prospecto_id: b.prospecto_id || null, motivo: b.motivo || null, fecha, ofertas: ofertas.map(o => ({ producto: o.producto, oferta: o.oferta, coste: o.coste })), con_precios: !!b.con_precios });
+  return json({ texto, ofertas, dudas_oferta: dudasOferta });
 }
 
 async function contactado(u: { id: string }, b: any) {
@@ -279,6 +347,13 @@ async function prefsSet(u: { id: string }, b: any) {
   const id = String(b.cliente_id || ""); if (!id) return json({ error: "Falta el cliente" }, 400);
   let wa: string | null = null;
   if (b.whatsapp != null && String(b.whatsapp).trim()) { wa = movil(String(b.whatsapp)); if (!wa) return json({ error: "Ese número no parece un móvil español (6xx o 7xx)" }, 400); }
+  if (b.solo_whatsapp) {   // desde «Móviles»: solo el número, sin tocar el resto de preferencias
+    if (!wa) return json({ error: "Escribe el móvil" }, 400);
+    await sql`insert into harvey.preferencias (cliente_id, whatsapp, acepta_whatsapp, updated_at, updated_by) values (${id}, ${wa}, ${!!b.acepta_whatsapp}, now(), ${u.id})
+      on conflict (cliente_id) do update set whatsapp = excluded.whatsapp, acepta_whatsapp = harvey.preferencias.acepta_whatsapp or excluded.acepta_whatsapp, updated_at = now(), updated_by = excluded.updated_by`;
+    await registrar(u.id, "preferencias_guardadas", id, { whatsapp: true, desde: "moviles" });
+    return json({ ok: true });
+  }
   const dias = Array.isArray(b.dias) ? b.dias.map((x: any) => Number(x)).filter((x: number) => x >= 1 && x <= 7) : null;
   const max = Math.min(7, Math.max(1, Number(b.max_semana) || 3));
   const hora = typeof b.hora === "string" && /^\d{2}:\d{2}$/.test(b.hora) ? b.hora : null;
