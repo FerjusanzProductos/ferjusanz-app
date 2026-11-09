@@ -3064,7 +3064,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v144';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v146';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -9562,7 +9562,7 @@ async function h2(accion, extra) {
 const h2Err = (el, e) => el.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : (e && e.message) || String(e)));
 const h2Mensaje = t => { const m = /\[MENSAJE\]\s*\n?([\s\S]*?)\n?\s*\[FIN\]/i.exec(t || ''); return { msg: (m ? m[1] : t || '').replace(/\*\*(.+?)\*\*/g, '*$1*').trim(), nota: m ? (t.slice(0, m.index) + t.slice(m.index + m[0].length)).trim() : '' }; };
 const h2Wa = (num, txt) => 'https://wa.me/' + (num || '') + '?text=' + encodeURIComponent(txt);
-const H2_MOTIVO = { habitual: '📋 Pedido habitual por confirmar', suele_pedir: '📅 Suele pedir este día', sin_pedir: '💤 Lleva tiempo sin pedir', producto_dejado: '🔻 Ha dejado de pedir un producto' };
+const H2_MOTIVO = { habitual: '📋 Pedido habitual por confirmar', suele_pedir: '📅 Suele pedir este día', sin_pedir: '💤 Lleva tiempo sin pedir', producto_dejado: '🔻 Ha dejado de pedir un producto', confirmar_pedido: '📦 Confirmar su pedido' };
 /* Quién aprueba los precios que propone Harvey (se le abre un WhatsApp con la petición) */
 const H2_APRUEBAN = [['Fernando (hijo)', '34609567354'], ['Fernando Sanz (padre)', '34609100690']];
 const H2_RE_PRECIO = /\d+(?:[.,]\d{1,2})?\s?(?:€|euros?)(?:\s?\/\s?[a-záéíóú]+)?/gi;
@@ -9584,7 +9584,7 @@ async function h2Preparar(caja, item, fecha, conPrecios) {
   caja.replaceChildren(h('p', { class: 'sub' }, '✍️ Harvey está preparando el mensaje…'));
   const recuperar = item.motivo === 'sin_pedir' || item.motivo === 'producto_dejado';
   try {
-    const r = await h2('mensaje', item.prospecto_id ? { prospecto_id: item.prospecto_id, fecha } : { cliente_id: item.cliente_id, motivo: H2_MOTIVO[item.motivo] || item.motivo, tipo: item.motivo, producto_codigo: item.producto_codigo || null, detalle: item.detalle, fecha, con_precios: !!conPrecios });
+    const r = await h2('mensaje', item.prospecto_id ? { prospecto_id: item.prospecto_id, fecha } : { cliente_id: item.cliente_id, motivo: H2_MOTIVO[item.motivo] || item.motivo, tipo: item.motivo, producto_codigo: item.producto_codigo || null, pedido_id: item.pedido_id || null, detalle: item.detalle, fecha, con_precios: !!conPrecios });
     const ofertas = r.ofertas || []; const dOf = r.dudas_oferta || [];
     const cajaOferta = ofertas.length || dOf.length ? h('div', { class: 'card', style: 'background:#eef7f0;border-color:var(--verde);margin:0 0 6px' }, h('b', {}, '💶 Oferta para recuperarlo (compra + 0,25 €)'),
       ...ofertas.map(o => h('div', { class: 'sub' }, o.producto + ': comprado a ' + eur(o.coste) + ' € (' + o.coste_fuente + ', ' + fechaES(String(o.coste_fecha).slice(0, 10)) + ') → oferta ' + eur(o.oferta) + ' €/' + o.unidad + (o.precio_antes ? ' · antes pagaba unos ' + eur(o.precio_antes) + ' €' : ''), o.aviso ? h('div', { style: 'color:#b36b00' }, '⚠️ ' + o.aviso) : null)),
@@ -9594,7 +9594,7 @@ async function h2Preparar(caja, item, fecha, conPrecios) {
     /* Si el mensaje lleva precios, se tapan hasta que Fernando los apruebe por WhatsApp */
     const precios = msg.match(H2_RE_PRECIO) || []; let aprobado = !precios.length && !ofertas.length;
     ta.value = aprobado ? msg : h2Tapa(msg); ta.readOnly = !aprobado;
-    const tipo = item.prospecto_id ? 'captacion' : (item.motivo === 'sin_pedir' ? 'seguimiento' : 'recordatorio');
+    const tipo = item.prospecto_id ? 'captacion' : item.motivo === 'confirmar_pedido' ? 'confirmacion' : (item.motivo === 'sin_pedir' ? 'seguimiento' : 'recordatorio');
     const marcar = async btn => { btn.disabled = true; try { const x = await h2('contactado', { cliente_id: item.cliente_id || null, prospecto_id: item.prospecto_id || null, tipo, mensaje: ta.value }); toast(x.duplicado ? 'Ya estaba apuntado hoy: no se duplica' : 'Apuntado como contactado', 'ok'); item.contactado_hoy = true; btn.textContent = '✔ Contactado hoy'; } catch (e) { btn.disabled = false; toast(e.message, 'err'); } };
     const bEnv = h('button', { class: 'ghost small', onclick: e => marcar(e.currentTarget) }, '✔ Marcar como enviado');
     const eu = n => eur(n) + ' €';
@@ -9630,7 +9630,9 @@ async function h2Hoy(el) {
       h('div', { class: 'sub' }, (it.hora ? '🕘 Escribir a las ' + it.hora + ' · ' : '') + (it.whatsapp ? '📱 +' + it.whatsapp : (it.telefono ? '☎️ ' + it.telefono + ' (no es móvil)' : '⚠️ Sin móvil: pídelo y apúntalo en ⚙️'))),
       h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' },
         h('button', { class: 'small', onclick: () => h2Preparar(caja, it, fecha) }, '✍️ Preparar mensaje'),
-        it.cliente_id ? h('button', { class: 'ghost small', onclick: () => h2Prefs(it.cliente_id, () => h2Hoy(el)) }, '⚙️ Preferencias') : null),
+        it.cliente_id ? h('button', { class: 'ghost small', onclick: () => h2Prefs(it.cliente_id, () => h2Hoy(el)) }, '⚙️ Preferencias') : null,
+        it.prospecto_id || it.motivo === 'sin_pedir' ? h('button', { class: 'ghost small', onclick: e => h2Presentacion(it, e.currentTarget) }, '🎬 Presentación') : null,
+        it.prospecto_id || it.motivo === 'sin_pedir' ? h('button', { class: 'ghost small', onclick: e => h2ListaPara(it, e.currentTarget) }, '📄 Lista de precios') : null),
       caja); };
   const porHora = a => a.slice().sort((x, y) => (x.hora || '99') < (y.hora || '99') ? -1 : (x.hora || '99') > (y.hora || '99') ? 1 : 0);
   const grupo = (titulo, items, ayuda) => items.length ? [h('h3', {}, titulo + ' (' + items.length + ')'), ayuda ? h('p', { class: 'sub', style: 'margin-top:-6px' }, ayuda) : null, ...porHora(items).map(tarjeta)] : [];
@@ -9640,10 +9642,43 @@ async function h2Hoy(el) {
     h('p', { class: 'sub' }, 'Historial de ventas hasta el ' + fechaES(d.historial_hasta) + '. No salen los clientes que ya tienen pedido para ese día, ni los que han pedido no recibir mensajes.' + (d.excluidos_por_preferencias ? ' (' + d.excluidos_por_preferencias + ' excluido(s) por sus preferencias.)' : '')),
     ...grupo('📅 Suelen pedir este día', cl.filter(x => x.motivo === 'suele_pedir' || x.motivo === 'habitual')),
     ...grupo('💤 Clientes perdidos: llevan tiempo sin pedir', cl.filter(x => x.motivo === 'sin_pedir'), 'Harvey les recuerda lo que compraban y les ofrece su producto principal a precio de compra + 0,25 €.'),
+    ...grupo('📦 Ya tienen pedido: confírmaselo', d.con_pedido || [], 'Harvey prepara un WhatsApp amable con lo que va en su pedido y les pregunta si quieren añadir algo.'),
     ...grupo('🔻 Han dejado de pedir un producto', d.productos_dejados || [], 'Siguen comprando, pero ya no este producto. Harvey prepara una oferta de ese producto (compra + 0,25 €).'),
     ...grupo('🎯 Leads para contactar hoy', d.leads || []),
     (d.sin_movil || []).length ? h('div', { class: 'card tap', style: 'border-left:4px solid #b36b00', onclick: () => { LS.set('fj_h2_sub', 'moviles'); tabHarvey(el.parentNode); } }, h('b', {}, '📱 Harvey te pide ' + d.sin_movil.length + ' móviles de clientes'), h('div', { class: 'sub' }, 'Clientes del último año sin móvil apuntado. Sin móvil no se les puede escribir por WhatsApp. Toca para completarlos.')) : null,
     !cl.length && !(d.leads || []).length ? h('p', { class: 'vacio' }, 'Nadie pendiente para ese día. 👌') : null);
+}
+
+/* --- 🎬 Presentación personalizada y 📄 lista de precios para un lead o cliente --- */
+const H2_LISTA_GENERAL = { hosteleria: '014cfef9-273a-422f-8a99-c9f5e7977425', colectivos: 'ba521bf5-2711-4ec3-baa1-df7936e9a3d3' };
+const h2EsColectivo = it => /colegio|residen|escuela|infantil|guarder|colectiv|catering|hospital/i.test((it.tipo || '') + ' ' + (it.nombre || ''));
+async function h2Presentacion(it, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '🎬 Preparando…'; }
+  try {
+    const r = await h2('propuesta', it.prospecto_id ? { prospecto_id: it.prospecto_id } : { cliente_id: it.cliente_id });
+    const tipo = r.tipo === 'colectivos' ? 'colectivos' : 'hosteleria'; const d = presPlantilla(tipo);
+    d[0] = Object.assign({}, d[0], { titulo: r.titulo || d[0].titulo, sub: r.subtitulo || d[0].sub });
+    const it2 = d.findIndex(x => x.t === 'texto'); if (it2 >= 0 && r.intro) d[it2] = Object.assign({}, d[it2], { texto: r.intro });
+    if ((r.puntos || []).length) d.splice(it2 >= 0 ? it2 + 1 : 1, 0, { t: 'lista', titulo: 'Lo que haremos por vosotros', puntos: r.puntos.slice(0, 6) });
+    d.forEach(x => { if (x.t === 'precios') x.lista_id = H2_LISTA_GENERAL[tipo]; });
+    const ins = await sb.from('presentaciones').insert({ titulo: 'Propuesta · ' + it.nombre, diapositivas: d }); if (ins.error) throw ins.error;
+    toast('Presentación «Propuesta · ' + it.nombre + '» creada. Revísala y envíala desde Presentaciones.', 'ok'); go('presentaciones');
+  } catch (e) { toast(e.message || String(e), 'err'); if (btn) { btn.disabled = false; btn.textContent = '🎬 Presentación'; } }
+}
+async function h2ListaPara(it, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '📄 Preparando…'; }
+  try {
+    const tipo = h2EsColectivo(it) ? 'colectivos' : 'hosteleria'; const base = H2_LISTA_GENERAL[tipo];
+    const [a, b] = await Promise.all([sb.from('listas_precios').select('*').eq('id', base).single(), sb.from('listas_precios_items').select('producto_id,nombre,precio,unidad,coste,nota').eq('lista_id', base).not('precio', 'is', null).order('nombre')]);
+    if (a.error) throw a.error; if (b.error) throw b.error;
+    const cab = await sb.from('listas_precios').insert({ nombre: 'Oferta · ' + it.nombre, tipo: a.data.tipo, titulo: 'Lista de precios · ' + it.nombre, subtitulo: a.data.subtitulo, pie: a.data.pie, presentacion: a.data.presentacion, incluir_recomendaciones: false, activa: true }).select('id').single(); if (cab.error) throw cab.error;
+    const filas = (b.data || []).sort((x, y) => String(x.nombre).localeCompare(String(y.nombre), 'es', { sensitivity: 'base' })).map((x, i) => Object.assign({}, x, { lista_id: cab.data.id, orden: i }));
+    if (filas.length) { const r = await sb.from('listas_precios_items').insert(filas); if (r.error) throw r.error; }
+    h2('anotar', { que: 'lista_creada', cliente_id: it.cliente_id || null }).catch(() => { });
+    toast('Lista «Oferta · ' + it.nombre + '» creada con ' + filas.length + ' productos de la tarifa ' + (tipo === 'colectivos' ? 'de colectividades' : 'de hostelería') + '. Retócala y guárdala.', 'ok');
+    abrirLista(cab.data.id, () => { });
+  } catch (e) { toast(e.message || String(e), 'err'); }
+  if (btn) { btn.disabled = false; btn.textContent = '📄 Lista de precios'; }
 }
 
 /* --- 📥 Pegar la respuesta del cliente → borrador --- */
@@ -9892,9 +9927,10 @@ async function tabHarveyChat(el) {
   };
   const pintarAtajos = () => {
     const n = foco ? foco.nombre : null;
-    const ops = n ? [['💬 Primer WhatsApp', 'Escríbeme el primer mensaje de WhatsApp para ' + n + ', presentándonos y ofreciendo lo que más le encaje según su tipo de negocio.'], ['📞 Guion de llamada', 'Prepárame un guion corto para llamar a ' + n + ', con preguntas para descubrir qué necesita.'], ['🔁 Seguimiento', 'Ya contactamos con ' + n + ' y no ha contestado. Escríbeme un mensaje de seguimiento amable que no resulte pesado.'], ['⭐ Oferta', 'Prepárame una oferta para ' + n + ' con las recomendaciones vigentes de la semana.']]
+    const ops = n ? [['💬 Primer WhatsApp', 'Escríbeme el primer WhatsApp para ' + n + '. Ya tienen proveedor: preséntanos por servicio, calidad, experiencia y estar pendientes de ellos, y propón pasar a visitarles para conocerles y que prueben nuestro género (con un día y una franja). No ofrezcas mandar tarifas.'], ['📞 Guion de llamada', 'Prepárame un guion corto para llamar a ' + n + ', con preguntas para descubrir qué necesita.'], ['🔁 Seguimiento', 'Ya contactamos con ' + n + ' y no ha contestado. Escríbeme un mensaje de seguimiento amable que no resulte pesado.'], ['⭐ Oferta', 'Prepárame una oferta para ' + n + ' con las recomendaciones vigentes de la semana.']]
       : [['⭐ Buscar clientes como los ideales', 'Según nuestro cliente ideal (La Figal de Pablo en hostelería; Colegio Reggio y Residencia El Pardo de Aravaca en colectividades), dime qué tipo de locales y centros debo buscar, en qué zonas de Madrid, qué contactos pendientes se les parecen más y cómo abordarlos.'], ['🎯 ¿A quién llamo hoy?', 'Mira los contactos pendientes y las quejas abiertas y dime a quién debería llamar hoy primero y por qué, con una frase para empezar cada llamada.'], ['⭐ Oferta de la semana', 'Escríbeme un WhatsApp para enviar a clientes de hostelería con las recomendaciones vigentes de esta semana.'], ['🙋 «Ya tengo proveedor»', 'Un cliente me dice «ya tengo proveedor». ¿Qué le contesto para no perderle?'], ['💶 «Es caro»', 'Un restaurante me dice que otro proveedor le hace mejor precio. ¿Cómo le respondo?'], ['😟 Responder a una queja', 'Ayúdame a contestar las quejas abiertas: un mensaje para cada cliente.'], ['🆕 Clientes nuevos', 'Escríbeme un mensaje para preguntar a los clientes nuevos de este mes qué tal su primer pedido.']];
-    atajos.replaceChildren(...ops.map(([t, p]) => h('button', { class: 'ghost small', onclick: () => { ta.value = p; enviar(); } }, t)));
+    atajos.replaceChildren(...ops.map(([t, p]) => h('button', { class: 'ghost small', onclick: () => { ta.value = p; enviar(); } }, t)),
+      ...(foco ? [h('button', { class: 'small', onclick: e => h2Presentacion({ prospecto_id: foco.id, nombre: foco.nombre, tipo: foco.tipo }, e.currentTarget) }, '🎬 Presentación para ' + n), h('button', { class: 'small', onclick: e => h2ListaPara({ prospecto_id: foco.id, nombre: foco.nombre, tipo: foco.tipo }, e.currentTarget) }, '📄 Lista de precios para ' + n)] : []));
   };
   async function enviar() {
     const t = ta.value.trim(); if (!t || ocupado) return;

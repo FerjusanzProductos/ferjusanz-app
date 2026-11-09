@@ -160,8 +160,15 @@ async function aQuienEscribir(fechaPedido: string) {
     from public.clientes c join harvey.entregas e on e.cliente_codigo = c.codigo left join harvey.preferencias pr on pr.cliente_id = c.id, ref
     where c.activo is not false and e.fecha > ref.r - 365 and coalesce(c.nombre_comercial, c.nombre) not ilike '%varios%'
     group by c.id, c.nombre_comercial, c.nombre, c.codigo, c.telefono, pr.whatsapp order by importe_90d desc limit 400`;
+  const conPedido = await sql`select x.id as pedido_id, c.id as cliente_id, coalesce(c.nombre_comercial, c.nombre) as nombre, c.telefono, c.localidad, pr.whatsapp, to_char(pr.hora, 'HH24:MI') as hora,
+      (select count(*) from public.lineas_pedido l where l.pedido_id = x.id)::int as lineas,
+      exists(select 1 from harvey.contactos k where k.cliente_id = c.id and k.fecha = ${hoy}::date and k.tipo = 'confirmacion') as contactado_hoy
+    from public.pedidos x join public.clientes c on c.id = x.cliente_id left join harvey.preferencias pr on pr.cliente_id = c.id
+    where x.fecha_entrega = ${fechaPedido}::date and coalesce(x.archivado, false) = false and x.estado <> 'anulado' and coalesce(pr.no_contactar, false) = false and exists(select 1 from public.lineas_pedido l where l.pedido_id = x.id)
+    order by 3 limit 80`;
   const [ref] = await sql`select max(fecha) as r from harvey.entregas where fecha <= current_date`;
   return {
+    con_pedido: (conPedido as any[]).map(p => ({ pedido_id: p.pedido_id, cliente_id: p.cliente_id, nombre: p.nombre, localidad: p.localidad, motivo: "confirmar_pedido", detalle: p.lineas + " producto(s) apuntados", hora: p.hora, whatsapp: movil(p.whatsapp, p.telefono), telefono: p.telefono, contactado_hoy: p.contactado_hoy })),
     fecha_pedido: fechaPedido, hoy, historial_hasta: ref?.r ?? null, excluidos_por_preferencias: excluidos,
     clientes: out,
     productos_dejados: (dejados as any[]).filter(d => !d.no_contactar).map(d => ({ cliente_id: d.id, nombre: d.nombre, codigo: d.codigo, localidad: d.localidad, motivo: "producto_dejado",
@@ -187,16 +194,26 @@ async function llamarIA(system: string, usuarioTexto: string, maxTokens = 1500, 
   if (r.stop_reason === "refusal") throw new Error("La IA no ha podido ayudar con esto");
   return r.content.filter((b: any) => b.type === "text").map((b: any) => b.text).join("\n").trim();
 }
-const SISTEMA_MSG = `Eres Harvey, el asistente comercial de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., mayorista familiar de patatas, fruta, verdura y huevos en Mercamadrid (Madrid). Preparas mensajes de WhatsApp que una persona de la oficina revisará y enviará con su nombre.
-Reglas:
+const SISTEMA_MSG = `Eres Harvey, el comercial de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L.: empresa familiar con tres generaciones en Mercamadrid (patatas, fruta, verdura y huevos), con cosechas propias y reparto con nuestros propios repartidores. Preparas mensajes de WhatsApp que una persona de la oficina revisará y enviará con su nombre.
+
+CÓMO ESCRIBES
+- Como un comercial con oficio y años de mercado: cercano, seguro y con entereza. Frases bien construidas y párrafos que se leen con naturalidad, nunca telegráficos ni de plantilla.
 - Escribe el mensaje para el cliente entre una línea que diga exactamente [MENSAJE] y otra que diga exactamente [FIN]. Fuera de esas marcas, como mucho 2 líneas de nota para la oficina.
-- Mensaje corto (2-5 líneas), cercano y natural, como lo escribiría alguien del equipo. A clientes habituales, trato cercano en plural («¿necesitáis…?»); a negocios que aún no son clientes, «usted».
-- Firma con el nombre de quien escribe si se indica. Nunca te presentes como Harvey ni como una IA.
-- Usa SOLO los productos y datos que aparecen en los DATOS. Nunca inventes precios, ofertas, disponibilidad ni condiciones.
-- PRECIOS: solo puedes poner un precio si aparece en «OFERTA PARA RECUPERARLO» o en «PRECIOS AUTORIZADOS». Si no aparece ninguno de esos apartados, NO menciones ningún precio ni cifra de dinero.
+- Entre 4 y 8 líneas. Español de España. A negocios que aún no son clientes, de usted; a los clientes habituales, trato cercano en plural («¿qué necesitáis…?»).
+- Firma con el nombre de quien escribe si se indica. Nunca te presentes como Harvey ni como una IA. Uno o ningún emoji.
+
+NUESTRA FORMA DE VENDER
+- Un negocio que no es cliente ya tiene proveedor y no nos necesita. No competimos por precio: nos diferenciamos por el servicio, la calidad del género, la experiencia de tres generaciones, estar pendientes de ellos y ayudarles en su día a día (que no les falte nada, adaptarnos a su cocina, resolver rápido cualquier problema).
+- El objetivo con un negocio nuevo es conseguir una VISITA: pasar a conocerles, ver su cocina, llevarles género para que lo prueben. Propón la visita con naturalidad, con una franja concreta («¿le viene bien que me pase el jueves por la mañana?»). NO ofrezcas mandar tarifas ni listas de precios salvo que nos las pidan.
+- Transmite que queremos que les vaya bien: si ellos crecen y están contentos, crecemos todos juntos.
+- Con los clientes habituales: pregunta con amabilidad qué necesitan para mañana, ofrécete a ayudar y, si ayuda, recuérdales lo que suelen llevar.
+- Las recomendaciones de la semana úsalas solo cuando encajen claramente con lo que ese cliente compra; la mayoría de las veces no hace falta nombrarlas.
+
+DATOS Y PRECIOS
+- Usa SOLO los productos y datos que aparecen en los DATOS. Nunca inventes precios, ofertas, disponibilidad, plazos ni condiciones.
+- Solo puedes poner un precio si aparece en «OFERTA PARA RECUPERARLO» o en «PRECIOS AUTORIZADOS». Si no, NO menciones precios ni cifras de dinero.
 - Si hay OFERTA PARA RECUPERARLO: recuérdale con naturalidad lo que nos compraba y ofrécele ese producto a ese precio, sin presionar y sin decir que es «nuestro coste».
-- Como mucho una o dos sugerencias de producto, y solo si encajan con lo que el cliente suele comprar o con una recomendación vigente. Nada de insistir ni de varias preguntas: termina con una sola pregunta fácil de contestar.
-- Español de España, sin markdown ni emojis en exceso (uno como mucho).`;
+- Si el motivo es CONFIRMAR PEDIDO: escribe una confirmación amable con la lista de lo que va (un producto por línea con su cantidad, tal como viene en los DATOS, sin precios) y pregunta si quieren añadir o cambiar algo antes de prepararlo.`;
 
 async function mensaje(u: { id: string; nombre: string }, b: any) {
   const fecha = fechaValida(b.fecha) || sumaDias(hoyMadrid(), 1); let datos = ""; let clienteId: string | null = null;
@@ -210,6 +227,11 @@ async function mensaje(u: { id: string; nombre: string }, b: any) {
     const [c] = await sql`select id, codigo, coalesce(nombre_comercial, nombre) as nombre, localidad from public.clientes where id = ${clienteId}`;
     if (!c) return json({ error: "Cliente no encontrado" }, 404);
     const recuperar = b.tipo === "sin_pedir" || b.tipo === "producto_dejado";
+    let txtPedido = "";
+    if (b.tipo === "confirmar_pedido" && b.pedido_id) {
+      const ls = await sql`select coalesce(pr.nombre, l.notas, 'producto') as producto, l.cantidad_pedida, l.unidad_pedida from public.lineas_pedido l left join public.productos pr on pr.id = l.producto_id where l.pedido_id = ${String(b.pedido_id)} order by pr.nombre`;
+      txtPedido = "PEDIDO YA APUNTADO PARA " + DIAS[isoDow(fecha)] + " " + fechaES(fecha) + ":\n" + (ls as any[]).map(x => `- ${x.cantidad_pedida ?? ""} ${x.unidad_pedida ?? ""} ${x.producto}`.replace(/\s+/g, " ").trim()).join("\n");
+    }
     const prods = await productosHabituales(clienteId, 10, recuperar ? 365 : 120) as any[];
     if (recuperar) {
       let objetivo = b.producto_codigo ? prods.filter(p => p.codigo === b.producto_codigo) : prods.slice(0, 2);
@@ -220,7 +242,7 @@ async function mensaje(u: { id: string; nombre: string }, b: any) {
     const euros = (n: number) => n.toFixed(2).replace(".", ",");
     datos = `CLIENTE: ${c.nombre}${c.localidad ? " (" + c.localidad + ")" : ""}
 MOTIVO DEL CONTACTO: ${b.motivo || "recordar pedido"}${b.detalle ? " — " + b.detalle : ""}
-${recuperar ? "OBJETIVO: recuperar al cliente (o el producto que ha dejado de pedir). Mensaje cercano, sin reproches." : `PEDIDO PARA: ${DIAS[isoDow(fecha)]} ${fechaES(fecha)}`}
+${recuperar ? "OBJETIVO: recuperar al cliente (o el producto que ha dejado de pedir). Mensaje cercano, sin reproches, recordando lo que nos compraba y ofreciendo nuestra ayuda." : b.tipo === "confirmar_pedido" ? "OBJETIVO: CONFIRMAR PEDIDO.\n" + txtPedido : `OBJETIVO: preguntar con amabilidad qué necesitan para el pedido de ${DIAS[isoDow(fecha)]} ${fechaES(fecha)}.`}
 LO QUE ${recuperar ? "COMPRABA" : "SUELE COMPRAR"} (${recuperar ? "último año" : "últimos meses"}):
 ${prods.map(p => `- ${p.nombre}: ${p.veces} veces, unos ${p.cantidad_media} ${p.unidad_venta || "kg"} cada vez`).join("\n") || "(sin historial)"}
 ${ofertas.length ? "OFERTA PARA RECUPERARLO (precios que SÍ puedes poner):\n" + ofertas.map(o => `- ${o.producto}: ${euros(o.oferta)} €/${o.unidad}`).join("\n") : ""}
@@ -235,11 +257,31 @@ NOTAS: ${p.notas || ""}
 REFERENCIAS QUE SE PUEDEN NOMBRAR (una, la más cercana): Restaurante La Figal de Pablo (San Sebastián de los Reyes); Hotel Cándido y Mesón de Cándido (Segovia); Colegio Reggio y Residencia El Pardo de Aravaca (colectividades).
 RECOMENDACIONES VIGENTES:
 ${txtRecs || "(ninguna)"}
-OBJETIVO: primer contacto o seguimiento para presentarnos y ofrecer enviar la tarifa.`;
+OBJETIVO: primer contacto o seguimiento. Ya tienen proveedor: preséntanos por servicio, calidad, experiencia y cercanía, y consigue una VISITA para conocerles y que prueben nuestro género (propón un día y una franja). No ofrezcas enviar tarifas.`;
   } else return json({ error: "Falta el cliente" }, 400);
   const texto = await llamarIA(SISTEMA_MSG, `${datos}\n\nNOTAS INTERNAS DE LA EMPRESA (para que decidas bien; NO las cuentes al cliente):\n${txtNotas || "(ninguna)"}\n\nQUIEN ESCRIBE: ${u.nombre || "(nombre de la persona de la oficina)"}\nPrepara el mensaje.`, 900);
   await registrar(u.id, "mensaje_preparado", clienteId, { prospecto_id: b.prospecto_id || null, motivo: b.motivo || null, fecha, ofertas: ofertas.map(o => ({ producto: o.producto, oferta: o.oferta, coste: o.coste })), con_precios: !!b.con_precios });
   return json({ texto, ofertas, dudas_oferta: dudasOferta });
+}
+
+const ESQUEMA_PROPUESTA = { type: "object", additionalProperties: false, required: ["titulo", "subtitulo", "intro", "puntos"],
+  properties: { titulo: { type: "string", description: "título de portada, corto y con gancho, con el nombre del negocio" }, subtitulo: { type: "string" },
+    intro: { type: "string", description: "3-5 frases de presentación personalizada para ese negocio" },
+    puntos: { type: "array", items: { type: "string" }, description: "5 compromisos concretos de servicio para ese negocio (sin precios)" } } };
+async function propuesta(u: { id: string; nombre: string }, b: any) {
+  let datos = ""; let tipoNeg = "hosteleria";
+  if (b.prospecto_id) { const [p] = await sql`select nombre, tipo, localidad, notas from public.prospectos where id = ${String(b.prospecto_id)}`; if (!p) return json({ error: "Contacto no encontrado" }, 404);
+    datos = `NEGOCIO (aún no es cliente): ${p.nombre} · ${p.tipo || ""} · ${p.localidad || ""}\nNOTAS: ${p.notas || ""}`; if (/colegio|residen|escuela|infantil|guarder|colectiv|catering|hospital/i.test((p.tipo || "") + " " + (p.nombre || ""))) tipoNeg = "colectivos"; }
+  else if (b.cliente_id) { const [c] = await sql`select coalesce(nombre_comercial, nombre) as nombre, localidad from public.clientes where id = ${String(b.cliente_id)}`; if (!c) return json({ error: "Cliente no encontrado" }, 404);
+    const prods = await productosHabituales(String(b.cliente_id), 8, 365) as any[]; datos = `CLIENTE: ${c.nombre} · ${c.localidad || ""}\nLO QUE NOS COMPRA: ${prods.map(p => p.nombre).join(", ") || "(sin historial)"}`;
+    if (/colegio|residen|escuela|infantil|guarder/i.test(c.nombre)) tipoNeg = "colectivos"; }
+  else return json({ error: "Falta el cliente" }, 400);
+  const salida = await llamarIA(SISTEMA_MSG + "\n\nAHORA NO escribes un WhatsApp: preparas el texto de una presentación personalizada (devuelve SOLO el JSON pedido).",
+    `${datos}\nREFERENCIAS QUE SE PUEDEN NOMBRAR: La Figal de Pablo (hostelería, San Sebastián de los Reyes); Hotel Cándido y Mesón de Cándido (Segovia); Colegio Reggio y Residencia El Pardo de Aravaca (colectividades).\nQUIEN LA PRESENTA: ${u.nombre || "la oficina"}`, 1500, ESQUEMA_PROPUESTA);
+  let r: any; try { r = JSON.parse(salida); } catch (_) { const m = salida.match(/\{[\s\S]*\}/); r = m ? JSON.parse(m[0]) : null; }
+  if (!r) return json({ error: "No se pudo preparar la presentación" }, 502);
+  await registrar(u.id, "propuesta_preparada", b.cliente_id || null, { prospecto_id: b.prospecto_id || null });
+  return json({ ...r, tipo: tipoNeg });
 }
 
 async function contactado(u: { id: string }, b: any) {
@@ -358,7 +400,7 @@ const ACCIONES: Record<string, string> = {
   mensaje_preparado: "✍️ Preparó un mensaje", contacto_apuntado: "✔ Contacto apuntado", contacto_duplicado_evitado: "🛑 Evitó un mensaje repetido",
   borrador_creado: "📥 Interpretó un pedido", borrador_pasado: "➡️ Borrador pasado a pedido", borrador_descartado: "🗑️ Borrador descartado",
   borrador_pendiente: "↩️ Borrador reabierto", preferencias_guardadas: "⚙️ Preferencias cambiadas",
-  precio_solicitado: "📲 Pidió aprobación de un precio", precio_aprobado: "✅ Precio aprobado", tarifa_recalculada: "🔄 Tarifa recalculada",
+  precio_solicitado: "📲 Pidió aprobación de un precio", propuesta_preparada: "🎬 Preparó una presentación", lista_creada: "📄 Preparó una lista de precios", precio_aprobado: "✅ Precio aprobado", tarifa_recalculada: "🔄 Tarifa recalculada",
   tarifa_aplicada: "💶 Tarifa nueva aplicada", tarifa_deshecha: "↩️ Tarifa deshecha", tarifa_descartada: "🗑️ Borrador de tarifa descartado",
 };
 async function actividad(b: any) {
@@ -430,7 +472,7 @@ async function tarifaDescartar(u: { id: string }, b: any) {
 }
 /** Apuntes sueltos en el registro (petición y aprobación de precios). */
 async function anotar(u: { id: string }, b: any) {
-  const ok = ["precio_solicitado", "precio_aprobado"]; if (!ok.includes(b.que)) return json({ error: "No válido" }, 400);
+  const ok = ["precio_solicitado", "precio_aprobado", "lista_creada"]; if (!ok.includes(b.que)) return json({ error: "No válido" }, 400);
   await registrar(u.id, b.que, b.cliente_id || null, { a_quien: b.a_quien || null, ofertas: b.ofertas || null });
   return json({ ok: true });
 }
@@ -464,6 +506,7 @@ Deno.serve(async (req) => {
       case "tarifa_deshacer": return await tarifaDeshacer(u, b);
       case "tarifa_descartar": return await tarifaDescartar(u, b);
       case "anotar": return await anotar(u, b);
+      case "propuesta": return await propuesta(u, b);
       default: return json({ error: "Acción desconocida" }, 400);
     }
   } catch (e) {
