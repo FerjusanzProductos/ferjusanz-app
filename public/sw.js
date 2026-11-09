@@ -1,11 +1,11 @@
 // Service worker de Ferjusanz: permite abrir la app sin conexión.
 // Guarda la propia app y la librería de Supabase. Los datos NUNCA se guardan aquí
 // (las llamadas a supabase.co siempre van a la red).
-const CACHE = 'ferjusanz-v105';
+const CACHE = 'ferjusanz-v124';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 // Librería de Supabase (la misma dirección que usa index.html): se guarda en la instalación
 // para que la app arranque aunque no haya conexión.
-const LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+const LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0';
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(async c => {
