@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1b7f3b">
-<script>(function(){try{var t=localStorage.getItem("fj_tema")||"auto";var o=t==="oscuro"||(t==="auto"&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.setAttribute("data-tema",o?"oscuro":"claro")}catch(e){}})()</script>
+<script>(function(){try{var t=localStorage.getItem("fj_tema")||"auto";var o=t==="oscuro"||(t==="auto"&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.setAttribute("data-tema",o?"oscuro":"claro")}catch(e){};try{var z=parseFloat(localStorage.getItem("fj_zoom"));if(z>1&&z<=1.6&&!/[?&](a|c)=/.test(location.search))document.documentElement.style.zoom=z}catch(e){}})()</script>
 <title>Ferjusanz</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
@@ -350,6 +350,9 @@ nav.tabs button{min-height:50px}
 #fjflot{position:fixed;right:8px;bottom:calc(78px + env(safe-area-inset-bottom));z-index:7;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 #fjflot button{width:42px;height:42px;min-height:42px;padding:0;border-radius:50%;font-size:20px;background:#fff;color:var(--txt);border:1px solid var(--borde);box-shadow:0 2px 6px rgba(0,0,0,.18);opacity:.9}
 #fjflot button.on{background:var(--verde);color:#fff;border-color:var(--verde)}
+/* Con la letra ampliada, la cabecera usa menos hueco para que quepan todos los botones */
+html[style*=zoom] header{gap:4px;padding-left:6px;padding-right:6px;flex-wrap:wrap;row-gap:4px}html[style*=zoom] header .tit{display:none}html[style*=zoom] header .chatbtn{min-width:34px}html[style*=zoom] header .back{padding:0 8px}
+#fjflot button.zoom{font-size:15px;font-weight:800;opacity:1;width:auto;min-width:42px;padding:0 8px;border-radius:999px}
 #fjflot button.habla{background:#dc2626;color:#fff;border-color:#dc2626;animation:parp2 1s infinite}
 #fjflot .dev{font-size:12px;font-weight:700;background:#1e3a8a;color:#fff;border-radius:999px;padding:3px 8px}
 @keyframes parp2{50%{opacity:.6}}
@@ -402,29 +405,7 @@ html[data-tema=oscuro] .bandeja-fac{background:linear-gradient(135deg,#67bf8f,#9
 html[data-tema=oscuro] .bandeja-fac.portal.nuevo,html[data-tema=oscuro] .portalbtn.nuevo{background:linear-gradient(135deg,#65a3ff,#169fdf) !important;color:#000 !important}
 html[data-tema=oscuro] .portalbtn.nuevo{box-shadow:0 0 0 2px #000,0 0 12px rgba(0,0,0,.6)}
 
-/* ===== v142: diseño decorado y con degradados (app y portal de clientes) ===== */
-body{background:radial-gradient(1200px 500px at 100% -10%,#dff3e6 0%,transparent 60%),radial-gradient(900px 420px at -10% 110%,#fef3c7 0%,transparent 55%),linear-gradient(180deg,#f4f8f2,#eaf2ec) fixed}
-header{background:linear-gradient(120deg,#0f5132 0%,#1b7f3b 45%,#2fa35c 100%);box-shadow:0 4px 18px rgba(15,81,50,.28);border-bottom:3px solid transparent;border-image:linear-gradient(90deg,#facc15,#f59e0b,#facc15) 1}
-header .back{background:rgba(255,255,255,.16);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.22)}
-button:where(:not(.ghost):not(.peligro):not(.chip):not(.back):not(.chatbtn):not(.quien):not(.circ):not(.calbtn):not(.fichar-btn):not(.bandeja-fac):not(.portalbtn):not(.pub-fila)){background:linear-gradient(135deg,#22a05a,#1b7f3b 55%,#14602c);box-shadow:0 3px 10px rgba(27,127,59,.25),inset 0 1px 0 rgba(255,255,255,.18)}
-nav.tabs button{box-shadow:none}
-button.guardar{background:linear-gradient(135deg,#34c26f,#1b9d55 50%,#14602c)!important;box-shadow:0 6px 16px rgba(27,157,85,.32),inset 0 1px 0 rgba(255,255,255,.25)!important;letter-spacing:.2px}
-button.ghost{background:linear-gradient(180deg,#ffffff,#f3f7f4);box-shadow:0 1px 3px rgba(20,40,25,.08)}
-button.peligro{background:linear-gradient(180deg,#fff,#fdf2f2)}
-.card{background:linear-gradient(160deg,#ffffff 0%,#fbfdfb 60%,#f3faf5 100%);border:1px solid rgba(27,127,59,.13);box-shadow:0 2px 8px rgba(20,60,35,.07),0 1px 2px rgba(20,60,35,.05)}
-.chip{background:linear-gradient(180deg,#fff,#f4f7f5)}
-.chip.on{background:linear-gradient(135deg,#22a05a,#14602c)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 3px 10px rgba(27,127,59,.3)}
-nav.tabs{background:linear-gradient(180deg,rgba(255,255,255,.96),#f1f7f3);backdrop-filter:blur(8px);box-shadow:0 -4px 16px rgba(20,60,35,.08)}
-nav.tabs button{background:transparent}
-nav.tabs button.on{background:linear-gradient(135deg,#dcfce7,#bbf7d0);border-color:#22a05a;box-shadow:0 2px 8px rgba(27,127,59,.18)}
-.bandeja-fac{box-shadow:0 6px 18px rgba(15,81,50,.25);position:relative;overflow:hidden}
-.bandeja-fac::after{content:'';position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.22),transparent 70%);pointer-events:none}
-.circ .c{background:radial-gradient(circle at 30% 25%,#ffffff 0%,#ffffff 45%,color-mix(in srgb,var(--c) 14%,#fff) 100%);box-shadow:0 4px 12px color-mix(in srgb,var(--c) 28%,transparent),inset 0 -3px 6px color-mix(in srgb,var(--c) 10%,transparent)}
-.grupo{background:linear-gradient(90deg,#14602c,#22a05a);-webkit-background-clip:text;background-clip:text;color:transparent}
-.saludo>div:first-child{background:linear-gradient(90deg,#0f5132,#22a05a);-webkit-background-clip:text;background-clip:text;color:transparent}
-.aviso-card{background:linear-gradient(135deg,#fffbeb,#fef3c7);box-shadow:0 2px 8px rgba(180,120,0,.12)}
-.sheet{background:linear-gradient(180deg,#ffffff,#f7fbf8)}
-/* Portal de clientes */
+/* ===== Portal de clientes decorado (la app se queda con su diseño de siempre) ===== */
 .pub{background:linear-gradient(180deg,#f6fbf7,#ffffff 240px)}
 .pub-cab{background:linear-gradient(120deg,#0f5132 0%,#1b7f3b 50%,#34a866 100%);border-bottom:0;position:relative;overflow:hidden;padding:22px 16px 26px;border-radius:0 0 22px 22px;box-shadow:0 8px 24px rgba(15,81,50,.25)}
 .pub-cab::before{content:'';position:absolute;right:-40px;top:-50px;width:170px;height:170px;border-radius:50%;background:radial-gradient(circle,rgba(250,204,21,.45),transparent 70%)}
@@ -3064,7 +3045,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v146';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v148';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -10986,12 +10967,19 @@ async function refrescaPortalPend() {
   try { const t = Date.now(); if (!navigator.onLine || !state.user || !state.perfil || (window.__PORTAL_T && t - window.__PORTAL_T < 90000)) return; window.__PORTAL_T = t;
     const l = await albaranesSinPublicar(3650); window.__PORTAL_PEND = l.length; document.querySelectorAll('.portalbtn').forEach(x => x.classList.toggle('nuevo', l.length > 0)); } catch (e) { }
 }
+/* 🔍 Letra más grande: solo AMPLÍA (nunca aleja). Cada toque agranda un poco; después del máximo vuelve al tamaño normal. Se guarda en cada móvil. */
+const ZOOMS = [1, 1.15, 1.3, 1.5];
+const fjZoom = () => { try { const z = parseFloat(localStorage.getItem('fj_zoom')); return ZOOMS.includes(z) ? z : 1; } catch (e) { return 1; } };
+function aplicaZoom() { const z = fjZoom(); document.documentElement.style.zoom = z > 1 ? String(z) : ''; }
+function cambiaZoom() { const z = fjZoom(); const n = ZOOMS[(ZOOMS.indexOf(z) + 1) % ZOOMS.length]; try { localStorage.setItem('fj_zoom', String(n)); } catch (e) { }
+  aplicaZoom(); pintaFlot(); toast(n === 1 ? 'Letra normal' : 'Letra ' + (n === 1.15 ? 'grande' : n === 1.3 ? 'muy grande' : 'enorme') + ' (' + Math.round(n * 100) + '%). Toca otra vez para más.', 'ok'); }
 function pintaFlot() {
   let f = document.getElementById('fjflot'); if (!f) { f = document.createElement('div'); f.id = 'fjflot'; document.body.appendChild(f); }
   if (!state.user || !state.perfil) { f.style.display = 'none'; return; } f.style.display = '';
   const osc = document.documentElement.getAttribute('data-tema') === 'oscuro'; 
   const bt = h('button', { title: osc ? 'Modo claro' : 'Modo oscuro', 'aria-label': 'Cambiar tema', onclick: () => ponTema(osc ? 'claro' : 'oscuro') }, osc ? '☀️' : '🌙');
-  f.replaceChildren(...(SALA.n > 1 ? [h('span', { class: 'dev', title: 'Dispositivos conectados ahora' }, '👥 ' + SALA.n)] : []), bt);
+  const z = fjZoom(); const bz = h('button', { class: 'zoom' + (z > 1 ? ' on' : ''), title: 'Letra más grande', 'aria-label': 'Letra más grande', onclick: cambiaZoom }, z > 1 ? Math.round(z * 100) + '%' : 'A+');
+  f.replaceChildren(...(SALA.n > 1 ? [h('span', { class: 'dev', title: 'Dispositivos conectados ahora' }, '👥 ' + SALA.n)] : []), bz, bt);
 }
 
 /* =====================  ARRANQUE  ===================== */
