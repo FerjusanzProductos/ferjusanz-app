@@ -4691,7 +4691,7 @@ function vistaMas() {
         ...g('Entregas y pedidos', c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a')),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
     ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z)),
-    ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null),
+    ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
     ...g('Compras y mercancía', c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('💶', 'Precios de compra', () => { if (LS.get('fj_precios_modo', 'dia') === 'hoy') LS.set('fj_precios_modo', 'dia'); go('precios'); }, A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('❓', 'Ayuda y guía', () => go('ayuda'), T), c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
@@ -9371,6 +9371,7 @@ async function tabListas(el) {
     const n = await sb.from('listas_precios_items').select('lista_id'); const cuenta = {}; (n.data || []).forEach(x => { cuenta[x.lista_id] = (cuenta[x.lista_id] || 0) + 1; });
     const ct = comInput('text', LS.get('fj_com_contacto', ''), { placeholder: 'Ej.: Tel. 609 100 690 · pedidos@…' }); ct.addEventListener('change', () => { LS.set('fj_com_contacto', ct.value.trim()); toast('Contacto guardado', 'ok'); });
     el.replaceChildren(
+      h('button', { class: 'bandeja-fac', style: 'width:100%;margin-bottom:8px', onclick: () => go('tarifas') }, h('span', { class: 'ic' }, '💶'), h('span', { class: 'tt' }, 'Tarifas nuevas', h('small', {}, 'Hostelería y colectividades al día con el último precio de compra · se preparan solas cada mañana'))),
       h('p', { class: 'sub' }, 'Listas de precios para enviar a clientes nuevos, hostelería, colectivos u ofertas. Se descargan en PDF con diseño. Los precios de aquí NO cambian los de los clientes actuales.'),
       comCampo('Contacto que sale al pie de los PDF', ct),
       ...(r.data || []).map(l => h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, l.nombre), h('div', { class: 'sub' }, comNombreDe(COM_TIPOS, l.tipo) + ' · ' + (cuenta[l.id] || 0) + ' productos')), h('button', { class: 'ghost small', onclick: () => abrirLista(l.id, () => tabListas(el)) }, '✏️ Editar')),
@@ -9619,45 +9620,89 @@ async function h2Moviles(el) {
 /* --- 💶 Tarifas para clientes nuevos: borradores diarios que solo se aplican al confirmar --- */
 async function h2Tarifas(el) {
   let d; try { d = await h2('tarifas'); } catch (e) { h2Err(el, e); return; }
-  const tarjeta = L => {
-    const bo = L.borrador; const caja = h('div', { class: 'card' }); const eu = n => n == null ? '—' : eur(n);
-    const margenes = []; for (let m = L.margen_min; m <= L.margen_max + 0.001; m += 0.05) margenes.push(Math.round(m * 100) / 100);
-    const mActual = bo ? bo.margen : L.margen;
-    const items = bo ? bo.items || [] : []; const marcados = new Set(items.filter(i => i.nuevo != null && !i.nuevo_producto).map(i => i.item_id || 'p:' + i.producto_id));
-    const ajustes = {};   // precios cambiados a mano con ▲ ▼ (clave → €)
-    const fila = i => { const clave = i.item_id || 'p:' + i.producto_id; const ck = h('input', { type: 'checkbox', checked: marcados.has(clave), disabled: i.nuevo == null, onchange: e => { e.target.checked ? marcados.add(clave) : marcados.delete(clave); pintarBoton(); } });
-      const sube = i.antes != null && i.nuevo != null ? (i.nuevo - i.antes) : null;
-      return h('tr', { style: 'border-top:1px solid var(--borde)' + (i.nuevo == null ? ';opacity:.55' : '') + (i.aviso ? ';background:#fff3d6;color:#5b3a00' : '') },
-        h('td', { style: 'padding:4px' }, ck), h('td', { style: 'padding:4px' }, h('b', {}, i.nombre), i.nuevo_producto ? h('span', { class: 'sub' }, ' ⭐ nuevo') : null,
-          h('div', { class: 'sub' }, i.coste != null ? 'compra ' + eu(i.coste) + ' €' + (i.coste_fecha ? ' (' + fechaES(String(i.coste_fecha).slice(0, 10)).slice(0, 5) + ')' : '') + (i.proveedor ? ' · ' + String(i.proveedor).replace(/\s+(S\.?L\.?|S\.?A\.?).*$/i, '') : '') : ''), i.venta_media != null ? h('div', { class: 'sub', style: i.nuevo != null && i.nuevo < i.venta_media * 0.85 ? 'color:#b36b00' : '' }, (i.nuevo != null && i.nuevo < i.venta_media * 0.85 ? '⬇️ ' : '') + 'vendéis a ' + eu(i.venta_media) + ' €') : null,
-          i.duda ? h('div', { class: 'sub' }, i.duda) : null, i.aviso ? h('div', { class: 'sub', style: 'color:#b36b00' }, '⚠️ ' + i.aviso) : null),
-        h('td', { style: 'padding:4px;text-align:right;white-space:nowrap' }, eu(i.antes)), celdaNuevo(i, clave), celdaGana(i, clave)); };
-    const precioDe = (i, clave) => ajustes[clave] != null ? ajustes[clave] : i.nuevo;
-    const celdaGana = (i, clave) => { const td = h('td', { style: 'padding:4px;text-align:right;white-space:nowrap' }); const pinta = () => { const p = precioDe(i, clave);
-        if (p == null || i.coste == null) { td.replaceChildren(h('span', { class: 'sub' }, '—')); return; } const g = p - Number(i.coste);
-        td.replaceChildren(h('b', { style: 'color:' + (g < 0 ? '#b91c1c' : 'var(--verde)') }, (g >= 0 ? '+' : '') + eur(g)), h('div', { class: 'sub' }, '€/kg'), h('div', { class: 'sub' }, Math.round(g / p * 100) + ' %')); };
-      td.__pinta = pinta; pinta(); return td; };
-    const celdaNuevo = (i, clave) => { const td = h('td', { style: 'padding:4px;text-align:right;white-space:nowrap' });
-      if (i.nuevo == null) { td.append(h('b', {}, '—')); return td; }
-      const valor = h('b', {}); const marca = h('div', { class: 'sub' });
-      const pinta = () => { const p = precioDe(i, clave); valor.textContent = eu(p); const sube = i.antes != null ? p - i.antes : null;
-        marca.textContent = (ajustes[clave] != null ? '✋ a mano' : '') + (sube != null && Math.abs(sube) > 0.005 ? (ajustes[clave] != null ? ' · ' : '') + (sube > 0 ? '+' : '') + eur(sube) : ''); const fila = td.parentNode; if (fila && fila.lastChild && fila.lastChild.__pinta) fila.lastChild.__pinta(); };
-      const mueve = d => { const p = Math.max(0.05, Math.round((precioDe(i, clave) + d) * 100) / 100); ajustes[clave] = Math.abs(p - i.nuevo) < 0.001 ? undefined : p; if (ajustes[clave] === undefined) delete ajustes[clave]; pinta(); };
-      const bt = (t, d) => h('button', { class: 'ghost', style: 'min-height:30px;min-width:40px;padding:0 6px;margin:0;font-size:13px;line-height:1', onclick: () => mueve(d) }, t);
-      td.append(h('div', { style: 'display:flex;flex-direction:column;align-items:flex-end;gap:2px' }, bt('▲', 0.05), valor, bt('▼', -0.05)), marca); setTimeout(pinta, 0); return td; };
-    const bAplicar = h('button', { style: 'flex:1;min-height:48px' }); const pintarBoton = () => { bAplicar.textContent = '✅ Aplicar ' + marcados.size + ' precio(s) a la lista'; bAplicar.disabled = !marcados.size; };
-    bAplicar.onclick = async () => { if (!await confirmar('¿Aplicar ' + marcados.size + ' precio(s) a la lista «' + L.nombre + '»? Se podrá deshacer.')) return; bAplicar.disabled = true; try { const precios = {}; [...marcados].forEach(k => { if (ajustes[k] != null) precios[k] = ajustes[k]; }); const r = await h2('tarifa_aplicar', { id: bo.id, elegidos: [...marcados], precios }); toast(r.cambios + ' precio(s) actualizados', 'ok'); h2Tarifas(el); } catch (e) { toast(e.message, 'err'); bAplicar.disabled = false; } };
-    pintarBoton();
-    caja.append(h('div', { class: 'nombre' }, L.etiqueta), h('div', { class: 'sub' }, 'Lista «' + L.nombre + '» · precio de compra + margen por kilo · última actualización de la lista ' + fechaES(String(L.updated_at).slice(0, 10))),
-      h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;align-items:center' }, h('span', { class: 'sub' }, 'Margen:'), ...margenes.map(m => h('button', { class: 'chip' + (Math.abs(m - mActual) < 0.001 ? ' on' : ''), onclick: async () => { try { await h2('tarifa_recalcular', { lista_id: L.lista_id, margen: m }); h2Tarifas(el); } catch (e) { toast(e.message, 'err'); } } }, '+' + eur(m) + ' €/kg')),
-        h('button', { class: 'ghost small', onclick: async () => { try { await h2('tarifa_recalcular', { lista_id: L.lista_id, margen: mActual }); toast('Recalculado con las últimas compras', 'ok'); h2Tarifas(el); } catch (e) { toast(e.message, 'err'); } } }, '🔄 Recalcular ahora')),
-      bo ? h('div', {}, h('div', { class: 'sub' }, 'Borrador ' + (bo.automatico ? 'automático' : 'recalculado') + ' del ' + fechaES(String(bo.created_at).slice(0, 10)) + '. La lista NO cambia hasta que pulses «Aplicar». Marcados: los que tienen precio de compra reciente.'),
-          h('div', { style: 'overflow-x:auto' }, h('table', { style: 'width:100%;font-size:13px;border-collapse:collapse;margin-top:6px' }, h('tr', { class: 'sub' }, h('th', {}), h('th', { style: 'text-align:left' }, 'Producto'), h('th', { style: 'text-align:right' }, 'Ahora'), h('th', { style: 'text-align:right' }, 'Nuevo'), h('th', { style: 'text-align:right' }, 'Ganas')), ...items.map(fila))),
-          h('div', { style: 'display:flex;gap:6px;margin-top:8px' }, bAplicar, h('button', { class: 'ghost', onclick: async () => { if (!await confirmar('¿Descartar este borrador?')) return; try { await h2('tarifa_descartar', { id: bo.id }); h2Tarifas(el); } catch (e) { toast(e.message, 'err'); } } }, 'Descartar')))
-        : h('p', { class: 'vacio' }, 'No hay borrador pendiente. Pulsa «Recalcular ahora» o espera al de mañana (se prepara solo cada día a las 7:15).'),
-      L.ultimo_aplicado ? h('button', { class: 'ghost small', style: 'margin-top:8px', onclick: async () => { if (!await confirmar('¿Devolver la lista a como estaba antes de la última actualización (' + fechaES(String(L.ultimo_aplicado.resuelto_en).slice(0, 10)) + ')?')) return; try { await h2('tarifa_deshacer', { id: L.ultimo_aplicado.id }); toast('Lista devuelta a como estaba', 'ok'); h2Tarifas(el); } catch (e) { toast(e.message, 'err'); } } }, '↩️ Deshacer la última actualización') : null);
-    return caja; };
-  el.replaceChildren(h('p', { class: 'sub' }, 'Solo para las listas de CLIENTES NUEVOS. Cada mañana Harvey prepara un borrador con el último precio de compra (facturas de proveedor, precio del día y lotes) + el margen, y lo compara con lo que vendéis de media (histórico de Golden). Sale bien si las compras y Golden están al día. Las listas de clientes concretos no se tocan. Patata pelada: siempre con el precio de El Parleño.'), ...(d.listas || []).map(tarjeta));
+  const listas = d.listas || []; if (!listas.length) { el.replaceChildren(h('p', { class: 'vacio' }, 'No hay listas configuradas.')); return; }
+  let actual = LS.get('fj_tar_lista', listas[0].lista_id); if (!listas.some(L => L.lista_id === actual)) actual = listas[0].lista_id;
+  const eu = n => n == null ? '—' : eur(n);
+  const chips = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:6px 0' }, ...listas.map(L => h('button', { class: 'chip' + (L.lista_id === actual ? ' on' : ''), onclick: () => { LS.set('fj_tar_lista', L.lista_id); h2Tarifas(el); } }, L.etiqueta.replace(' (clientes nuevos)', ''))));
+  const L = listas.find(x => x.lista_id === actual); const bo = L.borrador; const caja = h('div', { class: 'card' });
+  const margenes = []; for (let m = L.margen_min; m <= L.margen_max + 0.001; m += 0.05) margenes.push(Math.round(m * 100) / 100);
+  const mActual = bo ? bo.margen : L.margen;
+  const items = bo ? bo.items || [] : []; const clave = i => i.item_id || 'p:' + i.producto_id;
+  const marcados = new Set(items.filter(i => i.nuevo != null && !i.nuevo_producto).map(clave));
+  const ajustes = {};   // precios cambiados a mano (▲ ▼ o escritos): clave → €
+  const precioDe = i => ajustes[clave(i)] != null ? ajustes[clave(i)] : i.nuevo;
+  const recalcular = async m => { try { await h2('tarifa_recalcular', { lista_id: L.lista_id, margen: m }); h2Tarifas(el); } catch (e) { toast(e.message, 'err'); } };
+  const fila = i => {
+    const k = clave(i); const sinPrecio = i.nuevo == null;
+    const ck = h('input', { type: 'checkbox', checked: marcados.has(k), disabled: sinPrecio && ajustes[k] == null, onchange: e => { e.target.checked ? marcados.add(k) : marcados.delete(k); pintarBoton(); } });
+    const gana = h('td', { style: 'padding:4px;text-align:right;white-space:nowrap' });
+    const pintaGana = () => { const p = precioDe(i); if (p == null || i.coste == null) { gana.replaceChildren(h('span', { class: 'sub' }, '—')); return; } const g = p - Number(i.coste);
+      gana.replaceChildren(h('b', { style: 'color:' + (g < 0 ? '#b91c1c' : 'var(--verde)') }, (g >= 0 ? '+' : '') + eur(g)), h('div', { class: 'sub' }, '€/kg'), h('div', { class: 'sub' }, p ? Math.round(g / p * 100) + ' %' : '')); };
+    const inp = h('input', { type: 'number', step: '0.01', min: '0', inputmode: 'decimal', value: precioDe(i) != null ? Number(precioDe(i)).toFixed(2) : '', placeholder: 'precio', style: 'width:72px;text-align:right;font-weight:700;padding:4px' });
+    const marca = h('div', { class: 'sub' });
+    const fijar = p => { if (p == null || isNaN(p) || p <= 0) { delete ajustes[k]; } else { p = Math.round(p * 100) / 100; if (i.nuevo != null && Math.abs(p - i.nuevo) < 0.001) delete ajustes[k]; else ajustes[k] = p; }
+      if (ajustes[k] != null || i.nuevo != null) { ck.disabled = false; if (ajustes[k] != null) { ck.checked = true; marcados.add(k); } } else { ck.checked = false; ck.disabled = true; marcados.delete(k); }
+      marca.textContent = ajustes[k] != null ? '✋ a mano' : ''; pintaGana(); pintarBoton(); };
+    inp.addEventListener('change', () => fijar(parseFloat(String(inp.value).replace(',', '.'))));
+    const mueve = dlt => { const base = precioDe(i) != null ? precioDe(i) : (i.coste != null ? Number(i.coste) + mActual : 0); const p = Math.max(0.05, Math.round((base + dlt) * 100) / 100); inp.value = p.toFixed(2); fijar(p); };
+    const bt = (t, dlt) => h('button', { class: 'ghost', style: 'min-height:30px;min-width:40px;padding:0 6px;margin:0;font-size:13px;line-height:1', onclick: () => mueve(dlt) }, t);
+    pintaGana();
+    const tr = h('tr', { 'data-n': sinTilde(String(i.nombre || '').toLowerCase()), style: 'border-top:1px solid var(--borde)' + (sinPrecio ? ';opacity:.7' : '') + (i.aviso ? ';background:#fff3d6;color:#5b3a00' : '') },
+      h('td', { style: 'padding:4px' }, ck),
+      h('td', { style: 'padding:4px' }, h('b', {}, i.nombre), i.nuevo_producto ? h('span', { class: 'sub' }, ' ⭐') : null,
+        h('div', { class: 'sub' }, i.coste != null ? 'compra ' + eu(i.coste) + ' €' + (i.coste_fecha ? ' (' + fechaES(String(i.coste_fecha).slice(0, 10)).slice(0, 5) + ')' : '') + (i.proveedor ? ' · ' + String(i.proveedor).replace(/\s+(S\.?L\.?|S\.?A\.?).*$/i, '') : '') : ''),
+        i.venta_media != null ? h('div', { class: 'sub', style: precioDe(i) != null && precioDe(i) < i.venta_media * 0.85 ? 'color:#b36b00' : '' }, 'vendéis a ' + eu(i.venta_media) + ' €') : null,
+        i.antes != null ? h('div', { class: 'sub' }, 'ahora en la lista: ' + eu(i.antes) + ' €') : null,
+        i.duda && sinPrecio ? h('div', { class: 'sub' }, i.duda + ' · escribe el precio a mano') : null, i.aviso ? h('div', { class: 'sub', style: 'color:#b36b00' }, '⚠️ ' + i.aviso) : null),
+      h('td', { style: 'padding:4px;text-align:right;white-space:nowrap' }, h('div', { style: 'display:flex;flex-direction:column;align-items:flex-end;gap:2px' }, bt('▲', 0.05), inp, bt('▼', -0.05)), marca),
+      gana);
+    return tr; };
+  const tabla = h('table', { style: 'width:100%;font-size:13px;border-collapse:collapse;margin-top:6px' }, h('tr', { class: 'sub' }, h('th', {}), h('th', { style: 'text-align:left' }, 'Producto'), h('th', { style: 'text-align:right' }, 'Precio €'), h('th', { style: 'text-align:right' }, 'Ganas')), ...items.map(fila));
+  const buscar = comInput('text', '', { placeholder: '🔎 Buscar producto en la lista…' });
+  buscar.addEventListener('input', () => { const t = sinTilde(buscar.value.trim().toLowerCase()); tabla.querySelectorAll('tr[data-n]').forEach(tr => { tr.style.display = !t || tr.dataset.n.includes(t) ? '' : 'none'; }); });
+  const bAplicar = h('button', { class: 'guardar', style: 'flex:1;min-height:52px' }); const pintarBoton = () => { bAplicar.textContent = '✅ Aplicar ' + marcados.size + ' precio(s)'; bAplicar.disabled = !marcados.size; };
+  bAplicar.onclick = async () => { if (!await confirmar('¿Guardar ' + marcados.size + ' precio(s) en la lista «' + L.nombre + '»? Se podrá deshacer.')) return; bAplicar.disabled = true;
+    try { const precios = {}; [...marcados].forEach(x => { if (ajustes[x] != null) precios[x] = ajustes[x]; }); const r = await h2('tarifa_aplicar', { id: bo.id, elegidos: [...marcados], precios }); toast(r.cambios + ' precio(s) guardados en la lista', 'ok'); h2Tarifas(el); } catch (e) { toast(e.message, 'err'); bAplicar.disabled = false; } };
+  pintarBoton();
+  const lista = async () => { const r = await sb.from('listas_precios').select('*').eq('id', L.lista_id).single(); if (r.error) throw r.error; return r.data; };
+  const textoWa = async () => { const l = await lista(); const r = await sb.from('listas_precios_items').select('nombre,precio,unidad,orden').eq('lista_id', L.lista_id).not('precio', 'is', null).order('orden', { nullsFirst: false }).order('nombre'); if (r.error) throw r.error;
+    return '*' + (l.titulo || l.nombre) + '*\n' + (l.subtitulo ? l.subtitulo + '\n' : '') + '\n' + (r.data || []).map(x => '• ' + x.nombre + ': ' + eur(x.precio) + ' €/' + (x.unidad || 'kg')).join('\n') + (l.pie ? '\n\n' + l.pie : '') + '\n\nFERJUSANZ · Mercamadrid · 609 100 690 · 616 439 157 · 609 567 354'; };
+  const enviarWa = async () => { try { const t = await textoWa(); if (navigator.share) { try { await navigator.share({ text: t }); return; } catch (e) { if (e && e.name === 'AbortError') return; } } window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank'); } catch (e) { toast(e.message || String(e), 'err'); } };
+  caja.append(
+    h('div', { class: 'nombre' }, L.etiqueta), h('div', { class: 'sub' }, 'Precio de compra + margen por kg. ' + (bo ? 'Borrador del ' + fechaES(String(bo.created_at).slice(0, 10)) + '. ' : '') + 'La lista no cambia hasta que pulsas «Aplicar».'),
+    h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;align-items:center' }, h('span', { class: 'sub' }, 'Margen:'), ...margenes.map(m => h('button', { class: 'chip' + (Math.abs(m - mActual) < 0.001 ? ' on' : ''), style: 'width:auto;flex:0 0 auto;min-width:64px', onclick: () => recalcular(m) }, '+' + eur(m))), h('button', { class: 'ghost small', style: 'width:auto;flex:0 0 auto', onclick: () => recalcular(mActual) }, '🔄 Recalcular')),
+    h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap' }, h('button', { class: 'small', onclick: () => h2TarifaProductos(L, () => recalcular(mActual)) }, '➕ Añadir productos'),
+      h('button', { class: 'ghost small', onclick: async () => { try { comPdf(await lista(), false, 'enviar'); } catch (e) { toast(e.message, 'err'); } } }, '📄 Enviar PDF'),
+      h('button', { class: 'ghost small', onclick: enviarWa }, '💬 Enviar por WhatsApp')),
+    h('div', { class: 'sub', style: 'margin-top:4px' }, 'Enviar manda la lista tal como está GUARDADA (después de «Aplicar»), sin costes ni ganancias.'),
+    bo ? h('div', {}, buscar, h('div', { style: 'overflow-x:auto' }, tabla)) : h('p', { class: 'vacio' }, 'No hay borrador. Pulsa «🔄 Recalcular».'),
+    bo ? h('div', { style: 'display:flex;gap:6px;margin-top:8px;position:sticky;bottom:64px;background:var(--fondo,#fff);padding:6px 0' }, bAplicar, h('button', { class: 'ghost', onclick: async () => { if (!await confirmar('¿Descartar este borrador?')) return; try { await h2('tarifa_descartar', { id: bo.id }); h2Tarifas(el); } catch (e) { toast(e.message, 'err'); } } }, 'Descartar')) : null,
+    L.ultimo_aplicado ? h('button', { class: 'ghost small', style: 'margin-top:8px', onclick: async () => { if (!await confirmar('¿Devolver la lista a como estaba antes de la última actualización (' + fechaES(String(L.ultimo_aplicado.resuelto_en).slice(0, 10)) + ')?')) return; try { await h2('tarifa_deshacer', { id: L.ultimo_aplicado.id }); toast('Lista devuelta a como estaba', 'ok'); h2Tarifas(el); } catch (e) { toast(e.message, 'err'); } } }, '↩️ Deshacer la última actualización') : null);
+  el.replaceChildren(h('p', { class: 'sub' }, 'Solo listas de CLIENTES NUEVOS. Cada mañana se prepara un borrador con el último precio de compra + margen (patata pelada: El Parleño). Ajusta con ▲ ▼ o escribe el precio, y pulsa «Aplicar».'), chips, caja);
+}
+/* Elegir productos del catálogo y guardarlos en la lista (sin precio; el precio se pone en el borrador) */
+async function h2TarifaProductos(L, alGuardar) {
+  const r = await sb.from('productos').select('id,codigo,nombre,unidad_precio').eq('activo', true).order('nombre'); if (r.error) { toast(r.error.message, 'err'); return; }
+  const ya = await sb.from('listas_precios_items').select('producto_id').eq('lista_id', L.lista_id); const enLista = new Set((ya.data || []).map(x => x.producto_id));
+  const elegidos = new Set(); const res = h('div', { style: 'max-height:55vh;overflow:auto' }); const bG = h('button', { class: 'guardar', style: 'width:100%;min-height:52px;margin-top:8px' });
+  const pintaB = () => { bG.textContent = '💾 Guardar productos (' + elegidos.size + ')'; bG.disabled = !elegidos.size; };
+  const inp = comInput('text', '', { placeholder: 'Busca: pera, banana, patata…' });
+  const pinta = () => { const t = sinTilde(inp.value.trim().toLowerCase()); const lista = (r.data || []).filter(p => !t || sinTilde((p.nombre + ' ' + p.codigo).toLowerCase()).includes(t)).slice(0, 80);
+    res.replaceChildren(...lista.map(p => { const dentro = enLista.has(p.id); const ck = h('input', { type: 'checkbox', checked: dentro || elegidos.has(p.id), disabled: dentro, onchange: e => { e.target.checked ? elegidos.add(p.id) : elegidos.delete(p.id); pintaB(); } });
+      return h('label', { class: 'card', style: 'display:flex;gap:8px;align-items:center;padding:8px 10px;margin:4px 0' + (dentro ? ';opacity:.6' : '') }, ck, h('span', {}, h('b', {}, p.nombre), h('span', { class: 'sub' }, ' · ' + p.codigo + (dentro ? ' · ya está en la lista' : '')))); })); };
+  inp.addEventListener('input', debounce(pinta, 200));
+  let cerrar;
+  bG.onclick = async () => { bG.disabled = true; try {
+      const filas = (r.data || []).filter(p => elegidos.has(p.id)).map(p => ({ lista_id: L.lista_id, producto_id: p.id, nombre: p.nombre, unidad: p.unidad_precio || 'kg', precio: null, orden: 900 }));
+      const ins = await sb.from('listas_precios_items').insert(filas); if (ins.error) throw ins.error;
+      toast(filas.length + ' producto(s) añadidos a la lista', 'ok'); cerrar && cerrar(); alGuardar && alGuardar(); } catch (e) { toast(e.message || String(e), 'err'); bG.disabled = false; } };
+  pintaB(); pinta();
+  cerrar = hoja('Añadir productos a «' + L.nombre + '»', h('div', {}, h('p', { class: 'sub' }, 'Marca los productos que quieres en la lista y pulsa «Guardar». Después ponles precio en el borrador (se calcula solo si hay precio de compra reciente).'), inp, res, bG));
+}
+function vistaTarifas() {
+  state.view = 'tarifas'; if (!esOficina()) { go('inicio'); return; }
+  const cuerpo = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
+  $app.replaceChildren(shell('Tarifas nuevas', cuerpo)); h2Tarifas(cuerpo);
 }
 
 /* --- 📜 Actividad: todo lo que ha hecho Harvey --- */
@@ -10903,7 +10948,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { tarifas: vistaTarifas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
 }
