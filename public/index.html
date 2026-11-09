@@ -9093,9 +9093,9 @@ const H2_DIAS = [[1, 'L'], [2, 'M'], [3, 'X'], [4, 'J'], [5, 'V'], [6, 'S'], [7,
 async function tabHarvey(el) {
   if (!HARVEY2) return tabHarveyChat(el);
   let sub = LS.get('fj_h2_sub', 'hoy'); const cuerpo = h('div', {}); const chips = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:8px 0' });
-  const SUBS = [['hoy', '📅 Hoy'], ['pegar', '📥 Pegar pedido'], ['borr', '📝 Borradores'], ['moviles', '📱 Móviles'], ['chat', '💬 Chat']];
+  const SUBS = [['hoy', '📅 Hoy'], ['pegar', '📥 Pegar pedido'], ['borr', '📝 Borradores'], ['moviles', '📱 Móviles'], ['actividad', '📜 Actividad'], ['chat', '💬 Chat']];
   const pintarChips = () => chips.replaceChildren(...SUBS.map(([k, t]) => h('button', { class: 'chip' + (sub === k ? ' on' : ''), onclick: () => { sub = k; LS.set('fj_h2_sub', k); pintarChips(); pintar(); } }, t)));
-  const pintar = () => { cuerpo.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); ({ hoy: h2Hoy, pegar: h2Pegar, borr: h2Borradores, moviles: h2Moviles, chat: tabHarveyChat })[sub](cuerpo); };
+  const pintar = () => { cuerpo.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); ({ hoy: h2Hoy, pegar: h2Pegar, borr: h2Borradores, moviles: h2Moviles, actividad: h2Actividad, chat: tabHarveyChat })[sub](cuerpo); };
   el.replaceChildren(h('div', { class: 'aviso-card', style: 'background:#fff3d6;border-color:#b36b00;color:#5b3a00' }, '🧪 VERSIÓN DE PRUEBAS de Harvey. Lee vuestros datos reales pero no cambia pedidos, precios ni clientes, y no envía nada solo: tú revisas y envías.'), chips, cuerpo);
   pintarChips(); pintar();
 }
@@ -9203,6 +9203,18 @@ async function h2Moviles(el) {
       return h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, s.nombre), h('div', { class: 'sub' }, s.codigo + ' · ' + eur(s.importe_90d) + ' € en 90 días' + (s.telefono ? ' · tel. ' + s.telefono : '')))),
         h('div', { style: 'display:flex;gap:6px;align-items:center;margin-top:6px' }, inp, h('button', { class: 'small', onclick: async e => { const b = e.currentTarget; b.disabled = true; try { await h2('prefs_set', { cliente_id: s.cliente_id, whatsapp: inp.value, acepta_whatsapp: ok.checked, max_semana: 3 }); toast('Guardado', 'ok'); b.textContent = '✔'; } catch (x) { b.disabled = false; toast(x.message, 'err'); } } }, 'Guardar')),
         h('label', { class: 'sub', style: 'display:flex;gap:6px;align-items:center;margin-top:4px' }, ok, 'Ha aceptado recibir mensajes de Ferjusanz por WhatsApp')); }) : [h('p', { class: 'vacio' }, '✔ Todos vuestros mejores clientes tienen móvil.')]));
+}
+
+/* --- 📜 Actividad: todo lo que ha hecho Harvey --- */
+async function h2Actividad(el, dias) {
+  dias = dias || LS.get('fj_h2_act_dias', 7);
+  let d; try { d = await h2('actividad', { dias }); } catch (e) { h2Err(el, e); return; }
+  const r = d.resumen || {}; const cifra = (n, t) => h('div', { class: 'card', style: 'flex:1;min-width:90px;text-align:center;margin:0' }, h('div', { style: 'font-size:24px;font-weight:700' }, String(n || 0)), h('div', { class: 'sub' }, t));
+  const hora = t => { const x = new Date(t); return fechaES(hoy(x)) + ' ' + String(x.getHours()).padStart(2, '0') + ':' + String(x.getMinutes()).padStart(2, '0'); };
+  el.replaceChildren(
+    h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px' }, ...[[1, 'Hoy'], [7, '7 días'], [30, '30 días']].map(([n, t]) => h('button', { class: 'chip' + (dias === n ? ' on' : ''), onclick: () => { LS.set('fj_h2_act_dias', n); h2Actividad(el, n); } }, t))),
+    h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px' }, cifra(r.mensajes, 'mensajes preparados'), cifra(r.contactos, 'clientes contactados'), cifra(r.pedidos_interpretados, 'pedidos interpretados'), cifra(r.pasados_a_pedido, 'pasados a pedido'), cifra(r.repetidos_evitados, 'repetidos evitados')),
+    ...((d.acciones || []).length ? d.acciones.map(a => h('div', { class: 'card', style: 'padding:8px 12px' }, h('div', { class: 'fila' }, h('b', {}, a.texto), h('span', { class: 'sub' }, hora(a.created_at))), h('div', { class: 'sub' }, [a.cliente, 'por ' + a.usuario].filter(Boolean).join(' · ')))) : [h('p', { class: 'vacio' }, 'Todavía no hay actividad en este periodo.')]));
 }
 
 /* --- ⚙️ Preferencias de contacto de un cliente --- */

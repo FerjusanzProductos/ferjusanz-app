@@ -289,6 +289,27 @@ async function prefsSet(u: { id: string }, b: any) {
   await registrar(u.id, "preferencias_guardadas", id, { no_contactar: !!b.no_contactar, acepta_whatsapp: !!b.acepta_whatsapp, whatsapp: !!wa });
   return json({ ok: true });
 }
+const ACCIONES: Record<string, string> = {
+  mensaje_preparado: "✍️ Preparó un mensaje", contacto_apuntado: "✔ Contacto apuntado", contacto_duplicado_evitado: "🛑 Evitó un mensaje repetido",
+  borrador_creado: "📥 Interpretó un pedido", borrador_pasado: "➡️ Borrador pasado a pedido", borrador_descartado: "🗑️ Borrador descartado",
+  borrador_pendiente: "↩️ Borrador reabierto", preferencias_guardadas: "⚙️ Preferencias cambiadas",
+};
+async function actividad(b: any) {
+  const dias = Math.min(60, Math.max(1, Number(b.dias) || 7));
+  const filas = await sql`select r.id, r.created_at, r.accion, r.detalle, coalesce(pe.nombre, 'alguien') as usuario,
+      coalesce(c.nombre_comercial, c.nombre, pr.nombre) as cliente
+    from harvey.registro r left join public.perfiles pe on pe.id = r.usuario left join public.clientes c on c.id = r.cliente_id
+    left join public.prospectos pr on pr.id = nullif(r.detalle->>'prospecto_id', '')::uuid
+    where r.created_at > now() - make_interval(days => ${dias}) order by r.created_at desc limit 200`;
+  const resumen = await sql`select
+      count(*) filter (where accion = 'mensaje_preparado')::int as mensajes,
+      count(*) filter (where accion = 'contacto_apuntado')::int as contactos,
+      count(*) filter (where accion = 'borrador_creado')::int as pedidos_interpretados,
+      count(*) filter (where accion = 'borrador_pasado')::int as pasados_a_pedido,
+      count(*) filter (where accion = 'contacto_duplicado_evitado')::int as repetidos_evitados
+    from harvey.registro where created_at > now() - make_interval(days => ${dias})`;
+  return json({ dias, resumen: resumen[0], acciones: (filas as any[]).map(f => ({ ...f, texto: ACCIONES[f.accion] || f.accion })) });
+}
 async function buscarClientes(b: any) {
   const q = String(b.q || "").trim(); if (q.length < 2) return json({ clientes: [] });
   const filas = await sql`select id, codigo, coalesce(nombre_comercial, nombre) as nombre, localidad from public.clientes
@@ -312,6 +333,7 @@ Deno.serve(async (req) => {
       case "prefs_get": return await prefsGet(b);
       case "prefs_set": return await prefsSet(u, b);
       case "buscar_clientes": return await buscarClientes(b);
+      case "actividad": return await actividad(b);
       default: return json({ error: "Acción desconocida" }, 400);
     }
   } catch (e) {
