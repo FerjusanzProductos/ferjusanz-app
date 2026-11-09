@@ -3055,7 +3055,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v150';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v152';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -4724,7 +4724,7 @@ function vistaMas() {
   const k = [
     h('div', { class: 'saludo' }, h('div', { style: 'font-size:20px;font-weight:800' }, 'Hola, ' + (state.perfil.nombre || '').split(' ')[0]), h('div', { class: 'sub' }, (d => d.charAt(0).toUpperCase() + d.slice(1))(fmtDiaLargo(new Date().toISOString())))),
     esOficina() ? h('button', { class: 'bandeja-fac', onclick: () => go('secretaria') }, h('span', { class: 'ic' }, '🗂️'), h('span', { class: 'tt' }, 'Secretaría hoy', h('small', {}, 'Todas las tareas de oficina en una pantalla'))) : null,
-    esOficina() ? (() => { const num = h('span', { class: 'num cero' }, HARVEY2 ? '…' : ''); const b = h('button', { class: 'bandeja-fac', onclick: () => { LS.set('fj_h2_sub', 'hoy'); go('comercial', { tab: 'harvey' }); } }, h('span', { class: 'ic' }, '🤵'), h('span', { class: 'tt' }, 'Harvey · a quién escribir hoy', h('small', {}, HARVEY2 ? 'Clientes para el pedido de mañana · mensajes listos para revisar' : 'Vuestro comercial con IA: mensajes, guiones y ofertas')), num);
+    esOficina() ? (() => { const num = h('span', { class: 'num cero' }, HARVEY2 ? '…' : ''); const b = h('button', { class: 'bandeja-fac h2ban', onclick: () => { LS.set('fj_h2_sub', 'hoy'); go('comercial', { tab: 'harvey' }); } }, h('span', { class: 'ic' }, '🤵'), h('span', { class: 'tt' }, 'Harvey · a quién escribir hoy', h('small', {}, HARVEY2 ? 'Clientes para el pedido de mañana · mensajes listos para revisar' : 'Vuestro comercial con IA: mensajes, guiones y ofertas')), num);
       if (HARVEY2 && navigator.onLine) (window.__H2HOY && Date.now() - window.__H2HOY.t < 600000 ? Promise.resolve(window.__H2HOY.d) : h2('hoy').then(d => { window.__H2HOY = { t: Date.now(), d }; return d; })).then(d => { const n = (d.clientes || []).filter(x => !x.contactado_hoy).length + (d.leads || []).length; num.textContent = String(n); num.className = 'num' + (n ? '' : ' cero'); }).catch(() => { num.textContent = ''; });
       return b; })() : null,
     (() => { const num = h('span', { class: 'num cero' }, '…'); const b = h('button', { class: 'bandeja-fac', onclick: () => go('preciosp') }, h('span', { class: 'ic' }, '💶'), h('span', { class: 'tt' }, 'Poner precios a los pedidos', h('small', {}, 'Por hacer, en preparación o terminados · sin esperar a la factura')), num);
@@ -4733,14 +4733,14 @@ function vistaMas() {
     (() => { const num = h('span', { class: 'num cero' }, '…'); const b = h('button', { class: 'bandeja-fac portal', onclick: () => go('paginasclientes') }, h('span', { class: 'ic' }, '🌐'), h('span', { class: 'tt' }, 'Portal de clientes', h('small', {}, 'Cargar los albaranes en la página de cada cliente · QR y enlace')), num);
       if (navigator.onLine) albaranesSinPublicar(3650).then(l => { num.textContent = String(l.length); num.className = 'num' + (l.length ? '' : ' cero'); b.classList.toggle('nuevo', l.length > 0); window.__PORTAL_PEND = l.length; document.querySelectorAll('.portalbtn').forEach(x => x.classList.toggle('nuevo', l.length > 0)); }).catch(() => { num.textContent = ''; }); else num.textContent = '';
       return b; })(),
-    ...g('Trabajo diario', c('✍️', 'Apuntar pedido', () => go('rapido'), V),
+    ...g('Trabajo diario', c('✍️', 'Apuntar pedido', () => go('rapido'), V), c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Hoja de carga', () => go('carga'), V), c('🧑‍✈️', 'Reparto', () => go('reparto'), V), c('💶', 'Poner precios', () => go('preciosp'), V),
       c('🧺', 'Hoja de compra para hoy', () => go('hojacompra'), V), c('🛒', 'Compra para hoy', () => { if (puedeCompras()) { LS.set('fj_compras_modo', 'lista'); go('compras'); } else go('hojacompra'); }, V),
-      c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Hoja de carga', () => go('carga'), V), puedeCompras() ? c('💲', 'Precios de compra del día', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, V) : null, c('💶', 'Poner precios', () => go('preciosp'), V), c('🧑‍✈️', 'Reparto', () => go('reparto'), V), c('♻️', 'Sobrante', () => go('sobrante'), V)),
-        ...g('Entregas y pedidos', c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a')),
-    ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
+      puedeCompras() ? c('💲', 'Precios de compra del día', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, V) : null, c('♻️', 'Sobrante', () => go('sobrante'), V)),
+    ...g('Entregas y pedidos', c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a')),
+    ...g('Compras y mercancía', puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('💶', 'Precios de compra', () => { if (LS.get('fj_precios_modo', 'dia') === 'hoy') LS.set('fj_precios_modo', 'dia'); go('precios'); }, A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null),
     ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z)),
     ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
-    ...g('Compras y mercancía', c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('💶', 'Precios de compra', () => { if (LS.get('fj_precios_modo', 'dia') === 'hoy') LS.set('fj_precios_modo', 'dia'); go('precios'); }, A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
+    ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('❓', 'Ayuda y guía', () => go('ayuda'), T), c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
   /* «Ver arriba»: cada uno elige qué círculo quiere primero (se recuerda en este móvil). Los círculos se MUEVEN, no se duplican. */
@@ -4762,11 +4762,13 @@ function vistaMas() {
     pool['Calendario'] = c('📅', 'Calendario', () => go('calendario'), '#ea580c');
     const PRINC = modoV === 'reparto' ? ['Preparar', 'Hoja de carga', 'Reparto', 'Entregas', 'Cobros', 'Albaranes', 'Ruta', 'Calendario']
       : modoV === 'compra' ? ['Hoja de compra para hoy', 'Compra para hoy', 'A quién compramos hoy', 'Facturas de proveedores', 'Precios de compra del día', 'Calendario']
-      : ['Apuntar pedido', 'Calendario', 'Preparar', 'Hoja de carga', 'Reparto', 'Cobros'];
+      : ['Apuntar pedido', 'Calendario', 'Preparar', 'Hoja de carga', 'Reparto', 'Cobros', 'Facturas de proveedores', 'Clientes'];
     const grandes = PRINC.filter(x => pool[x]).map(x => pool[x]);
     bloqueGrande = h('div', { class: 'rej grande' }, ...grandes);
     lista.forEach(([t, it]) => { const r = it.filter(n => !grandes.includes(n)); if (r.length) k.push(h('div', { class: 'grupo' }, t), h('div', { class: 'rej' }, ...r)); });
   }
+  /* Harvey (lo usa solo quien hace de comercial): abajo, con lo comercial, no entre el trabajo de cada día */
+  { const i = k.findIndex(x => x && x.classList && x.classList.contains('h2ban')); if (i >= 0) { const hb = k.splice(i, 1)[0]; k.push(h('div', { class: 'grupo' }, 'Comercial'), hb); } }
   k.push(cambiaMenu);
   k.splice(1, 0, h('div', { class: 'chips', style: 'margin:6px 0 2px' }, h('span', { class: 'sub', style: 'align-self:center' }, 'Lo de arriba:'), ...[['todo', 'Todo'], ['reparto', '🧑‍✈️ Preparar y repartir'], ['compra', '🛒 Compra']].map(([m, n]) => h('button', { class: 'chip' + (modoV === m ? ' on' : ''), onclick: () => { LS.set('fj_vista', m); vistaMas(); } }, n))));
   /* Acceso directo: imprimir la hoja de carga o la de compra sin entrar en menús */
@@ -10824,9 +10826,71 @@ function fechaDeTexto(t) {
   if ((m = t.match(/\bdia\s+(\d{1,2})\b/) || t.match(/\bdel\s+(\d{1,2})\b/))) { let y = hd.getFullYear(), mo = hd.getMonth() + 1; if (Number(m[1]) > hd.getDate()) { mo--; if (mo < 1) { mo = 12; y--; } } return y + '-' + z(mo) + '-' + z(m[1]); }
   return null;
 }
+/* 🔍 Índice de TODOS los apartados de la app, con las palabras con que la gente los busca. o = solo oficina, c = quien compra. */
+const BUSCA_PANTALLAS = [
+  ['✍️', 'Apuntar pedido', 'apuntar anotar pedido nuevo encargo meter pedido rapido whatsapp pegar', () => go('rapido')],
+  ['📅', 'Calendario', 'calendario dia dias fecha semana mes previstos fijos', () => go('calendario')],
+  ['🗓️', 'Semana', 'semana semanal pedidos de la semana', () => go('semana')],
+  ['📋', 'Preparar', 'preparar preparacion lista del dia montar pedidos', () => go('lista')],
+  ['🚚', 'Hoja de carga', 'hoja carga cargar camion furgoneta imprimir carga', () => go('carga')],
+  ['🧑‍✈️', 'Reparto', 'reparto repartir repartidor repartidores asignar furgoneta', () => go('reparto')],
+  ['🗺️', 'Ruta', 'ruta mapa camino orden reparto navegar', () => go('ruta')],
+  ['✅', 'Entregas', 'entregas entregado entregar firma firmar', () => go('entregas')],
+  ['🧾', 'Albaranes', 'albaran albaranes nota entrega cuadre caja liquidacion datafono efectivo', () => go('albaranes')],
+  ['📑', 'Lista de pedidos', 'lista pedidos todos los pedidos historial pedidos', () => go('pedidos')],
+  ['💶', 'Poner precios a los pedidos', 'poner precios precio pedidos sin precio', () => go('preciosp')],
+  ['🧺', 'Hoja de compra para hoy', 'hoja compra comprar que comprar mercamadrid', () => go('hojacompra')],
+  ['🛒', 'Compra para hoy', 'compra hoy comprar mercamadrid', () => { if (puedeCompras()) { LS.set('fj_compras_modo', 'lista'); go('compras'); } else go('hojacompra'); }],
+  ['📥', 'Facturas de proveedores', 'facturas proveedores proveedor factura compra recibidas llegadas correo', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, 'c'],
+  ['🛒', 'Compras', 'compras compra lotes lote proveedor', () => go('compras'), 'c'],
+  ['🔎', 'A quién compramos hoy', 'quien compramos proveedor proveedores a quien', () => go('quien')],
+  ['💲', 'Precios de compra', 'precios compra coste costes precio compra del dia', () => go('precios'), 'c'],
+  ['🔎', 'Trazabilidad', 'trazabilidad lotes lote asignar lotes fifo', () => go('traza'), 'c'],
+  ['🧾', 'Facturas y documentos de compra', 'facturas documentos compra pagadas pagos proveedores', () => go('facturas'), 'c'],
+  ['♻️', 'Sobrante', 'sobrante sobra existencias stock almacen sobras', () => go('sobrante')],
+  ['💰', 'Cobros', 'cobros cobrar cobrado pagos pago dinero efectivo tarjeta bizum transferencia', () => go('cobros')],
+  ['🧮', 'Deudas', 'deudas deuda debe deben dinero pendiente cobro morosos impagados', () => go('deudas')],
+  ['👥', 'Clientes', 'clientes cliente ficha alta cliente telefono direccion', () => go('clientes')],
+  ['🥬', 'Productos', 'productos producto catalogo articulos codigos', () => go('catalogo')],
+  ['📋', 'Cómo se pone cada producto', 'reglas producto codigos golden nombres factura como se pone', () => go('reglasprod')],
+  ['🔎', 'Productos sin reconocer', 'productos sin reconocer enlazar nombres facturas', () => go('sinreconocer'), 'o'],
+  ['📐', 'Formatos', 'formatos formato caja kilos peso cliente', () => go('formatos'), 'o'],
+  ['🌐', 'Portal de clientes', 'portal pagina clientes web qr enlace publicar albaranes', () => go('paginasclientes')],
+  ['🗂️', 'Secretaría hoy', 'secretaria oficina tareas hoy', () => go('secretaria'), 'o'],
+  ['📤', 'Facturas para Golden', 'facturas golden pasar facturar prefacturas', () => go('prefacturas'), 'o'],
+  ['📄', 'Facturas de clientes', 'facturas clientes imprimir enviar factura cliente', () => go('facturascli'), 'o'],
+  ['🗂️', 'Histórico de Golden', 'historico golden ventas antiguas', () => go('golden'), 'o'],
+  ['📊', 'Resumen', 'resumen ventas totales numeros informe', () => go('resumen'), 'o'],
+  ['📈', 'Rentabilidad', 'rentabilidad ganancia beneficio margen ganamos perdemos', () => go('rentabilidad'), 'o'],
+  ['🤝', 'Comercial', 'comercial listas precios recomendaciones guiones web seo', () => go('comercial'), 'o'],
+  ['🤵', 'Harvey · a quién escribir hoy', 'harvey whatsapp escribir clientes mensajes leads comercial', () => { LS.set('fj_h2_sub', 'hoy'); go('comercial', { tab: 'harvey' }); }, 'o'],
+  ['📄', 'Listas de precios', 'listas lista precios tarifa oferta pdf', () => go('comercial', { tab: 'listas' }), 'o'],
+  ['💶', 'Tarifas nuevas', 'tarifas nuevas tarifa hosteleria colectividades colegios residencias', () => go('tarifas'), 'o'],
+  ['🎬', 'Presentaciones', 'presentaciones presentacion propuesta diapositivas', () => go('presentaciones'), 'o'],
+  ['💬', 'Chat', 'chat mensajes equipo hablar', () => go('chat')],
+  ['📢', 'Avisos y ofertas', 'avisos ofertas anuncios', () => go('avisos')],
+  ['⚠️', 'Incidencias', 'incidencias incidencia problema queja devolucion mal estado falta', () => go('incidencias')],
+  ['⏱️', 'Fichajes', 'fichajes fichar horas entrada salida horario', () => go('fichajes'), 'o'],
+  ['👤', 'Mi perfil', 'perfil foto contrasena fichar mi cuenta tema oscuro', () => go('perfil')],
+  ['❓', 'Ayuda y guía', 'ayuda guia como se hace manual tutorial', () => go('ayuda')],
+  ['🗄️', 'Archivo', 'archivo archivados borrados', () => go('archivo'), 'o'],
+  ['📝', 'Registro de cambios', 'registro cambios historial quien cambio', () => go('registro'), 'o'],
+  ['💾', 'Copia de seguridad', 'copia seguridad backup', () => go('copia'), 'o'],
+  ['📥', 'Importar pedido', 'importar pegar texto pedido', () => go('importar'), 'o']
+];
+function buscaPantallas(t) {
+  const ok = x => !x[4] || (x[4] === 'o' ? esOficina() : puedeCompras());
+  const NO = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'y', 'a', 'en', 'con', 'para', 'mi', 'mis', 'un', 'una', 'que', 'por', 'al', 'lo', 'ver', 'donde', 'esta', 'como', 'quiero']);
+  const ws = t.split(/\s+/).filter(w => w.length > 1 && !NO.has(w)); if (!ws.length) return [];
+  const pal = x => sinTilde((x[1] + ' ' + x[2]).toLowerCase()).split(/\s+/);
+  const raiz = w => w.replace(/(es|s)$/, '');
+  const casa = (w, k) => k.some(y => y === w || (w.length > 2 && y.startsWith(w)) || raiz(y) === raiz(w) || (w.length > 4 && y.length > 4 && waSimTok(w, y) >= 0.85));
+  return BUSCA_PANTALLAS.filter(ok).map(x => { const k = pal(x); const n = ws.filter(w => casa(w, k)).length; return { x, n }; })
+    .filter(r => r.n && (ws.length <= 2 ? r.n === ws.length : r.n >= Math.ceil(ws.length * 0.6))).sort((a, b) => b.n - a.n).slice(0, 6).map(r => r.x);
+}
 function vistaBuscar() {
   state.view = 'buscar'; const oficina = esOficina(), compras = puedeCompras();
-  const res = h('div', {}); const info = h('p', { class: 'sub' }, 'Escribe un cliente, producto, proveedor, número de albarán… y busco en todos los apartados que puedes ver.');
+  const res = h('div', {}); const info = h('p', { class: 'sub' }, 'Escribe lo que quieras: un cliente, un producto, un proveedor, un número de albarán, una factura, una persona del equipo, una lista de precios o un apartado de la app («deudas», «hoja de carga», «fichar»…).');
   let seq = 0;
   const inp = h('input', { type: 'search', placeholder: '🔍 Florencio, tomate pera, F 5723…', autocomplete: 'off', oninput: debounce(() => buscarTodo(inp.value), 300) });
   inp.value = (state.params && state.params.q) || '';
@@ -10842,6 +10906,17 @@ function vistaBuscar() {
     const quiereFac = /\bfactur/.test(t), mFe = fechaDeTexto(t);
     const tn = t.replace(/\bdia\s+\d{1,2}\b/g, ' ').replace(/\bdel\s+\d{1,2}\b/g, ' ').replace(/\b\d{1,2}\/\d{1,2}(\/\d{2,4})?\b/g, ' ').split(/\s+/).filter(w => w && !STOPB.has(w)).join(' ') || t;
     if (t.length < 2) { res.replaceChildren(); info.textContent = 'Escribe al menos 2 letras.'; return; }
+    /* Lo que se encuentra sin conexión: apartados de la app, ayuda, reglas de productos y personas del equipo */
+    const locales = (() => { const out = [];
+      out.push(grupo('📱 Apartados de la app', buscaPantallas(t).map(x => fila(x[0] + ' ' + x[1], 'Toca para abrir', x[3], 'Abrir'))));
+      try { const ay = GUIA_PROB_PAL.test(t) ? guiaProblemas(texto) : []; const gu = GUIA.filter(guiaVisible).filter(g => { const s = sinTilde((g.titulo + ' ' + (g.grupo || '')).toLowerCase()); return tn.split(/\s+/).filter(w => w.length > 2).every(w => s.includes(w)); }).slice(0, 4);
+        out.push(grupo('❓ Ayuda', [].concat(ay.map(p => fila('🛠 ' + p.t, [p.c, (p.p || []).join(' ')].filter(Boolean).join(' '), () => p.ir ? go(p.ir) : go('ayuda'))), gu.map(g => fila((g.icono || '📘') + ' ' + g.titulo, g.grupo || '', () => go('ayuda', { abrir: g.id })))))); } catch (e) { }
+      try { const rg = []; reglasProd().forEach(fm => fm.filas.forEach(([prov, c]) => { const s = sinTilde((prov + ' ' + c).toLowerCase()); if (tn.split(/\s+/).every(w => s.includes(w))) rg.push([fm.fam, prov, c]); }));
+        out.push(grupo('📋 Cómo se pone el producto', rg.slice(0, 6).map(([fam, prov, c]) => fila(prov + ' → código ' + c, fam, () => go('reglasprod'))))); } catch (e) { }
+      try { const gen = Object.entries(state.gente || {}).filter(([, g]) => g && g.nombre && sinTilde(g.nombre.toLowerCase()).split(/\s+/).some(w => tn.split(/\s+/).some(q => q.length > 1 && w.startsWith(q)))).slice(0, 5);
+        out.push(grupo('🧑‍🤝‍🧑 Equipo', gen.map(([id, g]) => fila(g.nombre, (g.rol || '') + ' · toca para escribirle por el chat', () => go('chat'))))); } catch (e) { }
+      return out.filter(Boolean); })();
+    if (locales.length) res.replaceChildren(...locales);
     { const dc = compras ? detectaConsulta(texto) : null;   // «último precio de compra del pimiento rojo»
       if (dc && (dc.tipo === 'ultimoprecio' || dc.tipo === 'preciocompra')) { info.textContent = 'Buscando…'; try { const rs = await consultarDatos(dc); if (mi !== seq) return; info.textContent = ''; res.replaceChildren(...rs.nodos); } catch (e) { if (mi === seq) { info.textContent = ''; res.replaceChildren(h('p', { class: 'err' }, msgErr(e))); } } return; } }
     info.textContent = 'Buscando…';
@@ -10867,6 +10942,10 @@ function vistaBuscar() {
       if (compras && idV.length) add('comprasV', sb.from('compras').select('id,fecha,numero_documento,proveedor_id').in('proveedor_id', idV).order('fecha', { ascending: false }).limit(10));
       if (compras) add('docs', sb.from('documentos_compra').select('id,fecha,tipo,importe,nota,pagada,ruta,nombre,proveedores(nombre)').neq('archivado', true).order('fecha', { ascending: false }).limit(300));
       if (compras && idV.length) add('frs', sb.from('facturas_recibidas').select('id,recibido_en,fecha_factura,ruta,nombre,proveedor_id').in('proveedor_id', idV).order('recibido_en', { ascending: false }).limit(80).then(r => r.error ? sb.from('facturas_recibidas').select('id,recibido_en,ruta,nombre,proveedor_id').in('proveedor_id', idV).order('recibido_en', { ascending: false }).limit(80) : r));
+      if (oficina) { const lk = '%' + tn.split(/\s+/)[0] + '%';
+        add('listasP', sb.from('listas_precios').select('id,nombre,titulo').or('nombre.ilike.' + lk + ',titulo.ilike.' + lk).limit(8));
+        add('presN', sb.from('presentaciones').select('id,titulo').ilike('titulo', lk).limit(6));
+        add('leads', sb.from('prospectos').select('id,nombre,tipo,localidad,estado').ilike('nombre', lk).limit(8)); }
       if (idP.length) add('sobra', sb.from('sobrante').select('id,fecha,producto_id,cantidad,unidad').in('producto_id', idP.slice(0, 20)).order('fecha', { ascending: false }).limit(8));
       const out = Object.fromEntries(await Promise.all(q)); if (mi !== seq) return;
       const vistos = new Set(); const peds = [];
@@ -10898,9 +10977,15 @@ function vistaBuscar() {
         kids.push(grupo('Facturas y documentos de compra (sin archivo)', docsSin.map(d => fila(((uno(d.proveedores) || {}).nombre || 'Sin proveedor') + (d.importe != null ? ' · ' + eur(d.importe) + ' €' : ''), (TIPOS_DOC[d.tipo] || d.tipo) + ' · ' + fechaES(d.fecha) + (d.pagada ? ' · pagada' : ''), () => go('facturas')))));
       }
       kids.push(grupo('Sobrante (existencias sin vender)', (out.sobra || []).slice(0, 5).map(s => fila((mapP[s.producto_id] ? mapP[s.producto_id].nombre : '') + ' · ' + num(s.cantidad) + ' ' + s.unidad, fechaES(s.fecha), () => go('carga')))));
+      if (oficina) {
+        kids.push(grupo('📄 Listas de precios', (out.listasP || []).map(l => fila(l.nombre, l.titulo || '', () => abrirLista(l.id, () => { })))));
+        kids.push(grupo('🎬 Presentaciones', (out.presN || []).map(p => fila(p.titulo, '', () => go('presentaciones')))));
+        kids.push(grupo('🎯 Posibles clientes (leads)', (out.leads || []).map(p => fila(p.nombre, [p.tipo, p.localidad, p.estado].filter(Boolean).join(' · '), () => { LS.set('fj_h2_sub', 'hoy'); go('comercial', { tab: 'harvey' }); }))));
+      }
+      kids.unshift(...locales);
       const k = kids.filter(Boolean); info.textContent = k.length ? '' : 'Sin resultados para «' + texto.trim() + '».';
       res.replaceChildren(...k);
-    } catch (e) { if (mi === seq) { info.textContent = ''; res.replaceChildren(h('p', { class: 'err' }, msgErr(e))); } }
+    } catch (e) { if (mi === seq) { info.textContent = ''; res.replaceChildren(...locales, h('p', { class: 'err' }, isNetErr(e) ? 'Sin conexión: solo se ven los apartados y la ayuda.' : msgErr(e))); } }
   }
   if (inp.value.trim()) buscarTodo(inp.value);
   setTimeout(() => inp.focus(), 100);
