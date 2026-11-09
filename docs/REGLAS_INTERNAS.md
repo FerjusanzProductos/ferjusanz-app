@@ -60,6 +60,20 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Corregido: «P.P. BOLSA BRAVA» estaba como Breva (fruta); «PIM. CALIF ROJO II … NEGRA» como Pimienta negra; «P.P. BASTÓN AGRIA» como Patata Agria;
   32 textos de compra recolocados.
 
+## Nombres que confunden (Fernando, 09/11/2026)
+- **Tomate Daniela = tomate ensalada (91-EN)**, siempre.
+- **Ensalada campestre** («ENSALADA CAMP» en las facturas de Perichán) = **mezclum** → 137-P «Ensalada Campestre». Las bolsas de «Lechuga mézclum 500 g» de las listas son este producto.
+- **Lechuga romana (168)** = «Lechuga (2 unidades)» o «bolsa de lechuga». NO confundir con mezclum, campestre ni brotes de lechuga.
+- **Plátanos**: hay varios. El «plátano canario» de las listas es el de **1ª (104-B)**.
+- **Naranja calibre 5** = **naranja de zumo (42)**.
+- **Cebollas**: todas son nuevas. La «cebolla nueva» de las listas es la **cebolla gorda (21)**. La **pequeña calibre 5** es la **20**.
+- **Manzana caja** = **golden (105)** de calibre 24 aprox., en caja de unos **7 kg**.
+- **Melón** = **piel de sapo (93)**. Ahora viene de **BRASIL** (en España ya no es época): que conste en la procedencia del lote.
+- **Patata pelada**: la buena es la de **EL PARLEÑO**, no la de La Ibérica. El Parleño ha subido el precio.
+- **Huevos**: se compran a **PATATAS DEL OLMO** a **2,00 €/docena**; mandan la factura a final de mes.
+- **Perejil** (y otros detalles): a veces se regala. En las listas puede quedar por debajo de la compra a propósito.
+- **Colectividades** (colegios, residencias, escuelas infantiles) gastan mucho **bananas, pera conferencia y pera de agua** de varios calibres.
+
 ## Pedidos
 - Los pedidos fijos generan **previstos** (2 semanas por delante, cada madrugada). Se confirman el día antes (✅) o se quitan (❌).
   Los previstos ya cuentan en la hoja de compra. Más allá de 2 semanas, el calendario los calcula al momento.
