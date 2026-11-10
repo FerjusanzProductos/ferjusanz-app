@@ -2,8 +2,8 @@
 _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.md. Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda._
 
 ## Por publicar o decidir
-- 🔴 **Informes para Jorge** a la app normal (está en pruebas, rama `harvey-fase1`). Juntar con main, probar y pedir «Autorizo publicar».
-- 🟡 **Harvey: mensajes de WhatsApp naturales** (en pruebas) a la app normal.
+- ✔️ 11/11/2026: TODO lo de pruebas publicado en la normal (v194): Informes para Jorge, ayuda guiada 🆘, Harvey con WhatsApp natural, Precios / facturas y «lo de siempre» con Golden.
+- 🟡 Desde ahora la app de pruebas sale de `main` (+ el cambio que se esté probando). No volver a dejar cosas solo en pruebas.
 - 🟡 Juntar la rama `memoria-permanente` (estos documentos) con main y borrar las ramas ya incluidas.
 - ⚪ Borrar el Worker antiguo `ferjusanz` en Cloudflare.
 
@@ -12,8 +12,8 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - 🟡 **Fernando decide**: corregir en la ficha de los productos la unidad de venta (ahora todos salen «kg»): Arándano (513) y Frambuesa (310) → bandeja; Ensalada Campestre (137-P) → bolsa. Mora del bosque (257) → bandeja (confirmado 11/11). Mientras tanto la app ya usa la unidad buena al leer facturas y al apuntar precios.
 
 ## Revisado el 11/11/2026 (para cuando se empiece de verdad)
-- 🔴 **Unidades de TODOS los productos**: lista confirmada por Fernando («OK»). Falta su «sí» a aplicar el SQL `supabase/migrations/20261111b_unidades_libro_ventas.sql` (37 productos pasan a cobrarse por caja, bandeja, bolsa, pieza, manojo o docena; también sus pedidos fijos y previstos).
-- 🔴 **«Lo de siempre» con Golden**: hecho en PRUEBAS (v193). Falta su «sí» a crear la función `memoria_golden` (`20261111a_memoria_golden.sql`) para que lo vean también secretaria, comercial, etc.; y luego «Autorizo publicar».
+- 🔴 **Unidades de TODOS los productos**: lista confirmada por Fernando («OK» dos veces). El cambio en Supabase se lanzó pero se quedó esperando su aprobación en el aviso del móvil: volver a lanzarlo cuando esté delante. SQL: `supabase/migrations/20261111b_unidades_libro_ventas.sql` (37 productos pasan a cobrarse por caja, bandeja, bolsa, pieza, manojo o docena; también sus pedidos fijos y previstos).
+- ✔️ **«Lo de siempre» con Golden**: publicado (v194) y función `memoria_golden` creada en Supabase el 11/11/2026: lo ve todo el equipo (sin precios).
 - 🟢 **Trazabilidad**: hecha y lista (lote más antiguo, reparto, confirmar todo). Empieza a funcionar sola en cuanto se registren compras con lotes.
 
 ## Esperando a Fernando

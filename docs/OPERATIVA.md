@@ -43,7 +43,7 @@ Cristian,Daniel, Fernando Sanz padre y Fermando Sanz hijo reparten y preparan pe
  Cómo se cobra (transferencia, efectivo, plazos): depende de los clientes, de los pedidos, de las rutas
 
 ## 6. Contabilidad
-- **Jorge** recibe cada mes (días 1 a 10) los **Informes para Jorge**: Excel con facturas emitidas y recibidas, cobros, albaranes sin facturar y jornada. ⚠️ Todavía solo en la app de pruebas. 📝
+- **Jorge** recibe cada mes (días 1 a 10) los **Informes para Jorge**: Excel con facturas emitidas y recibidas, cobros, albaranes sin facturar y jornada. En la app normal desde v194 (11/11/2026). 📝
 - Lista de cierre de mes en Secretaría. 📝
 - ⚠️ Qué más necesita Jorge y en qué formato.
 

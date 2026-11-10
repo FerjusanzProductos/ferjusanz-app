@@ -2,6 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 11/11/2026
+- **v194 publicada en la app normal con TODO lo de pruebas** (Fernando: «Que esté todo!»): Informes para Jorge, ayuda guiada 🆘 con «Hazlo conmigo», Harvey con mensajes de WhatsApp naturales y «lo de siempre» con Golden. Creada en Supabase la función `memoria_golden`. **Decisión:** no dejar cosas solo en pruebas; la app de pruebas sale de main.
 - **«Lo de siempre» aprende de Golden (v193, solo PRUEBAS)**, pedido por Fernando («Hazlo con Golden»): al elegir un cliente en el pedido rápido, la app mira también sus últimos 30 albaranes de Golden y propone lo que suele llevar y cuánto. Así, tras el «Contador a cero», no empieza de cero. Para que lo vean todos los que apuntan pedidos (no solo oficina) falta crear en Supabase la función `memoria_golden` (`supabase/migrations/20261111a_memoria_golden.sql`).
 - **Unidades de todos los productos**: Fernando da el «OK» a la lista (cajas, bandejas, bolsas, piezas, manojos y huevos por docena). SQL preparado en `supabase/migrations/20261111b_unidades_libro_ventas.sql`, sin aplicar hasta su confirmación.
 - **v190 publicada en la app normal** («Autorizo publicar»): pantalla Precios / facturas de proveedor (los 4 cambios de abajo) y **mora → bandeja** (confirmado por Fernando).
