@@ -1,0 +1,12 @@
+// Configuración de Cloudflare: la app Ferjusanz (archivos de public/) servida por el Worker "ferjusanz-productos".
+{
+  "name": "ferjusanz-productos",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  "rules": [
+    { "type": "Text", "globs": ["**/*.html", "**/sw.js", "**/*.webmanifest"], "fallthrough": true },
+    { "type": "Data", "globs": ["**/*.png", "**/*.jpg", "**/*.mp4"], "fallthrough": true }
+  ]
+}

@@ -1,0 +1,6 @@
+-- 09/11/2026 (aplicado a mano con permiso de Fernando): enlazar productos de las listas generales
+-- (plátano canario → 104-B, naranja cal. 5 → 42, cebolla nueva → 21, cebolla pequeña cal. 5 → 20, lechuga 2 ud → 168 romana,
+--  manzana caja 7 kg → 105, melón Brasil → 93, mezclum → 137-P Ensalada Campestre, y otros 25), activar 137-P,
+-- tomate rosa (91-G) en hostelería y colectividades, proveedor PATATAS DEL OLMO con huevos a 2,00 €/docena,
+-- notas internas para Harvey y harvey.coste_compra contando también las líneas leídas marcadas «revisar».
+-- El detalle exacto está en el historial de la sesión; todo queda en la tabla «historial» (Registro de cambios).
