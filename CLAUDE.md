@@ -26,6 +26,7 @@ Dueño y quien decide: **Fernando Sanz**.
 3. Publicar en la app normal (Worker `ferjusanz-productos`) **solo** cuando Fernando escriba «Autorizo publicar».
 4. Cada publicación: subir la versión en `public/sw.js` (`ferjusanz-vNNN`), con número **distinto** del de pruebas.
 5. La app está en pruebas: **no crear pedidos ni datos reales para probar**; usar el **Modo prácticas**.
+   **Todavía NO se usa de verdad** (el trabajo real sigue en Golden Soft): los pedidos, previstos y cobros de la app son de prueba. No sacar conclusiones ni mensajes a clientes de esos datos. Lo real: historial de Golden (`golden_*`), clientes, productos, contactos (prospectos) y facturas de proveedores.
 6. Nada de borrar datos, cambiar precios o tocar facturas, cobros o permisos sin confirmación expresa.
 7. Antes de cambiar la base de datos, enseñar el SQL y explicar qué hace.
    Los avisos de aprobación de Supabase caducan al minuto: antes de lanzarlo, pedir a Fernando que tenga abierta esta conversación y espere el aviso (que diga «listo»).
