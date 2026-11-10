@@ -3114,7 +3114,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v160';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v162';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -4744,7 +4744,7 @@ async function vistaContactosPortal() {
     filas.forEach(x => { const c = uno(x.clientes) || {}; const caja = h('div', { class: 'card' });
       const mov = x.movil ? x.movil.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3') : '';
       caja.append(h('div', { class: 'fila' }, h('div', { class: 'nombre' }, nombreCli(c)), h('span', { class: 'badge' }, x.estado === 'nuevo' ? 'Nuevo' : x.estado === 'guardado' ? '✔ En la ficha' : 'Descartado')),
-        h('div', { class: 'sub' }, fechaES(String(x.created_at).slice(0, 10)) + ' ' + fmtHora(x.created_at) + ' · desde ' + (x.origen === 'albaran' ? 'un albarán' : 'su página') + (x.nombre ? ' · lo dejó: ' + x.nombre : '')),
+        h('div', { class: 'sub' }, fechaES(String(x.created_at).slice(0, 10)) + ' ' + fmtHora(x.created_at) + (x.origen === 'repartidor' ? ' · lo apuntó el repartidor' + (x.nombre ? ' ' + x.nombre : '') : ' · desde ' + (x.origen === 'albaran' ? 'un albarán' : 'su página') + (x.nombre ? ' · lo dejó: ' + x.nombre : ''))),
         x.movil ? h('div', { style: 'font-size:18px;margin-top:6px' }, '📱 ' + mov + (c.telefono && movil9(c.telefono) === x.movil ? ' (ya está en la ficha)' : c.telefono ? ' · en la ficha: ' + c.telefono : '')) : null,
         x.email ? h('div', { style: 'font-size:16px;margin-top:4px' }, '✉️ ' + x.email + (c.email && c.email.toLowerCase() === x.email ? ' (ya está en la ficha)' : c.email ? ' · en la ficha: ' + c.email : '')) : null,
         h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' },
@@ -4756,8 +4756,8 @@ async function vistaContactosPortal() {
               if (x.movil) { try { await h2('prefs_set', { cliente_id: x.cliente_id, whatsapp: x.movil, solo_whatsapp: true, acepta_whatsapp: true }); } catch (e) { } }
               await marcar(x, 'guardado'); toast('Guardado en la ficha de ' + nombreCli(c), 'ok'); cargar();
             } catch (e) { toast(msgErr(e), 'err'); } } }, '✅ Guardar en su ficha') : null,
-          x.movil ? h('button', { class: 'small', onclick: async () => { try { const u = await enlacePagina(x.cliente_id); window.open('https://wa.me/34' + x.movil + '?text=' + encodeURIComponent('Hola' + (x.nombre ? ' ' + x.nombre.split(' ')[0] : '') + ', somos ' + EMPRESA.nombre + '. Aquí tienes tu página con todos tus albaranes; cada entrega nueva aparece sola. Guarda este mensaje para abrirla cuando quieras:\n' + u), '_blank'); } catch (e) { toast(msgErr(e), 'err'); } } }, '💬 Mandarle su página por WhatsApp') : null,
-          x.email ? h('button', { class: 'ghost small', onclick: async () => { try { const u = await enlacePagina(x.cliente_id); location.href = 'mailto:' + x.email + '?subject=' + encodeURIComponent('Tus albaranes de ' + EMPRESA.nombre) + '&body=' + encodeURIComponent('Hola' + (x.nombre ? ' ' + x.nombre.split(' ')[0] : '') + ',\n\nAquí tienes tu página con todos tus albaranes. Cada entrega nueva aparece sola:\n' + u + '\n\nGuarda este correo para abrirla cuando quieras.\n\nUn saludo,\n' + EMPRESA.nombre + '\n' + EMPRESA.tels); } catch (e) { toast(msgErr(e), 'err'); } } }, '✉️ Mandarle su página por correo') : null,
+          x.movil ? h('button', { class: 'small', onclick: async () => { try { const u = await enlacePagina(x.cliente_id); window.open('https://wa.me/34' + x.movil + '?text=' + encodeURIComponent('Hola' + (x.nombre && x.origen !== 'repartidor' ? ' ' + x.nombre.split(' ')[0] : '') + ', somos ' + EMPRESA.nombre + '. Aquí tienes tu página con todos tus albaranes; cada entrega nueva aparece sola. Guarda este mensaje para abrirla cuando quieras:\n' + u), '_blank'); } catch (e) { toast(msgErr(e), 'err'); } } }, '💬 Mandarle su página por WhatsApp') : null,
+          x.email ? h('button', { class: 'ghost small', onclick: async () => { try { const u = await enlacePagina(x.cliente_id); location.href = 'mailto:' + x.email + '?subject=' + encodeURIComponent('Tus albaranes de ' + EMPRESA.nombre) + '&body=' + encodeURIComponent('Hola' + (x.nombre && x.origen !== 'repartidor' ? ' ' + x.nombre.split(' ')[0] : '') + ',\n\nAquí tienes tu página con todos tus albaranes. Cada entrega nueva aparece sola:\n' + u + '\n\nGuarda este correo para abrirla cuando quieras.\n\nUn saludo,\n' + EMPRESA.nombre + '\n' + EMPRESA.tels); } catch (e) { toast(msgErr(e), 'err'); } } }, '✉️ Mandarle su página por correo') : null,
           x.estado === 'nuevo' ? h('button', { class: 'ghost small', onclick: async () => { if (!await confirmar('¿Descartar estos datos? (por ejemplo, si son de prueba o están mal)')) return; try { await marcar(x, 'descartado'); cargar(); } catch (e) { toast(msgErr(e), 'err'); } } }, 'Descartar') : null));
       kids.push(caja); });
     cont.replaceChildren(...kids);
@@ -6364,24 +6364,29 @@ function correoAlbaranes(forzar) {
   if (PRACTICA || !navigator.onLine || !state.user) return; if (!forzar && Date.now() - ultCorreoAlb < 60000) return; ultCorreoAlb = Date.now();
   try { sb.functions.invoke('albaranes-correo', { body: { accion: 'pendientes' } }).catch(() => { }); } catch (e) { }
 }
-/* 💬 Después de entregar: un toque para mandar el albarán por WhatsApp al móvil del cliente (sale del WhatsApp que tenga el móvil del repartidor) */
+/* 💬 Después de entregar: el repartidor manda el albarán desde SU WhatsApp con un toque (hasta que haya envío automático).
+   Móvil: ficha, Harvey o el que dejó el cliente al escanear el QR. Si no hay, lo escribe ahí y queda apuntado para la oficina. */
 async function ofrecerWhatsAppAlbaran(ids) {
   if (PRACTICA || !navigator.onLine) return;
   try {
-    const r = await sb.from('pedidos').select('id,cliente_id,clientes(nombre,nombre_comercial,telefono)').in('id', ids); if (r.error || !r.data) return;
+    const r = await sb.rpc('moviles_para_albaran', { p_pedidos: ids }); if (r.error || !r.data || !r.data.length) return;
     const filas = [];
-    for (const p of r.data) { const c = uno(p.clientes) || {}; const m = movil9(c.telefono); if (!/^[67]\d{8}$/.test(m)) continue;
-      let tk = null; try { const e = await sb.rpc('crear_enlace_albaran', { p_pedido: p.id }); if (!e.error) tk = e.data && e.data.token; } catch (e) { } if (!tk) continue;
-      filas.push({ p, c, m, u: albUrl(tk) }); }
+    for (const x of r.data) { let tk = null; try { const e = await sb.rpc('crear_enlace_albaran', { p_pedido: x.pedido_id }); if (!e.error) tk = e.data && e.data.token; } catch (e) { } if (tk) filas.push(Object.assign({}, x, { u: albUrl(tk) })); }
     if (!filas.length) return;
-    let cerrar; cerrar = hoja('💬 Mandar el albarán por WhatsApp', h('div', {}, h('p', { class: 'sub' }, 'Toca y dale a enviar. El cliente lo tiene al momento en su WhatsApp y no lo pierde.'),
-      ...filas.map(x => h('button', { class: 'guardar', style: 'width:100%;min-height:58px;margin-top:8px;font-size:17px', onclick: () => {
-        const txt = 'Hola, somos ' + EMPRESA.nombre + '. Os acabamos de entregar el pedido. Aquí tenéis el albarán (se queda guardado en este chat): ' + x.u;
-        try { Promise.resolve(sb.rpc('registrar_envio_albaran', { p_pedido: x.p.id, p_destino: 'WhatsApp ' + x.m + ' (repartidor)' })).catch(() => { }); } catch (e) { }
-        window.open('https://wa.me/34' + x.m + '?text=' + encodeURIComponent(txt), '_blank'); } }, '💬 ' + nombreCli(x.c) + ' · ' + x.m.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3'))),
-      h('button', { class: 'ghost', style: 'width:100%;min-height:48px;margin-top:10px', onclick: () => cerrar() }, 'Ahora no')));
+    const txt = x => 'Hola, somos ' + EMPRESA.nombre + '. Os acabamos de entregar el pedido. Aquí tenéis el albarán (se queda guardado en este chat): ' + x.u;
+    const enviar = (x, m) => { try { Promise.resolve(sb.rpc('registrar_envio_albaran', { p_pedido: x.pedido_id, p_destino: 'WhatsApp ' + m + ' (repartidor)' })).catch(() => { }); } catch (e) { }
+      window.open('https://wa.me/34' + m + '?text=' + encodeURIComponent(txt(x)), '_blank'); };
+    const bonito = m => m.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
+    hoja('💬 Mandar el albarán por WhatsApp', h('div', {}, h('p', { class: 'sub' }, 'Sale de tu WhatsApp. Toca y dale a enviar: el cliente lo tiene al momento y no lo pierde.'),
+      ...filas.map(x => /^[67]\d{8}$/.test(x.movil || '')
+        ? h('button', { class: 'guardar', style: 'width:100%;min-height:58px;margin-top:8px;font-size:17px', onclick: () => enviar(x, x.movil) }, '💬 ' + x.cliente + ' · ' + bonito(x.movil))
+        : (() => { const inp = h('input', { type: 'tel', inputmode: 'tel', placeholder: 'Móvil de ' + x.cliente, style: 'font-size:18px;min-height:52px;width:100%' });
+            return h('div', { class: 'card', style: 'margin-top:8px' }, h('b', {}, x.cliente), h('div', { class: 'sub' }, 'No tenemos su móvil. Pídeselo y escríbelo: queda apuntado para la próxima vez.'), inp,
+              h('button', { class: 'guardar', style: 'width:100%;min-height:52px;margin-top:6px', onclick: async () => { try { const a = await sb.rpc('apuntar_movil_cliente', { p_pedido: x.pedido_id, p_movil: inp.value }); if (a.error) throw a.error;
+                if (!a.data || !a.data.ok) { toast('Ese móvil no parece correcto (9 cifras, empieza por 6 o 7)', 'err'); return; } enviar(x, a.data.movil); } catch (e) { toast(msgErr(e), 'err'); } } }, '💬 Guardar y enviar')); })())));
   } catch (e) { }
 }
+
 async function marcarEntregado(pedidoId, nota) {
   if (!colaE.get().some(x => x.pedido === pedidoId)) colaE.set(colaE.get().concat([{ pedido: pedidoId, at: new Date().toISOString(), nota: nota || null }]));
   toast('Entrega registrada', 'ok'); await sincronizarEntregas();
