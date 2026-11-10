@@ -71,6 +71,30 @@ Si el usuario pide comprobar el kit, haz esto y responde con una tabla ✅/❌:
 
 ## 5. Notas
 
-- **OmniRoute** (diegosouzapw/OmniRoute) no está instalado a propósito: es un proxy que redirige el tráfico de Claude Code hacia otros proveedores y maneja tus credenciales. Solo si el usuario lo pide expresamente y tras revisar sus avisos de seguridad; nunca lo actives en `settings.json` (`ANTHROPIC_BASE_URL`).
+- **OmniRoute**: ver sección 6. Nunca pongas `ANTHROPIC_BASE_URL` en el `settings.json` del repo: rompería Claude Code en la nube y en cualquier equipo sin OmniRoute.
 - graphify instala su CLI (`graphifyy` en PyPI) la primera vez que se usa; añade `graphify-out/` al `.gitignore` si no quieres subir el grafo.
 - watch necesita `python3`; el motor local además `ffmpeg` y `yt-dlp`. Con Gemini, los vídeos se envían a Google.
+
+## 6. OmniRoute (solo en tu ordenador)
+
+[diegosouzapw/OmniRoute](https://github.com/diegosouzapw/OmniRoute) es un servidor local (puerto 20128) que reparte las peticiones de Claude Code, Codex, Cursor… entre muchos proveedores de IA con fallback automático y compresión de tokens. No es un plugin: tiene que estar ejecutándose en tu máquina, así que no funciona en sesiones de Claude Code en la nube.
+
+**Instalar y arrancar** (terminal de tu ordenador, Node 20+):
+```bash
+npm install -g omniroute
+omniroute            # abre el dashboard en http://localhost:20128
+```
+En el dashboard conecta al menos un proveedor (tu cuenta o API key) y copia tu clave de OmniRoute en Dashboard → Endpoints.
+
+**Usarlo con Claude Code**, de menor a mayor impacto:
+1. Solo sus herramientas, sin desviar el tráfico (recomendado):
+   `claude mcp add --scope user --transport http omniroute http://localhost:20128/api/mcp/stream`
+2. Lanzar Claude Code a través de OmniRoute solo cuando quieras: `omniroute run claude --model <proveedor/modelo>`.
+   El `claude` normal sigue yendo directo a Anthropic.
+
+**Precauciones**:
+- Todo lo que envíes (código, claves que aparezcan en el código) pasa por OmniRoute y por el proveedor que elija. No lo uses con datos de clientes ni secretos de Supabase.
+- Usa solo cuentas y claves propias, respetando los términos de cada proveedor. Desconfía de "tokens gratis" de cuentas ajenas.
+- No actives sus funciones de intercepción TLS/MITM ni instales su certificado raíz.
+- Revisa antes sus avisos de seguridad: https://github.com/diegosouzapw/OmniRoute/security
+- Si algo falla, desinstala con `npm uninstall -g omniroute`; tu Claude Code no queda modificado.
