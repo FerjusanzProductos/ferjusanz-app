@@ -27,7 +27,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 ## Mejoras pedidas (de `docs/PROMPTS.md`; recomendado empezar por la 3 y la 6)
 1. 🟡 Revisión de diseño y usabilidad en el móvil (lista priorizada, sin cambiar nada hasta elegir).
 2. ⚪ Agente buscador de clientes nuevos con cocina propia (Madrid norte y noroeste, Segovia), sin duplicados.
-3. 🔴 **Agente de seguimiento diario**: a quién llamar o escribir hoy, con los mensajes preparados.
+3. ✔️ **Agente de seguimiento diario**: tarea programada cada día a las 7:03 (desde el 11/11/2026). Revisar con Fernando tras unos días si el resumen le sirve.
 4. ⚪ Agente de ofertas semanales por tipo de cliente.
 5. 🟡 Agente de cobros: deudas por urgencia y recordatorios.
 6. 🔴 **Agente de compras y facturas**: precios raros, productos mal apuntados, margen mínimo y comprobación con las facturas de Golden.
