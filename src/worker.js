@@ -5,6 +5,8 @@ import swJs from "../public/sw.js";
 import manifest from "../public/manifest.webmanifest";
 import icon192 from "../public/icon-192.png";
 import icon512 from "../public/icon-512.png";
+import iconP192 from "../public/icon-pruebas-192.png";
+import iconP512 from "../public/icon-pruebas-512.png";
 import paso1 from "../public/guia-img/paso1.jpg";
 import paso2 from "../public/guia-img/paso2.jpg";
 import paso3 from "../public/guia-img/paso3.jpg";
@@ -51,13 +53,23 @@ const ARCHIVOS = {
   "/guia-img/ej6_calendario.jpg": [ej6_calendario, "image/jpeg"],
 };
 
+/* App de PRUEBAS (dirección con «pruebas»): otro nombre, color e icono para no confundirla con la de trabajar. */
+const PRUEBAS = {
+  "/manifest.webmanifest": [(() => { const m = JSON.parse(manifest); m.name = "Ferjusanz PRUEBAS"; m.short_name = "PRUEBAS"; m.theme_color = "#ea580c";
+    m.icons = [{ src: "icon-pruebas-192.png", sizes: "192x192", type: "image/png", purpose: "any" }, { src: "icon-pruebas-512.png", sizes: "512x512", type: "image/png", purpose: "any" }]; return JSON.stringify(m, null, 2); })(), "application/manifest+json; charset=utf-8"],
+  "/icon-192.png": [iconP192, "image/png"],
+  "/icon-512.png": [iconP512, "image/png"],
+  "/icon-pruebas-192.png": [iconP192, "image/png"],
+  "/icon-pruebas-512.png": [iconP512, "image/png"],
+};
+
 export default {
   async fetch(request) {
     if (request.method !== "GET" && request.method !== "HEAD") {
       return new Response("Método no permitido", { status: 405, headers: { Allow: "GET, HEAD" } });
     }
-    const ruta = new URL(request.url).pathname;
-    const archivo = ARCHIVOS[ruta];
+    const url = new URL(request.url), ruta = url.pathname;
+    const archivo = (url.hostname.includes("pruebas") && PRUEBAS[ruta]) || ARCHIVOS[ruta];
     if (!archivo) return new Response("No encontrado", { status: 404 });
     const [contenido, tipo] = archivo;
     const imagen = tipo.startsWith("image/") || tipo.startsWith("video/");
