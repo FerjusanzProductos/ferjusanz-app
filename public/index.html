@@ -2528,6 +2528,36 @@ const pubCabecera = () => h('div', { class: 'pub-cab' }, h('div', { class: 'pub-
 const pubPie = () => h('div', {}, h('button', { class: 'ghost', style: 'width:100%;min-height:50px;margin-top:14px', onclick: async () => { const u = location.href, t = document.title; try { if (navigator.share) await navigator.share({ title: t, text: 'Enlace de ' + EMPRESA.nombre + ' (solo para quien lo necesite):', url: u }); else { await navigator.clipboard.writeText(u); toast('Enlace copiado: pégalo en WhatsApp o en un correo', 'ok'); } } catch (e) { if (!e || e.name !== 'AbortError') { try { await navigator.clipboard.writeText(u); toast('Enlace copiado', 'ok'); } catch (er) { prompt('Copia este enlace:', u); } } } } }, '📲 Mandar este enlace a otra persona (jefe, gestoría…)'),
   h('p', { class: 'sub', style: 'margin-top:8px' }, 'Quien reciba el enlace lo abre en su móvil u ordenador, sin clave. Mándalo solo a personas de confianza.'),
   h('p', { class: 'sub', style: 'margin-top:8px' }, EMPRESA.dir + ' · ' + EMPRESA.email));
+/* 📲 Para que el cliente no pierda sus albaranes: lo guarda en su WhatsApp (escribiéndonos, así tenemos su número)
+   o nos deja móvil y correo. Solo se GUARDA: la oficina lo revisa y lo pasa a la ficha. Nada se envía solo. */
+const WA_OFICINA = '34609567354';
+function pubCajaContacto(tok, nombreCliente) {
+  const clave = 'fj_pub_contacto_' + tok.slice(0, 8); let hecho = false; try { hecho = localStorage.getItem(clave) === '1'; } catch (e) { }
+  const caja = h('div', { style: 'display:block;margin:12px 0;padding:14px;border-radius:14px;background:#ecfdf5;border:2px solid #86efac;font-weight:400;color:#14532d' });
+  const enlace = location.href.split('#')[0];
+  const bWa = h('a', { href: 'https://wa.me/' + WA_OFICINA + '?text=' + encodeURIComponent('Hola, os escribo de ' + (nombreCliente || 'vuestro cliente') + '. Quiero tener aquí mis albaranes de Ferjusanz: ' + enlace), target: '_blank', rel: 'noopener',
+    style: 'display:block;text-align:center;background:#16a34a;color:#fff;font-weight:800;font-size:17px;padding:14px;border-radius:12px;text-decoration:none;margin:8px 0' }, '💬 Guardarlo en mi WhatsApp');
+  const pinta = () => {
+    if (hecho) { caja.replaceChildren(h('b', {}, '✔ Ya tenemos tus datos.'), h('div', { class: 'sub' }, 'Te mandaremos tu página de albaranes. Si quieres, guárdala también en tu WhatsApp:'), bWa); return; }
+    const movil = h('input', { type: 'tel', inputmode: 'tel', placeholder: 'Tu móvil (6xx xxx xxx)', autocomplete: 'tel', style: 'font-size:17px;min-height:50px;width:100%;margin-top:6px' });
+    const mail = h('input', { type: 'email', inputmode: 'email', placeholder: 'Tu correo (opcional)', autocomplete: 'email', style: 'font-size:17px;min-height:50px;width:100%;margin-top:6px' });
+    const quien = h('input', { placeholder: 'Tu nombre (opcional)', autocomplete: 'name', style: 'font-size:17px;min-height:50px;width:100%;margin-top:6px' });
+    const acepto = h('input', { type: 'checkbox', checked: true, style: 'width:22px;height:22px' });
+    const bOk = h('button', { class: 'guardar', style: 'width:100%;min-height:52px;margin-top:8px;font-size:17px', onclick: async () => {
+      if (!movil.value.trim() && !mail.value.trim()) { toast('Escribe tu móvil o tu correo', 'err'); return; }
+      if (!acepto.checked) { toast('Marca la casilla para que podamos enviártelos', 'err'); return; }
+      bOk.disabled = true; bOk.textContent = 'Guardando…';
+      try { const r = await sb.rpc('portal_guardar_contacto', { p_token: tok, p_movil: movil.value, p_email: mail.value, p_nombre: quien.value }); if (r.error) throw r.error;
+        if (!r.data || !r.data.ok) { const e = (r.data || {}).error; toast(e === 'movil' ? 'Ese móvil no parece correcto (9 cifras, empieza por 6 o 7)' : e === 'email' ? 'Ese correo no parece correcto' : e === 'muchos' ? 'Ya nos has dejado tus datos hoy. ¡Gracias!' : 'No se pudo guardar. Llámanos: ' + EMPRESA.tels, 'err'); bOk.disabled = false; bOk.textContent = 'Guardar'; return; }
+        try { localStorage.setItem(clave, '1'); } catch (e) { } hecho = true; toast('¡Gracias! Guardado', 'ok'); pinta();
+      } catch (e) { toast(isNetErr(e) ? 'Sin conexión. Inténtalo de nuevo.' : 'No se pudo guardar', 'err'); bOk.disabled = false; bOk.textContent = 'Guardar'; } } }, 'Guardar');
+    caja.replaceChildren(h('b', { style: 'font-size:17px' }, '📲 No pierdas tus albaranes'),
+      h('div', { class: 'sub', style: 'margin-top:4px' }, 'Lo más rápido: toca el botón verde y envíanos el mensaje. Así el enlace se queda guardado en tu WhatsApp y lo abres cuando quieras.'), bWa,
+      h('div', { class: 'sub', style: 'margin-top:6px' }, 'O déjanos tu móvil y tu correo y te mandamos tu página con todos tus albaranes:'), movil, mail, quien,
+      h('label', { style: 'display:flex;gap:8px;align-items:center;margin-top:8px;font-size:14px' }, acepto, 'Acepto que me enviéis mis albaranes por WhatsApp o correo'), bOk);
+  };
+  pinta(); return caja;
+}
 async function vistaAlbaranPublico(tok) {
   window.__PUBLICA = true; aplicarTema();
   document.title = 'Albarán · ' + EMPRESA.nombre;
@@ -2535,7 +2565,7 @@ async function vistaAlbaranPublico(tok) {
   try {
     const r = await sb.rpc('albaran_publico', { p_token: tok }); if (r.error) throw r.error; const x = r.data;
     if (!x || !x.ok) { caja.replaceChildren(pubCabecera(), h('h2', {}, 'No encontramos este albarán'), h('p', {}, 'El enlace no es válido, está incompleto (si lo copiaste, falta alguna letra al final) o el albarán todavía no está cerrado. Pide a ' + EMPRESA.nombre + ' que te lo vuelva a enviar: ' + EMPRESA.tels), h('p', { class: 'sub' }, 'Código leído: ' + tok.slice(0, 6) + '…' + tok.slice(-4))); return; }
-    caja.replaceChildren(pubCabecera(), ...pubAlbaranNodos(x), h('p', { class: 'sub', style: 'margin-top:12px' }, 'Guarda este mensaje o este enlace: podrás abrir el albarán siempre que lo necesites.'), pubPie());
+    caja.replaceChildren(pubCabecera(), pubCajaContacto(tok, nombreCli(x.cliente || {})), ...pubAlbaranNodos(x), h('p', { class: 'sub', style: 'margin-top:12px' }, 'Guarda este mensaje o este enlace: podrás abrir el albarán siempre que lo necesites.'), pubPie());
   } catch (e) { caja.replaceChildren(pubCabecera(), h('h2', {}, 'No se pudo abrir'), h('p', {}, isNetErr(e) ? 'Comprueba tu conexión a internet y vuelve a abrir el enlace.' : msgErr(e))); }
 }
 /* Página del cliente: todos SUS albaranes y nada más. Se guarda una vez (marcador / pantalla de inicio) y se actualiza sola */
@@ -2567,14 +2597,15 @@ async function vistaPortalCliente(tok) {
       Object.keys(tot).forEach(k => { tot[k] = Math.round(tot[k] * 100) / 100; });
       const sinPrecio = als.filter(a => !a._T.hay).length;
       const filas = als.map(a => h('button', { class: 'pub-fila', onclick: () => detalle(a) }, h('div', { style: 'text-align:left;min-width:0;flex:1' }, h('div', { class: 'nombre' }, fechaES(a.fecha) + ' · ' + a.serie + ' ' + String(a.numero).padStart(7, '0')), h('div', { class: 'sub' }, (a.lineas || []).length + ' productos' + (a.entregado_at ? ' · 📦 ' + (a.entrega_nota && a.entrega_nota !== 'En mano' ? a.entrega_nota : 'entregado') : ' · pendiente de entrega') + (a.firma_nombre ? ' · firmado por ' + a.firma_nombre : (a.firma_at ? ' · firmado' : '')))), h('b', {}, a._T.hay ? eur(a._T.total) + ' €' : 'sin precio')));
-      caja.replaceChildren(pubCabecera(), h('h2', { style: 'margin:14px 0 2px' }, 'Tus albaranes'), h('div', { class: 'sub' }, nombreCli(cli) + (cli.localidad ? ' · ' + cli.localidad : '')),
+      caja.replaceChildren(...[pubCabecera(), h('h2', { style: 'margin:14px 0 2px' }, 'Tus albaranes'), h('div', { class: 'sub' }, nombreCli(cli) + (cli.localidad ? ' · ' + cli.localidad : '')),
+        pubCajaContacto(tok, nombreCli(cli)),
         h('p', { class: 'sub', style: 'margin-top:8px' }, 'Cada vez que te entregamos mercancía, el albarán aparece aquí solo. Esta página es privada: solo ves los tuyos. Guárdala en favoritos y no hace falta que nadie te mande nada.'),
         h('div', { class: 'pub-meses' }, meses.filter(k => !LIM || rango(k)[1] >= LIM).map(k => h('button', { class: 'chip' + (k === mes ? ' on' : ''), onclick: () => { mes = k; lista(); } }, MES(k).replace(/ \d{4}$/, '') + (k.slice(0, 4) !== String(hoyD.getFullYear()) ? ' ' + k.slice(2, 4) : '')))),
         h('div', { class: 'pub-mes' }, h('span', {}, MES(mes).replace(/^./, c => c.toUpperCase()) + ' · ' + als.length + ' albaranes'), h('b', {}, eur(tot.total) + ' €')),
         als.length ? h('div', { class: 'sub' }, 'Base ' + eur(tot.base) + ' € · IVA ' + eur(tot.iva + tot.re) + ' €' + (sinPrecio ? ' · ' + sinPrecio + ' albarán(es) aún sin precio' : '')) : null,
         ...(filas.length ? filas : [h('p', { class: 'vacio' }, 'No hay albaranes en ' + MES(mes) + '.')]),
         als.length ? h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;margin-top:14px' }, h('button', { class: 'guardar', style: 'flex:1;min-height:50px', onclick: () => bajar(pdfMes(als, cli, tot), 'Albaranes-' + mes + '.pdf', 'application/pdf') }, '📄 Resumen del mes (PDF)'), h('button', { class: 'ghost', style: 'flex:1;min-height:50px', onclick: () => bajar(csvDe(als, cli), 'Albaranes-' + mes + '.csv', 'text/csv;charset=utf-8') }, '📊 Excel (CSV)')) : null,
-        pubPie());
+        pubPie()].filter(Boolean));
     } catch (e) { caja.replaceChildren(pubCabecera(), h('h2', {}, 'No se pudo abrir'), h('p', {}, isNetErr(e) ? 'Comprueba tu conexión a internet y vuelve a abrir el enlace.' : msgErr(e))); }
   };
   const detalle = a => { caja.replaceChildren(pubCabecera(), h('button', { class: 'ghost small', style: 'margin-top:10px', onclick: lista }, '← Todos mis albaranes'),
@@ -3055,7 +3086,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v153';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v155';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -4662,6 +4693,50 @@ function marcaPend(re, n) {
 
 /* ===== SECRETARÍA HOY (fase 1): una pantalla con las tareas de oficina; cada una abre la pantalla de siempre y "← Volver" regresa aquí ===== */
 function volverIni() { go(state.desdeSec ? 'secretaria' : 'inicio'); }
+/* 📲 Móviles y correos que dejan los clientes desde su albarán o su página. La oficina los pasa a la ficha y les manda su página (WhatsApp o correo, con un toque). */
+async function vistaContactosPortal() {
+  state.view = 'contactosportal';
+  const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
+  $app.replaceChildren(shell('Móviles y correos de clientes', cont, { volver: volverIni })); renderBanner();
+  if (!esOficina()) { cont.replaceChildren(h('p', { class: 'vacio' }, 'Solo la oficina puede ver esto.')); return; }
+  let verTodos = false;
+  async function cargar() {
+    try {
+      let q = sb.from('contactos_portal').select('id,cliente_id,movil,email,nombre,origen,created_at,estado,clientes(id,codigo,nombre,nombre_comercial,telefono,email)').order('created_at', { ascending: false }).limit(100);
+      if (!verTodos) q = q.eq('estado', 'nuevo');
+      const r = await q; if (r.error) throw r.error; pintar(r.data || []);
+    } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+  }
+  const marcar = async (x, estado) => { const r = await sb.from('contactos_portal').update({ estado, resuelto_por: state.user.id, resuelto_en: new Date().toISOString() }).eq('id', x.id); if (r.error) throw r.error; };
+  const enlacePagina = async cid => { const tk = await sb.rpc('crear_enlace_cliente', { p_cliente: cid, p_nuevo: false }); if (tk.error) throw tk.error; return urlPortal(tk.data); };
+  function pintar(filas) {
+    const kids = [h('div', { class: 'aviso-card' }, 'Lo dejan los propios clientes al abrir su albarán o su página (QR o enlace). Revisa que sea correcto, guárdalo en su ficha y mándales su página: así tienen siempre todos sus albaranes.'),
+      h('div', { class: 'chips' }, [[false, 'Nuevos'], [true, 'Todos']].map(([v, n]) => h('button', { class: 'chip' + (verTodos === v ? ' on' : ''), onclick: () => { verTodos = v; cargar(); } }, n)))];
+    if (!filas.length) kids.push(h('p', { class: 'vacio' }, verTodos ? 'Todavía no ha dejado nadie sus datos.' : 'No hay nada nuevo. 👌'));
+    filas.forEach(x => { const c = uno(x.clientes) || {}; const caja = h('div', { class: 'card' });
+      const mov = x.movil ? x.movil.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3') : '';
+      caja.append(h('div', { class: 'fila' }, h('div', { class: 'nombre' }, nombreCli(c)), h('span', { class: 'badge' }, x.estado === 'nuevo' ? 'Nuevo' : x.estado === 'guardado' ? '✔ En la ficha' : 'Descartado')),
+        h('div', { class: 'sub' }, fechaES(String(x.created_at).slice(0, 10)) + ' ' + fmtHora(x.created_at) + ' · desde ' + (x.origen === 'albaran' ? 'un albarán' : 'su página') + (x.nombre ? ' · lo dejó: ' + x.nombre : '')),
+        x.movil ? h('div', { style: 'font-size:18px;margin-top:6px' }, '📱 ' + mov + (c.telefono && movil9(c.telefono) === x.movil ? ' (ya está en la ficha)' : c.telefono ? ' · en la ficha: ' + c.telefono : '')) : null,
+        x.email ? h('div', { style: 'font-size:16px;margin-top:4px' }, '✉️ ' + x.email + (c.email && c.email.toLowerCase() === x.email ? ' (ya está en la ficha)' : c.email ? ' · en la ficha: ' + c.email : '')) : null,
+        h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' },
+          x.estado === 'nuevo' ? h('button', { class: 'guardar small', onclick: async () => {
+            try { const cambios = {};
+              if (x.movil && movil9(c.telefono) !== x.movil) { if (!c.telefono || await confirmar('La ficha ya tiene el teléfono ' + c.telefono + '. ¿Poner ' + mov + ' en su lugar?\n(Si dices que no, el móvil se guarda solo para WhatsApp.)')) cambios.telefono = mov; }
+              if (x.email && (c.email || '').toLowerCase() !== x.email) { if (!c.email || await confirmar('La ficha ya tiene el correo ' + c.email + '. ¿Poner ' + x.email + ' en su lugar?')) cambios.email = x.email; }
+              if (Object.keys(cambios).length) { const u = await sb.from('clientes').update(cambios).eq('id', x.cliente_id); if (u.error) throw u.error; }
+              if (x.movil) { try { await h2('prefs_set', { cliente_id: x.cliente_id, whatsapp: x.movil, solo_whatsapp: true, acepta_whatsapp: true }); } catch (e) { } }
+              await marcar(x, 'guardado'); toast('Guardado en la ficha de ' + nombreCli(c), 'ok'); cargar();
+            } catch (e) { toast(msgErr(e), 'err'); } } }, '✅ Guardar en su ficha') : null,
+          x.movil ? h('button', { class: 'small', onclick: async () => { try { const u = await enlacePagina(x.cliente_id); window.open('https://wa.me/34' + x.movil + '?text=' + encodeURIComponent('Hola' + (x.nombre ? ' ' + x.nombre.split(' ')[0] : '') + ', somos ' + EMPRESA.nombre + '. Aquí tienes tu página con todos tus albaranes; cada entrega nueva aparece sola. Guarda este mensaje para abrirla cuando quieras:\n' + u), '_blank'); } catch (e) { toast(msgErr(e), 'err'); } } }, '💬 Mandarle su página por WhatsApp') : null,
+          x.email ? h('button', { class: 'ghost small', onclick: async () => { try { const u = await enlacePagina(x.cliente_id); location.href = 'mailto:' + x.email + '?subject=' + encodeURIComponent('Tus albaranes de ' + EMPRESA.nombre) + '&body=' + encodeURIComponent('Hola' + (x.nombre ? ' ' + x.nombre.split(' ')[0] : '') + ',\n\nAquí tienes tu página con todos tus albaranes. Cada entrega nueva aparece sola:\n' + u + '\n\nGuarda este correo para abrirla cuando quieras.\n\nUn saludo,\n' + EMPRESA.nombre + '\n' + EMPRESA.tels); } catch (e) { toast(msgErr(e), 'err'); } } }, '✉️ Mandarle su página por correo') : null,
+          x.estado === 'nuevo' ? h('button', { class: 'ghost small', onclick: async () => { if (!await confirmar('¿Descartar estos datos? (por ejemplo, si son de prueba o están mal)')) return; try { await marcar(x, 'descartado'); cargar(); } catch (e) { toast(msgErr(e), 'err'); } } }, 'Descartar') : null));
+      kids.push(caja); });
+    cont.replaceChildren(...kids);
+  }
+  cargar();
+}
+const movil9 = t => { const d = String(t || '').replace(/\D/g, ''); return d.length === 11 && d.startsWith('34') ? d.slice(2) : d; };
 function vistaSecretaria() {
   state.view = 'secretaria'; state.desdeSec = true;
   const tareas = [
@@ -4671,6 +4746,7 @@ function vistaSecretaria() {
     { k: 'traza', ic: '🔎', t: 'Trazabilidad', s: 'Albaranes sin lote asignado', f: () => go('traza') },
     { k: 'fact', ic: '📤', t: 'Pasar albaranes a factura', s: 'Facturas para Golden Soft', f: () => go('prefacturas') },
     { k: 'env', ic: '📄', t: 'Imprimir o enviar facturas', s: 'Facturas de clientes', f: () => go('facturascli') },
+    { k: 'contactos', ic: '📲', t: 'Móviles y correos de clientes', s: 'Los que dejan los clientes al abrir su albarán: pásalos a la ficha y mándales su página', f: () => go('contactosportal') },
     { k: 'cobros', ic: '💰', t: 'Cobros y deudas', s: 'Quién ha pagado y quién debe', f: () => go('cobros') },
     { k: 'precios', ic: '💶', t: 'Poner precios a los pedidos', s: 'Pedidos sin precio', f: () => go('preciosp') },
     { k: 'sinrec', ic: '🔎', t: 'Productos sin reconocer', s: 'Nombres de las facturas que no están como producto', f: () => go('sinreconocer') }
@@ -4690,6 +4766,7 @@ function vistaSecretaria() {
   (async () => {
     if (!navigator.onLine) return;
     try {
+      const rc = await sb.from('contactos_portal').select('id', { count: 'exact', head: true }).eq('estado', 'nuevo'); if (!rc.error && typeof rc.count === 'number') { nums.contactos = rc.count; pinta(); }
       const r = await sb.from('albaranes').select('id', { count: 'exact', head: true }).eq('estado', 'emitido').is('traza_estado', null);
       if (!r.error && typeof r.count === 'number') { nums.traza = r.count; pinta(); }
     } catch (e) { }
@@ -10944,6 +11021,7 @@ const BUSCA_PANTALLAS = [
   ['🔎', 'Productos sin reconocer', 'productos sin reconocer enlazar nombres facturas', () => go('sinreconocer'), 'o'],
   ['📐', 'Formatos', 'formatos formato caja kilos peso cliente', () => go('formatos'), 'o'],
   ['🌐', 'Portal de clientes', 'portal pagina clientes web qr enlace publicar albaranes', () => go('paginasclientes')],
+  ['📲', 'Móviles y correos de clientes', 'moviles correos telefonos contactos clientes dejan qr whatsapp email', () => go('contactosportal'), 'o'],
   ['🗂️', 'Secretaría hoy', 'secretaria oficina tareas hoy', () => go('secretaria'), 'o'],
   ['📤', 'Facturas para Golden', 'facturas golden pasar facturar prefacturas', () => go('prefacturas'), 'o'],
   ['📄', 'Facturas de clientes', 'facturas clientes imprimir enviar factura cliente', () => go('facturascli'), 'o'],
@@ -11188,7 +11266,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { tarifas: vistaTarifas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { tarifas: vistaTarifas, contactosportal: vistaContactosPortal, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
 }
