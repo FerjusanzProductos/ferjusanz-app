@@ -11190,6 +11190,7 @@ function vistaBuscar() {
 /* =====================  🆘 AYUDA: la persona atascada avisa a Fernando con su pantalla y sus errores  ===================== */
 const AYUDA_A = { id: 'dd57089e-662e-48cc-b888-cf52ea1eeea2', tel: '34609567354', nombre: 'Fernando' };   // quien atiende las ayudas (Fernando Sanz hijo)
 const soyAyudante = () => !!(state.user && state.user.id === AYUDA_A.id);
+const ocultarSOS = () => soyAyudante() && !/pruebas/.test(location.hostname);   // en la app de pruebas Fernando también lo ve, para probarlo
 try { addEventListener('error', e => { try { const L = window.__FJ_ERRS = (window.__FJ_ERRS || []); L.push({ t: new Date().toISOString(), m: 'Fallo de la app: ' + String(e.message || e).slice(0, 200), v: state && state.view }); if (L.length > 5) L.shift(); } catch (x) { } }); } catch (e) { }
 (function () { try { const p = new URLSearchParams(location.search); if (p.get('ayuda')) { LS.set('fj_ir_ayuda', p.get('ayuda')); history.replaceState(null, '', location.pathname); } } catch (e) { } })();
 const tituloPantalla = () => { const t = document.querySelector('header .tit'); return (t && t.textContent.trim()) || state.view || ''; };
@@ -11411,7 +11412,7 @@ function pintaFlot() {
   const osc = document.documentElement.getAttribute('data-tema') === 'oscuro'; 
   const bt = h('button', { title: osc ? 'Modo claro' : 'Modo oscuro', 'aria-label': 'Cambiar tema', onclick: () => ponTema(osc ? 'claro' : 'oscuro') }, osc ? '☀️' : '🌙');
   const z = fjZoom(); const bz = h('button', { class: 'zoom' + (z > 1 ? ' on' : ''), title: 'Letra más grande', 'aria-label': 'Letra más grande', onclick: cambiaZoom }, z > 1 ? Math.round(z * 100) + '%' : 'A+');
-  const bAy = soyAyudante() ? null : h('button', { class: 'ayuda', title: 'Pedir ayuda', 'aria-label': 'Pedir ayuda', onclick: pedirAyuda }, '🆘');
+  const bAy = ocultarSOS() ? null : h('button', { class: 'ayuda', title: 'Pedir ayuda', 'aria-label': 'Pedir ayuda', onclick: pedirAyuda }, '🆘');
   f.replaceChildren(...[...(SALA.n > 1 ? [h('span', { class: 'dev', title: 'Dispositivos conectados ahora' }, '👥 ' + SALA.n)] : []), bAy, bz, bt].filter(Boolean));
 }
 
