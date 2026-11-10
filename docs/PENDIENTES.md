@@ -16,6 +16,11 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - ✔️ **«Lo de siempre» con Golden**: publicado (v194) y función `memoria_golden` creada en Supabase el 11/11/2026: lo ve todo el equipo (sin precios).
 - 🟢 **Trazabilidad**: hecha y lista (lote más antiguo, reparto, confirmar todo). Empieza a funcionar sola en cuanto se registren compras con lotes.
 
+## En marcha (11/11/2026)
+- 🔴 **Seguimiento comercial dentro de la app**: hecho en PRUEBAS (v197, rama `seguimiento-app`). Falta crear en Supabase la tabla, la función y el programador (`supabase/migrations/20261111c_seguimiento_diario.sql`) con Fernando delante («listo») o pegándolo él en el editor SQL. Luego probar, «Autorizo publicar» y **quitar la tarea programada de Claude** (`trig_016V26ajMMcPLQ3Zvg1C2dw2`) para no duplicar.
+- 🟡 **Web**: dejar al proveedor actual (se le paga cada mes y el dominio cada año; el dominio es nuestro). Pedirle código de transferencia, accesos, copia completa y que NO borre la web. Ojo con los correos del dominio. Luego la llevamos nosotros con Claude.
+- 🟡 **Llamada con Jorge (contable)**: preguntas preparadas en la sesión del 11/11.
+
 ## Esperando a Fernando
 - 🟡 Confirmar la **lista completa de clientes sin IVA (azul)** y si «Bar Delfín» es la misma ficha que «Bar Delfines» (DEFINES).
 - 🟡 **Numeración real de albaranes**: al empezar de verdad, decir el último número de Golden (serie F).
