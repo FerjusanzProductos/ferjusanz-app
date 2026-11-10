@@ -10393,10 +10393,39 @@ async function memoriaCliente(cid) {
       const it = m[pr.id] = m[pr.id] || { p: pr, n: 0, dias: [0, 0, 0, 0, 0, 0, 0], q: {}, ult: p.fecha_entrega, ord: [] };
       it.n++; it.dias[dow]++; const k = num(l.cantidad_pedida) + '|' + l.unidad_pedida; if (!it.q[k]) { it.q[k] = { n: 0, q: l.cantidad_pedida, u: l.unidad_pedida, up: l.unidad_precio }; it.ord.push(k); } it.q[k].n++; }); });
   const items = Object.values(m).map(it => { let b = null; it.ord.forEach(k => { if (!b || it.q[k].n > b.n) b = it.q[k]; }); it.tipica = { q: b.q, u: b.u, up: b.up }; it.nTot = peds.length; return it; });
+  /* Historial de GOLDEN (libro de ventas): lo que ha llevado este cliente en sus últimos albaranes.
+     Así, aunque la app empiece de cero, desde el primer pedido propone lo de siempre. */
+  let nGolden = 0, ultGolden = null;
+  try {
+    /* Con la función memoria_golden (Supabase) la ven todos los que apuntan pedidos; sin ella, solo oficina y admin */
+    let filas = null; const rg = await sb.rpc('memoria_golden', { p_cliente: cid });
+    if (!rg.error) filas = rg.data || [];
+    else { const cc = await sb.from('clientes').select('codigo').eq('id', cid).maybeSingle(); const cod = cc.data && cc.data.codigo;
+      if (cod) { const gf = await sb.from('golden_facturas').select('numero,fecha').eq('cliente_codigo', cod).order('fecha', { ascending: false }).limit(40);
+        const ff = gf.data || []; const fF0 = {}; ff.forEach(f => { fF0[f.numero] = f.fecha; });
+        if (ff.length) { const gl0 = await sb.from('golden_lineas').select('factura_numero,albaran,producto_codigo,cantidad').in('factura_numero', ff.map(f => f.numero)).limit(4000); filas = (gl0.data || []).map(l => Object.assign({ fecha: fF0[l.factura_numero] }, l)); } } }
+    if (filas && filas.length) {
+      const facs = Array.from(new Set(filas.map(l => l.factura_numero))).map(n => ({ numero: n, fecha: (filas.find(l => l.factura_numero === n) || {}).fecha })).sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+      {
+        const fF = {}; facs.forEach(f => { fF[f.numero] = f.fecha; }); ultGolden = facs[0].fecha;
+        const gl = { data: filas };
+        const alb = {}; (gl.data || []).forEach(l => { const k = l.albaran || l.factura_numero; (alb[k] = alb[k] || { f: fF[l.factura_numero] || '', l: [] }).l.push(l); });
+        const albs = Object.values(alb).sort((a, b) => String(b.f).localeCompare(String(a.f))).slice(0, 30); nGolden = albs.length;
+        const prods = await waProductos(); const porCod = {}; prods.forEach(x => { if (x.activo !== false) porCod[x.codigo] = x; });
+        albs.forEach(a => { const vistos = new Set();
+          a.l.forEach(l => { const pr = porCod[l.producto_codigo]; if (!pr || vistos.has(pr.id) || !(Number(l.cantidad) > 0)) return; vistos.add(pr.id);
+            let it = items.find(i => i.p.id === pr.id);
+            if (!it) { it = { p: pr, n: 0, dias: [0, 0, 0, 0, 0, 0, 0], q: {}, ult: a.f, ord: [], golden: true, gq: {} }; items.push(it); }
+            it.n++; if (it.golden) { const k = String(Number(l.cantidad)); it.gq[k] = (it.gq[k] || 0) + 1; } }); });
+        items.forEach(it => { if (it.golden) { let b = null; Object.keys(it.gq).forEach(k => { if (!b || it.gq[k] > it.gq[b]) b = k; }); it.tipica = { q: Number(b), u: it.p.unidad_venta, up: it.p.unidad_precio }; } });
+      }
+    }
+  } catch (e) { }
+  items.forEach(it => { it.nTot = peds.length + nGolden; });
   /* pedidos habituales guardados a mano: también cuentan */
   try { const hb = await sb.from('pedidos_habituales').select('id,lineas_habituales(cantidad,unidad,productos(id,codigo,nombre,unidad_venta,unidad_precio,activo))').eq('cliente_id', cid).eq('activo', true);
     (hb.data || []).forEach(x => (x.lineas_habituales || []).forEach(l => { const pr = uno(l.productos); if (!pr || pr.activo === false || items.some(i => i.p.id === pr.id)) return; items.push({ p: pr, n: 1, dias: [0, 0, 0, 0, 0, 0, 0], tipica: { q: l.cantidad, u: l.unidad, up: pr.unidad_precio }, nTot: peds.length, hab: true, ult: '' }); })); } catch (e) { }
-  return { items, pedidos: peds.length, ultimo: peds.length ? peds[0].fecha_entrega : null };
+  return { items, pedidos: peds.length + nGolden, golden: nGolden, ultimo: peds.length ? peds[0].fecha_entrega : ultGolden };
 }
 function vistaRapido() {
   state.view = 'rapido';
@@ -10457,7 +10486,7 @@ function vistaRapido() {
     if (m.error) kids.push(h('div', { class: 'card', style: 'background:#fef9c3;border-color:#eab308' }, m.error));
     if (!m.pedidos && !m.items.length) kids.push(h('div', { class: 'card', style: 'background:#eff6ff;border-color:#93c5fd' }, h('b', {}, 'Es la primera vez que apuntas un pedido de este cliente.'), h('div', { class: 'sub' }, 'Busca sus productos abajo. Desde el siguiente pedido ya me acordaré de lo que suele llevar y de cuánto.')));
     else {
-      kids.push(h('div', { class: 'sub' }, '🧠 Memoria: ' + m.pedidos + (m.pedidos === 1 ? ' pedido anterior' : ' pedidos anteriores') + (m.ultimo ? ' · el último, el ' + fechaES(m.ultimo) : '')));
+      kids.push(h('div', { class: 'sub' }, '🧠 Memoria: ' + m.pedidos + (m.pedidos === 1 ? ' pedido anterior' : ' pedidos anteriores') + (m.golden ? ' (' + m.golden + ' del historial de Golden)' : '') + (m.ultimo ? ' · el último, el ' + fechaES(m.ultimo) : '')));
       kids.push(h('div', { style: 'display:flex;gap:6px;margin:6px 0' },
         h('button', { class: 'guardar', style: 'flex:2;min-height:54px;font-size:17px;margin:0;position:static;box-shadow:none', onclick: () => loDeSiempre() }, '↺ Lo de siempre'),
         h('button', { class: 'ghost', style: 'flex:1;min-height:54px', onclick: () => copiarUltimo() }, 'Igual que el último')));
