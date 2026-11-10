@@ -7,7 +7,7 @@ Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial 
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
 | **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v188** ✅ (publicada el 10/11/2026) | GitLab `main` |
-| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v187** ✅ | GitLab `harvey-fase1` |
+| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v189** ✅ (11/11/2026: + pantalla Precios / facturas) | GitLab `harvey-fase1` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
 La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la publicada: descargar el Worker desde la API de Cloudflare (`/workers/scripts/<nombre>/content/v2`) y buscar ese texto.
@@ -26,7 +26,8 @@ La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la pu
 ### Ramas abiertas en GitLab
 | Rama | Qué tiene | Estado |
 |---|---|---|
-| `harvey-fase1` | Rama de PRUEBAS (v187): todo lo de main + **Informes para Jorge** (v168-169) + Harvey con mensajes de WhatsApp naturales | ⚠️ Informes para Jorge sin publicar en la normal |
+| `harvey-fase1` | Rama de PRUEBAS (v189): todo lo de main + **Informes para Jorge** (v168-169) + Harvey con mensajes de WhatsApp naturales + pantalla Precios / facturas |
+| `precios-facturas` | Pantalla Precios / facturas sobre main, lista para publicar en la normal | ⚠️ esperando «Autorizo publicar» | ⚠️ Informes para Jorge sin publicar en la normal |
 | `memoria-permanente` | Estos documentos | pendiente de juntar |
 | `ayuda3-normal`, `ayuda2-normal`, `ayuda-normal`, `arreglo-iphone`, `guia-y-tarifas`, `previstos`, `configurar-cloudflare` | Ya incluidas en main o en harvey-fase1 | se pueden borrar |
 

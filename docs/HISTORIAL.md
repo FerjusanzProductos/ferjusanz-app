@@ -1,6 +1,14 @@
 # Historial de FERJUSANZ
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
+## 11/11/2026
+- **Pantalla Precios / facturas de proveedor (v189, solo en PRUEBAS)**, los 4 pedidos de Fernando del 10/11:
+  1. **Unidad del libro de ventas**: arándano y frambuesa por **bandeja** y ensalada campestre por **bolsa** (nunca «pieza»). Al leer facturas, registrar compras y apuntar un precio a mano se propone esa unidad; si la factura viene en otra (p. ej. kg y en ventas va por caja), sale un aviso naranja. Los «Arándano 2 pieza» ya leídos se ven ahora como bandeja.
+  2. **Registrar sin salir de la pantalla**: botón «Revisar y registrar» en Precios de compra del día y en la bandeja de Facturas de proveedores; se abre encima, se registra y se sigue en la misma pantalla. El registro detallado (lotes, origen) ya no salta a «Lotes»: vuelve a la bandeja.
+  3. **«✅ Registrar todas las compras del día»**: registra de una vez las facturas completas (con proveedor y todo reconocido) y dice cuáles hay que revisar a mano.
+  4. **Productos no reconocidos en ROJO** (arriba del todo y dentro de cada factura) y mejor lectura: «BANDEJA»/«BJ-» se entiende como bandeja y se quitan los códigos de artículo del final (p. ej. «856150»).
+- Decisión: la app de pruebas se publica desde `harvey-fase1` + este cambio para no perder Informes para Jorge.
+
 ## 10/11/2026
 - **Auditoría y memoria permanente** (sesión «TikTok video installation»): se crean CLAUDE.md y los documentos de `docs/`. **GitLab pasa a ser el maestro y GitHub la copia** (lo anterior de GitHub queda en la rama `respaldo-github-antes-espejo`).
 - **v188 publicada en la app normal**: ayuda 🆘 completa (respuesta al momento con IA, audio y «Hazlo conmigo»), sin Informes para Jorge.

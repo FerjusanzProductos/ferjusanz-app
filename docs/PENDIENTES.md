@@ -7,11 +7,9 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - 🟡 Juntar la rama `memoria-permanente` (estos documentos) con main y borrar las ramas ya incluidas.
 - ⚪ Borrar el Worker antiguo `ferjusanz` en Cloudflare.
 
-## Pedido por Fernando el 10/11/2026 (pantalla Precios / facturas de proveedor)
-- 🔴 **Unidad de cada producto como en el libro de ventas**: p. ej. frambuesa y arándano se compran y venden **por bandeja**, no por pieza. Al apuntar un precio a mano, proponer la unidad que usamos en ventas. Revisar los productos que ahora salen en la unidad equivocada (p. ej. «Arándano 4 pieza»).
-- 🔴 **Registrar la compra sin salir de la pantalla**: al revisar una factura de proveedor y pulsar registrar, quedarse en la misma pantalla (no obligar a volver atrás).
-- 🔴 **Botón «Registrar todas las compras del día»** de una vez, en esa misma pantalla.
-- 🔴 **Productos no reconocidos en ROJO** en las líneas de la factura, y mejorar la lectura (transcripción) de las líneas.
+## Pedido por Fernando el 10/11/2026 (pantalla Precios / facturas de proveedor) — ✔️ hecho en PRUEBAS (v189)
+- 🔴 **Publicar en la app normal** cuando Fernando lo pruebe y escriba «Autorizo publicar» (código en la rama de GitLab `precios-facturas`; la app de pruebas lo tiene en `harvey-fase1`).
+- 🟡 **Fernando decide**: corregir en la ficha de los productos la unidad de venta (ahora todos salen «kg»): Arándano (513) y Frambuesa (310) → bandeja; Ensalada Campestre (137-P) → bolsa. ¿Mora del bosque (257) también por bandeja? Mientras tanto la app ya usa la unidad buena al leer facturas y al apuntar precios.
 
 ## Esperando a Fernando
 - 🟡 Confirmar la **lista completa de clientes sin IVA (azul)** y si «Bar Delfín» es la misma ficha que «Bar Delfines» (DEFINES).
