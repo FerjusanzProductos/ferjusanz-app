@@ -373,6 +373,24 @@ html[style*=zoom] header{gap:4px;padding-left:6px;padding-right:6px;flex-wrap:wr
 .ph-l:active{background:var(--verde-cl)!important}
 .ph-ok{padding:10px 4px;font-weight:700;color:var(--verde-osc)}
 html.es-pruebas header{background:linear-gradient(120deg,#9a3412,#ea580c)!important}html.es-pruebas header::after{content:"PRUEBAS";position:absolute;left:50%;bottom:-1px;transform:translateX(-50%);background:#111827;color:#fff;font-size:10px;font-weight:800;letter-spacing:1px;padding:1px 8px;border-radius:6px 6px 0 0}html.es-pruebas header{position:sticky}
+/* Ayuda guiada */
+.fj-pasos{margin-top:10px;border-radius:14px;padding:12px;background:#ecfdf5;border:2px solid #22c55e;color:#14532d}
+.fj-pasos.aviso{background:#fef2f2;border-color:#ef4444;color:#7f1d1d}
+.fj-pasos-tit{font-weight:800;font-size:18px;margin-bottom:6px}
+.fj-paso{display:flex;gap:10px;align-items:flex-start;margin:8px 0;font-size:18px;line-height:1.35;font-weight:600}
+.fj-paso-n{flex-shrink:0;width:32px;height:32px;border-radius:50%;background:#16a34a;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800}
+.fj-pasos.aviso .fj-paso-n{background:#dc2626}
+.fj-btn-nom{background:#fde047;color:#111827;border-radius:6px;padding:0 6px;font-weight:800;white-space:nowrap}
+#fj-guia{position:fixed;left:8px;right:8px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:9;background:#14532d;color:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+body.con-guia main{padding-bottom:320px}
+#fj-guia .fj-guia-n{font-size:13px;opacity:.85;font-weight:700}
+#fj-guia .fj-guia-t{font-size:19px;font-weight:800;line-height:1.3;margin:4px 0}
+#fj-guia .fj-guia-x{font-size:15px}
+#fj-guia .fj-guia-b{display:flex;gap:6px;margin-top:8px}#fj-guia .fj-guia-b button{flex:1;min-height:50px;font-size:17px}
+#fj-guia .ghost{background:transparent!important;color:#fff;border-color:#86efac}
+@keyframes fjResalta{0%,100%{box-shadow:0 0 0 4px #facc15,0 0 0 9px rgba(250,204,21,.45)}50%{box-shadow:0 0 0 6px #facc15,0 0 0 16px rgba(250,204,21,.15)}}
+.fj-resalta{position:relative;animation:fjResalta 1.1s infinite;z-index:6;outline:none}
+.fj-resalta::after{content:'👆 Pulsa aquí';position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:8px;background:#facc15;color:#111827;font-weight:800;font-size:15px;padding:4px 10px;border-radius:999px;white-space:nowrap;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}
 #fjflot button.ayuda{background:#dc2626!important;color:#fff;border-color:#dc2626;opacity:1;font-size:22px}
 #fj-ayuda{position:fixed;left:8px;right:8px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:8;display:flex;gap:8px;align-items:center;background:#7f1d1d;color:#fff;border-radius:14px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.35);font-size:14px}
 #fj-ayuda .ghost{color:#fff;background:transparent!important;border-color:#fca5a5}
@@ -3129,7 +3147,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v185';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v187';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -11308,6 +11326,47 @@ function guiaParaAyuda(nota) {
   try { [...guiaOpciones(nota, 4), ...guiaOpciones(nota + ' ' + tituloPantalla(), 4)].forEach(o => o.tipo === 'prob' ? deProb(o.it) : deGuia(o.it)); } catch (e) { }
   return out;
 }
+const apartadosAyuda = () => (typeof BUSCA_PANTALLAS !== 'undefined' ? BUSCA_PANTALLAS : []).filter(x => !x[4] || (x[4] === 'o' ? esOficina() : puedeCompras()));
+const marcaBotones = txt => { const out = []; String(txt).split(/(«[^»]+»)/).forEach(s => out.push(/^«.+»$/.test(s) ? h('span', { class: 'fj-btn-nom' }, s.slice(1, -1)) : s)); return out; };
+/* Pasos de la respuesta, grandes y en color, con «Llévame» y «Hazlo conmigo» */
+function pasosAyuda(res, aps, alResolver) {
+  const pasos = (res.pasos && res.pasos.length ? res.pasos : [{ texto: res.respuesta || '', apartado: null, boton: null }]);
+  return h('div', { class: 'fj-pasos' + (res.avisar_fernando ? ' aviso' : '') },
+    h('div', { class: 'fj-pasos-tit' }, res.avisar_fernando ? '🤖 Esto mejor que lo vea Fernando' : '🤖 Haz esto:'),
+    ...pasos.map((p, i) => h('div', { class: 'fj-paso' }, h('span', { class: 'fj-paso-n' }, String(i + 1)), h('div', { class: 'fj-paso-t' }, ...marcaBotones(p.texto), p.boton && !String(p.texto).includes(p.boton) ? [' ', h('span', { class: 'fj-btn-nom' }, p.boton)] : null))),
+    res.avisar_fernando ? null : h('button', { class: 'guardar', style: 'width:100%;min-height:60px;font-size:19px;margin-top:10px', onclick: () => guiaTour(pasos, aps, alResolver) }, '👉 Hazlo conmigo, paso a paso'),
+    res.avisar_fernando ? null : h('button', { class: 'ghost', style: 'width:100%;min-height:50px;margin-top:6px', onclick: alResolver }, '✅ Ya está, gracias'));
+}
+/* «Hazlo conmigo»: lleva a la pantalla de cada paso y marca el botón que hay que pulsar */
+function guiaTour(pasos, aps, alResolver) {
+  document.querySelectorAll('.overlay').forEach(o => { if (o.querySelector('.fj-pasos')) o.remove(); }); state.sheetAbierta = false;
+  let i = 0; const barra = h('div', { id: 'fj-guia' }); document.body.append(barra); document.body.classList.add('con-guia');
+  new MutationObserver((m, o) => { if (!barra.isConnected) { document.body.classList.remove('con-guia'); o.disconnect(); } }).observe(document.body, { childList: true });
+  const quitar = () => document.querySelectorAll('.fj-resalta').forEach(e => e.classList.remove('fj-resalta'));
+  const norm = s => sinTilde(String(s || '').toLowerCase()).replace(/[^a-z0-9ñ ]+/g, ' ').replace(/\s+/g, ' ').trim();
+  function resaltar(txt) {
+    const q = norm(txt); if (!q) return false;
+    const cands = [...document.querySelectorAll('main button, main a, main .chip, main .circ, main label, main .card.tap, header button, nav button, #fjflot button, .sheet button')].filter(e => e.offsetParent && norm(e.textContent).includes(q));
+    if (!cands.length) return false;
+    const el = cands.sort((a, b) => norm(a.textContent).length - norm(b.textContent).length)[0];
+    el.classList.add('fj-resalta'); const sube = () => { const r = el.getBoundingClientRect(); window.scrollTo({ top: Math.max(0, window.scrollY + r.top - innerHeight * 0.22), behavior: 'smooth' }); }; sube(); setTimeout(sube, 400);   // arriba, para que no lo tape la barra de la guía
+    el.addEventListener('click', () => { el.classList.remove('fj-resalta'); setTimeout(() => { if (i < pasos.length - 1) { i++; mostrar(); } else fin(); }, 700); }, { once: true });
+    return true;
+  }
+  function fin() { quitar(); barra.replaceChildren(h('div', { class: 'fj-guia-t' }, '¿Se ha resuelto?'), h('div', { class: 'fj-guia-b' },
+    h('button', { class: 'guardar', onclick: () => { barra.remove(); alResolver && alResolver(); } }, '✅ Sí, gracias'),
+    h('button', { class: 'ghost', onclick: () => { barra.remove(); pedirAyuda(); } }, '🆘 No: avisar a ' + AYUDA_A.nombre))); }
+  function mostrar() {
+    quitar(); const p = pasos[i];
+    barra.replaceChildren(h('div', { class: 'fj-guia-n' }, 'Paso ' + (i + 1) + ' de ' + pasos.length), h('div', { class: 'fj-guia-t' }, ...marcaBotones(p.texto)), h('div', { class: 'fj-guia-x', id: 'fj-guia-x' }),
+      h('div', { class: 'fj-guia-b' }, i > 0 ? h('button', { class: 'ghost', onclick: () => { i--; mostrar(); } }, '‹ Atrás') : null,
+        h('button', { class: 'guardar', onclick: () => { if (i < pasos.length - 1) { i++; mostrar(); } else fin(); } }, i < pasos.length - 1 ? 'Siguiente ›' : 'Terminar ✔'),
+        h('button', { class: 'ghost', onclick: () => { quitar(); barra.remove(); } }, '✕')));
+    if (p.apartado != null && aps[p.apartado]) { try { aps[p.apartado][3](); } catch (e) { } }
+    setTimeout(() => { if (p.boton && !resaltar(p.boton)) { const x = document.getElementById('fj-guia-x'); if (x) x.replaceChildren('🔎 Busca en esta pantalla el botón ', h('span', { class: 'fj-btn-nom' }, p.boton)); } }, p.apartado != null ? 900 : 200);
+  }
+  mostrar();
+}
 function pedirAyuda() {
   const nota = h('textarea', { rows: 3, placeholder: '¿Qué te pasa? Ej.: no me deja guardar el pedido de La Figal', style: 'width:100%;font-size:17px' });
   const zonaAudio = h('div', {}), zonaIA = h('div', {});
@@ -11328,7 +11387,7 @@ function pedirAyuda() {
       grab.onstop = () => { clearInterval(reloj); st.getTracks().forEach(x => x.stop()); const mt = (grab.mimeType || tipo || 'audio/webm').split(';')[0]; if (trozos.length) audio = { blob: new Blob(trozos, { type: mt }), tipo: mt }; bAudio.textContent = audio ? '🎙️ Grabar otro audio' : '🎙️ Grabar un audio para Fernando'; bAudio.style.background = ''; bAudio.style.color = ''; pintaAudio(); };
       grab.start(); bAudio.style.background = '#dc2626'; bAudio.style.color = '#fff'; bAudio.textContent = '⏹ Grabando 0 s… (toca para parar)';
       reloj = setInterval(() => { seg++; bAudio.textContent = '⏹ Grabando ' + seg + ' s… (toca para parar)'; if (seg >= 60) parar(); }, 1000);
-    } catch (e) { toast('No se pudo usar el micrófono. Revisa el permiso del micrófono o mándale un audio por WhatsApp.', 'err'); }
+    } catch (e) { zonaAudio.replaceChildren(h('div', { class: 'aviso-card', style: 'margin-top:6px' }, h('b', {}, '🎙️ El móvil no deja usar el micrófono.'), h('div', {}, /iPhone|iPad/.test(navigator.userAgent) ? 'Ve a Ajustes › Safari › Micrófono › Permitir, y vuelve a intentarlo.' : 'Mantén pulsado el icono de la app › Información de la app › Permisos › Micrófono › Permitir. O toca el candado de arriba en Chrome › Permisos › Micrófono.'), h('div', { class: 'sub' }, 'Mientras, puedes escribirlo o mandarle un audio por WhatsApp.'))); }
   };
   /* 🔎 Respuesta al momento (antes de avisar a Fernando) */
   const bBuscar = h('button', { class: 'guardar', style: 'width:100%;min-height:56px;font-size:18px;margin-top:10px' }, '🔎 Buscar la solución ahora');
@@ -11337,12 +11396,11 @@ function pedirAyuda() {
     if (PRACTICA || !navigator.onLine) { toast(navigator.onLine ? 'En prácticas no se busca: pulsa «Avisar a Fernando».' : 'Sin conexión: pulsa «Avisar a Fernando» o llámale.', 'err'); return; }
     bBuscar.disabled = true; bBuscar.textContent = 'Pensando…'; zonaIA.replaceChildren(h('p', { class: 'sub' }, 'Buscando en la guía de la app…'));
     try {
-      const r = await sb.functions.invoke('ayuda-ia', { body: { nota: q, titulo: tituloPantalla(), vista: state.view, errores: (window.__FJ_ERRS || []).slice(-3), guia: guiaParaAyuda(q), apartados: (typeof BUSCA_PANTALLAS !== 'undefined' ? BUSCA_PANTALLAS.map(x => x[1]) : []) } });
+      const aps = apartadosAyuda();
+      const r = await sb.functions.invoke('ayuda-ia', { body: { nota: q, titulo: tituloPantalla(), vista: state.view, errores: (window.__FJ_ERRS || []).slice(-3), guia: guiaParaAyuda(q), apartados: aps.map(x => x[1]) } });
       if (r.error) throw r.error; if (r.data && r.data.error) throw new Error(r.data.error);
       iaRes = r.data;
-      zonaIA.replaceChildren(h('div', { class: 'card', style: 'border-left:5px solid ' + (iaRes.avisar_fernando ? 'var(--rojo)' : 'var(--verde)') + ';margin-top:8px' },
-        h('b', {}, iaRes.avisar_fernando ? '🤖 Mejor que lo vea Fernando' : '🤖 Prueba esto:'), h('div', { style: 'white-space:pre-wrap;margin-top:6px;font-size:16px;line-height:1.4' }, iaRes.respuesta),
-        iaRes.avisar_fernando ? null : h('button', { class: 'guardar', style: 'width:100%;min-height:52px;margin-top:10px', onclick: () => guardarAyuda('resuelta') }, '✅ Ya está, gracias')));
+      zonaIA.replaceChildren(pasosAyuda(iaRes, aps, () => guardarAyuda('resuelta')));
     } catch (e) { zonaIA.replaceChildren(h('p', { class: 'sub' }, 'No he podido buscar ahora. Pulsa «Avisar a Fernando».')); }
     bBuscar.disabled = false; bBuscar.textContent = '🔎 Buscar la solución otra vez';
   };
