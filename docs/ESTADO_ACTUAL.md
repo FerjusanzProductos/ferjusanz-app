@@ -7,7 +7,7 @@ Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial 
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
 | **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v190** ✅ (publicada el 11/11/2026: pantalla Precios / facturas) | GitLab `main` |
-| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v191** ✅ (11/11/2026: + pantalla Precios / facturas y mora por bandeja) | GitLab `harvey-fase1` |
+| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v193** ✅ (11/11/2026: + «lo de siempre» con Golden) | GitLab `harvey-fase1` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
 La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la publicada: descargar el Worker desde la API de Cloudflare (`/workers/scripts/<nombre>/content/v2`) y buscar ese texto.
@@ -27,7 +27,8 @@ La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la pu
 | Rama | Qué tiene | Estado |
 |---|---|---|
 | `harvey-fase1` | Rama de PRUEBAS (v189): todo lo de main + **Informes para Jorge** (v168-169) + Harvey con mensajes de WhatsApp naturales + pantalla Precios / facturas |
-| `precios-facturas` | Pantalla Precios / facturas | ✔️ ya en main (v190), se puede borrar | ⚠️ Informes para Jorge sin publicar en la normal |
+| `precios-facturas` | Pantalla Precios / facturas | ✔️ ya en main (v190), se puede borrar |
+| `memoria-golden` | «Lo de siempre» con el historial de Golden + SQL de unidades | ⚠️ en pruebas, esperando a Fernando | ⚠️ Informes para Jorge sin publicar en la normal |
 | `memoria-permanente` | Estos documentos | pendiente de juntar |
 | `ayuda3-normal`, `ayuda2-normal`, `ayuda-normal`, `arreglo-iphone`, `guia-y-tarifas`, `previstos`, `configurar-cloudflare` | Ya incluidas en main o en harvey-fase1 | se pueden borrar |
 

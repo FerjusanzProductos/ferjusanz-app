@@ -12,9 +12,9 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - 🟡 **Fernando decide**: corregir en la ficha de los productos la unidad de venta (ahora todos salen «kg»): Arándano (513) y Frambuesa (310) → bandeja; Ensalada Campestre (137-P) → bolsa. Mora del bosque (257) → bandeja (confirmado 11/11). Mientras tanto la app ya usa la unidad buena al leer facturas y al apuntar precios.
 
 ## Revisado el 11/11/2026 (para cuando se empiece de verdad)
-- 🔴 **Unidades de TODOS los productos**: en la base todos los productos activos salen «kg». El libro de ventas (Golden, tabla `golden_lineas`) no guarda la unidad, así que Claude ha hecho una propuesta por nombre, precio y cantidad (cajas, bandejas, bolsas, piezas, manojos, docenas). **Fernando la confirma** y entonces se cambia en la base (enseñando el SQL) y en `UNIDAD_LIBRO`.
-- 🔴 **«Lo de siempre» de cada cliente**: ahora sale de los pedidos de la app (30 últimos) y de los pedidos fijos. Con el «Contador a cero» los pedidos de prueba se borran y la memoria se queda solo con los fijos. **Propuesta**: que aprenda también del historial de Golden (2.257 facturas, 32.067 líneas) para que desde el primer día proponga lo que suele pedir cada cliente.
-- 🟢 **Trazabilidad**: hecha y lista (lote más antiguo, reparto, confirmar todo). Aún sin usar (0 asignaciones): empieza a funcionar sola en cuanto se registren compras con lotes.
+- 🔴 **Unidades de TODOS los productos**: lista confirmada por Fernando («OK»). Falta su «sí» a aplicar el SQL `supabase/migrations/20261111b_unidades_libro_ventas.sql` (37 productos pasan a cobrarse por caja, bandeja, bolsa, pieza, manojo o docena; también sus pedidos fijos y previstos).
+- 🔴 **«Lo de siempre» con Golden**: hecho en PRUEBAS (v193). Falta su «sí» a crear la función `memoria_golden` (`20261111a_memoria_golden.sql`) para que lo vean también secretaria, comercial, etc.; y luego «Autorizo publicar».
+- 🟢 **Trazabilidad**: hecha y lista (lote más antiguo, reparto, confirmar todo). Empieza a funcionar sola en cuanto se registren compras con lotes.
 
 ## Esperando a Fernando
 - 🟡 Confirmar la **lista completa de clientes sin IVA (azul)** y si «Bar Delfín» es la misma ficha que «Bar Delfines» (DEFINES).

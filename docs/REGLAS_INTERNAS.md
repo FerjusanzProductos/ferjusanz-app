@@ -76,6 +76,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 
 ## Unidades (Fernando, 10/11/2026)
 - **La unidad de cada producto es la del libro de VENTAS** (y el de compras): fijarse siempre en cómo lo hacemos nosotros.
+- **Iceberg y aguacate** se venden por caja o por pieza: son productos distintos (94-C caja / 94 pieza; 122 caja / 122-P pieza).
 - Ejemplos: **frambuesa → bandeja**, **arándano → bandeja**, **mora → bandeja** (nunca «pieza»). Ensalada campestre → bolsa.
 - Al apuntar un precio a mano o leer una factura, usar esa unidad; si la factura viene en otra, convertir o avisar.
 - En la app: lista fija `UNIDAD_LIBRO` y función `fcUnidadLibro` de `public/index.html` (arándano/frambuesa/mora → bandeja, campestre/mezclum → bolsa; si no, la unidad de venta del producto). Unidades nuevas que diga Fernando: añadirlas ahí.

@@ -2,6 +2,8 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 11/11/2026
+- **«Lo de siempre» aprende de Golden (v193, solo PRUEBAS)**, pedido por Fernando («Hazlo con Golden»): al elegir un cliente en el pedido rápido, la app mira también sus últimos 30 albaranes de Golden y propone lo que suele llevar y cuánto. Así, tras el «Contador a cero», no empieza de cero. Para que lo vean todos los que apuntan pedidos (no solo oficina) falta crear en Supabase la función `memoria_golden` (`supabase/migrations/20261111a_memoria_golden.sql`).
+- **Unidades de todos los productos**: Fernando da el «OK» a la lista (cajas, bandejas, bolsas, piezas, manojos y huevos por docena). SQL preparado en `supabase/migrations/20261111b_unidades_libro_ventas.sql`, sin aplicar hasta su confirmación.
 - **v190 publicada en la app normal** («Autorizo publicar»): pantalla Precios / facturas de proveedor (los 4 cambios de abajo) y **mora → bandeja** (confirmado por Fernando).
 - **Pantalla Precios / facturas de proveedor (v189, solo en PRUEBAS)**, los 4 pedidos de Fernando del 10/11:
   1. **Unidad del libro de ventas**: arándano y frambuesa por **bandeja** y ensalada campestre por **bolsa** (nunca «pieza»). Al leer facturas, registrar compras y apuntar un precio a mano se propone esa unidad; si la factura viene en otra (p. ej. kg y en ventas va por caja), sale un aviso naranja. Los «Arándano 2 pieza» ya leídos se ven ahora como bandeja.
