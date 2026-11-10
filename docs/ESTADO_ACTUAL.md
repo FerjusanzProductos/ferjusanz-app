@@ -12,6 +12,10 @@ Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial 
 
 La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la publicada: descargar el Worker desde la API de Cloudflare (`/workers/scripts/<nombre>/content/v2`) y buscar ese texto.
 
+### No confundir: app de PRUEBAS ≠ Modo prácticas
+- **App de pruebas** = otra **dirección web** (la de arriba, `ferjusanz-pruebas…`), con cabecera e icono **naranja** y el nombre «Ferjusanz PRUEBAS». Sirve para que Fernando vea un cambio antes de publicarlo. Fernando no la usa a diario: **hay que darle el enlace** cuando haya algo que probar.
+- **Modo prácticas** = un modo **dentro de la app normal** (Mi perfil), en **morado**, para practicar sin tocar datos reales.
+
 ## Repositorios
 - **GitLab (maestro)**: `ferjusanz-productos/ferjusanz-app`, rama `main`. ✅
 - **GitHub (copia de seguridad)**: `FerjusanzProductos/ferjusanz-app`. `main` es copia exacta de GitLab desde el 10/11/2026. ✅

@@ -74,6 +74,11 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - **Perejil** (y otros detalles): a veces se regala. En las listas puede quedar por debajo de la compra a propósito.
 - **Colectividades** (colegios, residencias, escuelas infantiles) gastan mucho **bananas, pera conferencia y pera de agua** de varios calibres.
 
+## Unidades (Fernando, 10/11/2026)
+- **La unidad de cada producto es la del libro de VENTAS** (y el de compras): fijarse siempre en cómo lo hacemos nosotros.
+- Ejemplos: **frambuesa → bandeja**, **arándano → bandeja** (nunca «pieza»). Ensalada campestre → bolsa.
+- Al apuntar un precio a mano o leer una factura, usar esa unidad; si la factura viene en otra, convertir o avisar.
+
 ## Pedidos
 - Los pedidos fijos generan **previstos** (2 semanas por delante, cada madrugada). Se confirman el día antes (✅) o se quitan (❌).
   Los previstos ya cuentan en la hoja de compra. Más allá de 2 semanas, el calendario los calcula al momento.
