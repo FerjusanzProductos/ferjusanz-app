@@ -3125,7 +3125,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v167';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v169';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -4824,6 +4824,7 @@ function vistaSecretaria() {
     { k: 'traza', ic: '🔎', t: 'Trazabilidad', s: 'Albaranes sin lote asignado', f: () => go('traza') },
     { k: 'fact', ic: '📤', t: 'Pasar albaranes a factura', s: 'Facturas para Golden Soft', f: () => go('prefacturas') },
     { k: 'env', ic: '📄', t: 'Imprimir o enviar facturas', s: 'Facturas de clientes', f: () => go('facturascli') },
+    new Date().getDate() <= 10 ? { k: 'jorge', ic: '📤', t: 'Cierre de mes para Jorge', s: 'Informes del mes pasado para la gestoría (revisar y compartir)', f: () => go('gestoria') } : null,
     { k: 'contactos', ic: '📲', t: 'Móviles y correos de clientes', s: 'Los que dejan los clientes al abrir su albarán: pásalos a la ficha y mándales su página', f: () => go('contactosportal') },
     { k: 'cobros', ic: '💰', t: 'Cobros y deudas', s: 'Quién ha pagado y quién debe', f: () => go('cobros') },
     { k: 'precios', ic: '💶', t: 'Poner precios a los pedidos', s: 'Pedidos sin precio', f: () => go('preciosp') },
@@ -4831,7 +4832,7 @@ function vistaSecretaria() {
   ];
   const nums = {};
   const lista = h('div', { style: 'display:flex;flex-direction:column;gap:8px' });
-  const pinta = () => lista.replaceChildren(...tareas.map(t => {
+  const pinta = () => lista.replaceChildren(...tareas.filter(Boolean).map(t => {
     const n = nums[t.k];
     return h('button', { class: 'bandeja-fac', style: 'width:100%;text-align:left', onclick: t.f },
       h('span', { class: 'ic' }, t.ic), h('span', { class: 'tt' }, t.t, h('small', {}, t.s)),
@@ -10928,7 +10929,9 @@ async function gesInforme(tipo, desde, hasta) {
     fs.forEach(f => filas.push([f.numero, f.serie, fechaES(f.fecha), f.tipo, f.cliente_codigo, f.cliente_nombre, nif[String(f.cliente_codigo || '').toUpperCase()] || '', gesNum(f.bruto), gesNum(f.descuentos), gesNum(f.gastos), gesNum(f.base), gesNum(Number(f.total || 0) - Number(f.base || 0)), gesNum(f.total), gesNum(porTipo[f.numero + '|0']), gesNum(porTipo[f.numero + '|4']), gesNum(porTipo[f.numero + '|10']), gesNum(porTipo[f.numero + '|21'])]));
     const cuota = fs.reduce((a, f) => a + Number(f.total || 0) - Number(f.base || 0), 0);
     const aviso = !fs.length ? '⚠️ No hay facturas de este mes en el histórico de Golden: hay que importarlas primero.' : (cuota < 1 ? '⚠️ Las facturas de este mes no traen IVA: el histórico de Golden parece incompleto. Revísalo antes de mandarlo.' : '');
-    return { filas, n: fs.length, total: fs.reduce((a, f) => a + Number(f.total || 0), 0), nota: (aviso ? aviso + ' ' : '') + 'Las columnas «Líneas al …%» suman las líneas antes de descuentos y gastos de la factura.' };
+    let hasta = null; try { const u = await sb.from('golden_facturas').select('fecha').eq('borrador', false).order('fecha', { ascending: false }).limit(1); hasta = u.data && u.data[0] && u.data[0].fecha; } catch (e) { }
+    const incompleto = fs.length && hasta && hasta < fin ? '⚠️ INCOMPLETO: Golden está importado solo hasta el ' + fechaES(hasta) + '. Importa en «Histórico de Golden» las facturas hasta el ' + fechaES(fin) + ' antes de mandarlo.' : '';
+    return { filas, n: fs.length, aviso: [incompleto, aviso].filter(Boolean).join(' '), total: fs.reduce((a, f) => a + Number(f.total || 0), 0), nota: 'Las columnas «Líneas al …%» suman las líneas antes de descuentos y gastos de la factura.' };
   }
   if (tipo === 'recibidas') {
     const fr = await gesTodas(() => sb.from('facturas_recibidas').select('id,fecha_factura,fecha_correo,remitente,asunto,nombre,estado,proveedor_id,compra_id,proveedores(nombre)').neq('estado', 'descartada').or('and(fecha_factura.gte.' + desde + ',fecha_factura.lte.' + fin + '),and(fecha_factura.is.null,fecha_correo.gte.' + desde + ',fecha_correo.lt.' + finTs + ')').order('fecha_factura'));
@@ -10936,7 +10939,8 @@ async function gesInforme(tipo, desde, hasta) {
     const filas = [['Origen', 'Fecha factura', 'Proveedor', 'Número', 'Importe', 'Pagada', 'Fecha pago', 'Estado', 'Archivo']];
     fr.forEach(f => filas.push(['Correo', fechaES(f.fecha_factura || String(f.fecha_correo || '').slice(0, 10)), (uno(f.proveedores) || {}).nombre || f.remitente || '', '', '', '', '', f.estado || '', f.nombre || '']));
     dc.forEach(d => filas.push(['Documento de compra', fechaES(d.fecha), (uno(d.proveedores) || {}).nombre || '', (uno(d.compras) || {}).numero_documento || '', gesNum(d.importe), d.pagada ? 'sí' : 'no', d.fecha_pago ? fechaES(d.fecha_pago) : '', d.tipo || '', d.nombre || '']));
-    return { filas, n: filas.length - 1, total: dc.reduce((a, d) => a + Number(d.importe || 0), 0), nota: 'Los PDF originales están en la app (Compras › Recibidas). Faltan el NIF y el desglose de IVA del proveedor: no se guardan todavía.' };
+    const sinRev = fr.filter(f => f.estado === 'nueva').length; const avR = sinRev ? '⚠️ ' + sinRev + ' factura(s) recibida(s) aún sin revisar en Compras › Recibidas.' : '';
+    return { filas, n: filas.length - 1, aviso: avR, total: dc.reduce((a, d) => a + Number(d.importe || 0), 0), nota: 'Los PDF originales están en la app (Compras › Recibidas). Faltan el NIF y el desglose de IVA del proveedor: no se guardan todavía.' };
   }
   if (tipo === 'cobros') {
     const cs = await gesTodas(() => sb.from('cobros').select('created_at,importe,forma,nota,cobrado_por,clientes(codigo,nombre,nombre_comercial,nif)').gte('created_at', desde).lt('created_at', finTs).order('created_at'));
@@ -10970,16 +10974,22 @@ function vistaGestoria() {
   const rango = () => { const [y, m] = mes.split('-').map(Number); const d = new Date(y, m, 0).getDate(); return [mes + '-01', mes + '-' + String(d).padStart(2, '0')]; };
   const nombreArchivo = t => 'ferjusanz_' + t + '_' + mes + '.csv';
   const pintar = () => { cuerpo.replaceChildren(...GES_INFORMES.map(([t, titulo, desc]) => { const caja = h('div', { class: 'sub' }); const card = h('div', { class: 'card' }, h('div', { class: 'nombre' }, titulo), h('div', { class: 'sub' }, desc), caja,
-      h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' }, h('button', { class: 'small', onclick: async e => { const b = e.currentTarget; b.disabled = true; caja.textContent = 'Preparando…'; try { const [d0, d1] = rango(); const r = await gesInforme(t, d0, d1); listos[t] = r; caja.replaceChildren(h('b', {}, r.n + ' fila(s)' + (r.total != null ? ' · total ' + eur(r.total) + ' €' : '')), r.nota ? h('div', {}, r.nota) : null); descargarCSV(nombreArchivo(t), r.filas); } catch (x) { caja.textContent = '⚠️ ' + (x.message || x); } b.disabled = false; } }, '⬇️ Descargar Excel'))); return card; })); };
+      h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' }, h('button', { class: 'small', onclick: async e => { const b = e.currentTarget; b.disabled = true; caja.textContent = 'Preparando…'; try { const [d0, d1] = rango(); const r = await gesInforme(t, d0, d1); listos[t] = r; caja.replaceChildren(...[h('b', {}, r.n ? r.n + ' fila(s)' + (r.total != null ? ' · total ' + eur(r.total) + ' €' : '') : 'Sin datos este mes: no se mandará'), r.aviso ? h('div', { style: 'color:var(--rojo);font-weight:700' }, r.aviso) : null, r.nota ? h('div', {}, r.nota) : null].filter(Boolean)); descargarCSV(nombreArchivo(t), r.filas); } catch (x) { caja.textContent = '⚠️ ' + (x.message || x); } b.disabled = false; } }, '⬇️ Descargar Excel'))); return card; })); };
   selMes.addEventListener('change', () => { if (selMes.value) { mes = selMes.value; LS.set('fj_ges_mes', mes); Object.keys(listos).forEach(k => delete listos[k]); pintar(); } });
   const bTodo = h('button', { class: 'guardar', style: 'width:100%;margin-top:8px' }, '📤 Preparar todo y compartir con Jorge');
   bTodo.onclick = async () => {
     bTodo.disabled = true; bTodo.textContent = 'Preparando los informes…';
     try { const [d0, d1] = rango(); const files = [];
-      for (const [t] of GES_INFORMES) { const r = listos[t] || await gesInforme(t, d0, d1); listos[t] = r; const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+      const vacios = [], avisos = [], van = [];
+      for (const [t, titulo] of GES_INFORMES) { const r = listos[t] || await gesInforme(t, d0, d1); listos[t] = r; const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+        const nom = titulo.replace(/^\S+\s/, '');
+        if (!r.n) { vacios.push(nom); continue; }   // los informes sin datos no se mandan (la app aún no se usa para eso)
+        if (r.aviso) avisos.push(r.aviso);
+        van.push(nom + ' (' + r.n + ')');
         files.push(new File(['﻿' + r.filas.map(f => f.map(q).join(';')).join('\r\n')], nombreArchivo(t), { type: 'text/csv' })); }
       pintar();
-      if (!await confirmar('¿Lo has revisado? Se abrirá «Compartir» para mandar los ' + files.length + ' archivos del mes ' + mes + ' (por correo o WhatsApp). Nada se envía solo.')) { bTodo.disabled = false; bTodo.textContent = '📤 Preparar todo y compartir con Jorge'; return; }
+      if (!files.length) { toast('No hay datos de ' + mes + ' para mandar.', 'err'); bTodo.disabled = false; bTodo.textContent = '📤 Preparar todo y compartir con Jorge'; return; }
+      if (!await confirmar('Mes ' + mes + '\n\nSE MANDAN:\n· ' + van.join('\n· ') + (vacios.length ? '\n\nNO SE MANDAN (sin datos este mes):\n· ' + vacios.join('\n· ') : '') + (avisos.length ? '\n\nOJO, REVISA ANTES:\n' + avisos.join('\n') : '') + '\n\n¿Lo has revisado? Se abrirá «Compartir» (correo o WhatsApp). Nada se envía solo.')) { bTodo.disabled = false; bTodo.textContent = '📤 Preparar todo y compartir con Jorge'; return; }
       if (navigator.canShare && navigator.canShare({ files })) await navigator.share({ files, title: 'Ferjusanz · informes ' + mes, text: 'Hola Jorge, te mando los informes de Ferjusanz del mes ' + mes + '.' });
       else { files.forEach(f => { const a = h('a', { href: URL.createObjectURL(f), download: f.name }); document.body.append(a); a.click(); a.remove(); }); toast('Descargados. Adjúntalos en un correo a Jorge.', 'ok'); }
     } catch (x) { if (x && x.name !== 'AbortError') toast(x.message || String(x), 'err'); }
@@ -10987,6 +10997,11 @@ function vistaGestoria() {
   };
   $app.replaceChildren(shell('Informes para Jorge', h('div', {},
     h('p', { class: 'sub' }, 'Informes del mes en Excel (CSV) para la gestoría. Revísalos antes de mandarlos: la app no envía nada sola. Las facturas las sigue haciendo Golden.'),
+    h('div', { class: 'aviso-card' }, h('b', {}, '✅ Cierre de mes, en este orden'),
+      h('div', { style: 'margin-top:4px;line-height:1.5' }, '1. En Golden, exporta las facturas del mes y cárgalas en ', h('a', { href: '#', onclick: e => { e.preventDefault(); go('golden'); } }, '«Histórico de Golden»'), ' (hasta el último día del mes).', h('br'),
+        '2. Revisa las ', h('a', { href: '#', onclick: e => { e.preventDefault(); LS.set('fj_compras_modo', 'recib'); go('compras'); } }, 'facturas de proveedores recibidas'), ' del mes.', h('br'),
+        '3. Pulsa «Preparar todo»: verás qué se manda, qué no (vacío) y los avisos.', h('br'),
+        '4. Compártelo con Jorge por correo o WhatsApp. Nada se envía solo.')),
     comCampo('Mes', selMes), cuerpo, bTodo)));
   pintar();
 }
@@ -11131,6 +11146,7 @@ const BUSCA_PANTALLAS = [
   ['📐', 'Formatos', 'formatos formato caja kilos peso cliente', () => go('formatos'), 'o'],
   ['🌐', 'Portal de clientes', 'portal pagina clientes web qr enlace publicar albaranes', () => go('paginasclientes')],
   ['📲', 'Móviles y correos de clientes', 'moviles correos telefonos contactos clientes dejan qr whatsapp email', () => go('contactosportal'), 'o'],
+  ['📤', 'Informes para Jorge', 'jorge gestoria gestor contable informes cierre mes iva facturas emitidas recibidas trimestre', () => go('gestoria'), 'o'],
   ['🗂️', 'Secretaría hoy', 'secretaria oficina tareas hoy', () => go('secretaria'), 'o'],
   ['📤', 'Facturas para Golden', 'facturas golden pasar facturar prefacturas', () => go('prefacturas'), 'o'],
   ['📄', 'Facturas de clientes', 'facturas clientes imprimir enviar factura cliente', () => go('facturascli'), 'o'],
