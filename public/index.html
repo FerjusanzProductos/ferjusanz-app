@@ -3129,7 +3129,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v178';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v180';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -11297,25 +11297,83 @@ const soyAyudante = () => !!(state.user && state.user.id === AYUDA_A.id);
 try { addEventListener('error', e => { try { const L = window.__FJ_ERRS = (window.__FJ_ERRS || []); L.push({ t: new Date().toISOString(), m: 'Fallo de la app: ' + String(e.message || e).slice(0, 200), v: state && state.view }); if (L.length > 5) L.shift(); } catch (x) { } }); } catch (e) { }
 (function () { try { const p = new URLSearchParams(location.search); if (p.get('ayuda')) { LS.set('fj_ir_ayuda', p.get('ayuda')); history.replaceState(null, '', location.pathname); } } catch (e) { } })();
 const tituloPantalla = () => { const t = document.querySelector('header .tit'); return (t && t.textContent.trim()) || state.view || ''; };
+/* Trozos de la guía que encajan con lo que le pasa (y con la pantalla en la que está), para la respuesta al momento */
+function guiaParaAyuda(nota) {
+  const vistos = new Set(), out = [];
+  const pon = (titulo, texto, clave) => { if (vistos.has(clave) || out.length >= 6) return; vistos.add(clave); out.push({ titulo, texto }); };
+  const deGuia = g => pon(g.titulo, [g.ahora, ...(g.pasos || []).map((p, n) => (n + 1) + '. ' + p)].filter(Boolean).join('\n'), 'g' + g.id);
+  const deProb = x => pon('Problema: ' + x.t, [x.c, ...(x.p || []).map((p, n) => (n + 1) + '. ' + p)].filter(Boolean).join('\n'), 'p' + x.t);
+  try { const gv = typeof VOZ_VISTA !== 'undefined' && VOZ_VISTA[state.view] ? GUIA.find(g => g.id === VOZ_VISTA[state.view] && guiaVisible(g)) : null; if (gv) deGuia(gv); } catch (e) { }
+  try { [...guiaOpciones(nota, 4), ...guiaOpciones(nota + ' ' + tituloPantalla(), 4)].forEach(o => o.tipo === 'prob' ? deProb(o.it) : deGuia(o.it)); } catch (e) { }
+  return out;
+}
 function pedirAyuda() {
-  const nota = h('textarea', { rows: 3, placeholder: '¿Qué te pasa? (opcional). Ej.: no me deja guardar el pedido de La Figal', style: 'width:100%;font-size:17px' });
-  const enviar = h('button', { class: 'guardar', style: 'width:100%;min-height:56px;font-size:18px;margin-top:8px' }, '🆘 Pedir ayuda a ' + AYUDA_A.nombre);
+  const nota = h('textarea', { rows: 3, placeholder: '¿Qué te pasa? Ej.: no me deja guardar el pedido de La Figal', style: 'width:100%;font-size:17px' });
+  const zonaAudio = h('div', {}), zonaIA = h('div', {});
+  let audio = null, grab = null, trozos = [], seg = 0, reloj = null, iaRes = null;
+  /* 🎙️ Audio para Fernando (hasta 1 minuto) */
+  const bAudio = h('button', { class: 'ghost', style: 'width:100%;min-height:52px;font-size:17px;margin-top:8px' }, '🎙️ Grabar un audio para Fernando');
+  const pintaAudio = () => zonaAudio.replaceChildren(...(audio ? [h('div', { style: 'display:flex;gap:6px;align-items:center;margin-top:6px' }, h('audio', { controls: true, src: URL.createObjectURL(audio.blob), style: 'flex:1;min-width:0' }),
+    h('button', { class: 'ghost small', onclick: () => { audio = null; pintaAudio(); } }, '🗑️'))] : []));
+  const parar = () => { try { if (grab && grab.state !== 'inactive') grab.stop(); } catch (e) { } };
+  bAudio.onclick = async () => {
+    if (grab && grab.state === 'recording') { parar(); return; }
+    if (!navigator.mediaDevices || !window.MediaRecorder) { toast('Este móvil no deja grabar audio aquí. Escríbelo o mándale un audio por WhatsApp.', 'err'); return; }
+    try {
+      const st = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const tipo = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'].find(x => { try { return MediaRecorder.isTypeSupported(x); } catch (e) { return false; } }) || '';
+      grab = new MediaRecorder(st, tipo ? { mimeType: tipo } : undefined); trozos = []; seg = 0;
+      grab.ondataavailable = e => { if (e.data && e.data.size) trozos.push(e.data); };
+      grab.onstop = () => { clearInterval(reloj); st.getTracks().forEach(x => x.stop()); const mt = (grab.mimeType || tipo || 'audio/webm').split(';')[0]; if (trozos.length) audio = { blob: new Blob(trozos, { type: mt }), tipo: mt }; bAudio.textContent = audio ? '🎙️ Grabar otro audio' : '🎙️ Grabar un audio para Fernando'; bAudio.style.background = ''; bAudio.style.color = ''; pintaAudio(); };
+      grab.start(); bAudio.style.background = '#dc2626'; bAudio.style.color = '#fff'; bAudio.textContent = '⏹ Grabando 0 s… (toca para parar)';
+      reloj = setInterval(() => { seg++; bAudio.textContent = '⏹ Grabando ' + seg + ' s… (toca para parar)'; if (seg >= 60) parar(); }, 1000);
+    } catch (e) { toast('No se pudo usar el micrófono. Revisa el permiso del micrófono o mándale un audio por WhatsApp.', 'err'); }
+  };
+  /* 🔎 Respuesta al momento (antes de avisar a Fernando) */
+  const bBuscar = h('button', { class: 'guardar', style: 'width:100%;min-height:56px;font-size:18px;margin-top:10px' }, '🔎 Buscar la solución ahora');
+  bBuscar.onclick = async () => {
+    const q = nota.value.trim(); if (q.length < 3) { toast('Escribe primero qué te pasa (puedes dictarlo con el micrófono del teclado)', 'err'); return; }
+    if (PRACTICA || !navigator.onLine) { toast(navigator.onLine ? 'En prácticas no se busca: pulsa «Avisar a Fernando».' : 'Sin conexión: pulsa «Avisar a Fernando» o llámale.', 'err'); return; }
+    bBuscar.disabled = true; bBuscar.textContent = 'Pensando…'; zonaIA.replaceChildren(h('p', { class: 'sub' }, 'Buscando en la guía de la app…'));
+    try {
+      const r = await sb.functions.invoke('ayuda-ia', { body: { nota: q, titulo: tituloPantalla(), vista: state.view, errores: (window.__FJ_ERRS || []).slice(-3), guia: guiaParaAyuda(q), apartados: (typeof BUSCA_PANTALLAS !== 'undefined' ? BUSCA_PANTALLAS.map(x => x[1]) : []) } });
+      if (r.error) throw r.error; if (r.data && r.data.error) throw new Error(r.data.error);
+      iaRes = r.data;
+      zonaIA.replaceChildren(h('div', { class: 'card', style: 'border-left:5px solid ' + (iaRes.avisar_fernando ? 'var(--rojo)' : 'var(--verde)') + ';margin-top:8px' },
+        h('b', {}, iaRes.avisar_fernando ? '🤖 Mejor que lo vea Fernando' : '🤖 Prueba esto:'), h('div', { style: 'white-space:pre-wrap;margin-top:6px;font-size:16px;line-height:1.4' }, iaRes.respuesta),
+        iaRes.avisar_fernando ? null : h('button', { class: 'guardar', style: 'width:100%;min-height:52px;margin-top:10px', onclick: () => guardarAyuda('resuelta') }, '✅ Ya está, gracias')));
+    } catch (e) { zonaIA.replaceChildren(h('p', { class: 'sub' }, 'No he podido buscar ahora. Pulsa «Avisar a Fernando».')); }
+    bBuscar.disabled = false; bBuscar.textContent = '🔎 Buscar la solución otra vez';
+  };
+  /* 🆘 Avisar a Fernando (con el audio si lo hay) o dejar apuntado que se resolvió */
+  const bAvisar = h('button', { class: 'peligro', style: 'width:100%;min-height:56px;font-size:18px;margin-top:10px;background:#dc2626!important;color:#fff;border:0' }, '🆘 Avisar a ' + AYUDA_A.nombre);
   let cerrar;
-  enviar.onclick = async () => {
-    enviar.disabled = true; enviar.textContent = 'Enviando…';
+  async function guardarAyuda(modo) {
+    parar(); bAvisar.disabled = true; bBuscar.disabled = true;
     let params = {}; try { params = JSON.parse(JSON.stringify(state.params || {})); if (JSON.stringify(params).length > 4000) params = {}; } catch (e) { }
     const fila = { nombre: state.perfil && state.perfil.nombre, nota: nota.value.trim().slice(0, 500) || null, vista: state.view, titulo: tituloPantalla(), params, errores: (window.__FJ_ERRS || []).slice(-5),
-      info: { version: typeof APP_VERSION !== 'undefined' ? APP_VERSION : '', movil: navigator.userAgent.slice(0, 160), conexion: navigator.onLine, pantalla: innerWidth + 'x' + innerHeight, zoom: document.documentElement.style.zoom || '' } };
-    let id = null;
-    try { if (!PRACTICA && navigator.onLine) { const r = await sb.from('ayudas').insert(fila).select('id').single(); if (r.error) throw r.error; id = r.data.id; } } catch (e) { }
-    const enlace = location.origin + location.pathname.replace(/[^\/]*$/, '') + (id ? '?ayuda=' + id : '');
-    const txt = '🆘 Ayuda, soy ' + (fila.nombre || 'del equipo') + '. Estoy en «' + fila.titulo + '».' + (fila.nota ? ' ' + fila.nota : '') + (fila.errores.length ? '\nMe sale: ' + fila.errores[fila.errores.length - 1].m : '') + (id ? '\nMi pantalla: ' + enlace : '');
+      info: { version: typeof APP_VERSION !== 'undefined' ? APP_VERSION : '', movil: navigator.userAgent.slice(0, 160), conexion: navigator.onLine, pantalla: innerWidth + 'x' + innerHeight, zoom: document.documentElement.style.zoom || '' },
+      ia: iaRes ? { respuesta: iaRes.respuesta, avisar_fernando: iaRes.avisar_fernando, sirvio: modo === 'resuelta' } : null };
+    if (modo === 'resuelta') Object.assign(fila, { estado: 'atendida', atendida_por: state.user.id, atendida_en: new Date().toISOString() });
+    let id = null, conAudio = false;
+    try {
+      if (!PRACTICA && navigator.onLine) {
+        if (audio && modo !== 'resuelta') { const ext = audio.tipo.includes('mp4') ? 'm4a' : audio.tipo.includes('ogg') ? 'ogg' : 'webm'; const ruta = state.user.id + '/' + Date.now() + '.' + ext;
+          const up = await sb.storage.from('ayudas').upload(ruta, audio.blob, { contentType: audio.tipo }); if (!up.error) { fila.audio = ruta; conAudio = true; } }
+        const r = await sb.from('ayudas').insert(fila).select('id').single(); if (r.error) throw r.error; id = r.data.id;
+      }
+    } catch (e) { }
     cerrar && cerrar();
+    if (modo === 'resuelta') { toast('¡Bien! Queda apuntado para mejorar la ayuda. 👍', 'ok'); return; }
+    const enlace = location.origin + location.pathname.replace(/[^\/]*$/, '') + (id ? '?ayuda=' + id : '');
+    const txt = '🆘 Ayuda, soy ' + (fila.nombre || 'del equipo') + '. Estoy en «' + fila.titulo + '».' + (fila.nota ? ' ' + fila.nota : '') + (conAudio ? '\n🎙️ Te he dejado un audio.' : (audio ? '\n(No se pudo subir el audio: te lo mando por aquí.)' : '')) + (fila.errores.length ? '\nMe sale: ' + fila.errores[fila.errores.length - 1].m : '') + (id ? '\nMi pantalla: ' + enlace : '');
     toast(id ? 'Avisado. Ahora envía el WhatsApp a ' + AYUDA_A.nombre + '.' : 'Sin conexión: manda el WhatsApp o llama a ' + AYUDA_A.nombre + '.', 'ok');
     window.open('https://wa.me/' + AYUDA_A.tel + '?text=' + encodeURIComponent(txt), '_blank');
-  };
-  cerrar = hoja('🆘 Pedir ayuda', h('div', {}, h('p', { class: 'sub' }, AYUDA_A.nombre + ' verá en qué pantalla estás y lo que te ha salido, y te ayudará. No se cambia nada de lo que estás haciendo.'), nota, enviar,
-    h('a', { href: 'tel:+' + AYUDA_A.tel, class: 'ghost', style: 'display:block;text-align:center;margin-top:10px;padding:14px;border:1.5px solid var(--borde);border-radius:12px;text-decoration:none;color:inherit;font-weight:700;font-size:17px' }, '📞 O llámale')));
+  }
+  bAvisar.onclick = () => guardarAyuda('avisar');
+  cerrar = hoja('🆘 Pedir ayuda', h('div', {}, h('p', { class: 'sub' }, 'Cuéntalo escribiendo (o con el 🎤 del teclado). Primero te busco la solución; si no vale, avisa a ' + AYUDA_A.nombre + ': verá tu pantalla y lo que te ha salido.'),
+    nota, bBuscar, zonaIA, bAudio, zonaAudio, bAvisar,
+    h('a', { href: 'tel:+' + AYUDA_A.tel, style: 'display:block;text-align:center;margin-top:10px;padding:14px;border:1.5px solid var(--borde);border-radius:12px;text-decoration:none;color:inherit;font-weight:700;font-size:17px' }, '📞 O llámale')));
 }
 /* Fernando abre el enlace del WhatsApp: se le abre la misma pantalla con un aviso de qué le pasa */
 async function abrirAyuda(id) {
@@ -11329,11 +11387,16 @@ function barraAyuda(a) {
   const prev = document.getElementById('fj-ayuda'); if (prev) prev.remove();
   const ult = (a.errores || []).slice(-1)[0];
   const b = h('div', { id: 'fj-ayuda' },
-    h('div', { style: 'flex:1;min-width:0' }, h('b', {}, '🆘 ' + (a.nombre || 'Alguien') + ' · ' + fmtHora(a.created_at)), h('div', {}, 'Estaba en «' + (a.titulo || a.vista) + '»' + (a.nota ? ': ' + a.nota : '')), ult ? h('div', { style: 'color:#fecaca' }, 'Le salió: ' + ult.m) : null),
+    h('div', { style: 'flex:1;min-width:0' }, h('b', {}, '🆘 ' + (a.nombre || 'Alguien') + ' · ' + fmtHora(a.created_at)), h('div', {}, 'Estaba en «' + (a.titulo || a.vista) + '»' + (a.nota ? ': ' + a.nota : '')), ult ? h('div', { style: 'color:#fecaca' }, 'Le salió: ' + ult.m) : null, a.audio ? audioAyuda(a.audio) : null),
     h('div', { style: 'display:flex;flex-direction:column;gap:4px' },
       a.estado === 'nueva' ? h('button', { class: 'small', onclick: async () => { try { const u = await sb.from('ayudas').update({ estado: 'atendida', atendida_por: state.user.id, atendida_en: new Date().toISOString() }).eq('id', a.id); if (u.error) throw u.error; toast('Marcada como atendida', 'ok'); b.remove(); } catch (e) { toast(msgErr(e), 'err'); } } }, '✔ Atendida') : null,
       h('button', { class: 'ghost small', onclick: () => b.remove() }, 'Cerrar')));
   document.body.append(b);
+}
+/* 🎙️ Escuchar el audio de una petición (enlace privado que caduca en 1 hora) */
+function audioAyuda(ruta) {
+  const caja = h('div', { style: 'margin-top:6px' }, h('button', { class: 'small', onclick: async () => { try { const r = await sb.storage.from('ayudas').createSignedUrl(ruta, 3600); if (r.error) throw r.error; caja.replaceChildren(h('audio', { controls: true, autoplay: true, src: r.data.signedUrl, style: 'width:100%' })); } catch (e) { toast('No se pudo cargar el audio: ' + msgErr(e), 'err'); } } }, '🎙️ Escuchar su audio'));
+  return caja;
 }
 async function vistaAyudas() {
   state.view = 'ayudas';
@@ -11346,6 +11409,8 @@ async function vistaAyudas() {
       h('div', { class: 'fila' }, h('div', { class: 'nombre' }, '🆘 ' + (a.nombre || 'Alguien')), h('span', { class: 'badge' }, a.estado === 'nueva' ? 'Sin atender' : '✔ Atendida')),
       h('div', { class: 'sub' }, fechaES(String(a.created_at).slice(0, 10)) + ' ' + fmtHora(a.created_at) + ' · en «' + (a.titulo || a.vista || '') + '»' + (a.info && a.info.version ? ' · ' + String(a.info.version).replace('ferjusanz-', '') : '')),
       a.nota ? h('div', { style: 'margin-top:4px' }, a.nota) : null,
+      a.audio ? audioAyuda(a.audio) : null,
+      a.ia ? h('div', { class: 'sub', style: 'margin-top:4px;white-space:pre-wrap' }, '🤖 ' + (a.ia.sirvio ? 'Lo resolvió con la ayuda automática: ' : 'La ayuda automática le dijo: ') + String(a.ia.respuesta || '').slice(0, 300)) : null,
       ...(a.errores || []).slice(-3).map(x => h('div', { class: 'sub', style: 'color:var(--rojo)' }, fmtHora(x.t) + ' · ' + x.m)),
       h('button', { class: 'small', style: 'margin-top:6px', onclick: () => { if (a.vista && a.vista !== 'inicio') go(a.vista, a.params || {}); setTimeout(() => barraAyuda(a), 300); } }, '👁️ Abrir su pantalla'))) : [h('p', { class: 'vacio' }, 'Nadie ha pedido ayuda todavía. 👌')]));
   } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
