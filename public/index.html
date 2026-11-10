@@ -3125,7 +3125,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v166';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v168';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -4824,6 +4824,7 @@ function vistaSecretaria() {
     { k: 'traza', ic: '🔎', t: 'Trazabilidad', s: 'Albaranes sin lote asignado', f: () => go('traza') },
     { k: 'fact', ic: '📤', t: 'Pasar albaranes a factura', s: 'Facturas para Golden Soft', f: () => go('prefacturas') },
     { k: 'env', ic: '📄', t: 'Imprimir o enviar facturas', s: 'Facturas de clientes', f: () => go('facturascli') },
+    new Date().getDate() <= 10 ? { k: 'jorge', ic: '📤', t: 'Cierre de mes para Jorge', s: 'Informes del mes pasado para la gestoría (revisar y compartir)', f: () => go('gestoria') } : null,
     { k: 'contactos', ic: '📲', t: 'Móviles y correos de clientes', s: 'Los que dejan los clientes al abrir su albarán: pásalos a la ficha y mándales su página', f: () => go('contactosportal') },
     { k: 'cobros', ic: '💰', t: 'Cobros y deudas', s: 'Quién ha pagado y quién debe', f: () => go('cobros') },
     { k: 'precios', ic: '💶', t: 'Poner precios a los pedidos', s: 'Pedidos sin precio', f: () => go('preciosp') },
@@ -4831,7 +4832,7 @@ function vistaSecretaria() {
   ];
   const nums = {};
   const lista = h('div', { style: 'display:flex;flex-direction:column;gap:8px' });
-  const pinta = () => lista.replaceChildren(...tareas.map(t => {
+  const pinta = () => lista.replaceChildren(...tareas.filter(Boolean).map(t => {
     const n = nums[t.k];
     return h('button', { class: 'bandeja-fac', style: 'width:100%;text-align:left', onclick: t.f },
       h('span', { class: 'ic' }, t.ic), h('span', { class: 'tt' }, t.t, h('small', {}, t.s)),
@@ -4894,7 +4895,7 @@ function vistaMas() {
     ...g('Entregas y pedidos', c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a')),
     ...g('Compras y mercancía', puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('💶', 'Precios de compra', () => { if (LS.get('fj_precios_modo', 'dia') === 'hoy') LS.set('fj_precios_modo', 'dia'); go('precios'); }, A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null),
     ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z)),
-    ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
+    ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('❓', 'Ayuda y guía', () => go('ayuda'), T), c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
@@ -10903,6 +10904,108 @@ const COPIA_TABLAS = ['perfiles', 'clientes', 'productos', 'tarifas', 'pedidos',
   'tarifas_compra', 'precios_compra_dia', 'compra_ajustes', 'facturas_recibidas', 'lineas_factura_leida', 'golden_facturas', 'golden_lineas', 'alias_compra', 'abreviaturas',
   'presentaciones', 'formatos_producto', 'formatos_cliente', 'carga_lineas', 'fotos_perfil'];
 function copiaVieja() { const u = LS.get('fj_ult_copia', null); return !u || (Date.now() - u) > 7 * 86400000; }
+/* ---------- 📤 Informes para la gestoría (Jorge): Excel (CSV) del mes, para revisar y enviar ---------- */
+async function gesTodas(q) {   // pide todas las filas, de 1000 en 1000
+  const out = []; for (let i = 0; ; i += 1000) { const r = await q().range(i, i + 999); if (r.error) throw r.error; out.push(...(r.data || [])); if (!r.data || r.data.length < 1000) return out; }
+}
+const gesNum = n => n == null || n === '' ? '' : String(Math.round(Number(n) * 100) / 100).replace('.', ',');
+const GES_INFORMES = [
+  ['emitidas', '🧾 Facturas emitidas (Golden)', 'Número, fecha, cliente, NIF, base, IVA por tipo y total'],
+  ['recibidas', '📥 Facturas recibidas', 'Proveedor, fecha, número, importe y estado'],
+  ['cobros', '💰 Cobros del mes', 'Fecha, cliente, forma de pago, importe y quién cobró'],
+  ['sinfacturar', '📋 Albaranes sin facturar', 'Albaranes entregados del mes que no aparecen en ninguna factura de Golden'],
+  ['fichajes', '⏱️ Registro de jornada', 'Entrada, salida y horas por trabajador y día'],
+];
+async function gesInforme(tipo, desde, hasta) {
+  const fin = hasta; const finTs = comSumaDias(hasta, 1);
+  if (tipo === 'emitidas') {
+    const fs = await gesTodas(() => sb.from('golden_facturas').select('numero,serie,fecha,tipo,cliente_codigo,cliente_nombre,bruto,descuentos,gastos,base,total').eq('borrador', false).gte('fecha', desde).lte('fecha', fin).order('fecha').order('numero'));
+    const nums = fs.map(f => f.numero); const lin = [];
+    for (let i = 0; i < nums.length; i += 150) lin.push(...await gesTodas(() => sb.from('golden_lineas').select('factura_numero,iva,importe').in('factura_numero', nums.slice(i, i + 150))));
+    const cods = [...new Set(fs.map(f => f.cliente_codigo).filter(Boolean))]; const nif = {};
+    for (let i = 0; i < cods.length; i += 150) (await gesTodas(() => sb.from('clientes').select('codigo,nif').in('codigo', cods.slice(i, i + 150)))).forEach(c => { nif[String(c.codigo).toUpperCase()] = c.nif || ''; });
+    const porTipo = {}; lin.forEach(l => { const k = l.factura_numero + '|' + Number(l.iva || 0); porTipo[k] = (porTipo[k] || 0) + Number(l.importe || 0); });
+    const filas = [['Número', 'Serie', 'Fecha', 'Tipo', 'Código cliente', 'Cliente', 'NIF', 'Bruto', 'Descuentos', 'Gastos', 'Base imponible', 'Cuota (total − base)', 'Total', 'Líneas al 0 %', 'Líneas al 4 %', 'Líneas al 10 %', 'Líneas al 21 %']];
+    fs.forEach(f => filas.push([f.numero, f.serie, fechaES(f.fecha), f.tipo, f.cliente_codigo, f.cliente_nombre, nif[String(f.cliente_codigo || '').toUpperCase()] || '', gesNum(f.bruto), gesNum(f.descuentos), gesNum(f.gastos), gesNum(f.base), gesNum(Number(f.total || 0) - Number(f.base || 0)), gesNum(f.total), gesNum(porTipo[f.numero + '|0']), gesNum(porTipo[f.numero + '|4']), gesNum(porTipo[f.numero + '|10']), gesNum(porTipo[f.numero + '|21'])]));
+    const cuota = fs.reduce((a, f) => a + Number(f.total || 0) - Number(f.base || 0), 0);
+    const aviso = !fs.length ? '⚠️ No hay facturas de este mes en el histórico de Golden: hay que importarlas primero.' : (cuota < 1 ? '⚠️ Las facturas de este mes no traen IVA: el histórico de Golden parece incompleto. Revísalo antes de mandarlo.' : '');
+    let hasta = null; try { const u = await sb.from('golden_facturas').select('fecha').eq('borrador', false).order('fecha', { ascending: false }).limit(1); hasta = u.data && u.data[0] && u.data[0].fecha; } catch (e) { }
+    const incompleto = fs.length && hasta && hasta < fin ? '⚠️ INCOMPLETO: Golden está importado solo hasta el ' + fechaES(hasta) + '. Importa en «Histórico de Golden» las facturas hasta el ' + fechaES(fin) + ' antes de mandarlo.' : '';
+    return { filas, n: fs.length, aviso: [incompleto, aviso].filter(Boolean).join(' '), total: fs.reduce((a, f) => a + Number(f.total || 0), 0), nota: 'Las columnas «Líneas al …%» suman las líneas antes de descuentos y gastos de la factura.' };
+  }
+  if (tipo === 'recibidas') {
+    const fr = await gesTodas(() => sb.from('facturas_recibidas').select('id,fecha_factura,fecha_correo,remitente,asunto,nombre,estado,proveedor_id,compra_id,proveedores(nombre)').neq('estado', 'descartada').or('and(fecha_factura.gte.' + desde + ',fecha_factura.lte.' + fin + '),and(fecha_factura.is.null,fecha_correo.gte.' + desde + ',fecha_correo.lt.' + finTs + ')').order('fecha_factura'));
+    const dc = await gesTodas(() => sb.from('documentos_compra').select('fecha,nombre,importe,tipo,pagada,fecha_pago,compra_id,proveedores(nombre),compras(numero_documento)').eq('archivado', false).gte('fecha', desde).lte('fecha', fin).order('fecha'));
+    const filas = [['Origen', 'Fecha factura', 'Proveedor', 'Número', 'Importe', 'Pagada', 'Fecha pago', 'Estado', 'Archivo']];
+    fr.forEach(f => filas.push(['Correo', fechaES(f.fecha_factura || String(f.fecha_correo || '').slice(0, 10)), (uno(f.proveedores) || {}).nombre || f.remitente || '', '', '', '', '', f.estado || '', f.nombre || '']));
+    dc.forEach(d => filas.push(['Documento de compra', fechaES(d.fecha), (uno(d.proveedores) || {}).nombre || '', (uno(d.compras) || {}).numero_documento || '', gesNum(d.importe), d.pagada ? 'sí' : 'no', d.fecha_pago ? fechaES(d.fecha_pago) : '', d.tipo || '', d.nombre || '']));
+    const sinRev = fr.filter(f => f.estado === 'nueva').length; const avR = sinRev ? '⚠️ ' + sinRev + ' factura(s) recibida(s) aún sin revisar en Compras › Recibidas.' : '';
+    return { filas, n: filas.length - 1, aviso: avR, total: dc.reduce((a, d) => a + Number(d.importe || 0), 0), nota: 'Los PDF originales están en la app (Compras › Recibidas). Faltan el NIF y el desglose de IVA del proveedor: no se guardan todavía.' };
+  }
+  if (tipo === 'cobros') {
+    const cs = await gesTodas(() => sb.from('cobros').select('created_at,importe,forma,nota,cobrado_por,clientes(codigo,nombre,nombre_comercial,nif)').gte('created_at', desde).lt('created_at', finTs).order('created_at'));
+    const per = {}; (await gesTodas(() => sb.from('perfiles').select('id,nombre'))).forEach(p => { per[p.id] = p.nombre; });
+    const filas = [['Fecha', 'Código cliente', 'Cliente', 'NIF', 'Forma de pago', 'Importe', 'Cobrado por', 'Nota']];
+    cs.forEach(c => { const cl = uno(c.clientes) || {}; filas.push([fechaES(String(c.created_at).slice(0, 10)), cl.codigo || '', cl.nombre_comercial || cl.nombre || '', cl.nif || '', c.forma || '', gesNum(c.importe), per[c.cobrado_por] || '', c.nota || '']); });
+    return { filas, n: cs.length, total: cs.reduce((a, c) => a + Number(c.importe || 0), 0) };
+  }
+  if (tipo === 'sinfacturar') {
+    const al = await gesTodas(() => sb.from('albaranes').select('serie,numero,fecha,estado,pedidos(id,cliente_id,clientes(codigo,nombre,nombre_comercial))').gte('fecha', desde).lte('fecha', fin).neq('estado', 'anulado').order('fecha'));
+    const fact = new Set(); (await gesTodas(() => sb.from('albaranes_facturados').select('pedido_id'))).forEach(x => fact.add(x.pedido_id));
+    const filas = [['Serie', 'Número', 'Fecha', 'Código cliente', 'Cliente', 'Estado']];
+    al.filter(a => !fact.has((uno(a.pedidos) || {}).id)).forEach(a => { const cl = uno((uno(a.pedidos) || {}).clientes) || {}; filas.push([a.serie || '', a.numero, fechaES(a.fecha), cl.codigo || '', cl.nombre_comercial || cl.nombre || '', a.estado || '']); });
+    return { filas, n: filas.length - 1, nota: 'Salen los albaranes de la app que aún no se han marcado como pasados a factura en «Facturas para Golden».' };
+  }
+  if (tipo === 'fichajes') {
+    const fj = await gesTodas(() => sb.from('fichajes').select('usuario_id,entrada,salida,sin_conexion,nota').gte('entrada', desde).lt('entrada', finTs).order('entrada'));
+    const per = {}; (await gesTodas(() => sb.from('perfiles').select('id,nombre'))).forEach(p => { per[p.id] = p.nombre; });
+    const hm = t => { const d = new Date(t); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+    const filas = [['Trabajador', 'Día', 'Entrada', 'Salida', 'Horas', 'Sin conexión', 'Nota']];
+    fj.forEach(f => filas.push([per[f.usuario_id] || '', fechaES(hoy(new Date(f.entrada))), hm(f.entrada), f.salida ? hm(f.salida) : 'sin salida', f.salida ? gesNum((new Date(f.salida) - new Date(f.entrada)) / 3600000) : '', f.sin_conexion ? 'sí' : '', f.nota || '']));
+    return { filas, n: fj.length };
+  }
+}
+function vistaGestoria() {
+  state.view = 'gestoria'; if (!esOficina()) { go('inicio'); return; }
+  const ahora = new Date(); const mesPasado = new Date(ahora.getFullYear(), ahora.getMonth() - 1, 1);
+  const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  let mes = LS.get('fj_ges_mes', iso(mesPasado));
+  const selMes = comInput('month', mes); const cuerpo = h('div', {}); const listos = {};
+  const rango = () => { const [y, m] = mes.split('-').map(Number); const d = new Date(y, m, 0).getDate(); return [mes + '-01', mes + '-' + String(d).padStart(2, '0')]; };
+  const nombreArchivo = t => 'ferjusanz_' + t + '_' + mes + '.csv';
+  const pintar = () => { cuerpo.replaceChildren(...GES_INFORMES.map(([t, titulo, desc]) => { const caja = h('div', { class: 'sub' }); const card = h('div', { class: 'card' }, h('div', { class: 'nombre' }, titulo), h('div', { class: 'sub' }, desc), caja,
+      h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' }, h('button', { class: 'small', onclick: async e => { const b = e.currentTarget; b.disabled = true; caja.textContent = 'Preparando…'; try { const [d0, d1] = rango(); const r = await gesInforme(t, d0, d1); listos[t] = r; caja.replaceChildren(...[h('b', {}, r.n ? r.n + ' fila(s)' + (r.total != null ? ' · total ' + eur(r.total) + ' €' : '') : 'Sin datos este mes: no se mandará'), r.aviso ? h('div', { style: 'color:var(--rojo);font-weight:700' }, r.aviso) : null, r.nota ? h('div', {}, r.nota) : null].filter(Boolean)); descargarCSV(nombreArchivo(t), r.filas); } catch (x) { caja.textContent = '⚠️ ' + (x.message || x); } b.disabled = false; } }, '⬇️ Descargar Excel'))); return card; })); };
+  selMes.addEventListener('change', () => { if (selMes.value) { mes = selMes.value; LS.set('fj_ges_mes', mes); Object.keys(listos).forEach(k => delete listos[k]); pintar(); } });
+  const bTodo = h('button', { class: 'guardar', style: 'width:100%;margin-top:8px' }, '📤 Preparar todo y compartir con Jorge');
+  bTodo.onclick = async () => {
+    bTodo.disabled = true; bTodo.textContent = 'Preparando los informes…';
+    try { const [d0, d1] = rango(); const files = [];
+      const vacios = [], avisos = [], van = [];
+      for (const [t, titulo] of GES_INFORMES) { const r = listos[t] || await gesInforme(t, d0, d1); listos[t] = r; const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+        const nom = titulo.replace(/^\S+\s/, '');
+        if (!r.n) { vacios.push(nom); continue; }   // los informes sin datos no se mandan (la app aún no se usa para eso)
+        if (r.aviso) avisos.push(r.aviso);
+        van.push(nom + ' (' + r.n + ')');
+        files.push(new File(['﻿' + r.filas.map(f => f.map(q).join(';')).join('\r\n')], nombreArchivo(t), { type: 'text/csv' })); }
+      pintar();
+      if (!files.length) { toast('No hay datos de ' + mes + ' para mandar.', 'err'); bTodo.disabled = false; bTodo.textContent = '📤 Preparar todo y compartir con Jorge'; return; }
+      if (!await confirmar('Mes ' + mes + '\n\nSE MANDAN:\n· ' + van.join('\n· ') + (vacios.length ? '\n\nNO SE MANDAN (sin datos este mes):\n· ' + vacios.join('\n· ') : '') + (avisos.length ? '\n\nOJO, REVISA ANTES:\n' + avisos.join('\n') : '') + '\n\n¿Lo has revisado? Se abrirá «Compartir» (correo o WhatsApp). Nada se envía solo.')) { bTodo.disabled = false; bTodo.textContent = '📤 Preparar todo y compartir con Jorge'; return; }
+      if (navigator.canShare && navigator.canShare({ files })) await navigator.share({ files, title: 'Ferjusanz · informes ' + mes, text: 'Hola Jorge, te mando los informes de Ferjusanz del mes ' + mes + '.' });
+      else { files.forEach(f => { const a = h('a', { href: URL.createObjectURL(f), download: f.name }); document.body.append(a); a.click(); a.remove(); }); toast('Descargados. Adjúntalos en un correo a Jorge.', 'ok'); }
+    } catch (x) { if (x && x.name !== 'AbortError') toast(x.message || String(x), 'err'); }
+    bTodo.disabled = false; bTodo.textContent = '📤 Preparar todo y compartir con Jorge';
+  };
+  $app.replaceChildren(shell('Informes para Jorge', h('div', {},
+    h('p', { class: 'sub' }, 'Informes del mes en Excel (CSV) para la gestoría. Revísalos antes de mandarlos: la app no envía nada sola. Las facturas las sigue haciendo Golden.'),
+    h('div', { class: 'aviso-card' }, h('b', {}, '✅ Cierre de mes, en este orden'),
+      h('div', { style: 'margin-top:4px;line-height:1.5' }, '1. En Golden, exporta las facturas del mes y cárgalas en ', h('a', { href: '#', onclick: e => { e.preventDefault(); go('golden'); } }, '«Histórico de Golden»'), ' (hasta el último día del mes).', h('br'),
+        '2. Revisa las ', h('a', { href: '#', onclick: e => { e.preventDefault(); LS.set('fj_compras_modo', 'recib'); go('compras'); } }, 'facturas de proveedores recibidas'), ' del mes.', h('br'),
+        '3. Pulsa «Preparar todo»: verás qué se manda, qué no (vacío) y los avisos.', h('br'),
+        '4. Compártelo con Jorge por correo o WhatsApp. Nada se envía solo.')),
+    comCampo('Mes', selMes), cuerpo, bTodo)));
+  pintar();
+}
+
 function vistaCopia() {
   state.view = 'copia';
   if (state.perfil.rol !== 'admin') { go('inicio'); return; }
@@ -11043,6 +11146,7 @@ const BUSCA_PANTALLAS = [
   ['📐', 'Formatos', 'formatos formato caja kilos peso cliente', () => go('formatos'), 'o'],
   ['🌐', 'Portal de clientes', 'portal pagina clientes web qr enlace publicar albaranes', () => go('paginasclientes')],
   ['📲', 'Móviles y correos de clientes', 'moviles correos telefonos contactos clientes dejan qr whatsapp email', () => go('contactosportal'), 'o'],
+  ['📤', 'Informes para Jorge', 'jorge gestoria gestor contable informes cierre mes iva facturas emitidas recibidas trimestre', () => go('gestoria'), 'o'],
   ['🗂️', 'Secretaría hoy', 'secretaria oficina tareas hoy', () => go('secretaria'), 'o'],
   ['📤', 'Facturas para Golden', 'facturas golden pasar facturar prefacturas', () => go('prefacturas'), 'o'],
   ['📄', 'Facturas de clientes', 'facturas clientes imprimir enviar factura cliente', () => go('facturascli'), 'o'],
@@ -11288,7 +11392,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { tarifas: vistaTarifas, contactosportal: vistaContactosPortal, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { tarifas: vistaTarifas, contactosportal: vistaContactosPortal, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
 }
