@@ -2,6 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 11/11/2026
+- **v190 publicada en la app normal** («Autorizo publicar»): pantalla Precios / facturas de proveedor (los 4 cambios de abajo) y **mora → bandeja** (confirmado por Fernando).
 - **Pantalla Precios / facturas de proveedor (v189, solo en PRUEBAS)**, los 4 pedidos de Fernando del 10/11:
   1. **Unidad del libro de ventas**: arándano y frambuesa por **bandeja** y ensalada campestre por **bolsa** (nunca «pieza»). Al leer facturas, registrar compras y apuntar un precio a mano se propone esa unidad; si la factura viene en otra (p. ej. kg y en ventas va por caja), sale un aviso naranja. Los «Arándano 2 pieza» ya leídos se ven ahora como bandeja.
   2. **Registrar sin salir de la pantalla**: botón «Revisar y registrar» en Precios de compra del día y en la bandeja de Facturas de proveedores; se abre encima, se registra y se sigue en la misma pantalla. El registro detallado (lotes, origen) ya no salta a «Lotes»: vuelve a la bandeja.

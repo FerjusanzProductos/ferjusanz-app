@@ -7,9 +7,9 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - 🟡 Juntar la rama `memoria-permanente` (estos documentos) con main y borrar las ramas ya incluidas.
 - ⚪ Borrar el Worker antiguo `ferjusanz` en Cloudflare.
 
-## Pedido por Fernando el 10/11/2026 (pantalla Precios / facturas de proveedor) — ✔️ hecho en PRUEBAS (v189)
-- 🔴 **Publicar en la app normal** cuando Fernando lo pruebe y escriba «Autorizo publicar» (código en la rama de GitLab `precios-facturas`; la app de pruebas lo tiene en `harvey-fase1`).
-- 🟡 **Fernando decide**: corregir en la ficha de los productos la unidad de venta (ahora todos salen «kg»): Arándano (513) y Frambuesa (310) → bandeja; Ensalada Campestre (137-P) → bolsa. ¿Mora del bosque (257) también por bandeja? Mientras tanto la app ya usa la unidad buena al leer facturas y al apuntar precios.
+## Pedido por Fernando el 10/11/2026 (pantalla Precios / facturas de proveedor) — ✔️ publicado (v190)
+- ✔️ Publicado en la app normal (v190) el 11/11/2026 con «Autorizo publicar».
+- 🟡 **Fernando decide**: corregir en la ficha de los productos la unidad de venta (ahora todos salen «kg»): Arándano (513) y Frambuesa (310) → bandeja; Ensalada Campestre (137-P) → bolsa. Mora del bosque (257) → bandeja (confirmado 11/11). Mientras tanto la app ya usa la unidad buena al leer facturas y al apuntar precios.
 
 ## Revisado el 11/11/2026 (para cuando se empiece de verdad)
 - 🔴 **Unidades de TODOS los productos**: en la base todos los productos activos salen «kg». El libro de ventas (Golden, tabla `golden_lineas`) no guarda la unidad, así que Claude ha hecho una propuesta por nombre, precio y cantidad (cajas, bandejas, bolsas, piezas, manojos, docenas). **Fernando la confirma** y entonces se cambia en la base (enseñando el SQL) y en `UNIDAD_LIBRO`.
