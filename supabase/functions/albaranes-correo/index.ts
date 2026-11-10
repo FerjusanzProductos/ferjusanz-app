@@ -1,6 +1,6 @@
 // Envío AUTOMÁTICO del albarán por correo cuando se marca la entrega.
 // - Sale del Gmail de Fernando (contraseña de aplicación en el secreto GMAIL_APP_PASSWORD; sin ella no envía nada).
-// - Solo a clientes con correo en su ficha y solo entregas de las últimas 24 horas. Cada albarán se manda UNA vez (tabla envios_correo).
+// - A clientes con correo en su ficha o que lo dejaron al escanear el QR, y solo entregas de las últimas 24 horas. Cada albarán se manda UNA vez (tabla envios_correo).
 // - La llama la app después de guardar una entrega (cualquier móvil del equipo). No modifica pedidos ni albaranes.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import postgres from "npm:postgres@3.4.5";
@@ -52,15 +52,19 @@ async function pendientes() {
   const pass = Deno.env.get("GMAIL_APP_PASSWORD"); const user = Deno.env.get("GMAIL_USER");
   if (!pass || !user) return { ok: false, motivo: "sin_configurar" };
   const lista = await sql`
-    select e.pedido_id, e.entregado_at, e.nota, c.id as cliente_id, coalesce(c.nombre_comercial, c.nombre) as cliente, lower(trim(c.email)) as email
-    from public.entregas e join public.pedidos p on p.id = e.pedido_id join public.clientes c on c.id = p.cliente_id
-    join public.albaranes a on a.pedido_id = p.id and a.numero is not null
-    where e.entregado_at > now() - interval '24 hours' and c.email ~* '^[^@\\s,;]+@[^@\\s,;]+\\.[a-z]{2,}$'
-      and coalesce(c.albaran_por_correo, true)
-      and not exists (select 1 from public.envios_correo x where x.pedido_id = e.pedido_id)
-    order by e.entregado_at limit 15`;
+    select * from (
+      select e.pedido_id, e.entregado_at, e.nota, c.id as cliente_id, coalesce(c.nombre_comercial, c.nombre) as cliente, c.albaran_por_correo,
+        -- el de la ficha; si no hay, el que dejó el propio cliente al escanear el QR (y aceptó recibirlos)
+        coalesce(case when c.email ~* '^[^@\\s,;]+@[^@\\s,;]+\\.[a-z]{2,}$' then lower(trim(c.email)) end,
+          (select k.email from public.contactos_portal k where k.cliente_id = c.id and k.email is not null and k.estado <> 'descartado' order by k.created_at desc limit 1)) as email
+      from public.entregas e join public.pedidos p on p.id = e.pedido_id join public.clientes c on c.id = p.cliente_id
+      join public.albaranes a on a.pedido_id = p.id and a.numero is not null
+      where e.entregado_at > now() - interval '24 hours') z
+    where z.email is not null and coalesce(z.albaran_por_correo, true)
+      and not exists (select 1 from public.envios_correo x where x.pedido_id = z.pedido_id)
+    order by z.entregado_at limit 15`;
   if (!lista.length) return { ok: true, enviados: 0 };
-  const tr = nodemailer.createTransport({ host: "smtp.gmail.com", port: 465, secure: true, auth: { user, pass } });
+  const tr = nodemailer.createTransport({ host: "smtp.gmail.com", port: 465, secure: true, auth: { user: user.trim(), pass: pass.replace(/\s+/g, "") } });
   let enviados = 0; const errores: string[] = [];
   for (const x of lista as any[]) {
     const tomado = await sql`insert into public.envios_correo (pedido_id, email, estado) values (${x.pedido_id}, ${x.email}, 'enviando') on conflict do nothing returning pedido_id`;
@@ -69,7 +73,7 @@ async function pendientes() {
       const [{ j: a }] = await sql`select public._albaran_json(${x.pedido_id}::uuid) as j`;
       if (!a || !a.ok) throw new Error("albarán no disponible");
       const urlAlb = APP + "?a=" + await token("albaran", x.pedido_id), urlCli = APP + "?c=" + await token("cliente", x.cliente_id);
-      await tr.sendMail({ from: `"${EMPRESA}" <${user}>`, replyTo: user, to: x.email,
+      await tr.sendMail({ from: `"${EMPRESA}" <${user.trim()}>`, replyTo: user.trim(), to: x.email,
         subject: `Albarán ${a.serie} ${String(a.numero).padStart(7, "0")} · ${fechaES(String(a.fecha || ""))} · Ferjusanz`,
         html: html(a, x.cliente, urlAlb, urlCli, x.nota),
         text: `Hola${x.cliente ? ", " + x.cliente : ""}. Te hemos entregado tu pedido. Albarán ${a.serie} ${a.numero} del ${fechaES(String(a.fecha || ""))}: ${urlAlb}\nTodos tus albaranes: ${urlCli}\n${EMPRESA} · ${TELS}` });
@@ -89,6 +93,13 @@ async function pendientes() {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   try {
+    const b0 = await req.clone().json().catch(() => ({}));
+    if (b0.accion === "comprobar") {   // solo comprueba que la contraseña de Gmail vale; NO envía nada
+      const pass = Deno.env.get("GMAIL_APP_PASSWORD"), user = Deno.env.get("GMAIL_USER");
+      if (!pass || !user) return json({ ok: false, motivo: !pass && !user ? "faltan los dos secretos" : !pass ? "falta GMAIL_APP_PASSWORD" : "falta GMAIL_USER" });
+      try { await nodemailer.createTransport({ host: "smtp.gmail.com", port: 465, secure: true, auth: { user: user.trim(), pass: pass.replace(/\s+/g, "") } }).verify(); return json({ ok: true, usuario: user.trim().replace(/^(.{3}).*(@.*)$/, "$1…$2") }); }
+      catch (e) { return json({ ok: false, motivo: String((e as Error)?.message || e).slice(0, 200) }); }
+    }
     if (!await usuario(req)) return json({ error: "Inicia sesión" }, 401);
     const b = await req.json().catch(() => ({}));
     if (b.accion === "reintentar" && b.pedido_id) await sql`delete from public.envios_correo where pedido_id = ${String(b.pedido_id)} and estado = 'error'`;
