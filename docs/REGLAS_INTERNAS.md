@@ -94,3 +94,9 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Clientes en azul (sin IVA) a 10/11/2026: **Bar Camarero (BACAM)**, **Bar La Torre (PVP)**, **Bar Andorra (BAAND)**, **Bar Delfín** y **Frutas Pedro** (fichas provisionales). Pendiente: que Fernando confirme el resto de la lista y si «Bar Delfín» es la misma ficha que «Bar Delfines» (DEFINES).
 - A los azules se les aplica la línea **«Descuento por productos»** (igual al IVA): pagan el total sin IVA; el IVA sigue en el albarán.
 - **Se factura siempre en Golden Soft**, no desde la app. La copia ROSA del albarán muestra el nombre interno y el código para teclearlo bien.
+
+## Envío del albarán al cliente (desde 10/11/2026)
+- **Correo:** automático al marcar la entrega, desde fernandosanzalba@gmail.com, al correo de la ficha o al que dejó el cliente al escanear el QR.
+- **WhatsApp:** hasta nueva orden lo manda **cada repartidor desde su propio WhatsApp** (botón que sale al marcar «Entregado»). Si el cliente no tiene móvil, el repartidor lo escribe y queda apuntado en «Móviles y correos de clientes».
+- **Aparcado:** envío automático por WhatsApp desde el 609 567 354 (coexistencia de WhatsApp Business con la API de Meta). Retomar cuando Fernando lo diga.
+
