@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1b7f3b">
-<script>(function(){try{var t=localStorage.getItem("fj_tema")||"auto";var o=t==="oscuro"||(t==="auto"&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.setAttribute("data-tema",o?"oscuro":"claro")}catch(e){};try{var B=1,cw=document.documentElement.clientWidth,sw=Math.min(screen.width,screen.height);if(window.matchMedia&&matchMedia("(pointer:coarse)").matches&&sw<700&&cw>sw*1.3)B=cw/sw;window.__FJ_BASEZ=B;var z=parseFloat(localStorage.getItem("fj_zoom"));if(!(z>1&&z<=1.6)||/[?&](a|c)=/.test(location.search))z=1;if(B*z!==1)document.documentElement.style.zoom=String(B*z)}catch(e){}})()</script>
+<script>(function(){try{var t=localStorage.getItem("fj_tema")||"auto";var o=t==="oscuro"||(t==="auto"&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.setAttribute("data-tema",o?"oscuro":"claro")}catch(e){};window.__fjBase=function(){var B=1;try{var cw=document.documentElement.clientWidth,sw=Math.min(screen.width,screen.height),vv=window.visualViewport;if(window.matchMedia&&matchMedia("(pointer:coarse)").matches&&sw<700&&cw>sw*1.3)B=cw/sw;if(vv&&vv.scale>0.2&&vv.scale<0.85&&cw>=700)B=Math.max(B,1/vv.scale)}catch(e){}return B};window.__fjAplicaZ=function(){try{var B=window.__fjBase();window.__FJ_BASEZ=B;var z=parseFloat(localStorage.getItem("fj_zoom"));if(!(z>1&&z<=1.6)||/[?&](a|c)=/.test(location.search))z=1;document.documentElement.style.zoom=B*z!==1?String(B*z):""}catch(e){}};window.__fjAplicaZ();addEventListener("load",function(){if(window.__fjBase()!==window.__FJ_BASEZ)window.__fjAplicaZ()});try{visualViewport.addEventListener("resize",function(){if((window.__FJ_BASEZ||1)===1&&window.__fjBase()>1)window.__fjAplicaZ()})}catch(e){}})()</script>
 <title>Ferjusanz</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
@@ -3091,7 +3091,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v157';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v159';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
