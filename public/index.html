@@ -373,6 +373,9 @@ html[style*=zoom] header{gap:4px;padding-left:6px;padding-right:6px;flex-wrap:wr
 .ph-l:active{background:var(--verde-cl)!important}
 .ph-ok{padding:10px 4px;font-weight:700;color:var(--verde-osc)}
 html.es-pruebas header{background:linear-gradient(120deg,#9a3412,#ea580c)!important}html.es-pruebas header::after{content:"PRUEBAS";position:absolute;left:50%;bottom:-1px;transform:translateX(-50%);background:#111827;color:#fff;font-size:10px;font-weight:800;letter-spacing:1px;padding:1px 8px;border-radius:6px 6px 0 0}html.es-pruebas header{position:sticky}
+#fjflot button.ayuda{background:#dc2626!important;color:#fff;border-color:#dc2626;opacity:1;font-size:22px}
+#fj-ayuda{position:fixed;left:8px;right:8px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:8;display:flex;gap:8px;align-items:center;background:#7f1d1d;color:#fff;border-radius:14px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.35);font-size:14px}
+#fj-ayuda .ghost{color:#fff;background:transparent!important;border-color:#fca5a5}
 #fjflot button.zoom{font-size:15px;font-weight:800;opacity:1;width:auto;min-width:42px;padding:0 8px;border-radius:999px}
 #fjflot button.habla{background:#dc2626;color:#fff;border-color:#dc2626;animation:parp2 1s infinite}
 #fjflot .dev{font-size:12px;font-weight:700;background:#1e3a8a;color:#fff;border-radius:999px;padding:3px 8px}
@@ -765,6 +768,7 @@ const LS = {
 };
 function irA(el) { if (!el) return; el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('resalta'); setTimeout(() => el.classList.remove('resalta'), 2400); const f = el.querySelector && el.querySelector('input,select,textarea'); if (f && !f.value) setTimeout(() => { try { f.focus({ preventScroll: true }); } catch (e) { } }, 500); }
 function toast(msg, tipo) {
+  if (tipo === 'err') { try { const L = window.__FJ_ERRS = (window.__FJ_ERRS || []); L.push({ t: new Date().toISOString(), m: String(msg).slice(0, 300), v: state && state.view }); if (L.length > 5) L.shift(); } catch (e) { } }
   const t = document.getElementById('toast');
   const d = h('div', { class: tipo || '' }, msg);
   t.append(d); setTimeout(() => d.remove(), tipo === 'err' ? 6000 : 3000);
@@ -3125,7 +3129,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v172';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v174';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -4730,14 +4734,16 @@ function panelHoy() {
   const cuenta = p => Promise.resolve(p).then(r => (r && !r.error) ? (typeof r.count === 'number' ? r.count : (r.data || []).length) : null).catch(() => null);
   (async () => {
     if (!navigator.onLine) { caja.replaceChildren(caja.firstChild, h('div', { class: 'sub' }, 'Sin conexión: cuando vuelva, aquí verás lo pendiente de hoy.')); return; }
-    const [ph, prevMan, inc, deu, cont, fr] = await Promise.all([
+    const [ph, prevMan, inc, deu, cont, fr, ayu] = await Promise.all([
       sb.from('pedidos').select('id,estado,repartidor_id,entregas(entregado_at)').eq('fecha_entrega', hoyF).neq('estado', 'anulado').neq('archivado', true).limit(500).then(r => r.error ? null : r.data).catch(() => null),
       cuenta(sb.from('pedidos').select('id', { count: 'exact', head: true }).eq('fecha_entrega', man).eq('estado', 'previsto').neq('archivado', true)),
       oficina ? cuenta(sb.from('incidencias').select('id', { count: 'exact', head: true }).eq('resuelta', false).neq('archivado', true)) : null,
       oficina ? sb.from('v_pedidos_importe').select('cliente_id,pendiente').gt('pendiente', 0.009).lt('fecha_entrega', hace30).limit(3000).then(r => r.error ? null : r.data).catch(() => null) : null,
       oficina ? cuenta(sb.from('contactos_portal').select('id', { count: 'exact', head: true }).eq('estado', 'nuevo')) : null,
-      compras ? cuenta(sb.from('facturas_recibidas').select('id', { count: 'exact', head: true }).eq('estado', 'nueva')) : null]);
+      compras ? cuenta(sb.from('facturas_recibidas').select('id', { count: 'exact', head: true }).eq('estado', 'nueva')) : null,
+      soyAyudante() ? cuenta(sb.from('ayudas').select('id', { count: 'exact', head: true }).eq('estado', 'nueva')) : null]);
     const L = [];
+    if (ayu) L.push(linea('🆘', ayu + ' petici' + (ayu === 1 ? 'ón' : 'ones') + ' de ayuda sin atender', ayu, 'rojo', () => go('ayudas')));
     if (ph) {
       const act = ph.filter(p => p.estado !== 'previsto'), prev = ph.filter(p => p.estado === 'previsto');
       const entregado = p => (Array.isArray(p.entregas) ? p.entregas.length : !!p.entregas);
@@ -4855,6 +4861,7 @@ function vistaSecretaria() {
 
 function vistaMas() {
   state.view = 'inicio'; state.desdeSec = false;
+  { const ay = LS.get('fj_ir_ayuda', null); if (ay) { LS.set('fj_ir_ayuda', null); setTimeout(() => abrirAyuda(ay), 0); } }
   if (LS.get('fj_ir', null) === 'recib') { LS.set('fj_ir', null); LS.set('fj_compras_modo', 'recib'); setTimeout(() => go('compras'), 0); return; }
   const c = (ico, t, f, color, badge) => h('button', { class: 'circ', onclick: f }, h('span', { class: 'c', style: '--c:' + color }, ico, badge ? h('span', { class: 'insig' }, badge) : null), h('span', { class: 'l' }, t));
   const CORTO = { 'Hoja de compra para hoy': 'Hoja compra hoy', 'Precios de compra del día': 'Precios compra del día', 'A quién compramos hoy': 'A quién compramos', 'Facturas de proveedores': 'Facturas proveed.', 'Facturas de clientes': 'Facturas clientes', 'Histórico de Golden': 'Histórico Golden', 'Registro de cambios': 'Registro cambios', 'Copia de seguridad': 'Copia seguridad', 'Lista de pedidos': 'Lista pedidos', 'Escanear pedido': 'Escanear pedido', 'Hoja de carga': 'Hoja de carga', 'Hoja de compra': 'Hoja compra', 'Avisos y ofertas': 'Avisos y ofertas' };
@@ -11147,6 +11154,7 @@ const BUSCA_PANTALLAS = [
   ['🌐', 'Portal de clientes', 'portal pagina clientes web qr enlace publicar albaranes', () => go('paginasclientes')],
   ['📲', 'Móviles y correos de clientes', 'moviles correos telefonos contactos clientes dejan qr whatsapp email', () => go('contactosportal'), 'o'],
   ['📤', 'Informes para Jorge', 'jorge gestoria gestor contable informes cierre mes iva facturas emitidas recibidas trimestre', () => go('gestoria'), 'o'],
+  ['🆘', 'Peticiones de ayuda', 'ayuda ayudas socorro atascado problema equipo', () => go('ayudas'), 'o'],
   ['🗂️', 'Secretaría hoy', 'secretaria oficina tareas hoy', () => go('secretaria'), 'o'],
   ['📤', 'Facturas para Golden', 'facturas golden pasar facturar prefacturas', () => go('prefacturas'), 'o'],
   ['📄', 'Facturas de clientes', 'facturas clientes imprimir enviar factura cliente', () => go('facturascli'), 'o'],
@@ -11283,6 +11291,66 @@ function vistaBuscar() {
 }
 
 
+/* =====================  🆘 AYUDA: la persona atascada avisa a Fernando con su pantalla y sus errores  ===================== */
+const AYUDA_A = { id: 'dd57089e-662e-48cc-b888-cf52ea1eeea2', tel: '34609567354', nombre: 'Fernando' };   // quien atiende las ayudas (Fernando Sanz hijo)
+const soyAyudante = () => !!(state.user && state.user.id === AYUDA_A.id);
+try { addEventListener('error', e => { try { const L = window.__FJ_ERRS = (window.__FJ_ERRS || []); L.push({ t: new Date().toISOString(), m: 'Fallo de la app: ' + String(e.message || e).slice(0, 200), v: state && state.view }); if (L.length > 5) L.shift(); } catch (x) { } }); } catch (e) { }
+(function () { try { const p = new URLSearchParams(location.search); if (p.get('ayuda')) { LS.set('fj_ir_ayuda', p.get('ayuda')); history.replaceState(null, '', location.pathname); } } catch (e) { } })();
+const tituloPantalla = () => { const t = document.querySelector('header .tit'); return (t && t.textContent.trim()) || state.view || ''; };
+function pedirAyuda() {
+  const nota = h('textarea', { rows: 3, placeholder: '¿Qué te pasa? (opcional). Ej.: no me deja guardar el pedido de La Figal', style: 'width:100%;font-size:17px' });
+  const enviar = h('button', { class: 'guardar', style: 'width:100%;min-height:56px;font-size:18px;margin-top:8px' }, '🆘 Pedir ayuda a ' + AYUDA_A.nombre);
+  let cerrar;
+  enviar.onclick = async () => {
+    enviar.disabled = true; enviar.textContent = 'Enviando…';
+    let params = {}; try { params = JSON.parse(JSON.stringify(state.params || {})); if (JSON.stringify(params).length > 4000) params = {}; } catch (e) { }
+    const fila = { nombre: state.perfil && state.perfil.nombre, nota: nota.value.trim().slice(0, 500) || null, vista: state.view, titulo: tituloPantalla(), params, errores: (window.__FJ_ERRS || []).slice(-5),
+      info: { version: typeof APP_VERSION !== 'undefined' ? APP_VERSION : '', movil: navigator.userAgent.slice(0, 160), conexion: navigator.onLine, pantalla: innerWidth + 'x' + innerHeight, zoom: document.documentElement.style.zoom || '' } };
+    let id = null;
+    try { if (!PRACTICA && navigator.onLine) { const r = await sb.from('ayudas').insert(fila).select('id').single(); if (r.error) throw r.error; id = r.data.id; } } catch (e) { }
+    const enlace = location.origin + location.pathname.replace(/[^\/]*$/, '') + (id ? '?ayuda=' + id : '');
+    const txt = '🆘 Ayuda, soy ' + (fila.nombre || 'del equipo') + '. Estoy en «' + fila.titulo + '».' + (fila.nota ? ' ' + fila.nota : '') + (fila.errores.length ? '\nMe sale: ' + fila.errores[fila.errores.length - 1].m : '') + (id ? '\nMi pantalla: ' + enlace : '');
+    cerrar && cerrar();
+    toast(id ? 'Avisado. Ahora envía el WhatsApp a ' + AYUDA_A.nombre + '.' : 'Sin conexión: manda el WhatsApp o llama a ' + AYUDA_A.nombre + '.', 'ok');
+    window.open('https://wa.me/' + AYUDA_A.tel + '?text=' + encodeURIComponent(txt), '_blank');
+  };
+  cerrar = hoja('🆘 Pedir ayuda', h('div', {}, h('p', { class: 'sub' }, AYUDA_A.nombre + ' verá en qué pantalla estás y lo que te ha salido, y te ayudará. No se cambia nada de lo que estás haciendo.'), nota, enviar,
+    h('a', { href: 'tel:+' + AYUDA_A.tel, class: 'ghost', style: 'display:block;text-align:center;margin-top:10px;padding:14px;border:1.5px solid var(--borde);border-radius:12px;text-decoration:none;color:inherit;font-weight:700;font-size:17px' }, '📞 O llámale')));
+}
+/* Fernando abre el enlace del WhatsApp: se le abre la misma pantalla con un aviso de qué le pasa */
+async function abrirAyuda(id) {
+  try {
+    const r = await sb.from('ayudas').select('*').eq('id', id).single(); if (r.error || !r.data) throw r.error || new Error('No encontrada');
+    const a = r.data; if (a.vista && a.vista !== 'inicio') go(a.vista, a.params || {});
+    setTimeout(() => barraAyuda(a), 300);
+  } catch (e) { toast('No se pudo abrir esa petición de ayuda: ' + msgErr(e), 'err'); }
+}
+function barraAyuda(a) {
+  const prev = document.getElementById('fj-ayuda'); if (prev) prev.remove();
+  const ult = (a.errores || []).slice(-1)[0];
+  const b = h('div', { id: 'fj-ayuda' },
+    h('div', { style: 'flex:1;min-width:0' }, h('b', {}, '🆘 ' + (a.nombre || 'Alguien') + ' · ' + fmtHora(a.created_at)), h('div', {}, 'Estaba en «' + (a.titulo || a.vista) + '»' + (a.nota ? ': ' + a.nota : '')), ult ? h('div', { style: 'color:#fecaca' }, 'Le salió: ' + ult.m) : null),
+    h('div', { style: 'display:flex;flex-direction:column;gap:4px' },
+      a.estado === 'nueva' ? h('button', { class: 'small', onclick: async () => { try { const u = await sb.from('ayudas').update({ estado: 'atendida', atendida_por: state.user.id, atendida_en: new Date().toISOString() }).eq('id', a.id); if (u.error) throw u.error; toast('Marcada como atendida', 'ok'); b.remove(); } catch (e) { toast(msgErr(e), 'err'); } } }, '✔ Atendida') : null,
+      h('button', { class: 'ghost small', onclick: () => b.remove() }, 'Cerrar')));
+  document.body.append(b);
+}
+async function vistaAyudas() {
+  state.view = 'ayudas';
+  const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
+  $app.replaceChildren(shell('Peticiones de ayuda', cont, { volver: volverIni })); renderBanner();
+  if (!esOficina()) { cont.replaceChildren(h('p', { class: 'vacio' }, 'Solo la oficina puede ver esto.')); return; }
+  try {
+    const r = await sb.from('ayudas').select('*').order('created_at', { ascending: false }).limit(60); if (r.error) throw r.error;
+    cont.replaceChildren(...(r.data.length ? r.data.map(a => h('div', { class: 'card', style: a.estado === 'nueva' ? 'border-left:5px solid var(--rojo)' : 'opacity:.7' },
+      h('div', { class: 'fila' }, h('div', { class: 'nombre' }, '🆘 ' + (a.nombre || 'Alguien')), h('span', { class: 'badge' }, a.estado === 'nueva' ? 'Sin atender' : '✔ Atendida')),
+      h('div', { class: 'sub' }, fechaES(String(a.created_at).slice(0, 10)) + ' ' + fmtHora(a.created_at) + ' · en «' + (a.titulo || a.vista || '') + '»' + (a.info && a.info.version ? ' · ' + String(a.info.version).replace('ferjusanz-', '') : '')),
+      a.nota ? h('div', { style: 'margin-top:4px' }, a.nota) : null,
+      ...(a.errores || []).slice(-3).map(x => h('div', { class: 'sub', style: 'color:var(--rojo)' }, fmtHora(x.t) + ' · ' + x.m)),
+      h('button', { class: 'small', style: 'margin-top:6px', onclick: () => { if (a.vista && a.vista !== 'inicio') go(a.vista, a.params || {}); setTimeout(() => barraAyuda(a), 300); } }, '👁️ Abrir su pantalla'))) : [h('p', { class: 'vacio' }, 'Nadie ha pedido ayuda todavía. 👌')]));
+  } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+}
+
 /* =====================  TEMA, LECTOR DE VOZ Y VARIOS DISPOSITIVOS  ===================== */
 const FJ_TEMA = () => { try { return localStorage.getItem('fj_tema') || 'auto'; } catch (e) { return 'auto'; } };
 function aplicarTema() {
@@ -11382,7 +11450,8 @@ function pintaFlot() {
   const osc = document.documentElement.getAttribute('data-tema') === 'oscuro'; 
   const bt = h('button', { title: osc ? 'Modo claro' : 'Modo oscuro', 'aria-label': 'Cambiar tema', onclick: () => ponTema(osc ? 'claro' : 'oscuro') }, osc ? '☀️' : '🌙');
   const z = fjZoom(); const bz = h('button', { class: 'zoom' + (z > 1 ? ' on' : ''), title: 'Letra más grande', 'aria-label': 'Letra más grande', onclick: cambiaZoom }, z > 1 ? Math.round(z * 100) + '%' : 'A+');
-  f.replaceChildren(...(SALA.n > 1 ? [h('span', { class: 'dev', title: 'Dispositivos conectados ahora' }, '👥 ' + SALA.n)] : []), bz, bt);
+  const bAy = soyAyudante() ? null : h('button', { class: 'ayuda', title: 'Pedir ayuda', 'aria-label': 'Pedir ayuda', onclick: pedirAyuda }, '🆘');
+  f.replaceChildren(...[...(SALA.n > 1 ? [h('span', { class: 'dev', title: 'Dispositivos conectados ahora' }, '👥 ' + SALA.n)] : []), bAy, bz, bt].filter(Boolean));
 }
 
 /* =====================  ARRANQUE  ===================== */
@@ -11392,7 +11461,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { tarifas: vistaTarifas, contactosportal: vistaContactosPortal, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { tarifas: vistaTarifas, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
 }
