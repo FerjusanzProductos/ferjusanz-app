@@ -23,6 +23,14 @@ const fechaValida = (s: unknown) => typeof s === "string" && /^\d{4}-\d{2}-\d{2}
 const DIAS = ["", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"];
 const isoDow = (iso: string) => { const d = new Date(iso + "T12:00:00Z").getUTCDay(); return d === 0 ? 7 : d; };
 const fechaES = (iso: string) => iso ? iso.slice(8, 10) + "/" + iso.slice(5, 7) : "";
+/** «mañana», «hoy» o «el jueves», como se habla. De madrugada (antes de las 6) aún cuenta como el día anterior. */
+const cuandoEs = (fecha: string) => {
+  const hora = Number(new Intl.DateTimeFormat("es-ES", { timeZone: "Europe/Madrid", hour: "numeric", hour12: false }).format(new Date()));
+  const ref = hora < 6 ? sumaDias(hoyMadrid(), -1) : hoyMadrid();
+  if (fecha === ref) return "hoy (" + DIAS[isoDow(fecha)] + ")";
+  if (fecha === sumaDias(ref, 1)) return "mañana (" + DIAS[isoDow(fecha)] + ")";
+  return "el " + DIAS[isoDow(fecha)];
+};
 
 /** Primer móvil español que aparezca en un texto (devuelve 34XXXXXXXXX) */
 function movil(...textos: (string | null | undefined)[]): string | null {
@@ -196,11 +204,19 @@ async function llamarIA(system: string, usuarioTexto: string, maxTokens = 1500, 
 }
 const SISTEMA_MSG = `Eres Harvey, el comercial de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L.: empresa familiar con tres generaciones en Mercamadrid (patatas, fruta, verdura y huevos), con cosechas propias y reparto con nuestros propios repartidores. Preparas mensajes de WhatsApp que una persona de la oficina revisará y enviará con su nombre.
 
-CÓMO ESCRIBES
-- Como un comercial con oficio y años de mercado: cercano, seguro y con entereza. Frases bien construidas y párrafos que se leen con naturalidad, nunca telegráficos ni de plantilla.
-- Escribe el mensaje para el cliente entre una línea que diga exactamente [MENSAJE] y otra que diga exactamente [FIN]. Fuera de esas marcas, como mucho 2 líneas de nota para la oficina.
-- Entre 4 y 8 líneas. Español de España. A negocios que aún no son clientes, de usted; a los clientes habituales, trato cercano en plural («¿qué necesitáis…?»).
-- Firma con el nombre de quien escribe si se indica. Nunca te presentes como Harvey ni como una IA. Uno o ningún emoji.
+CÓMO ESCRIBES (esto es WhatsApp, no un correo)
+- Escribe como lo haría Fernando desde su móvil: natural, directo y cercano, como se habla en el mercado. Que nadie note que lo ha preparado una máquina.
+- Corto: entre 2 y 4 líneas para clientes habituales; como mucho 5 para negocios nuevos. Frases cortas. Nada de párrafos largos.
+- PROHIBIDO lo que suena a correo o a plantilla: «Un saludo», «Atentamente», «Quedo a la espera», «Espero que estéis bien», «Por si os sirve de recordatorio», «lo dejamos todo listo para que no os falte de nada», listas largas, puntos y aparte formales.
+- No firmes al final: en WhatsApp ya se ve quién escribe. Solo con un negocio que aún no nos conoce, preséntate dentro de la frase: «Soy Fernando, de Ferjusanz (Mercamadrid)».
+- El día de entrega dilo como se habla: «para mañana», «para hoy» o «para el jueves». NUNCA pongas la fecha en números (nada de «10/11»).
+- Si recuerdas lo que suelen llevar, como mucho 2 o 3 productos y de pasada («¿lo de siempre, patata y tomate?»), nunca la lista entera.
+- Varía la forma de empezar y de preguntar; no repitas siempre la misma estructura. Ejemplos del tono (no los copies tal cual):
+  · «¡Buenas! ¿Qué os llevamos mañana? ¿Lo de siempre?»
+  · «Hola, ¿cómo va la semana? Dime qué necesitáis para mañana y os lo preparamos.»
+  · «Buenas, Fernando de Ferjusanz. ¿Os hace falta algo para mañana?»
+- Escribe el mensaje para el cliente entre una línea que diga exactamente [MENSAJE] y otra que diga exactamente [FIN]. Fuera de esas marcas, como mucho 1 línea de nota para la oficina.
+- Español de España. A negocios que aún no son clientes, de usted; a los habituales, de tú/vosotros. Nunca te presentes como Harvey ni como una IA. Uno o ningún emoji.
 
 NUESTRA FORMA DE VENDER
 - Un negocio que no es cliente ya tiene proveedor y no nos necesita. No competimos por precio: nos diferenciamos por el servicio, la calidad del género, la experiencia de tres generaciones, estar pendientes de ellos y ayudarles en su día a día (que no les falte nada, adaptarnos a su cocina, resolver rápido cualquier problema).
@@ -217,6 +233,7 @@ DATOS Y PRECIOS
 
 async function mensaje(u: { id: string; nombre: string }, b: any) {
   const fecha = fechaValida(b.fecha) || sumaDias(hoyMadrid(), 1); let datos = ""; let clienteId: string | null = null;
+  const cuando = cuandoEs(fecha);
   let ofertas: any[] = []; let dudasOferta: string[] = [];
   const recs = await recomendacionesVigentes(fecha);
   const notas = await sql`select texto from harvey.notas where activa order by id`;
@@ -230,7 +247,7 @@ async function mensaje(u: { id: string; nombre: string }, b: any) {
     let txtPedido = "";
     if (b.tipo === "confirmar_pedido" && b.pedido_id) {
       const ls = await sql`select coalesce(pr.nombre, l.notas, 'producto') as producto, l.cantidad_pedida, l.unidad_pedida from public.lineas_pedido l left join public.productos pr on pr.id = l.producto_id where l.pedido_id = ${String(b.pedido_id)} order by pr.nombre`;
-      txtPedido = "PEDIDO YA APUNTADO PARA " + DIAS[isoDow(fecha)] + " " + fechaES(fecha) + ":\n" + (ls as any[]).map(x => `- ${x.cantidad_pedida ?? ""} ${x.unidad_pedida ?? ""} ${x.producto}`.replace(/\s+/g, " ").trim()).join("\n");
+      txtPedido = "PEDIDO YA APUNTADO PARA " + cuando + ":\n" + (ls as any[]).map(x => `- ${x.cantidad_pedida ?? ""} ${x.unidad_pedida ?? ""} ${x.producto}`.replace(/\s+/g, " ").trim()).join("\n");
     }
     const prods = await productosHabituales(clienteId, 10, recuperar ? 365 : 120) as any[];
     if (recuperar) {
@@ -242,7 +259,7 @@ async function mensaje(u: { id: string; nombre: string }, b: any) {
     const euros = (n: number) => n.toFixed(2).replace(".", ",");
     datos = `CLIENTE: ${c.nombre}${c.localidad ? " (" + c.localidad + ")" : ""}
 MOTIVO DEL CONTACTO: ${b.motivo || "recordar pedido"}${b.detalle ? " — " + b.detalle : ""}
-${recuperar ? "OBJETIVO: recuperar al cliente (o el producto que ha dejado de pedir). Mensaje cercano, sin reproches, recordando lo que nos compraba y ofreciendo nuestra ayuda." : b.tipo === "confirmar_pedido" ? "OBJETIVO: CONFIRMAR PEDIDO.\n" + txtPedido : `OBJETIVO: preguntar con amabilidad qué necesitan para el pedido de ${DIAS[isoDow(fecha)]} ${fechaES(fecha)}.`}
+${recuperar ? "OBJETIVO: recuperar al cliente (o el producto que ha dejado de pedir). Mensaje cercano, sin reproches, recordando lo que nos compraba y ofreciendo nuestra ayuda." : b.tipo === "confirmar_pedido" ? "OBJETIVO: CONFIRMAR PEDIDO.\n" + txtPedido : `OBJETIVO: preguntar con amabilidad qué necesitan para ${cuando} (dilo así, sin fecha en números).`}
 LO QUE ${recuperar ? "COMPRABA" : "SUELE COMPRAR"} (${recuperar ? "último año" : "últimos meses"}):
 ${prods.map(p => `- ${p.nombre}: ${p.veces} veces, unos ${p.cantidad_media} ${p.unidad_venta || "kg"} cada vez`).join("\n") || "(sin historial)"}
 ${ofertas.length ? "OFERTA PARA RECUPERARLO (precios que SÍ puedes poner):\n" + ofertas.map(o => `- ${o.producto}: ${euros(o.oferta)} €/${o.unidad}`).join("\n") : ""}
