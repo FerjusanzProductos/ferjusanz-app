@@ -28,6 +28,7 @@ Dueño y quien decide: **Fernando Sanz**.
 5. La app está en pruebas: **no crear pedidos ni datos reales para probar**; usar el **Modo prácticas**.
 6. Nada de borrar datos, cambiar precios o tocar facturas, cobros o permisos sin confirmación expresa.
 7. Antes de cambiar la base de datos, enseñar el SQL y explicar qué hace.
+   Los avisos de aprobación de Supabase caducan al minuto: antes de lanzarlo, pedir a Fernando que tenga abierta esta conversación y espere el aviso (que diga «listo»).
 8. **Al terminar cada tarea**: actualizar `docs/HISTORIAL.md` (qué se hizo y por qué), `docs/PENDIENTES.md` y, si cambia la versión, `docs/ESTADO_ACTUAL.md`. Las reglas nuevas de productos o negocio van en `docs/REGLAS_INTERNAS.md`.
 9. Guardar en GitLab y copiar a GitHub. Nunca dejar trabajo sin guardar.
 
