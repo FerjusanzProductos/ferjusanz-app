@@ -79,6 +79,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - **Iceberg y aguacate** se venden por caja o por pieza: son productos distintos (94-C caja / 94 pieza; 122 caja / 122-P pieza).
 - Ejemplos: **frambuesa → bandeja**, **arándano → bandeja**, **mora → bandeja** (nunca «pieza»). Ensalada campestre → bolsa.
 - Al apuntar un precio a mano o leer una factura, usar esa unidad; si la factura viene en otra, convertir o avisar.
+- Desde el 11/11/2026 la unidad buena está en la ficha de cada producto (unidad de venta y precio por unidad). Lista aplicada: `supabase/migrations/20261111b_unidades_libro_ventas.sql`.
 - En la app: lista fija `UNIDAD_LIBRO` y función `fcUnidadLibro` de `public/index.html` (arándano/frambuesa/mora → bandeja, campestre/mezclum → bolsa; si no, la unidad de venta del producto). Unidades nuevas que diga Fernando: añadirlas ahí.
 
 ## Pedidos

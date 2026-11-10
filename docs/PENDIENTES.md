@@ -12,7 +12,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - 🟡 **Fernando decide**: corregir en la ficha de los productos la unidad de venta (ahora todos salen «kg»): Arándano (513) y Frambuesa (310) → bandeja; Ensalada Campestre (137-P) → bolsa. Mora del bosque (257) → bandeja (confirmado 11/11). Mientras tanto la app ya usa la unidad buena al leer facturas y al apuntar precios.
 
 ## Revisado el 11/11/2026 (para cuando se empiece de verdad)
-- 🔴 **Unidades de TODOS los productos**: lista confirmada por Fernando («OK» dos veces). El cambio en Supabase se lanzó pero se quedó esperando su aprobación en el aviso del móvil: volver a lanzarlo cuando esté delante. SQL: `supabase/migrations/20261111b_unidades_libro_ventas.sql` (37 productos pasan a cobrarse por caja, bandeja, bolsa, pieza, manojo o docena; también sus pedidos fijos y previstos).
+- ✔️ **Unidades de TODOS los productos**: aplicado el 11/11/2026 (Fernando lo pegó en el editor SQL de Supabase). 37 productos por caja, bandeja, bolsa, pieza, manojo o docena, cobrados por unidad; pedidos fijos y previstos también. Los previstos nuevos ya salen bien.
 - ✔️ **«Lo de siempre» con Golden**: publicado (v194) y función `memoria_golden` creada en Supabase el 11/11/2026: lo ve todo el equipo (sin precios).
 - 🟢 **Trazabilidad**: hecha y lista (lote más antiguo, reparto, confirmar todo). Empieza a funcionar sola en cuanto se registren compras con lotes.
 
