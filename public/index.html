@@ -3147,7 +3147,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v194';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v195';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -11492,7 +11492,7 @@ function vistaBuscar() {
 /* =====================  🆘 AYUDA: la persona atascada avisa a Fernando con su pantalla y sus errores  ===================== */
 const AYUDA_A = { id: 'dd57089e-662e-48cc-b888-cf52ea1eeea2', tel: '34609567354', nombre: 'Fernando' };   // quien atiende las ayudas (Fernando Sanz hijo)
 const soyAyudante = () => !!(state.user && state.user.id === AYUDA_A.id);
-const ocultarSOS = () => soyAyudante() && !/pruebas/.test(location.hostname);   // en la app de pruebas Fernando también lo ve, para probarlo
+const ocultarSOS = () => false;   // 11/11/2026: Fernando también quiere ver el botón 🆘 en la app normal
 try { addEventListener('error', e => { try { const L = window.__FJ_ERRS = (window.__FJ_ERRS || []); L.push({ t: new Date().toISOString(), m: 'Fallo de la app: ' + String(e.message || e).slice(0, 200), v: state && state.view }); if (L.length > 5) L.shift(); } catch (x) { } }); } catch (e) { }
 (function () { try { const p = new URLSearchParams(location.search); if (p.get('ayuda')) { LS.set('fj_ir_ayuda', p.get('ayuda')); history.replaceState(null, '', location.pathname); } } catch (e) { } })();
 const tituloPantalla = () => { const t = document.querySelector('header .tit'); return (t && t.textContent.trim()) || state.view || ''; };

@@ -6,8 +6,8 @@ Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial 
 ## Versiones
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
-| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v194** ✅ (publicada el 11/11/2026: TODO lo de pruebas) | GitLab `main` |
-| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v193** ✅ (mismo contenido que la normal v194) | desde ahora, GitLab `main` |
+| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v195** ✅ (publicada el 11/11/2026: TODO lo de pruebas + botón 🆘 también para Fernando) | GitLab `main` |
+| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v196** ✅ (mismo contenido que la normal v195) | desde ahora, GitLab `main` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
 La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la publicada: descargar el Worker desde la API de Cloudflare (`/workers/scripts/<nombre>/content/v2`) y buscar ese texto.
