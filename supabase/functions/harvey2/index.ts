@@ -56,7 +56,7 @@ async function productosHabituales(clienteId: string, limite = 12, dias = 120) {
            count(distinct e.fecha)::int as veces, round(avg(e.cantidad)::numeric, 1) as cantidad_media, max(e.fecha) as ultima,
            round(avg(e.precio) filter (where e.precio > 0)::numeric, 2) as precio_medio, round(sum(e.cantidad)::numeric) as cantidad_total
     from harvey.entregas e join c on e.cliente_codigo = c.codigo join public.productos p on p.codigo = e.producto_codigo, ref
-    where e.fecha > ref.r - ${dias}
+    where e.fecha > ref.r - ${dias}::int
     group by p.id, p.codigo, p.nombre, p.unidad_venta, p.unidad_precio
     order by veces desc, max(e.fecha) desc limit ${limite}`;
 }
