@@ -5355,7 +5355,7 @@ function vistaCompras() {
       const inp = h('input', { placeholder: 'Añadir producto comprado…', oninput: debounce(async () => {
         if (!inp.value.trim()) { res.replaceChildren(); return; }
         const r = await buscar('productos', inp.value, true, 10);
-        res.replaceChildren(h('div', { class: 'res' }, r.map(pr => h('button', { onclick: () => { const nl = { producto: pr, cantidad: '', unidad: pr.unidad_venta, origen: '', lote: codigoLote(pr) }; st.lineas.push(nl); pintarLineas(); cargarTarifa(nl); inp.value = ''; res.replaceChildren(); } }, pr.nombre + '  ·  ' + pr.codigo))));
+        res.replaceChildren(h('div', { class: 'res' }, r.map(pr => h('button', { onclick: () => { const nl = { producto: pr, cantidad: '', unidad: fcUnidadLibro(pr, '', ''), origen: '', lote: codigoLote(pr) }; st.lineas.push(nl); pintarLineas(); cargarTarifa(nl); inp.value = ''; res.replaceChildren(); } }, pr.nombre + '  ·  ' + pr.codigo))));
       }, 250) });
       prodBox.replaceChildren(inp, res);
     }
@@ -5406,7 +5406,7 @@ function vistaCompras() {
       }
       for (const fi of st.docs) { try { await subirDoc(fi, { fecha: st.fecha || hoy(), prov: st.prov, tipo: 'factura', importe: null, nota: null, compra: c.data.id }); } catch (e) { fallos++; } }
       LS.set(claveBorr(), null);
-      toast('Compra registrada con ' + filas.length + ' lote(s)' + (st.recOk ? ' y la factura de correo enlazada' : '') + (st.docs.length ? (fallos ? '. Algún archivo NO se subió: adjúntalo desde «Sin factura».' : ' y ' + st.docs.length + ' archivo(s) adjunto(s)') : '') + (tcOmitidos ? '. ' + tcOmitidos + ' precio(s) de compra sin cambiar: ya había uno de una factura más reciente' : ''), fallos ? 'err' : 'ok'); modo = 'lotes'; LS.set('fj_compras_modo', modo); pintarChips(); pintar(); try { contarBandeja(); } catch (e) { }
+      toast('Compra registrada con ' + filas.length + ' lote(s)' + (st.recOk ? ' y la factura de correo enlazada' : '') + (st.docs.length ? (fallos ? '. Algún archivo NO se subió: adjúntalo desde «Sin factura».' : ' y ' + st.docs.length + ' archivo(s) adjunto(s)') : '') + (tcOmitidos ? '. ' + tcOmitidos + ' precio(s) de compra sin cambiar: ya había uno de una factura más reciente' : ''), fallos ? 'err' : 'ok'); if (st.rec) { modo = 'recib'; LS.set('fj_compras_modo', modo); pintarChips(); } pintar(); try { contarBandeja(); } catch (e) { }
     }
     const pintarDocs = () => {
       const f1 = h('input', { type: 'file', accept: 'image/*', capture: 'environment', style: 'display:none', onchange: e => { st.docs.push(...Array.from(e.target.files || [])); pintarDocs(); } });
@@ -5423,7 +5423,7 @@ function vistaCompras() {
     const leerBox = h('div', {}), pendBox = h('div', {});
     const nuevaLineaFactura = (x, p, dud) => {
       let lo = codigoLote(p), n = 2; while (st.lineas.some(l => l.lote === lo)) lo = codigoLote(p) + '-' + (n++);
-      return { producto: p, cantidad: fmtN(x.cantidad), unidad: UNIDADES.includes(x.unidad) ? x.unidad : (p.unidad_venta && UNIDADES.includes(p.unidad_venta) ? p.unidad_venta : 'kg'), origen: x.origen || '', lote: lo, precio: fmtN(x.precio), fact: { texto: x.texto, norm: fcClave(x.texto) }, dudoso: !!dud };
+      return { producto: p, cantidad: fmtN(x.cantidad), unidad: fcUnidadLibro(p, x.texto, x.unidad), origen: x.origen || '', lote: lo, precio: fmtN(x.precio), fact: { texto: x.texto, norm: fcClave(x.texto), u: x.unidad || '' }, dudoso: !!dud };
     };
     function buscadorProducto(alElegir, ph) {
       const res = h('div', {});
@@ -5435,20 +5435,21 @@ function vistaCompras() {
     }
     function infoFact(l) {
       if (!l.fact) return null;
-      return [h('div', { class: 'sub' }, 'En la factura: ' + l.fact.texto),
+      return [h('div', { class: 'sub' }, 'En la factura: ' + l.fact.texto + (l.fact.u ? ' (' + l.fact.u + ')' : '')),
+        fcAvisoUnidad(l.fact.u, l.unidad) ? h('div', { class: 'sub', style: 'color:var(--ambar);font-weight:700' }, fcAvisoUnidad(l.fact.u, l.unidad)) : null,
         l.dudoso ? h('div', { class: 'sub', style: 'color:var(--ambar)' }, '⚠ Comprueba que es este producto') : null,
         l.dudoso && !l.cambiando ? h('button', { class: 'small', style: 'margin:4px 6px 4px 0;background:#16a34a', onpointerdown: e => e.preventDefault(), onclick: () => { l.dudoso = false; pintarLineas(); toast('Confirmado: ' + l.producto.nombre, 'ok'); } }, '✔ Sí, es este') : null,
         l.cambiando ? h('div', {}, (l.cand || []).length ? h('div', { class: 'sub', style: 'margin-top:4px' }, 'Parecidos a «' + l.fact.texto + '»:') : null,
-          (l.cand || []).length ? h('div', { class: 'fila', style: 'gap:6px;flex-wrap:wrap;justify-content:flex-start;margin:4px 0' }, l.cand.map(pr => h('button', { class: 'ghost small', onpointerdown: e => e.preventDefault(), onclick: () => { l.producto = pr; l.dudoso = false; l.cambiando = false; l.lote = codigoLote(pr); cargarTarifa(l); pintarLineas(); } }, pr.nombre))) : null,
-          buscadorProducto(pr => { l.producto = pr; l.dudoso = false; l.cambiando = false; l.lote = codigoLote(pr); cargarTarifa(l); pintarLineas(); }, 'Buscar el producto correcto…'),
+          (l.cand || []).length ? h('div', { class: 'fila', style: 'gap:6px;flex-wrap:wrap;justify-content:flex-start;margin:4px 0' }, l.cand.map(pr => h('button', { class: 'ghost small', onpointerdown: e => e.preventDefault(), onclick: () => { l.producto = pr; l.dudoso = false; l.cambiando = false; l.lote = codigoLote(pr); l.unidad = fcUnidadLibro(pr, l.fact.texto, l.fact.u); cargarTarifa(l); pintarLineas(); } }, pr.nombre))) : null,
+          buscadorProducto(pr => { l.producto = pr; l.dudoso = false; l.cambiando = false; l.lote = codigoLote(pr); l.unidad = fcUnidadLibro(pr, l.fact.texto, l.fact.u); cargarTarifa(l); pintarLineas(); }, 'Buscar el producto correcto…'),
           h('div', { class: 'fila', style: 'margin:4px 0' }, h('button', { class: 'ghost small', onclick: () => { l.cambiando = false; pintarLineas(); } }, 'Cancelar'), guardaBtn()))
           : h('div', { class: 'fila', style: 'margin:4px 0' }, h('button', { class: 'ghost small', onclick: async () => { if (!l.cand) { try { const pr0 = await waProductos(); l.cand = fcCandidatos(l.fact.texto, waIndice(pr0), 14).map(c => c.p).filter(y => y.id !== l.producto.id); } catch (e) { l.cand = []; } } l.cambiando = true; pintarLineas(); } }, 'Cambiar producto'), guardaBtn())];
     }
     function pintarPend() {
       pendBox.replaceChildren(...st.pend.map(q => {
         const elegir = pr => { const nl = nuevaLineaFactura(q.x, pr, false); st.lineas.push(nl); cargarTarifa(nl); st.pend.splice(st.pend.indexOf(q), 1); pintarLineas(); pintarPend(); };
-        return h('div', { class: 'card', style: 'border-left:4px solid var(--ambar)' },
-          h('div', { class: 'nombre' }, 'No reconozco: ' + q.x.texto),
+        return h('div', { class: 'card', style: 'border-left:6px solid #dc2626;background:rgba(220,38,38,.07)' },
+          h('div', { class: 'nombre', style: 'color:#dc2626' }, '🔴 No reconozco: ' + q.x.texto),
           h('div', { class: 'sub' }, fmtN(q.x.cantidad) + ' ' + (q.x.unidad || '') + ' · ' + eur(q.x.precio) + ' € = ' + eur(q.x.importe) + ' €'),
           q.cand.length ? h('div', { class: 'sub', style: 'margin-top:6px' }, 'Parecidos (toca el correcto):') : null,
           h('div', { class: 'fila', style: 'gap:6px;flex-wrap:wrap;justify-content:flex-start;margin:4px 0' }, q.cand.map(pr => h('button', { class: 'ghost small', onpointerdown: e => e.preventDefault(), onclick: () => elegir(pr) }, pr.nombre))),
@@ -5511,14 +5512,18 @@ function vistaCompras() {
       pintarBandeja(r.data.length);
       if (!r.data.length) { lista.replaceChildren(h('p', { class: 'vacio' }, '✔ No hay facturas nuevas por enlazar.')); return; }
       const provsR = await sb.from('proveedores').select('id,nombre,email').eq('activo', true).order('nombre'); const provs = provsR.data || [];
-      lista.replaceChildren(...r.data.map(f => {
+      const dias = {}; r.data.forEach(f => { const k = String(f.fecha_factura || f.recibido_en || '').slice(0, 10); (dias[k] = dias[k] || []).push(f); });
+      const dia0 = Object.keys(dias).sort().reverse()[0];
+      const todas = h('button', { class: 'guardar', style: 'width:100%;min-height:50px;margin:0 0 10px;position:static;box-shadow:none', onclick: () => registrarTodasDelDia(dias[dia0], () => { pRecibidas(); try { contarBandeja(); } catch (e) { } }) }, '✅ Registrar todas las compras del ' + fechaES(dia0) + ' (' + dias[dia0].length + ')');
+      lista.replaceChildren(todas, ...r.data.map(f => {
         const pv = f.proveedores ? uno(f.proveedores) : null;
         return h('div', { class: 'card' },
           h('div', { class: 'nombre' }, pv ? pv.nombre : (f.remitente || 'Remitente desconocido')),
           h('div', { class: 'sub' }, [f.asunto, f.nombre, f.fecha_factura ? 'Factura del ' + fechaES(String(f.fecha_factura).slice(0, 10)) : 'Llegó el ' + fechaES(String(f.recibido_en).slice(0, 10)), pv ? null : 'proveedor sin identificar'].filter(Boolean).join(' · ')),
           h('div', { class: 'fila', style: 'gap:6px;margin-top:6px;justify-content:flex-start;flex-wrap:wrap' },
             h('button', { class: 'ghost small', onclick: () => verDocumento(f.ruta) }, '👁 Ver'),
-            h('button', { class: 'small', onclick: () => { precarga = { f }; modo = 'registrar'; LS.set('fj_compras_modo', 'registrar'); pintarChips(); pintar(); } }, 'Registrar compra con esta factura'),
+            h('button', { class: 'small', onclick: () => revisarFacturaHoja(f, () => { pRecibidas(); try { contarBandeja(); } catch (e) { } }) }, '✅ Revisar y registrar aquí'),
+            h('button', { class: 'ghost small', onclick: () => { precarga = { f }; modo = 'registrar'; LS.set('fj_compras_modo', 'registrar'); pintarChips(); pintar(); } }, 'Registrar con más detalle (lotes, origen)'),
             h('button', { class: 'ghost small', onclick: () => enlazarRecibida(f, provs, pv) }, 'Enlazar con compra ya hecha'),
             h('button', { class: 'ghost small', onclick: async () => { if (!await confirmar('¿Descartar este archivo? Dejará de aparecer en la bandeja.')) return; const x = await sb.from('facturas_recibidas').update({ estado: 'descartada' }).eq('id', f.id); if (x.error) toast(msgErr(x.error), 'err'); else pRecibidas(); } }, 'Descartar')));
       }));
@@ -6928,6 +6933,7 @@ function vistaPrecios() {
       const estado = h('div', { class: 'sub', style: 'margin:6px 0' });
       /* Líneas que la app ya dejó guardadas en la base al leer las facturas de ese día (también las de «Leer las facturas de los últimos 15 días») */
       const extra = [], sinDB = []; const IGN0 = LS.get('fj_sin_ign', {});
+      let prodPorId = {}; try { (await waProductos()).forEach(z => { prodPorId[z.id] = z; }); } catch (e) { }
       try {
         let q = await sb.from('lineas_factura_leida').select('texto,cantidad,unidad,precio,producto_id,dudoso,factura_id,proveedor_id,proveedores(nombre),productos(nombre)').eq('fecha', fecha).limit(1500);
         if (!q.error) {
@@ -6938,7 +6944,7 @@ function vistaPrecios() {
             let pid = l.producto_id, nom = (uno(l.productos) || {}).nombre;
             if (!pid && l.proveedor_id) { if (!aliasProv[l.proveedor_id]) aliasProv[l.proveedor_id] = (await fcAliasCargar(l.proveedor_id)).map; const a = aliasProv[l.proveedor_id][fcClave(l.texto)]; if (a) { pid = a; if (!Object.keys(prodsMap).length) (await waProductos()).forEach(z => { prodsMap[z.id] = z; }); nom = (prodsMap[a] || {}).nombre; } }
             if (pid && !nom) { if (!Object.keys(prodsMap).length) (await waProductos()).forEach(z => { prodsMap[z.id] = z; }); nom = (prodsMap[pid] || {}).nombre; }
-            if (pid && isFinite(pr) && pr > 0) { extra.push({ pid, nombre: nom || 'Producto', precio: pr, unidad: l.unidad || 'kg', cant: Number(l.cantidad) || 0, prov: pv, dudoso: !!l.dudoso }); }
+            if (pid && isFinite(pr) && pr > 0) { extra.push({ pid, nombre: nom || 'Producto', precio: pr, unidad: fcUnidadLibro(prodPorId[pid], l.texto, l.unidad || ''), cant: Number(l.cantidad) || 0, prov: pv, dudoso: !!l.dudoso }); }
             else sinDB.push({ texto: l.texto, precio: isFinite(pr) && pr > 0 ? pr : null, unidad: l.unidad || '', cant: Number(l.cantidad) || 0, prov: pv, provId: l.proveedor_id, db: true });
           }
         }
@@ -6948,10 +6954,11 @@ function vistaPrecios() {
         const x = origen.x; let prods, indice;
         try { prods = await waProductos(); indice = waIndice(prods); } catch (e) { toast('Necesitas conexión', 'err'); return; }
         const pr = h('input', { inputmode: 'decimal', placeholder: 'Precio (€)', value: x.precio != null ? String(x.precio).replace('.', ',') : '' });
-        const un = h('select', {}, ...Array.from(new Set([x.unidad, 'kg', 'caja', 'saco', 'ud', 'pieza'].filter(Boolean))).map(u => h('option', { value: u, selected: u === (x.unidad || 'kg') }, u)));
+        const un = h('select', { onchange: () => { un.dataset.tocado = '1'; } }, ...Array.from(new Set([x.unidad].concat(UNIDADES).filter(Boolean))).map(u => h('option', { value: u, selected: u === (x.unidad || 'kg') }, u)));
         const res = h('div', {}); let cerrar;
         const elegir = async p => {
           const n = parseNum(pr.value); if (n === null || !(n > 0)) { toast('Escribe el precio de compra', 'err'); return; }
+          if (!un.dataset.tocado) un.value = fcUnidadLibro(p, x.texto, x.unidad);
           const linea = { pid: p.id, nombre: p.nombre, precio: n, unidad: un.value, cant: x.cant || 0, dudoso: false, prov: origen.prov || '' };
           if (origen.f) { const c = cacheF[origen.f.id]; c.sin.splice(c.sin.indexOf(x), 1); c.lineas.push({ pid: p.id, nombre: p.nombre, precio: n, unidad: un.value, cant: x.cant || 0, dudoso: false }); LS.set('fj_fact_leidas', cacheF); }
           else { sinDB.splice(sinDB.indexOf(x), 1); extra.push(linea); }
@@ -6969,7 +6976,7 @@ function vistaPrecios() {
         Object.values(P).forEach(o => { if (o._c0 === undefined) { o._c0 = o.cant; o._u0 = o.unidad; } o.cant = o._c0; o.unidad = o._u0; o.leidas = []; });
         extra.forEach(r => { const o = it(r.pid, r.nombre); if (o._c0 === undefined) { o._c0 = 0; o._u0 = ''; o.cant = 0; o.unidad = ''; } o.leidas.push(r); if (!o._c0) { if (!o.unidad) o.unidad = r.unidad; if (r.unidad === o.unidad) o.cant += r.cant || 0; } });
         facs.forEach(f => { const c = cacheF[f.id]; if (!c) return; const pv = (uno(f.proveedores) || {}).nombre || '';
-          c.lineas.forEach(r => { const o = it(r.pid, r.nombre); if (o._c0 === undefined) { o._c0 = 0; o._u0 = ''; o.cant = 0; o.unidad = ''; } o.leidas.push(Object.assign({ prov: pv }, r)); if (!o._c0) { if (!o.unidad) o.unidad = r.unidad; if (r.unidad === o.unidad) o.cant += r.cant || 0; } }); });
+          c.lineas.forEach(r => { r.unidad = fcUnidadLibro(prodPorId[r.pid], '', r.unidad); const o = it(r.pid, r.nombre); if (o._c0 === undefined) { o._c0 = 0; o._u0 = ''; o.cant = 0; o.unidad = ''; } o.leidas.push(Object.assign({ prov: pv }, r)); if (!o._c0) { if (!o.unidad) o.unidad = r.unidad; if (r.unidad === o.unidad) o.cant += r.cant || 0; } }); });
         return Object.values(P).sort((a, b) => a.producto.localeCompare(b.producto, 'es'));
       };
       const fuente = f => {
@@ -6982,7 +6989,8 @@ function vistaPrecios() {
       function editar(f) {
         const s = fuente(f); const ms = f.man;
         const pr = h('input', { inputmode: 'decimal', placeholder: 'Precio (€)', value: s ? String(s.precio).replace('.', ',') : '' });
-        const un = h('select', {}, ...Array.from(new Set([ms && ms.unidad, f.unidad, s && s.unidad, 'kg', 'caja', 'saco', 'ud'].filter(Boolean))).map(u => h('option', { value: u, selected: u === ((ms && ms.unidad) || f.unidad || (s && s.unidad) || 'kg') }, u)));
+        const uLib = fcUnidadLibro(prodPorId[f.pid], '', f.unidad || (s && s.unidad) || '');
+        const un = h('select', {}, ...Array.from(new Set([ms && ms.unidad, uLib].concat(UNIDADES).filter(Boolean))).map(u => h('option', { value: u, selected: u === ((ms && ms.unidad) || uLib) }, u + (u === uLib ? ' (como en ventas)' : ''))));
         const nt = h('input', { placeholder: 'Nota (proveedor, calidad…) opcional', value: (ms && ms.nota) || '' }); let cerrar;
         const guardar = async (precio, ev) => {
           if (ev) ev.target.disabled = true;
@@ -7012,7 +7020,13 @@ function vistaPrecios() {
       sinDB.filter(x => !fcEsBasura(x.texto) && x.precio != null && !IGN[fcClave(x.texto)]).forEach(x => sinRec.push(filaSin(x, { x, prov: x.prov })));
       if (sinRec.length) sinRec.unshift(h('div', { class: 'aviso-card' }, '🔴 ' + sinRec.length + ' producto(s) de las facturas sin reconocer. Toca uno para decir cuál es (la app lo recordará con ese proveedor) o ignóralo.'));
       const verFacs = facs.filter(f => f.ruta).length ? h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:6px 0' }, ...facs.filter(f => f.ruta).map(f => h('button', { class: 'small ghost', onclick: () => verDocumento(f.ruta, (f.proveedores ? (uno(f.proveedores) || {}).nombre : '') || f.nombre || 'Factura') }, '👁 ' + (((f.proveedores ? (uno(f.proveedores) || {}).nombre : '') || f.nombre || 'Factura').slice(0, 22))))) : null;
-      lista.replaceChildren(...cab, mas, estado, ...(verFacs ? [verFacs] : []), ...(kids.length ? kids : [h('p', { class: 'vacio' }, facs.length ? 'Hay ' + facs.length + ' factura(s) llegadas este día. Se están leyendo; los precios saldrán aquí.' : 'Todavía no hay compras, facturas ni precios para este día. También puedes apuntar un precio a mano con el botón de arriba.')]), ...sinRec);
+      const regBox = puedeCompras() && facs.length ? h('div', { class: 'card', style: 'border-left:6px solid #16a34a' }, h('div', { class: 'nombre' }, '🧾 Facturas por registrar (' + facs.length + ')'),
+        h('div', { class: 'sub', style: 'margin-bottom:6px' }, 'Revisa y registra cada compra aquí mismo, sin salir de esta pantalla.'),
+        h('button', { class: 'guardar', style: 'width:100%;min-height:50px;margin:0 0 8px;position:static;box-shadow:none', onclick: () => registrarTodasDelDia(facs, () => pHoy()) }, '✅ Registrar todas las compras del día'),
+        ...facs.map(f => { const c = cacheF[f.id]; const nS = c && c.sin ? c.sin.filter(x => !x.sinLeer && !fcEsBasura(x.texto) && !IGN[fcClave(x.texto)]).length : 0;
+          return h('div', { class: 'fila', style: 'padding:6px 0;border-top:1px solid var(--borde);gap:6px;flex-wrap:wrap' }, h('div', {}, h('div', { style: 'font-weight:700' }, pvDe(f)), h('div', { class: 'sub' }, c ? c.lineas.length + ' producto(s)' + (nS ? ' · ' : '') : 'sin leer todavía', nS ? h('span', { style: 'color:#dc2626;font-weight:700' }, '🔴 ' + nS + ' sin reconocer') : null)),
+            h('div', { style: 'display:flex;gap:6px' }, f.ruta ? h('button', { class: 'ghost small', onclick: () => verDocumento(f.ruta, pvDe(f)) }, '👁') : null, h('button', { class: 'small', onclick: () => revisarFacturaHoja(f, () => pHoy()) }, 'Revisar y registrar'))); })) : null;
+      lista.replaceChildren(...cab, ...(regBox ? [regBox] : []), ...sinRec, mas, estado, ...(verFacs && !regBox ? [verFacs] : []), ...(kids.length ? kids : [h('p', { class: 'vacio' }, facs.length ? 'Hay ' + facs.length + ' factura(s) llegadas este día. Se están leyendo; los precios saldrán aquí.' : 'Todavía no hay compras, facturas ni precios para este día. También puedes apuntar un precio a mano con el botón de arriba.')]));
       };
       montar();
       const pend = facs.filter(f => !cacheF[f.id] && f.ruta);
@@ -7027,7 +7041,7 @@ function vistaPrecios() {
               const file = await fcDescargar(f); const rd = await fcLeerFactura(file, () => { }); const al = f.proveedor_id ? await fcAliasCargar(f.proveedor_id) : { map: {} };
               const lineas = [], sin = [];
               rd.lineas.forEach(x => { const m = fcEmparejar(x, prods, indice, al.map); const pr = Number(x.precio);
-                if (m.producto && (m.estado === 'ok' || m.estado === 'dudoso') && isFinite(pr) && pr > 0) lineas.push({ pid: m.producto.id, nombre: m.producto.nombre, precio: pr, unidad: UNIDADES.includes(x.unidad) ? x.unidad : (m.producto.unidad_venta && UNIDADES.includes(m.producto.unidad_venta) ? m.producto.unidad_venta : 'kg'), cant: Number(x.cantidad) || 0, dudoso: m.estado === 'dudoso' });
+                if (m.producto && (m.estado === 'ok' || m.estado === 'dudoso') && isFinite(pr) && pr > 0) lineas.push({ pid: m.producto.id, nombre: m.producto.nombre, precio: pr, unidad: fcUnidadLibro(m.producto, x.texto, x.unidad), cant: Number(x.cantidad) || 0, dudoso: m.estado === 'dudoso' });
                 else sin.push({ texto: x.texto, precio: isFinite(pr) ? pr : null, unidad: x.unidad || '', cant: Number(x.cantidad) || 0, importe: Number(x.importe) || 0 }); });
               
               cacheF[f.id] = { lineas, sin, t: Date.now() }; LS.set('fj_fact_leidas', cacheF); montar(); guardarLineasLeidas(f, rd, prods, indice, al.map);
@@ -8389,6 +8403,141 @@ async function waLeerArchivo(file, progreso, porFilas) {
 const FC_UNI = { kilo: 'kg', kilos: 'kg', kg: 'kg', kgs: 'kg', kgr: 'kg', kilogramo: 'kg', kilogramos: 'kg', caja: 'caja', cajas: 'caja', cj: 'caja', saco: 'saco', sacos: 'saco', malla: 'saco', mallas: 'saco', bolsa: 'bolsa', bolsas: 'bolsa', bandeja: 'bandeja', bandejas: 'bandeja', manojo: 'manojo', manojos: 'manojo', docena: 'docena', docenas: 'docena', ud: 'pieza', uds: 'pieza', und: 'pieza', unds: 'pieza', unidad: 'pieza', unidades: 'pieza', pieza: 'pieza', piezas: 'pieza', pza: 'pieza', pzas: 'pieza', u: 'pieza', uv: null };
 const FC_RUIDO = new Set(['p', 'c', 'pc', 'ap', 'a', 'saco', 'sacos', 'caja', 'cajas', 'bolsa', 'bolsas', 'malla', 'mallas', 'bandeja', 'kg', 'kgs', 'mm', 'cal', 'calibre', 'gr', 'grs', 'banda', 'azul', 'roja', 'rojo', 'verde', 'amarilla', 'envasado', 'granel', 'cat', 'categoria', 'extra', 'x']);
 const fcNorm = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+/* Unidad del LIBRO DE VENTAS (regla de Fernando, 10/11/2026): cada producto se apunta en la unidad en que lo vendemos.
+   Primero la lista fija de abajo; luego la unidad de venta del producto; si la factura viene en otra unidad, se avisa. */
+const UNIDAD_LIBRO = [[/ar[aá]ndano|frambuesa/i, 'bandeja'], [/ensalada campestre|mezcl[uú]m/i, 'bolsa']];
+const UNI_CONTEO = ['pieza', 'bandeja', 'bolsa', 'manojo', 'docena'];
+function fcUnidadLibro(p, texto, uFac) {
+  const n = (p && p.nombre) || ''; for (const [re, u] of UNIDAD_LIBRO) if (re.test(n)) return u;
+  const uv = p && UNIDADES.includes(p.unidad_venta) ? p.unidad_venta : ''; uFac = UNIDADES.includes(uFac) ? uFac : '';
+  const conteo = !uFac || UNI_CONTEO.includes(uFac);
+  if (conteo && /(^|[\s\-.])(bandejas?|bdjas?|bj)(?=[\s\-.]|$)/i.test(texto || '')) return uv && uv !== 'kg' ? uv : 'bandeja';
+  if (conteo && uv && uv !== 'kg') return uv;
+  return uFac || uv || 'kg';
+}
+function fcAvisoUnidad(uFac, u) { return uFac && UNIDADES.includes(uFac) && uFac !== u && !(UNI_CONTEO.includes(uFac) && UNI_CONTEO.includes(u)) ? '⚠ En la factura viene por ' + uFac + ' y en ventas va por ' + u + ': revisa cantidad y precio' : ''; }
+/* Registra una compra entera de una factura llegada por correo, sin cambiar de pantalla.
+   lineas: [{ pid, codigo, cant, unidad, precio, origen, texto, alias }] → { ok, n, omitidos } o lanza error */
+async function fcRegistrarCompraDirecta(f, provId, fecha, lineas, numDoc) {
+  if (!provId) throw new Error('Falta el proveedor');
+  if (!lineas.length) throw new Error('No hay productos que registrar');
+  const pref = String(fecha || hoy()).slice(2, 10).replace(/-/g, ''); const usados = new Set();
+  const filas = lineas.map(l => { let lo = pref + '-' + (l.codigo || 'X'), k = 2; while (usados.has(lo)) lo = pref + '-' + (l.codigo || 'X') + '-' + (k++); usados.add(lo);
+    return { producto_id: l.pid, origen: l.origen || '', codigo_lote: lo, cantidad_recibida: l.cant, unidad: l.unidad, precio_compra: l.precio != null && l.precio > 0 ? l.precio : null }; });
+  const c = await sb.from('compras').insert({ proveedor_id: provId, fecha: fecha, numero_documento: numDoc || null }).select('id').single(); if (c.error) throw c.error;
+  const lo = await sb.from('lotes').insert(filas.map(x => Object.assign({ compra_id: c.data.id }, x)));
+  if (lo.error) { await sb.from('compras').delete().eq('id', c.data.id); throw lo.error; }
+  try { const alr = lineas.filter(l => l.alias && l.texto).map(l => ({ proveedor_id: provId, texto: fcClave(l.texto), producto_id: l.pid, actualizado: new Date().toISOString() })); if (alr.length) await sb.from('alias_compra').upsert(alr, { onConflict: 'proveedor_id,texto' }); } catch (e) { }
+  let omitidos = 0;
+  try { let tf = filas.filter(x => x.precio_compra != null).map(x => ({ producto_id: x.producto_id, proveedor_id: provId, precio: x.precio_compra, fecha: fecha, origen: 'app', unidad: x.unidad, updated_at: new Date().toISOString() }));
+    if (tf.length) { const ex = await sb.from('tarifas_compra').select('producto_id,fecha').eq('proveedor_id', provId).in('producto_id', tf.map(x => x.producto_id)); if (!ex.error && ex.data) { const mx = {}; ex.data.forEach(e => { mx[e.producto_id] = e.fecha; }); const n0 = tf.length; tf = tf.filter(x => !(mx[x.producto_id] && String(mx[x.producto_id]).slice(0, 10) > String(fecha).slice(0, 10))); omitidos = n0 - tf.length; } if (tf.length) await upsertTarifasCompra(tf); } } catch (e) { }
+  if (f) {
+    const di = await sb.from('documentos_compra').insert({ fecha: fecha, proveedor_id: provId, compra_id: c.data.id, tipo: 'factura', ruta: f.ruta, nombre: f.nombre }); if (di.error) throw di.error;
+    const fu = await sb.from('facturas_recibidas').update({ estado: 'enlazada', compra_id: c.data.id, proveedor_id: provId }).eq('id', f.id); if (fu.error) throw fu.error;
+  }
+  return { ok: true, n: filas.length, omitidos };
+}
+/* Líneas de una factura llegada por correo, listas para registrar: las guardadas al leerla o, si no, se lee ahora */
+async function fcLineasFactura(f, prods, indice) {
+  const P = {}; prods.forEach(p => { P[p.id] = p; });
+  const al = f.proveedor_id ? await fcAliasCargar(f.proveedor_id) : { map: {} }; const IGN = LS.get('fj_sin_ign', {});
+  let crudas = null;
+  try { const q = await sb.from('lineas_factura_leida').select('texto,cantidad,unidad,precio,producto_id,dudoso').eq('factura_id', f.id).limit(500); if (!q.error && q.data && q.data.length) crudas = q.data.map(l => ({ texto: l.texto, cantidad: Number(l.cantidad) || 0, unidad: l.unidad || '', precio: Number(l.precio), pid: l.producto_id, dudoso: !!l.dudoso })); } catch (e) { }
+  if (!crudas) {
+    const file = await fcDescargar(f); const rd = await fcLeerFactura(file, () => { }); guardarLineasLeidas(f, rd, prods, indice, al.map);
+    crudas = rd.lineas.map(x => { const m = fcEmparejar(x, prods, indice, al.map); const ok = m.producto && (m.estado === 'ok' || m.estado === 'dudoso'); return { texto: x.texto, cantidad: Number(x.cantidad) || 0, unidad: x.unidad || '', precio: Number(x.precio), pid: ok ? m.producto.id : null, dudoso: m.estado === 'dudoso', origen: x.origen || '' }; });
+  }
+  const lineas = [], sin = [];
+  crudas.forEach(x => {
+    let pid = x.pid, dud = x.dudoso; const a = al.map[fcClave(x.texto)]; if (a && P[a]) { pid = a; dud = false; }
+    const p = pid && P[pid];
+    if (p) { const u = fcUnidadLibro(p, x.texto, x.unidad); lineas.push({ pid: p.id, nombre: p.nombre, codigo: p.codigo, cant: x.cantidad, unidad: u, uFac: x.unidad, precio: isFinite(x.precio) ? x.precio : null, texto: x.texto, dudoso: dud, origen: x.origen || '', alias: !dud }); }
+    else if (!fcEsBasura(x.texto) && !IGN[fcClave(x.texto)]) sin.push({ texto: x.texto, cant: x.cantidad, unidad: x.unidad, precio: isFinite(x.precio) ? x.precio : null });
+  });
+  return { lineas, sin };
+}
+/* Revisar una factura y registrarla como compra en una hoja encima de la pantalla: al terminar se sigue en la misma pantalla */
+async function revisarFacturaHoja(f, alTerminar) {
+  const caja = h('div', {}, h('p', { class: 'vacio' }, 'Leyendo la factura…'));
+  const pvN = (uno(f.proveedores) || {}).nombre || f.nombre || 'Factura';
+  const cerrar = hoja('🧾 ' + pvN, caja);
+  let prods, indice, d, provs = [];
+  try { prods = await waProductos(); indice = waIndice(prods); d = await fcLineasFactura(f, prods, indice); const pr = await sb.from('proveedores').select('id,nombre').eq('activo', true).order('nombre'); provs = pr.data || []; }
+  catch (e) { caja.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : 'No he podido leer la factura: ' + msgErr(e))); return; }
+  const st = { prov: f.proveedor_id || '', fecha: String(f.fecha_factura || f.recibido_en || hoy()).slice(0, 10) };
+  const nuevaDe = (x, p) => ({ pid: p.id, nombre: p.nombre, codigo: p.codigo, cant: x.cant, unidad: fcUnidadLibro(p, x.texto, x.unidad), uFac: x.unidad, precio: x.precio, texto: x.texto, dudoso: false, alias: true });
+  function buscadorP(alElegir) {
+    const res = h('div', {}); const inp = h('input', { placeholder: 'Buscar el producto…', oninput: debounce(async () => { if (!inp.value.trim()) { res.replaceChildren(); return; } try { const r = await buscar('productos', inp.value, true, 8); res.replaceChildren(h('div', { class: 'res' }, r.map(p => h('button', { onclick: () => alElegir(p) }, p.nombre + ' · ' + p.codigo)))); } catch (e) { } }, 250) });
+    return h('div', {}, inp, res);
+  }
+  function pintar() {
+    const tot = d.lineas.reduce((s, l) => s + (l.precio != null ? (Number(l.cant) || 0) * l.precio : 0), 0);
+    const selP = h('select', { onchange: e => { st.prov = e.target.value; } }, [h('option', { value: '', selected: !st.prov }, 'Elige el proveedor…')].concat(provs.map(p => h('option', { value: p.id, selected: p.id === st.prov }, p.nombre))));
+    const sinC = d.sin.map(x => { const cands = fcCandidatos(x.texto, indice, 6).map(c => c.p);
+      const elegir = p => { d.sin.splice(d.sin.indexOf(x), 1); d.lineas.push(nuevaDe(x, p)); pintar(); };
+      return h('div', { class: 'card', style: 'border-left:6px solid #dc2626;background:rgba(220,38,38,.07)' },
+        h('div', { class: 'nombre', style: 'color:#dc2626' }, '🔴 No reconocido: ' + x.texto), h('div', { class: 'sub' }, num(x.cant) + ' ' + (x.unidad || '') + (x.precio != null ? ' · ' + eur(x.precio) + ' €' : '')),
+        cands.length ? h('div', { class: 'sub', style: 'margin-top:4px' }, 'Parecidos (toca el correcto):') : null,
+        h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:4px 0' }, cands.map(p => h('button', { class: 'ghost small', onclick: () => elegir(p) }, p.nombre))),
+        buscadorP(elegir),
+        h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: () => { const I = LS.get('fj_sin_ign', {}); I[fcClave(x.texto)] = 1; LS.set('fj_sin_ign', I); d.sin.splice(d.sin.indexOf(x), 1); pintar(); } }, '🙈 No es un producto'));
+    });
+    const linC = d.lineas.map((l, i) => { const av = fcAvisoUnidad(l.uFac, l.unidad);
+      return h('div', { class: 'card', style: l.dudoso ? 'border-left:6px solid #d97706' : '' },
+        h('div', { class: 'fila' }, h('div', { class: 'nombre' }, l.nombre), h('button', { class: 'peligro small', onclick: () => { d.lineas.splice(i, 1); pintar(); } }, 'Quitar')),
+        h('div', { class: 'sub' }, 'En la factura: ' + l.texto + (l.uFac ? ' (' + l.uFac + ')' : '')),
+        av ? h('div', { class: 'sub', style: 'color:var(--ambar);font-weight:700' }, av) : null,
+        l.dudoso ? h('div', { class: 'sub', style: 'color:var(--ambar)' }, '⚠ Comprueba que es este producto ', h('button', { class: 'small', style: 'background:#16a34a', onclick: () => { l.dudoso = false; l.alias = true; pintar(); } }, '✔ Sí, es este')) : null,
+        l.cambiando ? buscadorP(p => { Object.assign(l, nuevaDe({ cant: l.cant, unidad: l.uFac, precio: l.precio, texto: l.texto }, p)); l.cambiando = false; pintar(); }) : h('button', { class: 'ghost small', style: 'margin-top:4px', onclick: () => { l.cambiando = true; pintar(); } }, 'Cambiar producto'),
+        h('div', { style: 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px' },
+          h('label', { class: 'campo' }, 'Cantidad', h('input', { inputmode: 'decimal', value: String(l.cant).replace('.', ','), oninput: e => { l.cant = parseNum(e.target.value); } })),
+          h('label', { class: 'campo' }, 'Unidad', h('select', { onchange: e => { l.unidad = e.target.value; pintar(); } }, UNIDADES.map(u => h('option', { value: u, selected: u === l.unidad }, u)))),
+          h('label', { class: 'campo' }, '€ por ' + l.unidad, h('input', { inputmode: 'decimal', value: l.precio != null ? String(l.precio).replace('.', ',') : '', oninput: e => { l.precio = parseNum(e.target.value); } }))));
+    });
+    const btn = h('button', { class: 'guardar', style: 'width:100%;min-height:52px', onclick: async () => {
+      if (!st.prov) { toast('Elige el proveedor', 'err'); return; }
+      if (d.sin.length) { toast('Quedan ' + d.sin.length + ' línea(s) en rojo: di qué producto es o márcala como «No es un producto»', 'err'); return; }
+      if (!d.lineas.length) { toast('No hay productos que registrar', 'err'); return; }
+      const mal = d.lineas.find(l => !(Number(l.cant) > 0)); if (mal) { toast('Falta la cantidad de ' + mal.nombre, 'err'); return; }
+      const dud = d.lineas.filter(l => l.dudoso).length; if (dud && !await confirmar(dud + ' producto(s) están sin confirmar (en naranja). ¿Registrar igualmente?')) return;
+      btn.disabled = true;
+      try { const r = await fcRegistrarCompraDirecta(f, st.prov, st.fecha, d.lineas, String(f.nombre || '').replace(/\.[A-Za-z0-9]{2,4}$/, '').slice(0, 60)); cerrar(); toast('✅ Compra registrada: ' + r.n + ' producto(s)' + (r.omitidos ? '. ' + r.omitidos + ' precio(s) sin cambiar: ya había uno más reciente' : ''), 'ok'); if (alTerminar) alTerminar(); }
+      catch (e) { btn.disabled = false; toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); }
+    } }, '✅ Registrar compra');
+    caja.replaceChildren(
+      f.ruta ? h('button', { class: 'ghost small', style: 'margin-bottom:8px', onclick: () => verDocumento(f.ruta, pvN) }, '👁 Ver la factura') : null,
+      h('label', { class: 'campo' }, 'Proveedor', selP), h('label', { class: 'campo' }, 'Fecha de la compra', h('input', { type: 'date', value: st.fecha, onchange: e => { st.fecha = e.target.value || st.fecha; } })),
+      h('div', { class: 'sub', style: 'margin:6px 0' }, d.lineas.length + ' producto(s) · ' + eur(Math.round(tot * 100) / 100) + ' € sin IVA' + (d.sin.length ? ' · 🔴 ' + d.sin.length + ' sin reconocer' : '')),
+      ...sinC, ...linC, btn);
+  }
+  pintar();
+}
+/* Registrar de una vez todas las facturas del día que están completas (proveedor y todos los productos reconocidos) */
+async function registrarTodasDelDia(facs, alTerminar) {
+  if (!facs.length) { toast('No hay facturas por registrar este día', 'err'); return; }
+  if (!navigator.onLine) { toast('Necesitas conexión.', 'err'); return; }
+  toast('Preparando ' + facs.length + ' factura(s)…');
+  let prods, indice; try { prods = await waProductos(); indice = waIndice(prods); } catch (e) { toast(msgErr(e), 'err'); return; }
+  const listas = [], revisar = [];
+  for (const f of facs) {
+    const nom = (uno(f.proveedores) || {}).nombre || f.nombre || 'Factura';
+    if (!f.proveedor_id) { revisar.push(nom + ': falta el proveedor'); continue; }
+    try { const d = await fcLineasFactura(f, prods, indice);
+      if (!d.lineas.length) revisar.push(nom + ': no he leído productos');
+      else if (d.sin.length) revisar.push(nom + ': ' + d.sin.length + ' producto(s) en rojo');
+      else if (d.lineas.some(l => l.dudoso)) revisar.push(nom + ': ' + d.lineas.filter(l => l.dudoso).length + ' por confirmar');
+      else if (d.lineas.some(l => !(l.cant > 0))) revisar.push(nom + ': falta alguna cantidad');
+      else listas.push({ f, d, nom });
+    } catch (e) { revisar.push(nom + ': no se ha podido leer'); }
+  }
+  if (!listas.length) { hoja('Nada listo para registrar', h('div', {}, h('p', { class: 'sub' }, 'Estas facturas hay que revisarlas una a una (botón «Revisar y registrar»):'), ...revisar.map(t => h('div', { class: 'sub', style: 'padding:4px 0' }, '• ' + t)))); return; }
+  if (!await confirmar('Se van a registrar ' + listas.length + ' compra(s):\n' + listas.map(x => '• ' + x.nom + ' (' + x.d.lineas.length + ' productos)').join('\n') + (revisar.length ? '\n\nSe quedan para revisar a mano:\n' + revisar.map(t => '• ' + t).join('\n') : '') + '\n\n¿Seguir?')) return;
+  let ok = 0; const fallos = [];
+  for (const x of listas) { try { await fcRegistrarCompraDirecta(x.f, x.f.proveedor_id, String(x.f.fecha_factura || x.f.recibido_en || hoy()).slice(0, 10), x.d.lineas, String(x.f.nombre || '').replace(/\.[A-Za-z0-9]{2,4}$/, '').slice(0, 60)); ok++; } catch (e) { fallos.push(x.nom + ': ' + msgErr(e)); } }
+  toast('✅ ' + ok + ' compra(s) registrada(s)' + (fallos.length ? ' · ' + fallos.length + ' con error' : '') + (revisar.length ? ' · ' + revisar.length + ' para revisar a mano' : ''), fallos.length ? 'err' : 'ok');
+  if (fallos.length) hoja('Algunas no se han registrado', h('div', {}, ...fallos.map(t => h('div', { class: 'sub', style: 'padding:4px 0' }, '• ' + t))));
+  if (alTerminar) alTerminar();
+}
 function fcEsNum(t) { return /^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(t) || /^-?\d+(,\d+)?$/.test(t) || /^-?\d+\.\d{1,3}$/.test(t); }
 function fcNum(t) {
   t = String(t); if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(t)) t = t.replace(/\./g, '').replace(',', '.'); else t = t.replace(',', '.');
@@ -8437,11 +8586,13 @@ function fcLinea(fila, descPrevia) {
   while (dt.length > 2 && /^\d{1,3}$/.test(dt[0]) && /^(bt|bto|btos|bulto|bultos|cj|caja|cajas|sc|saco|sacos|bol|malla|ud|uds)$/i.test(dt[1])) dt = dt.slice(2);
   { const ii = dt.findIndex((w, i) => i > 0 && /^[Il|]$/.test(w)); if (ii > 0) dt = dt.slice(0, ii); }
   { const ic = dt.findIndex((w, i) => i > 0 && (/^(espa[nñf]a|espafia|spain|italia|francia|portugal|marruecos|holanda|peru|chile|egipto|turquia|grecia|alemania|belgica|argentina|ecuador|colombia|sudafrica|israel|mexico|brasil)$/i.test(w) || (/^\d{1,2}$/.test(w) && !/^(kg|kgs|kilo|kilos|g|gr|grs|mm|cm|l|lt|ud|uds|x|cal|calibre)$/i.test(dt[i + 1] || '') && !/^(cal|calibre|x|n|no|nº|n°|num|saco|sacos|caja|cajas|bolsa|bolsas|malla|mallas|bandeja|cj|sc|bto)$/i.test(dt[i - 1] || '')))); if (ic > 0) dt = dt.slice(0, ic); }
+  while (dt.length > 2 && /^\d{5,}$/.test(dt[dt.length - 1])) dt.pop();   // código de artículo al final (p. ej. «856150»)
   while (dt.length > 2 && /^\d{1,4}$/.test(dt[dt.length - 1]) && !/^(cal|calibre|x|n|no|nº|n°|num)$/i.test(dt[dt.length - 2])) dt.pop();   // «Uds» al final de la descripción
   while (dt.length > 2 && fcNorm(dt[dt.length - 1]) in FC_UNI && FC_UNI[fcNorm(dt[dt.length - 1])] && !/^\d+([.,]\d+)?$/.test(dt[dt.length - 2])) dt.pop();
   if (dt.length >= 3 && /^[A-Z]{1,2}$/.test(dt[0]) && !/^(EL|LA|LO|DE|UN|AL|Y|A|O|E)$/.test(dt[0]) && /^[A-ZÁÉÍÓÚÑa-záéíóúñ]{4,}$/.test(dt[1])) dt = dt.slice(1);   // código de artículo
   let desc = dt.join(' ').trim(); if ((desc.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/g) || []).length < 3) { if (descPrevia) desc = descPrevia; else return null; }
   if (/^(total|bases?|cuota|iva|suma|importe|subtotal|base imponible)\b/i.test(desc)) return null;
+  if ((!unidad || unidad === 'pieza') && /(^|[\s\-.])(bandejas?|bdjas?|bj)(?=[\s\-.]|$)/i.test(desc)) unidad = 'bandeja';   // «ARANDANO BANDEJA», «BJ-FRAMBUESA»
   let origen = ''; for (let i = corte; i < tri.a.i; i++) { const w = tk[i]; if (/^[A-ZÁÉÍÓÚÑ]{4,}$/.test(w) && !(fcNorm(w) in FC_UNI)) { origen = w.charAt(0) + w.slice(1).toLowerCase(); break; } }
   return { texto: desc, cantidad: tri.a.v, unidad, precio: tri.b.v, importe: tri.c.v, origen, calculado };
 }
