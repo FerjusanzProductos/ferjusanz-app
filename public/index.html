@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1b7f3b">
-<script>(function(){try{var t=localStorage.getItem("fj_tema")||"auto";var o=t==="oscuro"||(t==="auto"&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.setAttribute("data-tema",o?"oscuro":"claro")}catch(e){};try{var z=parseFloat(localStorage.getItem("fj_zoom"));if(z>1&&z<=1.6&&!/[?&](a|c)=/.test(location.search))document.documentElement.style.zoom=z}catch(e){}})()</script>
+<script>(function(){try{var t=localStorage.getItem("fj_tema")||"auto";var o=t==="oscuro"||(t==="auto"&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.setAttribute("data-tema",o?"oscuro":"claro")}catch(e){};try{var B=1,cw=document.documentElement.clientWidth,sw=Math.min(screen.width,screen.height);if(window.matchMedia&&matchMedia("(pointer:coarse)").matches&&sw<700&&cw>sw*1.3)B=cw/sw;window.__FJ_BASEZ=B;var z=parseFloat(localStorage.getItem("fj_zoom"));if(!(z>1&&z<=1.6)||/[?&](a|c)=/.test(location.search))z=1;if(B*z!==1)document.documentElement.style.zoom=String(B*z)}catch(e){}})()</script>
 <title>Ferjusanz</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
@@ -2556,7 +2556,13 @@ function pubCajaContacto(tok, nombreCliente) {
       h('div', { class: 'sub', style: 'margin-top:6px' }, 'O déjanos tu móvil y tu correo y te mandamos tu página con todos tus albaranes:'), movil, mail, quien,
       h('label', { style: 'display:flex;gap:8px;align-items:center;margin-top:8px;font-size:14px' }, acepto, 'Acepto que me enviéis mis albaranes por WhatsApp o correo'), bOk);
   };
-  pinta(); return caja;
+  /* Si ya tenemos su móvil, no se le pide otra vez: solo el botón para guardarlo en su WhatsApp */
+  caja.style.display = 'none';
+  (async () => { let ya = false; try { const r = await sb.rpc('portal_contacto_estado', { p_token: tok }); ya = !!(r.data && r.data.ok && r.data.movil); } catch (e) { }
+    if (ya && !hecho) caja.replaceChildren(h('b', {}, '📲 Para no perder tus albaranes'), h('div', { class: 'sub' }, 'Guarda este enlace en tu WhatsApp y ábrelo cuando quieras:'), bWa);
+    else pinta();
+    caja.style.display = 'block'; })();
+  return caja;
 }
 async function vistaAlbaranPublico(tok) {
   window.__PUBLICA = true; aplicarTema();
@@ -2565,7 +2571,7 @@ async function vistaAlbaranPublico(tok) {
   try {
     const r = await sb.rpc('albaran_publico', { p_token: tok }); if (r.error) throw r.error; const x = r.data;
     if (!x || !x.ok) { caja.replaceChildren(pubCabecera(), h('h2', {}, 'No encontramos este albarán'), h('p', {}, 'El enlace no es válido, está incompleto (si lo copiaste, falta alguna letra al final) o el albarán todavía no está cerrado. Pide a ' + EMPRESA.nombre + ' que te lo vuelva a enviar: ' + EMPRESA.tels), h('p', { class: 'sub' }, 'Código leído: ' + tok.slice(0, 6) + '…' + tok.slice(-4))); return; }
-    caja.replaceChildren(pubCabecera(), pubCajaContacto(tok, nombreCli(x.cliente || {})), ...pubAlbaranNodos(x), h('p', { class: 'sub', style: 'margin-top:12px' }, 'Guarda este mensaje o este enlace: podrás abrir el albarán siempre que lo necesites.'), pubPie());
+    caja.replaceChildren(pubCabecera(), ...pubAlbaranNodos(x), pubCajaContacto(tok, nombreCli(x.cliente || {})), h('p', { class: 'sub', style: 'margin-top:12px' }, 'Guarda este mensaje o este enlace: podrás abrir el albarán siempre que lo necesites.'), pubPie());
   } catch (e) { caja.replaceChildren(pubCabecera(), h('h2', {}, 'No se pudo abrir'), h('p', {}, isNetErr(e) ? 'Comprueba tu conexión a internet y vuelve a abrir el enlace.' : msgErr(e))); }
 }
 /* Página del cliente: todos SUS albaranes y nada más. Se guarda una vez (marcador / pantalla de inicio) y se actualiza sola */
@@ -2598,14 +2604,13 @@ async function vistaPortalCliente(tok) {
       const sinPrecio = als.filter(a => !a._T.hay).length;
       const filas = als.map(a => h('button', { class: 'pub-fila', onclick: () => detalle(a) }, h('div', { style: 'text-align:left;min-width:0;flex:1' }, h('div', { class: 'nombre' }, fechaES(a.fecha) + ' · ' + a.serie + ' ' + String(a.numero).padStart(7, '0')), h('div', { class: 'sub' }, (a.lineas || []).length + ' productos' + (a.entregado_at ? ' · 📦 ' + (a.entrega_nota && a.entrega_nota !== 'En mano' ? a.entrega_nota : 'entregado') : ' · pendiente de entrega') + (a.firma_nombre ? ' · firmado por ' + a.firma_nombre : (a.firma_at ? ' · firmado' : '')))), h('b', {}, a._T.hay ? eur(a._T.total) + ' €' : 'sin precio')));
       caja.replaceChildren(...[pubCabecera(), h('h2', { style: 'margin:14px 0 2px' }, 'Tus albaranes'), h('div', { class: 'sub' }, nombreCli(cli) + (cli.localidad ? ' · ' + cli.localidad : '')),
-        pubCajaContacto(tok, nombreCli(cli)),
         h('p', { class: 'sub', style: 'margin-top:8px' }, 'Cada vez que te entregamos mercancía, el albarán aparece aquí solo. Esta página es privada: solo ves los tuyos. Guárdala en favoritos y no hace falta que nadie te mande nada.'),
         h('div', { class: 'pub-meses' }, meses.filter(k => !LIM || rango(k)[1] >= LIM).map(k => h('button', { class: 'chip' + (k === mes ? ' on' : ''), onclick: () => { mes = k; lista(); } }, MES(k).replace(/ \d{4}$/, '') + (k.slice(0, 4) !== String(hoyD.getFullYear()) ? ' ' + k.slice(2, 4) : '')))),
         h('div', { class: 'pub-mes' }, h('span', {}, MES(mes).replace(/^./, c => c.toUpperCase()) + ' · ' + als.length + ' albaranes'), h('b', {}, eur(tot.total) + ' €')),
         als.length ? h('div', { class: 'sub' }, 'Base ' + eur(tot.base) + ' € · IVA ' + eur(tot.iva + tot.re) + ' €' + (sinPrecio ? ' · ' + sinPrecio + ' albarán(es) aún sin precio' : '')) : null,
         ...(filas.length ? filas : [h('p', { class: 'vacio' }, 'No hay albaranes en ' + MES(mes) + '.')]),
         als.length ? h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;margin-top:14px' }, h('button', { class: 'guardar', style: 'flex:1;min-height:50px', onclick: () => bajar(pdfMes(als, cli, tot), 'Albaranes-' + mes + '.pdf', 'application/pdf') }, '📄 Resumen del mes (PDF)'), h('button', { class: 'ghost', style: 'flex:1;min-height:50px', onclick: () => bajar(csvDe(als, cli), 'Albaranes-' + mes + '.csv', 'text/csv;charset=utf-8') }, '📊 Excel (CSV)')) : null,
-        pubPie()].filter(Boolean));
+        pubCajaContacto(tok, nombreCli(cli)), pubPie()].filter(Boolean));
     } catch (e) { caja.replaceChildren(pubCabecera(), h('h2', {}, 'No se pudo abrir'), h('p', {}, isNetErr(e) ? 'Comprueba tu conexión a internet y vuelve a abrir el enlace.' : msgErr(e))); }
   };
   const detalle = a => { caja.replaceChildren(pubCabecera(), h('button', { class: 'ghost small', style: 'margin-top:10px', onclick: lista }, '← Todos mis albaranes'),
@@ -3086,7 +3091,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v155';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v157';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -6328,6 +6333,31 @@ async function sincronizarEntregas() {
       colaE.set(colaE.get().filter(x => x.pedido !== it.pedido));
     }
   } finally { sincE = false; }
+  correoAlbaranes();
+}
+/* ✉️ Tras guardar entregas, el servidor manda el albarán por correo a los clientes que tienen correo (desde el Gmail de la empresa). Una vez por albarán. */
+let ultCorreoAlb = 0;
+function correoAlbaranes(forzar) {
+  if (PRACTICA || !navigator.onLine || !state.user) return; if (!forzar && Date.now() - ultCorreoAlb < 60000) return; ultCorreoAlb = Date.now();
+  try { sb.functions.invoke('albaranes-correo', { body: { accion: 'pendientes' } }).catch(() => { }); } catch (e) { }
+}
+/* 💬 Después de entregar: un toque para mandar el albarán por WhatsApp al móvil del cliente (sale del WhatsApp que tenga el móvil del repartidor) */
+async function ofrecerWhatsAppAlbaran(ids) {
+  if (PRACTICA || !navigator.onLine) return;
+  try {
+    const r = await sb.from('pedidos').select('id,cliente_id,clientes(nombre,nombre_comercial,telefono)').in('id', ids); if (r.error || !r.data) return;
+    const filas = [];
+    for (const p of r.data) { const c = uno(p.clientes) || {}; const m = movil9(c.telefono); if (!/^[67]\d{8}$/.test(m)) continue;
+      let tk = null; try { const e = await sb.rpc('crear_enlace_albaran', { p_pedido: p.id }); if (!e.error) tk = e.data && e.data.token; } catch (e) { } if (!tk) continue;
+      filas.push({ p, c, m, u: albUrl(tk) }); }
+    if (!filas.length) return;
+    let cerrar; cerrar = hoja('💬 Mandar el albarán por WhatsApp', h('div', {}, h('p', { class: 'sub' }, 'Toca y dale a enviar. El cliente lo tiene al momento en su WhatsApp y no lo pierde.'),
+      ...filas.map(x => h('button', { class: 'guardar', style: 'width:100%;min-height:58px;margin-top:8px;font-size:17px', onclick: () => {
+        const txt = 'Hola, somos ' + EMPRESA.nombre + '. Os acabamos de entregar el pedido. Aquí tenéis el albarán (se queda guardado en este chat): ' + x.u;
+        try { Promise.resolve(sb.rpc('registrar_envio_albaran', { p_pedido: x.p.id, p_destino: 'WhatsApp ' + x.m + ' (repartidor)' })).catch(() => { }); } catch (e) { }
+        window.open('https://wa.me/34' + x.m + '?text=' + encodeURIComponent(txt), '_blank'); } }, '💬 ' + nombreCli(x.c) + ' · ' + x.m.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3'))),
+      h('button', { class: 'ghost', style: 'width:100%;min-height:48px;margin-top:10px', onclick: () => cerrar() }, 'Ahora no')));
+  } catch (e) { }
 }
 async function marcarEntregado(pedidoId, nota) {
   if (!colaE.get().some(x => x.pedido === pedidoId)) colaE.set(colaE.get().concat([{ pedido: pedidoId, at: new Date().toISOString(), nota: nota || null }]));
@@ -6339,7 +6369,7 @@ const MODOS_ENTREGA = [['En mano', '🤝 Entregado en mano', 'Había alguien y l
 function elegirEntrega(ids, alTerminar) {
   let c; const lista = Array.isArray(ids) ? ids : [ids];
   c = hoja('¿Cómo se ha entregado?', h('div', {}, h('p', { class: 'sub' }, 'Queda anotado. Aunque no haya nadie ni firma, el cliente verá en su página que el albarán ya está entregado y cómo.'),
-    ...MODOS_ENTREGA.map(([nota, tit, expl]) => h('button', { class: nota === 'En mano' ? 'guardar' : 'ghost', style: 'width:100%;min-height:60px;margin-top:8px;text-align:left', onclick: async () => { c(); for (const id of lista) await marcarEntregado(id, nota); if (alTerminar) alTerminar(nota); } }, h('div', { style: 'font-size:17px;font-weight:800' }, tit), h('div', { class: 'sub', style: 'font-weight:400' }, expl)))));
+    ...MODOS_ENTREGA.map(([nota, tit, expl]) => h('button', { class: nota === 'En mano' ? 'guardar' : 'ghost', style: 'width:100%;min-height:60px;margin-top:8px;text-align:left', onclick: async () => { c(); for (const id of lista) await marcarEntregado(id, nota); if (alTerminar) alTerminar(nota); ofrecerWhatsAppAlbaran(lista); } }, h('div', { style: 'font-size:17px;font-weight:800' }, tit), h('div', { class: 'sub', style: 'font-weight:400' }, expl)))));
 }
 function vistaEntregas() {
   state.view = 'entregas';
@@ -11247,7 +11277,8 @@ async function refrescaPortalPend() {
 /* 🔍 Letra más grande: solo AMPLÍA (nunca aleja). Cada toque agranda un poco; después del máximo vuelve al tamaño normal. Se guarda en cada móvil. */
 const ZOOMS = [1, 1.15, 1.3, 1.5];
 const fjZoom = () => { try { const z = parseFloat(localStorage.getItem('fj_zoom')); return ZOOMS.includes(z) ? z : 1; } catch (e) { return 1; } };
-function aplicaZoom() { const z = fjZoom(); document.documentElement.style.zoom = z > 1 ? String(z) : ''; }
+/* Si el móvil abre la app en «modo ordenador» (980 px de ancho, todo se ve lejísimos), se corrige sola: __FJ_BASEZ la devuelve al tamaño de móvil */
+function aplicaZoom() { const z = fjZoom() * (window.__FJ_BASEZ || 1); document.documentElement.style.zoom = z !== 1 ? String(z) : ''; }
 function cambiaZoom() { const z = fjZoom(); const n = ZOOMS[(ZOOMS.indexOf(z) + 1) % ZOOMS.length]; try { localStorage.setItem('fj_zoom', String(n)); } catch (e) { }
   aplicaZoom(); pintaFlot(); toast(n === 1 ? 'Letra normal' : 'Letra ' + (n === 1.15 ? 'grande' : n === 1.3 ? 'muy grande' : 'enorme') + ' (' + Math.round(n * 100) + '%). Toca otra vez para más.', 'ok'); }
 function pintaFlot() {
