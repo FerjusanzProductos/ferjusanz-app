@@ -3147,7 +3147,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v195';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v197';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -4752,6 +4752,8 @@ function panelHoy() {
   const cuenta = p => Promise.resolve(p).then(r => (r && !r.error) ? (typeof r.count === 'number' ? r.count : (r.data || []).length) : null).catch(() => null);
   (async () => {
     if (!navigator.onLine) { caja.replaceChildren(caja.firstChild, h('div', { class: 'sub' }, 'Sin conexión: cuando vuelva, aquí verás lo pendiente de hoy.')); return; }
+    const verSeg = ['admin', 'oficina', 'comercial', 'secretaria', 'direccion'].includes(state.perfil && state.perfil.rol);
+    const segP = verSeg ? sb.from('seguimiento_diario').select('datos').eq('fecha', hoyF).maybeSingle().then(r => r.error ? null : r.data).catch(() => null) : null;
     const [ph, prevMan, inc, deu, cont, fr, ayu] = await Promise.all([
       sb.from('pedidos').select('id,estado,repartidor_id,entregas(entregado_at)').eq('fecha_entrega', hoyF).neq('estado', 'anulado').neq('archivado', true).limit(500).then(r => r.error ? null : r.data).catch(() => null),
       cuenta(sb.from('pedidos').select('id', { count: 'exact', head: true }).eq('fecha_entrega', man).eq('estado', 'previsto').neq('archivado', true)),
@@ -4761,6 +4763,8 @@ function panelHoy() {
       compras ? cuenta(sb.from('facturas_recibidas').select('id', { count: 'exact', head: true }).eq('estado', 'nueva')) : null,
       soyAyudante() ? cuenta(sb.from('ayudas').select('id', { count: 'exact', head: true }).eq('estado', 'nueva')) : null]);
     const L = [];
+    const seg = segP ? await segP : null;
+    if (seg && seg.datos) { const d = seg.datos, n = (d.llamar || []).length + (d.perdidos || []).length + (d.cobros || []).length; if (n) L.push(linea('📞', 'Seguimiento comercial de hoy: ' + n + ' mensaje' + (n === 1 ? '' : 's') + ' preparado' + (n === 1 ? '' : 's'), n, 'ambar', () => go('seguimiento'))); }
     if (ayu) L.push(linea('🆘', ayu + ' petici' + (ayu === 1 ? 'ón' : 'ones') + ' de ayuda sin atender', ayu, 'rojo', () => go('ayudas')));
     if (ph) {
       const act = ph.filter(p => p.estado !== 'previsto'), prev = ph.filter(p => p.estado === 'previsto');
@@ -4781,6 +4785,48 @@ function panelHoy() {
     caja.replaceChildren(caja.firstChild, ...(L.length ? L : [h('div', { class: 'ph-ok' }, '✔ Todo al día. ¡Buen trabajo!')]));
   })();
   return caja;
+}
+
+/* 📞 Seguimiento comercial de hoy: lo prepara Supabase cada mañana (generar_seguimiento, 6:30). Solo LEE.
+   Cada fila lleva un WhatsApp ya escrito y firmado «Fernando Sanz»; se abre WhatsApp y la persona decide si lo envía. */
+const FIRMA_SEG = 'Fernando Sanz';
+function waSeg(tel, texto) { let t = String(tel || '').replace(/\D/g, ''); if (t.length === 9) t = '34' + t; return 'https://wa.me/' + (t.length >= 11 ? t : '') + '?text=' + encodeURIComponent(texto); }
+function vistaSeguimiento() {
+  state.view = 'seguimiento';
+  const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
+  $app.replaceChildren(shell('Seguimiento comercial', cont, { volver: volverIni })); renderBanner();
+  const fila = (tit, sub, tel, texto, color) => {
+    const ta = h('textarea', { rows: 4, style: 'width:100%;font-size:15px;margin-top:6px' }, texto);
+    return h('div', { class: 'card', style: 'border-left:6px solid ' + color }, h('div', { class: 'nombre' }, tit), sub ? h('div', { class: 'sub' }, sub) : null, ta,
+      h('div', { style: 'display:flex;gap:6px;margin-top:6px;flex-wrap:wrap' },
+        h('button', { class: 'small', style: 'background:#16a34a', onclick: () => window.open(waSeg(tel, ta.value), '_blank') }, tel ? '🟢 WhatsApp' : '🟢 WhatsApp (elige el chat)'),
+        h('button', { class: 'ghost small', onclick: async () => { try { await navigator.clipboard.writeText(ta.value); toast('Mensaje copiado', 'ok'); } catch (e) { } } }, '📋 Copiar')));
+  };
+  async function cargar() {
+    try {
+      const r = await sb.from('seguimiento_diario').select('fecha,datos,creado').order('fecha', { ascending: false }).limit(1).maybeSingle();
+      if (r.error) throw r.error;
+      const kids = [];
+      const regen = ['admin', 'oficina'].includes(state.perfil && state.perfil.rol) ? h('button', { class: 'ghost small', style: 'margin:6px 0', onclick: async e => { e.target.disabled = true; const x = await sb.rpc('generar_seguimiento'); if (x.error) toast(msgErr(x.error), 'err'); else { toast('Seguimiento actualizado', 'ok'); cargar(); } e.target.disabled = false; } }, '↻ Volver a preparar ahora') : null;
+      if (!r.data) { cont.replaceChildren(h('div', { class: 'aviso-card' }, 'Todavía no hay seguimiento preparado. Se prepara solo cada mañana a las 6:30.'), regen || ''); return; }
+      const d = r.data.datos || {};
+      kids.push(h('div', { class: 'aviso-card' }, (r.data.fecha === hoy() ? 'Preparado hoy' : 'Preparado el ' + fechaES(r.data.fecha)) + ' a las ' + fmtHora(r.data.creado) + '. Revisa cada mensaje, cámbialo si quieres y pulsa WhatsApp. Nada se envía solo.'), regen || '');
+      if (d.previstos_hoy || d.previstos_manana) kids.push(h('div', { class: 'card tap fila', onclick: () => go('calendario', { dia: hoy() }) }, h('div', {}, h('div', { class: 'nombre' }, '📅 Previstos sin confirmar'), h('div', { class: 'sub' }, 'Hoy: ' + (d.previstos_hoy || 0) + ' · Mañana: ' + (d.previstos_manana || 0))), h('b', {}, '›')));
+      const ll = d.llamar || [], pe = d.perdidos || [], co = d.cobros || [];
+      if (pe.length) { kids.push(h('div', { class: 'letra' }, '😟 Clientes que han dejado de pedir'));
+        pe.forEach(x => kids.push(fila(x.nombre, 'Última compra: ' + (x.ultimo ? fechaES(x.ultimo) : '—') + (x.productos && x.productos.length ? ' · solía llevar ' + x.productos.join(', ') : ''), x.telefono,
+          'Hola, soy ' + FIRMA_SEG + ', de Ferjusanz. Hace unas semanas que no os servimos y quería saber si todo va bien.' + (x.productos && x.productos.length ? ' Esta semana tenemos muy buen género de ' + x.productos.slice(0, 2).join(' y ').toLowerCase() + '.' : '') + ' ¿Os preparo algo para mañana? Un saludo, ' + FIRMA_SEG, '#dc2626'))); }
+      if (ll.length) { kids.push(h('div', { class: 'letra' }, '📞 A quién llamar o escribir hoy'));
+        ll.forEach(x => kids.push(fila(x.nombre, [x.tipo, x.localidad, x.motivo, x.notas].filter(Boolean).join(' · '), x.telefono,
+          'Hola, soy ' + FIRMA_SEG + ', de Ferjusanz, mayoristas de fruta, verdura, patatas y huevos en Mercamadrid. Servimos a restaurantes, colegios y residencias de la zona con reparto diario. ¿Os puedo pasar la lista de precios de esta semana? Un saludo, ' + FIRMA_SEG, '#2563eb'))); }
+      if (co.length) { kids.push(h('div', { class: 'letra' }, '💰 Cobros pendientes (más de 30 días)'));
+        co.forEach(x => kids.push(fila(x.nombre + ' · ' + eur(x.pendiente) + ' €', 'Desde el ' + fechaES(x.desde), x.telefono,
+          'Hola, soy ' + FIRMA_SEG + ', de Ferjusanz. Os escribo por un importe pendiente de ' + eur(x.pendiente) + ' € desde el ' + fechaES(x.desde) + '. ¿Cuándo os viene bien que lo arreglemos? Muchas gracias, ' + FIRMA_SEG, '#b45309'))); }
+      if (!ll.length && !pe.length && !co.length) kids.push(h('p', { class: 'vacio' }, '✔ Hoy no hay nadie pendiente de seguimiento.'));
+      cont.replaceChildren(...kids);
+    } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : /seguimiento_diario|schema cache|does not exist/i.test((e && e.message) || '') ? 'Falta crear en Supabase el seguimiento diario (20261111c_seguimiento_diario.sql).' : msgErr(e))); }
+  }
+  cargar();
 }
 
 /* =====================  MÁS (menú)  ===================== */
@@ -11765,7 +11811,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { tarifas: vistaTarifas, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { seguimiento: vistaSeguimiento, tarifas: vistaTarifas, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
 }
