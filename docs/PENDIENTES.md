@@ -17,7 +17,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - 🟢 **Trazabilidad**: hecha y lista (lote más antiguo, reparto, confirmar todo). Empieza a funcionar sola en cuanto se registren compras con lotes.
 
 ## En marcha (11/11/2026)
-- 🔴 **Seguimiento comercial dentro de la app**: hecho en PRUEBAS (v197, rama `seguimiento-app`). Falta crear en Supabase la tabla, la función y el programador (`supabase/migrations/20261111c_seguimiento_diario.sql`) con Fernando delante («listo») o pegándolo él en el editor SQL. Luego probar, «Autorizo publicar» y **quitar la tarea programada de Claude** (`trig_016V26ajMMcPLQ3Zvg1C2dw2`) para no duplicar.
+- ⏸ **Seguimiento comercial dentro de la app**: hecho en PRUEBAS (v197, rama `seguimiento-app`). **En espera hasta que se empiece a usar la app de verdad** (Fernando, 11/11: hasta entonces los previstos son de prueba y no hay cobros). La tarea programada de Claude (`trig_016V26ajMMcPLQ3Zvg1C2dw2`) está PAUSADA por lo mismo. Falta crear en Supabase la tabla, la función y el programador (`supabase/migrations/20261111c_seguimiento_diario.sql`) con Fernando delante («listo») o pegándolo él en el editor SQL. Luego probar, «Autorizo publicar» y **quitar la tarea programada de Claude** (`trig_016V26ajMMcPLQ3Zvg1C2dw2`) para no duplicar.
 - 🟡 **Web**: dejar al proveedor actual (se le paga cada mes y el dominio cada año; el dominio es nuestro). Pedirle código de transferencia, accesos, copia completa y que NO borre la web. Ojo con los correos del dominio. Luego la llevamos nosotros con Claude.
 - 🟡 **Llamada con Jorge (contable)**: preguntas preparadas en la sesión del 11/11.
 
@@ -32,7 +32,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 ## Mejoras pedidas (de `docs/PROMPTS.md`; recomendado empezar por la 3 y la 6)
 1. 🟡 Revisión de diseño y usabilidad en el móvil (lista priorizada, sin cambiar nada hasta elegir).
 2. ⚪ Agente buscador de clientes nuevos con cocina propia (Madrid norte y noroeste, Segovia), sin duplicados.
-3. ✔️ **Agente de seguimiento diario**: tarea programada cada día a las 7:03 (desde el 11/11/2026). Revisar con Fernando tras unos días si el resumen le sirve.
+3. ⏸ **Agente de seguimiento diario**: preparado (tarea de Claude pausada y versión dentro de la app en pruebas). Se activa el día que se empiece con la app.
 4. ⚪ Agente de ofertas semanales por tipo de cliente.
 5. 🟡 Agente de cobros: deudas por urgencia y recordatorios.
 6. 🔴 **Agente de compras y facturas**: precios raros, productos mal apuntados, margen mínimo y comprobación con las facturas de Golden.
