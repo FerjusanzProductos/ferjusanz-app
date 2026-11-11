@@ -856,32 +856,55 @@ async function decidirVarios(ids, alTerminar) {
 const NOMBRE_DIA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 const diaSem = iso => NOMBRE_DIA[new Date(iso + 'T12:00:00').getDay()];
 const habDePedido = p => { const m = /^fijo:([^:]+):/.exec((p && p.hash_origen) || ''); return m ? m[1] : null; };
+const sePuedeMover = p => p && (p.estado === 'previsto' || p.estado === 'pendiente');   // aún no se ha empezado a preparar
+async function pedidosVivosCliente(clienteId, fechas, sinId) {   // pedidos del cliente esos días (no anulados ni archivados)
+  if (!fechas.length) return [];
+  const r = await sb.from('pedidos').select('id,fecha_entrega,archivado').eq('cliente_id', clienteId).in('fecha_entrega', fechas).neq('estado', 'anulado');
+  if (r.error) throw r.error; return (r.data || []).filter(x => x.id !== sinId && x.archivado !== true);
+}
 async function moverPedidoFecha(p, a, modo) {   // cambia la fecha; con modo 'siempre' también el día de su pedido fijo y sus previstos
   const de = p.fecha_entrega; const hid = habDePedido(p);
-  const u = await sb.from('pedidos').update({ fecha_entrega: a }).eq('id', p.id); if (u.error) throw u.error; p.fecha_entrega = a;
+  /* en el día nuevo va al final del reparto (el número del día antiguo no vale) */
+  const u = await sb.from('pedidos').update({ fecha_entrega: a, orden_reparto: null }).eq('id', p.id); if (u.error) throw u.error; p.fecha_entrega = a; p.orden_reparto = null;
   if (modo !== 'siempre' || !hid) return 'Pasado al ' + diaSem(a) + ' ' + fechaES(a);
   const dDe = new Date(de + 'T12:00:00').getDay(), dA = new Date(a + 'T12:00:00').getDay();
+  if (dDe === dA) return 'Pasado al ' + diaSem(a) + ' ' + fechaES(a);
   const hb = await sb.from('pedidos_habituales').select('id,dias_semana').eq('id', hid).maybeSingle(); if (hb.error) throw hb.error;
-  if (hb.data) { const dias = Array.from(new Set((hb.data.dias_semana || []).filter(x => x !== dDe).concat([dA]))).sort();
-    const uh = await sb.from('pedidos_habituales').update({ dias_semana: dias }).eq('id', hid); if (uh.error) throw uh.error;
-    /* los previstos futuros de ese pedido fijo que caían en el día antiguo pasan al nuevo */
-    const fut = await sb.from('pedidos').select('id,fecha_entrega,hash_origen').eq('estado', 'previsto').gt('fecha_entrega', de); if (fut.error) throw fut.error;
-    for (const x of (fut.data || []).filter(x => x.id !== p.id && String(x.hash_origen || '').startsWith('fijo:' + hid + ':') && new Date(x.fecha_entrega + 'T12:00:00').getDay() === dDe)) await sb.from('pedidos').update({ fecha_entrega: sumaDias(x.fecha_entrega, dA - dDe) }).eq('id', x.id); }
-  return 'Pasado. A partir de ahora sale los ' + NOMBRE_DIA[dA];
+  if (!hb.data) return 'Pasado al ' + diaSem(a) + ' ' + fechaES(a);
+  const dias = Array.from(new Set((hb.data.dias_semana || []).filter(x => x !== dDe).concat([dA]))).sort();
+  const uh = await sb.from('pedidos_habituales').update({ dias_semana: dias }).eq('id', hid); if (uh.error) throw uh.error;
+  /* los previstos ya creados de ese pedido fijo que caen en el día antiguo (desde hoy) pasan al día nuevo de SU misma semana */
+  const hoyIso = hoy();
+  const fut = await sb.from('pedidos').select('id,fecha_entrega,hash_origen').eq('estado', 'previsto').gte('fecha_entrega', hoyIso).ilike('hash_origen', 'fijo:' + hid + ':%');
+  if (fut.error) throw fut.error;
+  const mover = (fut.data || []).filter(x => x.id !== p.id && String(x.hash_origen || '').startsWith('fijo:' + hid + ':') && new Date(x.fecha_entrega + 'T12:00:00').getDay() === dDe)
+    .map(x => ({ id: x.id, de: x.fecha_entrega, a: sumaDias(x.fecha_entrega, dA - dDe) }));
+  const ocupados = new Set((await pedidosVivosCliente(p.cliente_id, mover.map(x => x.a), p.id)).map(x => x.fecha_entrega)); ocupados.add(a);
+  const ok = mover.filter(x => x.a >= hoyIso && !ocupados.has(x.a)), quedan = mover.filter(x => !ok.includes(x));
+  const rs = await Promise.all(ok.map(x => sb.from('pedidos').update({ fecha_entrega: x.a, orden_reparto: null }).eq('id', x.id)));
+  const err = rs.find(r => r.error); if (err) throw err.error;
+  return 'Pasado. A partir de ahora sale los ' + NOMBRE_DIA[dA] + (ok.length ? ' (' + ok.length + (ok.length === 1 ? ' previsto movido)' : ' previstos movidos)') : '') +
+    (quedan.length ? '. Ojo: se ' + (quedan.length === 1 ? 'queda' : 'quedan') + ' en ' + NOMBRE_DIA[dDe] + ' ' + quedan.map(x => fechaES(x.de).slice(0, 5)).join(', ') + ' (ese ' + NOMBRE_DIA[dA] + ' ya tiene pedido o ya ha pasado): revísalo' : '');
 }
 async function preguntarModoMover(p, a, otroEseDia) {   // devuelve 'una', 'siempre' o null
-  const hid = habDePedido(p);
+  const hid = habDePedido(p); const dDe = new Date(p.fecha_entrega + 'T12:00:00').getDay(), dA = new Date(a + 'T12:00:00').getDay();
+  let diasFijo = null;
+  if (hid && dDe !== dA) { const hb = await sb.from('pedidos_habituales').select('dias_semana').eq('id', hid).maybeSingle(); if (!hb.error && hb.data) diasFijo = hb.data.dias_semana || []; }
+  const yaSale = diasFijo && diasFijo.includes(dA);   // su pedido fijo ya tiene ese día: «siempre» juntaría dos repartos en uno
+  const siempre = diasFijo && !yaSale;
   return new Promise(res => { let hecho = false; const fin = v => { if (hecho) return; hecho = true; cerrar(); res(v); };
     const cerrar = hoja('Pasar el pedido de ' + nombreCli(uno(p.clientes)), h('div', {},
       h('p', {}, 'Del ' + diaSem(p.fecha_entrega) + ' ' + fechaES(p.fecha_entrega) + ' al ' + diaSem(a) + ' ' + fechaES(a) + '.'),
       otroEseDia ? h('div', { class: 'aviso-card' }, '⚠️ Este cliente ya tiene otro pedido ese día.') : null,
+      yaSale ? h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Su pedido fijo ya sale los ' + NOMBRE_DIA[dA] + ': solo se puede pasar esta vez.') : null,
       h('button', { class: 'guardar', style: 'width:100%;min-height:52px;margin-bottom:8px', onclick: () => fin('una') }, 'Solo esta vez'),
-      hid ? h('button', { style: 'width:100%;min-height:52px;margin-bottom:8px', onclick: () => fin('siempre') }, 'Siempre (cambiar su pedido fijo al ' + diaSem(a) + ')') : null,
+      siempre ? h('button', { style: 'width:100%;min-height:52px;margin-bottom:8px', onclick: () => fin('siempre') }, 'Siempre (cambiar su pedido fijo del ' + NOMBRE_DIA[dDe] + ' al ' + NOMBRE_DIA[dA] + ')') : null,
       h('button', { class: 'ghost', style: 'width:100%;margin-bottom:8px', onclick: () => fin(null) }, 'Cancelar')));
     const t = setInterval(() => { if (!state.sheetAbierta) { clearInterval(t); fin(null); } }, 300); });
 }
 async function abrirMoverDia(p, alTerminar) {   // botón «📆 Pasar a otro día» y gesto de deslizar en la lista
   if (!navigator.onLine) { toast('Necesitas conexión para pasar el pedido a otro día.', 'err'); return; }
+  if (!sePuedeMover(p)) { toast('Este pedido ya se está preparando: no se puede pasar a otro día.', 'err'); return; }
   if (state.sheetAbierta) return;
   const de = p.fecha_entrega; const hoyIso = hoy();
   const elegido = await new Promise(res => { let hecho = false; const fin = v => { if (hecho) return; hecho = true; cerrar(); res(v); };
@@ -893,25 +916,30 @@ async function abrirMoverDia(p, alTerminar) {   // botón «📆 Pasar a otro d�
       h('div', { style: 'display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0' },
         dias.map(f => h('button', { class: Math.abs((new Date(f) - new Date(de)) / 864e5) <= 3 ? '' : 'ghost', style: 'min-height:48px;padding:4px', onclick: () => fin(f) }, corto(f)))),
       h('div', { class: 'sub', style: 'margin-top:6px' }, 'U otra fecha:'),
-      h('div', { style: 'display:flex;gap:8px;margin:6px 0 10px' }, inp, h('button', { class: 'guardar', onclick: () => { if (!inp.value) { toast('Elige la fecha', 'err'); return; } if (inp.value === de) { toast('Es el mismo día', 'err'); return; } fin(inp.value); } }, 'Pasar')),
+      h('div', { style: 'display:flex;gap:8px;margin:6px 0 10px' }, inp, h('button', { class: 'guardar', onclick: () => { const v = inp.value;
+        if (!v) { toast('Elige la fecha', 'err'); return; } if (v === de) { toast('Es el mismo día', 'err'); return; }
+        if (v < hoyIso) { toast('Esa fecha ya ha pasado', 'err'); return; } if (new Date(v + 'T12:00:00').getDay() === 0) { toast('Los domingos no se reparte', 'err'); return; }
+        fin(v); } }, 'Pasar')),
       h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'También puedes arrastrarlo con el dedo en 🗓 Semana.')));
     const t = setInterval(() => { if (!state.sheetAbierta) { clearInterval(t); fin(null); } }, 300); });
   if (!elegido) return;
   try {
-    const otro = await sb.from('pedidos').select('id').eq('cliente_id', p.cliente_id).eq('fecha_entrega', elegido).neq('id', p.id).neq('estado', 'anulado').neq('archivado', true).limit(1);
+    const otro = await pedidosVivosCliente(p.cliente_id, [elegido], p.id).catch(() => []);
     await new Promise(r => setTimeout(r, 350));   // que se cierre la primera hoja antes de abrir la segunda
-    const modo = await preguntarModoMover(p, elegido, !otro.error && (otro.data || []).length > 0); if (!modo) return;
+    const modo = await preguntarModoMover(p, elegido, otro.length > 0); if (!modo) return;
     toast(await moverPedidoFecha(p, elegido, modo), 'ok');
   } catch (e) { toast(msgErr(e), 'err'); }
   if (alTerminar) alTerminar();
 }
 function deslizarParaMover(el, p, alTerminar) {   // deslizar la tarjeta a un lado abre «Pasar a otro día»
   let x0 = null, y0 = 0, dx = 0;
+  const soltar = () => { el.style.transition = 'transform .2s'; el.style.transform = ''; setTimeout(() => { el.style.transition = ''; }, 220); };
   el.addEventListener('touchstart', e => { const t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; dx = 0; }, { passive: true });
   el.addEventListener('touchmove', e => { if (x0 == null) return; const t = e.touches[0]; dx = t.clientX - x0;
-    if (Math.abs(t.clientY - y0) > Math.abs(dx)) { x0 = null; el.style.transform = ''; return; }
+    if (Math.abs(t.clientY - y0) > Math.abs(dx)) { x0 = null; dx = 0; soltar(); return; }
     el.style.transform = 'translateX(' + Math.max(-90, Math.min(90, dx)) + 'px)'; }, { passive: true });
-  el.addEventListener('touchend', () => { el.style.transition = 'transform .2s'; el.style.transform = ''; setTimeout(() => { el.style.transition = ''; }, 220);
+  el.addEventListener('touchcancel', () => { x0 = null; dx = 0; soltar(); });
+  el.addEventListener('touchend', () => { soltar();
     if (x0 != null && Math.abs(dx) > 80) { el._deslizado = true; setTimeout(() => { el._deslizado = false; }, 400); abrirMoverDia(p, alTerminar); } x0 = null; });
   return el;
 }
@@ -1310,7 +1338,7 @@ function pintarPedido() {
   if (!cerrado) kids.push(h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px' },
     h('button', { class: 'ghost', style: 'min-height:48px', onclick: () => abrirEdicionPedido(d) }, '✏️ Editar'),
     h('button', { class: 'ghost', style: 'min-height:48px', onclick: () => abrirAnadirProducto(d) }, '➕ Añadir'),
-    estado !== 'previsto' ? h('button', { class: 'ghost', style: 'grid-column:1/-1;min-height:48px', onclick: () => abrirMoverDia(d.pedido, () => actualizarPedido()) }, '📆 Pasar a otro día') : null,
+    estado === 'pendiente' && hechas === 0 ? h('button', { class: 'ghost', style: 'grid-column:1/-1;min-height:48px', onclick: () => abrirMoverDia(d.pedido, () => actualizarPedido()) }, '📆 Pasar a otro día') : null,
     h('button', { class: 'peligro', style: 'grid-column:1/-1;min-height:48px', onclick: () => borrarPedidoPrep(d) }, '🗑 Borrar')));
   if (state.perfil.rol === 'preparador' && d.pedido.preparador_id && d.pedido.preparador_id !== state.user.id && !cerrado)
     kids.push(h('div', { class: 'aviso-card' }, 'Este pedido lo está preparando otra persona.'));
