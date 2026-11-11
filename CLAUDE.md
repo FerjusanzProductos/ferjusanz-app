@@ -15,6 +15,7 @@ Dueño y quien decide: **Fernando Sanz**.
 4. Según la tarea: `docs/FUNCIONALIDADES.md`, `docs/OPERATIVA.md`, `docs/HISTORIAL.md` y `supabase/functions/harvey/LEEME.md`.
 
 ## Dónde está todo
+- **Mapa de Claude en la empresa** (una carpeta por área, con qué hace Claude en cada una): `claude/LEEME.md`. Textos para empezar chats: `claude/08-textos-para-empezar-chats/`.
 - **Repositorio maestro: GitLab** `https://gitlab.com/ferjusanz-productos/ferjusanz-app.git` (rama `main`).
 - **GitHub** `FerjusanzProductos/ferjusanz-app` es **solo copia de seguridad**: después de cada cambio en GitLab `main`, enviar lo mismo a GitHub `main`. Nunca trabajar al revés.
 - App: `public/` (sobre todo `public/index.html`). Publicación: `src/worker.js` y `wrangler.jsonc` (Cloudflare).

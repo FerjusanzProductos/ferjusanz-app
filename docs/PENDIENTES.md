@@ -33,7 +33,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - 🟡 Poner las claves de los conectores de Claude: `GEMINI_API_KEY`, `FIRECRAWL_API_KEY`, `PERPLEXITY_API_KEY` y `POSTHOG_API_KEY`.
 - 🟡 En GitLab, activar la copia automática a GitHub (Settings → Repository → Mirroring repositories). Mientras tanto, Claude copia a mano después de cada cambio.
 
-## Mejoras pedidas (de `docs/PROMPTS.md`; recomendado empezar por la 3 y la 6)
+## Mejoras pedidas (de `claude/08-textos-para-empezar-chats/PROMPTS.md`; recomendado empezar por la 3 y la 6)
 1. 🟡 Revisión de diseño y usabilidad en el móvil (lista priorizada, sin cambiar nada hasta elegir).
 2. ⚪ Agente buscador de clientes nuevos con cocina propia (Madrid norte y noroeste, Segovia), sin duplicados.
 3. ⏸ **Agente de seguimiento diario**: preparado (tarea de Claude pausada y versión dentro de la app en pruebas). Se activa el día que se empiece con la app.
@@ -44,6 +44,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 8. 🔴 **Copia de seguridad de fotos, PDF y audios** de Supabase Storage (ahora no se copian).
 
 ## Comprobaciones técnicas
+- ⚪ Poner al día `claude/08-textos-para-empezar-chats/PROMPT_FERNANDO_NUEVO_CHAT.md` (tiene ramas antiguas y dice que GitHub está suspendido).
 - 🟡 Comprobar que la copia nocturna de GitLab se está ejecutando y que se puede restaurar.
 - ⚪ Auditoría de seguridad de la app y de Supabase (skill `security-audit`).
 - ⚪ Hacer más pequeño `public/index.html` (más de 1 MB) para que cargue más rápido.
