@@ -25,6 +25,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - 🟡 **Llamada con Jorge (contable)**: preguntas preparadas en la sesión del 11/11.
 
 ## Esperando a Fernando
+- 🔴 **Facturación / VERI*FACTU** (auditoría 11/11/2026, `docs/AUDITORIA_FACTURACION.md`): Fernando decide si vamos con la Opción 1 (Golden factura, la app prepara). Preguntas para Carmen (versión de Golden, VERI*FACTU activado, importar/exportar) y para Jorge (serie F1 al 0 %, clientes «sin IVA», recargo de equivalencia, fechas). **No programar nada hasta su autorización.**
 - 🟡 Confirmar la **lista completa de clientes sin IVA (azul)** y si «Bar Delfín» es la misma ficha que «Bar Delfines» (DEFINES).
 - 🟡 **Numeración real de albaranes**: al empezar de verdad, decir el último número de Golden (serie F).
 - ⚪ **Cambio de temporada de patata** (09-F → 01-F) cuando lo diga («cambio de temporada patata»).
