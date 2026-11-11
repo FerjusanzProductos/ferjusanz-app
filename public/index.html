@@ -3242,7 +3242,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v208';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v209';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -5014,7 +5014,7 @@ function vistaMas() {
       puedeCompras() ? c('💲', 'Precios de compra del día', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, V) : null, c('♻️', 'Sobrante', () => go('sobrante'), V)),
     ...g('Entregas y pedidos', c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a')),
     ...g('Compras y mercancía', puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('💶', 'Precios de compra', () => { if (LS.get('fj_precios_modo', 'dia') === 'hoy') LS.set('fj_precios_modo', 'dia'); go('precios'); }, A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null),
-    ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('📦', 'Formatos de compra y venta', () => go('formatoscv'), Z) : null, esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z)),
+    ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z)),
     ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
@@ -6465,6 +6465,7 @@ function vistaCatalogo() {
         if (lectura) { ctl.length = 0; ctl.push(h('span', { class: 'sub' }, 'Se vende en ' + f.unidad_venta + (f.activo ? '' : ' · inactivo'))); }
         else if (tabla === 'productos') {
           ctl.push(h('select', { onchange: e => guardarCampo(f, { unidad_venta: e.target.value }) }, UNIDADES.map(u => h('option', { value: u, selected: u === f.unidad_venta }, 'Se vende en ' + u))));
+          if ('unidad_compra' in f) ctl.push(h('select', { title: 'Cómo se compra (si es distinto)', onchange: e => { const v = e.target.value || null; if (v && v !== f.unidad_venta) { const t = prompt('¿Cuánto trae cada ' + v + '? (en ' + f.unidad_venta + ', p. ej. 10). Déjalo vacío si no se sabe.', f.compra_trae != null ? String(f.compra_trae).replace('.', ',') : ''); guardarCampo(f, { unidad_compra: v, compra_trae: t ? parseNum(t) : null }); } else guardarCampo(f, { unidad_compra: null, compra_trae: null }); } }, [h('option', { value: '' }, 'Se compra igual')].concat(UNIDADES.map(u => h('option', { value: u, selected: u === f.unidad_compra }, 'Se compra por ' + u + (u === f.unidad_compra && f.compra_trae ? ' (' + num(f.compra_trae) + ' ' + f.unidad_venta + ')' : ''))))));
           ctl.push(h('select', { onchange: e => guardarCampo(f, { unidad_precio: e.target.value }) }, ['kg', 'unidad'].map(u => h('option', { value: u, selected: u === f.unidad_precio }, 'Precio por ' + etqCobro(u, f.unidad_venta)))));
           ctl.push(h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Precio general €', value: gen[f.id] != null ? String(gen[f.id]).replace('.', ',') : '', style: 'width:130px;min-height:42px', oninput: e => { f._pv = e.target.value; if (f._cc) f._cc.act(); }, onchange: async e => { const n = parseNum(e.target.value); if (n === null || n < 0) { toast('Precio no válido', 'err'); return; } if (await guardarTarifa(f.id, null, n)) toast('Precio general guardado', 'ok'); } }));
           if (puedeCompras()) ctl.push(f._cc = cajaCoste(f.id, () => f._pv != null ? f._pv : (gen[f.id] != null ? String(gen[f.id]).replace('.', ',') : ''), () => f.unidad_precio));
@@ -7390,9 +7391,11 @@ function editorFormato(P, alGuardar) {
     info.textContent = '✔ Guardado: se vende por ' + nv + (nc ? ' · se compra por ' + nc : '');
     alGuardar && alGuardar(P);
   } }, 'Guardar');
-  return h('div', {},
+  const caja = h('div', {},
     h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;align-items:center' }, h('span', { class: 'sub' }, 'Se vende por'), uv, h('span', { class: 'sub' }, 'Se compra por'), uc),
     filaTrae, h('div', { style: 'display:flex;gap:6px;align-items:center;margin-top:6px' }, bt, info));
+  caja.sugerir = sug => { if (sug.unidad_venta) uv.value = sug.unidad_venta; if (sug.unidad_compra) uc.value = sug.unidad_compra; pintaTrae(); if (filaTrae.style.display !== 'none') trae.focus(); info.textContent = 'Revisa y pulsa Guardar'; };
+  return caja;
 }
 async function hojaFormato(pid) {
   const cuerpo = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); hoja('📦 Formato de compra y venta', cuerpo);
@@ -7403,35 +7406,56 @@ async function hojaFormato(pid) {
     cuerpo.replaceChildren(h('div', { class: 'nombre' }, P.nombre + ' · ' + P.codigo), ej.length ? h('div', { class: 'sub', style: 'margin-bottom:6px' }, 'En las últimas facturas: ' + ej.join(' · ')) : null, editorFormato(P));
   } catch (e) { cuerpo.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
 }
-function vistaFormatosCV() {
-  state.view = 'formatoscv'; if (!esOficina()) { go('inicio'); return; }
+/* Detecta productos con el formato probablemente mal, mirando el libro de ventas de Golden, las facturas de compra y el nombre. */
+const FMT_PALABRA = [[/\b(botes?|tarros?)\b/i, 'bote'], [/\bbandejas?\b/i, 'bandeja'], [/\bmanojos?\b/i, 'manojo'], [/\bdocenas?\b/i, 'docena'], [/\bcajas?\b/i, 'caja'], [/\bbolsas?\b/i, 'bolsa'], [/\bsacos?\b/i, 'saco']];
+async function detectarFormatos(prods) {
+  const sosp = {}; const add = (id, txt, sug) => { (sosp[id] = sosp[id] || []).push({ txt, sug }); };
+  const desde = hoy(new Date(Date.now() - 150 * 86400000));
+  const fac = {}, compra = {};
+  const lf = await sb.from('lineas_factura_leida').select('producto_id,unidad,precio,texto,dudoso').not('producto_id', 'is', null).gte('fecha', desde).limit(5000);
+  (lf.data || []).forEach(x => { if (x.dudoso) return; if (x.unidad) { const o = fac[x.producto_id] = fac[x.producto_id] || {}; o[x.unidad] = (o[x.unidad] || 0) + 1; } if (Number(x.precio) > 0) (compra[x.producto_id] = compra[x.producto_id] || []).push(Number(x.precio)); });
+  const tc = await sb.from('tarifas_compra').select('producto_id,precio').gte('fecha', desde).range(0, 4999); (tc.data || []).forEach(x => { if (Number(x.precio) > 0) (compra[x.producto_id] = compra[x.producto_id] || []).push(Number(x.precio)); });
+  let gv = { venta: {} }; try { gv = await ventaGolden(150); } catch (e) { }
+  const med = a => { const b = a.slice().sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
+  prods.forEach(P => {
+    const esp = P.unidad_compra || P.unidad_venta || 'kg', us = fac[P.id] || {};
+    Object.keys(us).filter(u => u !== esp).forEach(u => add(P.id, 'En ' + us[u] + ' factura(s) viene por ' + u + ' (y aquí se compra por ' + esp + ')', null));
+    for (const [re, u] of FMT_PALABRA) if (re.test(P.nombre) && P.unidad_venta !== u && P.unidad_compra !== u && !(u === 'bolsa' || u === 'saco' || u === 'caja') ) { add(P.id, 'El nombre dice «' + u + '» pero se vende por ' + P.unidad_venta, { unidad_venta: u }); break; }
+    const v = gv.venta[P.codigo], c = compra[P.id];
+    if (v && v.n >= 3 && c && c.length >= 2) { const mc = med(c), k = P.unidad_compra && Number(P.compra_trae) > 0 ? Number(P.compra_trae) : 1, r = v.precio / (mc / k);
+      if (r < 0.8) add(P.id, 'Se compra a ' + eur(mc) + ' y se vende a ' + eur(v.precio) + ' (Golden): ¿se compra por caja/bolsa y se vende por ' + P.unidad_venta + '?', { unidad_compra: 'caja' });
+      else if (r > 3.5) add(P.id, 'Se vende a ' + eur(v.precio) + ' (Golden) y se compra a ' + eur(mc) + ': más del triple. ¿Se vende por caja/bandeja y se compra por kg?', null); }
+  });
+  return { sosp, fac };
+}
+function panelFormatosCV(cont) {
   let filtro = LS.get('fj_fcv_filtro', 'revisar');
   const busca = h('input', { placeholder: '🔎 Buscar producto…' }), chips = h('div', { class: 'chips' }), lista = h('div', {});
-  $app.replaceChildren(shell('Formatos de compra y venta', h('div', {},
-    h('div', { class: 'aviso-card' }, '📦 Cómo se compra y cómo se vende cada producto (kg, caja, bandeja, bote…). Lo que pongas aquí manda: lo usan el lector de facturas, los precios raros y los márgenes. «⚠️ Revisar» enseña los que en las facturas vienen en otra unidad.'),
-    busca, chips, lista), { volver: volverIni })); renderBanner();
-  let prods = [], fac = {};
+  cont.replaceChildren(h('div', { class: 'aviso-card' }, '📦 Cómo se compra y cómo se vende cada producto (kg, caja, bandeja, bote…). Lo que pongas aquí manda: lo usan el lector de facturas, los precios raros y los márgenes. «⚠️ Revisar» son los que la app cree que están mal, mirando el libro de ventas de Golden, las facturas de compra y el nombre.'),
+    busca, chips, lista);
+  let prods = [], det = { sosp: {}, fac: {} };
   const pinta = () => {
-    chips.replaceChildren(...[['revisar', '⚠️ Revisar'], ['todos', 'Todos'], ['nokg', 'No van por kg']].map(([k, t]) => h('button', { class: 'chip' + (filtro === k ? ' on' : ''), onclick: () => { filtro = k; LS.set('fj_fcv_filtro', k); pinta(); } }, t)));
+    const nR = prods.filter(P => det.sosp[P.id]).length;
+    chips.replaceChildren(...[['revisar', '⚠️ Revisar (' + nR + ')'], ['todos', 'Todos'], ['nokg', 'No van por kg']].map(([k, t]) => h('button', { class: 'chip' + (filtro === k ? ' on' : ''), onclick: () => { filtro = k; LS.set('fj_fcv_filtro', k); pinta(); } }, t)));
     const t = sinTilde(limpiaBusqueda(busca.value || ''));
-    const raro = P => { const us = Object.keys(fac[P.id] || {}), esp = P.unidad_compra || P.unidad_venta || 'kg'; return us.some(u => u !== esp); };
     let L = prods.filter(P => !t || sinTilde(P.nombre + ' ' + P.codigo).includes(t));
-    if (!t) L = L.filter(P => filtro === 'todos' || (filtro === 'nokg' ? (P.unidad_venta !== 'kg' || P.unidad_compra) : raro(P)));
-    lista.replaceChildren(h('div', { class: 'sub', style: 'margin:6px 0' }, L.length + ' producto(s)'), ...L.slice(0, 120).map(P => {
-      const us = fac[P.id] || {};
-      return h('div', { class: 'card', style: raro(P) ? 'border-left:5px solid #b45309' : '' }, h('div', { class: 'nombre' }, P.nombre + ' · ' + P.codigo),
-        Object.keys(us).length ? h('div', { class: 'sub' }, 'En las facturas (60 días): ' + Object.keys(us).map(u => us[u] + ' por ' + u).join(' · ')) : null,
-        editorFormato(P, () => { pinta(); }));
+    if (!t) L = L.filter(P => filtro === 'todos' || (filtro === 'nokg' ? (P.unidad_venta !== 'kg' || P.unidad_compra) : !!det.sosp[P.id]));
+    lista.replaceChildren(h('div', { class: 'sub', style: 'margin:6px 0' }, L.length + ' producto(s)' + (filtro === 'revisar' && !t ? ' para revisar' : '')), ...L.slice(0, 120).map(P => {
+      const ss = det.sosp[P.id] || [], ed = editorFormato(P, () => { delete det.sosp[P.id]; });
+      return h('div', { class: 'card', style: ss.length ? 'border-left:5px solid #b45309' : '' }, h('div', { class: 'nombre' }, P.nombre + ' · ' + P.codigo),
+        h('div', { class: 'sub' }, 'Ahora: se vende por ' + P.unidad_venta + (P.unidad_compra ? ' · se compra por ' + P.unidad_compra + (P.compra_trae ? ' (trae ' + num(P.compra_trae) + ' ' + P.unidad_venta + ')' : '') : '')),
+        ...ss.map(x => h('div', { style: 'color:#b45309;margin-top:2px' }, '⚠️ ' + x.txt)),
+        ...ss.filter(x => x.sug).slice(0, 1).map(x => h('button', { class: 'ghost small', style: 'margin-top:4px', onclick: () => { ed.sugerir(x.sug); } }, '💡 Poner: ' + Object.keys(x.sug).map(k => (k === 'unidad_venta' ? 'se vende por ' : 'se compra por ') + x.sug[k]).join(', ') + ' (revisa y Guardar)')),
+        ed);
     }), ...(L.length > 120 ? [h('p', { class: 'sub' }, 'Hay más: busca el producto por su nombre.')] : []));
   };
   busca.oninput = debounce(pinta, 200);
   (async () => {
-    lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+    lista.replaceChildren(h('p', { class: 'vacio' }, 'Buscando productos mal puestos (libro de ventas, facturas y nombres)…'));
     try {
       let r = await sb.from('productos').select('id,codigo,nombre,unidad_venta,unidad_precio,unidad_compra,compra_trae,activo').eq('activo', true).range(0, 4999); if (r.error) throw r.error;
       prods = (r.data || []).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
-      const lf = await sb.from('lineas_factura_leida').select('producto_id,unidad').not('producto_id', 'is', null).gte('fecha', hoy(new Date(Date.now() - 60 * 86400000))).limit(5000);
-      (lf.data || []).forEach(x => { if (!x.unidad) return; const o = fac[x.producto_id] = fac[x.producto_id] || {}; o[x.unidad] = (o[x.unidad] || 0) + 1; });
+      try { det = await detectarFormatos(prods); } catch (e) { }
       pinta();
     } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
   })();
@@ -8743,7 +8767,10 @@ function waPanelFormatos(cont, ctx) {
 }
 function vistaFormatos() {
   state.view = 'formatos'; if (!esOficina()) { go('inicio'); return; }
-  const cont = h('div', {}); $app.replaceChildren(shell('Formatos y abreviaturas', cont, { volver: volverIni })); renderBanner(); waPanelFormatos(cont, {});
+  let tab = LS.get('fj_formatos_tab', 'cv'); const cont = h('div', {}), chips = h('div', { class: 'chips' });
+  const pinta = () => { chips.replaceChildren(...[['cv', '📦 Cómo se compra y se vende'], ['wa', '📐 Formatos de pedido y abreviaturas']].map(([k, t]) => h('button', { class: 'chip' + (tab === k ? ' on' : ''), onclick: () => { tab = k; LS.set('fj_formatos_tab', k); pinta(); } }, t)));
+    if (tab === 'cv') panelFormatosCV(cont); else waPanelFormatos(cont, {}); };
+  $app.replaceChildren(shell('Formatos', h('div', {}, chips, cont), { volver: volverIni })); renderBanner(); pinta();
 }
 
 /* ---------- Lectura de imágenes y PDF (gratis, dentro del móvil) ---------- */
@@ -11791,10 +11818,9 @@ const BUSCA_PANTALLAS = [
   ['🧮', 'Deudas', 'deudas deuda debe deben dinero pendiente cobro morosos impagados', () => go('deudas')],
   ['👥', 'Clientes', 'clientes cliente ficha alta cliente telefono direccion', () => go('clientes')],
   ['🥬', 'Productos', 'productos producto catalogo articulos codigos', () => go('catalogo')],
-  ['📦', 'Formatos de compra y venta', 'formatos unidades bote caja bandeja kg pieza compra venta', () => go('formatoscv'), 'o'],
   ['📋', 'Cómo se pone cada producto', 'reglas producto codigos golden nombres factura como se pone', () => go('reglasprod')],
   ['🔎', 'Productos sin reconocer', 'productos sin reconocer enlazar nombres facturas', () => go('sinreconocer'), 'o'],
-  ['📐', 'Formatos', 'formatos formato caja kilos peso cliente', () => go('formatos'), 'o'],
+  ['📐', 'Formatos', 'formatos formato caja kilos peso cliente unidades bote bandeja compra venta se vende se compra', () => go('formatos'), 'o'],
   ['🌐', 'Portal de clientes', 'portal pagina clientes web qr enlace publicar albaranes', () => go('paginasclientes')],
   ['📲', 'Móviles y correos de clientes', 'moviles correos telefonos contactos clientes dejan qr whatsapp email', () => go('contactosportal'), 'o'],
   ['📤', 'Informes para Jorge', 'jorge gestoria gestor contable informes cierre mes iva facturas emitidas recibidas trimestre', () => go('gestoria'), 'o'],
@@ -12211,7 +12237,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { tarifas: vistaTarifas, formatoscv: vistaFormatosCV, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
 }

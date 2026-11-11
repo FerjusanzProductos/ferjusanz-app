@@ -53,7 +53,7 @@ _Sacadas del historial de GitLab y de los documentos (📝). Versión normal v18
 - `guia.html`, página de ejemplos con fotos y vídeo (cobro sin IVA, portal) y **Modo prácticas** (desde Mi perfil).
 
 ## Solo en la app de pruebas (sin publicar)
-- **📦 Formatos de compra y venta** (v208): unidad de venta, de compra y cuánto trae, por producto, editable a mano (`vistaFormatosCV`, `editorFormato`, `hojaFormato`).
+- **📦 Formatos de compra y venta** (v209, Más → 📐 Formatos, primera pestaña; y «Se compra por» en Productos): unidad de venta, de compra y cuánto trae, editable a mano, con «⚠️ Revisar» automático (`panelFormatosCV`, `detectarFormatos`, `editorFormato`, `hojaFormato`).
 - **Informes para Jorge**: Excel del mes con facturas emitidas y recibidas, cobros, albaranes sin facturar y jornada. Comprueba Golden y las facturas sin revisar, enseña el resumen antes de compartir y tiene una lista de cierre de mes y tarea en Secretaría (días 1 a 10).
 
 ## Sistema
