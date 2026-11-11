@@ -37,6 +37,7 @@ _Sacadas del historial de GitLab y de los documentos (📝). Versión normal v18
 - **📈 Suben** (Precios de compra, desde v204): productos cuya última compra supera la media de los 14 días anteriores y cuánto margen se pierde frente al precio de venta de Golden. Funciones `subidasCalc`, `ventaGolden`, `panelSuben`. Solo lee.
 - **Avisos en Facturas de proveedores** (desde v207): cada factura de la bandeja dice cuántos precios son raros, suben o bajan, aunque no esté registrada (lee sola las que falten).
 - **📄 Ver factura / 💶 Precios de venta** en cada producto de Raros y Suben (desde v207): `botonesCompraVenta`, `verFacturaLeida`, `hojaPreciosVenta`.
+- **📦 Formatos de compra y venta** (desde v210, Más → 📐 Formatos, primera pestaña; y «Se compra por» en Productos): unidad de venta, de compra y cuánto trae, editable a mano, con «⚠️ Revisar» automático (`panelFormatosCV`, `detectarFormatos`, `editorFormato`, `hojaFormato`).
 
 ## Precios, tarifas y listas
 - **Tarifas**: pestañas por lista, buscador, ▲▼ por precio, precio a mano y ganancia por kg o por unidad real (caja, bandeja, pieza), en orden alfabético. Productos sin compra enlazada se pueden enlazar.
@@ -53,7 +54,6 @@ _Sacadas del historial de GitLab y de los documentos (📝). Versión normal v18
 - `guia.html`, página de ejemplos con fotos y vídeo (cobro sin IVA, portal) y **Modo prácticas** (desde Mi perfil).
 
 ## Solo en la app de pruebas (sin publicar)
-- **📦 Formatos de compra y venta** (v209, Más → 📐 Formatos, primera pestaña; y «Se compra por» en Productos): unidad de venta, de compra y cuánto trae, editable a mano, con «⚠️ Revisar» automático (`panelFormatosCV`, `detectarFormatos`, `editorFormato`, `hojaFormato`).
 - **Informes para Jorge**: Excel del mes con facturas emitidas y recibidas, cobros, albaranes sin facturar y jornada. Comprueba Golden y las facturas sin revisar, enseña el resumen antes de compartir y tiene una lista de cierre de mes y tarea en Secretaría (días 1 a 10).
 
 ## Sistema
