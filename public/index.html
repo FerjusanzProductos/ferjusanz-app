@@ -3214,7 +3214,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v199';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v200';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -6937,9 +6937,9 @@ function vistaPrecios() {
   state.view = 'precios'; if (!puedeCompras()) { go('inicio'); return; }
   let modo = LS.get('fj_precios_modo', 'dia'), fecha = hoy();
   const cont = h('div', {}), chips = h('div', { class: 'chips' });
-  const pintarChips = () => chips.replaceChildren(...[['hoy', 'Del día'], ['dia', 'Por día'], ['producto', 'Por producto']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { LS.set('fj_precios_modo', m); vistaPrecios(); } }, n)));
+  const pintarChips = () => chips.replaceChildren(...[['hoy', 'Del día'], ['dia', 'Por día'], ['producto', 'Por producto'], ['raros', '⚠️ Raros']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { LS.set('fj_precios_modo', m); vistaPrecios(); } }, n)));
   $app.replaceChildren(shell(modo === 'hoy' ? 'Precios de compra del día' : 'Precios de compra', h('div', {}, chips, h('button', { class: 'ghost small', style: 'width:100%;margin:6px 0', onclick: () => rellenarPreciosCompra(() => vistaPrecios()) }, '💶 Rellenar con las facturas los precios que faltan'), cont), { volver: volverIni })); renderBanner(); pintarChips();
-  const pintar = () => modo === 'hoy' ? pHoy() : modo === 'dia' ? pDia() : pProducto();
+  const pintar = () => modo === 'hoy' ? pHoy() : modo === 'dia' ? pDia() : modo === 'raros' ? panelPreciosRaros(cont) : pProducto();
   async function editarPrecio(l) {
     if (!puedeCompras()) return;
     const v = prompt('Precio de compra por ' + l.unidad + ' (€)', l.precio_compra != null ? String(l.precio_compra).replace('.', ',') : ''); if (v === null) return;
@@ -7149,6 +7149,79 @@ function vistaPrecios() {
     }
   }
   pintar();
+}
+
+/* ---------- Agente de compras (1): PRECIOS RAROS ----------
+   Compara cada precio de las facturas de proveedor leídas con lo normal de ese producto: la MEDIANA de lo pagado
+   los 60 días anteriores (facturas leídas + tarifas de compra), en la MISMA unidad. Avisa si se aparta más del % elegido.
+   Si se aparta muchísimo (más del doble o menos de la mitad) suele ser unidad o producto mal apuntado: lo dice. Solo lee, no cambia nada. */
+function precioRaroCalc(lineas, hist, desde, umbral) {
+  const med = a => { const b = a.slice().sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
+  const porProd = {}; hist.forEach(x => { (porProd[x.pid + '|' + x.u] = porProd[x.pid + '|' + x.u] || []).push(x); });
+  const vistos = new Set(), out = [];
+  lineas.forEach(l => {
+    if (l.fecha < desde) return;
+    const k = [l.factura_id || '', l.proveedor_id || '', l.fecha, l.texto, l.precio].join('|'); if (vistos.has(k)) return; vistos.add(k);   /* la misma línea leída dos veces */
+    const ini = hoy(new Date(new Date(l.fecha + 'T12:00:00').getTime() - 60 * 86400000));
+    const ant = (porProd[l.pid + '|' + l.u] || []).filter(x => x.fecha < l.fecha && x.fecha >= ini);
+    if (ant.length < 3) return;   /* sin historial suficiente no se puede decir que sea raro */
+    const ref = med(ant.map(x => x.precio)), pct = (l.precio / ref - 1) * 100;
+    if (Math.abs(pct) < umbral) return;
+    const mismoProv = ant.filter(x => x.prov && x.prov === l.proveedor_id).sort((a, b) => b.fecha.localeCompare(a.fecha))[0];
+    out.push(Object.assign({}, l, { ref, pct, n: ant.length, min: Math.min(...ant.map(x => x.precio)), max: Math.max(...ant.map(x => x.precio)), ultProv: mismoProv ? mismoProv.precio : null, unidadMal: l.precio >= ref * 2 || l.precio <= ref / 2 }));
+  });
+  return out;
+}
+async function cargarPreciosRaros(dias, umbral) {
+  const desde = hoy(new Date(Date.now() - dias * 86400000)), desdeH = hoy(new Date(Date.now() - (dias + 62) * 86400000));
+  const prods = {}; try { (await waProductos()).forEach(p => { prods[p.id] = p; }); } catch (e) { }
+  const uni = (u, pid) => u || (prods[pid] && prods[pid].unidad_venta) || 'kg';
+  const lf = []; for (let i = 0; i < 20000; i += 1000) { const r = await sb.from('lineas_factura_leida').select('factura_id,proveedor_id,fecha,texto,cantidad,unidad,precio,producto_id,dudoso').not('producto_id', 'is', null).gte('fecha', desdeH).order('fecha', { ascending: false }).range(i, i + 999); if (r.error) throw r.error; lf.push(...(r.data || [])); if ((r.data || []).length < 1000) break; }
+  const tc = []; for (let i = 0; i < 20000; i += 1000) { let r = await sb.from('tarifas_compra').select('producto_id,proveedor_id,precio,fecha,unidad').gte('fecha', desdeH).order('fecha', { ascending: false }).range(i, i + 999); if (r.error) break; tc.push(...(r.data || [])); if ((r.data || []).length < 1000) break; }
+  const ok = l => !l.dudoso && Number(l.precio) > 0 && l.producto_id;
+  const lineas = lf.filter(ok).map(l => ({ factura_id: l.factura_id, proveedor_id: l.proveedor_id, fecha: String(l.fecha).slice(0, 10), texto: l.texto || '', cantidad: Number(l.cantidad) || 0, precio: Number(l.precio), pid: l.producto_id, u: uni(l.unidad, l.producto_id) }));
+  const hist = lineas.map(l => ({ pid: l.pid, u: l.u, fecha: l.fecha, precio: l.precio, prov: l.proveedor_id }))
+    .concat(tc.filter(t => Number(t.precio) > 0 && t.producto_id).map(t => ({ pid: t.producto_id, u: uni(t.unidad, t.producto_id), fecha: String(t.fecha).slice(0, 10), precio: Number(t.precio), prov: t.proveedor_id })));
+  const raros = precioRaroCalc(lineas, hist, desde, umbral);
+  const provs = {}; try { const pv = await sb.from('proveedores').select('id,nombre').range(0, 999); (pv.data || []).forEach(p => { provs[p.id] = p.nombre; }); } catch (e) { }
+  raros.forEach(r => { const p = prods[r.pid] || {}; r.producto = p.nombre || 'Producto'; r.codigo = p.codigo || ''; r.prov = provs[r.proveedor_id] || 'Proveedor sin identificar'; });
+  return raros;
+}
+function panelPreciosRaros(cont) {
+  let dias = LS.get('fj_raros_dias', 15), umbral = LS.get('fj_raros_umbral', 30), soloUlt = LS.get('fj_raros_ult', true);
+  const ctr = h('div', {}), lista = h('div', {});
+  const chip = (on, txt, fn) => h('button', { class: 'chip' + (on ? ' on' : ''), onclick: fn }, txt);
+  const pintaCtr = () => ctr.replaceChildren(
+    h('div', { class: 'sub', style: 'margin-top:6px' }, 'Facturas de los últimos:'),
+    h('div', { class: 'chips' }, ...[7, 15, 30, 60].map(d => chip(dias === d, d + ' días', () => { dias = d; LS.set('fj_raros_dias', d); cargar(); }))),
+    h('div', { class: 'sub' }, 'Avisar si el precio se aparta de lo normal más de:'),
+    h('div', { class: 'chips' }, ...[20, 30, 50].map(u => chip(umbral === u, u + ' %', () => { umbral = u; LS.set('fj_raros_umbral', u); cargar(); })),
+      chip(soloUlt, soloUlt ? 'Solo el último de cada producto' : 'Todas las líneas', () => { soloUlt = !soloUlt; LS.set('fj_raros_ult', soloUlt); cargar(); })));
+  cont.replaceChildren(h('div', { class: 'aviso-card' }, '⚠️ Precios de las facturas de proveedor que se salen de lo normal. «Lo normal» es lo que se ha pagado ese producto (en la misma unidad) los 60 días anteriores. Solo avisa: no cambia nada.'), ctr, lista);
+  const pct = x => (x > 0 ? '+' : '') + Math.round(x) + ' %';
+  async function cargar() {
+    pintaCtr(); lista.replaceChildren(h('p', { class: 'vacio' }, 'Revisando facturas…'));
+    try {
+      let raros = await cargarPreciosRaros(dias, umbral);
+      if (soloUlt) { const ult = {}; raros.forEach(r => { const k = r.pid + '|' + r.u; if (!ult[k] || r.fecha > ult[k].fecha) ult[k] = r; }); raros = Object.values(ult); }
+      raros.sort((a, b) => b.fecha.localeCompare(a.fecha) || Math.abs(b.pct) - Math.abs(a.pct));
+      const sube = raros.filter(r => r.pct > 0).length, baja = raros.length - sube;
+      const kids = [h('div', { class: 'card fila' }, h('div', { class: 'sub' }, raros.length ? '🔺 ' + sube + ' más caros · 🔻 ' + baja + ' más baratos' : 'Nada raro'), h('b', { style: 'font-size:20px' }, String(raros.length)))];
+      raros.forEach(r => {
+        const caro = r.pct > 0, col = r.unidadMal ? '#7c3aed' : caro ? '#b91c1c' : '#166534';
+        kids.push(h('div', { class: 'card', style: 'border-left:5px solid ' + col },
+          h('div', { class: 'fila' }, h('div', { class: 'nombre' }, r.producto + (r.codigo ? ' · ' + r.codigo : '')), h('b', { style: 'font-size:20px;color:' + col }, (caro ? '🔺 ' : '🔻 ') + pct(r.pct))),
+          h('div', { class: 'sub' }, fechaES(r.fecha) + ' · ' + r.prov),
+          h('div', { class: 'sub' }, 'En la factura: «' + r.texto + '»'),
+          h('div', { style: 'margin-top:4px' }, 'Pagado ', h('b', {}, eur(r.precio) + '/' + r.u), ' · lo normal ', h('b', {}, eur(r.ref) + '/' + r.u)),
+          h('div', { class: 'sub' }, 'Últimos 60 días: de ' + eur(r.min) + ' a ' + eur(r.max) + ' (' + r.n + ' precios)' + (r.ultProv != null ? ' · a este proveedor, la vez anterior: ' + eur(r.ultProv) : '')),
+          r.unidadMal ? h('div', { style: 'margin-top:4px;color:' + col + ';font-weight:700' }, '¿Unidad o producto mal apuntado? (caja/kg/pieza…) Revisa la factura.') : null));
+      });
+      if (!raros.length) kids.push(h('p', { class: 'vacio' }, 'No hay precios raros en las facturas de los últimos ' + dias + ' días con este margen.'));
+      lista.replaceChildren(...kids);
+    } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+  }
+  cargar();
 }
 
 /* ---------- Facturas y hojas de compra ---------- */

@@ -39,7 +39,11 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 3. ⏸ **Agente de seguimiento diario**: preparado (tarea de Claude pausada y versión dentro de la app en pruebas). Se activa el día que se empiece con la app.
 4. ⚪ Agente de ofertas semanales por tipo de cliente.
 5. 🟡 Agente de cobros: deudas por urgencia y recordatorios.
-6. 🔴 **Agente de compras y facturas**: precios raros, productos mal apuntados, margen mínimo y comprobación con las facturas de Golden.
+6. 🔴 **Agente de compras y facturas**:
+   - 🟢 **Precios raros**: hecho en PRUEBAS (v200), pestaña «⚠️ Raros» en Precios de compra. Falta que Fernando lo mire y diga «Autorizo publicar» (en la normal irá como v201).
+   - ⚪ Productos mal apuntados según las reglas internas (fcRegla*).
+   - ⚪ Margen mínimo: **Fernando tiene que decir el mínimo** (%).
+   - ⚪ Comprobador Golden ↔ albaranes: **esperando el archivo de ejemplo** de Golden.
 7. 🟡 Harvey orquestador v2: apuntar contactos, confirmar previstos, pedidos desde WhatsApp y recordatorios de cobro (siempre con confirmación).
 8. 🔴 **Copia de seguridad de fotos, PDF y audios** de Supabase Storage (ahora no se copian).
 
