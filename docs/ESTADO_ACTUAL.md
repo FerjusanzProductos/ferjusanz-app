@@ -6,8 +6,8 @@ Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial 
 ## Versiones
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
-| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v204** ✅ (publicada el 11/11/2026: v202 + «📈 Suben» en Precios de compra) | GitLab `main` |
-| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v206** ✅ (11/11/2026: la normal v204 + botones «📄 Ver factura» y «💶 Precios de venta» en Raros y Suben + avisos en Facturas de proveedores, sin publicar) | GitLab rama `agente-compras` |
+| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v207** ✅ (publicada el 11/11/2026: v204 + «📄 Ver factura» y «💶 Precios de venta» en Raros y Suben + avisos de precios en Facturas de proveedores) | GitLab `main` |
+| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v206** ✅ (mismo contenido que la normal v207) | GitLab `main` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
 La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la publicada: descargar el Worker desde la API de Cloudflare (`/workers/scripts/<nombre>/content/v2`) y buscar ese texto.

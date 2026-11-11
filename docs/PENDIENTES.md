@@ -2,7 +2,7 @@
 _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.md. Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda._
 
 ## Por publicar o decidir
-- 🟡 **«📄 Ver factura» y «💶 Precios de venta»** en Raros y Suben + **avisos de precios en la bandeja de Facturas de proveedores**: en PRUEBAS (v206). Falta «Autorizo publicar» (en la normal irá como v207).
+- ✔️ 11/11/2026: **«📄 Ver factura», «💶 Precios de venta» y avisos en Facturas de proveedores** publicados en la normal (v207).
 - ✔️ 11/11/2026: **Arreglos de «Pasar a otro día» + «⚠️ Raros»** publicados en la normal (v202) con «Autorizo publicar».
 - ✔️ 11/11/2026: **Pasar previstos a otro día** publicado en la normal (v199). Ojo: la app de pruebas (v198) ya no lleva el «Seguimiento comercial» (rama `seguimiento-app`, en espera).
 - ✔️ 11/11/2026: TODO lo de pruebas publicado en la normal (v194): Informes para Jorge, ayuda guiada 🆘, Harvey con WhatsApp natural, Precios / facturas y «lo de siempre» con Golden.
