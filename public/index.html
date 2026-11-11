@@ -3242,7 +3242,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v202';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v203';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -6965,9 +6965,9 @@ function vistaPrecios() {
   state.view = 'precios'; if (!puedeCompras()) { go('inicio'); return; }
   let modo = LS.get('fj_precios_modo', 'dia'), fecha = hoy();
   const cont = h('div', {}), chips = h('div', { class: 'chips' });
-  const pintarChips = () => chips.replaceChildren(...[['hoy', 'Del día'], ['dia', 'Por día'], ['producto', 'Por producto'], ['raros', '⚠️ Raros']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { LS.set('fj_precios_modo', m); vistaPrecios(); } }, n)));
+  const pintarChips = () => chips.replaceChildren(...[['hoy', 'Del día'], ['dia', 'Por día'], ['producto', 'Por producto'], ['raros', '⚠️ Raros'], ['suben', '📈 Suben']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { LS.set('fj_precios_modo', m); vistaPrecios(); } }, n)));
   $app.replaceChildren(shell(modo === 'hoy' ? 'Precios de compra del día' : 'Precios de compra', h('div', {}, chips, h('button', { class: 'ghost small', style: 'width:100%;margin:6px 0', onclick: () => rellenarPreciosCompra(() => vistaPrecios()) }, '💶 Rellenar con las facturas los precios que faltan'), cont), { volver: volverIni })); renderBanner(); pintarChips();
-  const pintar = () => modo === 'hoy' ? pHoy() : modo === 'dia' ? pDia() : modo === 'raros' ? panelPreciosRaros(cont) : pProducto();
+  const pintar = () => modo === 'hoy' ? pHoy() : modo === 'dia' ? pDia() : modo === 'raros' ? panelPreciosRaros(cont) : modo === 'suben' ? panelSuben(cont) : pProducto();
   async function editarPrecio(l) {
     if (!puedeCompras()) return;
     const v = prompt('Precio de compra por ' + l.unidad + ' (€)', l.precio_compra != null ? String(l.precio_compra).replace('.', ',') : ''); if (v === null) return;
@@ -7200,8 +7200,9 @@ function precioRaroCalc(lineas, hist, desde, umbral) {
   });
   return out;
 }
-async function cargarPreciosRaros(dias, umbral) {
-  const desde = hoy(new Date(Date.now() - dias * 86400000)), desdeH = hoy(new Date(Date.now() - (dias + 62) * 86400000));
+/* Facturas leídas + tarifas de compra desde hace (dias + extra) días, con productos y proveedores. Lo usan «⚠️ Raros» y «📈 Suben». */
+async function cargarComprasHist(dias, extra) {
+  const desdeH = hoy(new Date(Date.now() - (dias + extra) * 86400000));
   const prods = {}; try { (await waProductos()).forEach(p => { prods[p.id] = p; }); } catch (e) { }
   const uni = (u, pid) => u || (prods[pid] && prods[pid].unidad_venta) || 'kg';
   const lf = []; for (let i = 0; i < 20000; i += 1000) { const r = await sb.from('lineas_factura_leida').select('factura_id,proveedor_id,fecha,texto,cantidad,unidad,precio,producto_id,dudoso').not('producto_id', 'is', null).gte('fecha', desdeH).order('fecha', { ascending: false }).range(i, i + 999); if (r.error) throw r.error; lf.push(...(r.data || [])); if ((r.data || []).length < 1000) break; }
@@ -7210,10 +7211,80 @@ async function cargarPreciosRaros(dias, umbral) {
   const lineas = lf.filter(ok).map(l => ({ factura_id: l.factura_id, proveedor_id: l.proveedor_id, fecha: String(l.fecha).slice(0, 10), texto: l.texto || '', cantidad: Number(l.cantidad) || 0, precio: Number(l.precio), pid: l.producto_id, u: uni(l.unidad, l.producto_id) }));
   const hist = lineas.map(l => ({ pid: l.pid, u: l.u, fecha: l.fecha, precio: l.precio, prov: l.proveedor_id }))
     .concat(tc.filter(t => Number(t.precio) > 0 && t.producto_id).map(t => ({ pid: t.producto_id, u: uni(t.unidad, t.producto_id), fecha: String(t.fecha).slice(0, 10), precio: Number(t.precio), prov: t.proveedor_id })));
-  const raros = precioRaroCalc(lineas, hist, desde, umbral);
   const provs = {}; try { const pv = await sb.from('proveedores').select('id,nombre').range(0, 999); (pv.data || []).forEach(p => { provs[p.id] = p.nombre; }); } catch (e) { }
+  return { lineas, hist, prods, provs };
+}
+async function cargarPreciosRaros(dias, umbral) {
+  const desde = hoy(new Date(Date.now() - dias * 86400000));
+  const { lineas, hist, prods, provs } = await cargarComprasHist(dias, 62);
+  const raros = precioRaroCalc(lineas, hist, desde, umbral);
   raros.forEach(r => { const p = prods[r.pid] || {}; r.producto = p.nombre || 'Producto'; r.codigo = p.codigo || ''; r.prov = provs[r.proveedor_id] || 'Proveedor sin identificar'; });
   return raros;
+}
+/* ---------- Agente de compras (2): SUBEN (aviso de margen) ----------
+   Fernando (11/11/2026): sin porcentaje fijo. Para cada producto, «lo normal» es la MEDIA de lo pagado los 14 días anteriores
+   a la última compra (media de cada día). Si la última compra sale más cara, avisa y dice cuánto se come del margen,
+   con el precio de venta real de Golden (mediana de los últimos 60 días con datos). Solo lee, no cambia nada. */
+function subidasCalc(hist, desde) {
+  const dia = {};   /* producto|unidad -> fecha -> [precios] */
+  hist.forEach(x => { const k = x.pid + '|' + x.u; ((dia[k] = dia[k] || {})[x.fecha] = dia[k][x.fecha] || []).push(x.precio); });
+  const media = a => a.reduce((s, v) => s + v, 0) / a.length, out = [];
+  Object.keys(dia).forEach(k => {
+    const fechas = Object.keys(dia[k]).sort(), ult = fechas[fechas.length - 1]; if (!ult || ult < desde) return;
+    const ini = hoy(new Date(new Date(ult + 'T12:00:00').getTime() - 14 * 86400000));
+    const prev = fechas.filter(f => f < ult && f >= ini); if (prev.length < 2) return;   /* hacen falta al menos 2 días de compras para saber la media */
+    const pu = media(dia[k][ult]), pm = media(prev.map(f => media(dia[k][f])));
+    if (pu - pm < 0.02 || pu < pm * 1.03) return;   /* solo subidas de verdad, no de céntimos */
+    const [pid, u] = k.split('|'); out.push({ pid, u, fecha: ult, ultimo: pu, media: pm, dias: prev.length, sube: pu - pm, pct: (pu / pm - 1) * 100 });
+  });
+  return out;
+}
+async function ventaGolden(dias) {
+  const ult = await sb.from('golden_facturas').select('fecha').order('fecha', { ascending: false }).limit(1); if (ult.error || !(ult.data || []).length) return { venta: {}, hasta: null };
+  const hasta = String(ult.data[0].fecha).slice(0, 10), desde = hoy(new Date(new Date(hasta + 'T12:00:00').getTime() - dias * 86400000));
+  const nums = []; for (let i = 0; i < 20000; i += 1000) { const r = await sb.from('golden_facturas').select('numero,borrador').gte('fecha', desde).range(i, i + 999); if (r.error) break; nums.push(...(r.data || []).filter(f => !f.borrador).map(f => f.numero)); if ((r.data || []).length < 1000) break; }
+  const pre = {};
+  for (let j = 0; j < nums.length; j += 100) { const lote = nums.slice(j, j + 100);
+    for (let i = 0; i < 20000; i += 1000) { const r = await sb.from('golden_lineas').select('producto_codigo,precio').in('factura_numero', lote).range(i, i + 999); if (r.error) break; (r.data || []).forEach(l => { if (l.producto_codigo && Number(l.precio) > 0) (pre[l.producto_codigo] = pre[l.producto_codigo] || []).push(Number(l.precio)); }); if ((r.data || []).length < 1000) break; } }
+  const venta = {}; Object.keys(pre).forEach(c => { const b = pre[c].sort((x, y) => x - y), m = b.length >> 1; venta[c] = { precio: b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2, n: b.length }; });
+  return { venta, hasta };
+}
+function panelSuben(cont) {
+  let dias = LS.get('fj_suben_dias', 7);
+  const ctr = h('div', {}), lista = h('div', {});
+  const chip = (on, txt, fn) => h('button', { class: 'chip' + (on ? ' on' : ''), onclick: fn }, txt);
+  cont.replaceChildren(h('div', { class: 'aviso-card' }, '📈 Productos cuya última compra ha salido más cara que su media de los 14 días anteriores, y cuánto te come del margen (con el precio al que lo vendes en Golden). Así sabes a qué productos subir el precio de venta. Solo avisa: no cambia nada.'), ctr, lista);
+  const pc = x => Math.round(x) + ' %';
+  async function cargar() {
+    ctr.replaceChildren(h('div', { class: 'sub', style: 'margin-top:6px' }, 'Compras de los últimos:'), h('div', { class: 'chips' }, ...[3, 7, 15, 30].map(d => chip(dias === d, d + ' días', () => { dias = d; LS.set('fj_suben_dias', d); cargar(); }))));
+    lista.replaceChildren(h('p', { class: 'vacio' }, 'Revisando compras y ventas…'));
+    try {
+      const desde = hoy(new Date(Date.now() - dias * 86400000));
+      const [{ hist, prods }, gv] = await Promise.all([cargarComprasHist(dias, 16), ventaGolden(60).catch(() => ({ venta: {}, hasta: null }))]);
+      const sub = subidasCalc(hist, desde);
+      sub.forEach(r => { const p = prods[r.pid] || {}; r.producto = p.nombre || 'Producto'; r.codigo = p.codigo || ''; const v = gv.venta[r.codigo];
+        if (v) { r.venta = v.precio; r.ganabas = v.precio - r.media; r.ganas = v.precio - r.ultimo; r.mAntes = r.ganabas / v.precio * 100; r.mAhora = r.ganas / v.precio * 100; } });
+      /* primero los que pierden dinero, luego los que se quedan con menos margen, y al final los que no tienen venta en Golden */
+      sub.sort((a, b) => (a.venta == null) - (b.venta == null) || (a.mAhora == null ? 0 : a.mAhora - b.mAhora) || b.pct - a.pct);
+      const pierden = sub.filter(r => r.ganas != null && r.ganas <= 0).length;
+      const kids = [h('div', { class: 'card fila' }, h('div', { class: 'sub' }, sub.length ? '📈 Han subido' + (pierden ? ' · 🔴 ' + pierden + ' ya no dejan ganancia' : '') : 'Nada ha subido'), h('b', { style: 'font-size:20px' }, String(sub.length)))];
+      sub.forEach(r => {
+        const malo = r.ganas != null && r.ganas <= 0, col = malo ? '#b91c1c' : r.mAhora != null && r.mAhora < 15 ? '#c2410c' : '#ca8a04';
+        kids.push(h('div', { class: 'card', style: 'border-left:5px solid ' + col },
+          h('div', { class: 'fila' }, h('div', { class: 'nombre' }, r.producto + (r.codigo ? ' · ' + r.codigo : '')), h('b', { style: 'font-size:20px;color:' + col }, '🔺 +' + eur(r.sube))),
+          h('div', { style: 'margin-top:2px' }, 'Compra ', h('b', {}, eur(r.ultimo) + '/' + r.u), ' el ' + fechaES(r.fecha) + ' · su media ', h('b', {}, eur(r.media)), ' (+' + pc(r.pct) + ')'),
+          r.venta != null
+            ? h('div', { style: 'margin-top:4px' }, 'Lo vendes a ', h('b', {}, eur(r.venta) + '/' + r.u), ': ganabas ' + eur(r.ganabas) + ' (' + pc(r.mAntes) + ') → ahora ', h('b', { style: 'color:' + col }, eur(r.ganas) + ' (' + pc(r.mAhora) + ')'))
+            : h('div', { class: 'sub' }, 'Sin ventas en Golden los últimos 60 días para comparar.'),
+          malo ? h('div', { style: 'margin-top:4px;color:' + col + ';font-weight:700' }, '¡A este precio de compra no ganas nada! Revisa el precio de venta (o la factura, por si está mal la unidad).') : null,
+          h('div', { class: 'sub' }, 'Media de ' + r.dias + ' días de compra.')));
+      });
+      if (!sub.length) kids.push(h('p', { class: 'vacio' }, 'Ningún producto ha subido en las compras de los últimos ' + dias + ' días.'));
+      if (gv.hasta) kids.push(h('p', { class: 'sub', style: 'margin-top:8px' }, 'Precio de venta: lo que se ha cobrado en Golden los 60 días hasta el ' + fechaES(gv.hasta) + ' (lo más habitual).'));
+      lista.replaceChildren(...kids);
+    } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+  }
+  cargar();
 }
 function panelPreciosRaros(cont) {
   let dias = LS.get('fj_raros_dias', 15), umbral = LS.get('fj_raros_umbral', 30), soloUlt = LS.get('fj_raros_ult', true);

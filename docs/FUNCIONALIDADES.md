@@ -50,6 +50,7 @@ _Sacadas del historial de GitLab y de los documentos (📝). Versión normal v18
 - `guia.html`, página de ejemplos con fotos y vídeo (cobro sin IVA, portal) y **Modo prácticas** (desde Mi perfil).
 
 ## Solo en la app de pruebas (sin publicar)
+- **📈 Suben** (Precios de compra, v203): productos cuya última compra supera la media de los 14 días anteriores y cuánto margen se pierde frente al precio de venta de Golden. Funciones `subidasCalc`, `ventaGolden`, `panelSuben`. Solo lee.
 - **Informes para Jorge**: Excel del mes con facturas emitidas y recibidas, cobros, albaranes sin facturar y jornada. Comprueba Golden y las facturas sin revisar, enseña el resumen antes de compartir y tiene una lista de cierre de mes y tarea en Secretaría (días 1 a 10).
 
 ## Sistema

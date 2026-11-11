@@ -82,6 +82,9 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Desde el 11/11/2026 la unidad buena está en la ficha de cada producto (unidad de venta y precio por unidad). Lista aplicada: `supabase/migrations/20261111b_unidades_libro_ventas.sql`.
 - En la app: lista fija `UNIDAD_LIBRO` y función `fcUnidadLibro` de `public/index.html` (arándano/frambuesa/mora → bandeja, campestre/mezclum → bolsa; si no, la unidad de venta del producto). Unidades nuevas que diga Fernando: añadirlas ahí.
 
+## Aviso de margen (Fernando, 11/11/2026)
+- **No hay un margen mínimo fijo.** Se compara cada producto con **su propia media de compra de los últimos días** (14 días) y se avisa **cuando sube**, con lo que se pierde de margen frente al precio de venta de Golden. Pantalla «📈 Suben» en Precios de compra.
+
 ## Pedidos
 - Los pedidos fijos generan **previstos** (2 semanas por delante, cada madrugada). Se confirman el día antes (✅) o se quitan (❌).
   Los previstos ya cuentan en la hoja de compra. Más allá de 2 semanas, el calendario los calcula al momento.
