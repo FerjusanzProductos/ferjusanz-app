@@ -8,6 +8,7 @@ Trabajos de Claude fuera de la app: la web de la empresa, la contabilidad con Jo
 |---|---|---|
 | **Web** `www.ferjusanz-frutas-verduras.es` (WordPress de Creativate) | `docs/PLAN_WEB.md`: plan para llevarla nosotros, preguntas a Creativate, riesgos, costes y Google | 🟡 Fernando mira contrato y manda las preguntas |
 | Quitar la página de COVID de la web | `docs/PENDIENTES.md` | 🟡 Lo pide Fernando a Creativate |
+| **Tienda online / ser proveedores** | `docs/PLAN_TIENDA.md`: tienda propia gratis, WhatsApp y Google, y más adelante Shopify + Shopify Collective | 🟡 Decidido, sin empezar |
 | **Contabilidad (Jorge)** | Documento para Jorge: https://claude.ai/artifact/8Da6PSY7rvVAzn8aTpStTC · «📤 Informes para Jorge» en la app | 🟡 Llamada con Jorge pendiente |
 | Verifactu | Lo cumple **Golden Soft** (es quien factura) antes del 1/1/2027. La app no factura. | — |
 | WhatsApp automático (API de Meta) | `docs/PENDIENTES.md` | ⚪ Aparcado |
