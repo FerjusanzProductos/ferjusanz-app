@@ -3242,7 +3242,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v204';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v205';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -7209,7 +7209,7 @@ async function cargarComprasHist(dias, extra) {
   const tc = []; for (let i = 0; i < 20000; i += 1000) { let r = await sb.from('tarifas_compra').select('producto_id,proveedor_id,precio,fecha,unidad').gte('fecha', desdeH).order('fecha', { ascending: false }).range(i, i + 999); if (r.error) break; tc.push(...(r.data || [])); if ((r.data || []).length < 1000) break; }
   const ok = l => !l.dudoso && Number(l.precio) > 0 && l.producto_id;
   const lineas = lf.filter(ok).map(l => ({ factura_id: l.factura_id, proveedor_id: l.proveedor_id, fecha: String(l.fecha).slice(0, 10), texto: l.texto || '', cantidad: Number(l.cantidad) || 0, precio: Number(l.precio), pid: l.producto_id, u: uni(l.unidad, l.producto_id) }));
-  const hist = lineas.map(l => ({ pid: l.pid, u: l.u, fecha: l.fecha, precio: l.precio, prov: l.proveedor_id }))
+  const hist = lineas.map(l => ({ pid: l.pid, u: l.u, fecha: l.fecha, precio: l.precio, prov: l.proveedor_id, fac: l.factura_id }))
     .concat(tc.filter(t => Number(t.precio) > 0 && t.producto_id).map(t => ({ pid: t.producto_id, u: uni(t.unidad, t.producto_id), fecha: String(t.fecha).slice(0, 10), precio: Number(t.precio), prov: t.proveedor_id })));
   const provs = {}; try { const pv = await sb.from('proveedores').select('id,nombre').range(0, 999); (pv.data || []).forEach(p => { provs[p.id] = p.nombre; }); } catch (e) { }
   return { lineas, hist, prods, provs };
@@ -7221,13 +7221,66 @@ async function cargarPreciosRaros(dias, umbral) {
   raros.forEach(r => { const p = prods[r.pid] || {}; r.producto = p.nombre || 'Producto'; r.codigo = p.codigo || ''; r.prov = provs[r.proveedor_id] || 'Proveedor sin identificar'; });
   return raros;
 }
+/* Botones de las tarjetas de «⚠️ Raros» y «📈 Suben»: ver la factura del proveedor y cambiar los precios de venta del producto. */
+function botonesCompraVenta(pid, facs, provs, fecha, nombre, info) {
+  return h('div', { style: 'display:flex;gap:6px;margin-top:8px' },
+    h('button', { class: 'ghost small', style: 'flex:1;min-height:44px', onclick: () => verFacturaLeida(facs, provs, fecha, nombre) }, '📄 Ver factura'),
+    esOficina() ? h('button', { class: 'small', style: 'flex:1;min-height:44px', onclick: () => hojaPreciosVenta(pid, info) }, '💶 Precios de venta') : null);
+}
+/* Abre la factura de proveedor de donde salió el precio (por la factura leída; si no, la del mismo proveedor y día). */
+async function verFacturaLeida(facs, provs, fecha, nombre) {
+  try {
+    let docs = [];
+    if ((facs || []).length) { const r = await sb.from('facturas_recibidas').select('ruta,nombre,proveedores(nombre)').in('id', facs).limit(10); if (!r.error) docs = (r.data || []).filter(x => x.ruta); }
+    if (!docs.length && (provs || []).length) { const r = await sb.from('facturas_recibidas').select('ruta,nombre,fecha_factura,recibido_en,proveedores(nombre)').in('proveedor_id', provs).order('recibido_en', { ascending: false }).limit(200);
+      if (!r.error) docs = (r.data || []).filter(x => x.ruta && (String(x.fecha_factura || '').slice(0, 10) === fecha || String(x.recibido_en || '').slice(0, 10) === fecha)); }
+    if (!docs.length) { toast('No encuentro la factura de este precio (puede venir de Golden o apuntado a mano).', 'err'); return; }
+    const tit = d => ((uno(d.proveedores) || {}).nombre || 'Factura') + ' · ' + fechaES(fecha);
+    if (docs.length === 1) { verDocumento(docs[0].ruta, tit(docs[0])); return; }
+    hoja('Facturas de ' + nombre, h('div', {}, docs.map(d => h('button', { class: 'ghost', style: 'width:100%;min-height:50px;margin-bottom:6px;text-align:left', onclick: () => verDocumento(d.ruta, tit(d)) }, '📄 ' + tit(d) + (d.nombre ? ' · ' + d.nombre : '')))));
+  } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); }
+}
+/* Precios de venta de UN producto, para cambiarlos sin salir: precio general, precios especiales de cada cliente y listas de precios. */
+async function hojaPreciosVenta(pid, info) {
+  info = info || {};
+  const cuerpo = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
+  const cerrar = hoja('💶 Precios de venta', cuerpo);
+  try {
+    const pr = await sb.from('productos').select('id,codigo,nombre,unidad_precio').eq('id', pid).single(); if (pr.error) throw pr.error; const P = pr.data;
+    const t = await sb.from('tarifas').select('cliente_id,precio,desde').eq('producto_id', pid).order('desde', { ascending: false }).limit(500); if (t.error) throw t.error;
+    let general = null; const porCli = {}; (t.data || []).forEach(x => { if (!x.cliente_id) { if (!general) general = x; } else if (!porCli[x.cliente_id]) porCli[x.cliente_id] = x; });
+    const cids = Object.keys(porCli), nom = {};
+    if (cids.length) { const c = await sb.from('clientes').select('id,nombre,nombre_comercial').in('id', cids); (c.data || []).forEach(x => { nom[x.id] = nombreCli(x); }); }
+    let listas = []; try { const li = await sb.from('listas_precios_items').select('lista_id,nombre,precio,unidad,listas_precios(nombre)').eq('producto_id', pid); if (!li.error) listas = li.data || []; } catch (e) { }
+    const ud = P.unidad_precio || info.unidad || 'kg', compra = info.compra;
+    const gana = v => { if (compra == null || v == null || !(v > 0)) return ''; const g = v - compra; return ' · ' + (g >= 0 ? 'ganas ' : 'pierdes ') + eur(Math.abs(g)) + ' (' + Math.round(g / v * 100) + ' %)'; };
+    const fila = (titulo, actual, desde, cid) => {
+      const sub = h('div', { class: 'sub' }, (actual != null ? 'desde ' + fechaES(String(desde).slice(0, 10)) : 'sin precio') + gana(actual));
+      const inp = h('input', { type: 'text', inputmode: 'decimal', value: actual != null ? String(actual).replace('.', ',') : '', placeholder: '€', style: 'width:90px;min-height:44px;text-align:right;font-weight:700' });
+      const bt = h('button', { class: 'small', style: 'width:auto;min-height:44px', onclick: async () => { const n = parseNum(inp.value); if (n === null || n < 0) { toast('Precio no válido', 'err'); return; }
+        if (!await confirmar('¿Poner ' + P.nombre + ' a ' + eur(n) + ' €/' + ud + ' para ' + titulo + '?')) return;
+        if (await guardarTarifa(pid, cid, n)) { toast('Precio guardado', 'ok'); sub.textContent = 'desde hoy' + gana(n); } } }, 'Guardar');
+      return h('div', { class: 'card', style: 'padding:8px 10px' }, h('div', { class: 'fila', style: 'gap:8px' }, h('div', { style: 'flex:1' }, h('b', {}, titulo), sub), inp, bt));
+    };
+    cuerpo.replaceChildren(...[
+      h('div', { class: 'nombre' }, P.nombre + ' · ' + P.codigo),
+      h('div', { class: 'sub', style: 'margin-bottom:8px' }, [compra != null ? 'Última compra ' + eur(compra) + ' €/' + (info.unidad || ud) : null, info.venta != null ? 'en Golden se vende a ' + eur(info.venta) + ' €' : null].filter(Boolean).join(' · ') + '. Precios en €/' + ud + '.'),
+      fila('Precio general', general && Number(general.precio), general && general.desde, null),
+      cids.length ? h('div', { class: 'sub', style: 'margin:8px 0 4px' }, 'Precios especiales de clientes (' + cids.length + '):') : null,
+      ...cids.sort((a, b) => String(nom[a] || '').localeCompare(String(nom[b] || ''), 'es')).map(c => fila(nom[c] || 'Cliente', Number(porCli[c].precio), porCli[c].desde, c)),
+      listas.length ? h('div', { class: 'sub', style: 'margin:8px 0 4px' }, 'En las listas de precios de clientes nuevos:') : null,
+      ...listas.map(l => h('div', { class: 'card fila', style: 'padding:8px 10px' }, h('div', {}, h('b', {}, (uno(l.listas_precios) || {}).nombre || 'Lista'), h('div', { class: 'sub' }, l.precio != null ? eur(l.precio) + ' €/' + (l.unidad || 'kg') + gana(Number(l.precio)) : 'sin precio')),
+        h('button', { class: 'ghost small', style: 'width:auto', onclick: () => { LS.set('fj_tar_lista', l.lista_id); state.tarBuscar = l.nombre || P.nombre; cerrar(); go('tarifas'); } }, 'Abrir lista')))].filter(Boolean));
+  } catch (e) { cuerpo.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+}
 /* ---------- Agente de compras (2): SUBEN (aviso de margen) ----------
    Fernando (11/11/2026): sin porcentaje fijo. Para cada producto, «lo normal» es la MEDIA de lo pagado los 14 días anteriores
    a la última compra (media de cada día). Si la última compra sale más cara, avisa y dice cuánto se come del margen,
    con el precio de venta real de Golden (mediana de los últimos 60 días con datos). Solo lee, no cambia nada. */
 function subidasCalc(hist, desde) {
   const dia = {};   /* producto|unidad -> fecha -> [precios] */
-  hist.forEach(x => { const k = x.pid + '|' + x.u; ((dia[k] = dia[k] || {})[x.fecha] = dia[k][x.fecha] || []).push(x.precio); });
+  const docs = {};   /* producto|unidad|fecha -> facturas y proveedores de ese día (para «Ver factura») */
+  hist.forEach(x => { const k = x.pid + '|' + x.u; ((dia[k] = dia[k] || {})[x.fecha] = dia[k][x.fecha] || []).push(x.precio); const d = docs[k + '|' + x.fecha] = docs[k + '|' + x.fecha] || { facs: new Set(), provs: new Set() }; if (x.fac) d.facs.add(x.fac); if (x.prov) d.provs.add(x.prov); });
   const media = a => a.reduce((s, v) => s + v, 0) / a.length, out = [];
   Object.keys(dia).forEach(k => {
     const fechas = Object.keys(dia[k]).sort(), ult = fechas[fechas.length - 1]; if (!ult || ult < desde) return;
@@ -7235,7 +7288,7 @@ function subidasCalc(hist, desde) {
     const prev = fechas.filter(f => f < ult && f >= ini); if (prev.length < 2) return;   /* hacen falta al menos 2 días de compras para saber la media */
     const pu = media(dia[k][ult]), pm = media(prev.map(f => media(dia[k][f])));
     if (pu - pm < 0.02 || pu < pm * 1.03) return;   /* solo subidas de verdad, no de céntimos */
-    const [pid, u] = k.split('|'); out.push({ pid, u, fecha: ult, ultimo: pu, media: pm, dias: prev.length, sube: pu - pm, pct: (pu / pm - 1) * 100 });
+    const [pid, u] = k.split('|'), dd = docs[k + '|' + ult] || { facs: new Set(), provs: new Set() }; out.push({ pid, u, fecha: ult, facs: [...dd.facs], provs: [...dd.provs], ultimo: pu, media: pm, dias: prev.length, sube: pu - pm, pct: (pu / pm - 1) * 100 });
   });
   return out;
 }
@@ -7277,7 +7330,8 @@ function panelSuben(cont) {
             ? h('div', { style: 'margin-top:4px' }, 'Lo vendes a ', h('b', {}, eur(r.venta) + '/' + r.u), ': ganabas ' + eur(r.ganabas) + ' (' + pc(r.mAntes) + ') → ahora ', h('b', { style: 'color:' + col }, eur(r.ganas) + ' (' + pc(r.mAhora) + ')'))
             : h('div', { class: 'sub' }, 'Sin ventas en Golden los últimos 60 días para comparar.'),
           malo ? h('div', { style: 'margin-top:4px;color:' + col + ';font-weight:700' }, '¡A este precio de compra no ganas nada! Revisa el precio de venta (o la factura, por si está mal la unidad).') : null,
-          h('div', { class: 'sub' }, 'Media de ' + r.dias + ' días de compra.')));
+          h('div', { class: 'sub' }, 'Media de ' + r.dias + ' días de compra.'),
+          botonesCompraVenta(r.pid, r.facs, r.provs, r.fecha, r.producto, { compra: r.ultimo, unidad: r.u, venta: r.venta })));
       });
       if (!sub.length) kids.push(h('p', { class: 'vacio' }, 'Ningún producto ha subido en las compras de los últimos ' + dias + ' días.'));
       if (gv.hasta) kids.push(h('p', { class: 'sub', style: 'margin-top:8px' }, 'Precio de venta: lo que se ha cobrado en Golden los 60 días hasta el ' + fechaES(gv.hasta) + ' (lo más habitual).'));
@@ -7314,7 +7368,8 @@ function panelPreciosRaros(cont) {
           h('div', { class: 'sub' }, 'En la factura: «' + r.texto + '»'),
           h('div', { style: 'margin-top:4px' }, 'Pagado ', h('b', {}, eur(r.precio) + '/' + r.u), ' · lo normal ', h('b', {}, eur(r.ref) + '/' + r.u)),
           h('div', { class: 'sub' }, 'Últimos 60 días: de ' + eur(r.min) + ' a ' + eur(r.max) + ' (' + r.n + ' precios)' + (r.ultProv != null ? ' · a este proveedor, la vez anterior: ' + eur(r.ultProv) : '')),
-          r.unidadMal ? h('div', { style: 'margin-top:4px;color:' + col + ';font-weight:700' }, '¿Unidad o producto mal apuntado? (caja/kg/pieza…) Revisa la factura.') : null));
+          r.unidadMal ? h('div', { style: 'margin-top:4px;color:' + col + ';font-weight:700' }, '¿Unidad o producto mal apuntado? (caja/kg/pieza…) Revisa la factura.') : null,
+          botonesCompraVenta(r.pid, r.factura_id ? [r.factura_id] : [], r.proveedor_id ? [r.proveedor_id] : [], r.fecha, r.producto, { compra: r.precio, unidad: r.u })));
       });
       if (!raros.length) kids.push(h('p', { class: 'vacio' }, 'No hay precios raros en las facturas de los últimos ' + dias + ' días con este margen.'));
       lista.replaceChildren(...kids);
@@ -10380,7 +10435,9 @@ async function h2Tarifas(el) {
     return tr; };
   const tabla = h('table', { style: 'width:100%;font-size:13px;border-collapse:collapse;margin-top:6px' }, h('tr', { class: 'sub' }, h('th', {}), h('th', { style: 'text-align:left' }, 'Producto'), h('th', { style: 'text-align:right' }, 'Precio €'), h('th', { style: 'text-align:right' }, 'Ganas')), ...items.slice().sort((a, b) => String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es', { sensitivity: 'base' })).map(fila));
   const buscar = comInput('text', '', { placeholder: '🔎 Buscar producto en la lista…' });
-  buscar.addEventListener('input', () => { const t = sinTilde(buscar.value.trim().toLowerCase()); tabla.querySelectorAll('tr[data-n]').forEach(tr => { tr.style.display = !t || tr.dataset.n.includes(t) ? '' : 'none'; }); });
+  const filtra = () => { const t = sinTilde(buscar.value.trim().toLowerCase()); tabla.querySelectorAll('tr[data-n]').forEach(tr => { tr.style.display = !t || tr.dataset.n.includes(t) ? '' : 'none'; }); };
+  buscar.addEventListener('input', filtra);
+  if (state.tarBuscar) { buscar.value = state.tarBuscar; state.tarBuscar = null; filtra(); }   /* viene de «💶 Precios de venta» */
   const bAplicar = h('button', { class: 'guardar', style: 'flex:1.4;min-height:52px' }); const bAplicar2 = h('button', { class: 'guardar', style: 'flex:1.4;min-height:48px' });
   const pintarBoton = () => [bAplicar, bAplicar2].forEach(b => { b.textContent = '💾 Guardar ' + marcados.size + ' precio(s)'; b.disabled = !marcados.size; });
   bAplicar2.onclick = () => bAplicar.onclick();
