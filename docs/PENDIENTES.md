@@ -2,6 +2,7 @@
 _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.md. Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda._
 
 ## Por publicar o decidir
+- 🟡 **Formatos de compra y venta editables a mano** (pedido por Fernando el 11/11: «la piparra es por bote»). Propuesta hecha; SQL preparado en `supabase/migrations/20261111d_formatos_compra_venta.sql` (unidad «bote» + `unidad_compra` y `compra_trae` en productos). Esperando su visto bueno y «listo».
 - ✔️ 11/11/2026: **«📄 Ver factura», «💶 Precios de venta» y avisos en Facturas de proveedores** publicados en la normal (v207).
 - ✔️ 11/11/2026: **Arreglos de «Pasar a otro día» + «⚠️ Raros»** publicados en la normal (v202) con «Autorizo publicar».
 - ✔️ 11/11/2026: **Pasar previstos a otro día** publicado en la normal (v199). Ojo: la app de pruebas (v198) ya no lleva el «Seguimiento comercial» (rama `seguimiento-app`, en espera).
