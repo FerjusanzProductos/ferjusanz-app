@@ -3242,7 +3242,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v205';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v206';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -5611,11 +5611,15 @@ function vistaCompras() {
       const dias = {}; r.data.forEach(f => { const k = String(f.fecha_factura || f.recibido_en || '').slice(0, 10); (dias[k] = dias[k] || []).push(f); });
       const dia0 = Object.keys(dias).sort().reverse()[0];
       const todas = h('button', { class: 'guardar', style: 'width:100%;min-height:50px;margin:0 0 10px;position:static;box-shadow:none', onclick: () => registrarTodasDelDia(dias[dia0], () => { pRecibidas(); try { contarBandeja(); } catch (e) { } }) }, '✅ Registrar todas las compras del ' + fechaES(dia0) + ' (' + dias[dia0].length + ')');
-      lista.replaceChildren(todas, ...r.data.map(f => {
+      const huecos = {};   /* factura -> sitio para «⚠️ raros · 🔺 suben · 🔻 bajan» */
+      const estadoAv = h('div', { class: 'sub', style: 'margin:0 0 8px' });
+      lista.replaceChildren(todas, estadoAv, ...r.data.map(f => {
         const pv = f.proveedores ? uno(f.proveedores) : null;
+        huecos[f.id] = { el: h('div', {}), f, tit: (pv ? pv.nombre : (f.remitente || 'Factura')) + ' · ' + fechaES(String(f.fecha_factura || f.recibido_en).slice(0, 10)) };
         return h('div', { class: 'card' },
           h('div', { class: 'nombre' }, pv ? pv.nombre : (f.remitente || 'Remitente desconocido')),
           h('div', { class: 'sub' }, [f.asunto, f.nombre, f.fecha_factura ? 'Factura del ' + fechaES(String(f.fecha_factura).slice(0, 10)) : 'Llegó el ' + fechaES(String(f.recibido_en).slice(0, 10)), pv ? null : 'proveedor sin identificar'].filter(Boolean).join(' · ')),
+          huecos[f.id].el,
           h('div', { class: 'fila', style: 'gap:6px;margin-top:6px;justify-content:flex-start;flex-wrap:wrap' },
             h('button', { class: 'ghost small', onclick: () => verDocumento(f.ruta) }, '👁 Ver'),
             h('button', { class: 'small', onclick: () => revisarFacturaHoja(f, () => { pRecibidas(); try { contarBandeja(); } catch (e) { } }) }, '✅ Revisar y registrar aquí'),
@@ -5623,6 +5627,29 @@ function vistaCompras() {
             h('button', { class: 'ghost small', onclick: () => enlazarRecibida(f, provs, pv) }, 'Enlazar con compra ya hecha'),
             h('button', { class: 'ghost small', onclick: async () => { if (!await confirmar('¿Descartar este archivo? Dejará de aparecer en la bandeja.')) return; const x = await sb.from('facturas_recibidas').update({ estado: 'descartada' }).eq('id', f.id); if (x.error) toast(msgErr(x.error), 'err'); else pRecibidas(); } }, 'Descartar')));
       }));
+      /* Avisos de precios (raros, suben, bajan) de cada factura, aunque no esté revisada ni registrada */
+      const pintaAvisos = async () => {
+        try {
+          const av = await avisosDeFacturas(Object.keys(huecos)); let n = 0;
+          Object.keys(huecos).forEach(id => { const x = huecos[id], a = av[id] || [];
+            if (!a.length) { x.el.replaceChildren(); return; } n++;
+            x.el.replaceChildren(h('button', { class: 'ghost small', style: 'width:100%;margin-top:6px;min-height:44px;text-align:left;border-color:#f0b4b4', onclick: () => hojaAvisosFactura(x.f, a, x.tit) }, resumenAvisos(a) + ' · ver')); });
+          return n;
+        } catch (e) { return 0; }
+      };
+      (async () => {
+        estadoAv.textContent = 'Buscando precios raros, subidas y bajadas…';
+        let n = await pintaAvisos();
+        const sinLeer = []; try { const q = await sb.from('lineas_factura_leida').select('factura_id').in('factura_id', Object.keys(huecos)).limit(5000); const ya = new Set((q.data || []).map(x => x.factura_id)); const vac = LS.get('fj_fact_vacias', {}); Object.keys(huecos).forEach(id => { if (!ya.has(id) && !vac[id]) sinLeer.push(id); }); } catch (e) { }
+        if (sinLeer.length && navigator.onLine && state.view === 'compras') {   /* las que todavía no se han leído: se leen ahora y se vuelve a mirar */
+          const viejo = r.data.filter(f => sinLeer.includes(f.id)).map(f => String(f.fecha_factura || f.recibido_en).slice(0, 10)).sort()[0];
+          const diasL = Math.min(120, Math.max(15, Math.ceil((Date.now() - new Date(viejo + 'T12:00:00').getTime()) / 86400000) + 1));
+          estadoAv.textContent = '🔄 Leyendo ' + sinLeer.length + ' factura(s) sin leer para buscar precios raros…';
+          const res = await leerFacturasRecientes(diasL, (i, t) => { estadoAv.textContent = '🔄 Leyendo factura ' + i + ' de ' + t + '…'; });
+          if (res && !res.ocupado) n = await pintaAvisos();
+        }
+        estadoAv.textContent = n ? '⚠️ ' + n + ' factura(s) con precios que suben, bajan o son raros (toca «ver»).' : '';
+      })();
     } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
   }
   async function enlazarRecibida(f, provs, pv) {
@@ -7272,6 +7299,57 @@ async function hojaPreciosVenta(pid, info) {
       ...listas.map(l => h('div', { class: 'card fila', style: 'padding:8px 10px' }, h('div', {}, h('b', {}, (uno(l.listas_precios) || {}).nombre || 'Lista'), h('div', { class: 'sub' }, l.precio != null ? eur(l.precio) + ' €/' + (l.unidad || 'kg') + gana(Number(l.precio)) : 'sin precio')),
         h('button', { class: 'ghost small', style: 'width:auto', onclick: () => { LS.set('fj_tar_lista', l.lista_id); state.tarBuscar = l.nombre || P.nombre; cerrar(); go('tarifas'); } }, 'Abrir lista')))].filter(Boolean));
   } catch (e) { cuerpo.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+}
+/* ---------- Agente de compras (3): avisos en «Facturas de proveedores» ----------
+   Fernando (11/11/2026): que en la bandeja de facturas salga lo que SUBE, lo que BAJA y los RAROS de cada factura,
+   aunque todavía no se haya revisado ni registrado. Mismas reglas que las pestañas de Precios de compra:
+   raro = se aparta 30 % o más de la mediana de 60 días; sube/baja = frente a la media de los 14 días anteriores (más de 2 céntimos y del 3 %). */
+function avisosDeLineas(lineas, hist) {
+  const idx = {}; hist.forEach(x => { (idx[x.pid + '|' + x.u] = idx[x.pid + '|' + x.u] || []).push(x); });
+  const menos = (f, d) => hoy(new Date(new Date(f + 'T12:00:00').getTime() - d * 86400000));
+  const med = a => { const b = a.slice().sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
+  const media = a => a.reduce((t, v) => t + v, 0) / a.length;
+  return lineas.map(l => {
+    const todo = idx[l.pid + '|' + l.u] || [], o = Object.assign({}, l);
+    const a60 = todo.filter(x => x.fecha < l.fecha && x.fecha >= menos(l.fecha, 60));
+    if (a60.length >= 3) { o.ref = med(a60.map(x => x.precio)); o.pctRaro = (l.precio / o.ref - 1) * 100; o.raro = Math.abs(o.pctRaro) >= 30; o.unidadMal = l.precio >= o.ref * 2 || l.precio <= o.ref / 2; }
+    const porDia = {}; todo.filter(x => x.fecha < l.fecha && x.fecha >= menos(l.fecha, 14)).forEach(x => { (porDia[x.fecha] = porDia[x.fecha] || []).push(x.precio); });
+    const dias = Object.keys(porDia);
+    if (dias.length >= 2) { o.media = media(dias.map(d => media(porDia[d]))); o.dias = dias.length; const dif = l.precio - o.media;
+      o.sube = dif >= 0.02 && l.precio >= o.media * 1.03; o.baja = -dif >= 0.02 && l.precio <= o.media * 0.97; }
+    return o;
+  }).filter(o => o.raro || o.sube || o.baja);
+}
+/* Busca los avisos de varias facturas de proveedor ya leídas. Devuelve { factura_id: [avisos] }. */
+async function avisosDeFacturas(facIds) {
+  const out = {}; if (!facIds.length) return out;
+  const lf = []; for (let i = 0; i < facIds.length; i += 50) { const r = await sb.from('lineas_factura_leida').select('factura_id,proveedor_id,fecha,texto,cantidad,unidad,precio,producto_id,dudoso').in('factura_id', facIds.slice(i, i + 50)).limit(3000); if (r.error) throw r.error; lf.push(...(r.data || [])); }
+  const ok = lf.filter(l => !l.dudoso && Number(l.precio) > 0 && l.producto_id); if (!ok.length) return out;
+  const vieja = ok.map(l => String(l.fecha).slice(0, 10)).sort()[0], dias = Math.max(1, Math.ceil((Date.now() - new Date(vieja + 'T12:00:00').getTime()) / 86400000));
+  const { hist, prods, provs } = await cargarComprasHist(dias, 62);
+  const uni = (u, pid) => u || (prods[pid] && prods[pid].unidad_venta) || 'kg';
+  const lineas = ok.map(l => ({ factura_id: l.factura_id, proveedor_id: l.proveedor_id, fecha: String(l.fecha).slice(0, 10), texto: l.texto || '', precio: Number(l.precio), pid: l.producto_id, u: uni(l.unidad, l.producto_id) }));
+  const vistos = new Set();
+  avisosDeLineas(lineas, hist).forEach(a => { const k = [a.factura_id, a.texto, a.precio].join('|'); if (vistos.has(k)) return; vistos.add(k);
+    const p = prods[a.pid] || {}; a.producto = p.nombre || 'Producto'; a.codigo = p.codigo || ''; a.prov = provs[a.proveedor_id] || ''; (out[a.factura_id] = out[a.factura_id] || []).push(a); });
+  return out;
+}
+function resumenAvisos(av) {
+  const n = k => av.filter(a => a[k]).length, r = n('raro'), s = n('sube'), b = n('baja');
+  return [r ? '⚠️ ' + r + ' raro' + (r > 1 ? 's' : '') : null, s ? '🔺 ' + s + ' sube' + (s > 1 ? 'n' : '') : null, b ? '🔻 ' + b + ' baja' + (b > 1 ? 'n' : '') : null].filter(Boolean).join(' · ');
+}
+function hojaAvisosFactura(f, av, titulo) {
+  const pc = x => (x > 0 ? '+' : '') + Math.round(x) + ' %';
+  hoja('Precios de esta factura', h('div', {},
+    h('div', { class: 'sub', style: 'margin-bottom:6px' }, titulo),
+    ...av.sort((a, b) => (b.raro - a.raro) || (b.sube - a.sube)).map(a => { const col = a.unidadMal ? '#7c3aed' : a.sube || (a.raro && a.pctRaro > 0) ? '#b91c1c' : '#166534';
+      return h('div', { class: 'card', style: 'border-left:5px solid ' + col },
+        h('div', { class: 'fila' }, h('div', { class: 'nombre' }, a.producto + (a.codigo ? ' · ' + a.codigo : '')), h('b', { style: 'color:' + col }, [a.raro ? '⚠️' : null, a.sube ? '🔺' : a.baja ? '🔻' : null].filter(Boolean).join(' '))),
+        h('div', { class: 'sub' }, 'En la factura: «' + a.texto + '» · ' + eur(a.precio) + '/' + a.u),
+        a.media != null && (a.sube || a.baja) ? h('div', {}, (a.sube ? 'Sube' : 'Baja') + ' frente a su media de ' + a.dias + ' días: ', h('b', {}, eur(a.media)), ' (' + (a.precio >= a.media ? '+' : '') + eur(a.precio - a.media) + ')') : null,
+        a.raro ? h('div', {}, 'Raro: lo normal (60 días) es ', h('b', {}, eur(a.ref)), ' (' + pc(a.pctRaro) + ')') : null,
+        a.unidadMal ? h('div', { style: 'color:' + col + ';font-weight:700' }, '¿Unidad o producto mal apuntado? Revisa la factura.') : null,
+        botonesCompraVenta(a.pid, [a.factura_id], a.proveedor_id ? [a.proveedor_id] : [], a.fecha, a.producto, { compra: a.precio, unidad: a.u })); })));
 }
 /* ---------- Agente de compras (2): SUBEN (aviso de margen) ----------
    Fernando (11/11/2026): sin porcentaje fijo. Para cada producto, «lo normal» es la MEDIA de lo pagado los 14 días anteriores

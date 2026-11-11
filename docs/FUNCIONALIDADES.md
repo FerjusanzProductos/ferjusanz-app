@@ -51,6 +51,7 @@ _Sacadas del historial de GitLab y de los documentos (📝). Versión normal v18
 - `guia.html`, página de ejemplos con fotos y vídeo (cobro sin IVA, portal) y **Modo prácticas** (desde Mi perfil).
 
 ## Solo en la app de pruebas (sin publicar)
+- **Avisos en Facturas de proveedores** (v206): cada factura de la bandeja dice cuántos precios son raros, suben o bajan, aunque no esté registrada (lee sola las que falten).
 - **📄 Ver factura / 💶 Precios de venta** en cada producto de Raros y Suben (v205): `botonesCompraVenta`, `verFacturaLeida`, `hojaPreciosVenta`.
 - **Informes para Jorge**: Excel del mes con facturas emitidas y recibidas, cobros, albaranes sin facturar y jornada. Comprueba Golden y las facturas sin revisar, enseña el resumen antes de compartir y tiene una lista de cierre de mes y tarea en Secretaría (días 1 a 10).
 
