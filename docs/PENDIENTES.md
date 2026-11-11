@@ -43,7 +43,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 6. 🔴 **Agente de compras y facturas**:
    - ✔️ **Precios raros**: publicado (v202), pestaña «⚠️ Raros» en Precios de compra.
    - ⚪ Productos mal apuntados según las reglas internas (fcRegla*).
-   - 🟢 **Margen / subidas («📈 Suben»)**: hecho en PRUEBAS (v203). Sin % fijo: compara con la media de los 14 días anteriores de cada producto (decisión de Fernando). Falta «Autorizo publicar» (en la normal irá como v204).
+   - ✔️ **Margen / subidas («📈 Suben»)**: publicado (v204). Sin % fijo: compara con la media de los 14 días anteriores de cada producto (decisión de Fernando).
    - ⚪ Comprobador Golden ↔ albaranes: **esperando el archivo de ejemplo** de Golden.
 7. 🟡 Harvey orquestador v2: apuntar contactos, confirmar previstos, pedidos desde WhatsApp y recordatorios de cobro (siempre con confirmación).
 8. 🔴 **Copia de seguridad de fotos, PDF y audios** de Supabase Storage (ahora no se copian).

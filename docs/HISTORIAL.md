@@ -2,6 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 11/11/2026
+- **v204 publicada en la app normal** («Autorizo publicar»): «📈 Suben» (aviso de subidas y margen). Juntado con `main`. Pruebas queda en v203 con lo mismo.
 - **Agente de compras, parte 2: «📈 Suben» (v203 en PRUEBAS)**. Fernando no quiere un margen mínimo fijo: «que siga la media de los últimos días por producto y que cuando suba se avise». En Precios de compra, pestaña **«📈 Suben»**: para cada producto (y unidad), **lo normal = media de lo pagado los 14 días anteriores** a la última compra (media de cada día; facturas leídas + tarifas de compra; hacen falta 2 días de compras). Si la última compra sale más cara (más de 2 céntimos y del 3 %, para no avisar por céntimos), avisa y dice **cuánto se come del margen** con el precio de venta real de **Golden** (mediana de los 60 días con datos de `golden_lineas`): «ganabas X → ahora Y». Primero los que ya no dejan ganancia (en rojo). Compras de los últimos 3/7/15/30 días (por defecto 7). Solo lee. Probado con datos reales: manzana golden 1,85 €/kg frente a 1,33 de media, vendida a 1,75 → ya no gana.
 - **v202 publicada en la app normal** («Autorizo publicar»): arreglos de «📆 Pasar a otro día» + «⚠️ Raros» (precios raros de las facturas de proveedor). Juntado con `main`. Pruebas queda en v201 con lo mismo.
 - **v201 en PRUEBAS** = «⚠️ Raros» + arreglos de «Pasar a otro día» juntos (las dos ramas usaban la v200).
