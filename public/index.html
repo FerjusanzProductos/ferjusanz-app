@@ -852,6 +852,69 @@ async function decidirVarios(ids, alTerminar) {
   let ok = 0; for (const id of ids) { const r = await sb.rpc('confirmar_previsto', { p_pedido: id, p_hacer: true }); if (!r.error) ok++; }
   toast(ok + ' pedidos confirmados', 'ok'); if (alTerminar) alTerminar();
 }
+/* ===== Pasar un pedido (sobre todo un previsto) a otro día: «solo esta vez» o «siempre» (cambia su pedido fijo) ===== */
+const NOMBRE_DIA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const diaSem = iso => NOMBRE_DIA[new Date(iso + 'T12:00:00').getDay()];
+const habDePedido = p => { const m = /^fijo:([^:]+):/.exec((p && p.hash_origen) || ''); return m ? m[1] : null; };
+async function moverPedidoFecha(p, a, modo) {   // cambia la fecha; con modo 'siempre' también el día de su pedido fijo y sus previstos
+  const de = p.fecha_entrega; const hid = habDePedido(p);
+  const u = await sb.from('pedidos').update({ fecha_entrega: a }).eq('id', p.id); if (u.error) throw u.error; p.fecha_entrega = a;
+  if (modo !== 'siempre' || !hid) return 'Pasado al ' + diaSem(a) + ' ' + fechaES(a);
+  const dDe = new Date(de + 'T12:00:00').getDay(), dA = new Date(a + 'T12:00:00').getDay();
+  const hb = await sb.from('pedidos_habituales').select('id,dias_semana').eq('id', hid).maybeSingle(); if (hb.error) throw hb.error;
+  if (hb.data) { const dias = Array.from(new Set((hb.data.dias_semana || []).filter(x => x !== dDe).concat([dA]))).sort();
+    const uh = await sb.from('pedidos_habituales').update({ dias_semana: dias }).eq('id', hid); if (uh.error) throw uh.error;
+    /* los previstos futuros de ese pedido fijo que caían en el día antiguo pasan al nuevo */
+    const fut = await sb.from('pedidos').select('id,fecha_entrega,hash_origen').eq('estado', 'previsto').gt('fecha_entrega', de); if (fut.error) throw fut.error;
+    for (const x of (fut.data || []).filter(x => x.id !== p.id && String(x.hash_origen || '').startsWith('fijo:' + hid + ':') && new Date(x.fecha_entrega + 'T12:00:00').getDay() === dDe)) await sb.from('pedidos').update({ fecha_entrega: sumaDias(x.fecha_entrega, dA - dDe) }).eq('id', x.id); }
+  return 'Pasado. A partir de ahora sale los ' + NOMBRE_DIA[dA];
+}
+async function preguntarModoMover(p, a, otroEseDia) {   // devuelve 'una', 'siempre' o null
+  const hid = habDePedido(p);
+  return new Promise(res => { let hecho = false; const fin = v => { if (hecho) return; hecho = true; cerrar(); res(v); };
+    const cerrar = hoja('Pasar el pedido de ' + nombreCli(uno(p.clientes)), h('div', {},
+      h('p', {}, 'Del ' + diaSem(p.fecha_entrega) + ' ' + fechaES(p.fecha_entrega) + ' al ' + diaSem(a) + ' ' + fechaES(a) + '.'),
+      otroEseDia ? h('div', { class: 'aviso-card' }, '⚠️ Este cliente ya tiene otro pedido ese día.') : null,
+      h('button', { class: 'guardar', style: 'width:100%;min-height:52px;margin-bottom:8px', onclick: () => fin('una') }, 'Solo esta vez'),
+      hid ? h('button', { style: 'width:100%;min-height:52px;margin-bottom:8px', onclick: () => fin('siempre') }, 'Siempre (cambiar su pedido fijo al ' + diaSem(a) + ')') : null,
+      h('button', { class: 'ghost', style: 'width:100%;margin-bottom:8px', onclick: () => fin(null) }, 'Cancelar')));
+    const t = setInterval(() => { if (!state.sheetAbierta) { clearInterval(t); fin(null); } }, 300); });
+}
+async function abrirMoverDia(p, alTerminar) {   // botón «📆 Pasar a otro día» y gesto de deslizar en la lista
+  if (!navigator.onLine) { toast('Necesitas conexión para pasar el pedido a otro día.', 'err'); return; }
+  if (state.sheetAbierta) return;
+  const de = p.fecha_entrega; const hoyIso = hoy();
+  const elegido = await new Promise(res => { let hecho = false; const fin = v => { if (hecho) return; hecho = true; cerrar(); res(v); };
+    const dias = []; for (let i = -7; i <= 21; i++) { const f = sumaDias(de, i); if (f < hoyIso || f === de || new Date(f + 'T12:00:00').getDay() === 0) continue; dias.push(f); }
+    const corto = f => { const n = diaSem(f); return n.charAt(0).toUpperCase() + n.slice(1, 3) + ' ' + fechaES(f).slice(0, 5); };
+    const inp = h('input', { type: 'date', min: hoyIso, style: 'flex:1' });
+    const cerrar = hoja('📆 Pasar a otro día', h('div', {},
+      h('p', { class: 'sub' }, nombreCli(uno(p.clientes)) + ' · ahora el ' + diaSem(de) + ' ' + fechaES(de) + '. Toca el día nuevo:'),
+      h('div', { style: 'display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0' },
+        dias.map(f => h('button', { class: Math.abs((new Date(f) - new Date(de)) / 864e5) <= 3 ? '' : 'ghost', style: 'min-height:48px;padding:4px', onclick: () => fin(f) }, corto(f)))),
+      h('div', { class: 'sub', style: 'margin-top:6px' }, 'U otra fecha:'),
+      h('div', { style: 'display:flex;gap:8px;margin:6px 0 10px' }, inp, h('button', { class: 'guardar', onclick: () => { if (!inp.value) { toast('Elige la fecha', 'err'); return; } if (inp.value === de) { toast('Es el mismo día', 'err'); return; } fin(inp.value); } }, 'Pasar')),
+      h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'También puedes arrastrarlo con el dedo en 🗓 Semana.')));
+    const t = setInterval(() => { if (!state.sheetAbierta) { clearInterval(t); fin(null); } }, 300); });
+  if (!elegido) return;
+  try {
+    const otro = await sb.from('pedidos').select('id').eq('cliente_id', p.cliente_id).eq('fecha_entrega', elegido).neq('id', p.id).neq('estado', 'anulado').neq('archivado', true).limit(1);
+    await new Promise(r => setTimeout(r, 350));   // que se cierre la primera hoja antes de abrir la segunda
+    const modo = await preguntarModoMover(p, elegido, !otro.error && (otro.data || []).length > 0); if (!modo) return;
+    toast(await moverPedidoFecha(p, elegido, modo), 'ok');
+  } catch (e) { toast(msgErr(e), 'err'); }
+  if (alTerminar) alTerminar();
+}
+function deslizarParaMover(el, p, alTerminar) {   // deslizar la tarjeta a un lado abre «Pasar a otro día»
+  let x0 = null, y0 = 0, dx = 0;
+  el.addEventListener('touchstart', e => { const t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; dx = 0; }, { passive: true });
+  el.addEventListener('touchmove', e => { if (x0 == null) return; const t = e.touches[0]; dx = t.clientX - x0;
+    if (Math.abs(t.clientY - y0) > Math.abs(dx)) { x0 = null; el.style.transform = ''; return; }
+    el.style.transform = 'translateX(' + Math.max(-90, Math.min(90, dx)) + 'px)'; }, { passive: true });
+  el.addEventListener('touchend', () => { el.style.transition = 'transform .2s'; el.style.transform = ''; setTimeout(() => { el.style.transition = ''; }, 220);
+    if (x0 != null && Math.abs(dx) > 80) { el._deslizado = true; setTimeout(() => { el._deslizado = false; }, 400); abrirMoverDia(p, alTerminar); } x0 = null; });
+  return el;
+}
 /* ===== Clientes sin IVA (azul) / con IVA (dorado) ===== */
 const claseIva = c => (c && c.sin_iva) ? 'cli-siniva' : 'cli-coniva';
 function chipIva(c, clienteId, alTerminar) {
@@ -1093,8 +1156,8 @@ async function cargarPedidos(fecha) {
   const key = 'fj_pedidos_' + fecha;
   if (navigator.onLine) {
     const q = cols => sb.from('pedidos').select(cols).eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true);
-    let { data, error } = await q('id,cliente_id,estado,fecha_entrega,notas,preparador_id,repartidor_id,orden_reparto,clientes(codigo,nombre,nombre_comercial,forma_pago,sin_iva,albaran_papel),lineas_pedido(id,estado)');
-    if (error && /sin_iva|albaran_papel/i.test(error.message || '')) ({ data, error } = await q('id,cliente_id,estado,fecha_entrega,notas,preparador_id,repartidor_id,orden_reparto,clientes(codigo,nombre,nombre_comercial,forma_pago),lineas_pedido(id,estado)'));
+    let { data, error } = await q('id,cliente_id,estado,fecha_entrega,notas,preparador_id,repartidor_id,orden_reparto,hash_origen,clientes(codigo,nombre,nombre_comercial,forma_pago,sin_iva,albaran_papel),lineas_pedido(id,estado)');
+    if (error && /sin_iva|albaran_papel/i.test(error.message || '')) ({ data, error } = await q('id,cliente_id,estado,fecha_entrega,notas,preparador_id,repartidor_id,orden_reparto,hash_origen,clientes(codigo,nombre,nombre_comercial,forma_pago),lineas_pedido(id,estado)'));
     if (error && /repartidor_id|orden_reparto|does not exist|schema cache/i.test(error.message || '')) ({ data, error } = await q('id,estado,fecha_entrega,notas,preparador_id,clientes(codigo,nombre,nombre_comercial,forma_pago),lineas_pedido(id,estado)'));
     if (!error) { LS.set(key, data); return { datos: data, cache: false }; }
     if (!isNetErr(error)) throw error;
@@ -1142,18 +1205,20 @@ function pintarLista(cache) {
   if (!ps.length) kids.push(h('p', { class: 'vacio' }, 'No hay pedidos para esta fecha.'));
   { const pv = ps.filter(p => p.estado === 'previsto'); if (pv.length) kids.push(h('div', { class: 'card previsto' + (pv.some(prevRojo) ? ' roja' : '') },
       h('b', {}, '📅 ' + pv.length + (pv.length === 1 ? ' pedido previsto' : ' pedidos previstos') + ' sin confirmar'),
-      h('div', { class: 'sub' }, 'Salen solos de los pedidos fijos. Confírmalos el día antes (o quita los que no se hagan). Hasta entonces no se preparan.'),
+      h('div', { class: 'sub' }, 'Salen solos de los pedidos fijos. Confírmalos el día antes (o quita los que no se hagan). Hasta entonces no se preparan. Para cambiar uno de día: 📆 o desliza su tarjeta a un lado.'),
       h('button', { class: 'guardar', style: 'width:100%;margin-top:8px;min-height:48px', onclick: () => decidirVarios(pv.map(p => p.id), actualizarLista) }, '✅ Confirmar todos (' + pv.length + ')'))); }
   for (const p of ps) {
     if (p.estado === 'previsto') {
       const rep2 = repDe(p);
-      kids.push(h('div', { class: 'card tap previsto' + (prevRojo(p) ? ' roja' : ''), onclick: () => go('pedido', { id: p.id }) },
+      const tarj = h('div', { class: 'card tap previsto' + (prevRojo(p) ? ' roja' : ''), onclick: e => { if (e.currentTarget._deslizado) return; go('pedido', { id: p.id }); } },
         h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre ' + claseIva(p.clientes) }, nombreCli(p.clientes)), h('div', { class: 'sub' }, ((p.clientes && p.clientes.codigo) || '') + (rep2 ? ' · 🚚 ' + rep2.nombre.split(' ')[0] : '')), h('div', { style: 'margin-top:4px' }, chipIva(p.clientes, p.cliente_id, actualizarLista)), avisoSinIva(p.clientes)),
           h('span', { class: 'badge ' + claseEst(p) }, textoEst(p))),
         p.notas ? h('div', { class: 'sub', style: 'margin-top:6px' }, '📝 ' + p.notas) : null,
         h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px' },
           h('button', { class: 'guardar small', onclick: e => { e.stopPropagation(); decidirPrevisto(p.id, true, actualizarLista); } }, '✅ Confirmar'),
-          h('button', { class: 'ghost small', onclick: e => { e.stopPropagation(); decidirPrevisto(p.id, false, actualizarLista); } }, '❌ No se hace'))));
+          h('button', { class: 'ghost small', onclick: e => { e.stopPropagation(); decidirPrevisto(p.id, false, actualizarLista); } }, '❌ No se hace'),
+          h('button', { class: 'ghost small', style: 'grid-column:1/-1', onclick: e => { e.stopPropagation(); abrirMoverDia(p, actualizarLista); } }, '📆 Pasar a otro día')));
+      kids.push(deslizarParaMover(tarj, p, actualizarLista));
       continue;
     }
     const ls = p.lineas_pedido || []; const hechas = ls.filter(l => l.estado !== 'pendiente').length;
@@ -1177,7 +1242,7 @@ async function cargarPedido(id) {
   const key = 'fj_pedido_' + id;
   if (navigator.onLine) {
     let [p, l, a, en] = await Promise.all([
-      sb.from('pedidos').select('id,cliente_id,estado,fecha_entrega,notas,preparador_id,descuento_base,descuento_iva,descuento_motivo,clientes(codigo,nombre,nombre_comercial,forma_pago,direccion,localidad,recargo_equivalencia,sin_iva,albaran_papel)').eq('id', id).single(),
+      sb.from('pedidos').select('id,cliente_id,estado,fecha_entrega,notas,preparador_id,hash_origen,descuento_base,descuento_iva,descuento_motivo,clientes(codigo,nombre,nombre_comercial,forma_pago,direccion,localidad,recargo_equivalencia,sin_iva,albaran_papel)').eq('id', id).single(),
       sb.from('lineas_pedido').select('id,producto_id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,precio,precio_lista,nota_interna,iva,version,notas,formato_peso_kg,peso_estimado,peso_variable,productos(codigo,nombre,nombre_albaran,iva,iva_origen)').eq('pedido_id', id),
       sb.from('albaranes').select('serie,numero,fecha,estado,firma_png,firma_nombre,firma_at').eq('pedido_id', id).maybeSingle(),
       sb.from('entregas').select('entregado_at,entregado_por').eq('pedido_id', id).maybeSingle()]);
@@ -1240,10 +1305,12 @@ function pintarPedido() {
     h('div', { class: 'sub', style: 'margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap' }, '¿Con o sin IVA? ', chipIva(cli, d.pedido.cliente_id, () => actualizarPedido())),
     h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px' },
       h('button', { class: 'guardar', style: 'min-height:52px', onclick: () => decidirPrevisto(d.pedido.id, true, () => actualizarPedido()) }, '✅ Confirmar'),
-      h('button', { class: 'peligro', style: 'min-height:52px', onclick: () => decidirPrevisto(d.pedido.id, false, () => go('lista')) }, '❌ No se hace'))));
+      h('button', { class: 'peligro', style: 'min-height:52px', onclick: () => decidirPrevisto(d.pedido.id, false, () => go('lista')) }, '❌ No se hace'),
+      h('button', { style: 'grid-column:1/-1;min-height:52px', onclick: () => abrirMoverDia(d.pedido, () => actualizarPedido()) }, '📆 Pasar a otro día'))));
   if (!cerrado) kids.push(h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px' },
     h('button', { class: 'ghost', style: 'min-height:48px', onclick: () => abrirEdicionPedido(d) }, '✏️ Editar'),
     h('button', { class: 'ghost', style: 'min-height:48px', onclick: () => abrirAnadirProducto(d) }, '➕ Añadir'),
+    estado !== 'previsto' ? h('button', { class: 'ghost', style: 'grid-column:1/-1;min-height:48px', onclick: () => abrirMoverDia(d.pedido, () => actualizarPedido()) }, '📆 Pasar a otro día') : null,
     h('button', { class: 'peligro', style: 'grid-column:1/-1;min-height:48px', onclick: () => borrarPedidoPrep(d) }, '🗑 Borrar')));
   if (state.perfil.rol === 'preparador' && d.pedido.preparador_id && d.pedido.preparador_id !== state.user.id && !cerrado)
     kids.push(h('div', { class: 'aviso-card' }, 'Este pedido lo está preparando otra persona.'));
@@ -3147,7 +3214,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v195';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v198';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -6693,7 +6760,6 @@ function vistaSemana() {
   $app.replaceChildren(shell('Semana', cont)); renderBanner();
   const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
   const movible = p => !['terminado', 'anulado'].includes(p.estado);
-  const habDe = p => { const m = /^fijo:([^:]+):/.exec(p.hash_origen || ''); return m ? m[1] : null; };
   async function cargar() {
     cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
     try {
@@ -6743,27 +6809,9 @@ function vistaSemana() {
     if (!navigator.onLine) { toast('Necesitas conexión para mover pedidos.', 'err'); cargar(); return; }
     try {
       if (de !== a) {
-        const hid = habDe(p);
-        const modo = await new Promise(res => { let hecho = false; const fin = v => { if (hecho) return; hecho = true; cerrar(); res(v); };
-          const cerrar = hoja('Mover el pedido de ' + nombreCli(uno(p.clientes)), h('div', {},
-            h('p', {}, 'Del ' + fechaES(de) + ' al ' + DIAS[(new Date(a + 'T12:00:00').getDay() + 6) % 7].toLowerCase() + ' ' + fechaES(a) + '.'),
-            datos.some(x => x.id !== p.id && x.cliente_id === p.cliente_id && x.fecha_entrega === a) ? h('div', { class: 'aviso-card' }, '⚠️ Este cliente ya tiene otro pedido ese día.') : null,
-            h('button', { class: 'guardar', style: 'width:100%;margin-bottom:8px', onclick: () => fin('una') }, 'Solo esta vez'),
-            hid ? h('button', { style: 'width:100%;margin-bottom:8px', onclick: () => fin('siempre') }, 'Siempre (cambiar su pedido fijo a ese día)') : null,
-            h('button', { class: 'ghost', style: 'width:100%', onclick: () => fin(null) }, 'Cancelar')));
-          const t = setInterval(() => { if (!state.sheetAbierta) { clearInterval(t); fin(null); } }, 300); });
+        const modo = await preguntarModoMover(p, a, datos.some(x => x.id !== p.id && x.cliente_id === p.cliente_id && x.fecha_entrega === a));
         if (!modo) { cargar(); return; }
-        const u = await sb.from('pedidos').update({ fecha_entrega: a }).eq('id', id); if (u.error) throw u.error; p.fecha_entrega = a;
-        if (modo === 'siempre') {
-          const dDe = new Date(de + 'T12:00:00').getDay(), dA = new Date(a + 'T12:00:00').getDay();
-          const hb = await sb.from('pedidos_habituales').select('id,dias_semana').eq('id', hid).maybeSingle(); if (hb.error) throw hb.error;
-          if (hb.data) { const dias = Array.from(new Set((hb.data.dias_semana || []).filter(x => x !== dDe).concat([dA]))).sort();
-            const uh = await sb.from('pedidos_habituales').update({ dias_semana: dias }).eq('id', hid); if (uh.error) throw uh.error;
-            /* los previstos futuros de ese pedido fijo que caían en el día antiguo pasan al nuevo */
-            const fut = await sb.from('pedidos').select('id,fecha_entrega,hash_origen').eq('estado', 'previsto').gt('fecha_entrega', de); if (fut.error) throw fut.error;
-            for (const x of (fut.data || []).filter(x => String(x.hash_origen || '').startsWith('fijo:' + hid + ':') && new Date(x.fecha_entrega + 'T12:00:00').getDay() === dDe)) await sb.from('pedidos').update({ fecha_entrega: sumaDias(x.fecha_entrega, dA - dDe) }).eq('id', x.id); }
-          toast('Movido. A partir de ahora sale los ' + DIAS[(dA + 6) % 7].toLowerCase(), 'ok');
-        } else toast('Movido al ' + fechaES(a), 'ok');
+        toast(await moverPedidoFecha(p, a, modo), 'ok');
         await ordenar(ev.to); await ordenar(ev.from);
       } else { await ordenar(ev.to); toast('Orden de reparto guardado', 'ok'); }
     } catch (e) { toast(msgErr(e), 'err'); }
