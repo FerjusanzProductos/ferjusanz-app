@@ -18,7 +18,8 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 
 ## En marcha (11/11/2026)
 - ⏸ **Seguimiento comercial dentro de la app**: hecho en PRUEBAS (v197, rama `seguimiento-app`). **En espera hasta que se empiece a usar la app de verdad** (Fernando, 11/11: hasta entonces los previstos son de prueba y no hay cobros). La tarea programada de Claude (`trig_016V26ajMMcPLQ3Zvg1C2dw2`) está PAUSADA por lo mismo. Falta crear en Supabase la tabla, la función y el programador (`supabase/migrations/20261111c_seguimiento_diario.sql`) con Fernando delante («listo») o pegándolo él en el editor SQL. Luego probar, «Autorizo publicar» y **quitar la tarea programada de Claude** (`trig_016V26ajMMcPLQ3Zvg1C2dw2`) para no duplicar.
-- 🟡 **Web**: dejar al proveedor actual (se le paga cada mes y el dominio cada año; el dominio es nuestro). Pedirle código de transferencia, accesos, copia completa y que NO borre la web. Ojo con los correos del dominio. Luego la llevamos nosotros con Claude.
+- 🟡 **Web `www.ferjusanz-frutas-verduras.es`** (revisada el 11/11/2026, sin tocar nada): WordPress con plantilla Divi, hecha por **Creativate.es** («Hecho con ♥ por Creativate.es»). Web, DNS y correo del dominio en el mismo alojamiento (servidores `controldeservidor.com`, IP 217.61.210.26). La web enseña `ferjusanz@hotmail.com`, 91 763 21 86 y 609 100 690; tiene Google Tag Manager y botón de WhatsApp. Página antigua de COVID todavía publicada.
+  Plan: dejar a Creativate, pedirles código de transferencia del dominio (y confirmar que el titular es FERJUSANZ), accesos de WordPress y del alojamiento, copia completa, buzones de correo del dominio (si los hay) y acceso a Google Tag Manager/Analytics. Que NO borren nada hasta el traslado. Luego la llevamos nosotros con Claude.
 - 🟡 **Llamada con Jorge (contable)**: preguntas preparadas en la sesión del 11/11.
 
 ## Esperando a Fernando
