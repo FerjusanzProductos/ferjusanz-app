@@ -49,7 +49,7 @@ _Sacadas del historial de GitLab y de los documentos (📝). Versión normal v18
 - `guia.html`, página de ejemplos con fotos y vídeo (cobro sin IVA, portal) y **Modo prácticas** (desde Mi perfil).
 
 ## Solo en la app de pruebas (sin publicar)
-- **⚠️ Raros** (Precios de compra, v200): precios de las facturas de proveedor que se apartan de la mediana de los 60 días anteriores (misma unidad); marca en morado los que parecen unidad o producto mal apuntado. Función `panelPreciosRaros` / `precioRaroCalc`. Solo lee.
+- **⚠️ Raros** (Precios de compra, v201): precios de las facturas de proveedor que se apartan de la mediana de los 60 días anteriores (misma unidad); marca en morado los que parecen unidad o producto mal apuntado. Función `panelPreciosRaros` / `precioRaroCalc`. Solo lee.
 - **Informes para Jorge**: Excel del mes con facturas emitidas y recibidas, cobros, albaranes sin facturar y jornada. Comprueba Golden y las facturas sin revisar, enseña el resumen antes de compartir y tiene una lista de cierre de mes y tarea en Secretaría (días 1 a 10).
 
 ## Sistema

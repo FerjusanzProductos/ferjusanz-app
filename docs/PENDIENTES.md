@@ -2,6 +2,7 @@
 _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.md. Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda._
 
 ## Por publicar o decidir
+- 🟡 **Arreglos de «Pasar a otro día»** (v200, rama `arreglos-mover-previstos`): Fernando lo prueba en la app de pruebas y, si vale, «Autorizo publicar» (en la normal con otro número, p. ej. v201). Ojo: otra sesión estaba subiendo a la vez «Revisar fichas» a pruebas.
 - ✔️ 11/11/2026: **Pasar previstos a otro día** publicado en la normal (v199). Ojo: la app de pruebas (v198) ya no lleva el «Seguimiento comercial» (rama `seguimiento-app`, en espera).
 - ✔️ 11/11/2026: TODO lo de pruebas publicado en la normal (v194): Informes para Jorge, ayuda guiada 🆘, Harvey con WhatsApp natural, Precios / facturas y «lo de siempre» con Golden.
 - 🟡 Desde ahora la app de pruebas sale de `main` (+ el cambio que se esté probando). No volver a dejar cosas solo en pruebas.
@@ -40,7 +41,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 4. ⚪ Agente de ofertas semanales por tipo de cliente.
 5. 🟡 Agente de cobros: deudas por urgencia y recordatorios.
 6. 🔴 **Agente de compras y facturas**:
-   - 🟢 **Precios raros**: hecho en PRUEBAS (v200), pestaña «⚠️ Raros» en Precios de compra. Falta que Fernando lo mire y diga «Autorizo publicar» (en la normal irá como v201).
+   - 🟢 **Precios raros**: hecho en PRUEBAS (v201, junto con los arreglos de «Pasar a otro día»), pestaña «⚠️ Raros» en Precios de compra. Falta que Fernando lo mire y diga «Autorizo publicar» (en la normal irá como v202).
    - ⚪ Productos mal apuntados según las reglas internas (fcRegla*).
    - ⚪ Margen mínimo: **Fernando tiene que decir el mínimo** (%).
    - ⚪ Comprobador Golden ↔ albaranes: **esperando el archivo de ejemplo** de Golden.

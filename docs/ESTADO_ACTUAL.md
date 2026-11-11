@@ -7,7 +7,7 @@ Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial 
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
 | **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v199** ✅ (publicada el 11/11/2026: lo de antes + «📆 Pasar a otro día» para previstos) | GitLab `main` |
-| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v200** ✅ (11/11/2026: la normal v199 + «⚠️ Raros» en Precios de compra, sin publicar todavía) | GitLab `main` |
+| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v201** ✅ (11/11/2026: la normal v199 + arreglos de «Pasar a otro día» + «⚠️ Raros» en Precios de compra, sin publicar) | GitLab ramas `arreglos-mover-previstos` + `agente-compras` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
 La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la publicada: descargar el Worker desde la API de Cloudflare (`/workers/scripts/<nombre>/content/v2`) y buscar ese texto.
