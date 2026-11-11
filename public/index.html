@@ -961,7 +961,7 @@ async function generarPrevistos() {   // una vez al día por móvil (además lo 
 }
 const VISTAS_MAS_OLD = ['mas', 'clientes', 'cliente', 'catalogo', 'compras', 'traza', 'perfil', 'fichajes', 'entregas', 'calendario', 'incidencias', 'precios', 'facturas', 'resumen', 'archivo', 'avisos', 'ruta', 'rentabilidad', 'registro', 'quien', 'facturascli', 'pedidos', 'hojacompra', 'ayuda', 'golden'];
 const puedeCompras = () => !!state.perfil && ['compras', 'oficina', 'admin'].includes(state.perfil.rol);
-const UNIDADES = ['kg', 'pieza', 'caja', 'saco', 'bolsa', 'bandeja', 'manojo', 'docena'];
+const UNIDADES = ['kg', 'pieza', 'caja', 'saco', 'bolsa', 'bandeja', 'manojo', 'docena', 'bote'];
 /* Texto de «Se cobra por»: kg, o la unidad del pedido (docena, caja, pieza…) */
 const etqCobro = (u, uni) => u === 'kg' ? 'kg' : (uni && uni !== 'kg' ? uni : 'unidad');
 /* Unidad con la que se muestra una cantidad preparada: kg, docenas o ud */
@@ -3242,7 +3242,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v207';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v208';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -5014,7 +5014,7 @@ function vistaMas() {
       puedeCompras() ? c('💲', 'Precios de compra del día', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, V) : null, c('♻️', 'Sobrante', () => go('sobrante'), V)),
     ...g('Entregas y pedidos', c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a')),
     ...g('Compras y mercancía', puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('💶', 'Precios de compra', () => { if (LS.get('fj_precios_modo', 'dia') === 'hoy') LS.set('fj_precios_modo', 'dia'); go('precios'); }, A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null),
-    ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z)),
+    ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('📦', 'Formatos de compra y venta', () => go('formatoscv'), Z) : null, esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z)),
     ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
@@ -7252,7 +7252,8 @@ async function cargarPreciosRaros(dias, umbral) {
 function botonesCompraVenta(pid, facs, provs, fecha, nombre, info) {
   return h('div', { style: 'display:flex;gap:6px;margin-top:8px' },
     h('button', { class: 'ghost small', style: 'flex:1;min-height:44px', onclick: () => verFacturaLeida(facs, provs, fecha, nombre) }, '📄 Ver factura'),
-    esOficina() ? h('button', { class: 'small', style: 'flex:1;min-height:44px', onclick: () => hojaPreciosVenta(pid, info) }, '💶 Precios de venta') : null);
+    esOficina() ? h('button', { class: 'small', style: 'flex:1;min-height:44px', onclick: () => hojaPreciosVenta(pid, info) }, '💶 Precios de venta') : null,
+    esOficina() ? h('button', { class: 'ghost small', style: 'flex:0 0 auto;min-height:44px', title: 'Formato de compra y venta', onclick: () => hojaFormato(pid) }, '📦') : null);
 }
 /* Abre la factura de proveedor de donde salió el precio (por la factura leída; si no, la del mismo proveedor y día). */
 async function verFacturaLeida(facs, provs, fecha, nombre) {
@@ -7351,6 +7352,90 @@ function hojaAvisosFactura(f, av, titulo) {
         a.unidadMal ? h('div', { style: 'color:' + col + ';font-weight:700' }, '¿Unidad o producto mal apuntado? Revisa la factura.') : null,
         botonesCompraVenta(a.pid, [a.factura_id], a.proveedor_id ? [a.proveedor_id] : [], a.fecha, a.producto, { compra: a.precio, unidad: a.u })); })));
 }
+/* ---------- 📦 FORMATOS DE COMPRA Y VENTA (Fernando, 11/11/2026: «que se pueda corregir editando a mano») ----------
+   Cada producto: cómo se VENDE (unidad_venta; se cobra por kg o por unidad), cómo se COMPRA si es distinto (unidad_compra)
+   y cuánto trae esa unidad de compra (compra_trae). Lo puesto aquí manda sobre la lista fija UNIDAD_LIBRO. */
+function editorFormato(P, alGuardar) {
+  const uv = h('select', {}, UNIDADES.map(u => h('option', { value: u, selected: u === (P.unidad_venta || 'kg') }, u)));
+  const uc = h('select', {}, [h('option', { value: '' }, 'igual que la venta')].concat(UNIDADES.map(u => h('option', { value: u, selected: u === P.unidad_compra }, u))));
+  const trae = h('input', { type: 'text', inputmode: 'decimal', placeholder: 'trae…', value: P.compra_trae != null ? String(P.compra_trae).replace('.', ',') : '', style: 'width:80px;min-height:44px;text-align:right' });
+  const traeUd = h('span', { class: 'sub' }); const filaTrae = h('div', { style: 'display:flex;gap:6px;align-items:center;margin-top:6px' }, h('span', { class: 'sub' }, 'Cada'), trae, traeUd);
+  const pintaTrae = () => { const c = uc.value; filaTrae.style.display = c && c !== uv.value ? 'flex' : 'none'; filaTrae.firstChild.textContent = 'Cada ' + c + ' trae'; traeUd.textContent = uv.value + (uv.value === 'kg' ? '' : '(s)'); };
+  uv.onchange = pintaTrae; uc.onchange = pintaTrae; pintaTrae();
+  const info = h('div', { class: 'sub' });
+  const bt = h('button', { class: 'small', style: 'min-height:44px', onclick: async () => {
+    const nv = uv.value, nc = uc.value && uc.value !== nv ? uc.value : null, nt = nc ? parseNum(trae.value) : null;
+    const antesC = P.unidad_compra || P.unidad_venta || 'kg', despuesC = nc || nv;
+    if (!await confirmar('¿Guardar ' + P.nombre + ': se vende por ' + nv + (nc ? ', se compra por ' + nc + (nt ? ' (trae ' + num(nt) + ' ' + nv + ')' : '') : '') + '?')) return;
+    const cambios = { unidad_venta: nv, unidad_precio: nv === 'kg' ? 'kg' : 'unidad', unidad_compra: nc, compra_trae: nt };
+    const r = await sb.from('productos').update(cambios).eq('id', P.id); if (r.error) { toast(msgErr(r.error), 'err'); return; }
+    const antesV = P.unidad_venta; Object.assign(P, cambios); try { localStorage.removeItem('fj_wa_prod'); } catch (e) { } try { productosCache = null; } catch (e) { }
+    toast('Formato guardado', 'ok');
+    /* Corregir lo ya apuntado: solo si es cambio entre unidades que se cuentan (pieza → bote…), porque el precio sigue valiendo */
+    try {
+      if (antesC !== despuesC && UNI_CONTEO.includes(antesC) && UNI_CONTEO.includes(despuesC)) {
+        const q = await sb.from('lineas_factura_leida').select('id', { count: 'exact', head: true }).eq('producto_id', P.id).eq('unidad', antesC);
+        const q2 = await sb.from('tarifas_compra').select('id', { count: 'exact', head: true }).eq('producto_id', P.id).eq('unidad', antesC);
+        const n = (q.count || 0) + (q2.count || 0);
+        if (n && await confirmar('Hay ' + n + ' precio(s) de compra de ' + P.nombre + ' apuntados por «' + antesC + '». ¿Pasarlos a «' + despuesC + '»? (el precio no cambia)')) {
+          await sb.from('lineas_factura_leida').update({ unidad: despuesC }).eq('producto_id', P.id).eq('unidad', antesC);
+          await sb.from('tarifas_compra').update({ unidad: despuesC }).eq('producto_id', P.id).eq('unidad', antesC); toast('Precios de compra corregidos', 'ok'); }
+      }
+      if (antesV && antesV !== nv) {
+        const q = await sb.from('lineas_habituales').select('id', { count: 'exact', head: true }).eq('producto_id', P.id).eq('unidad', antesV);
+        if (q.count && await confirmar('Hay ' + q.count + ' pedido(s) fijo(s) con ' + P.nombre + ' por «' + antesV + '». ¿Pasarlos a «' + nv + '»? (la cantidad no cambia: revísala si hace falta)')) {
+          const u = await sb.from('lineas_habituales').update({ unidad: nv }).eq('producto_id', P.id).eq('unidad', antesV); toast(u.error ? msgErr(u.error) : 'Pedidos fijos corregidos', u.error ? 'err' : 'ok'); }
+      }
+    } catch (e) { }
+    info.textContent = '✔ Guardado: se vende por ' + nv + (nc ? ' · se compra por ' + nc : '');
+    alGuardar && alGuardar(P);
+  } }, 'Guardar');
+  return h('div', {},
+    h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;align-items:center' }, h('span', { class: 'sub' }, 'Se vende por'), uv, h('span', { class: 'sub' }, 'Se compra por'), uc),
+    filaTrae, h('div', { style: 'display:flex;gap:6px;align-items:center;margin-top:6px' }, bt, info));
+}
+async function hojaFormato(pid) {
+  const cuerpo = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); hoja('📦 Formato de compra y venta', cuerpo);
+  try {
+    let r = await sb.from('productos').select('id,codigo,nombre,unidad_venta,unidad_precio,unidad_compra,compra_trae').eq('id', pid).single(); if (r.error) throw r.error;
+    const P = r.data, us = await sb.from('lineas_factura_leida').select('unidad,texto').eq('producto_id', pid).order('fecha', { ascending: false }).limit(20);
+    const ej = (us.data || []).slice(0, 4).map(x => '«' + x.texto + '» (' + (x.unidad || '—') + ')');
+    cuerpo.replaceChildren(h('div', { class: 'nombre' }, P.nombre + ' · ' + P.codigo), ej.length ? h('div', { class: 'sub', style: 'margin-bottom:6px' }, 'En las últimas facturas: ' + ej.join(' · ')) : null, editorFormato(P));
+  } catch (e) { cuerpo.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+}
+function vistaFormatosCV() {
+  state.view = 'formatoscv'; if (!esOficina()) { go('inicio'); return; }
+  let filtro = LS.get('fj_fcv_filtro', 'revisar');
+  const busca = h('input', { placeholder: '🔎 Buscar producto…' }), chips = h('div', { class: 'chips' }), lista = h('div', {});
+  $app.replaceChildren(shell('Formatos de compra y venta', h('div', {},
+    h('div', { class: 'aviso-card' }, '📦 Cómo se compra y cómo se vende cada producto (kg, caja, bandeja, bote…). Lo que pongas aquí manda: lo usan el lector de facturas, los precios raros y los márgenes. «⚠️ Revisar» enseña los que en las facturas vienen en otra unidad.'),
+    busca, chips, lista), { volver: volverIni })); renderBanner();
+  let prods = [], fac = {};
+  const pinta = () => {
+    chips.replaceChildren(...[['revisar', '⚠️ Revisar'], ['todos', 'Todos'], ['nokg', 'No van por kg']].map(([k, t]) => h('button', { class: 'chip' + (filtro === k ? ' on' : ''), onclick: () => { filtro = k; LS.set('fj_fcv_filtro', k); pinta(); } }, t)));
+    const t = sinTilde(limpiaBusqueda(busca.value || ''));
+    const raro = P => { const us = Object.keys(fac[P.id] || {}), esp = P.unidad_compra || P.unidad_venta || 'kg'; return us.some(u => u !== esp); };
+    let L = prods.filter(P => !t || sinTilde(P.nombre + ' ' + P.codigo).includes(t));
+    if (!t) L = L.filter(P => filtro === 'todos' || (filtro === 'nokg' ? (P.unidad_venta !== 'kg' || P.unidad_compra) : raro(P)));
+    lista.replaceChildren(h('div', { class: 'sub', style: 'margin:6px 0' }, L.length + ' producto(s)'), ...L.slice(0, 120).map(P => {
+      const us = fac[P.id] || {};
+      return h('div', { class: 'card', style: raro(P) ? 'border-left:5px solid #b45309' : '' }, h('div', { class: 'nombre' }, P.nombre + ' · ' + P.codigo),
+        Object.keys(us).length ? h('div', { class: 'sub' }, 'En las facturas (60 días): ' + Object.keys(us).map(u => us[u] + ' por ' + u).join(' · ')) : null,
+        editorFormato(P, () => { pinta(); }));
+    }), ...(L.length > 120 ? [h('p', { class: 'sub' }, 'Hay más: busca el producto por su nombre.')] : []));
+  };
+  busca.oninput = debounce(pinta, 200);
+  (async () => {
+    lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+    try {
+      let r = await sb.from('productos').select('id,codigo,nombre,unidad_venta,unidad_precio,unidad_compra,compra_trae,activo').eq('activo', true).range(0, 4999); if (r.error) throw r.error;
+      prods = (r.data || []).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
+      const lf = await sb.from('lineas_factura_leida').select('producto_id,unidad').not('producto_id', 'is', null).gte('fecha', hoy(new Date(Date.now() - 60 * 86400000))).limit(5000);
+      (lf.data || []).forEach(x => { if (!x.unidad) return; const o = fac[x.producto_id] = fac[x.producto_id] || {}; o[x.unidad] = (o[x.unidad] || 0) + 1; });
+      pinta();
+    } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+  })();
+}
 /* ---------- Agente de compras (2): SUBEN (aviso de margen) ----------
    Fernando (11/11/2026): sin porcentaje fijo. Para cada producto, «lo normal» es la MEDIA de lo pagado los 14 días anteriores
    a la última compra (media de cada día). Si la última compra sale más cara, avisa y dice cuánto se come del margen,
@@ -7394,7 +7479,10 @@ function panelSuben(cont) {
       const [{ hist, prods }, gv] = await Promise.all([cargarComprasHist(dias, 16), ventaGolden(60).catch(() => ({ venta: {}, hasta: null }))]);
       const sub = subidasCalc(hist, desde);
       sub.forEach(r => { const p = prods[r.pid] || {}; r.producto = p.nombre || 'Producto'; r.codigo = p.codigo || ''; const v = gv.venta[r.codigo];
-        if (v) { r.venta = v.precio; r.ganabas = v.precio - r.media; r.ganas = v.precio - r.ultimo; r.mAntes = r.ganabas / v.precio * 100; r.mAhora = r.ganas / v.precio * 100; } });
+        /* si se compra en otra unidad (p. ej. caja de 10 kg) y se vende por kg, se pasa la compra a la unidad de venta */
+        const k = p.unidad_compra && r.u === p.unidad_compra && p.unidad_compra !== p.unidad_venta && Number(p.compra_trae) > 0 ? Number(p.compra_trae) : 1;
+        if (k !== 1) r.conv = '1 ' + r.u + ' = ' + num(k) + ' ' + p.unidad_venta;
+        if (v) { r.venta = v.precio; r.ganabas = v.precio - r.media / k; r.ganas = v.precio - r.ultimo / k; r.mAntes = r.ganabas / v.precio * 100; r.mAhora = r.ganas / v.precio * 100; } });
       /* primero los que pierden dinero, luego los que se quedan con menos margen, y al final los que no tienen venta en Golden */
       sub.sort((a, b) => (a.venta == null) - (b.venta == null) || (a.mAhora == null ? 0 : a.mAhora - b.mAhora) || b.pct - a.pct);
       const pierden = sub.filter(r => r.ganas != null && r.ganas <= 0).length;
@@ -7408,7 +7496,7 @@ function panelSuben(cont) {
             ? h('div', { style: 'margin-top:4px' }, 'Lo vendes a ', h('b', {}, eur(r.venta) + '/' + r.u), ': ganabas ' + eur(r.ganabas) + ' (' + pc(r.mAntes) + ') → ahora ', h('b', { style: 'color:' + col }, eur(r.ganas) + ' (' + pc(r.mAhora) + ')'))
             : h('div', { class: 'sub' }, 'Sin ventas en Golden los últimos 60 días para comparar.'),
           malo ? h('div', { style: 'margin-top:4px;color:' + col + ';font-weight:700' }, '¡A este precio de compra no ganas nada! Revisa el precio de venta (o la factura, por si está mal la unidad).') : null,
-          h('div', { class: 'sub' }, 'Media de ' + r.dias + ' días de compra.'),
+          h('div', { class: 'sub' }, 'Media de ' + r.dias + ' días de compra.' + (r.conv ? ' Se compra por ' + r.conv + '.' : '')),
           botonesCompraVenta(r.pid, r.facs, r.provs, r.fecha, r.producto, { compra: r.ultimo, unidad: r.u, venta: r.venta })));
       });
       if (!sub.length) kids.push(h('p', { class: 'vacio' }, 'Ningún producto ha subido en las compras de los últimos ' + dias + ' días.'));
@@ -8154,12 +8242,12 @@ function vistaDeudas() {
 
 /*WA-INICIO*/
 /* ---------- Pedido inteligente por texto: interpretación de mensajes y reconocimiento de clientes y productos ---------- */
-const WA_UNIDADES = { kg: 'kg', kgs: 'kg', kilo: 'kg', kilos: 'kg', kilogramo: 'kg', kilogramos: 'kg', k: 'kg', g: 'g', gr: 'g', grs: 'g', gramo: 'g', gramos: 'g', caja: 'caja', cajas: 'caja', saco: 'saco', sacos: 'saco', malla: 'saco', mallas: 'saco', manojo: 'manojo', manojos: 'manojo', bolsa: 'bolsa', bolsas: 'bolsa', bandeja: 'bandeja', bandejas: 'bandeja', ud: 'pieza', uds: 'pieza', und: 'pieza', unds: 'pieza', u: 'pieza', unidad: 'pieza', unidades: 'pieza', pieza: 'pieza', piezas: 'pieza', pza: 'pieza', pzas: 'pieza', docena: 'docena', docenas: 'docena' };
+const WA_UNIDADES = { kg: 'kg', kgs: 'kg', kilo: 'kg', kilos: 'kg', kilogramo: 'kg', kilogramos: 'kg', k: 'kg', g: 'g', gr: 'g', grs: 'g', gramo: 'g', gramos: 'g', caja: 'caja', cajas: 'caja', saco: 'saco', sacos: 'saco', malla: 'saco', mallas: 'saco', manojo: 'manojo', manojos: 'manojo', bolsa: 'bolsa', bolsas: 'bolsa', bandeja: 'bandeja', bandejas: 'bandeja', ud: 'pieza', uds: 'pieza', und: 'pieza', unds: 'pieza', u: 'pieza', unidad: 'pieza', unidades: 'pieza', pieza: 'pieza', piezas: 'pieza', pza: 'pieza', pzas: 'pieza', docena: 'docena', docenas: 'docena', bote: 'bote', botes: 'bote', tarro: 'bote', tarros: 'bote' };
 const WA_UNI_CORTAS = new Set(['k', 'g', 'u', 'gr', 'grs']);
 /* Abreviaturas de unidad que se aceptan SOLO justo después de una cantidad («3 s», «1 c», «6 b»). Se pueden ampliar desde el panel. */
 const WA_ABREV_DEF = { s: 'saco', ss: 'saco', c: 'caja', cs: 'caja', cj: 'caja', b: 'bolsa/bandeja', bs: 'bolsa/bandeja', m: 'manojo', ms: 'manojo', pz: 'pieza', pzs: 'pieza', ud: 'pieza', uds: 'pieza', k: 'kg', kg: 'kg' };
 /* errores de escritura frecuentes en las unidades largas («sakos», «cajass», «bandjea») */
-function waUniFuzzy(w) { if (w.length < 5) return null; for (const c of ['saco', 'sacos', 'caja', 'cajas', 'bolsa', 'bolsas', 'bandeja', 'bandejas', 'manojo', 'manojos', 'kilos', 'unidad', 'unidades', 'pieza', 'piezas']) { if (w !== c && waDist(w, c) <= 1) return WA_UNIDADES[c]; } return null; }
+function waUniFuzzy(w) { if (w.length < 5) return null; for (const c of ['saco', 'sacos', 'caja', 'cajas', 'bolsa', 'bolsas', 'bandeja', 'bandejas', 'manojo', 'manojos', 'kilos', 'unidad', 'unidades', 'pieza', 'piezas', 'botes']) { if (w !== c && waDist(w, c) <= 1) return WA_UNIDADES[c]; } return null; }
 let WA_ABREV = Object.assign({}, WA_ABREV_DEF);
 /* «a 2,00€», «2 euros el kg»: precio escrito dentro de una línea */
 function waPrecio(tr) {
@@ -8498,7 +8586,7 @@ function waClienteEnTexto(texto, clientes) {
 
 /* ---------- Formatos de producto, abreviaturas y memoria por cliente (se guardan en Supabase si existen las tablas de la parte 18; si no, solo en este móvil) ---------- */
 const WA_ENVASES = ['saco', 'caja', 'bolsa', 'bandeja', 'manojo'];
-const WA_FORMATOS = ['saco', 'caja', 'bolsa', 'bandeja', 'manojo', 'pieza'];
+const WA_FORMATOS = ['saco', 'caja', 'bolsa', 'bandeja', 'manojo', 'pieza', 'bote'];
 const WA_PLURAL = { saco: 'sacos', caja: 'cajas', bolsa: 'bolsas', bandeja: 'bandejas', manojo: 'manojos', pieza: 'piezas' };
 const WA_PESO_SUGERIDO = { saco: [25, 10] };
 let WAMEM = null;
@@ -8760,9 +8848,10 @@ const fcNorm = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toL
 /* Unidad del LIBRO DE VENTAS (regla de Fernando, 10/11/2026): cada producto se apunta en la unidad en que lo vendemos.
    Primero la lista fija de abajo; luego la unidad de venta del producto; si la factura viene en otra unidad, se avisa. */
 const UNIDAD_LIBRO = [[/ar[aá]ndano|frambuesa|\bmoras?\b|mora del bosque/i, 'bandeja'], [/ensalada campestre|mezcl[uú]m/i, 'bolsa']];
-const UNI_CONTEO = ['pieza', 'bandeja', 'bolsa', 'manojo', 'docena'];
+const UNI_CONTEO = ['pieza', 'bandeja', 'bolsa', 'manojo', 'docena', 'bote'];
 function fcUnidadLibro(p, texto, uFac) {
-  const n = (p && p.nombre) || ''; for (const [re, u] of UNIDAD_LIBRO) if (re.test(n)) return u;
+  if (p && UNIDADES.includes(p.unidad_compra)) return p.unidad_compra;   /* «📦 Formatos de compra y venta», puesto a mano: manda */
+  const n = (p && p.nombre) || ''; if (!(p && p.unidad_venta && p.unidad_venta !== 'kg')) for (const [re, u] of UNIDAD_LIBRO) if (re.test(n)) return u;
   const uv = p && UNIDADES.includes(p.unidad_venta) ? p.unidad_venta : ''; uFac = UNIDADES.includes(uFac) ? uFac : '';
   const conteo = !uFac || UNI_CONTEO.includes(uFac);
   if (conteo && /(^|[\s\-.])(bandejas?|bdjas?|bj)(?=[\s\-.]|$)/i.test(texto || '')) return uv && uv !== 'kg' ? uv : 'bandeja';
@@ -9592,7 +9681,7 @@ function pdfListaPrecios(d) {
 
 /* ---------- COMERCIAL: listas de precios, recomendaciones, avisos, calculadora, guiones y web ---------- */
 const COM_WEB = 'https://www.ferjusanz-frutas-verduras.es/';
-const COM_UNIDADES = ['kg', 'unidad', 'pieza', 'caja', 'saco', 'bandeja', 'bolsa', 'paquete', 'manojo', 'docena', 'malla'];
+const COM_UNIDADES = ['kg', 'unidad', 'pieza', 'caja', 'saco', 'bandeja', 'bolsa', 'paquete', 'manojo', 'docena', 'malla', 'bote'];
 const COM_INTRO = 'Somos Ferjusanz, mayoristas de frutas y verduras con puesto en Mercamadrid y cosechas propias. Empresa familiar, ya en la tercera generación: distribuimos directamente a nuestros clientes con un servicio cercano y de confianza, y adaptamos formatos y calidades a las necesidades de cada negocio.';
 /* Productos de partida de las dos listas (de las tarifas anteriores). SIN precio de venta: lo pone la oficina. El precio de compra se rellena solo con el último que haya. */
 const COM_PRECARGA = [
@@ -10702,7 +10791,8 @@ function tabWeb(el) {
 async function waProductos() {
   try {
     if (!navigator.onLine) throw new TypeError('network');
-    let q = await sb.from('productos').select('id,codigo,nombre,unidad_venta,unidad_precio,activo,alias').range(0, 4999);
+    let q = await sb.from('productos').select('id,codigo,nombre,unidad_venta,unidad_precio,activo,alias,unidad_compra,compra_trae').range(0, 4999);
+    if (q.error) q = await sb.from('productos').select('id,codigo,nombre,unidad_venta,unidad_precio,activo,alias').range(0, 4999);
     if (q.error) q = await sb.from('productos').select('id,codigo,nombre,unidad_venta,unidad_precio,activo').range(0, 4999);
     if (q.error) throw q.error; LS.set('fj_wa_prod', q.data); return q.data;
   } catch (e) { if (isNetErr(e)) { const c = LS.get('fj_wa_prod', null); if (c) return c; } throw e; }
@@ -11701,6 +11791,7 @@ const BUSCA_PANTALLAS = [
   ['🧮', 'Deudas', 'deudas deuda debe deben dinero pendiente cobro morosos impagados', () => go('deudas')],
   ['👥', 'Clientes', 'clientes cliente ficha alta cliente telefono direccion', () => go('clientes')],
   ['🥬', 'Productos', 'productos producto catalogo articulos codigos', () => go('catalogo')],
+  ['📦', 'Formatos de compra y venta', 'formatos unidades bote caja bandeja kg pieza compra venta', () => go('formatoscv'), 'o'],
   ['📋', 'Cómo se pone cada producto', 'reglas producto codigos golden nombres factura como se pone', () => go('reglasprod')],
   ['🔎', 'Productos sin reconocer', 'productos sin reconocer enlazar nombres facturas', () => go('sinreconocer'), 'o'],
   ['📐', 'Formatos', 'formatos formato caja kilos peso cliente', () => go('formatos'), 'o'],
@@ -12120,7 +12211,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { tarifas: vistaTarifas, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { tarifas: vistaTarifas, formatoscv: vistaFormatosCV, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
 }
