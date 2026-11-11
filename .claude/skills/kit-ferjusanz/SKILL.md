@@ -18,6 +18,7 @@ en lugar de improvisar.
 | **graphify** | skill | `.claude/skills/graphify` | Preguntas de arquitectura o "dónde está X" en un código grande (`index.html` pesa >1 MB). `/graphify .` genera `graphify-out/`; si existe, consúltalo antes de hacer grep. |
 | **security-audit** | skill | `.claude/skills/security-audit` (cloudflare/security-audit-skill) | "Audita la seguridad", antes de publicar, al tocar Supabase/RLS, auth, pagos o datos de clientes. |
 | **watch** | plugin | `watch@claude-video` (bradautomates/claude-video) | Ver un vídeo (YouTube, TikTok, Instagram, local): `/watch <url> pregunta`. Con `GEMINI_API_KEY`, Gemini ve el vídeo entero. |
+| **codex** | plugin | `codex@openai-codex` (openai/codex-plugin-cc) | Segunda opinión de Codex (OpenAI): `/codex:review` (revisión), `/codex:adversarial-review` (pone a prueba el diseño), `/codex:rescue` (le delega una tarea). Requiere cuenta de ChatGPT (vale la gratuita) o clave de OpenAI y Node 18+; la primera vez `/codex:setup` y `!codex login`. |
 | **playwright** | MCP | `.mcp.json` | Abrir la app, hacer clic, capturas, probar flujos (PWA, `sw.js`, `manifest`). |
 | **firecrawl** | MCP | `.mcp.json` | Scraping/extracción de webs concretas, crawl de un sitio, convertir páginas a markdown. |
 | **perplexity** | MCP | `.mcp.json` | Investigación con respuestas citadas, preguntas de actualidad, comparar opciones. |
@@ -67,7 +68,7 @@ Reglas de elección rápidas:
 ## 4. Comprobar el kit (`/kit-ferjusanz check`)
 
 Si el usuario pide comprobar el kit, haz esto y responde con una tabla ✅/❌:
-1. `/plugin` → que `ponytail`, `agent-skills` y `watch` estén instalados y activos.
+1. `/plugin` → que `ponytail`, `agent-skills`, `watch` y `codex` estén instalados y activos.
 2. `/mcp` → que `playwright`, `firecrawl`, `perplexity` y `posthog` estén conectados. Si uno falla por clave, di cuál falta (sección 2), sin pedir que la pegue en el chat.
 3. Que existan `.claude/skills/graphify/SKILL.md` y `.claude/skills/security-audit/SKILL.md`.
 4. Para watch: `python3 "<dir de la skill watch>/scripts/setup.py" --check --json` y mira `engine` y `gemini_key_present`.
