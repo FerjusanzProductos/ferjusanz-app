@@ -22,8 +22,11 @@ en lugar de improvisar.
 | **firecrawl** | MCP | `.mcp.json` | Scraping/extracción de webs concretas, crawl de un sitio, convertir páginas a markdown. |
 | **perplexity** | MCP | `.mcp.json` | Investigación con respuestas citadas, preguntas de actualidad, comparar opciones. |
 | **posthog** | MCP | `.mcp.json` | Métricas de producto: eventos, embudos, insights, feature flags. |
+| **context7** | MCP | `.mcp.json` (sin clave) | Documentación al día de librerías (Supabase, Cloudflare Workers, Playwright…) antes de escribir código con ellas. |
 
 Reglas de elección rápidas:
+- Código con una librería externa → context7 (documentación actual, no de memoria).
+- **Composio** (visto en redes, 11/11/2026): NO instalado. Da a la IA acceso a muchas cuentas (Gmail, Drive…) a través de un tercero; ya tenemos Gmail/Drive/Supabase conectados directamente. Solo si Fernando lo pide para algo concreto.
 - Web: dato puntual → perplexity; leer/extraer una página o sitio → firecrawl; interactuar con una web/app → playwright.
 - Código: entender estructura → graphify; implementar → agent-skills + ponytail; antes de mergear algo sensible → security-audit.
 - Vídeo o reel → watch.
