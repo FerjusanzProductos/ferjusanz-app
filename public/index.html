@@ -4244,25 +4244,65 @@ function vistaPrefacturas() {
     h('label', { class: 'campo', style: 'flex-direction:row;gap:8px;align-items:center' }, chkFact, ' Mostrar también los ya facturados'), info, cont), { volver: volverIni })); renderBanner(); cargar();
 }
 const arr = x => Array.isArray(x) ? x : (x ? [x] : []);
+/* Revisión de fichas para facturar (solo avisa, no cambia nada). NIF español: DNI, NIE o CIF con su letra/dígito de control. */
+function nifNorm(n) { return String(n || '').toUpperCase().replace(/[\s.\-_/]/g, '').replace(/^ES(?=[0-9A-Z]{9}$)/, ''); }
+function nifValido(n) {
+  const s = nifNorm(n), L = 'TRWAGMYFPDXBNJZSQVHLCKE';
+  if (/^\d{8}[A-Z]$/.test(s)) return L[+s.slice(0, 8) % 23] === s[8];
+  if (/^[XYZ]\d{7}[A-Z]$/.test(s)) return L[+('XYZ'.indexOf(s[0]) + s.slice(1, 8)) % 23] === s[8];
+  if (/^[KLM]\d{7}[A-Z]$/.test(s)) return L[+s.slice(1, 8) % 23] === s[8];
+  const m = /^([ABCDEFGHJNPQRSUVW])(\d{7})([0-9A-J])$/.exec(s); if (!m) return false;
+  let t = 0; for (let i = 0; i < 7; i++) { let d = +m[2][i]; if (i % 2 === 0) { d *= 2; d = Math.floor(d / 10) + (d % 10); } t += d; }
+  const dc = (10 - (t % 10)) % 10, lc = 'JABCDEFGHI'[dc], c = m[3];
+  if ('PQRSNW'.includes(m[1])) return c === lc; if ('ABEH'.includes(m[1])) return c === String(dc); return c === String(dc) || c === lc;
+}
+function problemasFicha(c, porNif) {
+  const p = [], n = nifNorm(c.nif);
+  if (!n) p.push('Sin NIF'); else if (!nifValido(n)) p.push('NIF mal escrito'); else if ((porNif[n] || []).length > 1) p.push('NIF repetido');
+  if (!String(c.direccion || '').trim()) p.push('Sin dirección');
+  if (!/^\d{5}$/.test(String(c.codigo_postal || '').trim())) p.push('Sin código postal');
+  if (!String(c.localidad || '').trim()) p.push('Sin localidad');
+  return p;
+}
 function vistaClientes() {
   state.view = 'clientes'; const lectura = false;
-  let soloActivos = LS.get('fj_cli_activos', true), tope = 80;
+  let soloActivos = LS.get('fj_cli_activos', true), tope = 80, revisar = false;
   const lista = h('div', {}); const info = h('p', { class: 'sub' });
   const inp = h('input', { placeholder: 'Buscar por nombre, código, NIF o teléfono…', oninput: debounce(() => { tope = 80; pintar(); }, 200) });
-  const bAct = h('button', { class: 'chip', onclick: () => { soloActivos = true; LS.set('fj_cli_activos', true); marca(); pintar(); } }, 'Activos');
-  const bTod = h('button', { class: 'chip', onclick: () => { soloActivos = false; LS.set('fj_cli_activos', false); marca(); pintar(); } }, 'Todos');
-  function marca() { bAct.className = 'chip' + (soloActivos ? ' on' : ''); bTod.className = 'chip' + (!soloActivos ? ' on' : ''); }
+  const bAct = h('button', { class: 'chip', onclick: () => { revisar = false; soloActivos = true; LS.set('fj_cli_activos', true); marca(); pintar(); } }, 'Activos');
+  const bTod = h('button', { class: 'chip', onclick: () => { revisar = false; soloActivos = false; LS.set('fj_cli_activos', false); marca(); pintar(); } }, 'Todos');
+  const bRev = esOficina() ? h('button', { class: 'chip', onclick: () => { revisar = true; tope = 80; marca(); pintar(); } }, '⚠️ Revisar fichas') : null;
+  const avisoRev = h('div', { class: 'card', style: 'display:none;background:#fff7ed;border-color:#fdba74' },
+    h('b', {}, 'Fichas por revisar para facturar'),
+    h('div', { class: 'sub' }, 'Clientes activos a los que les falta algo para una factura: NIF (bien escrito), dirección, código postal y localidad. Si el NIF sale «repetido», puede ser el mismo cliente en dos fichas: compruébalo antes de tocar nada. Esta lista solo avisa: no cambia ni borra nada.'));
+  function marca() { bAct.className = 'chip' + (!revisar && soloActivos ? ' on' : ''); bTod.className = 'chip' + (!revisar && !soloActivos ? ' on' : ''); if (bRev) bRev.className = 'chip' + (revisar ? ' on' : ''); avisoRev.style.display = revisar ? '' : 'none'; }
   function pintar() {
     marca();
     if (!clientesCache) { lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); return; }
     const t = sinTilde(limpiaBusqueda(inp.value));
-    let r = clientesCache.filter(c => !soloActivos || c.activo);
+    let r = clientesCache.filter(c => revisar ? c.activo : (!soloActivos || c.activo));
+    const porNif = {}, probs = {};
+    if (revisar) {
+      clientesCache.forEach(c => { const n = nifNorm(c.nif); if (n) (porNif[n] = porNif[n] || []).push(c); });
+      r.forEach(c => probs[c.id] = problemasFicha(c, porNif)); r = r.filter(c => probs[c.id].length);
+    }
     if (t) r = r.filter(c => sinTilde([c.nombre, c.nombre_comercial, c.codigo, lectura ? '' : c.nif, c.telefono, c.localidad].join(' ')).includes(t));
-    info.textContent = r.length + (r.length === 1 ? ' cliente' : ' clientes') + ' · de la A a la Z';
+    if (revisar) {
+      const cnt = {}; r.forEach(c => probs[c.id].forEach(p => cnt[p] = (cnt[p] || 0) + 1));
+      info.textContent = r.length + (r.length === 1 ? ' cliente activo' : ' clientes activos') + ' por revisar' + (r.length ? ' · ' + Object.keys(cnt).map(k => k + ': ' + cnt[k]).join(' · ') : '');
+    } else info.textContent = r.length + (r.length === 1 ? ' cliente' : ' clientes') + ' · de la A a la Z';
     const kids = []; let letra = '';
     for (const c of r.slice(0, tope)) {
       const n = nombreCli(c); const l = (sinTilde(n).charAt(0) || '#').toUpperCase(); const L = /[A-Z]/.test(l) ? l : '#';
       if (L !== letra) { letra = L; kids.push(h('div', { class: 'letra' }, L)); }
+      if (revisar) {
+        const nn = nifNorm(c.nif), otros = (porNif[nn] || []).filter(o => o.id !== c.id);
+        kids.push(h('div', { class: 'card tap', onclick: () => go('cliente', { id: c.id }) },
+          h('div', { class: 'nombre' }, n), h('div', { class: 'sub' }, [c.codigo, c.nif ? 'NIF ' + c.nif : null, c.localidad].filter(Boolean).join(' · ')),
+          h('div', { style: 'margin-top:6px;display:flex;flex-wrap:wrap;gap:4px' }, probs[c.id].map(p => h('span', { class: 'badge prevroja' }, p))),
+          otros.length > 0 && probs[c.id].includes('NIF repetido') ? h('div', { class: 'sub', style: 'margin-top:4px' }, 'Mismo NIF que: ' + otros.map(o => nombreCli(o) + (o.codigo ? ' (' + o.codigo + ')' : '') + (o.activo ? '' : ' [inactivo]')).join(', ')) : null));
+        continue;
+      }
       const desp = h('div', { style: 'display:none;margin-top:8px' });
       const btnF = esOficina() ? h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: e => { e.stopPropagation(); if (desp.style.display === 'none') { desp.style.display = ''; if (!desp.hasChildNodes()) desp.append(panelFacturasCli(c)); btnF.textContent = '▴ Ocultar facturas'; } else { desp.style.display = 'none'; btnF.textContent = '▾ Facturas'; } } }, '▾ Facturas') : null;
       kids.push(h('div', { class: 'card tap', onclick: () => go('cliente', { id: c.id }) },
@@ -4271,20 +4311,20 @@ function vistaClientes() {
           h('div', { style: 'text-align:right' }, c.activo ? null : h('span', { class: 'badge' }, 'Inactivo'), !lectura && c.forma_pago === 'contado' ? [' ', h('span', { class: 'badge cont' }, 'Contado')] : null)), btnF,
         h('div', { onclick: e => e.stopPropagation() }, desp)));
     }
-    if (!r.length) kids.push(h('p', { class: 'vacio' }, 'No hay clientes con esa búsqueda.'));
+    if (!r.length) kids.push(h('p', { class: 'vacio' }, revisar ? '✅ No hay fichas por revisar.' : 'No hay clientes con esa búsqueda.'));
     if (r.length > tope) kids.push(h('button', { class: 'ghost', style: 'width:100%', onclick: () => { tope += 120; pintar(); } }, 'Mostrar más (' + (r.length - tope) + ' restantes)'));
     lista.replaceChildren(...kids);
   }
   async function cargar() {
     try {
-      const { data, error } = await sb.from('clientes').select(lectura ? 'id,codigo,nombre,nombre_comercial,telefono,localidad,activo' : 'id,codigo,nombre,nombre_comercial,nif,telefono,email,localidad,forma_pago,activo').range(0, 4999);
+      const { data, error } = await sb.from('clientes').select(lectura ? 'id,codigo,nombre,nombre_comercial,telefono,localidad,activo' : 'id,codigo,nombre,nombre_comercial,nif,telefono,email,direccion,codigo_postal,localidad,forma_pago,activo').range(0, 4999);
       if (error) throw error;
       clientesCache = data.sort((a, b) => nombreCli(a).localeCompare(nombreCli(b), 'es')); pintar();
     } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver los clientes.' : msgErr(e))); }
   }
   $app.replaceChildren(shell('Clientes', h('div', {},
     lectura ? h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Solo consulta: los datos los modifica administración.') : h('button', { style: 'width:100%;margin-bottom:10px', onclick: () => go('cliente', { id: null }) }, '+ Añadir cliente'),
-    h('div', { class: 'chips' }, bAct, bTod), inp, info, lista)));
+    h('div', { class: 'chips' }, bAct, bTod, bRev), avisoRev, inp, info, lista)));
   renderBanner(); pintar(); cargar();
 }
 /* Ficha de cliente de solo lectura (preparadores y repartidores): sin datos económicos */
