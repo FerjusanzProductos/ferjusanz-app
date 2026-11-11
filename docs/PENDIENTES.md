@@ -54,6 +54,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 8. 🔴 **Copia de seguridad de fotos, PDF y audios** de Supabase Storage (ahora no se copian).
 
 ## Comprobaciones técnicas
+- 🟡 Mantener al día `claude/00-resumen-general/` (LEEME.md, resumen.html y la página de Claude) al terminar cada tarea.
 - ⚪ Poner al día `claude/08-textos-para-empezar-chats/PROMPT_FERNANDO_NUEVO_CHAT.md` (tiene ramas antiguas y dice que GitHub está suspendido).
 - 🟡 Comprobar que la copia nocturna de GitLab se está ejecutando y que se puede restaurar.
 - ⚪ Auditoría de seguridad de la app y de Supabase (skill `security-audit`).

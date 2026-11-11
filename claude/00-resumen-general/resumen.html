@@ -1,0 +1,226 @@
+<title>Resumen Ferjusanz</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: una columna estrecha tipo "hoja de mercado", bandas por bloque y fichas de estado */
+:root{
+  --bg:#f6f8f3; --surface:#ffffff; --fg:#1d2a1f; --muted:#5d6b5f; --line:#dfe6da;
+  --accent:#2f7d3a; --accent-soft:#e3f1e2;
+  --red:#c0392b; --amber:#b7791f; --grey:#7a857c; --blue:#2b6cb0;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121812; --surface:#1b231c; --fg:#e7eee6; --muted:#a3b0a4; --line:#2c372d;
+  --accent:#6cc177; --accent-soft:#213324; --red:#ef7b6e; --amber:#e3b04f; --grey:#9aa59b; --blue:#7fb2ec; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121812; --surface:#1b231c; --fg:#e7eee6; --muted:#a3b0a4; --line:#2c372d;
+  --accent:#6cc177; --accent-soft:#213324; --red:#ef7b6e; --amber:#e3b04f; --grey:#9aa59b; --blue:#7fb2ec; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--body)}
+.wrap{max-width:760px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+header .eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font:800 clamp(28px,7vw,40px)/1.1 var(--display);margin:6px 0 8px;text-wrap:balance}
+h2{font:700 22px/1.2 var(--display);margin:0 0 10px;text-wrap:balance}
+h3{font:600 15px/1.3 var(--body);margin:14px 0 6px;color:var(--accent)}
+p{margin:0 0 8px}
+a{color:var(--accent);word-break:break-word}
+.lead{color:var(--muted);max-width:60ch}
+.versions{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:14px}
+.ver{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.ver b{font:800 26px var(--display);font-variant-numeric:tabular-nums}
+.ver small{display:block;color:var(--muted)}
+.ver.test b{color:var(--amber)}
+section{min-width:0}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+ul.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+ul.list li{display:flex;gap:10px;align-items:flex-start}
+.dot{flex:0 0 auto;margin-top:7px;width:9px;height:9px;border-radius:50%;background:var(--accent)}
+.st{flex:0 0 auto;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:999px;border:1px solid currentColor;margin-top:2px;min-width:58px;text-align:center}
+.st.r{color:var(--red)}.st.a{color:var(--amber)}.st.g{color:var(--grey)}.st.p{color:var(--blue)}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;color:var(--muted);margin-bottom:6px}
+.legend span{display:flex;gap:6px;align-items:center}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.note{background:var(--accent-soft);border-radius:10px;padding:12px 14px}
+code{font-size:13px;background:var(--accent-soft);padding:1px 5px;border-radius:4px;word-break:break-word}
+footer{color:var(--muted);font-size:13px}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">FERJUSANZ · Mercamadrid · al 11/11/2026</div>
+  <h1>Lo que llevamos hecho y lo que falta</h1>
+  <p class="lead">Resumen de la app, la web y los proyectos. Sirve para tenerlo claro y para contárselo a Jorge. Está guardado también en GitLab, en la carpeta <code>claude/00-resumen-general</code>.</p>
+  <div class="versions">
+    <div class="ver"><small>App normal</small><b>v210</b><small><a href="https://ferjusanz-productos.fernandosanzalba.workers.dev">ferjusanz-productos…</a></small></div>
+    <div class="ver test"><small>App de pruebas (naranja)</small><b>v209</b><small><a href="https://ferjusanz-pruebas.fernandosanzalba.workers.dev">ferjusanz-pruebas…</a></small></div>
+  </div>
+</header>
+
+<section>
+  <h2>Cómo entrar a la carpeta en GitLab</h2>
+  <div class="box">
+    <p>El proyecto es <b>privado</b>. Si no has iniciado sesión, GitLab te manda a su página de publicidad (about.gitlab.com). Por eso no lo veías.</p>
+    <ol class="steps">
+      <li>En el móvil abre <b>Chrome</b> (no la aplicación) y entra en <a href="https://gitlab.com/users/sign_in">gitlab.com/users/sign_in</a>.</li>
+      <li>Inicia sesión con tu cuenta de GitLab.</li>
+      <li>Abre <a href="https://gitlab.com/ferjusanz-productos/ferjusanz-app/-/tree/main/claude">la carpeta claude</a>. La primera, <b>00-resumen-general</b>, es este resumen.</li>
+      <li>Los documentos completos están en <a href="https://gitlab.com/ferjusanz-productos/ferjusanz-app/-/tree/main/docs">la carpeta docs</a>.</li>
+      <li>Para descargar todo: en la página del proyecto, botón <b>Code → Download source code → zip</b>.</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <h2>Cómo están ordenadas las carpetas</h2>
+  <div class="box">
+    <ul class="list">
+      <li><span class="dot"></span><span><b>00 · Resumen general</b>: esta hoja.</span></li>
+      <li><span class="dot"></span><span><b>01 · Memoria y reglas</b>: lo que Claude lee siempre y no puede saltarse.</span></li>
+      <li><span class="dot"></span><span><b>02 · App y publicación</b>: app normal y de pruebas.</span></li>
+      <li><span class="dot"></span><span><b>03 · Base de datos</b>: clientes, pedidos, productos, historial de Golden.</span></li>
+      <li><span class="dot"></span><span><b>04 · IA dentro de la app</b>: Harvey, ayuda 🆘, lector de facturas.</span></li>
+      <li><span class="dot"></span><span><b>05 · Agentes y tareas programadas</b>: trabajos que Claude hace solo.</span></li>
+      <li><span class="dot"></span><span><b>06 · Herramientas de Claude Code</b>: plugins y conectores.</span></li>
+      <li><span class="dot"></span><span><b>07 · Copias y seguridad</b>: GitLab, GitHub, copias nocturnas.</span></li>
+      <li><span class="dot"></span><span><b>08 · Textos para empezar chats</b>: para ti y para el equipo.</span></li>
+      <li><span class="dot"></span><span><b>09 · Web y empresa</b>: web, tienda online, Jorge.</span></li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Lo que ya hemos hecho</h2>
+  <div class="cols">
+    <div class="box">
+      <h3 style="margin-top:0">Pedidos y reparto</h3>
+      <ul class="list">
+        <li><span class="dot"></span><span>Pedidos, pedidos fijos y previstos, calendario y pantalla Semana.</span></li>
+        <li><span class="dot"></span><span>«📆 Pasar a otro día» para mover previstos.</span></li>
+        <li><span class="dot"></span><span>Albarán por correo al entregar, con el código de Golden.</span></li>
+        <li><span class="dot"></span><span>«Lo de siempre» de cada cliente, aprendido de Golden.</span></li>
+        <li><span class="dot"></span><span>Trazabilidad por el lote más antiguo.</span></li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3 style="margin-top:0">Compras y precios</h3>
+      <ul class="list">
+        <li><span class="dot"></span><span>Lector de facturas de proveedor con IA.</span></li>
+        <li><span class="dot"></span><span>«⚠️ Raros»: precios que se salen de lo normal.</span></li>
+        <li><span class="dot"></span><span>«📈 Suben»: avisos frente a la media de 14 días.</span></li>
+        <li><span class="dot"></span><span>Formatos de compra y venta de cada producto (caja, bandeja, bote…).</span></li>
+        <li><span class="dot"></span><span>Tarifas y listas de precios por WhatsApp y PDF.</span></li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3 style="margin-top:0">Ayuda e inteligencia</h3>
+      <ul class="list">
+        <li><span class="dot"></span><span>Harvey, asistente comercial.</span></li>
+        <li><span class="dot"></span><span>Botón 🆘 con «Hazlo conmigo».</span></li>
+        <li><span class="dot"></span><span>«📤 Informes para Jorge».</span></li>
+        <li><span class="dot"></span><span>Modo prácticas y app de pruebas.</span></li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3 style="margin-top:0">Orden y planes</h3>
+      <ul class="list">
+        <li><span class="dot"></span><span>Memoria de Claude y carpetas por áreas.</span></li>
+        <li><span class="dot"></span><span>GitLab principal y GitHub como copia; copia diaria de la base de datos.</span></li>
+        <li><span class="dot"></span><span>Plan para llevarnos la web de Creativate.</span></li>
+        <li><span class="dot"></span><span>Plan de tienda online.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Lo que hay que saber</h2>
+  <div class="note">
+    <ul class="list">
+      <li><span class="dot"></span><span>La app <b>aún no se usa de verdad</b>. Se trabaja y se factura en <b>Golden Soft</b>. Los pedidos y cobros de la app son de prueba.</span></li>
+      <li><span class="dot"></span><span><b>Verifactu</b> lo cumple Golden Soft, que es quien factura (antes del 1/1/2027). La app no factura.</span></li>
+      <li><span class="dot"></span><span>Datos reales en la app: historial de Golden, clientes, productos, contactos y facturas de proveedores.</span></li>
+      <li><span class="dot"></span><span>Nada se publica sin «Autorizo publicar». No se borran datos ni se tocan precios, facturas o cobros sin tu confirmación.</span></li>
+      <li><span class="dot"></span><span>Coste: el alojamiento de la app es gratis (Cloudflare). Se paga la IA según uso y la base de datos (Supabase).</span></li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Lo que quiero hacer</h2>
+  <div class="box">
+    <ol class="steps">
+      <li><b>Empezar a usar la app de verdad</b> y dejar Golden solo para facturar.</li>
+      <li><b>Web nueva propia</b>: más rápida, mejor en Google y sin depender de Creativate.</li>
+      <li><b>Pedidos online</b> («Haz tu pedido») para hostelería y colectividades; catálogo en WhatsApp Business y Google; más adelante Shopify.</li>
+      <li><b>Agentes de Claude</b>: seguimiento diario, cobros, ofertas semanales, clientes nuevos, compras y facturas.</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <h2>Pendientes</h2>
+  <div class="legend"><span><i class="st r">Urgente</i></span><span><i class="st a">Pronto</i></span><span><i class="st g">Cuando se pueda</i></span><span><i class="st p">En espera</i></span></div>
+  <div class="cols">
+    <div class="box">
+      <h3 style="margin-top:0">App</h3>
+      <ul class="list">
+        <li><span class="st a">Pronto</span><span>Confirmar formatos: Mango, Bote Garbanzos, Nabo, Cogollos de Tudela, Fresón 1ª.</span></li>
+        <li><span class="st a">Pronto</span><span>Lista de clientes sin IVA y si «Bar Delfín» es «Bar Delfines».</span></li>
+        <li><span class="st a">Pronto</span><span>Último número de albarán de Golden (serie F).</span></li>
+        <li><span class="st r">Urgente</span><span>Copia de seguridad de fotos, PDF y audios.</span></li>
+        <li><span class="st p">Espera</span><span>Seguimiento comercial (hecho en pruebas).</span></li>
+        <li><span class="st g">Luego</span><span>Revisión de diseño en el móvil y app más ligera.</span></li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3 style="margin-top:0">Web</h3>
+      <ul class="list">
+        <li><span class="st a">Pronto</span><span>Pedir a Creativate que quite la página de COVID («Entrega a domicilio»).</span></li>
+        <li><span class="st a">Pronto</span><span>Mirar contrato y facturas de Creativate y enviarles las preguntas.</span></li>
+        <li><span class="st g">Luego</span><span>Hacer la web nueva y trasladar el dominio.</span></li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3 style="margin-top:0">Redes, Google y WhatsApp</h3>
+      <ul class="list">
+        <li><span class="st a">Pronto</span><span>Ficha de Google: conseguir la propiedad, fotos y reseñas.</span></li>
+        <li><span class="st a">Pronto</span><span>Catálogo de WhatsApp Business y productos en Google.</span></li>
+        <li><span class="st g">Luego</span><span>Enlazar Instagram y Facebook con la web nueva.</span></li>
+        <li><span class="st p">Espera</span><span>WhatsApp automático desde el 609 567 354.</span></li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3 style="margin-top:0">Proyectos y agentes</h3>
+      <ul class="list">
+        <li><span class="st r">Urgente</span><span>Comprobar Golden ↔ albaranes (falta un archivo de ejemplo de Golden).</span></li>
+        <li><span class="st a">Pronto</span><span>Agente de cobros, Harvey v2 y «Haz tu pedido».</span></li>
+        <li><span class="st g">Luego</span><span>Buscador de clientes nuevos y ofertas semanales.</span></li>
+        <li><span class="st a">Pronto</span><span>Copia automática GitLab → GitHub y comprobar la copia diaria.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Para la reunión con Jorge</h2>
+  <div class="box">
+    <h3 style="margin-top:0">Enseñarle</h3>
+    <ul class="list">
+      <li><span class="dot"></span><span>«📤 Informes para Jorge» en la app y <a href="https://claude.ai/artifact/8Da6PSY7rvVAzn8aTpStTC">el documento preparado para él</a>.</span></li>
+      <li><span class="dot"></span><span>Que la facturación sigue en Golden Soft (Verifactu cubierto).</span></li>
+    </ul>
+    <h3>Preguntarle</h3>
+    <ul class="list">
+      <li><span class="dot"></span><span>Qué informes quiere cada mes y en qué formato.</span></li>
+      <li><span class="dot"></span><span>Cómo reflejar los clientes sin IVA.</span></li>
+      <li><span class="dot"></span><span>Si le sirven las facturas de proveedor que lee la app.</span></li>
+      <li><span class="dot"></span><span>Cómo contabilizar los gastos de la app (IA y base de datos) y de la web.</span></li>
+      <li><span class="dot"></span><span>Quién figura como titular del dominio y qué se paga a Creativate.</span></li>
+    </ul>
+  </div>
+</section>
+
+<footer>Se actualiza al terminar cada tarea. Detalle completo en GitLab: docs/HISTORIAL.md y docs/PENDIENTES.md.</footer>
+</div>

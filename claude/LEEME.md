@@ -6,10 +6,14 @@ Cada carpeta tiene un `LEEME.md` con: **para qué sirve**, **dónde están las c
 > siguen donde estaban, porque la app y las sesiones de Claude los buscan ahí). Estas carpetas son el
 > **índice ordenado** que explica cada cosa y enlaza a ella. Solo se han traído aquí los textos para empezar chats.
 
+> **Resumen general para leer de un vistazo y para Jorge**: [00 · Resumen general](00-resumen-general/LEEME.md) · versión para el móvil: https://claude.ai/artifact/Wdbkv5YALTkXdADqbX2rPb
+> GitLab es **privado**: iniciar sesión primero en https://gitlab.com/users/sign_in (si no, sale la página de publicidad de GitLab).
+
 ## Las áreas
 
 | Carpeta | Para qué sirve | En una frase, qué hace Claude |
 |---|---|---|
+| [00 · Resumen general](00-resumen-general/LEEME.md) | Todo de un vistazo: hecho, planes y pendientes | Lo mantiene al día al terminar cada tarea |
 | [01 · Memoria y reglas](01-memoria-y-reglas/LEEME.md) | Lo que Claude lee al empezar y lo que nunca puede saltarse | Lee las reglas, apunta lo hecho y lo pendiente |
 | [02 · App y publicación](02-app-y-publicacion/LEEME.md) | La app del móvil (normal y de pruebas) | Programa cambios, los prueba y los publica con tu permiso |
 | [03 · Base de datos](03-base-de-datos/LEEME.md) | Supabase: clientes, pedidos, productos, Golden… | Consulta datos y prepara cambios (siempre enseñando el SQL antes) |
