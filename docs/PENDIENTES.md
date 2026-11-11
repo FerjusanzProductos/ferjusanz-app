@@ -2,6 +2,7 @@
 _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.md. Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda._
 
 ## Por publicar o decidir
+- 🟡 **Entrega en mano paso a paso** (revisar albarán en grande → firma → enviar → cómo paga): en PRUEBAS (v211, rama `claude/app-link-delivery-flow-ohwa0q`). Falta que Fernando lo pruebe en Modo prácticas y diga «Autorizo publicar» (en la normal irá con otro número, v212).
 - 🟡 Confirmar con Fernando: **Mango** (¿se compra por caja? ¿cuántas piezas trae?), **Bote Garbanzos** (¿por bote?), **Nabo, Cogollos de Tudela y Fresón 1ª** (se compran más caros de lo que se venden por kg: ¿caja/manojo?).
 - 🟢 **📦 Formatos de compra y venta** (Más → 📐 Formatos): base de datos aplicada (11/11) y publicado en la normal (v210) con detección automática. Piparras Tarro ya por bote (lo hizo Fernando). Fernando dice que hay «muchísimos» mal: la detección encuentra 9; pedirle ejemplos de los que vea mal para añadir la regla que falte.
 - ✔️ 11/11/2026: **«📄 Ver factura», «💶 Precios de venta» y avisos en Facturas de proveedores** publicados en la normal (v207).
