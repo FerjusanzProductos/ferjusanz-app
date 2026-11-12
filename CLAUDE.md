@@ -31,6 +31,8 @@ Dueño y quien decide: **Fernando Sanz**.
 6. Nada de borrar datos, cambiar precios o tocar facturas, cobros o permisos sin confirmación expresa.
 7. Antes de cambiar la base de datos, enseñar el SQL y explicar qué hace.
    Los cambios de Supabase ya no piden botón «Aprobar» (permitidos en `.claude/settings.json` para poder hacerlo desde el móvil). Por eso el permiso es **por el chat**: enseñar el SQL y no lanzarlo hasta que Fernando escriba «Autorizo».
+   **Cómo lanzarlo (Fernando, 13/11/2026: «siempre usa esos caminos»)**: NO con `apply_migration`/`execute_sql` del conector Supabase para escribir (piden un «Aprobar» que no le llega al móvil y caducan). Usar la API de Supabase, que tiene la clave puesta por el entorno:
+   `curl -sS -X POST https://api.supabase.com/v1/projects/<ref>/database/query -H "Authorization: Bearer proxy-injected" -H "Content-Type: application/json" --data @consulta.json` (con `{"query": "<SQL>"}`). Real `hvydnjaswdexttogsyen`, pruebas `pbeuxbwbpmlanbhhnpgy`. Después, comprobar con otra consulta que ha quedado bien. Ni pedirle a Fernando que lo pegue.
 8. **Al terminar cada tarea**: actualizar `docs/HISTORIAL.md` (qué se hizo y por qué), `docs/PENDIENTES.md` y, si cambia la versión, `docs/ESTADO_ACTUAL.md`. Las reglas nuevas de productos o negocio van en `docs/REGLAS_INTERNAS.md`.
 9. Guardar en GitLab y copiar a GitHub. Nunca dejar trabajo sin guardar.
 
