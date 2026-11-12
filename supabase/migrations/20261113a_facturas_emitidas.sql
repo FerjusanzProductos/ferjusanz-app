@@ -139,9 +139,20 @@ do $$ declare t text; begin
   end loop; end $$;
 
 -- ===== Ayudas =====
--- NIF español (DNI, NIE o CIF) con su letra o dígito de control (igual que nifValido de la app)
+-- NIF limpio para la factura: sin espacios, puntos ni guiones, y el DNI siempre con 8 cifras («5376981-H» → «05376981H»)
+create or replace function public.sif_nif_normal(v text) returns text language plpgsql immutable as $$
+declare s text := regexp_replace(upper(regexp_replace(coalesce(v, ''), '[\s.\-/]', '', 'g')), '^0+(?=[A-Z])', '');
+begin
+  if s ~ '^\d{1,9}[A-Z]$' then
+    s := regexp_replace(substr(s, 1, length(s) - 1), '^0+(?=\d{8})', '') || right(s, 1);
+    if length(s) <= 9 then s := lpad(s, 9, '0'); end if;
+  end if;
+  return s;
+end $$;
+
+-- NIF español (DNI, NIE o CIF) con su letra o dígito de control (igual que nifValido de la app, v257)
 create or replace function public.sif_nif_valido(v text) returns boolean language plpgsql immutable as $$
-declare s text := upper(regexp_replace(coalesce(v, ''), '[\s.\-/]', '', 'g')); L text := 'TRWAGMYFPDXBNJZSQVHLCKE'; a int := 0; b int := 0; d int; x int; ctl int;
+declare s text := public.sif_nif_normal(v); L text := 'TRWAGMYFPDXBNJZSQVHLCKE'; a int := 0; b int := 0; d int; x int; ctl int;
 begin
   if s ~ '^\d{8}[A-Z]$' then return substr(L, (substr(s, 1, 8)::bigint % 23)::int + 1, 1) = substr(s, 9, 1); end if;
   if s ~ '^[XYZ]\d{7}[A-Z]$' then return substr(L, (((position(substr(s, 1, 1) in 'XYZ') - 1)::text || substr(s, 2, 7))::bigint % 23)::int + 1, 1) = substr(s, 9, 1); end if;
@@ -324,7 +335,7 @@ begin
 
   return jsonb_build_object(
     'cliente_id', v_cli,
-    'cliente', jsonb_build_object('codigo', c.codigo, 'nombre', c.nombre, 'nombre_comercial', c.nombre_comercial, 'nif', upper(regexp_replace(coalesce(c.nif, ''), '[\s.\-/]', '', 'g')),
+    'cliente', jsonb_build_object('codigo', c.codigo, 'nombre', c.nombre, 'nombre_comercial', c.nombre_comercial, 'nif', public.sif_nif_normal(c.nif),
                                   'direccion', c.direccion, 'codigo_postal', c.codigo_postal, 'localidad', c.localidad, 'telefono', c.telefono, 'email', c.email),
     'recargo_equivalencia', coalesce(c.recargo_equivalencia, false),
     'dias_pago', c.dias_pago, 'forma_pago_cliente', c.forma_pago,
