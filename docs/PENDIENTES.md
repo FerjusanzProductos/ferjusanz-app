@@ -57,7 +57,8 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
   - ✔️ **Fase 1 (datos fiscales)** publicada en la normal (v255, «Autorizo publicar»). ✔️ Tabla `empresa` creada en pruebas y en la real («listo», 12/11/2026).
   - ✔️ 12/11/2026: 609 567 354 quitado de la factura y de los **albaranes** (v254 en PRUEBAS). Publicado (v255) y función `albaranes-correo` subida.
   - 🔴 **Fernando: sacar de Golden la lista de clientes en Excel** (código, nombre, NIF, dirección, CP, localidad) para que Claude cargue los NIF que faltan de una vez (80 de los que faltan tienen facturas en Golden en 2026). ✔️ Comprobación del NIF más flexible publicada (v257).
-  - 🟡 **Carmen: completar los 96 clientes** sin NIF / dirección / CP (Clientes → «🧾 Faltan datos para facturar») antes del 1/1/2027.
+  - ✔️ 12/11/2026: NIF de 28 empresas buscados en internet y guardados. Quedan **70** (66 sin NIF).
+  - 🟡 **Carmen: completar los clientes que quedan** sin NIF / dirección / CP (Clientes → «🧾 Faltan datos para facturar») antes del 1/1/2027.
   - ✔️ 12/11/2026: dirección (C/ Carare, 2 – 28033 Madrid, también domicilio fiscal), teléfono 91 763 21 86 y sello (cabecera de los albaranes de papel) confirmados por Fernando.
   - 🟡 Fernando (y Jorge): decidir los **clientes sin IVA**. Claude recomienda una sola app con todo facturado (ver punto 6 del plan); no se puede montar una parte de ventas que no llegue a facturación ni al contable.
   - 🟡 Jorge: confirmar por escrito la fecha de Verifactu cuando salga la norma.
