@@ -5743,12 +5743,13 @@ function vistaCompras() {
   if (!puedeCompras()) { go('lista'); return; }
   let modo = LS.get('fj_compras_modo', 'lista'), fecha = hoy(); let precarga = null;
   const cont = h('div', {}); const chips = h('div', { class: 'chips' });
-  const pintarChips = () => { if (typeof bandeja !== 'undefined') bandeja.classList.toggle('on', modo === 'recib'); chips.replaceChildren(...[['lista', 'Qué comprar'], ['registrar', 'Añadir factura de compra'], ['lotes', 'Lotes'], ['sinfac', 'Sin factura']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_compras_modo', m); pintarChips(); pintar(); } }, n))); };
+  const pintarChips = () => { if (typeof bandeja !== 'undefined') bandeja.classList.toggle('on', modo === 'recib'); chips.replaceChildren(...[['lista', 'Qué comprar'], ['registrar', 'Añadir factura de compra'], ['lotes', 'Lotes'], ['sinfac', 'Sin factura']].concat(FISCAL_RECIBIDAS ? [['fiscal', '🧾 NIF e IVA']] : []).map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_compras_modo', m); pintarChips(); pintar(); } }, n))); };
   const bandeja = h('button', { class: 'bandeja-fac', onclick: () => { modo = 'recib'; LS.set('fj_compras_modo', 'recib'); pintarChips(); pintar(); } });
   const pintarBandeja = (n) => { bandeja.className = 'bandeja-fac' + (modo === 'recib' ? ' on' : ''); bandeja.replaceChildren(h('span', { class: 'ic' }, '📥'), h('span', { class: 'tt' }, 'Facturas de proveedores', h('small', {}, n === null ? 'Las que llegan por correo, de la más reciente a la más antigua' : n > 0 ? n + ' por revisar · la más reciente arriba' : 'Todo al día · toca para ver')), h('span', { class: 'num' + (n ? '' : ' cero') }, n === null ? '…' : String(n))); };
   const contarBandeja = async () => { try { const q = await sb.from('facturas_recibidas').select('id', { count: 'exact', head: true }).eq('estado', 'nueva'); pintarBandeja(q.error ? null : (q.count || 0)); } catch (e) { pintarBandeja(null); } };
   $app.replaceChildren(shell('Compras', h('div', {}, bandeja, chips, cont), { volver: volverIni })); renderBanner(); pintarChips(); pintarBandeja(null); contarBandeja();
-  function pintar() { (modo === 'lista' ? pLista : modo === 'registrar' ? pRegistrar : modo === 'sinfac' ? pSinFactura : modo === 'recib' ? pRecibidas : pLotes)(); }
+  if (modo === 'fiscal' && !FISCAL_RECIBIDAS) modo = 'lista';
+  function pintar() { (modo === 'lista' ? pLista : modo === 'registrar' ? pRegistrar : modo === 'sinfac' ? pSinFactura : modo === 'recib' ? pRecibidas : modo === 'fiscal' ? () => pFiscalRecibidas(cont) : pLotes)(); }
 
   /* ---- Ajustes de la lista (cantidad corregida, nota, productos extra): se guardan en este móvil y en Supabase ---- */
   const enviarAjuste = async (f, a) => { try { const r = await sb.rpc('guardar_ajuste_compra', { p_fecha: f, p_producto: a.pid, p_unidad: a.unidad, p_cantidad: a.cantidad == null ? null : a.cantidad, p_nota: a.nota || null, p_extra: !!a.extra }); return r.error || null; } catch (e) { return e; } };
@@ -6150,6 +6151,7 @@ function vistaCompras() {
             h('button', { class: 'small', onclick: () => revisarFacturaHoja(f, () => { pRecibidas(); try { contarBandeja(); } catch (e) { } }) }, '✅ Revisar y registrar aquí'),
             h('button', { class: 'ghost small', onclick: () => { precarga = { f }; modo = 'registrar'; LS.set('fj_compras_modo', 'registrar'); pintarChips(); pintar(); } }, 'Registrar con más detalle (lotes, origen)'),
             h('button', { class: 'ghost small', onclick: () => enlazarRecibida(f, provs, pv) }, 'Enlazar con compra ya hecha'),
+            FISCAL_RECIBIDAS ? h('button', { class: 'ghost small', onclick: () => hojaFiscalFactura(f.id) }, '🧾 NIF e IVA') : null,
             h('button', { class: 'ghost small', onclick: async () => { if (!await confirmar('¿Descartar este archivo? Dejará de aparecer en la bandeja.')) return; const x = await sb.from('facturas_recibidas').update({ estado: 'descartada' }).eq('id', f.id); if (x.error) toast(msgErr(x.error), 'err'); else pRecibidas(); } }, 'Descartar')));
       }));
       /* Avisos de precios (raros, suben, bajan) de cada factura, aunque no esté revisada ni registrada */
@@ -10504,6 +10506,48 @@ function fcTotales(filas) {
   const bs = baseExplicita.length ? baseExplicita : base;
   return { base: bs.length ? Math.max.apply(null, bs) : null, total: total.length ? Math.max.apply(null, total) : null };
 }
+/* ---------- Datos fiscales de una factura de proveedor (fase 3): NIF y CP del proveedor, desglose de IVA y total ---------- */
+const FC_NIF_PROPIOS = { B87446670: 'FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L.', E80746670: 'FERJUSANZ C.B.' };
+const FC_TIPOS_IVA = [2, 4, 5, 7.5, 10, 21];
+const FC_TIPOS_RE = [0.5, 0.62, 1, 1.4, 1.75, 5.2, 0.26];
+function fcFiscal(filas, tot) {
+  const r = { nif: '', cp: '', desglose: [], total: null, aNombreDe: '' };
+  const lim = s => String(s || '').replace(/ /g, ' ');
+  const nuestro = t => /ferjusanz|carare/i.test(t);
+  /* NIF del proveedor: el primero válido que no sea nuestro («ES» delante, guiones o puntos se quitan) */
+  const nifs = [], propios = new Set();
+  filas.forEach((f, i) => { const t = lim(f).toUpperCase().replace(/(\b[A-Z])[\s.\-]+(?=\d)/g, '$1').replace(/(\d)[\s.\-]+(?=[A-Z0-9]\b)/g, '$1');
+    (t.match(/\b(?:ES)?[A-Z]?\d{7,8}[A-Z0-9]\b/g) || []).forEach(w => { const s = w.replace(/^ES(?=[A-Z0-9]{9}$)/, ''); if (!nifValido(s)) return; if (FC_NIF_PROPIOS[s]) { propios.add(s); return; } if (!nifs.some(n => n.s === s)) nifs.push({ s, i }); }); });
+  if (nifs.length) { r.nif = nifs[0].s; r.filaNif = nifs[0].i; }
+  /* ¿A nombre de quién viene? Si no sale nuestro NIF de la S.L. pero sí el de otra empresa nuestra (p. ej. la C.B.), se avisa */
+  if (!propios.has('B87446670') && propios.size) r.aNombreDe = [...propios].map(k => FC_NIF_PROPIOS[k] + ' (' + k + ')').join(', ');
+  /* Código postal del proveedor: 5 cifras y detrás la población; no el nuestro ni el de filas con nuestros datos. Se prefiere el más cercano al NIF. */
+  const cps = [];
+  filas.forEach((f, i) => { const t = lim(f); if (nuestro(t)) return; const re = /(?:^|[\s\/,(\-:]|C\.?P\.?:?\s?)((?:0[1-9]|[1-4]\d|5[0-2])\d{3})\s*[-–]?\s+(?=[A-ZÁÉÍÓÚÑ(][A-Za-zÁÉÍÓÚÑáéíóúñ'(]{2,})/g; let m;
+    while ((m = re.exec(t))) { const sig = t.slice(m.index + m[0].length); if (m[1] === '28033' || /^(espa[nñ]a|spain|costa|portugal|francia|italia|marruecos|holanda|peru|per[uú]|chile|brasil|ue)\b/i.test(sig) || /(tel|tfno|fax|m[oó]vil)\W*$/i.test(t.slice(0, m.index))) continue; cps.push({ s: m[1], i }); } });
+  if (cps.length) { const cerca = r.filaNif != null ? cps.slice().sort((a, b) => Math.abs(a.i - r.filaNif) - Math.abs(b.i - r.filaNif))[0] : null; r.cp = (cerca && Math.abs(cerca.i - r.filaNif) <= 4 ? cerca : cps[0]).s; }
+  /* Desglose de IVA: en el cuadro de impuestos, «base · % · cuota» (y a veces «% recargo · cuota recargo») */
+  const numsFila = f => lim(f).replace(/[%€]/g, ' ').split(/\s+/).filter(w => /^-?\d{1,3}(?:\.\d{3})+(?:,\d{1,3})?$|^-?\d+(?:[.,]\d{1,3})?$/.test(w)).map(fcNum).filter(v => v !== null);
+  const esCab = t => /\b(iva|i\.v\.a|base|bases|imponible|cuota|impuestos?)\b/i.test(t);
+  const triple = ns => { let mejor = null;
+    for (let b = 0; b < ns.length; b++) { const pct = ns[b]; if (!FC_TIPOS_IVA.includes(pct)) continue;
+      for (let a = 0; a < ns.length; a++) { if (a === b) continue; const base = ns[a]; if (!(Math.abs(base) >= 0.5)) continue;
+        for (let c = 0; c < ns.length; c++) { if (c === a || c === b) continue; const cu = ns[c]; if (cu && Math.abs(base * pct / 100 - cu) <= 0.011 + Math.abs(base) * 0.0001) { const k = Math.abs(a - c) + Math.abs(a - b); if (!mejor || k < mejor.k) mejor = { base, pct, cu, a, b, c, k }; } } } }
+    if (!mejor) return null; let rp = 0, rc = 0;
+    for (let x = 0; x < ns.length && !rp; x++) { if ([mejor.a, mejor.b, mejor.c].includes(x) || !FC_TIPOS_RE.includes(ns[x])) continue; const q = Math.round(mejor.base * ns[x]) / 100; const y = ns.findIndex((v, j) => ![mejor.a, mejor.b, mejor.c, x].includes(j) && v && Math.abs(v - q) <= 0.011); if (y >= 0) { rp = ns[x]; rc = ns[y]; } }
+    return { tipo_iva: mejor.pct, base: mejor.base, cuota: mejor.cu, recargo_pct: rp, cuota_recargo: rc }; };
+  const meter = d => { if (d && !r.desglose.some(x => x.tipo_iva === d.tipo_iva && x.recargo_pct === d.recargo_pct)) r.desglose.push(d); };   // el mismo tipo dos veces = copia de la hoja
+  filas.forEach((f, i) => { if ([filas[i - 3], filas[i - 2], filas[i - 1], f].some(x => x != null && esCab(lim(x)))) meter(triple(numsFila(f))); });
+  /* Total: el número escrito junto a «Total» que coincide con base + IVA (+ recargo) */
+  const totalJunto = s => { for (let i = 0; i < filas.length; i++) { if (!/total|a pagar|importe/i.test(lim(filas[i]) + ' ' + lim(filas[i - 1] || ''))) continue; if (numsFila(filas[i]).some(v => Math.abs(v - s) <= 0.02)) return true; } return false; };
+  /* Facturas sin rótulos (impresas en papel con el cuadro de IVA dibujado): se acepta la fila solo si su base + cuota aparece como total */
+  if (!r.desglose.length) filas.forEach(f => { if (r.desglose.length || (lim(f).match(/[A-Za-zÁÉÍÓÚÑáéíóúñ]{3,}/g) || []).length > 1) return; const d = triple(numsFila(f)); if (!d) return; const s = Math.round((d.base + d.cuota + d.cuota_recargo) * 100) / 100; if (filas.some(g => g !== f && numsFila(g).some(v => Math.abs(v - s) <= 0.02))) meter(d); });
+  /* Nº de factura en formatos que no entiende fcCabecera («Numero Factura: RI 1108», «Factura: 1/ 451896») */
+  { const txt = filas.map(lim).join('\n'); const m = /n[uú]mero\s+(?:de\s+)?factura\s*:?\s*([A-Z]{0,3}\s?\d[\d\/\-]*(?:\s\d{3,})?)/i.exec(txt) || /\bfactura\s*:\s*(\d{1,3}\s*\/\s*\d{3,})/i.exec(txt); if (m) r.numero = m[1].replace(/\s*\/\s*/g, '/').trim(); }
+  const suma = Math.round(r.desglose.reduce((a, d) => a + d.base + d.cuota + d.cuota_recargo, 0) * 100) / 100;
+  r.total = !r.desglose.length ? null : totalJunto(suma) ? suma : (tot && tot.total != null ? tot.total : null);   // sin desglose no se da el total por bueno (en resúmenes y recibos sale cualquier cosa)
+  return r;
+}
 const FC_MESES = { enero: 1, febrero: 2, marzo: 3, abril: 4, mayo: 5, junio: 6, julio: 7, agosto: 8, septiembre: 9, setiembre: 9, octubre: 10, noviembre: 11, diciembre: 12 };
 /* Clave para recordar un artículo de factura: texto sin acentos ni signos */
 const fcClave = t => fcNorm(t);
@@ -10540,7 +10584,9 @@ async function fcLeerFactura(file, progreso) {
     }
   }
   if (filas.join('').length < 40) { const o = await waLeerArchivo(file, progreso, true); filas = String(o.texto || '').split(/\n+/); lineas = fcTextoALineas(fcRecorteTabla(filas)); noLeidas = lineas.noLeidas || []; }
-  return { filas, lineas, noLeidas, cab: fcCabecera(filas), tot: fcTotales(filas) };
+  const cab = fcCabecera(filas), tot = fcTotales(filas), fis = fcFiscal(filas, tot);
+  if (!cab.numero && fis.numero) cab.numero = fis.numero;
+  return { filas, lineas, noLeidas, cab, tot, fis };
 }
 /* ---------- Precios de las facturas leídas: se guardan TODAS las líneas (también las que no se emparejan con un producto) ---------- */
 async function guardarLineasLeidas(f, rd, prods, indice, alias) {
@@ -10549,6 +10595,7 @@ async function guardarLineasLeidas(f, rd, prods, indice, alias) {
       return { texto: x.texto, cantidad: x.cantidad, unidad: x.unidad || null, precio: x.precio, importe: x.importe, producto_id: ok ? m.producto.id : null, dudoso: m.estado === 'dudoso' }; });
     const fecha = fcFechaCompra(f, rd.cab && rd.cab.fecha);
     const r = await sb.rpc('guardar_lineas_factura', { p_factura: f.id, p_proveedor: f.proveedor_id || null, p_fecha: fecha, p_lineas: lin });
+    fcGuardarFiscalLeido(f, rd);
     // Se guarda también la fecha de la factura, para que una factura que llega tarde cuente en su día (y no en el día en que llegó el correo)
     if (!f.fecha_factura && rd.cab && rd.cab.fecha && fecha === rd.cab.fecha) { try { const u = await sb.from('facturas_recibidas').update({ fecha_factura: fecha }).eq('id', f.id).is('fecha_factura', null); if (!u.error) f.fecha_factura = fecha; } catch (e) { } }
     if (r && r.error) { window.__sinP54 = true; return false; } return true;
@@ -10574,13 +10621,152 @@ async function leerFacturasRecientes(dias, progreso, forzar) {
       progreso && progreso(out.leidas + out.fallos + 1, pend.length);
       try {
         const file = await fcDescargar(f); const rd = await fcLeerFactura(file, () => { }); const al = f.proveedor_id ? await fcAliasCargar(f.proveedor_id) : { map: {} };
-        if (!rd.lineas.length) { vacias[f.id] = Date.now(); LS.set('fj_fact_vacias', vacias); out.leidas++; continue; }
+        if (!rd.lineas.length) { fcGuardarFiscalLeido(f, rd); vacias[f.id] = Date.now(); LS.set('fj_fact_vacias', vacias); out.leidas++; continue; }
         if (await guardarLineasLeidas(f, rd, prods, indice, al.map)) out.leidas++; else out.fallos++;
       } catch (e) { out.fallos++; }
     }
   } catch (e) { out.error = (e && e.message) || 'error'; }
   finally { try { out.renombradas = await fcRepararNumeros(forzar); } catch (e) { } window.__leyendoRec = false; }
   return out;
+}
+/* ---------- Fase 3 de facturación: NIF, CP y desglose de IVA de las facturas de proveedores ----------
+   La app lo lee sola al leer la factura (origen «lector»: solo rellena lo vacío y nunca pisa lo que corrigió la oficina)
+   y la oficina lo corrige en «🧾 NIF e IVA». Solo en la app de PRUEBAS hasta «Autorizo publicar» (y el SQL en la base real). */
+const FISCAL_RECIBIDAS = ES_PRUEBAS;
+const fcR2 = n => Math.round(Number(n || 0) * 100) / 100;
+function fcGuardarFiscalLeido(f, rd) {
+  if (!FISCAL_RECIBIDAS || !f || !f.id || !rd || !rd.fis || window.__sinFiscal) return;
+  const x = rd.fis;
+  if (!x.nif && !x.cp && !x.desglose.length && x.total == null && !(rd.cab && rd.cab.numero)) return;
+  sb.rpc('guardar_fiscal_factura_recibida', { p_factura: f.id, p_origen: 'lector', p_datos: { numero: (rd.cab && rd.cab.numero) || x.numero || '', nif: x.nif || '', cp: x.cp || '', total: x.total, aviso_destinatario: x.aNombreDe ? 'Viene a nombre de ' + x.aNombreDe + ', no de la S.L.' : '', desglose: x.desglose } })
+    .then(r => { if (r && r.error && /does not exist|Could not find|schema cache/i.test(r.error.message || '')) window.__sinFiscal = true; }).catch(() => { });
+}
+/* Avisos de una factura (fila de v_facturas_recibidas_control o lo que hay en pantalla) */
+function fcAvisosFiscal(x) {
+  const a = [];
+  if (!x.nif) a.push('Falta el NIF del proveedor'); else if (!nifValido(x.nif)) a.push('El NIF del proveedor no parece correcto');
+  if (!x.codigo_postal) a.push('Falta el código postal del proveedor'); else if (!/^\d{5}$/.test(String(x.codigo_postal))) a.push('El código postal debe tener 5 cifras');
+  if (!x.numero) a.push('Falta el nº de factura');
+  if (!x.n_tipos) a.push('Falta el desglose de IVA');
+  if (x.total_factura == null) a.push('Falta el total de la factura');
+  else if (x.n_tipos && Math.abs(fcR2(x.total_factura) - fcR2(x.suma_total)) > 0.02) { const d = fcR2(x.total_factura - x.suma_total); a.push('El desglose no cuadra con el total: suma ' + eur(x.suma_total) + ' € y la factura dice ' + eur(x.total_factura) + ' € (' + (d > 0 ? 'faltan ' : 'sobran ') + eur(Math.abs(d)) + ' €)'); }
+  if (x.aviso_destinatario) a.push(x.aviso_destinatario);
+  return a;
+}
+const resumenDesglose = ds => ds.map(d => String(d.tipo_iva).replace('.', ',') + ' %: ' + eur(d.base) + ' + ' + eur(Number(d.cuota) + Number(d.cuota_recargo || 0))).join(' · ');
+/* Hoja para ver y corregir los datos fiscales de una factura de proveedor */
+async function hojaFiscalFactura(id, alTerminar) {
+  const cuerpo = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
+  const cerrar = hoja('🧾 NIF e IVA de la factura', cuerpo);
+  let fr, ds, prov = null;
+  try {
+    const a = await sb.from('v_facturas_recibidas_control').select('*').eq('id', id).maybeSingle(); if (a.error) throw a.error; if (!a.data) throw new Error('No encuentro esa factura');
+    fr = a.data; const b = await sb.from('facturas_recibidas_iva').select('tipo_iva,base,cuota,recargo_pct,cuota_recargo').eq('factura_id', id).order('tipo_iva'); if (b.error) throw b.error; ds = b.data || [];
+    if (fr.proveedor_id) { const c = await sb.from('proveedores').select('id,nombre,nif,codigo_postal').eq('id', fr.proveedor_id).maybeSingle(); prov = c.data || null; }
+  } catch (e) { cuerpo.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : /does not exist|Could not find|schema cache/i.test((e && e.message) || '') ? 'Falta crear en la base de datos la parte de «NIF e IVA» (fase 3).' : msgErr(e))); return; }
+  const st = { numero: fr.numero || '', fecha: fr.fecha ? String(fr.fecha).slice(0, 10) : '', nif: fr.nif || '', cp: fr.codigo_postal || '', total: fr.total_factura != null ? String(fr.total_factura).replace('.', ',') : '',
+    ds: ds.map(d => ({ tipo_iva: Number(d.tipo_iva), base: String(d.base).replace('.', ','), cuota: String(d.cuota).replace('.', ','), recargo_pct: Number(d.recargo_pct || 0), cuota_recargo: String(d.cuota_recargo || 0).replace('.', ',') })),
+    aFicha: !!prov && (!prov.nif || !prov.codigo_postal), aviso: fr.aviso_destinatario || '' };
+  const num = v => { const n = parseNum(String(v || '').replace(/\.(?=\d{3}(\D|$))/g, '')); return n === null ? null : n; };
+  const avisosBox = h('div', {}), dsBox = h('div', {}), sumaBox = h('div', { class: 'sub', style: 'margin:6px 0' });
+  const ahora = () => { const lin = st.ds.map(d => ({ base: num(d.base) || 0, cuota: num(d.cuota) || 0, cr: num(d.cuota_recargo) || 0 })); const suma = fcR2(lin.reduce((a, d) => a + d.base + d.cuota + d.cr, 0));
+    return { nif: st.nif.trim(), codigo_postal: st.cp.trim(), numero: st.numero.trim(), n_tipos: st.ds.length, total_factura: num(st.total), suma_total: suma, aviso_destinatario: st.aviso }; };
+  const pintarAvisos = () => { const x = ahora(); const a = fcAvisosFiscal(x);
+    sumaBox.textContent = st.ds.length ? 'Suma del desglose: ' + eur(x.suma_total) + ' €' + (x.total_factura != null ? ' · total de la factura: ' + eur(x.total_factura) + ' €' : '') : '';
+    avisosBox.replaceChildren(a.length ? h('div', { class: 'card', style: 'border-left:6px solid #dc2626;background:rgba(220,38,38,.07);margin-bottom:10px' }, ...a.map(t => h('div', { style: 'color:var(--rojo);font-weight:700' }, '⚠ ' + t))) : h('div', { class: 'card', style: 'border-left:6px solid #16a34a;margin-bottom:10px' }, h('div', { style: 'color:var(--verde);font-weight:700' }, '✔ Todo correcto: NIF, código postal y el desglose cuadra con el total.'))); };
+  const campo = (t, k, ph, im) => h('label', { class: 'campo' }, t, h('input', { value: st[k], placeholder: ph || '', inputmode: im || 'text', oninput: e => { st[k] = e.target.value; pintarAvisos(); } }));
+  const TIPOS = [0, 2, 4, 5, 10, 21];
+  function pintarDs() {
+    dsBox.replaceChildren(...st.ds.map((d, i) => { const tot = h('div', { class: 'sub', style: 'margin-top:4px;font-weight:700' });
+      const calcTot = () => { tot.textContent = 'Total de este tipo: ' + eur(fcR2((num(d.base) || 0) + (num(d.cuota) || 0) + (num(d.cuota_recargo) || 0))) + ' €'; pintarAvisos(); };
+      const cuotaInp = h('input', { inputmode: 'decimal', value: d.cuota, oninput: e => { d.cuota = e.target.value; calcTot(); } });
+      const card = h('div', { class: 'card' },
+        h('div', { class: 'fila' }, h('div', { class: 'nombre' }, 'IVA ' + String(d.tipo_iva).replace('.', ',') + ' %'), h('button', { class: 'peligro small', onclick: () => { st.ds.splice(i, 1); pintarDs(); } }, 'Quitar')),
+        h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px' },
+          h('label', { class: 'campo' }, '% de IVA', h('select', { onchange: e => { d.tipo_iva = Number(e.target.value); const b = num(d.base); if (b != null) { d.cuota = String(fcR2(b * d.tipo_iva / 100)).replace('.', ','); } pintarDs(); } }, TIPOS.concat(TIPOS.includes(d.tipo_iva) ? [] : [d.tipo_iva]).map(t => h('option', { value: t, selected: t === d.tipo_iva }, String(t).replace('.', ',') + ' %')))),
+          h('label', { class: 'campo' }, 'Base imponible €', h('input', { inputmode: 'decimal', value: d.base, oninput: e => { d.base = e.target.value; calcTot(); }, onchange: () => { const b = num(d.base); if (b != null && !String(d.cuota).trim()) { d.cuota = String(fcR2(b * d.tipo_iva / 100)).replace('.', ','); cuotaInp.value = d.cuota; calcTot(); } } })),
+          h('label', { class: 'campo' }, 'Cuota de IVA €', cuotaInp),
+          h('label', { class: 'campo' }, 'Recargo equiv. % / €', h('div', { style: 'display:flex;gap:4px' }, h('input', { inputmode: 'decimal', style: 'width:45%', value: String(d.recargo_pct).replace('.', ','), oninput: e => { d.recargo_pct = num(e.target.value) || 0; } }), h('input', { inputmode: 'decimal', style: 'width:55%', value: d.cuota_recargo, oninput: e => { d.cuota_recargo = e.target.value; calcTot(); } })))),
+        tot);
+      calcTot(); return card; }),
+      h('button', { class: 'ghost small', style: 'margin-bottom:8px', onclick: () => { const usados = st.ds.map(d => d.tipo_iva); st.ds.push({ tipo_iva: [4, 10, 21, 2, 5, 0].find(t => !usados.includes(t)) ?? 4, base: '', cuota: '', recargo_pct: 0, cuota_recargo: '0' }); pintarDs(); } }, '+ Añadir otro tipo de IVA'));
+    pintarAvisos();
+  }
+  const leerBtn = h('button', { class: 'ghost small', style: 'margin-bottom:8px', onclick: async () => {
+    if ((st.ds.length || st.nif || st.cp) && !await confirmar('Se pondrá lo que lea la app en la factura (NIF, CP, nº, total y desglose) en lugar de lo que hay en pantalla. No se guarda hasta que toques «Guardar». ¿Seguir?')) return;
+    leerBtn.disabled = true; leerBtn.textContent = '📖 Leyendo la factura…';
+    try { const rd = await fcLeerFactura(await fcDescargar(fr), () => { }); const x = rd.fis || {};
+      if (x.nif) st.nif = x.nif; if (x.cp) st.cp = x.cp; if (rd.cab && rd.cab.numero) st.numero = rd.cab.numero; if (x.total != null) st.total = String(x.total).replace('.', ',');
+      if ((x.desglose || []).length) st.ds = x.desglose.map(d => ({ tipo_iva: d.tipo_iva, base: String(d.base).replace('.', ','), cuota: String(d.cuota).replace('.', ','), recargo_pct: d.recargo_pct, cuota_recargo: String(d.cuota_recargo).replace('.', ',') }));
+      st.aviso = x.aNombreDe ? 'Viene a nombre de ' + x.aNombreDe + ', no de la S.L.' : st.aviso;
+      pintarTodo(); toast((x.desglose || []).length ? 'Leída. Revisa los datos y toca «Guardar».' : 'No he encontrado el desglose de IVA: escríbelo a mano.', (x.desglose || []).length ? 'ok' : 'warn');
+    } catch (e) { toast('No he podido leer la factura: ' + (isNetErr(e) ? 'sin conexión' : msgErr(e)), 'err'); }
+    leerBtn.disabled = false; leerBtn.textContent = '📖 Leer otra vez de la factura';
+  } }, '📖 Leer de la factura');
+  const guardarBtn = h('button', { class: 'guardar', style: 'position:static;width:100%;margin:8px 0', onclick: async () => {
+    const x = ahora(); if (x.codigo_postal && !/^\d{5}$/.test(x.codigo_postal)) { toast('El código postal debe tener 5 cifras', 'err'); return; }
+    for (const d of st.ds) { if (num(d.base) === null || num(d.cuota) === null) { toast('Falta la base o la cuota del IVA ' + d.tipo_iva + ' %', 'err'); return; } }
+    if (new Set(st.ds.map(d => d.tipo_iva + '|' + d.recargo_pct)).size < st.ds.length) { toast('Hay dos filas con el mismo % de IVA: júntalas en una', 'err'); return; }
+    const a = fcAvisosFiscal(x); if (a.length && !await confirmar('Quedan avisos:\n• ' + a.join('\n• ') + '\n\n¿Guardar de todas formas?')) return;
+    guardarBtn.disabled = true;
+    const r = await sb.rpc('guardar_fiscal_factura_recibida', { p_factura: id, p_origen: 'oficina', p_datos: { numero: x.numero, fecha: st.fecha || '', nif: x.nif, cp: x.codigo_postal, total: x.total_factura, a_ficha: st.aFicha, desglose: st.ds.map(d => ({ tipo_iva: d.tipo_iva, base: num(d.base), cuota: num(d.cuota), recargo_pct: d.recargo_pct || 0, cuota_recargo: num(d.cuota_recargo) || 0 })) } });
+    guardarBtn.disabled = false;
+    if (r.error) { toast(msgErr(r.error), 'err'); return; }
+    toast('Guardado' + (a.length ? ' (con avisos)' : ''), a.length ? 'warn' : 'ok'); cerrar(); if (alTerminar) alTerminar();
+  } }, 'Guardar');
+  function pintarTodo() {
+    cuerpo.replaceChildren(
+      h('div', { class: 'fila', style: 'margin-bottom:6px' }, h('div', {}, h('div', { class: 'nombre' }, fr.proveedor || 'Proveedor sin identificar'), h('div', { class: 'sub' }, fr.fiscal_origen === 'oficina' ? '✔ Revisada por la oficina' : fr.fiscal_origen === 'lector' ? '📖 Rellenada por la app al leer la factura: revísala' : 'Sin datos todavía')), fr.ruta ? h('button', { class: 'small', onclick: () => verDocumento(fr.ruta, fr.nombre || 'Factura') }, '👁 Ver') : null),
+      avisosBox, leerBtn,
+      h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px' }, campo('Nº de factura', 'numero', 'Ej. FV-26-0001'), h('label', { class: 'campo' }, 'Fecha de la factura', h('input', { type: 'date', value: st.fecha, onchange: e => { st.fecha = e.target.value; } })),
+        campo('NIF del proveedor', 'nif', 'Ej. B12345678'), campo('Código postal', 'cp', '28053', 'numeric')),
+      prov && esOficina() ? h('label', { class: 'fila', style: 'gap:8px;justify-content:flex-start;margin-bottom:8px' }, h('input', { type: 'checkbox', checked: st.aFicha, onchange: e => { st.aFicha = e.target.checked; } }), h('span', { class: 'sub' }, 'Guardar este NIF y CP también en la ficha de ' + prov.nombre + (prov.nif ? ' (ahora tiene ' + prov.nif + (prov.codigo_postal ? ', CP ' + prov.codigo_postal : '') + ')' : ' (no tiene)'))) : null,
+      h('label', { class: 'campo' }, 'Desglose de IVA (una fila por cada tipo)'), dsBox, sumaBox,
+      campo('Total de la factura € (con IVA)', 'total', '0,00', 'decimal'),
+      guardarBtn);
+    pintarDs();
+  }
+  pintarTodo();
+}
+/* Lista «🧾 NIF e IVA» (Compras): las facturas de proveedores con sus avisos */
+async function pFiscalRecibidas(cont) {
+  let filtro = LS.get('fj_fiscal_filtro', 'avisos'), filas = null, dsPor = {};
+  const lista = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')), chips = h('div', { class: 'chips' }), estado = h('div', { class: 'sub', style: 'margin:0 0 8px' });
+  const leerBtn = h('button', { class: 'ghost', style: 'width:100%;min-height:48px;margin-bottom:8px' }, '📖 Leer NIF e IVA de las facturas que aún no lo tienen');
+  cont.replaceChildren(h('div', { class: 'aviso-card' }, 'Para el listado de COMPRAS de Jorge: cada factura de proveedor con su NIF, código postal y el IVA por tipos (base, %, cuota y total). La app lo lee sola de la factura; aquí se revisa y se corrige. Toca una factura para verla.'), leerBtn, chips, estado, lista);
+  const pintarChips = () => chips.replaceChildren(...[['avisos', 'Con avisos'], ['todas', 'Todas']].map(([m, n]) => h('button', { class: 'chip' + (filtro === m ? ' on' : ''), onclick: () => { filtro = m; LS.set('fj_fiscal_filtro', m); pintarChips(); pintar(); } }, n)));
+  async function cargar() {
+    try {
+      const r = await sb.from('v_facturas_recibidas_control').select('*').order('fecha', { ascending: false }).limit(400); if (r.error) throw r.error; filas = r.data || [];
+      dsPor = {}; const ids = filas.filter(f => f.n_tipos).map(f => f.id);
+      for (let i = 0; i < ids.length; i += 100) { const q = await sb.from('facturas_recibidas_iva').select('factura_id,tipo_iva,base,cuota,cuota_recargo').in('factura_id', ids.slice(i, i + 100)).order('tipo_iva'); (q.data || []).forEach(d => { (dsPor[d.factura_id] = dsPor[d.factura_id] || []).push(d); }); }
+      pintar();
+    } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : /does not exist|Could not find|schema cache/i.test((e && e.message) || '') ? 'Falta crear en la base de datos la parte de «NIF e IVA» (fase 3).' : msgErr(e))); }
+  }
+  function pintar() {
+    if (!filas) return;
+    const con = filas.map(f => Object.assign({}, f, { av: fcAvisosFiscal(f) }));
+    const nAv = con.filter(f => f.av.length).length;
+    estado.textContent = filas.length + ' factura(s) · ' + (nAv ? nAv + ' con avisos' : 'ninguna con avisos ✔');
+    const ver = con.filter(f => filtro === 'todas' || f.av.length);
+    lista.replaceChildren(...(ver.length ? ver.map(f => h('button', { class: 'card tap', style: 'width:100%;text-align:left' + (f.av.length ? ';border-left:6px solid #dc2626' : ';border-left:6px solid #16a34a'), onclick: () => hojaFiscalFactura(f.id, cargar) },
+      h('div', { class: 'fila' }, h('div', { class: 'nombre' }, f.proveedor || 'Proveedor sin identificar'), h('div', { class: 'tot-num', style: 'font-size:16px' }, f.total_factura != null ? eur(f.total_factura) + ' €' : '—')),
+      h('div', { class: 'sub' }, [fechaES(String(f.fecha || '').slice(0, 10)), f.numero ? 'Nº ' + f.numero : null, f.nif ? 'NIF ' + f.nif : null, f.codigo_postal ? 'CP ' + f.codigo_postal : null, f.fiscal_origen === 'oficina' ? '✔ revisada' : f.fiscal_origen === 'lector' ? '📖 leída por la app' : null].filter(Boolean).join(' · ')),
+      dsPor[f.id] ? h('div', { class: 'sub' }, 'IVA ' + resumenDesglose(dsPor[f.id])) : null,
+      ...f.av.map(t => h('div', { class: 'sub', style: 'color:var(--rojo);font-weight:700' }, '⚠ ' + t))))
+      : [h('p', { class: 'vacio' }, filtro === 'avisos' ? '✔ Ninguna factura con avisos.' : 'No hay facturas.')]));
+  }
+  leerBtn.onclick = async () => {
+    const pend = (filas || []).filter(f => !f.fiscal_origen && f.ruta); if (!pend.length) { toast('No hay facturas sin leer', 'ok'); return; }
+    leerBtn.disabled = true; let ok = 0, mal = 0; const prev = window.__sinFiscal; window.__sinFiscal = false;
+    for (let i = 0; i < pend.length; i++) { leerBtn.textContent = '📖 Leyendo ' + (i + 1) + ' de ' + pend.length + '…';
+      try { const rd = await fcLeerFactura(await fcDescargar(pend[i]), () => { }); const x = rd.fis;
+        const r = await sb.rpc('guardar_fiscal_factura_recibida', { p_factura: pend[i].id, p_origen: 'lector', p_datos: { numero: (rd.cab && rd.cab.numero) || x.numero || '', nif: x.nif || '', cp: x.cp || '', total: x.total, aviso_destinatario: x.aNombreDe ? 'Viene a nombre de ' + x.aNombreDe + ', no de la S.L.' : '', desglose: x.desglose } });
+        if (r.error) mal++; else ok++; } catch (e) { mal++; } }
+    window.__sinFiscal = prev; leerBtn.disabled = false; leerBtn.textContent = '📖 Leer NIF e IVA de las facturas que aún no lo tienen';
+    toast('Leídas ' + ok + (mal ? ' · ' + mal + ' no se pudieron leer' : ''), mal ? 'warn' : 'ok'); cargar();
+  };
+  pintarChips(); cargar();
 }
 /* Últimos precios de compra de un producto, del más nuevo al más antiguo, de todas las fuentes */
 async function ultimosPreciosCompra(prod, n) {
