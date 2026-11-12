@@ -2,6 +2,12 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 12/11/2026
+- **↕ Mover los pedidos del reparto con el dedo (v241 en PRUEBAS, rama `modo-reparto`)**, pedido por Fernando. En el Modo reparto («📋 Lista» → «Orden de hoy») y en la pantalla **Reparto** de la oficina:
+  - **Mantener el dedo quieto medio segundo** sobre un cliente (vibra) y arrastrarlo; cerca del borde la lista se desplaza sola. Si el dedo se mueve antes, es scroll normal y no se mueve nada. Con ratón: mantener pulsado un momento y arrastrar. Además, flechas ↑↓ pequeñas al lado. Los ya entregados no se pueden coger.
+  - Se guarda con `ordenar_reparto` (queda en el historial). **Sin cobertura** se guarda en el móvil (cola `fj_cola_orden`, solo el último orden de cada repartidor y día) y se envía al volver la red; mientras, la app enseña el orden nuevo.
+  - **«🔁 Poner el orden de siempre»**: puesto medio de cada cliente en las últimas 4 semanas de ese repartidor; los clientes nuevos van al final y los entregados no se mueven. Pregunta antes. Se guarda en el móvil para usarlo sin cobertura.
+  - **Fernando: «Que puedan todos»** cambiar el orden (también «dirección», repartidores y preparadores, de cualquier repartidor). En la app ya sale para todos; en la base de datos hace falta el cambio `supabase/migrations/20261112d_ordenar_reparto_todos.sql` (hasta aplicarlo, solo pueden el propio repartidor, oficina y admin). Quitar a alguien del reparto (✕) sigue igual (el propio y oficina/admin).
+  - Probado en Modo prácticas con 12 clientes (arrastrar, scroll sin mover, flechas, sin cobertura y «de siempre»).
 - **🚚 Modo reparto, FASE 1 (v240 en PRUEBAS, rama `modo-reparto`)**, pedido por Fernando. Una sola pantalla para el repartidor, sin menú:
   - Entra solo al abrir la app **el día que tiene pedidos asignados por entregar** (decisión de Fernando). En Inicio, botón «🚚 Entrar en MODO REPARTO» para quien reparte.
   - Cliente actual: nombre, dirección, notas, «Ir con el mapa» y «Llamar»; debajo, en grande, lo que lleva (producto, cantidad, peso real), tocando para marcar lo sacado; lo «No servido» aparte.

@@ -180,6 +180,14 @@ label.campo{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(
 .mr-ok{text-align:center;font-size:22px;font-weight:900;color:#166534;background:#dcfce7;border-radius:14px;padding:12px}
 .mr-fin{text-align:center;font-size:22px;font-weight:900;background:#fef3c7;border-radius:14px;padding:16px;margin-top:8px}
 .mr button.mr-peq{min-height:50px;font-size:16px}
+.arr-f,.arr-f *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.arr-on{position:relative;z-index:20;box-shadow:0 10px 28px rgba(0,0,0,.35)!important;border-radius:14px;background:#fff;opacity:1;transition:none!important}
+.arr-cont .arr-f:not(.arr-on){transition:transform .12s}
+.arr-fls{display:flex;flex-direction:column;gap:4px;flex:0 0 46px}
+button.arr-fl{flex:1;min-height:30px!important;width:46px;padding:0!important;font-size:20px!important;font-weight:900;background:#fff!important;color:#166534!important;border:2px solid #86efac!important;border-radius:10px!important;box-shadow:none!important}
+button.arr-fl:disabled{opacity:.25}
+.mr-arr{display:flex;gap:6px;align-items:stretch;margin:0 0 8px}.mr .mr-arr>button.mr-fila{margin:0;flex:1;min-width:0}
+.mr-ayuda{font-size:16px;color:#374151;margin:-2px 0 8px;font-weight:600}
 .mr-salir{position:relative;overflow:hidden;width:100%;min-height:46px;margin-top:28px;background:#f3f4f6!important;color:#6b7280!important;border:1px dashed #9ca3af!important;border-radius:12px;font-size:14px;box-shadow:none!important;user-select:none;-webkit-user-select:none;touch-action:none}
 .mr-salir-barra{position:absolute;left:0;top:0;bottom:0;width:0;background:#fca5a5}.mr-salir.carga .mr-salir-barra{width:100%;transition:width 3s linear}.mr-salir-t{position:relative}
 .ent-caja{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin-top:10px}
@@ -3331,7 +3339,7 @@ async function diagnosticoApp(salida) {
   ok(navigator.onLine, 'Hay conexión', 'Sin conexión', 'Busca cobertura o wifi. Mientras tanto la app guarda lo que hagas.');
   if (navigator.onLine) { const t0 = Date.now(); try { const r = await sb.from('perfiles').select('id').limit(1); ok(!r.error, 'La app habla bien con el servidor (' + (Date.now() - t0) + ' ms)', 'El servidor no responde bien', 'Prueba en unos minutos. Si sigue, avisa al administrador.'); } catch (e) { ok(false, '', 'El servidor no responde', 'Prueba en unos minutos. Si sigue, avisa al administrador.'); } }
   ok(!!(state.perfil && state.perfil.activo !== false), 'Tu usuario está activo (' + (state.perfil ? state.perfil.rol : '') + ')', 'Tu usuario no figura como activo', 'Pide a la oficina que lo revise.');
-  const pend = getCola().length + getColaC().length + getColaF().length + getColaK().length + colaE.get().length + colaI.get().length + colaFi.get().length;
+  const pend = totalPendiente();
   ok(pend === 0, 'No hay nada pendiente de enviar', 'Hay ' + pend + ' cambios guardados en el móvil sin enviar', 'Con conexión, pulsa «Enviar lo pendiente».');
   salida.replaceChildren(...f, h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' }, h('button', { class: 'small', onclick: () => accionAyuda('sincronizar') }, 'Enviar lo pendiente'), h('button', { class: 'ghost small', onclick: () => accionAyuda('recargar') }, 'Actualizar la app')));
 }
@@ -6599,7 +6607,136 @@ function vistaCatalogo() {
 const uuid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); });
 const crearCola = k => ({ get: () => LS.get(k, []), set: c => { LS.set(k, c); renderBanner(); } });
 const colaE = crearCola('fj_cola_entregas'), colaI = crearCola('fj_cola_inc'), colaFi = crearCola('fj_cola_firmas');
-const totalPendiente = () => getCola().length + getColaC().length + getColaF().length + getColaK().length + colaE.get().length + colaI.get().length + colaFi.get().length;
+const totalPendiente = () => getCola().length + getColaC().length + getColaF().length + getColaK().length + colaE.get().length + colaI.get().length + colaFi.get().length + colaO.get().length;
+/* ↕ ORDEN DEL REPARTO (Fernando, 12/11/2026): se cambia arrastrando con el dedo o con ↑↓, en el Modo reparto y en la pantalla Reparto.
+   Se guarda con ordenar_reparto (queda en el historial). Sin cobertura se guarda en el móvil (solo el último orden de cada
+   repartidor y día) y se envía solo al volver la red. Devuelve 'ok', 'cola' (sin red) o 'error'. */
+const colaO = crearCola('fj_cola_orden');
+async function guardarOrdenReparto(fecha, rep, pedidos) {
+  const k = fecha + '|' + rep;
+  colaO.set(colaO.get().filter(x => x.k !== k).concat([{ k, fecha, rep, pedidos, ts: Date.now() }]));
+  if (!navigator.onLine) return 'cola';
+  const r = await sincronizarOrden();
+  return colaO.get().some(x => x.k === k) ? 'cola' : r;
+}
+let sincO = false;
+async function sincronizarOrden() {
+  if (sincO) return 'cola'; if (!navigator.onLine || !colaO.get().length) return 'ok'; sincO = true; let res = 'ok';
+  try {
+    for (let vuelta = 0; vuelta < 5 && colaO.get().length; vuelta++) {
+      let corte = false;
+      for (const it of colaO.get().slice()) {
+        let r; try { r = await sb.rpc('ordenar_reparto', { p_pedidos: it.pedidos }); } catch (e) { r = { error: e }; }
+        if (r.error) { if (isNetErr(r.error)) { corte = true; res = 'cola'; break; }
+          res = 'error'; toast(/SIN_PERMISO/.test(r.error.message || '') ? 'No se pudo guardar el orden del reparto: algún pedido ha cambiado de repartidor. Vuelve a abrir la pantalla.' : msgErr(r.error), 'err'); }
+        colaO.set(colaO.get().filter(x => x.ts !== it.ts));
+      }
+      if (corte) break;
+    }
+  } finally { sincO = false; }
+  return res;
+}
+/* Lo que aún está en el móvil sin enviar se pone encima de lo que viene del servidor (para que no «vuelva» el orden antiguo) */
+function aplicarOrdenPendiente(peds, fecha) {
+  (peds || []).length && colaO.get().filter(x => x.fecha === fecha).forEach(it => it.pedidos.forEach((id, i) => { const p = peds.find(x => x.id === id); if (p && p.repartidor_id === it.rep) p.orden_reparto = i + 1; }));
+  return peds;
+}
+/* «Poner el orden de siempre»: puesto medio de cada cliente en los últimos 4 semanas de ese repartidor (0 = primero, 1 = último).
+   Se guarda en el móvil para poder usarlo sin cobertura. */
+async function puestosHabituales(rep, fecha) {
+  const k = 'fj_orden_hab_' + rep; let c = LS.get(k, null);
+  if (navigator.onLine && !(c && c.fecha === fecha)) {
+    try {
+      const d = new Date(fecha + 'T12:00:00'); d.setDate(d.getDate() - 28); const desde = d.toISOString().slice(0, 10);
+      const r = await sb.from('pedidos').select('cliente_id,fecha_entrega,orden_reparto').eq('repartidor_id', rep).gte('fecha_entrega', desde).lt('fecha_entrega', fecha).not('orden_reparto', 'is', null).neq('estado', 'anulado');
+      if (!r.error && r.data) {
+        const dias = {}; r.data.forEach(p => { const m = dias[p.fecha_entrega] || (dias[p.fecha_entrega] = {}); m[p.cliente_id] = Math.min(m[p.cliente_id] == null ? 1e9 : m[p.cliente_id], Number(p.orden_reparto)); });
+        const suma = {}, n = {};
+        Object.values(dias).forEach(m => { const cs = Object.keys(m).sort((a, b) => m[a] - m[b]); cs.forEach((cid, i) => { suma[cid] = (suma[cid] || 0) + (cs.length > 1 ? i / (cs.length - 1) : 0); n[cid] = (n[cid] || 0) + 1; }); });
+        const pu = {}; Object.keys(suma).forEach(cid => { pu[cid] = suma[cid] / n[cid]; });
+        c = { fecha, pu, dias: Object.keys(dias).length }; LS.set(k, c);
+      }
+    } catch (e) { }
+  }
+  return c;
+}
+/* Ordena la lista como suele ir. Los ya entregados se quedan en su sitio; los clientes nuevos van al final. */
+function ordenarComoSiempre(lista, pu, cliDe, fijo) {
+  const mov = lista.filter(g => !fijo(g)).map((g, i) => ({ g, s: pu[cliDe(g)] != null ? pu[cliDe(g)] : 2 + i / 1000 })).sort((a, b) => a.s - b.s).map(x => x.g);
+  let k = 0; return lista.map(g => fijo(g) ? g : mov[k++]);
+}
+async function pedirOrdenDeSiempre(rep, fecha, lista, cliDe, fijo) {
+  const c = await puestosHabituales(rep, fecha);
+  if (!c || !Object.keys(c.pu || {}).length) { toast(navigator.onLine ? 'Todavía no hay días anteriores con orden de reparto para sacar el de siempre' : 'Sin cobertura y sin el orden de siempre guardado en este móvil', 'err'); return null; }
+  const nuevos = lista.filter(g => !fijo(g) && c.pu[cliDe(g)] == null).length;
+  if (!await confirmar('¿Poner el orden de siempre?\n\nSe ordenan los clientes como se suelen llevar (últimos ' + c.dias + ' días de reparto).' + (nuevos ? '\n' + nuevos + (nuevos === 1 ? ' cliente no sale en esos días: va al final.' : ' clientes no salen en esos días: van al final.') : '') + '\nLos ya entregados no se mueven.')) return null;
+  return ordenarComoSiempre(lista, c.pu, cliDe, fijo);
+}
+/* Arrastrar con el dedo: MANTENER PULSADO medio segundo una fila (vibra) y moverla. Si el dedo se mueve antes, es scroll normal
+   y no se mueve nada. Cerca del borde de la pantalla, la lista se desplaza sola. Las filas llevan data-id y data-mov="1" si se pueden mover. */
+function activarArrastre(cont, alSoltar, puede) {
+  let t = null, fila = null, x0 = 0, y0 = 0, yA = 0, agarre = 0, activo = false, raf = 0, suprimir = false, antes = '';
+  const filas = () => [...cont.children].filter(e => e.dataset && e.dataset.id);
+  const parar = () => { clearTimeout(t); t = null; };
+  const mitad = e => { const r = e.getBoundingClientRect(); return r.top + r.height / 2; };
+  function colocar() {
+    for (let n = 0; n < 50; n++) {
+      const l = filas(), i = l.indexOf(fila), ant = l[i - 1], sig = l[i + 1];
+      if (ant && yA - agarre + fila.offsetHeight / 2 < mitad(ant)) cont.insertBefore(fila, ant);
+      else if (sig && yA - agarre + fila.offsetHeight / 2 > mitad(sig)) cont.insertBefore(fila, sig.nextSibling);
+      else break;
+    }
+    fila.style.transform = ''; const r = fila.getBoundingClientRect();
+    fila.style.transform = 'translateY(' + Math.round(yA - agarre - r.top) + 'px)';
+  }
+  function bucle() {
+    if (!activo) return;
+    const m = 90, v = yA < m ? -Math.ceil((m - yA) / 6) : yA > innerHeight - m ? Math.ceil((yA - innerHeight + m) / 6) : 0;
+    if (v) { window.scrollBy(0, v); colocar(); }
+    raf = requestAnimationFrame(bucle);
+  }
+  function empezar() {
+    t = null; if (!fila || !document.body.contains(fila)) return;
+    activo = true; state.arrastrando = true; antes = filas().map(e => e.dataset.id).join();
+    const r = fila.getBoundingClientRect(); agarre = y0 - r.top;
+    fila.classList.add('arr-on'); cont.classList.add('arr-cont');
+    try { navigator.vibrate && navigator.vibrate(40); } catch (e) { }
+    colocar(); bucle();
+  }
+  function soltar() {
+    parar(); if (!activo) { fila = null; return; }
+    activo = false; state.arrastrando = false; cancelAnimationFrame(raf);
+    fila.classList.remove('arr-on'); cont.classList.remove('arr-cont'); fila.style.transform = '';
+    suprimir = true; setTimeout(() => { suprimir = false; }, 450);
+    const ids = filas().map(e => e.dataset.id); fila = null;
+    if (ids.join() !== antes) alSoltar(ids);
+  }
+  function inicio(tg, x, y, ms) {
+    const f = tg.closest && tg.closest('[data-id]');
+    if (!f || f.parentNode !== cont || f.dataset.mov !== '1' || tg.closest('.arr-fl') || (puede && !puede())) return;
+    fila = f; x0 = x; y0 = yA = y; parar(); t = setTimeout(empezar, ms);
+  }
+  function mueve(x, y, e) {
+    if (activo) { if (e.cancelable) e.preventDefault(); yA = y; colocar(); return; }
+    if (t && (Math.abs(x - x0) > 10 || Math.abs(y - y0) > 10)) { parar(); fila = null; }
+  }
+  cont.addEventListener('touchstart', e => { if (e.touches.length !== 1) { parar(); return; } inicio(e.target, e.touches[0].clientX, e.touches[0].clientY, 450); }, { passive: true });
+  cont.addEventListener('touchmove', e => mueve(e.touches[0].clientX, e.touches[0].clientY, e), { passive: false });
+  cont.addEventListener('touchend', soltar); cont.addEventListener('touchcancel', soltar);
+  /* con ratón (ordenador de la oficina): mantener pulsado un momento y arrastrar */
+  cont.addEventListener('mousedown', e => {
+    if (e.button !== 0) return; inicio(e.target, e.clientX, e.clientY, 250); if (!t) return;
+    const mm = ev => mueve(ev.clientX, ev.clientY, ev), mu = () => { window.removeEventListener('mousemove', mm); window.removeEventListener('mouseup', mu); soltar(); };
+    window.addEventListener('mousemove', mm); window.addEventListener('mouseup', mu);
+  });
+  cont.addEventListener('click', e => { if (suprimir) { e.preventDefault(); e.stopPropagation(); } }, true);
+  cont.addEventListener('contextmenu', e => { if (t || activo) e.preventDefault(); });
+  return cont;
+}
+/* Flechas ↑↓ pequeñas al lado de cada fila (para quien no se apañe arrastrando) */
+const flechasOrden = (i, n, fn) => h('div', { class: 'arr-fls' },
+  h('button', { class: 'arr-fl', 'aria-label': 'Subir', disabled: i === 0, onclick: e => { e.stopPropagation(); fn(-1); } }, '↑'),
+  h('button', { class: 'arr-fl', 'aria-label': 'Bajar', disabled: i === n - 1, onclick: e => { e.stopPropagation(); fn(1); } }, '↓'));
 const TIPOS_INC = { queja: 'Queja de un cliente', calidad: 'Producto en mal estado', devolucion: 'Devolución', merma: 'Merma / se estropeó', falta: 'Faltó género', otra: 'Otra' };
 const quienEs = id => (state.gente[id] && state.gente[id].nombre) || '';
 
@@ -6991,13 +7128,14 @@ function vistaModoReparto() {
       if (!navigator.onLine) throw new TypeError('network');
       const r = await sb.from('pedidos').select('id,estado,cliente_id,repartidor_id,orden_reparto,notas,clientes(id,codigo,nombre,nombre_comercial,direccion,codigo_postal,localidad,telefono,lat,lng,notas_reparto),lineas_pedido(id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,notas,productos(codigo,nombre,nombre_albaran)),entregas(entregado_at),albaranes(serie,numero)')
         .eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true);
-      if (r.error) throw r.error; datos = r.data || []; cache = false; LS.set(MR.k(fecha), datos);
+      if (r.error) throw r.error; datos = aplicarOrdenPendiente(r.data || [], fecha); cache = false; LS.set(MR.k(fecha), datos);
+      if (!state.mrHab) { state.mrHab = true; puestosHabituales(yo, fecha); }   /* «orden de siempre» guardado para usarlo sin cobertura */
       precargarPedidos(datos.filter(p => p.repartidor_id === yo && p.estado === 'terminado' && !entregadoP(p)).map(p => p.id));
     } catch (e) { if (!isNetErr(e)) { if (!datos) { raiz.replaceChildren(h('p', { class: 'err' }, msgErr(e)), B('guardar', '↻ Reintentar', cargar)); return; } } cache = true; }
-    cargado = true; if (state.view === 'modoreparto' && !state.sheetAbierta && !document.querySelector('.ent-ov')) pintar();
+    cargado = true; if (state.view === 'modoreparto' && !state.sheetAbierta && !state.arrastrando && !document.querySelector('.ent-ov')) pintar();
   }
   let ultCarga = 0;
-  state.refrescarModoReparto = () => { if (Date.now() - ultCarga < 60000) return; if (!document.querySelector('.ent-ov') && !state.sheetAbierta && !(document.activeElement && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName))) cargar(); };
+  state.refrescarModoReparto = () => { if (Date.now() - ultCarga < 60000 || state.arrastrando) return; if (!document.querySelector('.ent-ov') && !state.sheetAbierta && !(document.activeElement && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName))) cargar(); };
   function posActual(gs) { const id = LS.get(kPos, null); let i = gs.findIndex(g => g.id === id); if (i < 0) i = gs.findIndex(g => !g.hecho); return i < 0 ? Math.max(0, gs.length - 1) : i; }
   const irA = id => { LS.set(kPos, id); modo = 'cliente'; pintar(); window.scrollTo(0, 0); };
   function cabecera(gs, i) {
@@ -7077,17 +7215,33 @@ function vistaModoReparto() {
     }
   }
   function pintaLista(gs, i) {
-    const out = [h('div', { class: 'mr-sec' }, '📋 Mi orden de hoy (' + gs.length + ')')];
+    const out = [h('div', { class: 'mr-sec' }, '📋 Orden de hoy (' + gs.length + ')')];
     if (!gs.length) out.push(h('p', { class: 'vacio' }, 'No tienes clientes asignados hoy.'));
-    gs.forEach((g, k) => out.push(h('button', { class: 'mr-fila' + (k === i ? ' act' : '') + (g.hecho ? ' hecho' : ''), onclick: () => irA(g.id) },
-      h('span', { class: 'mr-fn' }, g.hecho ? '✔' : String(k + 1)),
-      h('span', { class: 'mr-lt' }, h('span', { class: 'mr-ln' }, nombreCli(g.cli)), h('span', { class: 'mr-lc' }, [g.cli.localidad, g.hecho ? 'entregado' : !g.listo ? '⏳ preparándose' : k === i ? 'ahora' : ''].filter(Boolean).join(' · '))))));
+    else if (gs.length > 1) out.push(h('div', { class: 'mr-ayuda' }, '↕ Para cambiar el orden: deja el dedo quieto en un cliente hasta que vibre y arrástralo. O usa las flechas ↑↓.'),
+      B('ghost', '🔁 Poner el orden de siempre', async () => { const n = await pedirOrdenDeSiempre(yo, fecha, gs, g => g.id, g => g.hecho); if (n) ordenar(n.map(g => g.id)); }, 'width:100%;min-height:54px;font-size:17px;margin-bottom:10px'));
+    const cont = h('div', {});
+    gs.forEach((g, k) => cont.append(h('div', { class: 'mr-arr arr-f', 'data-id': g.id, 'data-mov': g.hecho ? '0' : '1' },
+      h('button', { class: 'mr-fila' + (k === i ? ' act' : '') + (g.hecho ? ' hecho' : ''), onclick: () => irA(g.id) },
+        h('span', { class: 'mr-fn' }, g.hecho ? '✔' : String(k + 1)),
+        h('span', { class: 'mr-lt' }, h('span', { class: 'mr-ln' }, nombreCli(g.cli)), h('span', { class: 'mr-lc' }, [g.cli.localidad, g.hecho ? 'entregado' : !g.listo ? '⏳ preparándose' : k === i ? 'ahora' : ''].filter(Boolean).join(' · ')))),
+      gs.length > 1 ? flechasOrden(k, gs.length, d => { const o = gs.map(x => x.id); const j = k + d; if (j < 0 || j >= o.length) return; [o[k], o[j]] = [o[j], o[k]]; ordenar(o); }) : null)));
+    out.push(activarArrastre(cont, ids => ordenar(ids)));
     const sr = sinRep();
     out.push(h('div', { class: 'mr-sec' }, '🙋 Sin repartidor (' + sr.length + ')'));
     if (!sr.length) out.push(h('p', { class: 'vacio' }, 'Todos los pedidos de hoy tienen repartidor.'));
     sr.forEach(g => out.push(h('div', { class: 'mr-caja' }, h('div', { class: 'mr-ln', style: 'font-size:19px' }, nombreCli(g.cli)), h('div', { class: 'sub' }, [g.cli.localidad, g.peds.length > 1 ? g.peds.length + ' pedidos' : null, gs.some(x => x.id === g.id) ? '⚠ es OTRO pedido de un cliente que ya llevas' : null].filter(Boolean).join(' · ')),
       B('guardar', '🙋 Me lo llevo yo', () => llevar(g), 'width:100%;min-height:58px;margin-top:8px;font-size:19px'))));
     return out;
+  }
+  /* Nuevo orden de mis clientes (lista de ids de cliente): se ve al momento y se guarda (o queda en el móvil sin cobertura) */
+  async function ordenar(idsCli) {
+    const gs = mios(), m = {}; gs.forEach(g => { m[g.id] = g; });
+    const nuevo = idsCli.map(id => m[id]).filter(Boolean); gs.forEach(g => { if (!nuevo.includes(g)) nuevo.push(g); });
+    const pedidos = nuevo.flatMap(g => g.peds.map(p => p.id));
+    pedidos.forEach((id, k) => { const p = datos.find(x => x.id === id); if (p) p.orden_reparto = k + 1; });
+    LS.set(MR.k(fecha), datos); pintar();
+    const r = await guardarOrdenReparto(fecha, yo, pedidos);
+    if (r === 'ok') toast('Orden guardado', 'ok'); else if (r === 'cola') toast('📵 Orden guardado en el móvil: se envía solo cuando haya cobertura', 'ok'); else cargar();
   }
   async function llevar(g) {
     if (!navigator.onLine) { toast('Necesitas cobertura para quedártelo (así no lo coge otro a la vez)', 'err'); return; }
@@ -8481,7 +8635,7 @@ function vistaReparto() {
   const fechaInp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); state.fecha = fecha; marcados = {}; cargar(); } });
   $app.replaceChildren(shell('Reparto', cont)); renderBanner();
   cont.append(h('div', { class: 'barra' }, fechaInp, h('button', { class: 'ghost', onclick: () => cargar() }, '↻')), cuerpo);
-  const timer = setInterval(() => { if (state.view !== 'reparto' || !document.body.contains(cont)) { clearInterval(timer); return; } if (!ocupado && !state.sheetAbierta) cargar(true); }, 30000);
+  const timer = setInterval(() => { if (state.view !== 'reparto' || !document.body.contains(cont)) { clearInterval(timer); return; } if (!ocupado && !state.sheetAbierta && !state.arrastrando) cargar(true); }, 30000);
   const miId = () => (state.user && state.user.id) || (state.perfil && state.perfil.id);
   const color = r => (r && r.color_reparto) || PALETA_REP[Math.max(0, reps.indexOf(r)) % PALETA_REP.length];
   const repDe = id => reps.find(r => r.id === id);
@@ -8498,8 +8652,8 @@ function vistaReparto() {
         sb.from('perfiles').select('id,nombre,rol,activo,reparte,color_reparto').eq('activo', true)]);
       const err = p.error || rp.error;
       if (err) { if (/repartidor_id|orden_reparto|reparte|color_reparto|does not exist|schema cache/i.test(err.message || '')) { falta = true; cuerpo.replaceChildren(h('div', { class: 'aviso-card' }, 'Falta ejecutar en Supabase la Parte 49 (reparto). Después, vuelve a abrir esta pantalla.')); return; } throw err; }
-      falta = false; LS.set(key, { p: p.data, r: rp.data }); cache = false; armar(p.data, rp.data);
-    } catch (e) { if (!isNetErr(e)) { cuerpo.replaceChildren(h('p', { class: 'err' }, msgErr(e))); return; } cache = true; const g = LS.get(key, null); if (!g) { cuerpo.replaceChildren(h('p', { class: 'vacio' }, 'Sin conexión y sin datos guardados de este día.')); return; } armar(g.p, g.r); }
+      falta = false; aplicarOrdenPendiente(p.data, fecha); LS.set(key, { p: p.data, r: rp.data }); cache = false; armar(p.data, rp.data);
+    } catch (e) { if (!isNetErr(e)) { cuerpo.replaceChildren(h('p', { class: 'err' }, msgErr(e))); return; } cache = true; const g = LS.get(key, null); if (!g) { cuerpo.replaceChildren(h('p', { class: 'vacio' }, 'Sin conexión y sin datos guardados de este día.')); return; } armar(aplicarOrdenPendiente(g.p, fecha), g.r); }
     pintar();
   }
   function armar(peds, perfs) {
@@ -8536,9 +8690,21 @@ function vistaReparto() {
     pintaH(); cerrar = hoja('⚙ Repartidores', cuerpoH);
   }
 
-  async function mover(lista, i, d) {   // lista = paradas del repartidor en orden; mueve i una posición (d = -1 arriba, +1 abajo)
+  async function mover(lista, i, d, rep) {   // lista = paradas del repartidor en orden; mueve i una posición (d = -1 arriba, +1 abajo)
     const j = i + d; if (j < 0 || j >= lista.length) return; const o = lista.slice(); [o[i], o[j]] = [o[j], o[i]];
-    if (await llamar('ordenar_reparto', { p_pedidos: o.flatMap(g => g.pedidos) })) await cargar(true);
+    await ordenarLista(o, rep);
+  }
+  /* Guarda el orden nuevo de un repartidor (todos pueden: Fernando, 12/11/2026). Sin cobertura queda en el móvil y se envía después. */
+  async function ordenarLista(o, rep) {
+    const pedidos = o.flatMap(g => g.pedidos);
+    o.forEach((g, k) => { g.orden = k; });
+    const cc = LS.get('fj_reparto_' + fecha, null);
+    if (cc && cc.p) { pedidos.forEach((id, k) => { const p = cc.p.find(x => x.id === id); if (p) p.orden_reparto = k + 1; }); LS.set('fj_reparto_' + fecha, cc); }
+    pintar(); ocupado = true;
+    let r; try { r = await guardarOrdenReparto(fecha, rep, pedidos); } finally { ocupado = false; }
+    if (r === 'ok') { toast('Orden guardado', 'ok'); await cargar(true); }
+    else if (r === 'cola') toast('📵 Orden guardado en el móvil: se envía solo cuando haya cobertura', 'ok');
+    else await cargar(true);
   }
   async function mejorRuta(lista, btn) {
     const pend = lista.filter(g => !g.entregado); if (pend.length < 2) { toast('Hace falta al menos 2 paradas sin entregar.', 'err'); return; }
@@ -8559,12 +8725,12 @@ function vistaReparto() {
   function tarjeta(g, ctx) {   // ctx: { lista, i, editable, col }
     const [a, b] = ventanaCli(g); const sub = [g.localidad, g.pedidos.length + (g.pedidos.length === 1 ? ' pedido' : ' pedidos'), g.entregado ? '✔ entregado' : g.listo ? '✔ preparado' : '⏳ por preparar', a != null || b != null ? (a != null ? deMin(a) : '') + '–' + (b != null ? deMin(b) : '') : '', g.lat == null && !g.entregado ? '⚠ sin ubicación' : ''].filter(Boolean).join(' · ');
     const edit = ctx && ctx.editable && !g.entregado;
-    return h('div', { class: 'card parada' + (g.entregado ? ' hecha' : ''), style: (ctx ? 'border-left:8px solid ' + ctx.col : 'border-left:8px solid #d1d5db') + (pincel && !g.entregado ? ';cursor:pointer;outline:2px dashed ' + (pincel === 'suelto' ? '#6b7280' : color(repDe(pincel))) : ''), onclick: e => { if (!pincel || e.target.closest('button,a,input,label,select')) return; usarPincel(g); } },
+    return h('div', { class: 'card parada' + (ctx ? ' arr-f' : '') + (g.entregado ? ' hecha' : ''), 'data-id': ctx ? g.id : null, 'data-mov': edit ? '1' : '0', style: (ctx ? 'border-left:8px solid ' + ctx.col : 'border-left:8px solid #d1d5db') + (pincel && !g.entregado ? ';cursor:pointer;outline:2px dashed ' + (pincel === 'suelto' ? '#6b7280' : color(repDe(pincel))) : ''), onclick: e => { if (!pincel || e.target.closest('button,a,input,label,select')) return; usarPincel(g); } },
       h('div', { class: 'fila', style: 'gap:8px' },
         !ctx && !g.rep && !g.entregado ? h('input', { type: 'checkbox', class: 'chk-g', checked: !!marcados[g.id], onchange: e => { marcados[g.id] = e.target.checked; if (!e.target.checked) delete marcados[g.id]; pintarBarra(); } }) : null,
         ctx ? h('div', { class: 'nparada', style: 'background:' + ctx.col }, String(ctx.i + 1)) : null,
         h('div', { style: 'flex:1;min-width:0' }, h('div', { class: 'nombre' }, nombreCli(g), g.est && Object.values(g.est).some(e => e === 'previsto') ? h('span', { class: 'badge prev', style: 'margin-left:6px;font-size:12px' }, '📅 previsto') : null), h('div', { class: 'sub' }, sub), g.notas_reparto ? h('div', { class: 'sub' }, '📝 ' + g.notas_reparto) : null),
-        edit ? h('div', { class: 'mov' }, h('button', { class: 'ghost small', 'aria-label': 'Subir', disabled: ctx.i === 0, onclick: () => mover(ctx.lista, ctx.i, -1) }, '↑'), h('button', { class: 'ghost small', 'aria-label': 'Bajar', disabled: ctx.i === ctx.lista.length - 1, onclick: () => mover(ctx.lista, ctx.i, 1) }, '↓'), h('button', { class: 'ghost small', 'aria-label': 'Soltar', onclick: () => asignar([g], null) }, '✕')) : null),
+        edit ? h('div', { class: 'mov', style: 'display:flex;gap:6px;align-items:stretch' }, ctx.lista.length > 1 ? flechasOrden(ctx.i, ctx.lista.length, d => mover(ctx.lista, ctx.i, d, ctx.rep)) : null, ctx.soltar ? h('button', { class: 'ghost small arr-fl', 'aria-label': 'Soltar', style: 'align-self:center', onclick: () => asignar([g], null) }, '✕') : null) : null),
       !ctx && !g.entregado ? h('div', { style: 'display:flex;gap:8px;margin-top:6px;flex-wrap:wrap' }, soyRep() ? h('button', { class: 'guardar small', onclick: () => asignar([g], miId()) }, '🙋 Lo cojo yo') : null, gestor ? h('button', { class: 'ghost small', onclick: () => elegirRepartidor([g], 'Asignar «' + nombreCli(g) + '» a…') }, 'Asignar a…') : null) : null,
       h('div', { style: 'display:flex;gap:8px;margin-top:6px;flex-wrap:wrap' }, g.pedidos.map((id, k) => { const t = (g.est || {})[id] === 'terminado'; const n = g.pedidos.length > 1 ? ' ' + (k + 1) : ''; return h('button', { class: (t ? 'small' : 'ghost small'), onclick: () => go(t ? 'albaran' : 'pedido', { id, desde: 'reparto' }) }, t ? '🧾 Albarán' + n : '📋 Pedido' + n + ' (aún sin albarán)'); }))
       );
@@ -8613,13 +8779,16 @@ function vistaReparto() {
     const orden = reps.slice().sort((a, b) => (a.id === miId() ? -1 : b.id === miId() ? 1 : 0));
     orden.forEach(r => {
       const lista = grupos.filter(g => g.rep === r.id).sort((a, b) => a.orden - b.orden || nombreCli(a).localeCompare(nombreCli(b), 'es'));
-      const editable = r.id === miId() || gestor; const col = color(r);
+      const editable = true, soltar = r.id === miId() || gestor; const col = color(r);
       kids.push(h('div', { class: 'cab-rep', style: 'background:' + col }, h('b', {}, (r.id === miId() ? 'Mi reparto · ' : '') + r.nombre), h('span', {}, lista.length + (lista.length === 1 ? ' parada' : ' paradas') + (lista.some(g => g.entregado) ? ' · ' + lista.filter(g => g.entregado).length + ' entregadas' : ''))));
       if (!lista.length) { kids.push(h('p', { class: 'sub', style: 'margin:0 4px 10px' }, 'Aún no ha cogido ningún cliente.')); return; }
-      lista.forEach((g, i) => kids.push(tarjeta(g, { lista, i, editable, col })));
+      if (lista.filter(g => !g.entregado).length > 1) kids.push(h('div', { class: 'sub', style: 'margin:0 4px 6px;font-size:15px;font-weight:600;color:#374151' }, '↕ Para cambiar el orden: deja el dedo quieto en un cliente hasta que vibre y arrástralo, o usa ↑↓.'));
+      const contR = h('div', {}); lista.forEach((g, i) => contR.append(tarjeta(g, { lista, i, editable, soltar, col, rep: r.id })));
+      kids.push(activarArrastre(contR, ids => { const m = {}; lista.forEach(g => { m[g.id] = g; }); ordenarLista(ids.map(id => m[id]).filter(Boolean), r.id); }, () => !pincel));
       if (editable) { const { tr, sinUb } = enlaces(lista);
         const bOrd = h('button', { class: 'ghost', style: 'flex:1', onclick: () => mejorRuta(lista, bOrd) }, '✨ Ordenar por la mejor ruta');
-        kids.push(h('div', { style: 'display:flex;gap:8px;margin:2px 0 6px;flex-wrap:wrap' }, bOrd),
+        const bSiempre = lista.length > 1 ? h('button', { class: 'ghost', style: 'flex:1', onclick: async () => { const n = await pedirOrdenDeSiempre(r.id, fecha, lista, g => g.id, g => g.entregado); if (n) ordenarLista(n, r.id); } }, '🔁 Poner el orden de siempre') : null;
+        kids.push(h('div', { style: 'display:flex;gap:8px;margin:2px 0 6px;flex-wrap:wrap' }, bOrd, bSiempre),
           ...tr.map((t, k) => h('a', { href: enlaceMapas(t, k === 0 ? undefined : tr[k - 1][tr[k - 1].length - 1]), target: '_blank', rel: 'noopener', class: 'maps-btn', style: 'background:' + col }, '🗺 Abrir en Maps' + (tr.length > 1 ? ' · tramo ' + (k + 1) + ' de ' + tr.length + ' (paradas ' + (k * 9 + 1) + '–' + (k * 9 + t.length) + ')' : ''))),
           ...(sinUb.length ? [h('div', { class: 'aviso-card' }, 'Sin ubicación (no salen en Maps): ' + sinUb.map(nombreCli).join(', ') + '. Pulsa «Ordenar por la mejor ruta» para buscarla por la dirección.')] : [])); }
       kids.push(h('div', { style: 'height:8px' }));
@@ -12936,7 +13105,7 @@ function tick() {
   if (!state.user || !state.perfil) return;
   renderBanner();
   if (!navigator.onLine) return;
-  sincronizar(); sincronizarCarga(); sincronizarFichaje(); sincronizarCobros(); sincronizarEntregas(); sincronizarFirmas(); sincronizarInc(); comprobarEntregas(); if (state.view !== 'chat') contarChat();
+  sincronizar(); sincronizarCarga(); sincronizarFichaje(); sincronizarCobros(); sincronizarEntregas(); sincronizarFirmas(); sincronizarOrden(); sincronizarInc(); comprobarEntregas(); if (state.view !== 'chat') contarChat();
   if (!document.hidden && !state.sheetAbierta) refrescarVista();
 }
 /* Igual que lo anterior, para los PRECIOS DE COMPRA: así en las prácticas «Poner precios» enseña el precio de compra como en la app normal. Se queda solo en el móvil. */
@@ -12979,7 +13148,7 @@ async function init() {
   aplicarCompartido(); render(); cargarGente(); setTimeout(guardarCatalogoReal, 4000); setTimeout(guardarCompraReal, 9000);
   try { history.replaceState(navSnap(0), ''); } catch (e) { }
   sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') { state.user = null; state.perfil = null; render(); } });
-  window.addEventListener('online', () => { renderBanner(); sincronizar(); sincronizarCarga(); sincronizarFichaje(); sincronizarCobros(); sincronizarEntregas(); sincronizarFirmas(); sincronizarInc(); refrescarVista(); });
+  window.addEventListener('online', () => { renderBanner(); sincronizar(); sincronizarCarga(); sincronizarFichaje(); sincronizarCobros(); sincronizarEntregas(); sincronizarFirmas(); sincronizarOrden(); sincronizarInc(); refrescarVista(); });
   window.addEventListener('offline', renderBanner);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
   setInterval(tick, 8000);
