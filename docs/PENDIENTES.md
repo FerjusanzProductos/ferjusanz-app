@@ -60,7 +60,9 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
    - ⚪ Productos mal apuntados según las reglas internas (fcRegla*).
    - ✔️ **Margen / subidas («📈 Suben»)**: publicado (v204). Sin % fijo: compara con la media de los 14 días anteriores de cada producto (decisión de Fernando).
    - ⚪ Comprobador Golden ↔ albaranes: **esperando el archivo de ejemplo** de Golden.
-7. 🟡 **Siguiente (Fernando, 12/11/2026)**: Harvey orquestador v2, en una conversación nueva (texto en `PROMPTS.md`, punto 7): apuntar contactos, confirmar previstos, pedidos desde WhatsApp y recordatorios de cobro (siempre con confirmación).
+7. 🟡 **Harvey orquestador v2** (plan en `supabase/functions/harvey-v2/LEEME.md`):
+   - 🧪 **Apuntar contactos y «volver a llamar el…»**: hecho en PRUEBAS (v215, 12/11). Falta que Fernando lo pruebe y diga «Autorizo publicar» (entonces la normal llama a `harvey-v2`).
+   - ⚪ Confirmar pedidos previstos · ⚪ Preparar pedido desde un WhatsApp · ⚪ Preparar recordatorios de cobro (estos dos últimos, cuando la app se use de verdad).
 8. 🔴 **Copia de seguridad de fotos, PDF y audios** de Supabase Storage (ahora no se copian).
 
 ## Comprobaciones técnicas

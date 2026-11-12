@@ -3258,7 +3258,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v210';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v215';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -10916,12 +10916,17 @@ async function tabHarveyChat(el) {
         movil ? null : h('button', { class: 'ghost small', onclick: () => guiaWhatsApp(limpiar(txt)) }, '💬 WhatsApp (elegir chat)')); });
     return caja;
   };
+  /* Harvey v2: cuando va a CAMBIAR datos, resume y termina con [CONFIRMAR]; la app pone «✅ Sí, hazlo» / «❌ No» (solo en su último mensaje). */
+  const responder = t => { if (ocupado) return; ta.value = t; enviar(); };
   const burbuja = m => {
     const mio = m.rol !== 'harvey';
+    const pide = !mio && !m.error && /\[CONFIRMAR\]/i.test(m.texto);
+    if (pide) m = Object.assign({}, m, { texto: m.texto.replace(/\s*\[CONFIRMAR\]\s*/gi, '\n').trim(), pide, ultimo: m === conv[conv.length - 1] });
     const partes = !mio && !m.error ? trozos(m.texto) : null;
     let cuerpo;
     if (partes) cuerpo = partes.map(p => p.msg ? h('div', { style: 'border:1px solid var(--verde);border-radius:10px;padding:8px 10px;margin:6px 0;background:rgba(27,127,59,.08)' }, h('div', { class: 'sub', style: 'font-weight:700;margin-bottom:4px' }, '✉️ Mensaje para enviar'), limpiar(p.msg), botones(p.msg, p.para)) : (p.nota.trim() ? h('div', { class: 'sub', style: 'white-space:pre-wrap' }, p.nota.trim()) : null));
-    else cuerpo = [m.texto, !mio && !m.error ? h('div', { style: 'margin-top:6px' }, copiarBtn(paraEnviar(m.texto))) : null];
+    else cuerpo = [m.texto, !mio && !m.error && !m.pide ? h('div', { style: 'margin-top:6px' }, copiarBtn(paraEnviar(m.texto))) : null];
+    if (m.pide) cuerpo = [].concat(cuerpo, m.ultimo && !ocupado ? h('div', { style: 'display:flex;gap:8px;margin-top:8px' }, h('button', { class: 'guardar', style: 'flex:1;min-height:48px', onclick: () => responder('Sí, hazlo.') }, '✅ Sí, hazlo'), h('button', { class: 'ghost', style: 'flex:1;min-height:48px', onclick: () => responder('No, no lo guardes.') }, '❌ No')) : h('div', { class: 'sub', style: 'margin-top:6px' }, '(pedía confirmación)'));
     return h('div', { class: 'msg' + (mio ? ' mio' : '') }, h('div', { class: 'burbuja', style: m.error ? 'border-color:#b91c1c;color:#b91c1c' : '' }, h('span', { class: 'quien2' }, mio ? 'Tú' : '🤵 Harvey'), ...cuerpo));
   };
   const pintarConv = () => {
@@ -10943,8 +10948,8 @@ async function tabHarveyChat(el) {
     conv.push({ rol: 'yo', texto: t, t: Date.now() }); ta.value = ''; ocupado = true; btnEnv.disabled = true; guardar(); pintarConv();
     try {
       const contexto = await harveyContexto(foco);
-      const r = await sb.functions.invoke('harvey', { body: { mensajes: conv.filter(m => !m.error).map(m => ({ rol: m.rol, texto: m.texto })), contexto } });
-      if (r.error) { let m = r.error.message || ''; try { const j = await r.error.context.json(); if (j && j.error) m = j.error; } catch (e) { } throw new Error(/not found|404/i.test(m) ? 'Harvey todavía no está activado en Supabase (falta la función «harvey»)' : m); }
+      const r = await sb.functions.invoke(H2_PRUEBAS ? 'harvey-v2' : 'harvey', { body: { mensajes: conv.filter(m => !m.error).map(m => ({ rol: m.rol, texto: m.texto })), contexto } });
+      if (r.error) { let m = r.error.message || ''; try { const j = await r.error.context.json(); if (j && j.error) m = j.error; } catch (e) { } throw new Error(/not found|404/i.test(m) ? 'Harvey todavía no está activado en Supabase (falta la función «' + (H2_PRUEBAS ? 'harvey-v2' : 'harvey') + '»)' : m); }
       if (r.data && r.data.error) throw new Error(r.data.error);
       const txt = String((r.data && r.data.texto) || '').trim(); if (!txt) throw new Error('Harvey no ha contestado');
       conv.push({ rol: 'harvey', texto: txt, t: Date.now() });
