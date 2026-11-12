@@ -9,7 +9,8 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
   - 🔴 Venta en ruta a cliente sin IVA: **recalcular sola** el descuento (Fernando: «que lo haga la app sola»). ✔️ Aplicado en Supabase y v244 en PRUEBAS: que Fernando lo pruebe.
   - ✔️ Aplicado en Supabase (12/11, «listo»): todos pueden cambiar el orden del reparto.
   - 🟡 Fase 2 en PRUEBAS (v245): albarán fijo arriba + cobro (contado/pendiente) + firma si no paga + «Cambiar algo» y «← Volver al reparto». Que Fernando la pruebe.
-  - ⚪ Fase 3: «📦 Cómo cargar la furgoneta» (orden inverso). (El «Orden de hoy» con flechas y «de siempre» ya está en v241.)
+  - 🟡 Fase 3 en PRUEBAS (v246): «📦 Cómo cargar la furgoneta» (orden inverso). Que Fernando la pruebe.
+  - Cuando Fernando lo apruebe todo: juntar la rama `modo-reparto` con `main` y publicar en la normal **solo con «Autorizo publicar»**.
   - ✔️ Fernando (12/11): el orden lo pueden cambiar **todos** (SQL pendiente de aplicar, arriba).
 - ✔️ 12/11/2026: **Avisos en ROJO de precios y pesos que faltan + «atrás» en el portal del cliente** publicados en la normal (v234, «Autorizo publicar»). Pruebas en v233 con lo mismo.
 - ✔️ 12/11/2026: **Arreglos de Preparar → Entregar → Facturar** publicados en la normal (v232, «Autorizo publicar»).

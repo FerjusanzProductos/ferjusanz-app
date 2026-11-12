@@ -189,6 +189,9 @@ button.arr-fl:disabled{opacity:.25}
 .mr-arr{display:flex;gap:6px;align-items:stretch;margin:0 0 8px}.mr .mr-arr>button.mr-fila{margin:0;flex:1;min-width:0}
 .mr-iva{border-radius:12px;padding:8px 12px;margin:2px 0 6px;font-size:19px;font-weight:900;border:2px solid}.mr-iva.sin{background:#dbeafe;color:#1d4ed8;border-color:#1d4ed8}.mr-iva.con{background:#fef3c7;color:#a16207;border-color:#d97706}
 .mr-iva-sub{display:block;font-size:15px;font-weight:700;margin-top:2px}
+.mr button.mr-cargar{width:100%;min-height:64px;font-size:20px;font-weight:900;background:#92400e!important;color:#fff!important;border-radius:16px;margin:6px 0 2px}
+.mr-cargcab{display:flex;align-items:center;gap:12px;margin:16px 0 8px;padding:8px 10px;background:#ecfdf5;border:2px solid #16a34a;border-radius:14px}
+.mr-cargn{flex:0 0 auto;min-width:48px;height:48px;border-radius:12px;background:#166534;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900}
 .mr-ayuda{font-size:16px;color:#374151;margin:-2px 0 8px;font-weight:600}
 .ent-albayuda{font-size:13px;font-weight:700;color:#4b5563;text-align:center;margin-bottom:4px}
 .ent-mr .ent-albfijo{position:relative;flex:0 0 auto;max-height:42vh;overflow:auto;-webkit-overflow-scrolling:touch;padding:6px;background:#f3f4f6;border-bottom:4px solid #166534}
@@ -7222,7 +7225,7 @@ function vistaModoReparto() {
       h('div', { class: 'mr-cab1' }, h('span', {}, '🚚 Mi reparto de hoy'), h('span', { class: 'mr-cuenta' }, hechos + ' de ' + gs.length + ' entregados')),
       h('div', { class: 'mr-tabs' },
         B('mr-tab' + (modo === 'cliente' ? ' on' : ''), '👤 Cliente ' + (gs.length ? (i + 1) + ' de ' + gs.length : ''), () => { modo = 'cliente'; pintar(); }),
-        B('mr-tab' + (modo === 'lista' ? ' on' : ''), '📋 Lista' + (sinRep().length ? ' · 🙋 ' + sinRep().length : ''), () => { modo = 'lista'; pintar(); window.scrollTo(0, 0); })));
+        B('mr-tab' + (modo === 'lista' || modo === 'carga' ? ' on' : ''), '📋 Lista' + (sinRep().length ? ' · 🙋 ' + sinRep().length : ''), () => { modo = 'lista'; pintar(); window.scrollTo(0, 0); })));
   }
   function pintar() {
     if (state.view !== 'modoreparto') return;
@@ -7234,6 +7237,7 @@ function vistaModoReparto() {
     if (cache) kids.push(h('div', { class: 'aviso-card' }, '📵 Sin cobertura: es lo guardado en este móvil. Lo que hagas se envía solo cuando vuelva la red.'));
     if (!cargado && !datos) kids.push(h('p', { class: 'vacio' }, 'Cargando tu reparto…'));
     else if (modo === 'lista') kids.push(...pintaLista(gs, i));
+    else if (modo === 'carga') kids.push(...pintaCarga(gs));
     else if (!g) kids.push(h('div', { class: 'mr-caja' }, h('div', { class: 'mr-nom' }, 'Hoy no tienes clientes asignados.'), h('div', { class: 'sub', style: 'font-size:17px' }, 'Mira en «📋 Lista» si hay pedidos sin repartidor que te puedas llevar.'), B('guardar', '📋 Ver la lista', () => { modo = 'lista'; pintar(); }, 'width:100%;min-height:60px;margin-top:10px;font-size:19px')));
     else kids.push(...pintaCliente(gs, i, g));
     kids.push(botonSalir());
@@ -7304,7 +7308,7 @@ function vistaModoReparto() {
     }
   }
   function pintaLista(gs, i) {
-    const out = [h('div', { class: 'mr-sec' }, '📋 Orden de hoy (' + gs.length + ')')];
+    const out = [gs.some(g => !g.hecho) ? B('mr-cargar', '📦 Cómo cargar la furgoneta', () => { modo = 'carga'; pintar(); window.scrollTo(0, 0); }) : null, h('div', { class: 'mr-sec' }, '📋 Orden de hoy (' + gs.length + ')')].filter(Boolean);
     if (!gs.length) out.push(h('p', { class: 'vacio' }, 'No tienes clientes asignados hoy.'));
     else if (gs.length > 1) out.push(h('div', { class: 'mr-ayuda' }, '↕ Para cambiar el orden: deja el dedo quieto en un cliente hasta que vibre y arrástralo. O usa las flechas ↑↓.'),
       B('ghost', '🔁 Poner el orden de siempre', async () => { const n = await pedirOrdenDeSiempre(yo, fecha, gs, g => g.id, g => g.hecho); if (n) ordenar(n.map(g => g.id)); }, 'width:100%;min-height:54px;font-size:17px;margin-bottom:10px'));
@@ -7320,6 +7324,30 @@ function vistaModoReparto() {
     if (!sr.length) out.push(h('p', { class: 'vacio' }, 'Todos los pedidos de hoy tienen repartidor.'));
     sr.forEach(g => out.push(h('div', { class: 'mr-caja' }, h('div', { class: 'mr-ln ' + claseIva(g.cli), style: 'font-size:19px' }, nombreCli(g.cli)), h('div', { class: 'sub' }, [g.cli.sin_iva ? '🔵 sin IVA' : '🟡 con IVA', g.cli.localidad, g.peds.length > 1 ? g.peds.length + ' pedidos' : null, gs.some(x => x.id === g.id) ? '⚠ es OTRO pedido de un cliente que ya llevas' : null].filter(Boolean).join(' · ')),
       B('guardar', '🙋 Me lo llevo yo', () => llevar(g), 'width:100%;min-height:58px;margin-top:8px;font-size:19px'))));
+    return out;
+  }
+  /* 📦 FASE 3 · Cómo cargar la furgoneta: lo de cada cliente en orden INVERSO al reparto (lo del último cliente se carga
+     primero, al fondo; lo del primero, lo último, junto a la puerta). Sin precios. Se puede ir marcando lo cargado (se guarda en el móvil). */
+  const kC = 'fj_mr_cargado_' + fecha;
+  function pintaCarga(gs) {
+    const quedan = gs.filter(g => !g.hecho), orden = quedan.slice().reverse(), hechos = new Set(LS.get(kC, []));
+    const filas = g => g.peds.flatMap(p => (p.lineas_pedido || []).filter(l => !noServida(l)).map(l => ({ l, k: p.id + ':' + l.id })))
+      .sort((a, b) => nomL(a.l).localeCompare(nomL(b.l), 'es'));
+    const tot = orden.reduce((s, g) => s + filas(g).length, 0), x = orden.reduce((s, g) => s + filas(g).filter(f => hechos.has(f.k)).length, 0);
+    const out = [B('ghost', '← Volver a la lista', () => { modo = 'lista'; pintar(); window.scrollTo(0, 0); }, 'width:100%;min-height:52px;font-size:17px'),
+      h('div', { class: 'mr-sec' }, '📦 Cómo cargar la furgoneta'),
+      h('div', { class: 'mr-caja', style: 'background:#fef9c3;font-size:17px' }, h('b', {}, 'Se carga al revés del reparto: '), 'lo del ÚLTIMO cliente, primero (al fondo); lo del PRIMERO, al final (junto a la puerta). Así cada cliente tiene lo suyo a mano cuando llegas.'),
+      h('div', { class: 'mr-iva con', style: 'text-align:center;background:#dcfce7;color:#166534;border-color:#16a34a' }, x + ' de ' + tot + ' cargados' + (tot && x >= tot ? ' · ✔ Todo cargado' : ''))];
+    if (!orden.length) out.push(h('p', { class: 'vacio' }, 'No queda nada por cargar: todo entregado.'));
+    orden.forEach((g, k) => {
+      const nRep = gs.indexOf(g) + 1, fs = filas(g);
+      out.push(h('div', { class: 'mr-cargcab' }, h('span', { class: 'mr-cargn' }, (k + 1) + 'º'), h('span', { class: 'mr-lt' }, h('span', { class: 'mr-ln ' + claseIva(g.cli) }, nombreCli(g.cli)), h('span', { class: 'mr-lc' }, 'Se entrega el ' + nRep + 'º' + (k === 0 ? ' · al fondo' : k === orden.length - 1 ? ' · junto a la puerta' : '') + (!g.listo ? ' · ⏳ preparándose' : '')))));
+      if (!fs.length) out.push(h('p', { class: 'vacio' }, 'Sin productos.'));
+      fs.forEach(f => { const on = hechos.has(f.k);
+        out.push(h('button', { class: 'mr-lin' + (on ? ' on' : ''), onclick: () => { const ss = new Set(LS.get(kC, [])); ss.has(f.k) ? ss.delete(f.k) : ss.add(f.k); LS.set(kC, [...ss]); pintar(); } },
+          h('span', { class: 'mr-ck' }, on ? '✔' : ''), h('span', { class: 'mr-lt' }, h('span', { class: 'mr-ln' }, num(f.l.cantidad_pedida) + ' ' + (f.l.unidad_pedida || '') + ' · ' + nomL(f.l)), f.l.peso_real != null && f.l.peso_real !== '' ? h('span', { class: 'mr-lc' }, 'Pesado: ' + num(f.l.peso_real) + ' ' + udLinea(f.l)) : null))); });
+    });
+    if (tot) out.push(B('ghost', x < tot ? '✔ Marcar todo como cargado' : '↺ Desmarcar todo', () => { LS.set(kC, x < tot ? orden.flatMap(g => filas(g).map(f => f.k)) : []); pintar(); }, 'width:100%;min-height:52px;margin-top:10px;font-size:17px'));
     return out;
   }
   /* Nuevo orden de mis clientes (lista de ids de cliente): se ve al momento y se guarda (o queda en el móvil sin cobertura) */
