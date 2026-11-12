@@ -77,7 +77,7 @@ Orden recomendado; **una cosa por sesión**. Texto para empezar: `claude/08-text
      3. **Desde el arranque**: las pruebas (también las de facturas) **solo en la app naranja**.
      - ⏳ Fernando avisará **2-3 días antes** del arranque con la fecha exacta.
      - La copia semanal a Google Drive (botón «💾 Descargar copia de seguridad») se mantiene como segunda copia, pero **no sustituye a Pro**: es a mano, no tiene botón para recuperarla y no guarda fotos, PDF, firmas ni Harvey.
-2. 🔴 **Copias de seguridad**: Supabase está en plan **gratuito** (sin copias propias). La copia nocturna de GitLab nunca se ha probado recuperándola. Fotos, PDF y firmas no se copian. Para facturar en 2027, valorar plan Pro (unos 25 $/mes).
+2. 🔴 **Copias de seguridad**: Supabase está en plan **gratuito** (sin copias propias). ✔️ 12/11/2026: copia nocturna ampliada (Harvey, tareas automáticas, archivos) y **prueba de recuperación automática cada noche** en GitLab. **Falta**: 🟡 Fernando pone la variable `SUPABASE_SECRET_KEY` en GitLab (para los archivos) · 🟡 comprobar la primera prueba real en GitLab (trabajo `prueba_recuperacion` en verde). Para facturar en 2027, Pro sigue recomendado.
 3. 🟡 **Contadores de prueba separados** (pedidos, cargas, albaranes, facturas) con reinicio controlado y archivo de lo ensayado. Hoy solo existe `albaran_f_seq` y está sin usar.
 4. 🟡 **Último nº real de albarán de Golden** (serie F, y si hay más series): lo dice Fernando. Antes del arranque, tabla «último nº / siguiente nº» de cada serie.
 5. 🟡 **Ficha de empresa** con NIF, domicilio y datos registrales (ya dados; comprobar con nota simple).
@@ -116,11 +116,11 @@ Orden recomendado; **una cosa por sesión**. Texto para empezar: `claude/08-text
    - ✔️ **Apuntar contactos y «volver a llamar el…»**: publicado en la normal (v216, 12/11/2026). ⚪ Más adelante, borrar la función antigua `harvey` de Supabase.
    - ✔️ **Confirmar o quitar pedidos previstos**: publicado en la normal (v220, 12/11/2026).
    - ⚪ Preparar pedido desde un WhatsApp · ⚪ Preparar recordatorios de cobro (estos dos últimos, cuando la app se use de verdad).
-8. 🔴 **Copia de seguridad de fotos, PDF y audios** de Supabase Storage (ahora no se copian).
+8. 🟡 **Copia de seguridad de fotos, PDF y audios** de Supabase Storage: preparada (12/11/2026); empieza cuando Fernando ponga `SUPABASE_SECRET_KEY` en GitLab.
 
 ## Comprobaciones técnicas
 - 🟡 Mantener al día `claude/00-resumen-general/` (LEEME.md, resumen.html y la página de Claude) al terminar cada tarea.
 - ⚪ Poner al día `claude/08-textos-para-empezar-chats/PROMPT_FERNANDO_NUEVO_CHAT.md` (tiene ramas antiguas y dice que GitHub está suspendido).
-- ✅ La copia nocturna de GitLab se ejecuta (desde el 9/11/2026, todas bien). 🟡 Falta: añadir archivos (55 MB) y Harvey, y **probar a recuperarla**. Si sale bien antes del arranque, se puede evitar Supabase Pro (decisión de Fernando).
+- ✅ La copia nocturna de GitLab se ejecuta (desde el 9/11/2026, todas bien). ✔️ 12/11: ya lleva Harvey, tareas y lista de archivos, y se prueba a recuperar cada noche. 🟡 Falta: variable `SUPABASE_SECRET_KEY` (archivos) y ver la primera prueba en verde. Si sale bien antes del arranque, se puede evitar Supabase Pro (decisión de Fernando).
 - ⚪ Auditoría de seguridad de la app y de Supabase (skill `security-audit`).
 - ⚪ Hacer más pequeño `public/index.html` (más de 1 MB) para que cargue más rápido.

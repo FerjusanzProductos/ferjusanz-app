@@ -107,7 +107,7 @@ Precios a comprobar el día de contratar. Ojo: en el plan Pro, un **segundo** pr
 | 4 | Usuarios de prueba, funciones sin Gmail/WhatsApp, tareas automáticas | No | A |
 | 5 | Ficha «entorno» (SQL que se enseña antes; en la real con «listo») | **Sí, mínima** | B |
 | 6 | App: dirección por entorno, pantalla roja, marca «SIN VALOR FISCAL», contadores de prueba y botón de ponerlos a cero. **Solo en la app naranja**; Fernando lo prueba | No | B |
-| 7 | Copia nocturna ampliada + prueba de recuperación en pruebas | Solo lectura | C |
+| 7 | Copia nocturna ampliada + prueba de recuperación (✔️ 12/11: hecha en una base desechable de GitLab cada noche, no en pruebas, para no meter datos reales; falta la variable de archivos) | Solo lectura | C |
 | 8 | Normal con «Autorizo publicar» (solo lleva el cerrojo; sin contadores de prueba) | Sí | B o C |
 | 9 | Diciembre: plan Pro para la real | Coste | — |
 

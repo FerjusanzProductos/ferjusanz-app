@@ -38,11 +38,12 @@ La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la pu
 - **Supabase** (`hvydnjaswdexttogsyen`): base de datos, inicio de sesión, archivos (fotos, PDF, audios) y funciones.
   - Funciones activas ✅: `harvey-v2` (Harvey de la app normal), `harvey-v2-pruebas` (Harvey de la app de pruebas), `harvey` (antigua, sin uso), `harvey2`, `ayuda-ia`, `albaranes-correo`, `recibir-factura`, `copia-archivo`.
   - Las funciones con IA usan la API de Anthropic (secreto `ANTHROPIC_API_KEY` en Supabase; modelo en `HARVEY_MODEL`).
-- **GitLab CI** (`.gitlab-ci.yml`): copia nocturna de la base de datos (90 días) y publicación manual. ✅ Programación «Copia diaria» activa (todos los días a las 3:00, hora de Madrid, rama main); comprobado el 12/11/2026 con capturas de Fernando: 4 copias (9 a 12/11), todas bien. **Falta probar a recuperarla.**
+- **GitLab CI** (`.gitlab-ci.yml`): copia nocturna de la base de datos (90 días) y publicación manual. ✅ Programación «Copia diaria» activa (todos los días a las 3:00, hora de Madrid, rama main); comprobado el 12/11/2026 con capturas de Fernando: 4 copias (9 a 12/11), todas bien. Desde el 12/11 la copia lleva también Harvey, tareas automáticas y archivos (estos, con la variable `SUPABASE_SECRET_KEY`), y el trabajo `prueba_recuperacion` la recupera cada noche en una base desechable y compara tabla a tabla. ⚠️ Falta ver la primera en verde.
 - **Roles en la app** 📝: admin, oficina, secretaria, comercial, compras, preparador, repartidor y dirección.
 
 ## Seguridad y copias
-- Copia de la base de datos: GitLab CI (`scripts/copia-supabase.sh`). Las fotos, PDF y audios de Storage **no** se copian (pendiente).
+- Copia de la base de datos: GitLab CI (`scripts/copia-supabase.sh`): `public`, `harvey`, usuarios, tareas automáticas y archivos de Storage (si existe `SUPABASE_SECRET_KEY`).
+- Prueba de recuperación: GitLab CI, cada noche (`scripts/prueba-recuperacion.sh`). **Cómo recuperar de verdad**: descargar la copia (GitLab › Build › Artifacts), `pg_restore --no-owner --no-privileges -d <base nueva> ferjusanz-AAAA-MM-DD-datos.dump`, luego usuarios (`-usuarios.dump`), tareas (`-tareas.sql`) y subir los archivos (`-archivos.tar.gz`) a sus carpetas de Storage. Antes de recuperar sobre la base real, siempre con «sí» de Fernando.
 - Claves: solo en los secretos de Supabase, en las variables de GitLab CI y en el entorno de Claude. **Nunca** en el código ni en los documentos.
 
 ## Situación técnica conocida

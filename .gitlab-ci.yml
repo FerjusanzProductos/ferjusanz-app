@@ -3,6 +3,7 @@
 
 stages:
   - backup
+  - comprobar
   - deploy
 
 copia_supabase:
@@ -11,12 +12,34 @@ copia_supabase:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web"'
   script:
+    - apk add --no-cache curl >/dev/null
     - sh scripts/copia-supabase.sh copia
   artifacts:
     name: "copia-supabase-$CI_PIPELINE_ID"
     paths:
       - copia/
     expire_in: 90 days
+
+# Prueba de recuperación: cada noche, después de la copia, la monta en una base vacía y desechable
+# (solo existe mientras dura este trabajo) y comprueba que cada tabla tiene las mismas filas. No toca Supabase.
+prueba_recuperacion:
+  stage: comprobar
+  image: postgres:17-alpine
+  needs: [copia_supabase]
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web"'
+  services:
+    - name: postgres:17-alpine
+      alias: base-vacia
+  variables:
+    POSTGRES_PASSWORD: prueba-desechable
+    PGHOST: base-vacia
+    PGUSER: postgres
+    PGPASSWORD: prueba-desechable
+    PGDATABASE: postgres
+  script:
+    - for i in $(seq 30); do pg_isready -q && break; sleep 2; done
+    - sh scripts/prueba-recuperacion.sh copia
 
 desplegar_cloudflare:
   stage: deploy
