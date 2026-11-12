@@ -754,7 +754,10 @@ function crearSbPractica(){
     borrar_pedido(a){const p=DB.pedidos.find(x=>x.id===a.p_pedido);if(!p)throw new Error('PEDIDO_NO_EXISTE');if(p.estado==='terminado')throw new Error('PEDIDO_TERMINADO');p.estado='anulado';return null;},
     anadir_venta_ruta(a){const ped=DB.pedidos.find(x=>x.id===a.p_pedido);if(!ped)throw new Error('PEDIDO_NO_EXISTE');if(ped.estado==='anulado')throw new Error('PEDIDO_ANULADO');if(!(a.p_cantidad>0))throw new Error('CANTIDAD_NO_VALIDA');
       const id='vr'+Math.random().toString(36).slice(2,8);DB.lineas_pedido.push({id,pedido_id:a.p_pedido,producto_id:a.p_producto,cantidad_pedida:a.p_cantidad,unidad_pedida:a.p_unidad,peso_real:a.p_cantidad,unidad_precio:a.p_unidad_precio,precio:a.p_precio,estado:'hecha',notas:'Venta en ruta'+(a.p_nota?' · '+a.p_nota:''),version:1,venta_ruta:true});
-      DB.albaranes.filter(x=>x.pedido_id===a.p_pedido&&x.estado==='emitido').forEach(x=>{x.traza_estado=null;x.traza_motivo=null;});return id;},
+      DB.albaranes.filter(x=>x.pedido_id===a.p_pedido&&x.estado==='emitido').forEach(x=>{x.traza_estado=null;x.traza_motivo=null;});
+      const cl=DB.clientes.find(c=>c.id===ped.cliente_id)||{};if(cl.sin_iva&&(!(Number(ped.descuento_base)>0)||ped.descuento_motivo==='Descuento por productos')){const b={};DB.lineas_pedido.filter(l=>l.pedido_id===ped.id&&l.precio!=null).forEach(l=>{const k=l.unidad_precio==='kg'?l.peso_real:l.cantidad_pedida;if(k==null)return;const pr=DB.productos.find(x=>x.id===l.producto_id)||{};const t=l.iva!=null?Number(l.iva):pr.iva!=null?Number(pr.iva):4;b[t]=(b[t]||0)+Math.round(Number(k)*Number(l.precio)*100)/100;});
+        const iva=Object.keys(b).reduce((s,t)=>s+Math.round(b[t]*Number(t))/100,0);const r=Number(Object.keys(b).sort((x,y)=>b[y]-b[x])[0]);if(iva>0){ped.descuento_base=Math.round(iva/(1+r/100)*100)/100;ped.descuento_iva=r;ped.descuento_motivo='Descuento por productos';}}
+      return id;},
     terminar_pedido(a){const ls=DB.lineas_pedido.filter(l=>l.pedido_id===a.p_pedido);if(ls.some(l=>l.estado==='pendiente'))throw new Error('LINEAS_PENDIENTES');
       DB.pedidos.find(p=>p.id===a.p_pedido).estado='terminado';let al=DB.albaranes.find(x=>x.pedido_id===a.p_pedido);
       if(!al){al={id:'al'+Math.random().toString(36).slice(2,7),pedido_id:a.p_pedido,serie:'F',numero:DB.seq++,fecha:hoy(),estado:'emitido',created_at:new Date().toISOString()};DB.albaranes.push(al);}return al.numero;}
@@ -2022,7 +2025,7 @@ function abrirVentaRuta(d, alTerminar) {   /* alTerminar: lo usa el Modo reparto
   uni.onchange = () => { cobro.value = uni.value === 'kg' ? 'kg' : 'unidad'; };
   cerrar = hoja('Venta en ruta · ' + nombreCli(cli), h('div', {},
     avisoIvaReparto(cli),
-    cli && cli.sin_iva ? h('div', { class: 'sub', style: 'color:#1d4ed8;font-weight:700;margin-bottom:6px' }, 'El precio se pone como siempre (sin IVA). Después, avisa a la oficina: tiene que volver a calcular el descuento sin IVA de este albarán.') : null,
+    cli && cli.sin_iva ? h('div', { class: 'sub', style: 'color:#1d4ed8;font-weight:700;margin-bottom:6px' }, 'El precio se pone como siempre (sin IVA). La app vuelve a calcular sola el descuento sin IVA del albarán.') : null,
     h('p', { class: 'sub' }, 'Producto que se ha dejado al cliente sin estar en el pedido. Se añade al pedido y al albarán, y la oficina tendrá que asignarle el lote en «Confirmar trazabilidad».'),
     selP, inp, res, h('label', { class: 'campo' }, 'Cantidad', cant), h('label', { class: 'campo' }, 'Unidad', uni), h('label', { class: 'campo' }, 'Precio', precio), h('label', { class: 'campo' }, 'Cobrar', cobro), h('label', { class: 'campo' }, 'Nota', nota),
     h('button', { class: 'guardar', style: 'width:100%', onclick: async ev => {

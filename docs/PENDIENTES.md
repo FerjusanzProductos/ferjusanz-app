@@ -6,7 +6,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - 🔴 12/11/2026: **🚚 Modo reparto** (rama `modo-reparto` en GitLab, NO en main hasta que Fernando lo apruebe):
   - 🟡 **Fase 1** en PRUEBAS (v240): que Fernando la pruebe en Modo prácticas. No decir «terminado» hasta probarlo con él.
   - 🟡 **Mover con el dedo + flechas ↑↓ + «Poner el orden de siempre»** (v241) y **➕ Venta en ruta** dentro del Modo reparto (v242) y **recuerdo CON/SIN IVA** (v243) en PRUEBAS: que Fernando lo pruebe.
-  - ⚪ Propuesta: que la venta en ruta a un cliente sin IVA recalcule sola el descuento (hoy hay que avisar a la oficina). Preguntar a Fernando.
+  - 🔴 Venta en ruta a cliente sin IVA: **recalcular sola** el descuento (Fernando: «que lo haga la app sola»). Hecho en la app (v244, sin subir) y en `supabase/migrations/20261112e_venta_ruta_descuento_sin_iva.sql`: esperando el «listo» de Fernando para aplicarlo y subir v244 a PRUEBAS.
   - 🔴 Aplicar en Supabase `supabase/migrations/20261112d_ordenar_reparto_todos.sql` («que puedan todos» cambiar el orden): enseñado a Fernando, esperando su «listo».
   - ⚪ Fase 2: tras «Entregado», albarán fijo arriba + cobro (contado/pendiente) + firma si no paga, usando lo que ya existe; botón pequeño «Cambiar algo» (edición de pedidos de siempre, con «← Volver al reparto»).
   - ⚪ Fase 3: «📦 Cómo cargar la furgoneta» (orden inverso). (El «Orden de hoy» con flechas y «de siempre» ya está en v241.)

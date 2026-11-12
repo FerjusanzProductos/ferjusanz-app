@@ -135,4 +135,4 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - El **Modo reparto** se abre solo el día que el repartidor tiene pedidos asignados por entregar.
 - El **orden del reparto** lo puede cambiar **cualquiera** de la app (Fernando, 12/11/2026), arrastrando con el dedo o con ↑↓.
 - En las pantallas de reparto siempre se recuerda si el cliente es **CON IVA (dorado) o SIN IVA (azul)**, para que los repartidores no se líen (Fernando, 12/11/2026).
-- **Venta en ruta** (no suele ocurrir, pero pasa): dentro del Modo reparto, con su explicación. Si el cliente es sin IVA, la oficina debe recalcular el descuento sin IVA de ese albarán.
+- **Venta en ruta** (no suele ocurrir, pero pasa): dentro del Modo reparto, con su explicación. Si el cliente es sin IVA, se recalcula sola la línea «Descuento por productos» (si el pedido tenía otro descuento puesto a mano, no se toca) (Fernando, 12/11/2026: «que lo haga la app sola»).
