@@ -22,6 +22,7 @@ en lugar de improvisar.
 | **superpowers** | plugin | `superpowers@superpowers-marketplace` (obra/superpowers) | Método de trabajo: lluvia de ideas, plan, TDD, depuración sistemática, verificar antes de dar algo por hecho. Se solapa con agent-skills: usa la que encaje, sin duplicar pasos. |
 | **impeccable** | plugin | `impeccable@impeccable` (pbakaus/impeccable) | Diseño de pantallas: `/impeccable audit`, `critique`, `polish`… al tocar el aspecto de `public/index.html`. Respeta los colores y estilo actuales de la app (móvil, botones grandes). |
 | **shorts** | skill | `.claude/skills/shorts` (AgriciDaniel/claude-shorts, adaptada a la nube) | Sacar clips cortos verticales con subtítulos de un vídeo largo (YouTube/archivo) para TikTok, Reels o Shorts. Primero `bash .claude/skills/shorts/preparar-nube.sh`. |
+| **taste** | plugin | `taste-skill@taste-skill` (Leonxlnx/taste-skill) | Diseño de **webs de empresa** de nivel profesional (fotos reales, una sección por pantalla, revisión en navegador). Para la web nueva de Ferjusanz (`docs/PLAN_WEB.md`); para pantallas de la app, mejor impeccable. Necesita Node 22+ y Chromium. |
 | **playwright** | MCP | `.mcp.json` | Abrir la app, hacer clic, capturas, probar flujos (PWA, `sw.js`, `manifest`). |
 | **firecrawl** | MCP | `.mcp.json` | Scraping/extracción de webs concretas, crawl de un sitio, convertir páginas a markdown. |
 | **perplexity** | MCP | `.mcp.json` | Investigación con respuestas citadas, preguntas de actualidad, comparar opciones. |
@@ -74,7 +75,7 @@ Reglas de elección rápidas:
 ## 4. Comprobar el kit (`/kit-ferjusanz check`)
 
 Si el usuario pide comprobar el kit, haz esto y responde con una tabla ✅/❌:
-1. `/plugin` → que `ponytail`, `agent-skills`, `watch`, `codex`, `superpowers` e `impeccable` estén instalados y activos.
+1. `/plugin` → que `ponytail`, `agent-skills`, `watch`, `codex`, `superpowers`, `impeccable` y `taste-skill` estén instalados y activos.
 2. `/mcp` → que `playwright`, `firecrawl`, `perplexity` y `posthog` estén conectados. Si uno falla por clave, di cuál falta (sección 2), sin pedir que la pegue en el chat.
 3. Que existan `.claude/skills/graphify/SKILL.md` y `.claude/skills/security-audit/SKILL.md`.
 4. Para watch: `python3 "<dir de la skill watch>/scripts/setup.py" --check --json` y mira `engine` y `gemini_key_present`.
