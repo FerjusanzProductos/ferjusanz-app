@@ -24,7 +24,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - ✔️ **Unidades de TODOS los productos**: aplicado el 11/11/2026 (Fernando lo pegó en el editor SQL de Supabase). 37 productos por caja, bandeja, bolsa, pieza, manojo o docena, cobrados por unidad; pedidos fijos y previstos también. Los previstos nuevos ya salen bien.
 - ✔️ **«Lo de siempre» con Golden**: publicado (v194) y función `memoria_golden` creada en Supabase el 11/11/2026: lo ve todo el equipo (sin precios).
 - 🟢 **Trazabilidad**: hecha y lista (lote más antiguo, reparto, confirmar todo). Empieza a funcionar sola en cuanto se registren compras con lotes.
-- 🟡 **MADREMIA** (12/11/2026): arreglo del nº de factura en PRUEBAS (v225); falta «Autorizo publicar». Decidir: (1) poner el número real a las 13 compras guardadas como «Factura_Electronica»; (2) hay **14 facturas de MADREMIA del 27/10 al 03/11 sin registrar** (estado «nueva»): sin compra ni lotes, esos días no tienen trazabilidad; (3) una compra del 29/10 sin factura adjunta.
+- 🟡 **Facturas con nº real y «PROVEEDOR · Fra. Nº»** (MADREMIA, 12/11/2026): en PRUEBAS (v226); falta «Autorizo publicar». Al publicar, las 13 compras de MADREMIA con «Factura_Electronica» se corrigen solas al abrir la lectura de facturas con oficina/administración: comprobarlo.
 - ✔️ 12/11/2026: **Arreglos de trazabilidad** publicados en la normal (v222) y migración `20261112b_trazabilidad_arreglos.sql` aplicada (incluye: el peso ya no admite un lote de otro producto).
 
 ## En marcha (11/11/2026)

@@ -3261,7 +3261,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v225';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v226';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -5425,7 +5425,7 @@ function vistaCompras() {
     if (precarga) {
       const pc = precarga; precarga = null; st.rec = pc.f;
       st.prov = pc.f.proveedor_id || ''; if (pc.f.fecha_factura) st.fecha = String(pc.f.fecha_factura).slice(0, 10);
-      st.doc = String(pc.f.nombre || '').replace(/\.[A-Za-z0-9]{2,4}$/, '').slice(0, 60);
+      { const nom = String(pc.f.nombre || '').replace(/\.[A-Za-z0-9]{2,4}$/, '').trim(); st.doc = FC_NOMBRE_GENERICO.test(nom) ? '' : nom.slice(0, 60); }
       st.recordar = !pc.f.proveedor_id && !!pc.f.remitente;
     }
     const claveBorr = () => 'fj_borr_compra_' + (st.rec ? st.rec.id : 'manual');
@@ -5515,6 +5515,7 @@ function vistaCompras() {
           if (di.error) throw di.error;
           const fu = await sb.from('facturas_recibidas').update(Object.assign({ estado: 'enlazada', compra_id: c.data.id, proveedor_id: st.prov }, st.fechaLeida && !st.rec.fecha_factura ? { fecha_factura: st.fechaLeida } : {})).eq('id', st.rec.id);
           if (fu.error) throw fu.error;
+          await fcBautizar(c.data.id, st.rec);
           if (st.recordar && st.rec.remitente) await sb.from('proveedores').update({ email: st.rec.remitente }).eq('id', st.prov);
           st.recOk = true;
         } catch (e) { fallos++; }
@@ -5688,6 +5689,7 @@ function vistaCompras() {
       if (i.error) { toast(msgErr(i.error), 'err'); return; }
       const u = await sb.from('facturas_recibidas').update({ estado: 'enlazada', compra_id: c.id, proveedor_id: provId }).eq('id', f.id);
       if (u.error) { toast(msgErr(u.error), 'err'); return; }
+      await fcBautizar(c.id, f);
       if (recordar && f.remitente) await sb.from('proveedores').update({ email: f.remitente }).eq('id', provId);
       ov.remove(); toast('Factura enlazada con la compra', 'ok'); pRecibidas();
     }
@@ -9065,6 +9067,7 @@ async function fcRegistrarCompraDirecta(f, provId, fecha, lineas, numDoc) {
   if (f) {
     const di = await sb.from('documentos_compra').insert({ fecha: fecha, proveedor_id: provId, compra_id: c.data.id, tipo: 'factura', ruta: f.ruta, nombre: f.nombre }); if (di.error) throw di.error;
     const fu = await sb.from('facturas_recibidas').update({ estado: 'enlazada', compra_id: c.data.id, proveedor_id: provId }).eq('id', f.id); if (fu.error) throw fu.error;
+    await fcBautizar(c.data.id, f);
   }
   return { ok: true, n: filas.length, omitidos };
 }
@@ -9097,6 +9100,38 @@ async function fcNumDoc(f, d) {
   if (n) return String(n).slice(0, 60);
   const nom = String(f.nombre || '').replace(/\.[A-Za-z0-9]{2,4}$/, '').trim();
   return nom && !FC_NOMBRE_GENERICO.test(nom) ? nom.slice(0, 60) : '';
+}
+const fcNumGenerico = n => !n || FC_NOMBRE_GENERICO.test(String(n).trim());
+/* Pone a la compra su nº real (si no lo tiene) y a su factura un nombre que diga de quién es:
+   «MADREMIA S.L · Fra. V/6031144.pdf». f = { ruta, nombre } del archivo de la factura (opcional). */
+async function fcBautizar(compraId, f) {
+  try {
+    const c = await sb.from('compras').select('id,fecha,numero_documento,proveedores(nombre),documentos_compra(id,ruta,nombre,tipo)').eq('id', compraId).maybeSingle();
+    if (c.error || !c.data) return false;
+    const docs = (c.data.documentos_compra || []).filter(d => d.tipo === 'factura' && d.ruta);
+    const arch = f && f.ruta ? f : docs[0]; let num = c.data.numero_documento;
+    if (fcNumGenerico(num) && arch) { const n = await fcNumDoc(arch, null); if (n) { num = n; const u = await sb.from('compras').update({ numero_documento: n }).eq('id', compraId); if (u.error) return false; } }
+    const prov = (uno(c.data.proveedores) || {}).nombre || 'Proveedor';
+    const ext = ((arch && String(arch.nombre || arch.ruta || '').match(/\.[A-Za-z0-9]{2,4}$/)) || ['.pdf'])[0].toLowerCase();
+    const nombre = (prov + ' · ' + (!fcNumGenerico(num) ? 'Fra. ' + num : 'factura del ' + fechaES(c.data.fecha))).replace(/\s+/g, ' ').slice(0, 90) + ext;
+    for (const d of docs) if (d.nombre !== nombre) await sb.from('documentos_compra').update({ nombre }).eq('id', d.id);
+    await sb.from('facturas_recibidas').update({ nombre }).eq('compra_id', compraId);
+    return true;
+  } catch (e) { return false; }
+}
+/* Arreglo de lo ya guardado: compras con factura cuyo nº es el nombre del archivo (MADREMIA: «Factura_Electronica») o que no lo tienen */
+async function fcRepararNumeros(forzar) {
+  if (!forzar && LS.get('fj_rep_num', '') === hoy()) return 0;
+  const r = await sb.from('documentos_compra').select('compra_id,ruta,nombre,compras(numero_documento)').eq('tipo', 'factura').not('compra_id', 'is', null).limit(1000);
+  if (r.error) return 0;
+  const vistos = new Set(); let n = 0;
+  for (const d of r.data || []) {
+    if (vistos.has(d.compra_id)) continue; vistos.add(d.compra_id);
+    const num = (uno(d.compras) || {}).numero_documento;
+    if (!fcNumGenerico(num) && !FC_NOMBRE_GENERICO.test(String(d.nombre || '').replace(/\.[A-Za-z0-9]{2,4}$/, '').trim())) continue;
+    if (await fcBautizar(d.compra_id, d)) n++;
+  }
+  LS.set('fj_rep_num', hoy()); return n;
 }
 /* Revisar una factura y registrarla como compra en una hoja encima de la pantalla: al terminar se sigue en la misma pantalla */
 async function revisarFacturaHoja(f, alTerminar) {
@@ -9381,7 +9416,7 @@ async function leerFacturasRecientes(dias, progreso, forzar) {
       } catch (e) { out.fallos++; }
     }
   } catch (e) { out.error = (e && e.message) || 'error'; }
-  finally { window.__leyendoRec = false; }
+  finally { try { out.renombradas = await fcRepararNumeros(forzar); } catch (e) { } window.__leyendoRec = false; }
   return out;
 }
 /* Últimos precios de compra de un producto, del más nuevo al más antiguo, de todas las fuentes */

@@ -119,3 +119,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - **Sin pedido mínimo.**
 - **Zonas de reparto: Madrid y Segovia.**
 - Usar solo estas condiciones en la web, anuncios y mensajes; no prometer otras sin confirmarlo con Fernando.
+
+## Facturas de proveedores (Fernando, 12/11/2026)
+- El **nº de documento** de cada compra es siempre el **número real** que pone en la factura, nunca el nombre del archivo (MADREMIA manda todas como «Factura_Electronica.pdf»).
+- El archivo de la factura se nombra **«PROVEEDOR · Fra. Nº»** para que se sepa de quién es.
