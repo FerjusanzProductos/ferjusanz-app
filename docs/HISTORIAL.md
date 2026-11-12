@@ -3,6 +3,8 @@ _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab
 
 ## 12/11/2026
 - **Migración `20261112b_trazabilidad_arreglos.sql` aplicada** con Fernando («listo», 12/11/2026). Incluye el fallo que encontró Claude normal: **`guardar_peso` apuntaba un lote sin comprobar que fuera del mismo producto**; ahora da `ASIGNACION_NO_VALIDA` (como la pantalla de trazabilidad). Comprobado: la función tiene la comprobación, `corregir_linea` conserva sus valores por defecto y la vista `v_trazabilidad` sigue con `security_invoker` y ya lleva `cliente_id` y `unidad`.
+- **v223 publicada en la app normal** («Autorizo publicar», 12/11/2026): v222 + entrega en mano en el orden nuevo. Pruebas queda en v224 con lo mismo.
+- **Entrega en mano: nuevo orden (v221 en PRUEBAS)**, pedido por Fernando el 12/11/2026: 1) el albarán en grande ARRIBA para revisarlo y, debajo, la firma (botón «✍ Ir a la firma»); 2) ¿paga o lo debe? (efectivo, tarjeta, Bizum, transferencia o a deber; al anotarlo queda entregado); 3) enviarle el albarán firmado (WhatsApp u otras formas). Sin cambios en la base de datos. Probado en Modo prácticas.
 - **v222 publicada en la app normal** («Autorizo publicar», 12/11/2026): v220 + arreglos de trazabilidad de la app. Juntado con `main`. Pruebas sigue en v221 con lo mismo. La migración se aplicó después (ver arriba).
 - **Arreglos de trazabilidad (v221 en PRUEBAS, rama `trazabilidad-arreglos`)**. Revisión pedida por Fernando («haz suposiciones»; la app aún no se usa de verdad). Fallos encontrados y arreglados en la app:
   1. La propuesta «más antiguo primero» podía proponer un lote **ya agotado** cuando el lote estaba en otra unidad (cajas) que la línea (kg).
