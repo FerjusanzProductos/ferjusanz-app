@@ -2,7 +2,7 @@
 _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.md. Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda._
 
 ## Por publicar o decidir
-- ✔️ 12/11/2026: **Facturas con retraso** publicado en la normal (v226). 🔴 Falta aplicar `supabase/migrations/20261112c_facturas_con_retraso.sql` con Fernando delante («listo»): pasa 2 compras de Ibérica del 11/11 al 10/11 y rellena la fecha de 24 facturas.
+- ✔️ 12/11/2026: **Facturas con retraso** publicado en la normal (v228, junto con el nº real). 🔴 Falta aplicar `supabase/migrations/20261112c_facturas_con_retraso.sql` con Fernando delante («listo»): pasa 2 compras de Ibérica del 11/11 al 10/11 y rellena la fecha de 24 facturas.
 - ✔️ 12/11/2026: **Entrega en mano, orden nuevo** (albarán arriba + firma → paga o debe → enviar) publicada en la normal (v223). Pruebas en v224 con lo mismo.
 - 🟡 Vídeo «5 skills para Claude Code»: superpowers e impeccable activados (12/11). La 4.ª es **ponytail** (ya instalada). La 5.ª no se vio; Fernando pidió **taste** (activada 12/11). Si en el vídeo la 5.ª es otra, pasar captura. Claude-Mem: solo en su ordenador si lo quiere.
 - 🟡 **Clips cortos de vídeos (skill `shorts`)**, 12/11/2026: lista y probada. Para usarla con YouTube, Fernando tiene que añadir `*.googlevideo.com` en los ajustes de red del entorno «ferjusanz-app» (Settings → Network access → Allowed domains). Luego mandar el primer enlace de un vídeo propio.
@@ -25,6 +25,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - ✔️ **Unidades de TODOS los productos**: aplicado el 11/11/2026 (Fernando lo pegó en el editor SQL de Supabase). 37 productos por caja, bandeja, bolsa, pieza, manojo o docena, cobrados por unidad; pedidos fijos y previstos también. Los previstos nuevos ya salen bien.
 - ✔️ **«Lo de siempre» con Golden**: publicado (v194) y función `memoria_golden` creada en Supabase el 11/11/2026: lo ve todo el equipo (sin precios).
 - 🟢 **Trazabilidad**: hecha y lista (lote más antiguo, reparto, confirmar todo). Empieza a funcionar sola en cuanto se registren compras con lotes.
+- ✔️ 12/11/2026: **Facturas con nº real y «PROVEEDOR · Fra. Nº»** publicado en la normal (v227, y sigue en v228). Comprobar que las 13 de MADREMIA con «Factura_Electronica» se corrigen al abrir la lectura de facturas con oficina/administración.
 - ✔️ 12/11/2026: **Arreglos de trazabilidad** publicados en la normal (v222) y migración `20261112b_trazabilidad_arreglos.sql` aplicada (incluye: el peso ya no admite un lote de otro producto).
 
 ## En marcha (11/11/2026)
