@@ -17,12 +17,10 @@ Documentos de esta carpeta:
 
 ---
 
-## ⭐ Pregunta clave para Jorge (12/11/2026): ¿estamos en el SII? (SIN CONFIRMAR)
-- Según el **art. 3 del RD 1007/2023**, quien lleva los libros de IVA por el **SII** queda **fuera de Verifactu**. Si FERJUSANZ está en el SII: **no hace falta** declaración responsable, ni huella, ni QR Verifactu, ni envío Verifactu.
-- **A cambio, el SII obliga a** mandar a Hacienda los datos de cada factura emitida y recibida en **4 días hábiles**. La app tendrá que darle esos datos a Jorge (o mandarlos ella misma).
-- **Sigue siendo obligatorio**: factura completa (RD 1619/2012), numeración sin huecos, no borrar facturas (rectificativas), conservarlas y no ocultar ventas (art. 29.2.j LGT).
-- **Si algún día se sale del SII**, vuelve todo lo de esta carpeta: lo dejamos preparado.
-- ⚠️ Pendiente: si el SII es **obligatorio** (más de 6 millones de facturación o devolución mensual) o **voluntario**, y quién lo envía hoy (Jorge o Golden).
+## ⭐ Decidido (12/11/2026): FERJUSANZ NO está en el SII → Verifactu SÍ aplica
+- **Fecha: octubre de 2028** (según Jorge; depende de que el aplazamiento salga en el BOE, lo sigue Jorge).
+- **Plan**: desde el 1/1/2027 se factura con la app **ya preparada para Verifactu** (registros, huella encadenada, sin borrar facturas, rectificativas). Antes de octubre de 2028: QR, envío a la AEAT, pruebas de `PRUEBAS_TECNICAS.md`, certificado FNMT y **declaración responsable firmada** por Fernando o Julián Sanz Horrillo.
+- Sin SII: no hay que mandar datos a Hacienda en 4 días. Jorge recibe los listados (Excel, CSV y PDF).
 
 ## 0. Resumen para Fernando (lo importante en 6 líneas)
 1. **Hoy la app NO es un programa de facturación**: solo prepara «prefacturas» y apunta el número de la factura que se hace en **Golden**. Por eso hoy no hay nada que declarar.
