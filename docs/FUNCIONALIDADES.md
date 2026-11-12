@@ -17,6 +17,7 @@ _Sacadas del historial de GitLab y de los documentos (📝). Versión normal v18
 - «Contador a cero» mientras se está en pruebas (`supabase/contador_a_cero.sql`).
 
 ## Preparar, carga y compra
+- **🚦 Camino de los pedidos** (⚠️ en pruebas, v231): cada pedido del día con Preparado → Entregado → Albarán enviado → Cobrado → Facturado en Golden, qué falta y a quién le toca; la oficina ve además lo entregado del mes sin pasar a Golden (`vistaCamino`). Solo lee.
 - Preparar con **pesos reales**, la etiqueta «📄 Papel» para los clientes que lo quieren impreso y el botón 🗓.
 - **Hoja de compra**, con un total de tomate por volumen, y **hoja de carga**: lo único que se imprime.
 - **Trazabilidad por lotes**: propone siempre el lote más antiguo, reparte si no llega y deja confirmarlo todo de una vez. El origen consta en el lote (p. ej. melón de Brasil).

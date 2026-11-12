@@ -1120,7 +1120,7 @@ function tabActiva(tabs) {
   if (v === 'mas') return 'inicio'; if (VISTAS_PEDIDOS.includes(v)) return 'lista'; return 'inicio';
 }
 function chipsHub() {
-  const it = [['lista', 'Preparar'], ['reparto', 'Reparto'], ['carga', 'Carga'], ['calendario', '📅 Calendario'], ['semana', '🗓 Semana'], ['entregas', 'Entregas'], ['albaranes', 'Albaranes'], ['ruta', 'Ruta']]; it.push(['rapido', '⚡ Apuntar pedido']);
+  const it = [['lista', 'Preparar'], ['camino', '🚦 Camino'], ['reparto', 'Reparto'], ['carga', 'Carga'], ['calendario', '📅 Calendario'], ['semana', '🗓 Semana'], ['entregas', 'Entregas'], ['albaranes', 'Albaranes'], ['ruta', 'Ruta']]; it.push(['rapido', '⚡ Apuntar pedido']);
   const bx = h('div', { class: 'chips hub' }, it.map(([v, t]) => h('button', { class: 'chip' + (state.view === v ? ' on' : ''), onclick: () => go(v) }, t))); setTimeout(() => { try { const on = bx.querySelector('.on'); if (on) bx.scrollLeft = Math.max(0, on.offsetLeft - 20); } catch (e) { } }, 0); return bx;
 }
 function shell(titulo, contenido, opts) {
@@ -1307,7 +1307,7 @@ async function cargarPedido(id) {
 }
 function vistaPedido() {
   state.view = 'pedido'; state.ped = null; state.hechasLoc = {};
-  $app.replaceChildren(shell('Pedido', h('div', { id: 'detalle' }, h('p', { class: 'vacio' }, 'Cargando…')), { volver: () => state.params.desde === 'reparto' ? go('reparto') : go('lista') }));
+  $app.replaceChildren(shell('Pedido', h('div', { id: 'detalle' }, h('p', { class: 'vacio' }, 'Cargando…')), { volver: () => state.params.desde === 'reparto' ? go('reparto') : state.params.desde === 'camino' ? go('camino') : go('lista') }));
   renderBanner();
   actualizarPedido(true);
 }
@@ -3267,7 +3267,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v227';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v231';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -4974,6 +4974,7 @@ function vistaSecretaria() {
     { k: 'cuadre', ic: '🧮', t: 'Cuadre de ayer', s: 'Liquidación por repartidor: efectivo, datáfono y lo vendido', f: () => { LS.set('fj_alb_tab', 'caja'); LS.set('fj_alb_dias', 2); go('albaranes'); } },
     { k: 'prov', ic: '📥', t: 'Facturas de proveedores', s: 'Repasar las que han llegado', f: () => { LS.set('fj_compras_modo', 'recib'); go('compras'); } },
     { k: 'traza', ic: '🔎', t: 'Trazabilidad', s: 'Albaranes sin lote asignado', f: () => go('traza') },
+    { k: 'camino', ic: '🚦', t: 'Camino de los pedidos', s: 'Cada pedido: preparado, entregado, enviado, cobrado y facturado en Golden', f: () => go('camino') },
     { k: 'fact', ic: '📤', t: 'Pasar albaranes a factura', s: 'Facturas para Golden Soft', f: () => go('prefacturas') },
     { k: 'env', ic: '📄', t: 'Imprimir o enviar facturas', s: 'Facturas de clientes', f: () => go('facturascli') },
     new Date().getDate() <= 10 ? { k: 'jorge', ic: '📤', t: 'Cierre de mes para Jorge', s: 'Informes del mes pasado para la gestoría (revisar y compartir)', f: () => go('gestoria') } : null,
@@ -5045,7 +5046,7 @@ function vistaMas() {
     ...g('Trabajo diario', c('✍️', 'Apuntar pedido', () => go('rapido'), V), c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Hoja de carga', () => go('carga'), V), c('🧑‍✈️', 'Reparto', () => go('reparto'), V), c('💶', 'Poner precios', () => go('preciosp'), V),
       c('🧺', 'Hoja de compra para hoy', () => go('hojacompra'), V), c('🛒', 'Compra para hoy', () => { if (puedeCompras()) { LS.set('fj_compras_modo', 'lista'); go('compras'); } else go('hojacompra'); }, V),
       puedeCompras() ? c('💲', 'Precios de compra del día', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, V) : null, c('♻️', 'Sobrante', () => go('sobrante'), V)),
-    ...g('Entregas y pedidos', c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a')),
+    ...g('Entregas y pedidos', c('🚦', 'Camino de los pedidos', () => go('camino'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a')),
     ...g('Compras y mercancía', puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('💶', 'Precios de compra', () => { if (LS.get('fj_precios_modo', 'dia') === 'hoy') LS.set('fj_precios_modo', 'dia'); go('precios'); }, A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null),
     ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z)),
     ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
@@ -5053,7 +5054,7 @@ function vistaMas() {
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('❓', 'Ayuda y guía', () => go('ayuda'), T), c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
   /* «Ver arriba»: cada uno elige qué círculo quiere primero (se recuerda en este móvil). Los círculos se MUEVEN, no se duplican. */
-  const ESPECIAL = { reparto: ['Preparar y repartir', ['Preparar', 'Hoja de carga', 'Reparto', 'Entregas', 'Albaranes', 'Ruta', 'Cobros']], compra: ['Compra en Mercamadrid', ['Hoja de compra para hoy', 'Compra para hoy', 'A quién compramos hoy', 'Compras', 'Facturas de proveedores', 'Precios de compra del día', 'Precios de compra', 'Hoja de carga']] };
+  const ESPECIAL = { reparto: ['Preparar y repartir', ['Preparar', 'Camino de los pedidos', 'Hoja de carga', 'Reparto', 'Entregas', 'Albaranes', 'Ruta', 'Cobros']], compra: ['Compra en Mercamadrid', ['Hoja de compra para hoy', 'Compra para hoy', 'A quién compramos hoy', 'Compras', 'Facturas de proveedores', 'Precios de compra del día', 'Precios de compra', 'Hoja de carga']] };
   const modoV = LS.get('fj_vista', state.perfil.rol === 'compras' ? 'compra' : state.perfil.rol === 'preparador' ? 'reparto' : 'todo');
   const lab = n => { const l = n.querySelector('.l'); return l ? (n.title || l.textContent) : ''; };
   let lista = defs; const esp = ESPECIAL[modoV];
@@ -5069,7 +5070,7 @@ function vistaMas() {
   else {
     const pool = {}; lista.forEach(([, it]) => it.forEach(n => { pool[lab(n)] = n; }));
     pool['Calendario'] = c('📅', 'Calendario', () => go('calendario'), '#ea580c');
-    const PRINC = modoV === 'reparto' ? ['Preparar', 'Hoja de carga', 'Reparto', 'Entregas', 'Cobros', 'Albaranes', 'Ruta', 'Calendario']
+    const PRINC = modoV === 'reparto' ? ['Preparar', 'Camino de los pedidos', 'Hoja de carga', 'Reparto', 'Entregas', 'Cobros', 'Albaranes', 'Ruta', 'Calendario']
       : modoV === 'compra' ? ['Hoja de compra para hoy', 'Compra para hoy', 'A quién compramos hoy', 'Facturas de proveedores', 'Precios de compra del día', 'Calendario']
       : ['Apuntar pedido', 'Calendario', 'Preparar', 'Hoja de carga', 'Reparto', 'Cobros', 'Facturas de proveedores', 'Clientes'];
     const grandes = PRINC.filter(x => pool[x]).map(x => pool[x]);
@@ -7911,6 +7912,125 @@ function vistaResumen() {
         bloque('Comprado (coste)', eur(coste) + ' €', cm.data.length + ' compras con precio anotado', []),
         h('button', { class: 'ghost', style: 'width:100%;min-height:48px', onclick: () => compartirTexto('Resumen ' + fechaES(fecha) + ' · ' + EMPRESA.nombre + '\nEntregados: ' + ent.length + ' de ' + peds.length + '\nCobrado: ' + eur(cobradoT) + ' € (' + (Object.keys(formas).map(k => (nf[k] || k) + ' ' + eur(formas[k])).join(', ') || 'sin cobros') + ')\nPendiente de cobro: ' + eur(pendT) + ' €\nNo entregado: ' + noEnt.length + (noEnt.length ? ' (' + noEnt.map(nomP).join(', ') + ')' : '') + '\nIncidencias del día: ' + ic.data.length) }, '📤 Compartir el resumen'));
     } catch (e) { caja.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+  }
+  cargar();
+}
+
+/* ---------- 🚦 Camino de los pedidos: en qué paso está cada pedido (solo enseña, no cambia nada) ----------
+   Preparado → Entregado → Albarán enviado → Cobrado → Facturado en Golden.
+   Preparadores y repartidores ven los 3 primeros pasos; la oficina (Carmen, Jorge) los 5 y lo que falta pasar a Golden del mes. */
+function vistaCamino() {
+  state.view = 'camino';
+  const ofi = esOficina();
+  let fecha = state.params && state.params.fecha || hoy(), filtro = LS.get('fj_camino_f', 'falta');
+  const cont = h('div', {});
+  $app.replaceChildren(shell('Camino de los pedidos', cont, { volver: volverIni })); renderBanner();
+  const lee = q => Promise.resolve(q).then(r => r && !r.error ? { ok: true, d: r.data || [] } : { ok: false, d: [] }).catch(() => ({ ok: false, d: [] }));
+  const PASOS = ofi ? ['prep', 'ent', 'env', 'cob', 'fac'] : ['prep', 'ent', 'env'];
+  const NOMBRE = { prep: 'Preparado', ent: 'Entregado', env: 'Albarán enviado', cob: 'Cobrado', fac: 'Facturado en Golden' };
+  const QUIEN = { prep: 'preparadores', ent: 'repartidor', env: 'repartidor', cob: 'repartidor / oficina', fac: 'Carmen' };
+  const COL = { si: ['#dcfce7', '#166534'], medio: ['#fef3c7', '#92400e'], no: ['#fee2e2', '#991b1b'], gris: ['#eef0ec', '#555'] };
+  /* Estado de cada paso: { v: 'si'|'medio'|'no'|'gris', t: texto corto } */
+  function pasos(p, x) {
+    const c = uno(p.clientes) || {}, e = uno(p.entregas), al = uno(p.albaranes), r = {};
+    r.prep = p.estado === 'terminado' ? { v: 'si', t: 'Preparado' } : p.estado === 'en_preparacion' ? { v: 'medio', t: 'Preparando' + (quienEs(p.preparador_id) ? ' (' + quienEs(p.preparador_id).split(' ')[0] + ')' : '') }
+      : p.estado === 'previsto' ? { v: 'gris', t: 'Previsto sin confirmar' } : { v: 'no', t: 'Sin preparar' };
+    r.ent = e ? { v: 'si', t: 'Entregado ' + fmtHora(e.entregado_at) + (quienEs(e.entregado_por) ? ' · ' + quienEs(e.entregado_por).split(' ')[0] : '') } : { v: 'no', t: 'Sin entregar' };
+    const co = x.correo[p.id], por = x.portal.has(p.id);
+    r.env = !e ? { v: 'gris', t: 'Al entregar' }
+      : co && co.estado === 'enviado' ? { v: 'si', t: '✉️ Correo enviado' + (por ? ' · 🌐 portal' : '') }
+      : co && co.estado === 'error' ? { v: 'no', t: '✉️ Correo con error' + (por ? ' · 🌐 en portal' : '') }
+      : por ? { v: 'si', t: '🌐 En su portal' }
+      : c.albaran_papel ? { v: 'si', t: '📄 En papel' }
+      : co ? { v: 'medio', t: '✉️ Enviándose' }
+      : { v: 'gris', t: '📲 WhatsApp del repartidor (no queda apuntado)' };
+    if (ofi) {
+      const im = x.imp[p.id];
+      r.cob = !im || !(Number(im.total) > 0) ? { v: 'gris', t: 'Sin precio todavía' }
+        : Number(im.pendiente) <= 0.009 ? { v: 'si', t: 'Cobrado ' + eur(im.total) + ' €' }
+        : Number(im.cobrado) > 0.009 ? { v: 'medio', t: 'Falta ' + eur(im.pendiente) + ' € de ' + eur(im.total) }
+        : { v: 'no', t: 'Debe ' + eur(im.pendiente) + ' €' };
+      const fa = x.fact[p.id];
+      r.fac = !x.factOk ? { v: 'gris', t: 'No se puede ver' } : fa ? { v: 'si', t: 'Factura ' + fa.numero_factura }
+        : !e || !al ? { v: 'gris', t: 'Después de entregar' } : { v: 'no', t: 'Falta pasarlo a Golden' };
+    }
+    return r;
+  }
+  /* El primer paso que falta: lo que hay que hacer ahora y quién */
+  const siguiente = r => PASOS.find(k => r[k].v === 'no' || r[k].v === 'medio') || null;
+  function fila(p, x) {
+    const r = pasos(p, x), c = uno(p.clientes) || {}, al = uno(p.albaranes), sig = siguiente(r);
+    const bola = k => { const [bg, fg] = COL[r[k].v]; return h('div', { title: NOMBRE[k] + ': ' + r[k].t, style: 'flex:1;min-width:0;text-align:center;padding:5px 2px;border-radius:8px;background:' + bg + ';color:' + fg + ';font-size:12px;font-weight:700;line-height:1.15' },
+      h('div', { style: 'font-size:16px' }, r[k].v === 'si' ? '✔' : r[k].v === 'medio' ? '◐' : r[k].v === 'no' ? '✖' : '·'), NOMBRE[k].split(' ')[0]); };
+    return h('div', { class: 'card tap', style: 'padding:10px 12px', onclick: () => go('pedido', { id: p.id, desde: 'camino' }) },
+      h('div', { class: 'fila', style: 'align-items:flex-start;gap:8px' },
+        h('div', { style: 'min-width:0' }, h('div', { class: 'nombre ' + claseIva(c) }, nombreCli(c) || 'Cliente'),
+          h('div', { class: 'sub' }, (al && al.numero ? 'Albarán ' + (al.serie || 'F') + ' ' + al.numero : 'Sin albarán todavía') + (c.albaran_papel ? ' · 📄 Papel' : ''))),
+        sig ? null : h('span', { class: 'badge', style: 'background:#dcfce7;color:#166534' }, '✔ Todo hecho')),
+      h('div', { style: 'display:flex;gap:4px;margin-top:8px' }, PASOS.map(bola)),
+      sig ? h('div', { style: 'margin-top:6px;font-size:14px' }, h('b', {}, '➡ ' + r[sig].t), h('span', { class: 'sub' }, ' · le toca a: ' + QUIEN[sig])) : null);
+  }
+  async function cargar() {
+    const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); cargar(); } });
+    const caja = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
+    cont.replaceChildren(h('div', { class: 'aviso-card' }, ofi ? 'Cada pedido del día y sus 5 pasos. En verde lo hecho, en rojo lo que falta. Debajo de cada uno: qué toca ahora y a quién. Pulsa un pedido para abrirlo.'
+      : 'Cada pedido del día: preparado, entregado y albarán enviado. En verde lo hecho, en rojo lo que falta. Pulsa un pedido para abrirlo.'),
+      h('div', { class: 'barra' }, inp, h('button', { class: 'ghost', onclick: () => cargar() }, '↻')), caja);
+    try {
+      if (!navigator.onLine) throw new TypeError('network');
+      try { await cargarGente(); } catch (e) { }
+      const pr = await sb.from('pedidos').select('id,estado,cliente_id,preparador_id,repartidor_id,orden_reparto,clientes(codigo,nombre,nombre_comercial,sin_iva,albaran_papel),entregas(entregado_at,entregado_por),albaranes(serie,numero,estado)')
+        .eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true).limit(500);
+      if (pr.error) throw pr.error;
+      const peds = (pr.data || []).slice().sort((a, b) => (a.orden_reparto == null ? 9999 : a.orden_reparto) - (b.orden_reparto == null ? 9999 : b.orden_reparto) || nombreCli(uno(a.clientes)).localeCompare(nombreCli(uno(b.clientes)), 'es'));
+      const ids = peds.map(p => p.id), x = { correo: {}, portal: new Set(), imp: {}, fact: {}, factOk: true };
+      for (let i = 0; i < ids.length; i += 150) { const ch = ids.slice(i, i + 150);
+        const [co, po, im, fa] = await Promise.all([lee(sb.from('envios_correo').select('pedido_id,estado').in('pedido_id', ch)), lee(sb.from('albaran_portal').select('pedido_id').in('pedido_id', ch)),
+          ofi ? lee(sb.from('v_pedidos_importe').select('pedido_id,total,cobrado,pendiente').in('pedido_id', ch)) : { d: [] }, ofi ? lee(sb.from('albaranes_facturados').select('pedido_id,numero_factura').in('pedido_id', ch)) : { ok: true, d: [] }]);
+        co.d.forEach(z => x.correo[z.pedido_id] = z); po.d.forEach(z => x.portal.add(z.pedido_id)); im.d.forEach(z => x.imp[z.pedido_id] = z); fa.d.forEach(z => x.fact[z.pedido_id] = z); if (!fa.ok) x.factOk = false; }
+      const rs = peds.map(p => ({ p, r: pasos(p, x) }));
+      /* Contadores por paso (los previstos sin confirmar no cuentan) */
+      const reales = rs.filter(z => z.p.estado !== 'previsto');
+      const resumen = h('div', { style: 'display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:6px;margin:8px 0' }, PASOS.map(k => {
+        const aplica = reales.filter(z => z.r[k].v !== 'gris'), hechos = aplica.filter(z => z.r[k].v === 'si').length, falta = aplica.length - hechos;
+        const [bg, fg] = COL[!aplica.length ? 'gris' : falta ? 'no' : 'si'];
+        return h('div', { style: 'background:' + bg + ';color:' + fg + ';border-radius:10px;padding:8px;text-align:center' }, h('div', { style: 'font-size:12px;font-weight:700' }, NOMBRE[k]),
+          h('div', { style: 'font-size:20px;font-weight:800' }, hechos + ' / ' + aplica.length), h('div', { style: 'font-size:11.5px' }, falta ? (falta === 1 ? 'falta 1' : 'faltan ' + falta) : aplica.length ? 'todo hecho' : '—'));
+      }));
+      const MIO = { preparador: ['prep'], repartidor: ['ent', 'env'] }[state.perfil.rol] || (ofi ? ['fac', 'cob'] : null);
+      const CH = [['falta', 'Lo que falta'], MIO ? ['mio', 'Lo que me toca'] : null, ['todos', 'Todos']].filter(Boolean);
+      if (!CH.some(c => c[0] === filtro)) filtro = 'falta';
+      const lista = h('div', {});
+      const chips = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px' });
+      const pinta = () => {
+        chips.replaceChildren(...CH.map(([k, t]) => h('button', { class: 'chip' + (filtro === k ? ' on' : ''), onclick: () => { filtro = k; LS.set('fj_camino_f', k); pinta(); } }, t)));
+        const vis = rs.filter(z => filtro === 'todos' ? true : filtro === 'mio' ? MIO.some(k => z.r[k].v === 'no' || z.r[k].v === 'medio') : !!siguiente(z.r));
+        lista.replaceChildren(...(vis.length ? vis.map(z => fila(z.p, x)) : [h('p', { class: 'vacio' }, !rs.length ? 'No hay pedidos para este día.' : filtro === 'todos' ? 'No hay pedidos.' : '✔ No falta nada en este día.')]));
+      };
+      pinta();
+      const extra = [];
+      if (ofi) {   /* Para Carmen y Jorge: lo entregado del mes que aún no está en Golden */
+        const caj = h('div', { class: 'card', style: 'border-left:6px solid #2563eb' }, h('div', { class: 'sub' }, 'Calculando lo pendiente de pasar a Golden…'));
+        extra.push(caj);
+        (async () => {
+          try {
+            const d1 = fecha.slice(0, 8) + '01';
+            const q = await sb.from('pedidos').select('id,entregas(entregado_at),albaranes(estado)').gte('fecha_entrega', d1).lte('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true).limit(3000);
+            if (q.error) throw q.error;
+            const ent = (q.data || []).filter(p => uno(p.entregas) && uno(p.albaranes) && uno(p.albaranes).estado !== 'anulado').map(p => p.id), fac = new Set(); let tot = 0, ok = true;
+            for (let i = 0; i < ent.length; i += 150) { const ch = ent.slice(i, i + 150); const [f, m] = await Promise.all([lee(sb.from('albaranes_facturados').select('pedido_id').in('pedido_id', ch)), lee(sb.from('v_pedidos_importe').select('pedido_id,total').in('pedido_id', ch))]);
+              if (!f.ok) ok = false; f.d.forEach(z => fac.add(z.pedido_id)); m.d.forEach(z => { if (!fac.has(z.pedido_id)) tot += Number(z.total) || 0; }); }
+            if (!ok) { caj.replaceChildren(h('div', { class: 'sub' }, 'No se puede ver qué está facturado (falta la Parte 51 en Supabase).')); return; }
+            const n = ent.filter(id => !fac.has(id)).length;
+            caj.replaceChildren(h('div', { class: 'nombre' }, '📤 Facturar en Golden · ' + fechaES(d1) + ' a ' + fechaES(fecha)),
+              h('div', { style: 'font-size:18px;font-weight:800;margin:4px 0' }, n ? n + ' albarán(es) entregados sin facturar · ' + eur(Math.round(tot * 100) / 100) + ' €' : '✔ Todo lo entregado del mes está facturado'),
+              h('div', { class: 'sub' }, 'Entregados: ' + ent.length + ' · ya facturados: ' + (ent.length - n) + '. Esto es lo que Jorge verá como «albaranes sin facturar».'),
+              ...(n ? [h('button', { class: 'guardar small', style: 'margin-top:8px', onclick: () => { LS.set('fj_pf_desde', d1); go('prefacturas'); } }, '📤 Ir a Facturas para Golden')] : []));
+          } catch (e) { caj.replaceChildren(h('div', { class: 'sub' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+        })();
+      }
+      caja.replaceChildren(resumen, ...extra, chips, lista);
+    } catch (e) { caja.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver el camino de los pedidos.' : msgErr(e))); }
   }
   cargar();
 }
@@ -12083,6 +12203,7 @@ const BUSCA_PANTALLAS = [
   ['📤', 'Informes para Jorge', 'jorge gestoria gestor contable informes cierre mes iva facturas emitidas recibidas trimestre', () => go('gestoria'), 'o'],
   ['🆘', 'Peticiones de ayuda', 'ayuda ayudas socorro atascado problema equipo', () => go('ayudas'), 'o'],
   ['🗂️', 'Secretaría hoy', 'secretaria oficina tareas hoy', () => go('secretaria'), 'o'],
+  ['🚦', 'Camino de los pedidos', 'camino pedidos estado preparado entregado enviado cobrado facturado golden falta donde esta pedido', () => go('camino')],
   ['📤', 'Facturas para Golden', 'facturas golden pasar facturar prefacturas', () => go('prefacturas'), 'o'],
   ['📄', 'Facturas de clientes', 'facturas clientes imprimir enviar factura cliente', () => go('facturascli'), 'o'],
   ['🗂️', 'Histórico de Golden', 'historico golden ventas antiguas', () => go('golden'), 'o'],
@@ -12494,7 +12615,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, camino: vistaCamino, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
 }

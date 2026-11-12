@@ -2,8 +2,9 @@
 _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.md. Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda._
 
 ## Por publicar o decidir
-- 🔴 12/11/2026: **Arreglos de Preparar → Entregar → Facturar** en PRUEBAS (v230): albaranes sin precios que desaparecían, «No servido», nombre del PDF, entrega sin precios y avisos en Preparar facturas (detalle en HISTORIAL). Falta: que Fernando lo vea y «Autorizo publicar» (usar v231 o más).
+- 🔴 12/11/2026: **Arreglos de Preparar → Entregar → Facturar** en PRUEBAS (v231, junto con 🚦 Camino de los pedidos): albaranes sin precios que desaparecían, «No servido», nombre del PDF, entrega sin precios y avisos en Preparar facturas (detalle en HISTORIAL). Falta: que Fernando lo vea y «Autorizo publicar» (usar v231 o más).
   - ⚪ Propuestas sin hacer (que decida Fernando): hoja de **Carga** ordenada por repartidor y orden de reparto (ahora va por ruta del cliente); el correo automático del albarán (`albaranes-correo`) aún pone «0» en lo no servido; unidades «ud» en el albarán para cajas/bandejas.
+- 🟡 12/11/2026: **🚦 Camino de los pedidos** en PRUEBAS (v231, junto con los arreglos de arriba). Fernando lo mira; al decir «Autorizo publicar», publicar en la normal con un número nuevo (v232 o el siguiente libre); los dos cambios van juntos.
 - ✔️ 12/11/2026: **Facturas con retraso** publicado en la normal (v228, junto con el nº real). SQL `20261112c_facturas_con_retraso.sql` aplicado con Fernando («listo»).
 - ✔️ 12/11/2026: **Entrega en mano, orden nuevo** (albarán arriba + firma → paga o debe → enviar) publicada en la normal (v223). Pruebas en v224 con lo mismo.
 - 🟡 Vídeo «5 skills para Claude Code»: superpowers e impeccable activados (12/11). La 4.ª es **ponytail** (ya instalada). La 5.ª no se vio; Fernando pidió **taste** (activada 12/11). Si en el vídeo la 5.ª es otra, pasar captura. Claude-Mem: solo en su ordenador si lo quiere.
