@@ -15,5 +15,3 @@ Lo que quiero:
 
 Antes de cambiar la base de datos, enséñame el SQL y explícamelo. **No publiques en la normal** hasta que escriba «Autorizo publicar». Los movimientos del banco son datos reales: no borres ni cambies nada sin preguntarme.
 ---
-
-Recordatorio: antes de esta fase, sigue pendiente pegar el SQL de la caja (`20261114a_caja_efectivo.sql`) en la base REAL.
