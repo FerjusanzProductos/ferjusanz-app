@@ -2,25 +2,46 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "extraKnownMarketplaces": {
     "ponytail": {
-      "source": { "source": "github", "repo": "DietrichGebert/ponytail" }
+      "source": {
+        "source": "github",
+        "repo": "DietrichGebert/ponytail"
+      }
     },
     "addy-agent-skills": {
-      "source": { "source": "github", "repo": "addyosmani/agent-skills" }
+      "source": {
+        "source": "github",
+        "repo": "addyosmani/agent-skills"
+      }
     },
     "claude-video": {
-      "source": { "source": "github", "repo": "bradautomates/claude-video" }
+      "source": {
+        "source": "github",
+        "repo": "bradautomates/claude-video"
+      }
     },
     "openai-codex": {
-      "source": { "source": "github", "repo": "openai/codex-plugin-cc" }
+      "source": {
+        "source": "github",
+        "repo": "openai/codex-plugin-cc"
+      }
     },
     "superpowers-marketplace": {
-      "source": { "source": "github", "repo": "obra/superpowers-marketplace" }
+      "source": {
+        "source": "github",
+        "repo": "obra/superpowers-marketplace"
+      }
     },
     "impeccable": {
-      "source": { "source": "github", "repo": "pbakaus/impeccable" }
+      "source": {
+        "source": "github",
+        "repo": "pbakaus/impeccable"
+      }
     },
     "taste-skill": {
-      "source": { "source": "github", "repo": "Leonxlnx/taste-skill" }
+      "source": {
+        "source": "github",
+        "repo": "Leonxlnx/taste-skill"
+      }
     }
   },
   "enabledPlugins": {
@@ -32,5 +53,17 @@
     "impeccable@impeccable": true,
     "taste-skill@taste-skill": true
   },
-  "enabledMcpjsonServers": ["playwright", "firecrawl", "perplexity", "posthog"]
+  "enabledMcpjsonServers": [
+    "playwright",
+    "firecrawl",
+    "perplexity",
+    "posthog"
+  ],
+  "permissions": {
+    "allow": [
+      "mcp__Supabase__execute_sql",
+      "mcp__Supabase__apply_migration",
+      "mcp__Supabase__deploy_edge_function"
+    ]
+  }
 }

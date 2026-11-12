@@ -30,7 +30,7 @@ Dueño y quien decide: **Fernando Sanz**.
    **Todavía NO se usa de verdad** (el trabajo real sigue en Golden Soft): los pedidos, previstos y cobros de la app son de prueba. No sacar conclusiones ni mensajes a clientes de esos datos. Lo real: historial de Golden (`golden_*`), clientes, productos, contactos (prospectos) y facturas de proveedores.
 6. Nada de borrar datos, cambiar precios o tocar facturas, cobros o permisos sin confirmación expresa.
 7. Antes de cambiar la base de datos, enseñar el SQL y explicar qué hace.
-   Los avisos de aprobación de Supabase caducan al minuto: antes de lanzarlo, pedir a Fernando que tenga abierta esta conversación y espere el aviso (que diga «listo»).
+   Los cambios de Supabase ya no piden botón «Aprobar» (permitidos en `.claude/settings.json` para poder hacerlo desde el móvil). Por eso el permiso es **por el chat**: enseñar el SQL y no lanzarlo hasta que Fernando escriba «Autorizo».
 8. **Al terminar cada tarea**: actualizar `docs/HISTORIAL.md` (qué se hizo y por qué), `docs/PENDIENTES.md` y, si cambia la versión, `docs/ESTADO_ACTUAL.md`. Las reglas nuevas de productos o negocio van en `docs/REGLAS_INTERNAS.md`.
 9. Guardar en GitLab y copiar a GitHub. Nunca dejar trabajo sin guardar.
 
