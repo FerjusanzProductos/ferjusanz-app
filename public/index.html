@@ -155,6 +155,33 @@ label.campo{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(
 .ent-pagos{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ent-pago{min-height:62px;font-size:17px;font-weight:800;background:#fff;color:#111827;border:2px solid #d1d5db;border-radius:14px;padding:6px}
 .ent-ov button.ent-pago{background:#fff!important;color:#111827!important;border:2px solid #9ca3af!important;box-shadow:none!important}.ent-pago:last-child{grid-column:1/-1}.ent-ov button.ent-pago.on{background:#166534!important;color:#fff!important;border-color:#166534!important;box-shadow:0 0 0 3px #86efac!important}
 .ent-zfirma{margin-top:12px;padding-top:10px;border-top:3px solid #16a34a}.ent-ftit{font-size:20px;font-weight:900;color:#166534;margin-bottom:8px}
+.mr{background:#f9fafb;min-height:100vh;max-width:640px;margin:0 auto;padding:0 12px calc(16px + env(safe-area-inset-bottom));color:#111827}
+.mr-cab{position:sticky;top:0;z-index:5;background:#166534;color:#fff;margin:0 -12px 8px;padding:calc(8px + env(safe-area-inset-top)) 12px 8px}
+.mr-cab1{display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:19px;gap:8px}.mr-cuenta{font-size:15px;font-weight:700;opacity:.95}
+.mr-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.mr button.mr-tab{min-height:50px;font-size:17px;font-weight:800;background:rgba(255,255,255,.15)!important;color:#fff!important;border:2px solid rgba(255,255,255,.4)!important;border-radius:12px;box-shadow:none!important}
+.mr button.mr-tab.on{background:#fff!important;color:#166534!important}
+.mr-caja{background:#fff;border:2px solid #e5e7eb;border-radius:16px;padding:12px;margin:8px 0;font-size:17px}
+.mr-cli{border-color:#16a34a}.mr-cli.hecho{background:#f0fdf4}.mr-num{font-size:15px;font-weight:800;color:#166534}
+.mr-nom{font-size:26px;font-weight:900;line-height:1.15;margin:2px 0 6px}.mr-dir{font-size:18px;font-weight:600}.mr-nota{font-size:17px;background:#fef9c3;border-radius:10px;padding:8px;margin-top:6px}
+.mr-2col{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.mr-btn2{display:flex;align-items:center;justify-content:center;min-height:56px;border:2px solid #166534;border-radius:14px;font-size:18px;font-weight:800;color:#166534;text-decoration:none;background:#fff;text-align:center}.mr-btn2.off{border-color:#d1d5db;color:#9ca3af}
+.mr-sec{font-size:20px;font-weight:900;margin:16px 0 6px;color:#14532d}
+.mr button.mr-lin,.mr button.mr-fila{display:flex;align-items:center;gap:12px;width:100%;min-height:68px;margin:0 0 8px;padding:8px 12px;text-align:left;background:#fff!important;color:#111827!important;border:2px solid #d1d5db!important;border-radius:14px;box-shadow:none!important;font-weight:400}
+.mr button.mr-lin.on{background:#dcfce7!important;border-color:#16a34a!important}
+.mr-ck,.mr-fn{flex:0 0 40px;height:40px;border:3px solid #9ca3af;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff}
+.mr-lin.on .mr-ck{background:#16a34a;border-color:#16a34a}.mr-fn{color:#111827;border-radius:50%}
+.mr-lt{flex:1;min-width:0;display:flex;flex-direction:column}.mr-ln{font-size:20px;font-weight:800;line-height:1.2}.mr-lc{font-size:17px;font-weight:700;color:#166534;margin-top:2px}
+.mr-lin.on .mr-ln{text-decoration:line-through;color:#4b5563}
+.mr button.mr-fila.act{border-color:#166534!important;border-width:3px!important;background:#f0fdf4!important}.mr button.mr-fila.hecho{opacity:.6}.mr-fila.hecho .mr-fn{background:#16a34a;border-color:#16a34a;color:#fff}
+.mr-pie{margin-top:14px}.mr-pie>button{width:100%}
+.mr button.mr-ent{min-height:84px;font-size:28px;font-weight:900;background:#16a34a!important;color:#fff!important;border-radius:18px;letter-spacing:.5px}
+.mr button.mr-sig{min-height:84px;font-size:26px;font-weight:900;background:#1d4ed8!important;color:#fff!important;border-radius:18px;margin-top:8px}
+.mr-ok{text-align:center;font-size:22px;font-weight:900;color:#166534;background:#dcfce7;border-radius:14px;padding:12px}
+.mr-fin{text-align:center;font-size:22px;font-weight:900;background:#fef3c7;border-radius:14px;padding:16px;margin-top:8px}
+.mr button.mr-peq{min-height:50px;font-size:16px}
+.mr-salir{position:relative;overflow:hidden;width:100%;min-height:46px;margin-top:28px;background:#f3f4f6!important;color:#6b7280!important;border:1px dashed #9ca3af!important;border-radius:12px;font-size:14px;box-shadow:none!important;user-select:none;-webkit-user-select:none;touch-action:none}
+.mr-salir-barra{position:absolute;left:0;top:0;bottom:0;width:0;background:#fca5a5}.mr-salir.carga .mr-salir-barra{width:100%;transition:width 3s linear}.mr-salir-t{position:relative}
 .ent-caja{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin-top:10px}
 .ent-ov button.ent-sacar{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;margin:0 0 8px;padding:8px 12px;text-align:left;background:#fff!important;color:#111827!important;border:2px solid #d1d5db!important;border-radius:14px;box-shadow:none!important;font-weight:400}
 .ent-ov button.ent-sacar.on{background:#dcfce7!important;border-color:#16a34a!important}.ent-ov button.ent-sacar.on .ent-sacar-nom{text-decoration:line-through;color:#4b5563}
@@ -553,7 +580,7 @@ function crearSbPractica(){
       __init.lineas_pedido=[]; ps.forEach((x,k)=>{const o=cs.length?(k%cs.length):0; if(cs.length) __init.lineas_pedido.push({id:'l'+(k+1),pedido_id:'o'+(o+1),producto_id:x.id,cantidad_pedida:1+(k%3),unidad_pedida:x.unidad_venta||'kg',peso_real:null,unidad_precio:x.unidad_precio||'kg',precio:tp(x.id),estado:'pendiente',version:1});});
     } } catch(e) {}
   const __j=JSON.parse(localStorage.getItem('p_stub_db')||'null'); const __saved=(__j&&__j.dia===H()&&__j.__reales===__init.__reales)?__j:null;
-  const DB = window.__DB = __saved || __init; DB.dia=H(); ['presentaciones','formatos_producto','formatos_cliente','abreviaturas','albaran_portal','albaran_enlaces','cliente_enlaces'].forEach(k=>{DB[k]=DB[k]||[];}); DB.carga_lineas=DB.carga_lineas||[]; DB.sobrante=DB.sobrante||[]; DB.mensajes=DB.mensajes||[]; DB.fichajes=DB.fichajes||[]; DB.fotos_perfil=DB.fotos_perfil||[]; DB.cobros=DB.cobros||[]; DB.proveedores=DB.proveedores||[]; DB.compras=DB.compras||[]; DB.lotes=DB.lotes||[]; DB.asignaciones_lote=DB.asignaciones_lote||[]; DB.entregas=DB.entregas||[]; DB.incidencias=DB.incidencias||[]; DB.documentos_compra=DB.documentos_compra||[]; DB.facturas_recibidas=DB.facturas_recibidas||[]; DB.facturas_clientes=DB.facturas_clientes||[]; if(!DB.golden_facturas){DB.golden_facturas=[{id:'g1',numero:'P/20.001',serie:'P',fecha:'2026-09-10',tipo:'Serie PC',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:100,descuentos:0,gastos:0,base:100,total:104,borrador:false,n_lineas:2},{id:'g2',numero:'BOR/5',serie:'BOR',fecha:'2026-09-11',tipo:'Facturas borrador',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:50,descuentos:0,gastos:0,base:50,total:52,borrador:true,n_lineas:1},{id:'g3',numero:'F1/9.001',serie:'F1',fecha:'2026-08-01',tipo:'Facturas Fernando',cliente_codigo:'TABERNA',cliente_nombre:'Taberna El Enano',bruto:30,descuentos:0,gastos:0,base:30,total:31.2,borrador:false,n_lineas:1}];DB.golden_lineas=[{id:'l1',factura_numero:'P/20.001',orden:1,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:20,precio:2,iva:4,importe:41.6},{id:'l2',factura_numero:'P/20.001',orden:2,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'01',descripcion:'Patata Agria',cantidad:100,precio:0.6,iva:4,importe:62.4},{id:'l3',factura_numero:'BOR/5',orden:1,albaran:null,producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:25,precio:2,iva:4,importe:52},{id:'l4',factura_numero:'F1/9.001',orden:1,albaran:null,producto_codigo:'21',descripcion:'Cebollas Gordas',cantidad:30,precio:1,iva:4,importe:31.2}];} DB.alias_compra=DB.alias_compra||[]; DB.albaranes_facturados=DB.albaranes_facturados||[]; DB.precios_compra_dia=DB.precios_compra_dia||[]; DB.lineas_factura_leida=DB.lineas_factura_leida||[]; DB.compra_ajustes=DB.compra_ajustes||[]; DB.listas_precios=DB.listas_precios||[]; DB.listas_precios_items=DB.listas_precios_items||[]; DB.recomendaciones=DB.recomendaciones||[]; DB.prospectos=DB.prospectos||[]; DB.avisos=DB.avisos||[]; DB.pedidos_habituales=DB.pedidos_habituales||[]; if(!DB.__fijosEj){DB.__fijosEj=1; const cs=DB.clientes.filter(c=>c.activo!==false); const c3=cs.slice(-3); const dl=[1,2,3,4,5,6,0];
+  const DB = window.__DB = __saved || __init; DB.dia=H(); DB.perfiles.forEach(p=>{if(p.id==='u1'&&p.reparte==null)p.reparte=true;}); ['presentaciones','formatos_producto','formatos_cliente','abreviaturas','albaran_portal','albaran_enlaces','cliente_enlaces'].forEach(k=>{DB[k]=DB[k]||[];}); DB.carga_lineas=DB.carga_lineas||[]; DB.sobrante=DB.sobrante||[]; DB.mensajes=DB.mensajes||[]; DB.fichajes=DB.fichajes||[]; DB.fotos_perfil=DB.fotos_perfil||[]; DB.cobros=DB.cobros||[]; DB.proveedores=DB.proveedores||[]; DB.compras=DB.compras||[]; DB.lotes=DB.lotes||[]; DB.asignaciones_lote=DB.asignaciones_lote||[]; DB.entregas=DB.entregas||[]; DB.incidencias=DB.incidencias||[]; DB.documentos_compra=DB.documentos_compra||[]; DB.facturas_recibidas=DB.facturas_recibidas||[]; DB.facturas_clientes=DB.facturas_clientes||[]; if(!DB.golden_facturas){DB.golden_facturas=[{id:'g1',numero:'P/20.001',serie:'P',fecha:'2026-09-10',tipo:'Serie PC',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:100,descuentos:0,gastos:0,base:100,total:104,borrador:false,n_lineas:2},{id:'g2',numero:'BOR/5',serie:'BOR',fecha:'2026-09-11',tipo:'Facturas borrador',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:50,descuentos:0,gastos:0,base:50,total:52,borrador:true,n_lineas:1},{id:'g3',numero:'F1/9.001',serie:'F1',fecha:'2026-08-01',tipo:'Facturas Fernando',cliente_codigo:'TABERNA',cliente_nombre:'Taberna El Enano',bruto:30,descuentos:0,gastos:0,base:30,total:31.2,borrador:false,n_lineas:1}];DB.golden_lineas=[{id:'l1',factura_numero:'P/20.001',orden:1,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:20,precio:2,iva:4,importe:41.6},{id:'l2',factura_numero:'P/20.001',orden:2,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'01',descripcion:'Patata Agria',cantidad:100,precio:0.6,iva:4,importe:62.4},{id:'l3',factura_numero:'BOR/5',orden:1,albaran:null,producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:25,precio:2,iva:4,importe:52},{id:'l4',factura_numero:'F1/9.001',orden:1,albaran:null,producto_codigo:'21',descripcion:'Cebollas Gordas',cantidad:30,precio:1,iva:4,importe:31.2}];} DB.alias_compra=DB.alias_compra||[]; DB.albaranes_facturados=DB.albaranes_facturados||[]; DB.precios_compra_dia=DB.precios_compra_dia||[]; DB.lineas_factura_leida=DB.lineas_factura_leida||[]; DB.compra_ajustes=DB.compra_ajustes||[]; DB.listas_precios=DB.listas_precios||[]; DB.listas_precios_items=DB.listas_precios_items||[]; DB.recomendaciones=DB.recomendaciones||[]; DB.prospectos=DB.prospectos||[]; DB.avisos=DB.avisos||[]; DB.pedidos_habituales=DB.pedidos_habituales||[]; if(!DB.__fijosEj){DB.__fijosEj=1; const cs=DB.clientes.filter(c=>c.activo!==false); const c3=cs.slice(-3); const dl=[1,2,3,4,5,6,0];
     if(c3[0]) DB.pedidos_habituales.push({id:'hf1',cliente_id:c3[0].id,nombre:'Fijo (ejemplo)',dias_semana:dl,notas:'2 sacos patatas, cebollas',activo:true,tipo:'fijo',repartidor_id:'u1',created_at:'2026-01-01'});
     if(c3[1]) DB.pedidos_habituales.push({id:'hf2',cliente_id:c3[1].id,nombre:'Fijo (ejemplo)',dias_semana:dl,notas:'',activo:true,tipo:'especifico',repartidor_id:'u1',created_at:'2026-01-02'});
     if(c3[2]) DB.pedidos_habituales.push({id:'hf3',cliente_id:c3[2].id,nombre:'Si llama (ejemplo)',dias_semana:dl,notas:'',activo:true,tipo:'si_llama',repartidor_id:'u1',created_at:'2026-01-03'});} DB.lineas_habituales=DB.lineas_habituales||[];
@@ -1088,6 +1115,7 @@ function refrescarVista() {
   else if (state.view === 'carga') actualizarCarga();
   else if ((state.view === 'cobros' || state.view === 'deudas') && !state.sheetAbierta && state.refrescarCobros) state.refrescarCobros();
   else if (state.view === 'entregas' && !state.sheetAbierta && state.refrescarEntregas) state.refrescarEntregas();
+  else if (state.view === 'modoreparto' && !state.sheetAbierta && state.refrescarModoReparto) state.refrescarModoReparto();
 }
 function renderBanner() {
   const b = document.getElementById('banner'); if (!b) return;
@@ -1115,6 +1143,8 @@ window.addEventListener('popstate', e => {
   if (vd) { vd.remove(); try { history.pushState(navSnap(NAV.d), ''); } catch (x) { } return; }
   const ov = document.querySelector('.overlay');
   if (ov) { ov.remove(); state.sheetAbierta = false; try { history.pushState(navSnap(NAV.d), ''); } catch (x) { } return; }
+  if (MR.dentro() && state.view === 'modoreparto' && !(e.state && e.state.v === 'pedido')) { try { history.pushState(navSnap(NAV.d), ''); } catch (x) { } return; }   /* modo reparto: «atrás» no saca de él */
+  if (MR.dentro() && state.user && (!e.state || e.state.v !== 'modoreparto') && state.view === 'pedido') { state.view = 'modoreparto'; state.params = {}; render(); return; }
   const s = e.state; if (!s || !s.v) { NAV.d = 0; state.view = 'inicio'; state.params = {}; } else { NAV.d = s.d || 0; state.view = s.v; state.params = s.p || {}; }
   render(); window.scrollTo(0, 0);
 });
@@ -5110,6 +5140,7 @@ function vistaMas() {
   { const dia = LS.get('fj_imp_dia', 'hoy'); const tarj = h('div', { class: 'card', style: 'padding:10px;margin:6px 0' }); const pintaT = () => { const dd = LS.get('fj_imp_dia', 'hoy'); tarj.replaceChildren(h('div', { class: 'fila' }, h('div', { class: 'nombre' }, '🖨 Imprimir ahora'), h('div', { class: 'chips', style: 'margin:0' }, [['hoy', 'Hoy'], ['manana', 'Mañana']].map(([v, t]) => h('button', { class: 'chip' + (dd === v ? ' on' : ''), onclick: () => { LS.set('fj_imp_dia', v); pintaT(); } }, t)))),
       h('div', { style: 'display:flex;gap:8px;margin-top:8px' }, h('button', { style: 'flex:1;min-height:54px;font-size:16px', onclick: () => impRapido('carga') }, '🚚 Hoja de carga'), h('button', { style: 'flex:1;min-height:54px;font-size:16px', onclick: () => impRapido('compra') }, '🛒 Hoja de compra'))); }; pintaT(); k.splice(2, 0, tarj); }
   if (bloqueGrande) k.splice(2, 0, bloqueGrande);
+  { const bmr = h('button', { class: 'guardar', style: 'width:100%;min-height:62px;font-size:19px;margin:6px 0;display:none', onclick: mrEntrar }, '🚚 Entrar en MODO REPARTO'); k.splice(1, 0, bmr); mrReparte().then(v => { if (v) bmr.style.display = ''; }).catch(() => { }); }
   k.splice(1, 0, panelHoy());
   { const ver = h('div', { class: 'sub', style: 'text-align:center;margin-top:18px' }, 'Versión de la app: ' + APP_VERSION.replace('ferjusanz-', ''));
     const bVer = h('button', { class: 'ghost', style: 'width:100%;min-height:48px;margin-top:6px', onclick: async () => { if (await confirmar('Se cargará la última versión de la app. No se pierde ningún dato. ¿Seguir?')) actualizarApp(); } }, '🔄 Buscar versión nueva');
@@ -6905,6 +6936,175 @@ let precargando = false;
 async function precargarPedidos(ids) {
   if (precargando || !navigator.onLine || PRACTICA) return; precargando = true;
   try { for (let i = 0; i < ids.length; i += 6) await Promise.all(ids.slice(i, i + 6).map(id => cargarPedido(id).catch(() => { }))); } finally { precargando = false; }
+}
+/* =====================  🚚 MODO REPARTO (Fernando, 12/11/2026)  =====================
+   Una sola pantalla para el repartidor, siempre igual, sin menú: su reparto del día en orden, el cliente actual con lo que
+   lleva (para sacarlo de la furgoneta), ENTREGADO (con confirmación) y SIGUIENTE CLIENTE. Recuerda dónde se quedó.
+   Entra solo el día que tiene pedidos asignados por entregar. Usa la entrega, el cobro, la firma y la cola sin conexión de siempre. */
+const MR = { k: f => 'fj_mr_' + f, dentro: () => LS.get('fj_mr_dentro', null) === hoy() };
+function mrSalir() { LS.set('fj_mr_dentro', null); LS.set('fj_mr_fuera', hoy()); go('inicio', {}, { replace: true }); }
+async function mrEntrar() { LS.set('fj_mr_dentro', hoy()); go('modoreparto', {}, { replace: true }); }
+/* ¿Le toca reparto hoy? Solo se mira al abrir la app (en Inicio) y si no ha salido hoy a mano */
+async function mrAuto() {
+  if (state.mrMirado || !state.user || !state.perfil) return; state.mrMirado = true;
+  if (MR.dentro()) { if (state.view === 'inicio') go('modoreparto', {}, { replace: true }); return; }
+  if (LS.get('fj_mr_fuera', null) === hoy() || !navigator.onLine) return;
+  try {
+    const r = await sb.from('pedidos').select('id,estado,entregas(entregado_at)').eq('fecha_entrega', hoy()).eq('repartidor_id', state.user.id).neq('estado', 'anulado').neq('archivado', true);
+    if (r.error || !r.data) return;
+    const q = colaE.get(); const pend = r.data.filter(p => !uno(p.entregas) && !q.some(x => x.pedido === p.id));
+    if (pend.length && state.view === 'inicio' && !state.sheetAbierta) mrEntrar();
+  } catch (e) { }
+}
+/* ¿Reparte? (para enseñar el botón «Modo reparto» en Inicio). Se guarda en el móvil. */
+async function mrReparte() {
+  if (PRACTICA) return true;
+  const k = 'fj_yo_reparte_' + (state.user && state.user.id); let v = LS.get(k, null);
+  if (navigator.onLine) { try { const r = await sb.from('perfiles').select('reparte').eq('id', state.user.id).maybeSingle(); if (!r.error && r.data) { v = !!r.data.reparte; LS.set(k, v); } } catch (e) { } }
+  return !!v;
+}
+function vistaModoReparto() {
+  state.view = 'modoreparto'; LS.set('fj_mr_dentro', hoy());
+  /* un paso de más en el historial: así el botón «atrás» del móvil no saca del modo reparto ni cierra la app */
+  try { if (!(history.state && history.state.mr)) history.pushState(Object.assign(navSnap(NAV.d), { mr: 1 }), ''); } catch (e) { }
+  const fecha = hoy(), yo = state.user.id;
+  let datos = LS.get(MR.k(fecha), null), cache = false, modo = 'cliente', cargado = false;
+  const raiz = h('div', { class: 'mr' });
+  $app.replaceChildren(raiz);
+  const B = (cls, txt, fn, st) => h('button', { class: cls, style: st || '', onclick: fn }, txt);
+  const kPos = 'fj_mr_pos_' + fecha;
+  const kS = id => 'fj_sacado_' + id;
+  const nomL = l => { const p = uno(l.productos) || {}; return p.nombre_albaran || p.nombre || '—'; };
+  const entregadoP = p => !!uno(p.entregas) || colaE.get().some(x => x.pedido === p.id);
+  /* Un cliente puede tener más de un pedido el mismo día: van juntos */
+  function grupos(lista) {
+    const m = {};
+    lista.forEach(p => { const c = uno(p.clientes) || {}; const g = m[p.cliente_id] || (m[p.cliente_id] = { id: p.cliente_id, cli: c, peds: [], orden: 99999 }); g.peds.push(p); if (p.orden_reparto != null) g.orden = Math.min(g.orden, Number(p.orden_reparto)); });
+    return Object.values(m).map(g => Object.assign(g, { hecho: g.peds.every(entregadoP), listo: g.peds.every(p => p.estado === 'terminado') }))
+      .sort((a, b) => a.orden - b.orden || nombreCli(a.cli).localeCompare(nombreCli(b.cli), 'es'));
+  }
+  const mios = () => grupos((datos || []).filter(p => p.repartidor_id === yo));
+  const sinRep = () => grupos((datos || []).filter(p => !p.repartidor_id && !entregadoP(p)));
+  async function cargar() {
+    ultCarga = Date.now();
+    try {
+      if (!navigator.onLine) throw new TypeError('network');
+      const r = await sb.from('pedidos').select('id,estado,cliente_id,repartidor_id,orden_reparto,notas,clientes(id,codigo,nombre,nombre_comercial,direccion,codigo_postal,localidad,telefono,lat,lng,notas_reparto),lineas_pedido(id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,notas,productos(codigo,nombre,nombre_albaran)),entregas(entregado_at),albaranes(serie,numero)')
+        .eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true);
+      if (r.error) throw r.error; datos = r.data || []; cache = false; LS.set(MR.k(fecha), datos);
+      precargarPedidos(datos.filter(p => p.repartidor_id === yo && p.estado === 'terminado' && !entregadoP(p)).map(p => p.id));
+    } catch (e) { if (!isNetErr(e)) { if (!datos) { raiz.replaceChildren(h('p', { class: 'err' }, msgErr(e)), B('guardar', '↻ Reintentar', cargar)); return; } } cache = true; }
+    cargado = true; if (state.view === 'modoreparto' && !state.sheetAbierta && !document.querySelector('.ent-ov')) pintar();
+  }
+  let ultCarga = 0;
+  state.refrescarModoReparto = () => { if (Date.now() - ultCarga < 60000) return; if (!document.querySelector('.ent-ov') && !state.sheetAbierta && !(document.activeElement && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName))) cargar(); };
+  function posActual(gs) { const id = LS.get(kPos, null); let i = gs.findIndex(g => g.id === id); if (i < 0) i = gs.findIndex(g => !g.hecho); return i < 0 ? Math.max(0, gs.length - 1) : i; }
+  const irA = id => { LS.set(kPos, id); modo = 'cliente'; pintar(); window.scrollTo(0, 0); };
+  function cabecera(gs, i) {
+    const hechos = gs.filter(g => g.hecho).length;
+    return h('div', { class: 'mr-cab' },
+      h('div', { class: 'mr-cab1' }, h('span', {}, '🚚 Mi reparto de hoy'), h('span', { class: 'mr-cuenta' }, hechos + ' de ' + gs.length + ' entregados')),
+      h('div', { class: 'mr-tabs' },
+        B('mr-tab' + (modo === 'cliente' ? ' on' : ''), '👤 Cliente ' + (gs.length ? (i + 1) + ' de ' + gs.length : ''), () => { modo = 'cliente'; pintar(); }),
+        B('mr-tab' + (modo === 'lista' ? ' on' : ''), '📋 Lista' + (sinRep().length ? ' · 🙋 ' + sinRep().length : ''), () => { modo = 'lista'; pintar(); window.scrollTo(0, 0); })));
+  }
+  function pintar() {
+    if (state.view !== 'modoreparto') return;
+    const gs = mios(), i = posActual(gs), g = gs[i];
+    if (g) LS.set(kPos, g.id);   /* recuerda en qué cliente está (si se cierra la app, vuelve aquí) */
+    const kids = [cabecera(gs, i)];
+    if (PRACTICA) kids.push(h('div', { class: 'prac' }, h('span', {}, 'MODO PRÁCTICAS · nada es de verdad')));
+    kids.push(h('div', { id: 'banner', class: 'banner' }));
+    if (cache) kids.push(h('div', { class: 'aviso-card' }, '📵 Sin cobertura: es lo guardado en este móvil. Lo que hagas se envía solo cuando vuelva la red.'));
+    if (!cargado && !datos) kids.push(h('p', { class: 'vacio' }, 'Cargando tu reparto…'));
+    else if (modo === 'lista') kids.push(...pintaLista(gs, i));
+    else if (!g) kids.push(h('div', { class: 'mr-caja' }, h('div', { class: 'mr-nom' }, 'Hoy no tienes clientes asignados.'), h('div', { class: 'sub', style: 'font-size:17px' }, 'Mira en «📋 Lista» si hay pedidos sin repartidor que te puedas llevar.'), B('guardar', '📋 Ver la lista', () => { modo = 'lista'; pintar(); }, 'width:100%;min-height:60px;margin-top:10px;font-size:19px')));
+    else kids.push(...pintaCliente(gs, i, g));
+    kids.push(botonSalir());
+    raiz.replaceChildren(...kids); renderBanner();
+  }
+  function pintaCliente(gs, i, g) {
+    const c = g.cli, out = [];
+    const dir = [c.direccion, [c.codigo_postal, c.localidad].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+    out.push(h('div', { class: 'mr-caja mr-cli' + (g.hecho ? ' hecho' : '') },
+      h('div', { class: 'mr-num' }, 'Cliente ' + (i + 1) + ' de ' + gs.length + (g.hecho ? ' · ✔ ENTREGADO' : '')),
+      h('div', { class: 'mr-nom' }, nombreCli(c)),
+      dir ? h('div', { class: 'mr-dir' }, '📍 ' + dir) : null,
+      c.notas_reparto ? h('div', { class: 'mr-nota' }, '📝 ' + c.notas_reparto) : null,
+      ...g.peds.filter(p => p.notas).map(p => h('div', { class: 'mr-nota' }, '📝 ' + p.notas)),
+      h('div', { class: 'mr-2col' },
+        h('a', { class: 'mr-btn2', href: c.lat != null && c.lng != null ? enlaceMapas([c]) : 'https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=' + encodeURIComponent(dir || nombreCli(c)), target: '_blank', rel: 'noopener' }, '🗺 Ir con el mapa'),
+        c.telefono ? h('a', { class: 'mr-btn2', href: 'tel:' + c.telefono }, '📞 Llamar') : h('span', { class: 'mr-btn2 off' }, '📞 Sin teléfono'))));
+    /* Lo que lleva: producto, cantidad y peso real, en grande. Se toca para marcar lo que ya se ha sacado. */
+    let tot = 0, hechas = 0; const filas = [], noServ = [];
+    g.peds.forEach(p => {
+      const s = new Set(LS.get(kS(p.id), []));
+      (p.lineas_pedido || []).slice().sort((a, b) => nomL(a).localeCompare(nomL(b), 'es')).forEach(l => {
+        if (noServida(l)) { noServ.push(nomL(l)); return; }
+        const on = s.has(l.id); tot++; if (on) hechas++;
+        const peso = l.peso_real != null && l.peso_real !== '' ? num(l.peso_real) + ' ' + udLinea(l) : 'sin pesar';
+        filas.push(h('button', { class: 'mr-lin' + (on ? ' on' : ''), onclick: () => { const ss = new Set(LS.get(kS(p.id), [])); ss.has(l.id) ? ss.delete(l.id) : ss.add(l.id); LS.set(kS(p.id), [...ss]); pintar(); } },
+          h('span', { class: 'mr-ck' }, on ? '✔' : ''),
+          h('span', { class: 'mr-lt' }, h('span', { class: 'mr-ln' }, nomL(l)), h('span', { class: 'mr-lc' }, num(l.cantidad_pedida) + ' ' + (l.unidad_pedida || '') + ' · ' + peso))));
+      });
+    });
+    out.push(h('div', { class: 'mr-sec' }, '📦 Lo que lleva' + (tot ? ' · sacado ' + hechas + ' de ' + tot : '')));
+    if (!g.listo) out.push(h('div', { class: 'aviso-card', style: 'border-left:6px solid #d97706;font-size:17px;font-weight:700' }, '⏳ Este pedido todavía se está preparando. Se podrá entregar cuando esté terminado.'));
+    out.push(...filas);
+    if (!filas.length && !noServ.length) out.push(h('p', { class: 'vacio' }, 'Sin productos.'));
+    if (noServ.length) out.push(h('div', { class: 'mr-caja', style: 'background:#f3f4f6' }, h('b', {}, '🚫 No servido (no va en la furgoneta): '), noServ.join(', ')));
+    /* Abajo: ENTREGADO (con confirmación) o, si ya está, SIGUIENTE CLIENTE */
+    const sig = gs.slice(i + 1).find(x => !x.hecho) || gs.slice(0, i).find(x => !x.hecho);
+    const pie = h('div', { class: 'mr-pie' });
+    if (!g.hecho) pie.append(B('mr-ent', '✔ ENTREGADO', () => confirmarEntrega(g), g.listo ? '' : 'opacity:.45'));
+    else pie.append(h('div', { class: 'mr-ok' }, '✔ Entregado' + (() => { const e = g.peds.map(p => uno(p.entregas)).find(Boolean); return e ? ' a las ' + fmtHora(e.entregado_at) : ''; })()),
+      sig ? B('mr-sig', 'SIGUIENTE CLIENTE ›', () => irA(sig.id)) : h('div', { class: 'mr-fin' }, '🏁 ¡Reparto terminado! Todos entregados.'));
+    out.push(pie);
+    out.push(h('div', { class: 'mr-2col', style: 'margin-top:10px' },
+      i > 0 ? B('ghost mr-peq', '‹ Anterior', () => irA(gs[i - 1].id)) : h('span', {}),
+      i < gs.length - 1 ? B('ghost mr-peq', 'Saltar a la siguiente ›', () => irA(gs[i + 1].id)) : h('span', {})));
+    return out;
+  }
+  function confirmarEntrega(g) {
+    if (!g.listo) { toast('Todavía se está preparando: no se puede entregar aún', 'err'); return; }
+    const c = hoja('¿Entregado?', h('div', {},
+      h('p', { style: 'font-size:20px;font-weight:800;margin:4px 0 14px' }, '¿Has entregado el pedido de ' + nombreCli(g.cli) + '?'),
+      B('guardar', '✔ SÍ, ENTREGADO', () => { c(); seguir(); }, 'width:100%;min-height:70px;font-size:22px'),
+      B('ghost', 'No, todavía no', () => c(), 'width:100%;min-height:56px;margin-top:10px;font-size:18px')));
+    function seguir() {
+      const ids = g.peds.map(p => p.id);
+      elegirEntrega(ids, () => { ids.forEach(id => { try { localStorage.removeItem(PRE + kS(id)); } catch (e) { } }); pintar(); cargar(); });
+    }
+  }
+  function pintaLista(gs, i) {
+    const out = [h('div', { class: 'mr-sec' }, '📋 Mi orden de hoy (' + gs.length + ')')];
+    if (!gs.length) out.push(h('p', { class: 'vacio' }, 'No tienes clientes asignados hoy.'));
+    gs.forEach((g, k) => out.push(h('button', { class: 'mr-fila' + (k === i ? ' act' : '') + (g.hecho ? ' hecho' : ''), onclick: () => irA(g.id) },
+      h('span', { class: 'mr-fn' }, g.hecho ? '✔' : String(k + 1)),
+      h('span', { class: 'mr-lt' }, h('span', { class: 'mr-ln' }, nombreCli(g.cli)), h('span', { class: 'mr-lc' }, [g.cli.localidad, g.hecho ? 'entregado' : !g.listo ? '⏳ preparándose' : k === i ? 'ahora' : ''].filter(Boolean).join(' · '))))));
+    const sr = sinRep();
+    out.push(h('div', { class: 'mr-sec' }, '🙋 Sin repartidor (' + sr.length + ')'));
+    if (!sr.length) out.push(h('p', { class: 'vacio' }, 'Todos los pedidos de hoy tienen repartidor.'));
+    sr.forEach(g => out.push(h('div', { class: 'mr-caja' }, h('div', { class: 'mr-ln', style: 'font-size:19px' }, nombreCli(g.cli)), h('div', { class: 'sub' }, [g.cli.localidad, g.peds.length > 1 ? g.peds.length + ' pedidos' : null, gs.some(x => x.id === g.id) ? '⚠ es OTRO pedido de un cliente que ya llevas' : null].filter(Boolean).join(' · ')),
+      B('guardar', '🙋 Me lo llevo yo', () => llevar(g), 'width:100%;min-height:58px;margin-top:8px;font-size:19px'))));
+    return out;
+  }
+  async function llevar(g) {
+    if (!navigator.onLine) { toast('Necesitas cobertura para quedártelo (así no lo coge otro a la vez)', 'err'); return; }
+    try { const r = await sb.rpc('asignar_reparto', { p_pedidos: g.peds.map(p => p.id), p_repartidor: yo }); if (r.error) throw r.error;
+      toast('Ahora lo llevas tú: está al final de tu lista', 'ok'); await cargar(); }
+    catch (e) { const m = String(e.message || e); toast(/YA_ASIGNADO|DE_OTRO/.test(m) ? 'Ya lo lleva otro repartidor' : /REPARTIDOR_NO_VALIDO/.test(m) ? 'Tu usuario no está marcado como repartidor: díselo a la oficina' : /YA_ENTREGADO/.test(m) ? 'Ya está entregado' : msgErr(e), 'err'); await cargar(); }
+  }
+  /* Salir: mantener pulsado 3 segundos y confirmar (para que no se pulse sin querer) */
+  function botonSalir() {
+    let t = null; const b = h('button', { class: 'mr-salir' }, h('span', { class: 'mr-salir-barra' }), h('span', { class: 'mr-salir-t' }, 'Salir del modo reparto (mantén pulsado)'));
+    const parar = () => { clearTimeout(t); t = null; b.classList.remove('carga'); };
+    b.addEventListener('pointerdown', e => { e.preventDefault(); b.classList.add('carga'); t = setTimeout(async () => { parar(); if (await confirmar('¿Salir del modo reparto?\n\nVolverás al menú de la app. Hoy no se volverá a abrir solo.')) mrSalir(); }, 3000); });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, parar));
+    b.addEventListener('contextmenu', e => e.preventDefault());
+    return b;
+  }
+  pintar(); cargar();
 }
 function vistaEntregas() {
   state.view = 'entregas';
@@ -12727,8 +12927,9 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, camino: vistaCamino, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
-  v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); try { conectarSala();  } catch (e) { }
+  const v = { modoreparto: vistaModoReparto, tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, camino: vistaCamino, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  if (MR.dentro() && state.view === 'inicio' && !state.mrMirado) { state.mrMirado = true; return vistaModoReparto(); }   /* vuelve al modo reparto si se cerró la app */
+  v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); if (state.view === 'inicio') setTimeout(mrAuto, 300); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
 }
 function tick() {

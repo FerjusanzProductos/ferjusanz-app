@@ -128,3 +128,8 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 ## Facturas de proveedores (Fernando, 12/11/2026)
 - El **nº de documento** de cada compra es siempre el **número real** que pone en la factura, nunca el nombre del archivo (MADREMIA manda todas como «Factura_Electronica.pdf»).
 - El archivo de la factura se nombra **«PROVEEDOR · Fra. Nº»** para que se sepa de quién es.
+
+## Reparto (Fernando, 12/11/2026)
+- Reparten: **Dani** (Daniel Ferjusanz), **Cristian**, **Fernando Sanz (hijo)** y **Fernando Sanz Boss**. **Juli** (Julián) prepara pedidos; su ruta la lleva Dani.
+- Los pedidos **sin repartidor** los ven **todos los que reparten**, no solo la oficina: a veces depende de lo que digan los repartidores, que son los que hablan con los clientes. Cualquiera puede quedárselo («Me lo llevo yo»).
+- El **Modo reparto** se abre solo el día que el repartidor tiene pedidos asignados por entregar.

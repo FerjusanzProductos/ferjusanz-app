@@ -3,7 +3,11 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 
 ## Por publicar o decidir
 - ✔️ 12/11/2026: **📦 Sacar de la furgoneta antes de entregar** publicado en la normal (v239, «Autorizo publicar»). Pruebas en v238.
-- 🔴 12/11/2026: **Modo reparto** (una sola pantalla para repartidores, 3 fases). Plan explicado; **esperando «sí»** de Fernando y respuesta a: 1) ¿entran directo solo los de puesto repartidor? 2) pedidos sin repartidor siguen sin salir hasta asignarlos; 3) ¿el puesto «dirección» puede cambiar el orden? (necesitaría SQL). Sin cambios en la base de datos si no.
+- 🔴 12/11/2026: **🚚 Modo reparto** (rama `modo-reparto` en GitLab, NO en main hasta que Fernando lo apruebe):
+  - 🟡 **Fase 1** en PRUEBAS (v240): que Fernando la pruebe en Modo prácticas. No decir «terminado» hasta probarlo con él.
+  - ⚪ Fase 2: tras «Entregado», albarán fijo arriba + cobro (contado/pendiente) + firma si no paga, usando lo que ya existe; botón pequeño «Cambiar algo» (edición de pedidos de siempre, con «← Volver al reparto»).
+  - ⚪ Fase 3: «↕ Orden de hoy» con flechas ↑↓ y «Poner el orden de siempre» (sacado de los últimos días; cambios en el historial; cola sin conexión) y «📦 Cómo cargar la furgoneta» (orden inverso).
+  - Pendiente de Fernando: ¿el puesto «dirección» puede cambiar el orden? (hoy nadie lo tiene; necesitaría SQL).
 - ✔️ 12/11/2026: **Avisos en ROJO de precios y pesos que faltan + «atrás» en el portal del cliente** publicados en la normal (v234, «Autorizo publicar»). Pruebas en v233 con lo mismo.
 - ✔️ 12/11/2026: **Arreglos de Preparar → Entregar → Facturar** publicados en la normal (v232, «Autorizo publicar»).
   - ⚪ Propuestas sin hacer (que decida Fernando): unidades «ud» en el albarán para cajas/bandejas.
