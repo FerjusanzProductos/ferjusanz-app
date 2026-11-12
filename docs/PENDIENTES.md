@@ -71,6 +71,7 @@ Orden recomendado; **una cosa por sesión**. Texto para empezar: `claude/08-text
 7. 🟡 **Verifactu**: Jorge dice octubre de 2028, pero a 12/11/2026 **no está en el BOE**. Pedir a Jorge confirmación por escrito y plan B: preguntar al proveedor de Golden si está adaptado para 2027.
 8. 🟡 **Jorge**: factura por entrega o mensual (recapitulativa) y qué es «una operación» para el límite de efectivo.
 9. 🟡 Auditoría de clientes para Carmen (la base ya está: «Revisar fichas», v198 en pruebas): falta añadir datos encontrados, fuente, confianza y estado.
+10. 🔴 **Productor del programa de facturación (Verifactu)**, 12/11/2026: diagnóstico y borrador en `docs/SIF_PRODUCTOR/LEEME.md`. Falta: Jorge confirma si hay SII, fecha vigente en el BOE y que FERJUSANZ es productora; escritura/nota simple para saber quién firma; certificado electrónico de representante; separar la facturación en un módulo con versión propia (SIF 1.0.0); programar registros, huella encadenada, bloqueo de borrado, QR y envío VERI\*FACTU; pasar `docs/SIF_PRODUCTOR/PRUEBAS_TECNICAS.md`; cotejar art. 13 RD 1007/2023 y art. 15 Orden HAC/1177/2024 en el BOE; firmar la declaración (nunca Claude). **Plan B: Golden** si el 1/1/2027 no está todo.
 - ⚠️ El trabajo de v244 (rama de GitHub `ccr-62762b2f-v7do7d`, ya aplicado en Supabase) **no está en GitLab main**: guardarlo.
 
 ## Esperando a Fernando

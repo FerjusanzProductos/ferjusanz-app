@@ -138,3 +138,8 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Sello o firma en el PDF. Forma de pago siempre. **Efectivo (Ley 7/2012, art. 7)**: si la operación con una empresa o autónomo es de **1.000 € o más, no se puede pagar NADA en efectivo** (ni una parte); se suman todos los pagos de la misma operación. Corregido el 12/11/2026 (antes decía «máximo 1.000 €», que estaba mal). ⚠️ Que Jorge confirme qué es «una operación» en una factura mensual con varios albaranes.
 - Todas las ventas se facturan; la app no tendrá ventas fuera de facturación.
 - Listados para Jorge (ventas y compras): fecha, nº, nombre, NIF, CP, concepto, base, % IVA, cuota, total; una fila por tipo de IVA.
+
+## Programa de facturación propio (Verifactu) — desde el 12/11/2026
+- FERJUSANZ es la **productora** del programa de facturación de la app. Claude programa y prueba, pero **nunca firma** la declaración responsable ni dice que el programa cumple sin pruebas.
+- La app **no emite facturas reales** hasta que estén ✅ todas las pruebas de `docs/SIF_PRODUCTOR/PRUEBAS_TECNICAS.md` y haya declaración firmada de esa versión.
+- Todo cambio en la facturación (`public/sif/`, funciones o tablas `sif_*`) **sube la versión del SIF** y exige declaración nueva antes de usarla. Detalle: `docs/SIF_PRODUCTOR/LEEME.md`, punto 8.
