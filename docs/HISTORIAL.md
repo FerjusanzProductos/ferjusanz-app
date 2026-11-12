@@ -2,6 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 12/11/2026
+- **Variable `SUPABASE_SECRET_KEY` puesta en GitLab** (Fernando, guiado por Claude): clave secreta nueva `copia_gitlab` del proyecto REAL, enmascarada y protegida. Desde la copia de las 3:00 se guardan también los archivos (fotos, PDF, audios). Falta comprobar la primera copia y la prueba de recuperación en verde (Claude no tiene acceso a la API de GitLab: hace falta captura de Fernando).
 - **v260 publicada en la app normal** («Autorizo publicar»): mismo código que pruebas v259 (facturación fase 2). En la normal el botón «🧾 Facturas (desde la app)» **no sale** (solo en la app naranja) y la base real no tiene las tablas de facturas: se sigue facturando en Golden. Comprobado en Cloudflare.
 - **Facturación, FASE 2: facturas emitidas desde la app (v258-v259 en PRUEBAS)**, plan de Jorge. Pantalla «🧾 Facturas (desde la app) · PRUEBAS» (Más → Facturas y análisis, y la lupa), **solo en la app naranja**:
   - **📥 Por facturar**: albaranes ENTREGADOS sin facturar del mes, por cliente; se marcan los que entran y «🧾 Hacer factura». Aviso en rojo si al cliente le falta NIF, dirección, CP o localidad (no deja emitir y lleva a su ficha).
