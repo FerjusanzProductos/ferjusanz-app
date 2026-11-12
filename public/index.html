@@ -13166,39 +13166,170 @@ async function gesTodas(q) {   // pide todas las filas, de 1000 en 1000
   const out = []; for (let i = 0; ; i += 1000) { const r = await q().range(i, i + 999); if (r.error) throw r.error; out.push(...(r.data || [])); if (!r.data || r.data.length < 1000) return out; }
 }
 const gesNum = n => n == null || n === '' ? '' : String(Math.round(Number(n) * 100) / 100).replace('.', ',');
+/* ===== Fase 4 de facturación: listados de VENTAS y COMPRAS para Jorge =====
+   10 columnas (docs/PLAN_FACTURACION.md, punto 2), UNA FILA POR TIPO DE IVA de cada factura y totales por tipo al final.
+   Salen en Excel (.xlsx de verdad, con números y fechas), CSV y PDF. Mensual o trimestral. */
+const LJ_CAB = ['Fecha factura', 'Nº factura', 'Nombre', 'CIF/NIF', 'Código postal', 'Concepto', 'Base imponible', 'Tipo de IVA (%)', 'Cuota de IVA', 'Total'];
+const ljR = n => Math.round((Number(n) || 0) * 100) / 100;
+const ljPct = t => String(Number(t || 0)).replace('.', ',') + ' %';
+function ljTotales(filas) {
+  const pt = {}; const tot = { base: 0, cuota: 0, total: 0 };
+  filas.forEach(f => { const k = Number(f[7] || 0); const o = pt[k] || (pt[k] = { tipo: k, base: 0, cuota: 0, total: 0 }); o.base += f[6]; o.cuota += f[8]; o.total += f[9]; tot.base += f[6]; tot.cuota += f[8]; tot.total += f[9]; });
+  const lista = Object.values(pt).sort((a, b) => a.tipo - b.tipo).map(o => ({ tipo: o.tipo, base: ljR(o.base), cuota: ljR(o.cuota), total: ljR(o.total) }));
+  return { lista, base: ljR(tot.base), cuota: ljR(tot.cuota), total: ljR(tot.total) };
+}
+/* Golden no guarda la base por tipo de IVA: se reparte con sus líneas (unas veces llevan el IVA dentro, otras no) y se cuadra con la base y el total de la factura. */
+function ljRepartoGolden(f, lins) {
+  const base = ljR(f.base), cuota = ljR(Number(f.total || 0) - Number(f.base || 0));
+  let tipos = Object.keys(lins).map(Number).filter(t => Math.abs(lins[t]) > 0.004);
+  if (!tipos.length) { const t = base ? Math.round(cuota / base * 1000) / 10 : 0; const ok = [0, 2, 4, 5, 10, 21].includes(t); return { partes: [{ tipo: ok ? t : 0, base, cuota }], dudosa: !ok && Math.abs(cuota) > 0.01 }; }
+  if (tipos.length === 1) return { partes: [{ tipo: tipos[0], base, cuota }], dudosa: Math.abs(ljR(base * tipos[0] / 100) - cuota) > 0.05 };
+  const suma = tipos.reduce((a, t) => a + lins[t], 0); const conIva = Math.abs(suma - Number(f.total || 0)) < Math.abs(suma - base);
+  let b = tipos.map(t => conIva ? lins[t] / (1 + t / 100) : lins[t]); const sb0 = b.reduce((a, x) => a + x, 0);
+  if (Math.abs(sb0) > 0.004) b = b.map(x => x * base / sb0);
+  const partes = tipos.map((t, i) => ({ tipo: t, base: ljR(b[i]) }));
+  const may = partes.reduce((m, p, i) => Math.abs(p.base) > Math.abs(partes[m].base) ? i : m, 0);
+  partes[may].base = ljR(partes[may].base + base - partes.reduce((a, p) => a + p.base, 0));
+  partes.forEach(p => { p.cuota = ljR(p.base * p.tipo / 100); });
+  const dif = ljR(cuota - partes.reduce((a, p) => a + p.cuota, 0));
+  const conIvaPos = partes.filter(p => p.tipo > 0); const dest = conIvaPos.length ? conIvaPos.reduce((m, p) => Math.abs(p.base) > Math.abs(m.base) ? p : m) : partes[may];
+  dest.cuota = ljR(dest.cuota + dif);
+  return { partes, dudosa: Math.abs(dif) > 0.05 };
+}
+async function ljVentas(desde, hasta) {
+  const filas = [], avisos = []; let n = 0, dudosas = 0, prueba = 0;
+  // 1) Golden (todo 2026)
+  const fs = await gesTodas(() => sb.from('golden_facturas').select('numero,serie,fecha,cliente_codigo,cliente_nombre,base,total').eq('borrador', false).gte('fecha', desde).lte('fecha', hasta).order('fecha').order('numero'));
+  const nums = fs.map(f => f.numero); const lin = {};
+  for (let i = 0; i < nums.length; i += 150) (await gesTodas(() => sb.from('golden_lineas').select('factura_numero,iva,importe').in('factura_numero', nums.slice(i, i + 150)))).forEach(l => { const o = lin[l.factura_numero] || (lin[l.factura_numero] = {}); const t = Number(l.iva || 0); o[t] = (o[t] || 0) + Number(l.importe || 0); });
+  const cods = [...new Set(fs.map(f => f.cliente_codigo).filter(Boolean))]; const cli = {};
+  for (let i = 0; i < cods.length; i += 150) (await gesTodas(() => sb.from('clientes').select('codigo,nombre,nif,codigo_postal').in('codigo', cods.slice(i, i + 150)))).forEach(c => { cli[String(c.codigo).toUpperCase()] = c; });
+  fs.forEach(f => { n++; const c = cli[String(f.cliente_codigo || '').toUpperCase()] || {}; const r = ljRepartoGolden(f, lin[f.numero] || {}); if (r.dudosa) dudosas++;
+    r.partes.forEach(p => filas.push([f.fecha, f.numero, f.cliente_nombre || c.nombre || '', c.nif || '', c.codigo_postal || '', 'Venta de fruta y verdura', p.base, p.tipo, p.cuota, ljR(p.base + p.cuota)])); });
+  if (fs.length) { let ult = null; try { const u = await sb.from('golden_facturas').select('fecha').eq('borrador', false).order('fecha', { ascending: false }).limit(1); ult = u.data && u.data[0] && u.data[0].fecha; } catch (e) { }
+    if (ult && ult < hasta) avisos.push('⚠️ INCOMPLETO: Golden está importado solo hasta el ' + fechaES(ult) + '. Importa en «Histórico de Golden» las facturas hasta el ' + fechaES(hasta) + ' antes de mandarlo.');
+    if (fs.reduce((a, f) => a + Number(f.total || 0) - Number(f.base || 0), 0) < 1) avisos.push('⚠️ Las facturas de Golden de este periodo no traen IVA: el histórico parece incompleto.'); }
+  // 2) Facturas hechas en la app (desde 2027; en la base real la tabla aún no existe y se salta)
+  try {
+    const r = await gesTodas(() => sb.from('sif_facturas').select('codigo,fecha,cliente,concepto,prueba,sif_factura_iva(tipo_iva,base,cuota_iva,cuota_re,total)').gte('fecha', desde).lte('fecha', hasta).order('fecha').order('serie').order('numero'));
+    r.forEach(f => { n++; if (f.prueba) prueba++; const c = f.cliente || {};
+      (f.sif_factura_iva || []).slice().sort((a, b) => a.tipo_iva - b.tipo_iva).forEach(i => filas.push([f.fecha, f.codigo, c.nombre || c.nombre_comercial || '', c.nif || '', c.codigo_postal || '', f.concepto || '', ljR(i.base), Number(i.tipo_iva), ljR(i.cuota_iva), ljR(i.total)])); });
+  } catch (e) { if (!/PGRST205|42P01|does not exist|schema cache/i.test((e && (e.code + ' ' + e.message)) || '')) avisos.push('⚠️ No se pudieron leer las facturas de la app: ' + msgErr(e)); }
+  filas.sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : String(a[1]).localeCompare(String(b[1]), 'es', { numeric: true }) || a[7] - b[7]);
+  if (!n) avisos.push('⚠️ No hay facturas de este periodo (ni en el histórico de Golden ni en la app).');
+  if (prueba) avisos.push('⚠️ ' + prueba + ' factura(s) son de PRUEBAS (SIN VALOR FISCAL): no mandar a Jorge.');
+  const sinNif = new Set(filas.filter(f => !f[3]).map(f => f[1])).size, sinCp = new Set(filas.filter(f => !f[4]).map(f => f[1])).size;
+  if (sinNif || sinCp) avisos.push('⚠️ Faltan datos del cliente: ' + [sinNif ? sinNif + ' factura(s) sin NIF' : '', sinCp ? sinCp + ' sin código postal' : ''].filter(Boolean).join(' y ') + ' (Más › «Clientes sin datos para facturar»).');
+  if (dudosas) avisos.push('⚠️ En ' + dudosas + ' factura(s) de Golden el reparto por tipo de IVA no cuadra del todo: la cuota total sí es la de Golden, pero revisa esas filas.');
+  return { tipo: 'ventas', titulo: 'VENTAS (facturas emitidas)', filas, n, avisos, tot: ljTotales(filas), nota: fs.length ? 'Golden no guarda la base por tipo de IVA: la app la reparte con las líneas de cada factura y la cuadra con su base y su total.' : '' };
+}
+async function ljCompras(desde, hasta) {
+  const avisos = [];
+  const v = await gesTodas(() => sb.from('v_libro_compras').select('factura_id,fecha_factura,numero_factura,proveedor,nif,codigo_postal,concepto,base_imponible,tipo_iva,cuota_iva,cuota_recargo,total').gte('fecha_factura', desde).lte('fecha_factura', hasta).order('fecha_factura').order('numero_factura').order('tipo_iva'));
+  const filas = v.map(x => [x.fecha_factura, x.numero_factura || '', x.proveedor || '', x.nif || '', x.codigo_postal || '', x.concepto || 'Compra de mercaderías', ljR(x.base_imponible), Number(x.tipo_iva), ljR(Number(x.cuota_iva || 0) + Number(x.cuota_recargo || 0)), ljR(x.total)]);
+  const re = v.filter(x => Number(x.cuota_recargo || 0) !== 0).length;
+  try {
+    const c = await gesTodas(() => sb.from('v_facturas_recibidas_control').select('id,sin_desglose,falta_nif,falta_cp,no_cuadra,numero').gte('fecha', desde).lte('fecha', hasta));
+    const sinD = c.filter(x => x.sin_desglose).length, sinN = c.filter(x => !x.sin_desglose && x.falta_nif).length, sinC = c.filter(x => !x.sin_desglose && x.falta_cp).length, noC = c.filter(x => x.no_cuadra).length, sinNum = c.filter(x => !x.sin_desglose && !x.numero).length;
+    if (sinD) avisos.push('⚠️ ' + sinD + ' factura(s) de proveedor de este periodo aún sin NIF e IVA leídos: NO salen en el listado. Compras › «🧾 NIF e IVA».');
+    if (sinN || sinC) avisos.push('⚠️ ' + [sinN ? sinN + ' sin NIF' : '', sinC ? sinC + ' sin código postal' : ''].filter(Boolean).join(' y ') + ' del proveedor.');
+    if (sinNum) avisos.push('⚠️ ' + sinNum + ' sin número de factura.');
+    if (noC) avisos.push('⚠️ ' + noC + ' factura(s) donde el desglose de IVA no cuadra con el total.');
+  } catch (e) { }
+  return { tipo: 'compras', titulo: 'COMPRAS (facturas recibidas)', filas, n: new Set(v.map(x => x.factura_id)).size, avisos, tot: ljTotales(filas), nota: re ? 'En ' + re + ' fila(s) la «Cuota de IVA» incluye el recargo de equivalencia.' : '' };
+}
+function ljFilasCSV(l) {
+  const out = [LJ_CAB]; l.filas.forEach(f => out.push([fechaES(f[0]), f[1], f[2], f[3], f[4], f[5], gesNum(f[6]), gesNum(f[7]), gesNum(f[8]), gesNum(f[9])]));
+  out.push([]); out.push(['', '', '', '', '', 'TOTALES POR TIPO DE IVA']);
+  l.tot.lista.forEach(t => out.push(['', '', '', '', '', 'IVA ' + ljPct(t.tipo), gesNum(t.base), gesNum(t.tipo), gesNum(t.cuota), gesNum(t.total)]));
+  out.push(['', '', '', '', '', 'TOTAL', gesNum(l.tot.base), '', gesNum(l.tot.cuota), gesNum(l.tot.total)]); return out;
+}
+/* --- Excel (.xlsx) hecho a mano: un ZIP sin comprimir con el XML de la hoja --- */
+const LJ_CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function ljZip(files) {
+  const enc = new TextEncoder(); const partes = [], central = []; let off = 0;
+  files.forEach(([nombre, txt]) => {
+    const nm = enc.encode(nombre), d = enc.encode(txt); let crc = 0xFFFFFFFF; for (let i = 0; i < d.length; i++) crc = LJ_CRC[(crc ^ d[i]) & 255] ^ (crc >>> 8); crc = (crc ^ 0xFFFFFFFF) >>> 0;
+    const lh = new DataView(new ArrayBuffer(30)); [[0, 0x04034b50, 4], [4, 20, 2], [6, 0x0800, 2], [8, 0, 2], [10, 0, 2], [12, 33, 2], [14, crc, 4], [18, d.length, 4], [22, d.length, 4], [26, nm.length, 2], [28, 0, 2]].forEach(([o, v, b]) => b === 4 ? lh.setUint32(o, v, true) : lh.setUint16(o, v, true));
+    const ch = new DataView(new ArrayBuffer(46)); [[0, 0x02014b50, 4], [4, 20, 2], [6, 20, 2], [8, 0x0800, 2], [10, 0, 2], [12, 0, 2], [14, 33, 2], [16, crc, 4], [20, d.length, 4], [24, d.length, 4], [28, nm.length, 2], [30, 0, 2], [32, 0, 2], [34, 0, 2], [36, 0, 2], [38, 0, 4], [42, off, 4]].forEach(([o, v, b]) => b === 4 ? ch.setUint32(o, v, true) : ch.setUint16(o, v, true));
+    partes.push(new Uint8Array(lh.buffer), nm, d); central.push(new Uint8Array(ch.buffer), nm); off += 30 + nm.length + d.length;
+  });
+  const tamC = central.reduce((a, x) => a + x.length, 0); const fin = new DataView(new ArrayBuffer(22));
+  [[0, 0x06054b50, 4], [4, 0, 2], [6, 0, 2], [8, files.length, 2], [10, files.length, 2], [12, tamC, 4], [16, off, 4], [20, 0, 2]].forEach(([o, v, b]) => b === 4 ? fin.setUint32(o, v, true) : fin.setUint16(o, v, true));
+  const todo = [...partes, ...central, new Uint8Array(fin.buffer)]; const out = new Uint8Array(todo.reduce((a, x) => a + x.length, 0)); let p = 0; todo.forEach(x => { out.set(x, p); p += x.length; }); return out;
+}
+function ljXlsx(l, hoja) {
+  const esc = v => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '');
+  const col = i => String.fromCharCode(65 + i);
+  const txt = (r, i, v, s) => v === '' || v == null ? '' : '<c r="' + col(i) + r + '" t="inlineStr"' + (s ? ' s="' + s + '"' : '') + '><is><t xml:space="preserve">' + esc(v) + '</t></is></c>';
+  const num = (r, i, v, s) => v === '' || v == null || isNaN(v) ? '' : '<c r="' + col(i) + r + '"' + (s ? ' s="' + s + '"' : '') + '><v>' + Number(v) + '</v></c>';
+  const serie = iso => { const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number); return (Date.UTC(y, m - 1, d) - Date.UTC(1899, 11, 30)) / 86400000; };
+  const filasX = []; let r = 1;
+  filasX.push('<row r="1">' + LJ_CAB.map((c, i) => txt(1, i, c, 1)).join('') + '</row>');
+  l.filas.forEach(f => { r++; filasX.push('<row r="' + r + '">' + (f[0] ? num(r, 0, serie(f[0]), 3) : '') + txt(r, 1, f[1]) + txt(r, 2, f[2]) + txt(r, 3, f[3]) + txt(r, 4, f[4]) + txt(r, 5, f[5]) + num(r, 6, f[6], 2) + num(r, 7, f[7]) + num(r, 8, f[8], 2) + num(r, 9, f[9], 2) + '</row>'); });
+  const ultDato = r; r += 2; filasX.push('<row r="' + r + '">' + txt(r, 5, 'TOTALES POR TIPO DE IVA', 5) + '</row>');
+  l.tot.lista.forEach(t => { r++; filasX.push('<row r="' + r + '">' + txt(r, 5, 'IVA ' + ljPct(t.tipo)) + num(r, 6, t.base, 2) + num(r, 7, t.tipo) + num(r, 8, t.cuota, 2) + num(r, 9, t.total, 2) + '</row>'); });
+  r++; filasX.push('<row r="' + r + '">' + txt(r, 5, 'TOTAL', 5) + num(r, 6, l.tot.base, 4) + num(r, 8, l.tot.cuota, 4) + num(r, 9, l.tot.total, 4) + '</row>');
+  const anchos = [12, 16, 38, 13, 9, 26, 15, 9, 13, 14];
+  const ns = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+  const sheet = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet ' + ns + '><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>' + anchos.map((w, i) => '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>').join('') + '</cols><sheetData>' + filasX.join('') + '</sheetData>' + (ultDato > 1 ? '<autoFilter ref="A1:J' + ultDato + '"/>' : '') + '<pageSetup orientation="landscape" paperSize="9" fitToHeight="0"/></worksheet>';
+  const nomHoja = esc(hoja.slice(0, 31));
+  const libro = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook ' + ns + '><sheets><sheet name="' + nomHoja + '" sheetId="1" r:id="rId1"/></sheets>' + (ultDato > 1 ? '<definedNames><definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">\'' + nomHoja + '\'!$A$1:$J$' + ultDato + '</definedName></definedNames>' : '') + '</workbook>';
+  const estilos = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="dd/mm/yyyy"/></numFmts><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE5E7EB"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="6"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="4" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="4" fontId="1" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+  return ljZip([
+    ['[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
+    ['_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+    ['xl/workbook.xml', libro],
+    ['xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+    ['xl/worksheets/sheet1.xml', sheet], ['xl/styles.xml', estilos]]);
+}
+/* --- PDF apaisado (A4) para verlo o imprimirlo --- */
+function ljPdf(l, periodo) {
+  const doc = pdfNuevo(841.89, 595.28); const M = 28, ANCHO = doc.W - 2 * M;
+  const cols = [[52, 'l'], [74, 'l'], [190, 'l'], [70, 'l'], [40, 'l'], [118, 'l'], [70, 'r'], [42, 'r'], [64, 'r'], [66, 'r']];
+  const esc = ANCHO / cols.reduce((a, c) => a + c[0], 0); cols.forEach(c => { c[0] *= esc; });
+  const xs = []; cols.reduce((x, c) => { xs.push(x); return x + c[0]; }, M);
+  const corta = (t, w, sz, neg) => { t = String(t == null ? '' : t); if (pdfAncho(t, sz, neg) <= w - 4) return t; while (t.length > 1 && pdfAncho(t + '…', sz, neg) > w - 4) t = t.slice(0, -1); return t + '…'; };
+  const celda = (t, i, y, sz, neg) => { const [w, al] = cols[i]; const s = corta(t, w, sz, neg); if (al === 'r') doc.texto(s, xs[i] + w - 2, y, sz, { neg, align: 'right' }); else doc.texto(s, xs[i] + 2, y, sz, { neg }); };
+  const cabecera = () => {
+    doc.texto('FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. · NIF B87446670', M, 34, 9, { color: '#4b5563' });
+    doc.texto('Listado de ' + l.titulo + ' · ' + periodo, M, 54, 14, { neg: true });
+    doc.rect(M, 64, ANCHO, 18, '#e5e7eb'); LJ_CAB.forEach((c, i) => celda(c.replace('Fecha factura', 'Fecha').replace('Tipo de IVA (%)', '% IVA').replace('Código postal', 'CP').replace('Base imponible', 'Base'), i, 76, 8, true));
+    return 94;
+  };
+  let y = cabecera(); const LH = 13, FIN = doc.H - 36;
+  if (!l.filas.length) doc.texto('No hay facturas en este periodo.', M, y + 6, 10);
+  l.filas.forEach((f, k) => {
+    if (y > FIN) { doc.pagina(); y = cabecera(); }
+    if (k % 2) doc.rect(M, y - 9.5, ANCHO, LH, '#f9fafb');
+    [fechaES(f[0]), f[1], f[2], f[3], f[4], f[5], eur(f[6]), ljPct(f[7]), eur(f[8]), eur(f[9])].forEach((v, i) => celda(v, i, y, 8));
+    y += LH;
+  });
+  if (y + 30 + LH * (l.tot.lista.length + 1) > FIN) { doc.pagina(); y = cabecera(); }
+  y += 10; doc.linea(M, y - 8, M + ANCHO, y - 8, '#9ca3af', 0.8); celda('TOTALES POR TIPO DE IVA', 5, y + 4, 8.5, true); y += LH + 4;
+  l.tot.lista.forEach(t => { celda('IVA ' + ljPct(t.tipo), 5, y, 8.5); celda(eur(t.base), 6, y, 8.5); celda(ljPct(t.tipo), 7, y, 8.5); celda(eur(t.cuota), 8, y, 8.5); celda(eur(t.total), 9, y, 8.5); y += LH; });
+  celda('TOTAL', 5, y, 9, true); celda(eur(l.tot.base), 6, y, 9, true); celda(eur(l.tot.cuota), 8, y, 9, true); celda(eur(l.tot.total), 9, y, 9, true);
+  y += LH + 6; doc.texto(l.n + ' factura(s) · ' + l.filas.length + ' fila(s) (una por tipo de IVA) · hecho el ' + fechaES(hoy()), M, y, 8, { color: '#4b5563' });
+  const np = doc.numPaginas(); for (let i = 0; i < np; i++) doc.enPagina(i, () => doc.texto('Página ' + (i + 1) + ' de ' + np, doc.W - M, doc.H - 18, 8, { align: 'right', color: '#6b7280' }));
+  return doc.bytes();
+}
+const LJ_MIME = { xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', csv: 'text/csv', pdf: 'application/pdf' };
+function ljArchivo(l, formato, periodo, clave) {
+  const nombre = 'ferjusanz_' + l.tipo + '_' + clave + '.' + formato;
+  if (formato === 'csv') { const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; return new File(['﻿' + ljFilasCSV(l).map(f => f.map(q).join(';')).join('\r\n')], nombre, { type: LJ_MIME.csv }); }
+  return new File([formato === 'xlsx' ? ljXlsx(l, l.tipo === 'ventas' ? 'Ventas ' + clave : 'Compras ' + clave) : ljPdf(l, periodo)], nombre, { type: LJ_MIME[formato] });
+}
+function ljBajar(f) { const u = URL.createObjectURL(f), a = h('a', { href: u, download: f.name }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); }
 const GES_INFORMES = [
-  ['emitidas', '🧾 Facturas emitidas (Golden)', 'Número, fecha, cliente, NIF, base, IVA por tipo y total'],
-  ['recibidas', '📥 Facturas recibidas', 'Proveedor, fecha, número, importe y estado'],
+  ['ventas', '📗 Listado de VENTAS (facturas emitidas)', '10 columnas, una fila por tipo de IVA y totales por tipo. Hasta el 31/12/2026 salen de Golden.'],
+  ['compras', '📕 Listado de COMPRAS (facturas de proveedores)', '10 columnas, una fila por tipo de IVA y totales por tipo. Concepto: «Compra de mercaderías».'],
   ['cobros', '💰 Cobros del mes', 'Fecha, cliente, forma de pago, importe y quién cobró'],
   ['sinfacturar', '📋 Albaranes sin facturar', 'Albaranes entregados del mes que no aparecen en ninguna factura de Golden'],
   ['fichajes', '⏱️ Registro de jornada', 'Entrada, salida y horas por trabajador y día'],
 ];
 async function gesInforme(tipo, desde, hasta) {
   const fin = hasta; const finTs = comSumaDias(hasta, 1);
-  if (tipo === 'emitidas') {
-    const fs = await gesTodas(() => sb.from('golden_facturas').select('numero,serie,fecha,tipo,cliente_codigo,cliente_nombre,bruto,descuentos,gastos,base,total').eq('borrador', false).gte('fecha', desde).lte('fecha', fin).order('fecha').order('numero'));
-    const nums = fs.map(f => f.numero); const lin = [];
-    for (let i = 0; i < nums.length; i += 150) lin.push(...await gesTodas(() => sb.from('golden_lineas').select('factura_numero,iva,importe').in('factura_numero', nums.slice(i, i + 150))));
-    const cods = [...new Set(fs.map(f => f.cliente_codigo).filter(Boolean))]; const nif = {};
-    for (let i = 0; i < cods.length; i += 150) (await gesTodas(() => sb.from('clientes').select('codigo,nif').in('codigo', cods.slice(i, i + 150)))).forEach(c => { nif[String(c.codigo).toUpperCase()] = c.nif || ''; });
-    const porTipo = {}; lin.forEach(l => { const k = l.factura_numero + '|' + Number(l.iva || 0); porTipo[k] = (porTipo[k] || 0) + Number(l.importe || 0); });
-    const filas = [['Número', 'Serie', 'Fecha', 'Tipo', 'Código cliente', 'Cliente', 'NIF', 'Bruto', 'Descuentos', 'Gastos', 'Base imponible', 'Cuota (total − base)', 'Total', 'Líneas al 0 %', 'Líneas al 4 %', 'Líneas al 10 %', 'Líneas al 21 %']];
-    fs.forEach(f => filas.push([f.numero, f.serie, fechaES(f.fecha), f.tipo, f.cliente_codigo, f.cliente_nombre, nif[String(f.cliente_codigo || '').toUpperCase()] || '', gesNum(f.bruto), gesNum(f.descuentos), gesNum(f.gastos), gesNum(f.base), gesNum(Number(f.total || 0) - Number(f.base || 0)), gesNum(f.total), gesNum(porTipo[f.numero + '|0']), gesNum(porTipo[f.numero + '|4']), gesNum(porTipo[f.numero + '|10']), gesNum(porTipo[f.numero + '|21'])]));
-    const cuota = fs.reduce((a, f) => a + Number(f.total || 0) - Number(f.base || 0), 0);
-    const aviso = !fs.length ? '⚠️ No hay facturas de este mes en el histórico de Golden: hay que importarlas primero.' : (cuota < 1 ? '⚠️ Las facturas de este mes no traen IVA: el histórico de Golden parece incompleto. Revísalo antes de mandarlo.' : '');
-    let hasta = null; try { const u = await sb.from('golden_facturas').select('fecha').eq('borrador', false).order('fecha', { ascending: false }).limit(1); hasta = u.data && u.data[0] && u.data[0].fecha; } catch (e) { }
-    const incompleto = fs.length && hasta && hasta < fin ? '⚠️ INCOMPLETO: Golden está importado solo hasta el ' + fechaES(hasta) + '. Importa en «Histórico de Golden» las facturas hasta el ' + fechaES(fin) + ' antes de mandarlo.' : '';
-    return { filas, n: fs.length, aviso: [incompleto, aviso].filter(Boolean).join(' '), total: fs.reduce((a, f) => a + Number(f.total || 0), 0), nota: 'Las columnas «Líneas al …%» suman las líneas antes de descuentos y gastos de la factura.' };
-  }
-  if (tipo === 'recibidas') {
-    const fr = await gesTodas(() => sb.from('facturas_recibidas').select('id,fecha_factura,fecha_correo,remitente,asunto,nombre,estado,proveedor_id,compra_id,proveedores(nombre)').neq('estado', 'descartada').or('and(fecha_factura.gte.' + desde + ',fecha_factura.lte.' + fin + '),and(fecha_factura.is.null,fecha_correo.gte.' + desde + ',fecha_correo.lt.' + finTs + ')').order('fecha_factura'));
-    const dc = await gesTodas(() => sb.from('documentos_compra').select('fecha,nombre,importe,tipo,pagada,fecha_pago,compra_id,proveedores(nombre),compras(numero_documento)').eq('archivado', false).gte('fecha', desde).lte('fecha', fin).order('fecha'));
-    const filas = [['Origen', 'Fecha factura', 'Proveedor', 'Número', 'Importe', 'Pagada', 'Fecha pago', 'Estado', 'Archivo']];
-    fr.forEach(f => filas.push(['Correo', fechaES(f.fecha_factura || String(f.fecha_correo || '').slice(0, 10)), (uno(f.proveedores) || {}).nombre || f.remitente || '', '', '', '', '', f.estado || '', f.nombre || '']));
-    dc.forEach(d => filas.push(['Documento de compra', fechaES(d.fecha), (uno(d.proveedores) || {}).nombre || '', (uno(d.compras) || {}).numero_documento || '', gesNum(d.importe), d.pagada ? 'sí' : 'no', d.fecha_pago ? fechaES(d.fecha_pago) : '', d.tipo || '', d.nombre || '']));
-    const sinRev = fr.filter(f => f.estado === 'nueva').length; const avR = sinRev ? '⚠️ ' + sinRev + ' factura(s) recibida(s) aún sin revisar en Compras › Recibidas.' : '';
-    return { filas, n: filas.length - 1, aviso: avR, total: dc.reduce((a, d) => a + Number(d.importe || 0), 0), nota: 'Los PDF originales están en la app (Compras › Recibidas). Faltan el NIF y el desglose de IVA del proveedor: no se guardan todavía.' };
-  }
+  if (tipo === 'ventas' || tipo === 'compras') { const l = tipo === 'ventas' ? await ljVentas(desde, fin) : await ljCompras(desde, fin); return { lj: l, filas: ljFilasCSV(l), n: l.n, total: l.tot.total, aviso: l.avisos.join(' '), nota: l.nota }; }
   if (tipo === 'cobros') {
     const cs = await gesTodas(() => sb.from('cobros').select('created_at,importe,forma,nota,cobrado_por,clientes(codigo,nombre,nombre_comercial,nif)').gte('created_at', desde).lt('created_at', finTs).order('created_at'));
     const per = {}; (await gesTodas(() => sb.from('perfiles').select('id,nombre'))).forEach(p => { per[p.id] = p.nombre; });
@@ -13226,41 +13357,59 @@ function vistaGestoria() {
   state.view = 'gestoria'; if (!esOficina()) { go('inicio'); return; }
   const ahora = new Date(); const mesPasado = new Date(ahora.getFullYear(), ahora.getMonth() - 1, 1);
   const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-  let mes = LS.get('fj_ges_mes', iso(mesPasado));
+  const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  let mes = LS.get('fj_ges_mes', iso(mesPasado)); let modoP = LS.get('fj_ges_per', 'mes') === 'tri' ? 'tri' : 'mes';
+  const triPasado = (() => { let y = ahora.getFullYear(), q = Math.floor(ahora.getMonth() / 3); if (q === 0) { y--; q = 4; } return y + '-T' + q; })();
+  let tri = LS.get('fj_ges_tri', triPasado);
   const selMes = comInput('month', mes); const cuerpo = h('div', {}); const listos = {};
-  const rango = () => { const [y, m] = mes.split('-').map(Number); const d = new Date(y, m, 0).getDate(); return [mes + '-01', mes + '-' + String(d).padStart(2, '0')]; };
-  const nombreArchivo = t => 'ferjusanz_' + t + '_' + mes + '.csv';
-  const pintar = () => { cuerpo.replaceChildren(...GES_INFORMES.map(([t, titulo, desc]) => { const caja = h('div', { class: 'sub' }); const card = h('div', { class: 'card' }, h('div', { class: 'nombre' }, titulo), h('div', { class: 'sub' }, desc), caja,
-      h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' }, h('button', { class: 'small', onclick: async e => { const b = e.currentTarget; b.disabled = true; caja.textContent = 'Preparando…'; try { const [d0, d1] = rango(); const r = await gesInforme(t, d0, d1); listos[t] = r; caja.replaceChildren(...[h('b', {}, r.n ? r.n + ' fila(s)' + (r.total != null ? ' · total ' + eur(r.total) + ' €' : '') : 'Sin datos este mes: no se mandará'), r.aviso ? h('div', { style: 'color:var(--rojo);font-weight:700' }, r.aviso) : null, r.nota ? h('div', {}, r.nota) : null].filter(Boolean)); descargarCSV(nombreArchivo(t), r.filas); } catch (x) { caja.textContent = '⚠️ ' + (x.message || x); } b.disabled = false; } }, '⬇️ Descargar Excel'))); return card; })); };
-  selMes.addEventListener('change', () => { if (selMes.value) { mes = selMes.value; LS.set('fj_ges_mes', mes); Object.keys(listos).forEach(k => delete listos[k]); pintar(); } });
-  const bTodo = h('button', { class: 'guardar', style: 'width:100%;margin-top:8px' }, '📤 Preparar todo y compartir con Jorge');
+  const selTri = h('select', { style: 'width:100%' }); { let y = ahora.getFullYear(), q = Math.floor(ahora.getMonth() / 3) + 1; for (let i = 0; i < 8; i++) { const v = y + '-T' + q; selTri.append(h('option', { value: v }, q + '.º trimestre ' + y + ' (' + MESES[(q - 1) * 3].slice(0, 3) + '–' + MESES[q * 3 - 1].slice(0, 3) + ')')); if (--q === 0) { q = 4; y--; } } } selTri.value = tri; if (!selTri.value) { selTri.selectedIndex = 1; tri = selTri.value; }
+  const rango = () => { if (modoP === 'tri') { const [y, q] = tri.split('-T').map(Number); const m1 = (q - 1) * 3 + 1, m3 = q * 3; return [y + '-' + String(m1).padStart(2, '0') + '-01', y + '-' + String(m3).padStart(2, '0') + '-' + String(new Date(y, m3, 0).getDate()).padStart(2, '0')]; }
+    const [y, m] = mes.split('-').map(Number); const d = new Date(y, m, 0).getDate(); return [mes + '-01', mes + '-' + String(d).padStart(2, '0')]; };
+  const clave = () => modoP === 'tri' ? tri : mes;
+  const periodo = () => { if (modoP === 'tri') { const [y, q] = tri.split('-T'); return q + '.º trimestre ' + y; } const [y, m] = mes.split('-').map(Number); return MESES[m - 1][0].toUpperCase() + MESES[m - 1].slice(1) + ' ' + y; };
+  const nombreArchivo = t => 'ferjusanz_' + t + '_' + clave() + '.csv';
+  const preparar = async t => { if (!listos[t]) { const [d0, d1] = rango(); listos[t] = await gesInforme(t, d0, d1); } return listos[t]; };
+  const resumen = (caja, r) => caja.replaceChildren(...[h('b', {}, r.n ? r.n + (r.lj ? ' factura(s), ' + r.lj.filas.length + ' fila(s)' : ' fila(s)') + (r.total != null ? ' · total ' + eur(r.total) + ' €' : '') : 'Sin datos en este periodo: no se mandará'), r.aviso ? h('div', { style: 'color:var(--rojo);font-weight:700' }, r.aviso) : null, r.nota ? h('div', {}, r.nota) : null].filter(Boolean));
+  const boton = (texto, caja, t, hacer) => h('button', { class: 'small', onclick: async e => { const b = e.currentTarget; b.disabled = true; caja.textContent = 'Preparando…'; try { const r = await preparar(t); resumen(caja, r); hacer(r); } catch (x) { caja.textContent = '⚠️ ' + (x.message || msgErr(x)); } b.disabled = false; } }, texto);
+  const pintar = () => { cuerpo.replaceChildren(...GES_INFORMES.map(([t, titulo, desc]) => { const caja = h('div', { class: 'sub' }); if (listos[t]) resumen(caja, listos[t]);
+    const bot = t === 'ventas' || t === 'compras'
+      ? [boton('📊 Excel', caja, t, r => ljBajar(ljArchivo(r.lj, 'xlsx', periodo(), clave()))), boton('📄 PDF', caja, t, r => ljBajar(ljArchivo(r.lj, 'pdf', periodo(), clave()))), boton('🔤 CSV', caja, t, r => ljBajar(ljArchivo(r.lj, 'csv', periodo(), clave())))]
+      : [boton('⬇️ Descargar Excel (CSV)', caja, t, r => descargarCSV(nombreArchivo(t), r.filas))];
+    return h('div', { class: 'card' }, h('div', { class: 'nombre' }, titulo), h('div', { class: 'sub' }, desc), caja, h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' }, ...bot)); })); };
+  const limpiar = () => { Object.keys(listos).forEach(k => delete listos[k]); pintar(); };
+  selMes.addEventListener('change', () => { if (selMes.value) { mes = selMes.value; LS.set('fj_ges_mes', mes); limpiar(); } });
+  selTri.addEventListener('change', () => { tri = selTri.value; LS.set('fj_ges_tri', tri); limpiar(); });
+  const chipsP = h('div', { class: 'chips' }); const campoP = h('div', {});
+  const pintarP = () => { chipsP.replaceChildren(...[['mes', '📅 Mensual'], ['tri', '🗓️ Trimestral']].map(([v, tx]) => h('button', { class: 'chip' + (modoP === v ? ' on' : ''), onclick: () => { if (modoP === v) return; modoP = v; LS.set('fj_ges_per', v); pintarP(); limpiar(); } }, tx))); campoP.replaceChildren(modoP === 'tri' ? comCampo('Trimestre', selTri) : comCampo('Mes', selMes)); };
+  const TXT_TODO = '📤 Preparar todo y compartir con Jorge';
+  const bTodo = h('button', { class: 'guardar', style: 'width:100%;margin-top:8px' }, TXT_TODO);
   bTodo.onclick = async () => {
     bTodo.disabled = true; bTodo.textContent = 'Preparando los informes…';
-    try { const [d0, d1] = rango(); const files = [];
-      const vacios = [], avisos = [], van = [];
-      for (const [t, titulo] of GES_INFORMES) { const r = listos[t] || await gesInforme(t, d0, d1); listos[t] = r; const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    try { const files = []; const vacios = [], avisos = [], van = [];
+      for (const [t, titulo] of GES_INFORMES) { const r = await preparar(t); const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
         const nom = titulo.replace(/^\S+\s/, '');
-        if (!r.n) { vacios.push(nom); continue; }   // los informes sin datos no se mandan (la app aún no se usa para eso)
+        if (!r.n) { vacios.push(nom); continue; }   // los informes sin datos no se mandan
         if (r.aviso) avisos.push(r.aviso);
+        if (r.lj) { van.push(nom + ' (' + r.n + ' facturas · Excel y PDF)'); files.push(ljArchivo(r.lj, 'xlsx', periodo(), clave()), ljArchivo(r.lj, 'pdf', periodo(), clave())); continue; }
         van.push(nom + ' (' + r.n + ')');
         files.push(new File(['﻿' + r.filas.map(f => f.map(q).join(';')).join('\r\n')], nombreArchivo(t), { type: 'text/csv' })); }
       pintar();
-      if (!files.length) { toast('No hay datos de ' + mes + ' para mandar.', 'err'); bTodo.disabled = false; bTodo.textContent = '📤 Preparar todo y compartir con Jorge'; return; }
-      if (!await confirmar('Mes ' + mes + '\n\nSE MANDAN:\n· ' + van.join('\n· ') + (vacios.length ? '\n\nNO SE MANDAN (sin datos este mes):\n· ' + vacios.join('\n· ') : '') + (avisos.length ? '\n\nOJO, REVISA ANTES:\n' + avisos.join('\n') : '') + '\n\n¿Lo has revisado? Se abrirá «Compartir» (correo o WhatsApp). Nada se envía solo.')) { bTodo.disabled = false; bTodo.textContent = '📤 Preparar todo y compartir con Jorge'; return; }
-      if (navigator.canShare && navigator.canShare({ files })) await navigator.share({ files, title: 'Ferjusanz · informes ' + mes, text: 'Hola Jorge, te mando los informes de Ferjusanz del mes ' + mes + '.' });
-      else { files.forEach(f => { const a = h('a', { href: URL.createObjectURL(f), download: f.name }); document.body.append(a); a.click(); a.remove(); }); toast('Descargados. Adjúntalos en un correo a Jorge.', 'ok'); }
-    } catch (x) { if (x && x.name !== 'AbortError') toast(x.message || String(x), 'err'); }
-    bTodo.disabled = false; bTodo.textContent = '📤 Preparar todo y compartir con Jorge';
+      if (!files.length) { toast('No hay datos de ' + periodo() + ' para mandar.', 'err'); return; }
+      if (!await confirmar(periodo() + '\n\nSE MANDAN:\n· ' + van.join('\n· ') + (vacios.length ? '\n\nNO SE MANDAN (sin datos):\n· ' + vacios.join('\n· ') : '') + (avisos.length ? '\n\nOJO, REVISA ANTES:\n' + avisos.join('\n') : '') + '\n\n¿Lo has revisado? Se abrirá «Compartir» (correo o WhatsApp). Nada se envía solo.')) return;
+      if (navigator.canShare && navigator.canShare({ files })) await navigator.share({ files, title: 'Ferjusanz · informes ' + periodo(), text: 'Hola Jorge, te mando los informes de Ferjusanz de ' + periodo().toLowerCase() + '.' });
+      else { files.forEach(ljBajar); toast('Descargados. Adjúntalos en un correo a Jorge.', 'ok'); }
+    } catch (x) { if (x && x.name !== 'AbortError') toast(x.message || msgErr(x), 'err'); }
+    finally { bTodo.disabled = false; bTodo.textContent = TXT_TODO; }
   };
   $app.replaceChildren(shell('Informes para Jorge', h('div', {},
-    h('p', { class: 'sub' }, 'Informes del mes en Excel (CSV) para la gestoría. Revísalos antes de mandarlos: la app no envía nada sola. Las facturas las sigue haciendo Golden.'),
-    h('div', { class: 'aviso-card' }, h('b', {}, '✅ Cierre de mes, en este orden'),
-      h('div', { style: 'margin-top:4px;line-height:1.5' }, '1. En Golden, exporta las facturas del mes y cárgalas en ', h('a', { href: '#', onclick: e => { e.preventDefault(); go('golden'); } }, '«Histórico de Golden»'), ' (hasta el último día del mes).', h('br'),
-        '2. Revisa las ', h('a', { href: '#', onclick: e => { e.preventDefault(); LS.set('fj_compras_modo', 'recib'); go('compras'); } }, 'facturas de proveedores recibidas'), ' del mes.', h('br'),
+    h('p', { class: 'sub' }, 'Listados de ventas y compras con las 10 columnas que pide Jorge (Excel, PDF y CSV) y el resto de informes del mes. Revísalos antes de mandarlos: la app no envía nada sola. Hasta el 31/12/2026 las facturas las sigue haciendo Golden.'),
+    h('div', { class: 'aviso-card' }, h('b', {}, '✅ Cierre del mes o del trimestre, en este orden'),
+      h('div', { style: 'margin-top:4px;line-height:1.5' }, '1. En Golden, exporta las facturas del periodo y cárgalas en ', h('a', { href: '#', onclick: e => { e.preventDefault(); go('golden'); } }, '«Histórico de Golden»'), ' (hasta el último día).', h('br'),
+        '2. En Compras › ', h('a', { href: '#', onclick: e => { e.preventDefault(); LS.set('fj_compras_modo', 'recib'); go('compras'); } }, 'facturas de proveedores'), ', que todas tengan su «🧾 NIF e IVA» (si no, no salen en COMPRAS).', h('br'),
         '3. Pulsa «Preparar todo»: verás qué se manda, qué no (vacío) y los avisos.', h('br'),
         '4. Compártelo con Jorge por correo o WhatsApp. Nada se envía solo.')),
-    comCampo('Mes', selMes), cuerpo, bTodo)));
-  pintar();
+    chipsP, campoP, cuerpo, bTodo)));
+  pintarP(); pintar();
 }
 
 function vistaCopia() {

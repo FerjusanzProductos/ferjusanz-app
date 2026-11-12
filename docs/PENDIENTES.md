@@ -62,7 +62,8 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
   - ✔️ Código publicado en la normal (v264, 13/11), oculto allí.
   - ✔️ **Activado en la normal (v265, 13/11/2026)**: tablas creadas en la base real (Fernando).
   - 🟡 Oficina (Carmen): en Compras → «🧾 NIF e IVA», tocar «📖 Leer NIF e IVA de las facturas que aún no lo tienen» y revisar los avisos. Poner a mano el NIF de los proveedores que no lo traen como texto (Pataleta, Perichán…).
-  - Siguiente: **fase 4, listados para Jorge**.
+  - 🟡 **Fase 4 (listados para Jorge)** hecha en PRUEBAS (v267, 13/11/2026): Más → «📤 Informes para Jorge» → «📗 Listado de VENTAS» y «📕 Listado de COMPRAS», mensual o trimestral, en Excel, PDF y CSV. Que Fernando lo pruebe (en pruebas solo hay 3 facturas PRUEBA de noviembre y Golden de los últimos 60 días) y, con «Autorizo publicar», pasarlo a la normal. Enseñarle a Jorge un listado para que diga si le vale el formato.
+  - Siguiente: **fase 5, caja** (entradas y salidas de efectivo).
   - 🟡 **Fase 2 (facturas emitidas)** hecha en PRUEBAS (v259, 12/11/2026; v261 arregla el «permission denied»; v262 pone código y lote/origen en la factura: hay que entrar con `fernando@pruebas.invalid`). ✔️ Arreglo de la sesión publicado en la normal (v264, 13/11). Que Fernando la pruebe en la app naranja (Más → «🧾 Facturas (desde la app) · PRUEBAS»). Hay 2 albaranes de ensayo sin facturar (Aguila Rock, 1.037 € para probar el límite del efectivo; y un cliente sin NIF). Código publicado en la normal (v260, «Autorizo publicar»), pero allí el botón no sale y la base real no tiene las tablas: para facturar de verdad hace falta crearlas (quedan bloqueadas) y la declaración firmada.
     - ⚪ Mejora pequeña para el próximo SQL: en la factura, la unidad de lo que no va por kg sale «ud»; mejor la del pedido (manojo, caja, bandeja…).
     - ⚪ Poner el **IBAN** en «Datos de la empresa» para que salga en las facturas por transferencia.

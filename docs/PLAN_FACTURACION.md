@@ -56,7 +56,7 @@ Dos listados: **VENTAS** (facturas emitidas) y **COMPRAS** (facturas recibidas).
 1. **Datos fiscales**: ficha de la empresa (emisor) y ficha de clientes completa (NIF, dirección, CP, teléfono, correo); lista de clientes a los que les falta algo. ✔️ Hecho en PRUEBAS (v252, 12/11/2026): «🏢 Datos de la empresa» con sello y «🧾 Clientes sin datos para facturar». Publicado en la normal (v255) y tabla `empresa` creada en las dos bases (12/11/2026). ✔️ Terminada.
 2. **Facturas emitidas** en PRUEBAS: numeración 2027-NNNN, rectificativas, concepto, desglose por producto y por tipo de IVA, forma de pago con el límite de efectivo, PDF con sello. Desde los albaranes entregados. ✔️ Hecho en PRUEBAS (v259, 12/11/2026), falta que lo pruebe Fernando. Ver `docs/HISTORIAL.md`.
 3. **Facturas recibidas**: guardar NIF, CP y desglose de IVA del proveedor (el lector ya lee la factura). ✔️ Hecho en PRUEBAS (v263, 13/11/2026); código publicado en la normal (v264) pero oculto hasta crear las tablas en la base real.
-4. **Listados para Jorge** (ventas y compras, 10 columnas, mensual y trimestral) dentro de «Informes para Jorge».
+4. **Listados para Jorge** (ventas y compras, 10 columnas, mensual y trimestral) dentro de «Informes para Jorge». ✔️ Hecho en PRUEBAS (v267, 13/11/2026): Excel (.xlsx), PDF y CSV; ventas de Golden en 2026 y de la app desde 2027. Falta que lo pruebe Fernando y publicarlo.
 5. **Caja**: entradas y salidas de efectivo, de quién / a quién, con justificante que puede llegar después.
 6. **Banco**: importar Norma 43 / Excel y emparejar cada movimiento con cliente o proveedor.
 7. **Paso a 2027**: prueba completa en Modo prácticas en diciembre, «Autorizo publicar» y empezar el 1/1/2027.
