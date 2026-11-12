@@ -2,6 +2,8 @@
 _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.md. Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda._
 
 ## Por publicar o decidir
+- ✔️ 12/11/2026: **Usuario de Jorge Ruiz Onetti** (oficina) creado, con contraseña provisional.
+  - 🟡 Añadir a la app **«Cambiar mi contraseña»** (en Mi perfil) y **«He olvidado la contraseña»**, para que Jorge (y los demás) puedan poner la suya. Hoy no existe.
 - ✔️ 12/11/2026: **📦 Sacar de la furgoneta antes de entregar** publicado en la normal (v239, «Autorizo publicar»). Pruebas en v238.
 - 🔴 12/11/2026: **Modo reparto** (una sola pantalla para repartidores, 3 fases). Plan explicado; **esperando «sí»** de Fernando y respuesta a: 1) ¿entran directo solo los de puesto repartidor? 2) pedidos sin repartidor siguen sin salir hasta asignarlos; 3) ¿el puesto «dirección» puede cambiar el orden? (necesitaría SQL). Sin cambios en la base de datos si no.
 - ✔️ 12/11/2026: **Avisos en ROJO de precios y pesos que faltan + «atrás» en el portal del cliente** publicados en la normal (v234, «Autorizo publicar»). Pruebas en v233 con lo mismo.
