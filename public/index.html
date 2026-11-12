@@ -884,8 +884,9 @@ const nombreCli = c => (c && (c.nombre_comercial || c.nombre)) || '';
 /* ---- Datos fiscales (fase 1 del plan de facturación) ---- */
 /* NIF español: DNI (8 cifras + letra), NIE (X/Y/Z + 7 cifras + letra) o CIF (letra + 7 cifras + control). Devuelve true si la letra/control cuadra. */
 function nifValido(v) {
-  const s = String(v || '').toUpperCase().replace(/[\s.\-\/]/g, ''); const L = 'TRWAGMYFPDXBNJZSQVHLCKE';
-  if (/^\d{8}[A-Z]$/.test(s)) return L[+s.slice(0, 8) % 23] === s[8];
+  const s = String(v || '').toUpperCase().replace(/[\s.\-\/]/g, '').replace(/^0+(?=[A-Z])/, ''); const L = 'TRWAGMYFPDXBNJZSQVHLCKE';
+  /* DNI: se admiten sin el 0 de delante («5376981-H») o con uno de más («071627338-W») */
+  if (/^\d{1,9}[A-Z]$/.test(s)) { const n = s.slice(0, -1).replace(/^0+(?=\d{8})/, ''); return n.length <= 8 && L[+n % 23] === s.slice(-1); }
   if (/^[XYZ]\d{7}[A-Z]$/.test(s)) return L[+(('XYZ'.indexOf(s[0])) + s.slice(1, 8)) % 23] === s[8];
   if (/^[ABCDEFGHJKLMNPQRSUVW]\d{7}[0-9A-J]$/.test(s)) {
     let a = 0, b = 0; for (let i = 1; i <= 7; i++) { const d = +s[i]; if (i % 2 === 0) a += d; else { const x = d * 2; b += Math.floor(x / 10) + (x % 10); } }
