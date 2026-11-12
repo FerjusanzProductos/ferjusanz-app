@@ -2,7 +2,7 @@
 _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.md. Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda._
 
 ## Por publicar o decidir
-- 🔴 12/11/2026: **Avisos en ROJO de precios y pesos que faltan + «atrás» en el portal del cliente** en PRUEBAS (v233). Falta: que Fernando lo vea y «Autorizo publicar» (usar v234 o más).
+- ✔️ 12/11/2026: **Avisos en ROJO de precios y pesos que faltan + «atrás» en el portal del cliente** publicados en la normal (v234, «Autorizo publicar»). Pruebas en v233 con lo mismo.
 - ✔️ 12/11/2026: **Arreglos de Preparar → Entregar → Facturar** publicados en la normal (v232, «Autorizo publicar»).
   - ⚪ Propuestas sin hacer (que decida Fernando): hoja de **Carga** ordenada por repartidor y orden de reparto (ahora va por ruta del cliente); el correo automático del albarán (`albaranes-correo`) aún pone «0» en lo no servido; unidades «ud» en el albarán para cajas/bandejas.
 - ✔️ 12/11/2026: **🚦 Camino de los pedidos** publicado en la normal (v232, junto con los arreglos de arriba). Que Carmen, Jorge y los preparadores lo vayan mirando y digan qué echan en falta.
