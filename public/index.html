@@ -3261,7 +3261,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v223';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v225';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -9072,10 +9072,10 @@ async function fcRegistrarCompraDirecta(f, provId, fecha, lineas, numDoc) {
 async function fcLineasFactura(f, prods, indice) {
   const P = {}; prods.forEach(p => { P[p.id] = p; });
   const al = f.proveedor_id ? await fcAliasCargar(f.proveedor_id) : { map: {} }; const IGN = LS.get('fj_sin_ign', {});
-  let crudas = null;
+  let crudas = null, numero = '';
   try { const q = await sb.from('lineas_factura_leida').select('texto,cantidad,unidad,precio,producto_id,dudoso').eq('factura_id', f.id).limit(500); if (!q.error && q.data && q.data.length) crudas = q.data.map(l => ({ texto: l.texto, cantidad: Number(l.cantidad) || 0, unidad: l.unidad || '', precio: Number(l.precio), pid: l.producto_id, dudoso: !!l.dudoso })); } catch (e) { }
   if (!crudas) {
-    const file = await fcDescargar(f); const rd = await fcLeerFactura(file, () => { }); guardarLineasLeidas(f, rd, prods, indice, al.map);
+    const file = await fcDescargar(f); const rd = await fcLeerFactura(file, () => { }); numero = (rd.cab && rd.cab.numero) || ''; guardarLineasLeidas(f, rd, prods, indice, al.map);
     crudas = rd.lineas.map(x => { const m = fcEmparejar(x, prods, indice, al.map); const ok = m.producto && (m.estado === 'ok' || m.estado === 'dudoso'); return { texto: x.texto, cantidad: Number(x.cantidad) || 0, unidad: x.unidad || '', precio: Number(x.precio), pid: ok ? m.producto.id : null, dudoso: m.estado === 'dudoso', origen: x.origen || '' }; });
   }
   const lineas = [], sin = [];
@@ -9085,7 +9085,18 @@ async function fcLineasFactura(f, prods, indice) {
     if (p) { const u = fcUnidadLibro(p, x.texto, x.unidad); lineas.push({ pid: p.id, nombre: p.nombre, codigo: p.codigo, cant: x.cantidad, unidad: u, uFac: x.unidad, precio: isFinite(x.precio) ? x.precio : null, texto: x.texto, dudoso: dud, origen: x.origen || '', alias: !dud }); }
     else if (!fcEsBasura(x.texto) && !IGN[fcClave(x.texto)]) sin.push({ texto: x.texto, cant: x.cantidad, unidad: x.unidad, precio: isFinite(x.precio) ? x.precio : null });
   });
-  return { lineas, sin };
+  return { lineas, sin, numero };
+}
+/* Nº de documento de una factura recibida: el que pone DENTRO de la factura (p. ej. V/6031144).
+   Antes se usaba el nombre del archivo, y MADREMIA manda todas como «Factura_Electronica.pdf»: en la trazabilidad
+   todas sus compras salían con el mismo número. El nombre del archivo solo vale si no es genérico. */
+const FC_NOMBRE_GENERICO = /^(factura[\s_-]*electr[oó]nica|factura|invoice|documento|document|scan|escaneo|img|image|doc)[\s_\-0-9()]*$/i;
+async function fcNumDoc(f, d) {
+  let n = (d && d.numero) || '';
+  if (!n) { try { const rd = await fcLeerFactura(await fcDescargar(f), () => { }); n = (rd.cab && rd.cab.numero) || ''; } catch (e) { } }
+  if (n) return String(n).slice(0, 60);
+  const nom = String(f.nombre || '').replace(/\.[A-Za-z0-9]{2,4}$/, '').trim();
+  return nom && !FC_NOMBRE_GENERICO.test(nom) ? nom.slice(0, 60) : '';
 }
 /* Revisar una factura y registrarla como compra en una hoja encima de la pantalla: al terminar se sigue en la misma pantalla */
 async function revisarFacturaHoja(f, alTerminar) {
@@ -9132,7 +9143,7 @@ async function revisarFacturaHoja(f, alTerminar) {
       const mal = d.lineas.find(l => !(Number(l.cant) > 0)); if (mal) { toast('Falta la cantidad de ' + mal.nombre, 'err'); return; }
       const dud = d.lineas.filter(l => l.dudoso).length; if (dud && !await confirmar(dud + ' producto(s) están sin confirmar (en naranja). ¿Registrar igualmente?')) return;
       btn.disabled = true;
-      try { const r = await fcRegistrarCompraDirecta(f, st.prov, st.fecha, d.lineas, String(f.nombre || '').replace(/\.[A-Za-z0-9]{2,4}$/, '').slice(0, 60)); cerrar(); toast('✅ Compra registrada: ' + r.n + ' producto(s)' + (r.omitidos ? '. ' + r.omitidos + ' precio(s) sin cambiar: ya había uno más reciente' : ''), 'ok'); if (alTerminar) alTerminar(); }
+      try { const r = await fcRegistrarCompraDirecta(f, st.prov, st.fecha, d.lineas, await fcNumDoc(f, d)); cerrar(); toast('✅ Compra registrada: ' + r.n + ' producto(s)' + (r.omitidos ? '. ' + r.omitidos + ' precio(s) sin cambiar: ya había uno más reciente' : ''), 'ok'); if (alTerminar) alTerminar(); }
       catch (e) { btn.disabled = false; toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); }
     } }, '✅ Registrar compra');
     caja.replaceChildren(
@@ -9164,7 +9175,7 @@ async function registrarTodasDelDia(facs, alTerminar) {
   if (!listas.length) { hoja('Nada listo para registrar', h('div', {}, h('p', { class: 'sub' }, 'Estas facturas hay que revisarlas una a una (botón «Revisar y registrar»):'), ...revisar.map(t => h('div', { class: 'sub', style: 'padding:4px 0' }, '• ' + t)))); return; }
   if (!await confirmar('Se van a registrar ' + listas.length + ' compra(s):\n' + listas.map(x => '• ' + x.nom + ' (' + x.d.lineas.length + ' productos)').join('\n') + (revisar.length ? '\n\nSe quedan para revisar a mano:\n' + revisar.map(t => '• ' + t).join('\n') : '') + '\n\n¿Seguir?')) return;
   let ok = 0; const fallos = [];
-  for (const x of listas) { try { await fcRegistrarCompraDirecta(x.f, x.f.proveedor_id, String(x.f.fecha_factura || x.f.recibido_en || hoy()).slice(0, 10), x.d.lineas, String(x.f.nombre || '').replace(/\.[A-Za-z0-9]{2,4}$/, '').slice(0, 60)); ok++; } catch (e) { fallos.push(x.nom + ': ' + msgErr(e)); } }
+  for (const x of listas) { try { await fcRegistrarCompraDirecta(x.f, x.f.proveedor_id, String(x.f.fecha_factura || x.f.recibido_en || hoy()).slice(0, 10), x.d.lineas, await fcNumDoc(x.f, x.d)); ok++; } catch (e) { fallos.push(x.nom + ': ' + msgErr(e)); } }
   toast('✅ ' + ok + ' compra(s) registrada(s)' + (fallos.length ? ' · ' + fallos.length + ' con error' : '') + (revisar.length ? ' · ' + revisar.length + ' para revisar a mano' : ''), fallos.length ? 'err' : 'ok');
   if (fallos.length) hoja('Algunas no se han registrado', h('div', {}, ...fallos.map(t => h('div', { class: 'sub', style: 'padding:4px 0' }, '• ' + t))));
   if (alTerminar) alTerminar();
