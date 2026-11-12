@@ -4563,7 +4563,7 @@ function sifHtml(d) {
     d.I.map(i => '<tr><td style="padding:2px 6px">' + num(i.tipo_iva) + ' %</td><td style="text-align:right;padding:2px 6px">' + eur(i.base) + '</td><td style="text-align:right;padding:2px 6px">' + eur(i.cuota_iva) + '</td>' + (re ? '<td style="text-align:right;padding:2px 6px">' + num(i.tipo_re) + ' %: ' + eur(i.cuota_re) + '</td>' : '') + '<td style="text-align:right;padding:2px 6px">' + eur(i.total) + '</td></tr>').join('') +
     '<tr style="border-top:1.5px solid #111"><td style="padding:3px 6px"><b>Totales</b></td><td style="text-align:right;padding:3px 6px"><b>' + eur(f.base) + '</b></td><td style="text-align:right;padding:3px 6px"><b>' + eur(f.cuota_iva) + '</b></td>' + (re ? '<td style="text-align:right;padding:3px 6px"><b>' + eur(f.cuota_re) + '</b></td>' : '') + '<td></td></tr></tbody></table>' +
     '<div style="text-align:right;font-size:18px;font-weight:900;margin-top:6px">TOTAL FACTURA: ' + eur(f.total) + ' €</div>' +
-    '<div style="margin-top:8px"><b>Forma de pago:</b> ' + esc(SIF_FORMA_TXT[f.forma_pago] || f.forma_pago) + ' · <b>Vencimiento:</b> ' + esc(sifVence(f)) + '</div>' +
+    '<div style="margin-top:8px"><b>Forma de pago:</b> ' + esc(SIF_FORMA_TXT[f.forma_pago] || f.forma_pago) + (rect ? '' : ' · <b>Vencimiento:</b> ' + esc(sifVence(f))) + '</div>' +
     (f.notas ? '<div><b>Observaciones:</b> ' + esc(f.notas) + '</div>' : '') +
     '<div style="font-size:10px;color:#6b7280;margin-top:10px">' + esc(e.razon_social) + ' · NIF ' + esc(e.nif) + ' · ' + esc([e.direccion, e.codigo_postal, e.localidad].filter(Boolean).join(' ')) + '. ' + esc(e.registro_mercantil || '') + '. La cuota de IVA de cada producto es orientativa; la que vale es la del resumen por tipo de IVA.</div>' +
     (f.prueba ? '<div style="color:#b91c1c;font-weight:700;margin-top:6px;text-align:center">Documento de PRUEBA, hecho en la app de pruebas. SIN VALOR FISCAL.</div>' : '') + '</div>';
@@ -4582,7 +4582,7 @@ function sifPdf(d) {
   /* Sello */
   const rs = String(e.razon_social || EMPRESA.nombre); const m = rs.match(/^(\S+)\s+(.*)$/) || [rs, rs, ''];
   doc.caja(M, y, 300, 108, null, '#111827');
-  doc.texto(m[1], M + 6, y + 24, 21, { neg: true }); doc.texto(corta(m[2], 300 - 16 - pdfAncho(m[1], 21, true), 10.5, true), M + 12 + pdfAncho(m[1], 21, true), y + 24, 10.5, { neg: true });
+  const w1 = pdfAncho(m[1], 21, true), hueco = 300 - 18 - w1; let sz2 = 10.5; while (sz2 > 6 && pdfAncho(m[2], sz2, true) > hueco) sz2 -= 0.25; doc.texto(m[1], M + 6, y + 24, 21, { neg: true }); doc.texto(m[2], M + 12 + w1, y + 24, sz2, { neg: true });
   doc.texto(String(e.lema || EMPRESA.lema).toUpperCase(), M + 6, y + 40, 8.5, { neg: true });
   doc.texto('Tels: ' + (e.telefono || ''), M + 6, y + 53, 8.5); doc.texto('Móviles: ' + (e.moviles || ''), M + 6, y + 65, 8.5);
   doc.texto([String(e.direccion || '').replace(/^C\/\s*/i, ''), [e.codigo_postal, e.localidad].filter(Boolean).join(' ')].join(' - ').toUpperCase(), M + 6, y + 77, 8.5);
@@ -4596,7 +4596,7 @@ function sifPdf(d) {
   const lc = [c.nombre + (c.nombre_comercial && c.nombre_comercial !== c.nombre ? ' (' + c.nombre_comercial + ')' : ''), 'NIF ' + (c.nif || ''), c.direccion || '', [c.codigo_postal, c.localidad].filter(Boolean).join(' '), [c.telefono, c.email].filter(Boolean).join(' · ')].filter(Boolean);
   doc.caja(M, y, W - 2 * M, 16 + lc.length * 13, '#f9fafb', '#9ca3af'); doc.texto('CLIENTE', M + 8, y + 11, 7.5, { color: '#6b7280' });
   lc.forEach((t, k) => doc.texto(corta(t, W - 2 * M - 16, 10, k === 0), M + 8, y + 24 + k * 13, 10, { neg: k === 0 })); y += 26 + lc.length * 13;
-  if (rect) { const lm = parte('Motivo: ' + (f.motivo || ''), W - 2 * M - 16, 9.5); doc.caja(M, y, W - 2 * M, 22 + lm.length * 12, '#fffbeb', '#b45309'); doc.texto('Rectifica la factura Nº ' + f.rectifica_codigo + (f.anula ? ' (la deja sin efecto, a cero)' : ' (por diferencias)'), M + 8, y + 14, 10, { neg: true }); lm.forEach((t, k) => doc.texto(t, M + 8, y + 27 + k * 12, 9.5)); y += 32 + lm.length * 12; }
+  if (rect) { const lm = parte('Motivo: ' + (f.motivo || ''), W - 2 * M - 16, 9.5); doc.caja(M, y, W - 2 * M, 22 + lm.length * 12, '#fffbeb', '#b45309'); doc.texto('Rectifica la factura Nº ' + f.rectifica_codigo + (f.anula ? ' (la deja sin efecto, a cero)' : ' (por diferencias)'), M + 8, y + 14, 10, { neg: true }); lm.forEach((t, k) => doc.texto(t, M + 8, y + 27 + k * 12, 9.5)); y += 42 + lm.length * 12; }
   doc.texto('Concepto: ' + f.concepto, M, y, 10, { neg: true }); y += 18;
   cabTabla();
   let alb = null;
@@ -4619,7 +4619,7 @@ function sifPdf(d) {
   const tot = re ? ['Totales', eur(f.base), eur(f.cuota_iva), eur(f.cuota_re), ''] : ['Totales', eur(f.base), eur(f.cuota_iva), ''];
   tot.forEach((t, k) => doc.texto(t, X[k], y, 9.5, { neg: true, align: k ? 'right' : 'left' })); y += 22;
   doc.rect(X[0] - 8, y - 15, W - M - X[0] + 8, 24, '#166534'); doc.texto('TOTAL FACTURA: ' + eur(f.total) + ' €', W - M - 6, y + 2, 13, { neg: true, color: '#ffffff', align: 'right' }); y += 28;
-  doc.texto('Forma de pago: ' + (SIF_FORMA_TXT[f.forma_pago] || f.forma_pago) + ' · Vencimiento: ' + sifVence(f), M, y, 10, { neg: true }); y += 14;
+  doc.texto('Forma de pago: ' + (SIF_FORMA_TXT[f.forma_pago] || f.forma_pago) + (rect ? '' : ' · Vencimiento: ' + sifVence(f)), M, y, 10, { neg: true }); y += 14;
   if (f.notas) parte('Observaciones: ' + f.notas, W - 2 * M, 9).forEach(t => { doc.texto(t, M, y, 9); y += 11; });
   /* Pie en todas las páginas */
   const n = doc.numPaginas();
@@ -4703,8 +4703,8 @@ async function sifNueva(pedidos, alTerminar) {
   const iPlazo = h('input', { type: 'number', min: 0, max: 120, value: plazo || 30, style: 'width:70px', oninput: () => { plazo = Math.max(0, parseInt(iPlazo.value || '0', 10)); pinta(); } });
   function pinta() {
     chipsF.replaceChildren(...SIF_FORMAS.map(([k, t]) => { const no = k === 'efectivo' && !v.efectivo_permitido; return h('button', { class: 'chip' + (forma === k ? ' on' : ''), disabled: no, onclick: () => { forma = k; pinta(); } }, t + (no ? ' 🚫' : '')); }));
-    aviF.replaceChildren(!v.efectivo_permitido ? h('div', { class: 'aviso-card', style: 'border-left:5px solid #b91c1c;font-size:14px' }, '🚫 EFECTIVO no permitido: la factura llega a ' + eur(v.total) + ' € (1.000 € o más). Entre empresas o profesionales no se puede pagar NADA en efectivo, ni una parte (Ley 7/2012, art. 7).') : Number(v.total) >= 800 && forma === 'efectivo' ? h('div', { class: 'aviso-card', style: 'font-size:14px' }, '⚠️ Cerca del límite: si se le suman más compras de la misma operación y llega a 1.000 €, ya no puede pagar nada en efectivo.') : null);
-    chipsV.replaceChildren(h('button', { class: 'chip' + (plazo === 0 ? ' on' : ''), onclick: () => { plazo = 0; pinta(); } }, 'Al contado'), h('button', { class: 'chip' + (plazo > 0 ? ' on' : ''), onclick: () => { plazo = Math.max(1, parseInt(iPlazo.value || '30', 10)); pinta(); } }, 'A plazo'), plazo > 0 ? h('label', { class: 'sub' }, iPlazo, ' días (vence el ' + fechaES(hoyMas(plazo)) + ')') : null);
+    aviF.replaceChildren(...[!v.efectivo_permitido ? h('div', { class: 'aviso-card', style: 'border-left:5px solid #b91c1c;font-size:14px' }, '🚫 EFECTIVO no permitido: la factura llega a ' + eur(v.total) + ' € (1.000 € o más). Entre empresas o profesionales no se puede pagar NADA en efectivo, ni una parte (Ley 7/2012, art. 7).') : Number(v.total) >= 800 && forma === 'efectivo' ? h('div', { class: 'aviso-card', style: 'font-size:14px' }, '⚠️ Cerca del límite: si se le suman más compras de la misma operación y llega a 1.000 €, ya no puede pagar nada en efectivo.') : null].filter(Boolean));
+    chipsV.replaceChildren(h('button', { class: 'chip' + (plazo === 0 ? ' on' : ''), onclick: () => { plazo = 0; pinta(); } }, 'Al contado'), h('button', { class: 'chip' + (plazo > 0 ? ' on' : ''), onclick: () => { plazo = Math.max(1, parseInt(iPlazo.value || '30', 10)); pinta(); } }, 'A plazo'), plazo > 0 ? h('label', { class: 'sub' }, iPlazo, ' días (vence el ' + fechaES(hoyMas(plazo)) + ')') : '');
   }
   const L = v.lineas || [], I = v.iva || [];
   const tabla = h('div', { style: 'overflow-x:auto' }); let alb = null;
@@ -4774,8 +4774,8 @@ function vistaFacturasApp() {
     ents.forEach(x => { if (sel[x.pedido_id] === undefined) sel[x.pedido_id] = true; });
     const totTxt = h('b', {}), bF = h('button', { class: 'guardar small', onclick: e => { e.stopPropagation(); const ps = ents.filter(x => sel[x.pedido_id]).map(x => x.pedido_id); if (!ps.length) { toast('Marca algún albarán.', 'err'); return; } sifNueva(ps, () => { datos = null; emitidas = null; cargar(); }); } }, '🧾 Hacer factura');
     const refresca = () => { const m = ents.filter(x => sel[x.pedido_id]); totTxt.textContent = eur(m.reduce((a, x) => a + x.total, 0)) + ' €'; bF.disabled = !m.length; };
-    const filas = g.items.map(x => { const ch = h('input', { type: 'checkbox', checked: !!sel[x.pedido_id] && x.entregado, disabled: !x.entregado, onchange: () => { sel[x.pedido_id] = ch.checked; refresca(); } });
-      return h('label', { class: 'fila', style: 'gap:8px;padding:6px 0;border-top:1px solid #e5e7eb;align-items:center;' + (x.entregado ? '' : 'opacity:.6') }, ch, h('div', { style: 'flex:1' }, (x.serie || 'F') + ' ' + String(x.numero).padStart(7, '0') + ' · ' + fechaES(x.fecha), x.entregado ? null : h('div', { class: 'sub' }, '🚚 Sin marcar como entregado: no se puede facturar')), h('span', {}, eur(x.total) + ' €')); });
+    const filas = g.items.map(x => { const ch = h('input', { type: 'checkbox', style: 'width:28px;height:28px;flex:none', checked: !!sel[x.pedido_id] && x.entregado, disabled: !x.entregado, onchange: () => { sel[x.pedido_id] = ch.checked; refresca(); } });
+      return h('label', { class: 'fila', style: 'gap:8px;padding:6px 0;border-top:1px solid #e5e7eb;align-items:center;' + (x.entregado ? '' : 'opacity:.6') }, ch, h('div', { style: 'flex:1;min-width:0' }, h('b', {}, 'Albarán ' + (x.serie || 'F') + ' ' + String(x.numero).padStart(7, '0')), h('div', { class: 'sub' }, fechaES(x.fecha)), x.entregado ? null : h('div', { class: 'sub' }, '🚚 Sin marcar como entregado: no se puede facturar')), h('span', { style: 'white-space:nowrap' }, eur(x.total) + ' €')); });
     refresca();
     return h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, nombreCli(c)), h('div', { class: 'sub' }, ents.length + ' entregado(s)' + (sinE.length ? ' · ' + sinE.length + ' sin entregar' : ''))), totTxt),
       falta.length ? botRojo('🧾 Para facturar le falta: ' + falta.join(', ') + ' · completar ›', () => go('cliente', { id: c.id }), 'font-size:14px;min-height:42px;margin-top:6px') : null,

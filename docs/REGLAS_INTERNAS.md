@@ -146,6 +146,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Concepto «Venta de fruta / verdura / patata» y, por producto, base, % IVA, cuota y total; resumen por tipo de IVA.
 - Sello o firma en el PDF. Forma de pago siempre. **Efectivo (Ley 7/2012, art. 7)**: si la operación con una empresa o autónomo es de **1.000 € o más, no se puede pagar NADA en efectivo** (ni una parte); se suman todos los pagos de la misma operación. Corregido el 12/11/2026 (antes decía «máximo 1.000 €», que estaba mal). ⚠️ Que Jorge confirme qué es «una operación» en una factura mensual con varios albaranes.
 - Todas las ventas se facturan; la app no tendrá ventas fuera de facturación.
+- **Cómo factura la app (fase 2, 12/11/2026)**: solo albaranes **entregados**; una factura junta albaranes del **mismo cliente y del mismo mes** (factura recapitulativa); lo «No servido» no se factura; los descuentos del albarán van como línea en negativo. Series: `2027-0001` (ordinarias) y `R2027-0001` (rectificativas); en la base de pruebas `PRUEBA-…` con «SIN VALOR FISCAL». Rectificativa siempre con motivo; «anular entera» deja libres sus albaranes para la factura buena. Efectivo bloqueado si la factura (o la que se rectifica) llega a 1.000 €. La fecha y el número los pone la base de datos.
 - Listados para Jorge (ventas y compras): fecha, nº, nombre, NIF, CP, concepto, base, % IVA, cuota, total; una fila por tipo de IVA.
 
 ## Programa de facturación propio (Verifactu) — desde el 12/11/2026
