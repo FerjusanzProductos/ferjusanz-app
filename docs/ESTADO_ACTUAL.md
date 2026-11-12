@@ -7,7 +7,7 @@ Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial 
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
 | **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v232** ✅ (publicada el 12/11/2026: v228 + arreglos de Preparar → Entregar → Facturar + 🚦 Camino de los pedidos; mismo contenido que pruebas v231) | GitLab `main` |
-| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v231** ✅ (12/11/2026: normal v228 + arreglos de Preparar → Entregar → Facturar + 🚦 Camino de los pedidos, ya publicado como v232 en la normal; Harvey con la función `harvey-v2-pruebas`) | GitLab `main` |
+| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v233** ✅ (12/11/2026: normal v232 + avisos en ROJO de precios/pesos que llevan directo + «atrás» en el portal del cliente, sin publicar; Harvey con la función `harvey-v2-pruebas`) | GitLab `main` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
 La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la publicada: descargar el Worker desde la API de Cloudflare (`/workers/scripts/<nombre>/content/v2`) y buscar ese texto.

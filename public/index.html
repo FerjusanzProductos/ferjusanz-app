@@ -73,6 +73,7 @@ nav.tabs button.on{background:var(--verde-cl);color:var(--verde-osc);border-colo
 .login h1{margin:0;color:var(--verde);font-size:34px}
 .login .sub{margin:0 0 6px}
 .visordoc{position:fixed;inset:0;z-index:80;background:#1f2937;display:flex;flex-direction:column}.visordoc .vcab{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#111827;color:#fff}.visordoc .vcab b{flex:1;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.visordoc .vcab button{min-height:48px;min-width:48px;font-size:18px;margin:0}.visordoc .vcuerpo{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:6px;text-align:center}.visordoc canvas,.visordoc img{max-width:none;background:#fff;margin:0 auto 8px;display:block}
+.falta-rojo{display:block;width:100%;text-align:left;min-height:50px;margin:6px 0;font-size:16px;font-weight:800;background:#dc2626!important;color:#fff!important;border:0;border-radius:12px;padding:10px 12px}.falta-rojo.small{display:inline-block;width:auto;min-height:40px;font-size:14px;margin:6px 0 0;padding:6px 10px}.card.rojo-falta{border-left:7px solid #dc2626!important;background:#fef2f2}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:#fff;width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
 .sheet h2{margin:0;font-size:22px}
@@ -1105,6 +1106,7 @@ function go(view, params, opts) {
 }
 function atras(fallback) { if (NAV.d > 0) history.back(); else if (fallback) fallback(); else go('inicio', {}, { replace: true }); }
 window.addEventListener('popstate', e => {
+  if (window.__PUBLICA) { const f = PUB_ATRAS.pop(); if (f) f(); return; }   /* páginas del cliente: «atrás» cierra lo abierto */
   const vd = document.querySelector('.visordoc');   // el visor de facturas va por encima: «atrás» solo lo cierra a él
   if (vd) { vd.remove(); try { history.pushState(navSnap(NAV.d), ''); } catch (x) { } return; }
   const ov = document.querySelector('.overlay');
@@ -1203,7 +1205,7 @@ async function cargarPedidos(fecha) {
   const key = 'fj_pedidos_' + fecha;
   if (navigator.onLine) {
     const q = cols => sb.from('pedidos').select(cols).eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true);
-    let { data, error } = await q('id,cliente_id,estado,fecha_entrega,notas,preparador_id,repartidor_id,orden_reparto,hash_origen,clientes(codigo,nombre,nombre_comercial,forma_pago,sin_iva,albaran_papel),lineas_pedido(id,estado),entregas(entregado_at)');
+    let { data, error } = await q('id,cliente_id,estado,fecha_entrega,notas,preparador_id,repartidor_id,orden_reparto,hash_origen,clientes(codigo,nombre,nombre_comercial,forma_pago,sin_iva,albaran_papel),lineas_pedido(id,estado,precio,peso_real),entregas(entregado_at)');
     if (error && /sin_iva|albaran_papel/i.test(error.message || '')) ({ data, error } = await q('id,cliente_id,estado,fecha_entrega,notas,preparador_id,repartidor_id,orden_reparto,hash_origen,clientes(codigo,nombre,nombre_comercial,forma_pago),lineas_pedido(id,estado)'));
     if (error && /repartidor_id|orden_reparto|does not exist|schema cache/i.test(error.message || '')) ({ data, error } = await q('id,estado,fecha_entrega,notas,preparador_id,clientes(codigo,nombre,nombre_comercial,forma_pago),lineas_pedido(id,estado)'));
     if (!error) { LS.set(key, data); return { datos: data, cache: false }; }
@@ -1270,7 +1272,9 @@ function pintarLista(cache) {
     }
     const ls = p.lineas_pedido || []; const hechas = ls.filter(l => l.estado !== 'pendiente').length;
     const pct = ls.length ? Math.round(hechas * 100 / ls.length) : 0;
-    kids.push(h('div', { class: 'card tap', onclick: () => go('pedido', { id: p.id }) },
+    const sinPr = ls.some(l => 'precio' in l) ? ls.filter(l => l.precio == null && !noServida(l)).length : 0;
+    const rojo = p.estado === 'terminado' && sinPr > 0;
+    kids.push(h('div', { class: 'card tap' + (rojo ? ' rojo-falta' : ''), onclick: () => go('pedido', { id: p.id }) },
       h('div', { class: 'fila' },
         h('div', {}, h('div', { class: 'nombre ' + claseIva(p.clientes) }, nombreCli(p.clientes)), h('div', { class: 'sub' }, (p.clientes && p.clientes.codigo) || ''), h('div', { style: 'margin:3px 0' }, chipIva(p.clientes, p.cliente_id, actualizarLista)), avisoSinIva(p.clientes),
           (hayReparto || reps.length) ? (repDe(p) ? h('div', { class: 'sub', style: 'font-weight:700;color:#14532d' }, h('span', { style: 'display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;background:' + (repDe(p).color_reparto || '#2f7d4a') }), '🚚 Reparte ' + repDe(p).nombre.split(' ')[0] + (p.orden_reparto ? ' · nº ' + p.orden_reparto : '')) : h('div', { class: 'sub', style: 'color:#b45309' }, '🚚 Sin repartidor')) : null),
@@ -1280,7 +1284,8 @@ function pintarLista(cache) {
           p.clientes && p.clientes.forma_pago === 'contado' ? h('span', { class: 'badge cont' }, 'Contado') : null,
           p.clientes && p.clientes.albaran_papel ? h('div', {}, h('span', { class: 'badge', style: 'background:#dbeafe;color:#1e3a8a;margin-top:4px' }, '📄 Papel')) : null)),
       h('div', { class: 'sub', style: 'margin-top:6px' }, hechas + ' de ' + ls.length + ' líneas'),
-      h('div', { class: 'progreso' }, h('i', { style: 'width:' + pct + '%' }))));
+      h('div', { class: 'progreso' }, h('i', { style: 'width:' + pct + '%' })),
+      rojo ? botRojo('💶 Faltan ' + sinPr + (sinPr === 1 ? ' precio' : ' precios') + ' · ponerlos ›', () => abrirPrecios(p.id, () => actualizarLista()), 'margin-top:8px') : null));
   }
   cont.replaceChildren(...kids);
 }
@@ -1324,8 +1329,14 @@ async function actualizarPedido(primera) {
       else { d.pedido.estado = 'en_preparacion'; d.pedido.preparador_id = state.user.id; }
     }
     pintarPedido();
+    if (primera && state.params.pesar) { const sig = (state.lv || []).find(x => !x._hecha); if (sig && !cerradoPed(d.pedido)) setTimeout(() => { if (!hojaViva()) abrirLinea(sig); }, 250); }
   } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, msgErr(e))); }
 }
+/* «Te lleva ahí»: abre el pedido y directamente el primer producto sin pesar */
+const cerradoPed = p => !p || p.estado === 'terminado' || p.estado === 'anulado' || p.estado === 'previsto';
+function irAPesar(id) { document.querySelectorAll('.overlay').forEach(o => o.remove()); state.sheetAbierta = false; go('pedido', { id, pesar: 1 }); }
+/* Botón ROJO de «falta algo», que lleva directamente a arreglarlo */
+const botRojo = (txt, fn, st) => h('button', { type: 'button', class: 'falta-rojo', style: st || '', onclick: e => { e.stopPropagation(); fn(); } }, txt);
 function lineasVista() {
   const d = state.ped; const cola = getCola();
   return d.lineas.map(l => {
@@ -1365,7 +1376,7 @@ function pintarPedido() {
   if (d.cache) kids.push(h('div', { class: 'aviso-card' }, 'Datos guardados en este móvil; se actualizarán al volver la conexión.'));
   { const dd = ls.filter(esDespues); if (dd.length && !cerrado) kids.push(h('div', { class: 'aviso-card' }, '🛒 Se compra después: ' + dd.map(x => x.productos ? x.productos.nombre : '—').join(', ') + '. Puedes terminar el pedido: en el albarán saldrá como «No servido», sin cobrar. Cuando llegue, toca la línea y anota la cantidad.')); }
   if (!ls.length) kids.push(h('p', { class: 'vacio' }, 'Este pedido no tiene líneas.'));
-  if (estado !== 'anulado') { const sinP = ls.filter(l => l.precio == null && !noServida(l)).length; kids.push(h('button', { class: sinP ? '' : 'ghost', style: 'width:100%;min-height:50px;margin-bottom:10px', onclick: () => abrirPrecios(d.pedido.id, () => actualizarPedido()) }, '💶 Poner / cambiar precios' + (sinP ? ' (' + sinP + ' sin precio)' : ''))); }
+  if (estado !== 'anulado') { const sinP = ls.filter(l => l.precio == null && !noServida(l)).length; kids.push(sinP ? botRojo('💶 Faltan ' + sinP + (sinP === 1 ? ' precio' : ' precios') + ' · toca para ponerlos ›', () => abrirPrecios(d.pedido.id, () => actualizarPedido()), 'margin-bottom:10px') : h('button', { class: 'ghost', style: 'width:100%;min-height:50px;margin-bottom:10px', onclick: () => abrirPrecios(d.pedido.id, () => actualizarPedido()) }, '💶 Poner / cambiar precios')); }
   for (const l of ls) {
     const u = udLinea(l);
     kids.push(h('div', {
@@ -1388,8 +1399,9 @@ function pintarPedido() {
     acciones.push(h('div', { class: 'aviso-card' }, 'Primero confírmalo (arriba). Después se prepara como cualquier pedido.'));
   } else if (estado !== 'anulado') {
     const faltan = ls.length - hechas;
-    acciones.push(h('button', { disabled: faltan > 0 || !ls.length, onclick: () => terminarPedido(d.pedido.id) },
-      faltan > 0 ? 'Faltan ' + faltan + ' líneas' : 'Terminar y crear albarán'));
+    const primeraSin = ls.find(l => !l._hecha);
+    acciones.push(faltan > 0 && primeraSin && estado !== 'previsto' ? botRojo((faltan === 1 ? '⚖️ Falta 1' : '⚖️ Faltan ' + faltan) + ' por pesar · ir a «' + (primeraSin.productos ? primeraSin.productos.nombre : 'la primera') + '» ›', () => abrirLinea(primeraSin))
+      : h('button', { disabled: faltan > 0 || !ls.length, onclick: () => terminarPedido(d.pedido.id) }, faltan > 0 ? 'Faltan ' + faltan + ' líneas' : 'Terminar y crear albarán'));
     if (esOficina() && faltan === 0 && ls.length) acciones.push(h('button', { class: 'ghost', onclick: async () => { if (!navigator.onLine) { toast('Necesitas conexión.', 'err'); return; } if (!await confirmarSinPrecios(d.pedido.id)) return; await sincronizar(); abrirTrazabilidad(d.pedido.id, {}); } }, 'Terminar asignando los lotes ahora'));
     if (esOficina()) acciones.push(h('button', { class: 'peligro', onclick: () => anularPedido(d.pedido.id) }, 'Anular pedido'));
   }
@@ -1448,8 +1460,8 @@ async function abrirPrecios(pedidoId, alGuardar) {
   const vivoDet = h('details', { style: 'margin:8px 0' }, h('summary', { style: 'font-weight:700;cursor:pointer;padding:8px 0' }, '📄 Ver el albarán con estos precios'), h('div', {}));
   function actVivo() { if (!vivoDet.open) return; const dv = { pedido: Object.assign({}, ped, descVal()), lineas: R.map(x => Object.assign({}, x.l, { precio: String(x.precio).trim() === '' || isNaN(parseNum(x.precio)) ? null : parseNum(x.precio), unidad_precio: x.up })), albaran: ped.estado === 'terminado' ? { serie: 'F', numero: null, estado: 'cerrado', fecha: ped.fecha_entrega } : null }; vivoDet.lastChild.replaceChildren(cuerpoAlbaranVivo(dv, accVivo)); }
   const accVivo = {
-    precio: () => { const x = R.find(z => String(z.precio).trim() === ''); if (!x) { toast('Todas las líneas ya tienen precio', 'ok'); return; } x.card.style.display = ''; try { x.card.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { } setTimeout(() => { try { x.inp.focus(); } catch (e) { } }, 350); },
-    peso: async () => { const hayCambios = R.some(z => String(z.precio).trim() !== z.precio0s); if (hayCambios && !await confirmar('Tienes precios sin guardar. ¿Salir a pesar y perderlos?\n\n(Cancela, pulsa «Guardar y seguir» y vuelve a tocar.)')) return; cerrar(); go('pedido', { id: ped.id }); } };
+    precio: () => { const x = R.find(z => String(z.precio).trim() === '' && !noServida(z.l)); if (!x) { toast('Todas las líneas ya tienen precio', 'ok'); return; } x.card.style.display = ''; try { x.card.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { } setTimeout(() => { try { x.inp.focus(); } catch (e) { } }, 350); },
+    peso: async () => { const hayCambios = R.some(z => String(z.precio).trim() !== z.precio0s); if (hayCambios && !await confirmar('Tienes precios sin guardar. ¿Salir a pesar y perderlos?\n\n(Cancela, pulsa «Guardar y seguir» y vuelve a tocar.)')) return; cerrar(); irAPesar(ped.id); } };
   vivoDet.addEventListener('toggle', actVivo);
   let cerrar = () => { };
   const cantTxt = l => l.peso_real != null && l.unidad_precio === 'kg' ? num(l.peso_real) + ' kg' : num(l.cantidad_pedida) + ' ' + l.unidad_pedida;
@@ -1640,6 +1652,8 @@ async function abrirPrecios(pedidoId, alGuardar) {
   const barraG = h('div', { class: 'barraG' }, btnGS, btnG);
   cerrar = hoja('💶 Precios · ' + nombreCli(uno(ped.clientes) || {}), h('div', {}, h('p', { class: 'sub' }, fechaES(ped.fecha_entrega) + ' · ' + (ped.estado === 'terminado' ? 'albarán cerrado' : 'albarán sin cerrar') + '. Puedes poner los precios ahora o más tarde: cerrar el albarán no depende de ellos.'),
     totalBox, vivoDet, sinIvaBox, calcBox, descBox, barraM, Object.keys(tarifas).length ? btnLlenar : null, cuerpo, barraG));
+  /* Te lleva directamente al primer producto sin precio */
+  if (R.some(z => String(z.precio).trim() === '' && !noServida(z.l))) setTimeout(() => accVivo.precio(), 450);
 }
 async function vistaPreciosPend() {
   state.view = 'preciosp';
@@ -2238,19 +2252,19 @@ function estadoLineaAlb(l) {
   return { tipo, motivos };
 }
 function cuerpoAlbaranVivo(d, acc) {
-  acc = Object.assign({ precio: () => abrirPrecios(d.pedido.id), peso: () => go('pedido', { id: d.pedido.id }) }, acc || {});
+  acc = Object.assign({ precio: () => abrirPrecios(d.pedido.id), peso: () => irAPesar(d.pedido.id) }, acc || {});
   const ls = d.lineas || []; const est = ls.map(estadoLineaAlb); const nx = est.filter(e => e.tipo === 'fallo').length;
   const sinPeso = ls.filter(l => l.estado !== 'no_disponible' && l.peso_real == null).length, sinPrecio = ls.filter(l => !noServida(l) && (l.precio == null || l.precio === '')).length;
   const despues = ls.filter(esDespues).length, nodisp = ls.filter(l => l.estado === 'no_disponible' && !esDespues(l)).length;
   const faltas = [sinPeso ? sinPeso + ' sin peso' : '', sinPrecio ? sinPrecio + ' sin precio' : '', despues ? despues + ' por comprar' : '', nodisp ? nodisp + ' no disponible' : ''].filter(Boolean);
   const irFalta = () => { if (sinPrecio) acc.precio(); else if (sinPeso) acc.peso(); else toast('Lo que falta se resuelve comprando o preparando el producto en el pedido', 'ok'); };
-  const botFalta = (t, fn) => h('button', { type: 'button', style: 'display:block;width:100%;text-align:left;margin:5px 0;min-height:48px;font-size:16px;font-weight:700;background:#fef9c3;border:1.5px solid #facc15;color:#713f12', onclick: fn }, t);
+  const botFalta = (t, fn) => botRojo(t, fn);
   const prev = Object.assign({}, d, { albaran: d.albaran || { serie: 'F', numero: null, fecha: d.pedido.fecha_entrega, estado: 'borrador' }, traza: {} });
   const wrap = h('div', { class: 'alb-wrap' }); wrap.innerHTML = htmlAlbaran(prev, 'a4', { vivo: true }); const bl = wrap.querySelector('.copia.blanca'); if (bl) wrap.replaceChildren(bl);
   const completo = !faltas.length && !nx && ls.length;
   return h('div', {},
-    h('div', { class: 'ley-alb' }, h('span', { class: 'l-ok' }, '✅ Listo'), h('span', { class: 'l-f', style: 'cursor:pointer', onclick: irFalta }, '🟡 Falta algo: peso, precio o compra ›'), h('span', { class: 'l-x' }, '❌ Fallo: revisar')),
-    h('div', { class: 'card', style: 'margin:6px 0;border-left:6px solid ' + (nx ? '#dc2626' : faltas.length ? '#facc15' : '#16a34a') },
+    h('div', { class: 'ley-alb' }, h('span', { class: 'l-ok' }, '✅ Listo'), h('span', { class: 'l-f', style: 'cursor:pointer', onclick: irFalta }, '🟡 Falta algo ›'), h('span', { class: 'l-x' }, '❌ Fallo: revisar')),
+    h('div', { class: 'card', style: 'margin:6px 0;border-left:6px solid ' + (nx || sinPrecio || sinPeso ? '#dc2626' : faltas.length ? '#facc15' : '#16a34a') },
       completo ? h('div', { class: 'nombre' }, '✅ Albarán completo: ya se puede cerrar') : h('div', {},
         faltas.length ? h('div', {}, h('div', { class: 'nombre' }, '🟡 Falta:'),
           sinPrecio ? botFalta('💶 ' + sinPrecio + ' sin precio · toca para ponerlos ›', acc.precio) : null,
@@ -2265,7 +2279,7 @@ function abrirAlbaranVivo(id) {
   const pintar = async () => {
     try {
       const d = await cargarPedido(id); const f = JSON.stringify([d.lineas, d.pedido.estado, d.albaran && d.albaran.numero]); if (f === firma) return; firma = f;
-      cuerpo.replaceChildren(cuerpoAlbaranVivo(d, { precio: () => { cerrar0(); abrirPrecios(id); }, peso: () => { cerrar0(); go('pedido', { id }); } }), d.albaran ? h('button', { style: 'width:100%;margin:8px 0', onclick: () => { cerrar0(); go('albaran', { id }); } }, '🖨 Abrir el albarán cerrado e imprimir') : null);
+      cuerpo.replaceChildren(cuerpoAlbaranVivo(d, { precio: () => { cerrar0(); abrirPrecios(id); }, peso: () => { cerrar0(); irAPesar(id); } }), d.albaran ? h('button', { style: 'width:100%;margin:8px 0', onclick: () => { cerrar0(); go('albaran', { id }); } }, '🖨 Abrir el albarán cerrado e imprimir') : null);
     } catch (e) { cuerpo.replaceChildren(h('p', { class: 'err' }, msgErr(e))); }
   };
   pintar(); const t = setInterval(() => { if (!document.body.contains(cuerpo)) { clearInterval(t); return; } pintar(); }, 8000);
@@ -2287,8 +2301,8 @@ async function vistaAlbaran() {
       cont.replaceChildren(
         h('div', { class: 'card', style: 'border-left:6px solid #d97706;margin-bottom:10px' }, h('div', { class: 'nombre' }, '📝 Albarán por hacer · vista previa'),
           h('div', { class: 'sub' }, 'Así quedará el albarán de ' + nombreCli(d.pedido.clientes) + '. Todavía no tiene número: lo recibe al terminar el pedido, y entonces ya se puede imprimir.'),
-          sinPeso ? h('div', { class: 'sub', style: 'color:#b45309' }, '⚠ ' + sinPeso + ' línea(s) sin peso o cantidad real todavía.') : null,
-          nmSin.length ? h('div', { class: 'sub', style: 'color:#b45309' }, '⚠ ' + textoSinPrecio(nmSin) + '.') : null,
+          sinPeso ? botRojo('⚖️ Faltan ' + sinPeso + ' por pesar · toca para ir ›', () => irAPesar(d.pedido.id)) : null,
+          nmSin.length ? botRojo('💶 ' + textoSinPrecio(nmSin) + ' · toca para ponerlos ›', () => abrirPrecios(d.pedido.id, () => vistaAlbaran())) : null,
           anul ? h('div', { class: 'sub' }, 'Este pedido está anulado.') : h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;margin-top:8px' },
             h('button', { class: 'guardar', onclick: () => terminarPedido(d.pedido.id) }, '✅ Terminar pedido y cerrar el albarán'),
             h('button', { class: 'ghost', onclick: () => abrirPrecios(d.pedido.id, () => vistaAlbaran()) }, '💶 Poner precios'),
@@ -2319,7 +2333,7 @@ async function vistaAlbaran() {
     const nmSin = nombresSinPrecio(d.lineas);
     cont.replaceChildren(
       ...(avisoIva ? [avisoIva] : []),
-      ...(nmSin.length ? [h('div', { class: 'aviso-card', style: 'margin-bottom:10px' }, '⚠ ' + textoSinPrecio(nmSin) + '. El albarán se imprime con esas casillas de precio vacías.')] : []),
+      ...(nmSin.length ? [botRojo('💶 ' + textoSinPrecio(nmSin) + ' · toca para ponerlos ›', () => abrirPrecios(d.pedido.id, () => vistaAlbaran()), 'margin-bottom:10px')] : []),
       cobroBox,
       d.pedido.estado === 'terminado' ? h('button', { class: 'ghost', style: 'width:100%;margin-bottom:10px;min-height:48px', onclick: () => abrirVentaRuta(d) }, '➕ Venta en ruta (el cliente se lleva algo más)') : null,
       cajaFirma(d),
@@ -2331,7 +2345,7 @@ async function vistaAlbaran() {
       cajaIncidenciasAlb(d),
       cajaTraza(d),
       gananciaBox,
-      (() => { const sinP = d.lineas.filter(l => l.precio == null && !noServida(l)).length; return d.pedido.estado === 'anulado' ? null : h('button', { class: sinP ? '' : 'ghost', style: 'width:100%;margin-bottom:10px;min-height:48px', onclick: () => abrirPrecios(d.pedido.id, () => vistaAlbaran()) }, '💶 Poner / cambiar precios' + (sinP ? ' (' + sinP + ' sin precio)' : '')); })(),
+      (() => { const sinP = d.lineas.filter(l => l.precio == null && !noServida(l)).length; return d.pedido.estado === 'anulado' || sinP ? null : h('button', { class: 'ghost', style: 'width:100%;margin-bottom:10px;min-height:48px', onclick: () => abrirPrecios(d.pedido.id, () => vistaAlbaran()) }, '💶 Poner / cambiar precios' + (sinP ? ' (' + sinP + ' sin precio)' : '')); })(),
       (() => { const cli = uno(d.pedido.clientes) || {}; const contado = cli.forma_pago === 'contado';
         const copiaBtn = (cls, titulo, expl, rec) => h('button', { class: 'copia-btn ' + cls + (rec ? ' rec' : ''), onclick: () => { const el = wrap.querySelector('.copia.' + cls); if (el) imprimir(el.outerHTML); } },
           h('span', { class: 'ct' }, '🖨 Imprimir ' + titulo + (rec ? '  ✔ la que toca a este cliente' : '')), h('span', { class: 'ce' }, expl));
@@ -2587,7 +2601,7 @@ async function vistaPaginasClientes() {
     h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' },
       h('button', { class: 'small', onclick: async () => { try { const u = urlPortal(await tok(c)); hojaQrEnlace('📱 Página de ' + nombreCli(c), u, 'Es privada: solo enseña los albaranes de este cliente. Si la cámara no lo lee, copia el enlace.', () => { let t = String(c.telefono || '').replace(/\D/g, ''); if (t.length === 9) t = '34' + t; window.open('https://wa.me/' + t + '?text=' + encodeURIComponent('Hola, esta es tu página privada de ' + EMPRESA.nombre + ': aquí verás todos tus albaranes, siempre actualizados. Guárdala en favoritos: ' + u), '_blank'); }); } catch (e) { err(e); } } }, '📱 QR y enlace'),
       h('button', { class: 'small ghost', onclick: async () => { try { await navigator.clipboard.writeText(urlPortal(await tok(c))); toast('Enlace copiado', 'ok'); } catch (e) { err(e); } } }, '🔗 Copiar'),
-      h('button', { class: 'small ghost', onclick: async () => { try { window.open(urlPortal(await tok(c)), '_blank'); } catch (e) { err(e); } } }, '👁 Ver como cliente'),
+      h('button', { class: 'small ghost', onclick: async () => { try { verComoCliente(urlPortal(await tok(c))); } catch (e) { err(e); } } }, '👁 Ver como cliente'),
       esOficina() ? h('button', { class: 'small ghost', style: 'color:#b91c1c', onclick: async () => { if (!await confirmar('El enlace de «' + nombreCli(c) + '» dejará de funcionar y se creará uno nuevo (habrá que dárselo otra vez). ¿Seguir?')) return; try { await tok(c, true); toast('Enlace anulado. Ya hay uno nuevo.', 'ok'); } catch (e) { err(e); } } }, '🔒 Anular') : null));
   const pinta = () => { const t = sinTilde(q.value.trim()); const f = cls.filter(c => !t || sinTilde([c.nombre, c.nombre_comercial, c.codigo, c.localidad].join(' ')).includes(t)); lista.replaceChildren(...(f.length ? f.slice(0, 60).map(fila) : [h('p', { class: 'vacio' }, 'Ningún cliente con ese nombre.')]), ...(f.length > 60 ? [h('p', { class: 'sub' }, 'Hay más: escribe más letras para afinar.')] : [])); };
   q.addEventListener('input', pinta); pinta();
@@ -2789,7 +2803,7 @@ async function vistaPortalCliente(tok) {
         pubCajaContacto(tok, nombreCli(cli)), pubPie()].filter(Boolean));
     } catch (e) { caja.replaceChildren(pubCabecera(), h('h2', {}, 'No se pudo abrir'), h('p', {}, isNetErr(e) ? 'Comprueba tu conexión a internet y vuelve a abrir el enlace.' : msgErr(e))); }
   };
-  const detalle = a => { caja.replaceChildren(pubCabecera(), h('button', { class: 'ghost small', style: 'margin-top:10px', onclick: lista }, '← Todos mis albaranes'),
+  const detalle = a => { pubPaso(lista); caja.replaceChildren(pubCabecera(), h('button', { class: 'ghost', style: 'margin-top:10px;width:100%;min-height:52px;font-size:17px;font-weight:700', onclick: () => pubVolver(lista) }, '← Todos mis albaranes'),
     ...pubAlbaranNodos(a, async () => { const r = await sb.rpc('portal_albaran', { p_token: tok, p_numero: a.numero }); return r.data && r.data.ok ? r.data : a; }), pubPie()); window.scrollTo(0, 0); };
   lista();
 }
@@ -4325,7 +4339,7 @@ function vistaPrefacturas() {
       const t = totalesFact(x), al = albDe(x), fa = fact[x.id];
       const ch = h('input', { type: 'checkbox', checked: !!sel[x.id] && !fa, disabled: !!fa, onchange: () => { sel[x.id] = ch.checked; refresca(); } });
       return h('label', { class: 'fila', style: 'gap:8px;padding:6px 0;border-top:1px solid #e5e7eb;align-items:center;' + (fa ? 'opacity:.6' : '') }, ch,
-        h('div', { style: 'flex:1' }, h('div', {}, (al.serie || 'F') + ' ' + al.numero + ' · ' + fechaES(x.fecha_entrega)), fa ? h('div', { class: 'sub' }, '✔ Facturado en ' + fa.numero_factura) : null, t.sinPrecio ? h('div', { class: 'sub', style: 'color:#b45309' }, '⚠ ' + t.sinPrecio + ' línea(s) sin precio o sin peso') : null),
+        h('div', { style: 'flex:1' }, h('div', {}, (al.serie || 'F') + ' ' + al.numero + ' · ' + fechaES(x.fecha_entrega)), fa ? h('div', { class: 'sub' }, '✔ Facturado en ' + fa.numero_factura) : null, t.sinPrecio ? botRojo('💶 ' + t.sinPrecio + ' sin precio o sin peso · ponerlos ›', () => abrirPrecios(x.id, () => cargar()), 'font-size:14px;min-height:42px') : null),
         h('b', {}, eur(t.total) + ' €'));
     });
     if (verFact && ids.length !== c.items.length) filas.push(h('button', { class: 'ghost small', onclick: async e => { e.stopPropagation(); if (!await confirmar('¿Quitar la marca de facturado de los albaranes de ' + c.nombre + ' de este periodo? (No cambia nada en Golden.)')) return; const r = await sb.rpc('desmarcar_albaranes_facturados', { p_pedidos: c.items.filter(x => fact[x.id]).map(x => x.id) }); if (r.error) { toast(msgErr(r.error), 'err'); return; } toast('Marca quitada', 'ok'); cargar(); } }, 'Quitar marca de facturado'));
@@ -5821,6 +5835,7 @@ function vistaAlbaranes() {
   let datos = [], traza = {}, cache = false, ext = {}, repF = LS.get('fj_alb_rep', 'todos');
   const nomG = id => id ? ((state.gente[id] || {}).nombre || 'Otro') : '';
   const quien = x => { const e = ext[x.pedido_id] || {}; return e.ent || e.rep || null; };
+  const refrescaLuego = debounce(() => { if (state.view === 'albaranes') cargar(); }, 1500);   /* tras poner precios, la lista se pone al día sola */
   async function cargar() {
     cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
     const hasta = hoy(), desde = hoy(new Date(Date.now() - (dias - 1) * 86400000)), key = 'fj_albaranes_' + dias;
@@ -5863,10 +5878,12 @@ function vistaAlbaranes() {
       if (x.fecha_entrega !== dia) { dia = x.fecha_entrega; kids.push(h('div', { class: 'grupo' }, fechaES(dia) + ' · ' + lista.filter(y => y.fecha_entrega === dia).length + ' albaranes')); }
       const t = traza[x.pedido_id] || {}; const anul = t.estado === 'anulado';
       const pagado = !x._sinImporte && !sinPr[x.pedido_id] && Number(x.pendiente) <= 0.009;
-      kids.push(h('div', { class: 'card tap fila', style: anul ? 'opacity:.55' : '', onclick: () => go('albaran', { id: x.pedido_id }) },
+      const faltaPr = !anul && (x._sinImporte || sinPr[x.pedido_id]);
+      kids.push(h('div', { class: 'card tap' + (faltaPr ? ' rojo-falta' : ''), style: anul ? 'opacity:.55' : '', onclick: () => go('albaran', { id: x.pedido_id }) }, h('div', { class: 'fila' },
         h('div', {}, h('div', { class: 'nombre' }, (x.serie || 'F') + ' ' + x.numero_albaran + ' · ' + (x.cliente_nombre || '')),
           h('div', { class: 'sub' }, [quien(x) ? '🚚 ' + nomG(quien(x)) : '🚚 sin repartidor', (ext[x.pedido_id] || {}).portal ? '🌐 en el portal' : '🌐 sin publicar', (ext[x.pedido_id] || {}).entNota && ext[x.pedido_id].entNota !== 'En mano' ? '📦 ' + ext[x.pedido_id].entNota : null, (ext[x.pedido_id] || {}).firma ? '✍ firmado' + ((ext[x.pedido_id] || {}).firmaNom ? ' (' + ext[x.pedido_id].firmaNom + ')' : '') : '✍ sin firma', ((ext[x.pedido_id] || {}).inc || []).length ? '⚠ ' + ext[x.pedido_id].inc.length + ' incidencia(s)' : null, sinPr[x.pedido_id] ? '⚠ ' + sinPr[x.pedido_id] + ' sin precio' : null, anul ? 'ANULADO' : x._sinImporte ? '💶 sin precios: importe por poner' : (pagado ? '✔ Cobrado' : 'Pendiente de cobro ' + eur(Math.max(0, Number(x.pendiente) || 0)) + (sinPr[x.pedido_id] ? ' (de momento)' : '')), esOficina() ? (t.traza_estado === 'confirmada' ? '✔ trazabilidad' : t.traza_estado === 'sin_trazabilidad' ? 'sin trazabilidad' : '⚠ trazabilidad pendiente') : null].filter(Boolean).join(' · '))),
-        h('b', { style: 'font-size:18px' + (x._sinImporte ? ';color:#b45309' : '') }, x._sinImporte ? '— €' : eur(x.total))));
+        h('b', { style: 'font-size:18px' + (x._sinImporte ? ';color:#b91c1c' : '') }, x._sinImporte ? '— €' : eur(x.total))),
+        faltaPr ? botRojo('💶 ' + (sinPr[x.pedido_id] ? 'Faltan ' + sinPr[x.pedido_id] + (sinPr[x.pedido_id] === 1 ? ' precio' : ' precios') : 'Sin precios') + ' · ponerlos ›', () => abrirPrecios(x.pedido_id, refrescaLuego), 'margin-top:8px') : null));
     });
     return kids;
   }
@@ -5897,7 +5914,8 @@ function vistaAlbaranes() {
       if (p.fecha_entrega !== dia) { dia = p.fecha_entrega; kids.push(h('div', { class: 'grupo' }, fechaES(dia) + ' · ' + lista.filter(y => y.fecha_entrega === dia).length + ' por hacer')); }
       const ls = (p.lineas_pedido || []).filter(l => !noServida(l)); const sp = ls.filter(l => l.peso_real == null).length, sc = ls.filter(l => l.precio == null).length;
       kids.push(h('div', { class: 'card tap fila', style: 'border-left:6px solid #d97706', onclick: () => go('albaran', { id: p.id }) },
-        h('div', {}, h('div', { class: 'nombre' }, nombreCli(uno(p.clientes))), h('div', { class: 'sub' }, [p.estado === 'pendiente' ? 'Por preparar' : 'En preparación', sp ? sp + ' sin peso' : '', sc ? sc + ' sin precio' : ''].filter(Boolean).join(' · '))),
+        h('div', {}, h('div', { class: 'nombre' }, nombreCli(uno(p.clientes))), h('div', { class: 'sub' }, p.estado === 'pendiente' ? 'Por preparar' : 'En preparación'),
+          sp ? botRojo('⚖️ ' + sp + ' sin pesar ›', () => irAPesar(p.id), '') : null, sc ? botRojo('💶 ' + sc + ' sin precio ›', () => abrirPrecios(p.id, refrescaLuego), '') : null),
         h('span', { class: 'badge cont' }, 'Por hacer')));
     });
     return kids;
@@ -6543,12 +6561,30 @@ const totalPendiente = () => getCola().length + getColaC().length + getColaF().l
 const TIPOS_INC = { queja: 'Queja de un cliente', calidad: 'Producto en mal estado', devolucion: 'Devolución', merma: 'Merma / se estropeó', falta: 'Faltó género', otra: 'Otra' };
 const quienEs = id => (state.gente[id] && state.gente[id].nombre) || '';
 
+/* Páginas del cliente (portal y enlace de un albarán): cada cosa que se abre deja un paso en el historial,
+   para que el botón «atrás» del móvil vuelva a lo anterior en vez de salir de la página */
+const PUB_ATRAS = [];
+function pubPaso(alVolver) { try { history.pushState({ pub: PUB_ATRAS.length + 1 }, ''); PUB_ATRAS.push(alVolver); return true; } catch (e) { return false; } }
+function pubVolver(sinHistorial) { if (PUB_ATRAS.length && history.state && history.state.pub) history.back(); else if (sinHistorial) sinHistorial(); }
 function hoja(titulo, contenido) {
-  state.sheetAbierta = true;
-  const cerrar = () => { ov.remove(); state.sheetAbierta = false; };
+  state.sheetAbierta = true; let fuera = false;
+  const quitar = () => { if (fuera) return; fuera = true; ov.remove(); state.sheetAbierta = false; };
+  const pub = !!window.__PUBLICA && pubPaso(quitar);
+  const cerrar = () => { if (pub && !fuera) pubVolver(quitar); else quitar(); };
   const ov = h('div', { class: 'overlay', onclick: e => { if (e.target === ov) cerrar(); } },
-    h('div', { class: 'sheet', style: 'max-height:88vh;overflow-y:auto' }, h('h2', {}, titulo), contenido, h('button', { class: 'ghost', onclick: cerrar }, 'Cerrar')));
+    h('div', { class: 'sheet', style: 'max-height:88vh;overflow-y:auto' }, h('h2', {}, titulo), contenido, h('button', { class: 'ghost', style: pub ? 'width:100%;min-height:52px;font-size:17px' : '', onclick: cerrar }, pub ? '← Volver' : 'Cerrar')));
   document.body.append(ov); return cerrar;
+}
+/* «👁 Ver como cliente» dentro de la app, con un botón grande para volver (antes se abría la página del cliente y no había forma de regresar) */
+function verComoCliente(url) {
+  const cerrar = () => { ov.remove(); state.sheetAbierta = false; };
+  const ov = h('div', { class: 'overlay', style: 'align-items:stretch;background:#fff;z-index:30' },
+    h('div', { style: 'display:flex;flex-direction:column;width:100%;height:100%;padding-top:env(safe-area-inset-top)' },
+      h('div', { style: 'display:flex;gap:10px;align-items:center;padding:8px 10px;background:#166534;color:#fff' },
+        h('button', { style: 'min-height:50px;font-size:17px;font-weight:800;background:#fff;color:#166534;border-radius:12px;padding:0 14px', onclick: cerrar }, '← Volver a la app'),
+        h('div', { style: 'font-weight:700;font-size:15px' }, '👁 Así lo ve el cliente')),
+      h('iframe', { src: url, title: 'Página del cliente', style: 'flex:1;border:0;width:100%;background:#fff' })));
+  state.sheetAbierta = true; document.body.append(ov);
 }
 async function confirmar(msg) { return window.confirm(msg); }
 
@@ -6678,7 +6714,8 @@ async function entregaPasoAPaso(id, alTerminar) {
   let faltanPr = [];
   /* Sin todos los precios el total no es el de verdad: se dice claro en vez de enseñar un importe vacío o a medias */
   const txtPend = t => faltanPr.length ? (t != null ? eur(t) + ' € de momento (faltan precios: el total subirá)' : 'el importe, cuando se pongan los precios') : eur(t) + ' €';
-  const avisoPrecios = () => faltanPr.length ? h('div', { class: 'ent-caja', style: 'border:2px solid #d97706;background:#fffbeb' }, h('b', {}, '💶 ' + textoSinPrecio(faltanPr) + '.'), h('div', { class: 'sub' }, (total == null ? 'Todavía no se sabe el total' : 'El total de abajo no está completo') + '. La oficina pondrá los precios; lo que no se cobre ahora queda pendiente.')) : null;
+  const avisoPrecios = () => faltanPr.length ? h('div', { class: 'ent-caja', style: 'border:2px solid #dc2626;background:#fef2f2' }, h('b', {}, '💶 ' + textoSinPrecio(faltanPr) + '.'), h('div', { class: 'sub' }, (total == null ? 'Todavía no se sabe el total' : 'El total de abajo no está completo') + '. Ponlos ahora o la oficina los pondrá después; lo que no se cobre ahora queda pendiente.'),
+    botRojo('💶 Poner los precios ahora ›', () => abrirPrecios(id, async () => { await cargar(); if (paso === 2) pintar(); }))) : null;
   const albaranGrande = () => { const w = h('div', { class: 'ent-alb' }); w.innerHTML = htmlAlbaran(d, 'a4'); const c = w.querySelector('.copia.' + (contado() ? 'blanca' : 'amarilla')) || w.querySelector('.copia'); if (c) w.replaceChildren(c); return w; };
   function pintar() {
     pasos.replaceChildren(...[1, 2, 3].map(n => h('div', { class: 'ent-paso' + (n <= paso ? ' on' : '') })));
