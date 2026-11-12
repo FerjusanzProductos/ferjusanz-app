@@ -1998,7 +1998,7 @@ function abrirAnadirProducto(d) {
     } }, 'Añadir al pedido')));
 }
 /* Venta en ruta: producto que se deja al cliente sin estar en el pedido; se añade al pedido y al albarán */
-function abrirVentaRuta(d) {
+function abrirVentaRuta(d, alTerminar) {   /* alTerminar: lo usa el Modo reparto para volver a su pantalla */
   let prod = null, cerrar; const ped = d.pedido; const cli = uno(ped.clientes);
   const res = h('div', {}), selP = h('div', {});
   const cant = h('input', { inputmode: 'decimal', placeholder: 'Cantidad' }), uni = h('select', {}, UNIDADES.map(u => h('option', { value: u }, u)));
@@ -2023,7 +2023,7 @@ function abrirVentaRuta(d) {
       ev.target.disabled = true;
       const r = await sb.rpc('anadir_venta_ruta', { p_pedido: ped.id, p_producto: prod.id, p_cantidad: q, p_unidad: uni.value, p_precio: pr, p_unidad_precio: cobro.value, p_nota: nota.value.trim() || null });
       if (r.error) { ev.target.disabled = false; toast(msgErr(r.error), 'err'); return; }
-      cerrar(); toast('Añadido al pedido y al albarán', 'ok'); state.sheetAbierta = false; if (state.view === 'albaran') vistaAlbaran(); else actualizarPedido(false);
+      cerrar(); toast('Añadido al pedido y al albarán', 'ok'); state.sheetAbierta = false; if (alTerminar) alTerminar(); else if (state.view === 'albaran') vistaAlbaran(); else actualizarPedido(false);
     } }, 'Añadir al pedido y al albarán')));
 }
 /* Al terminar de anotar pesos: todo hecho → confirmar; quedan líneas → avisar cuáles */
@@ -7201,7 +7201,17 @@ function vistaModoReparto() {
     out.push(h('div', { class: 'mr-2col', style: 'margin-top:10px' },
       i > 0 ? B('ghost mr-peq', '‹ Anterior', () => irA(gs[i - 1].id)) : h('span', {}),
       i < gs.length - 1 ? B('ghost mr-peq', 'Saltar a la siguiente ›', () => irA(gs[i + 1].id)) : h('span', {})));
+    /* ➕ Venta en ruta (Fernando, 12/11/2026: «no suele ocurrir pero pasa»): la de siempre, pequeña y con su explicación */
+    if (g.listo) out.push(h('div', { class: 'mr-caja', style: 'margin-top:14px;background:#f9fafb' },
+      h('div', { style: 'font-weight:800;font-size:17px' }, '➕ Venta en ruta'),
+      h('div', { class: 'sub', style: 'font-size:16px;margin:4px 0 8px' }, 'Solo si este cliente se queda con algo que NO estaba en su pedido (por ejemplo, algo que llevas de más en la furgoneta). Se añade a su pedido y a su albarán con su precio. Necesita cobertura.'),
+      B('ghost', '➕ Añadir venta en ruta', () => ventaRuta(g), 'width:100%;min-height:52px;font-size:17px')));
     return out;
+  }
+  async function ventaRuta(g) {
+    if (!navigator.onLine) { toast('Necesitas cobertura para añadir una venta en ruta', 'err'); return; }
+    const p = g.peds.find(x => x.estado === 'terminado') || g.peds[0];
+    try { const d = await cargarPedido(p.id); abrirVentaRuta(d, () => cargar()); } catch (e) { toast(msgErr(e), 'err'); }
   }
   function confirmarEntrega(g) {
     if (!g.listo) { toast('Todavía se está preparando: no se puede entregar aún', 'err'); return; }
