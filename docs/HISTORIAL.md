@@ -2,6 +2,13 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 12/11/2026
+- **Arreglos de trazabilidad (v221 en PRUEBAS, rama `trazabilidad-arreglos`)**. Revisión pedida por Fernando («haz suposiciones»; la app aún no se usa de verdad). Fallos encontrados y arreglados en la app:
+  1. La propuesta «más antiguo primero» podía proponer un lote **ya agotado** cuando el lote estaba en otra unidad (cajas) que la línea (kg).
+  2. Lo asignado a **pedidos anulados** seguía gastando kilos del lote (salía menos disponible del real) en «Asignar trazabilidad» y en «Lotes».
+  3. «Por cliente» y «Para factura» buscaban las entregas por el **nombre** del cliente (dos clientes con el mismo nombre se mezclaban; si se cambiaba el nombre, desaparecían). Ahora por la ficha.
+  4. El anexo de trazabilidad para factura ponía siempre **«kg»**, aunque fueran cajas o bandejas. Ahora la unidad real (también en los CSV).
+  5. Los avisos «albarán sin lote» contaban líneas a 0 (sin género) y en el libro salía el peso en vez de la cantidad en las líneas por unidad.
+  Preparado en la base de datos, **SIN APLICAR** (`supabase/migrations/20261112b_trazabilidad_arreglos.sql`): cambiar el peso de una línea con un lote ya no deja los kilos viejos en el lote (y reabre la trazabilidad si estaba cerrada); cambiar la cantidad de una línea por unidades también la reabre; pedidos anulados fuera del disponible y del buscador de lotes; compras sin proveedor ya no desaparecen del buscador; la vista lleva la ficha del cliente y la unidad.
 - **v220 publicada en la app normal** («Autorizo publicar», 12/11/2026): v218 + Harvey confirma o quita pedidos previstos (atajo «📅 Previstos de mañana»). Mismo código subido a `harvey-v2`. Pruebas sigue en v219 con lo mismo.
 - **Harvey v2, acción 2: confirmar o quitar pedidos previstos (v219 en PRUEBAS)**. Herramientas nuevas `previstos_dia` (qué previstos hay un día, por defecto mañana, con productos) y `decidir_previstos` (✅ confirmar / ❌ quitar, usando la misma función `confirmar_previsto` que los botones de la app). Mismo sistema de confirmación con [CONFIRMAR] y botones. Atajo «📅 Previstos de mañana» en Harvey. Sin cambios en la base de datos. **Nuevo:** la app de PRUEBAS usa su propia función `harvey-v2-pruebas`, así los cambios de Harvey se prueban sin tocar la normal; al publicar se sube el mismo código a `harvey-v2`. `APP_VERSION` estaba otra vez desfasado (v216): igualado a `sw.js`.
 - **v218 publicada en la app normal** («Autorizo publicar»): sin pedido mínimo y reparto en Madrid y Segovia en `/nuevos-clientes`. Pruebas queda en v217 con lo mismo.

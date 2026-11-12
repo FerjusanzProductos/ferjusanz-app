@@ -569,7 +569,7 @@ function crearSbPractica(){
     const cob=DB.cobros.filter(c=>c.pedido_id===p.id).reduce((a,c)=>a+c.importe,0);const al=DB.albaranes.find(a=>a.pedido_id===p.id);const total=Math.round((base+iva+rec)*100)/100;
     return {pedido_id:p.id,cliente_id:p.cliente_id,fecha_entrega:p.fecha_entrega,estado:p.estado,cliente_codigo:cl.codigo,cliente_nombre:cl.nombre_comercial||cl.nombre,forma_pago:cl.forma_pago,serie:al&&al.serie,numero_albaran:al&&al.numero,base,iva,recargo:rec,total,cobrado:cob,pendiente:Math.round((total-cob)*100)/100};}).filter(Boolean);
   const viewTraza=()=>DB.asignaciones_lote.map(a=>{const lo=DB.lotes.find(l=>l.id===a.lote_id),co=DB.compras.find(c=>c.id===lo.compra_id),pv=DB.proveedores.find(p=>p.id===co.proveedor_id),pr=DB.productos.find(p=>p.id===lo.producto_id),l=DB.lineas_pedido.find(x=>x.id===a.linea_id),p=DB.pedidos.find(x=>x.id===l.pedido_id),cl=DB.clientes.find(c=>c.id===p.cliente_id),al=DB.albaranes.find(x=>x.pedido_id===p.id);
-    return {lote_id:lo.id,codigo_lote:lo.codigo_lote,producto:pr.nombre,origen:lo.origen,proveedor:pv.nombre,fecha_compra:co.fecha,cantidad_entregada:a.cantidad,fecha_entrega:p.fecha_entrega,cliente:cl.nombre,serie:al&&al.serie,numero_albaran:al&&al.numero};});
+    return {lote_id:lo.id,codigo_lote:lo.codigo_lote,producto:pr.nombre,origen:lo.origen,proveedor:pv.nombre,fecha_compra:co.fecha,cantidad_entregada:a.cantidad,fecha_entrega:p.fecha_entrega,cliente:cl.nombre,cliente_id:cl.id,unidad:l.unidad_precio==='kg'?'kg':(l.unidad_pedida||'ud'),serie:al&&al.serie,numero_albaran:al&&al.numero};}).filter(Boolean);
   const net=()=>{ if(!navigator.onLine){const e=new TypeError('Failed to fetch');throw e;} };
   const join=(t,r)=>{
     if(t==='pedidos'){return Object.assign({},r,{entregas:DB.entregas.find(e=>e.pedido_id===r.id)||null,clientes:DB.clientes.find(c=>c.id===r.cliente_id),albaranes:DB.albaranes.filter(a=>a.pedido_id===r.id),lineas_pedido:DB.lineas_pedido.filter(l=>l.pedido_id===r.id).map(l=>Object.assign({},l,{productos:DB.productos.find(p=>p.id===l.producto_id),carga_lineas:DB.carga_lineas.find(c=>c.linea_id===l.id)||null,asignaciones_lote:DB.asignaciones_lote.filter(a=>a.linea_id===l.id)}))});}
@@ -2044,6 +2044,8 @@ async function terminarPedido(id) {
   go('albaran', { id });
 }
 /* =====================  ASIGNAR TRAZABILIDAD (al terminar el albarán)  ===================== */
+/* Lo asignado a un pedido anulado no ha salido del almacén: no gasta kilos del lote */
+function asigAnulada(a) { const l = uno(a && a.lineas_pedido); const p = l ? uno(l.pedidos) : null; return !!(p && p.estado === 'anulado'); }
 async function abrirTrazabilidad(pedidoId, opt) {
   opt = opt || {}; const corregir = !!opt.corregir; const oficina = esOficina();
   const r = await sb.from('lineas_pedido').select('id,estado,peso_real,cantidad_pedida,unidad_pedida,unidad_precio,producto_id,productos(codigo,nombre,unidad_venta),asignaciones_lote(lote_id,cantidad)').eq('pedido_id', pedidoId);
@@ -2054,11 +2056,11 @@ async function abrirTrazabilidad(pedidoId, opt) {
     .sort((a, b) => (a.prod.nombre || '').localeCompare(b.prod.nombre || '', 'es'));
   const misLineas = new Set(r.data.map(l => l.id));
   const prodIds = [...new Set(lineas.map(l => l.producto_id))];
-  const lr = prodIds.length ? await sb.from('lotes').select('id,producto_id,codigo_lote,origen,cantidad_recibida,unidad,precio_compra,created_at,compras(fecha,numero_documento,proveedores(nombre)),asignaciones_lote(cantidad,linea_id)').in('producto_id', prodIds).neq('archivado', true).order('created_at', { ascending: false }).limit(1000) : { data: [] };
+  const lr = prodIds.length ? await sb.from('lotes').select('id,producto_id,codigo_lote,origen,cantidad_recibida,unidad,precio_compra,created_at,compras(fecha,numero_documento,proveedores(nombre)),asignaciones_lote(cantidad,linea_id,lineas_pedido(pedidos(estado)))').in('producto_id', prodIds).neq('archivado', true).order('created_at', { ascending: false }).limit(1000) : { data: [] };
   if (lr.error) { toast(msgErr(lr.error), 'err'); return; }
   // kilos que ya han salido de cada lote en OTROS pedidos
   const lotes = lr.data.map(lo => { const c = uno(lo.compras) || {}; const pv = c.proveedores ? uno(c.proveedores) : null;
-    const fuera = (lo.asignaciones_lote || []).filter(a => !misLineas.has(a.linea_id)).reduce((t, a) => t + Number(a.cantidad), 0);
+    const fuera = (lo.asignaciones_lote || []).filter(a => !misLineas.has(a.linea_id) && !asigAnulada(a)).reduce((t, a) => t + Number(a.cantidad), 0);
     return { id: lo.id, producto_id: lo.producto_id, codigo: lo.codigo_lote, origen: lo.origen, rec: Number(lo.cantidad_recibida), unidad: lo.unidad, precio: lo.precio_compra, fecha: c.fecha, creado: lo.created_at, factura: c.numero_documento, proveedor: pv ? pv.nombre : '', disp: Math.round((Number(lo.cantidad_recibida) - fuera) * 1000) / 1000 }; });
   const porProd = {};
   lotes.forEach(lo => (porProd[lo.producto_id] = porProd[lo.producto_id] || []).push(lo));
@@ -2072,9 +2074,9 @@ async function abrirTrazabilidad(pedidoId, opt) {
   const usoOtras = (l, lid) => lineas.reduce((t, x) => t + (x.id !== l.id ? (Number(asig[x.id][lid]) || 0) : 0), 0);
   const libreLote = (l, lo) => (lo.unidad === l.uni) ? Math.max(0, Math.round((lo.disp - usoOtras(l, lo.id)) * 1000) / 1000) : Infinity;
   /* Del más antiguo al más nuevo: llena el primero y pasa al siguiente si no llega */
-  const fifo = l => { const m = {}; let falta = l.need; for (const lo of (porProd[l.producto_id] || [])) { if (falta <= 0.0005) break; const lb = libreLote(l, lo); if (lb <= 0.0005 && lo.disp <= 0.0005) continue; if (lb <= 0.0005) continue; const v = Math.round(Math.min(falta, lb) * 1000) / 1000; m[lo.id] = v; falta = Math.round((falta - v) * 1000) / 1000; } return m; };
+  const fifo = l => { const m = {}; let falta = l.need; for (const lo of (porProd[l.producto_id] || [])) { if (falta <= 0.0005) break; const lb = libreLote(l, lo); if (lo.disp <= 0.0005 || lb <= 0.0005) continue; const v = Math.round(Math.min(falta, lb) * 1000) / 1000; m[lo.id] = v; falta = Math.round((falta - v) * 1000) / 1000; } return m; };
   /* A partes iguales entre los lotes que tienen género */
-  const iguales = l => { const ls = (porProd[l.producto_id] || []).filter(lo => libreLote(l, lo) > 0.0005); const m = {}; if (!ls.length) return m; const parte = Math.floor(l.need / ls.length * 1000) / 1000; ls.forEach((lo, i) => { m[lo.id] = i === ls.length - 1 ? Math.round((l.need - parte * (ls.length - 1)) * 1000) / 1000 : parte; }); return m; };
+  const iguales = l => { const ls = (porProd[l.producto_id] || []).filter(lo => lo.disp > 0.0005 && libreLote(l, lo) > 0.0005); const m = {}; if (!ls.length) return m; const parte = Math.floor(l.need / ls.length * 1000) / 1000; ls.forEach((lo, i) => { m[lo.id] = i === ls.length - 1 ? Math.round((l.need - parte * (ls.length - 1)) * 1000) / 1000 : parte; }); return m; };
   lineas.forEach(l => { if (!Object.keys(asig[l.id]).length) { const m = fifo(l); if (Object.keys(m).length) { asig[l.id] = m; propuesta.add(l.id); } } });
   if (opt.keep) lineas.forEach(l => { if (opt.keep[l.id]) { asig[l.id] = Object.assign({}, opt.keep[l.id]); propuesta.delete(l.id); } });
   const usoLote = lid => lineas.reduce((t, l) => t + (Number(asig[l.id][lid]) || 0), 0);
@@ -2139,10 +2141,10 @@ async function abrirTrazabilidad(pedidoId, opt) {
         h('div', { class: 'fila', style: 'gap:6px;margin-top:4px;justify-content:flex-start;align-items:center' }, inp, h('span', { class: 'sub' }, lo.unidad), resto));
     });
     const confirmarProp = h('button', { class: 'small', style: 'display:none', onclick: () => { propuesta.delete(l.id); refrescar(); } }, '✅ Confirmar');
-    const conGenero = (porProd[l.producto_id] || []).filter(lo => libreLote(l, lo) > 0.0005);
+    const conGenero = (porProd[l.producto_id] || []).filter(lo => lo.disp > 0.0005 && libreLote(l, lo) > 0.0005);
     const rapidos = lots.length ? h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:6px 0' },
       h('button', { class: 'small', onclick: () => poner(l, fifo(l), false) }, '⚡ Más antiguo primero'),
-      ...(lots.length > 1 ? lots.filter(lo => libreLote(l, lo) >= l.need - 0.001).map(lo => h('button', { class: 'ghost small', onclick: () => poner(l, { [lo.id]: l.need }, false) }, 'Todo de ' + String(lo.proveedor || 'lote').split(/\s+/).slice(0, 2).join(' ') + (lo.fecha ? ' (' + fechaES(lo.fecha).slice(0, 5) + ')' : ''))) : []),
+      ...(lots.length > 1 ? lots.filter(lo => lo.disp > 0.0005 && libreLote(l, lo) >= l.need - 0.001).map(lo => h('button', { class: 'ghost small', onclick: () => poner(l, { [lo.id]: l.need }, false) }, 'Todo de ' + String(lo.proveedor || 'lote').split(/\s+/).slice(0, 2).join(' ') + (lo.fecha ? ' (' + fechaES(lo.fecha).slice(0, 5) + ')' : ''))) : []),
       conGenero.length > 1 ? h('button', { class: 'ghost small', onclick: () => poner(l, iguales(l), false) }, '⚖️ A partes iguales') : null,
       h('button', { class: 'ghost small', onclick: () => poner(l, {}, false) }, '✕ Vaciar')) : null;
     const detalle = h('div', {}, rapidos,
@@ -3258,7 +3260,7 @@ function guiaProblemas(q) {
   const t = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(w => w.length > 2); if (!t.length) return [];
   return GUIA_PROB.map(x => { const k = sinTilde(x.k + ' ' + x.t).split(/\s+/); let sc = 0; t.forEach(w => { if (k.some(y => y === w || (w.length > 4 && y.startsWith(w.slice(0, 5))) || (w.length > 3 && y.length > 3 && waSimTok(w, y) >= 0.74))) sc += 3; }); return { x, sc }; }).filter(r => r.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 2).map(r => r.x);
 }
-const APP_VERSION = 'ferjusanz-v220';   // igual que CACHE en sw.js (se suben juntas)
+const APP_VERSION = 'ferjusanz-v221';   // igual que CACHE en sw.js (se suben juntas)
 async function actualizarApp() {
   try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } if (window.caches) { const ks = await caches.keys(); for (const k of ks) await caches.delete(k); } } catch (e) { }
   location.reload();
@@ -5725,7 +5727,7 @@ function vistaCompras() {
       const r = datos.filter(l => !t || sinTilde([(l.productos || {}).nombre, l.codigo_lote, l.origen, (uno(l.compras) || {}).proveedores ? uno(uno(l.compras).proveedores).nombre : ''].join(' ')).includes(t));
       lista.replaceChildren(...(r.length ? r.map(l => {
         const c = uno(l.compras) || {}; const pv = c.proveedores ? uno(c.proveedores) : null;
-        const ent = (l.asignaciones_lote || []).reduce((a, x) => a + Number(x.cantidad), 0);
+        const ent = (l.asignaciones_lote || []).filter(x => !asigAnulada(x)).reduce((a, x) => a + Number(x.cantidad), 0);
         return h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, l.productos ? l.productos.nombre : ''),
           h('div', { class: 'sub' }, [l.codigo_lote, pv && pv.nombre, l.origen, c.fecha && fechaES(c.fecha)].filter(Boolean).join(' · '))),
           h('div', { style: 'text-align:right' }, h('b', {}, num(l.cantidad_recibida) + ' ' + l.unidad), h('div', { class: 'sub' }, 'entregado ' + num(ent) + ' · queda ' + num(Math.round((l.cantidad_recibida - ent) * 1000) / 1000)))),
@@ -5735,7 +5737,7 @@ function vistaCompras() {
     }
     try {
       const d = new Date(Date.now() - 60 * 86400000).toISOString();
-      const r = await sb.from('lotes').select('id,codigo_lote,origen,cantidad_recibida,unidad,created_at,productos(codigo,nombre),compras(fecha,numero_documento,proveedores(nombre),documentos_compra(ruta,archivado)),asignaciones_lote(cantidad)').gte('created_at', d).neq('archivado', true).order('created_at', { ascending: false }).limit(150);
+      const r = await sb.from('lotes').select('id,codigo_lote,origen,cantidad_recibida,unidad,created_at,productos(codigo,nombre),compras(fecha,numero_documento,proveedores(nombre),documentos_compra(ruta,archivado)),asignaciones_lote(cantidad,lineas_pedido(pedidos(estado)))').gte('created_at', d).neq('archivado', true).order('created_at', { ascending: false }).limit(150);
       if (r.error) throw r.error; datos = r.data; pintarL();
     } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver los lotes.' : msgErr(e))); }
   }
@@ -6067,8 +6069,12 @@ function vistaTraza() {
   function pintar() { (modo === 'pend' ? pPend : modo === 'lote' ? pLote : modo === 'factura' ? pFactura : modo === 'libro' ? pLibro : pCliente)(); }
   const filasTz = rows => rows.map(r => h('div', { class: 'fila', style: 'padding:5px 0;border-top:1px solid var(--borde)' },
     h('div', {}, h('div', {}, fechaES(r.fecha_entrega) + ' · ' + (r.cliente || r.producto)), h('div', { class: 'sub' }, [r.numero_albaran ? 'Albarán ' + r.serie + ' ' + r.numero_albaran : '', r.codigo_lote, r.proveedor, r.origen].filter(Boolean).join(' · '))),
-    h('b', {}, num(r.cantidad_entregada))));
-  const csvTz = (nombre, rows) => h('button', { class: 'ghost small', style: 'width:100%;margin-bottom:8px', onclick: () => descargarCSV(nombre, [['Fecha entrega', 'Cliente', 'Producto', 'Lote', 'Proveedor', 'Origen', 'Albarán', 'Cantidad']].concat(rows.map(r => [fechaES(r.fecha_entrega), r.cliente, r.producto, r.codigo_lote, r.proveedor, r.origen, r.numero_albaran ? r.serie + ' ' + r.numero_albaran : '', r.cantidad_entregada]))) }, 'Descargar Excel (CSV)');
+    h('b', {}, num(r.cantidad_entregada) + ' ' + uTz(r))));
+  /* Entregas de un cliente: por su ficha (cliente_id), no por el nombre (dos clientes con el mismo nombre se mezclaban). Si Supabase aún no tiene la columna, por nombre. */
+  const trazaCli = async (cli, f) => { let r = await f(sb.from('v_trazabilidad').select('*').eq('cliente_id', cli.id)); if (r.error && /cliente_id/.test(r.error.message || '')) r = await f(sb.from('v_trazabilidad').select('*').eq('cliente', cli.nombre)); return r; };
+  const uTz = r => r.unidad || 'kg';
+  const cantTz = l => Number(l.unidad_precio === 'kg' ? l.peso_real : l.cantidad_pedida) || 0;
+  const csvTz = (nombre, rows) => h('button', { class: 'ghost small', style: 'width:100%;margin-bottom:8px', onclick: () => descargarCSV(nombre, [['Fecha entrega', 'Cliente', 'Producto', 'Lote', 'Proveedor', 'Origen', 'Albarán', 'Cantidad', 'Unidad']].concat(rows.map(r => [fechaES(r.fecha_entrega), r.cliente, r.producto, r.codigo_lote, r.proveedor, r.origen, r.numero_albaran ? r.serie + ' ' + r.numero_albaran : '', r.cantidad_entregada, uTz(r)]))) }, 'Descargar Excel (CSV)');
 
   async function pPend() {
     const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); pPend(); } });
@@ -6170,8 +6176,8 @@ function vistaTraza() {
         });
         /* entregas del periodo sin lote asignado: la trazabilidad está incompleta */
         const d0 = desde || (compras[0] ? compras[0].fecha : hasta); const sinLote = [];
-        try { const r = await sb.from('pedidos').select('id,fecha_entrega,estado,clientes(codigo,nombre,nombre_comercial),albaranes(serie,numero),lineas_pedido(id,estado,peso_real,unidad_precio,productos(nombre),asignaciones_lote(id))').eq('estado', 'terminado').gte('fecha_entrega', d0).lte('fecha_entrega', hasta).limit(1500);
-          (r.data || []).forEach(pe => (pe.lineas_pedido || []).filter(l => ['hecha', 'parcial'].includes(l.estado) && !(l.asignaciones_lote || []).length).forEach(l => { const al = (pe.albaranes || [])[0]; sinLote.push({ fent: pe.fecha_entrega, cli: nombreCli(uno(pe.clientes) || {}), alb: al ? al.serie + ' ' + String(al.numero).padStart(7, '0') : '', prod: (uno(l.productos) || {}).nombre || '', cant: l.peso_real }); })); } catch (e) { }
+        try { const r = await sb.from('pedidos').select('id,fecha_entrega,estado,clientes(codigo,nombre,nombre_comercial),albaranes(serie,numero),lineas_pedido(id,estado,peso_real,cantidad_pedida,unidad_pedida,unidad_precio,productos(nombre),asignaciones_lote(id))').eq('estado', 'terminado').gte('fecha_entrega', d0).lte('fecha_entrega', hasta).limit(1500);
+          (r.data || []).forEach(pe => (pe.lineas_pedido || []).filter(l => ['hecha', 'parcial'].includes(l.estado) && cantTz(l) > 0 && !(l.asignaciones_lote || []).length).forEach(l => { const al = (pe.albaranes || [])[0]; sinLote.push({ fent: pe.fecha_entrega, cli: nombreCli(uno(pe.clientes) || {}), alb: al ? al.serie + ' ' + String(al.numero).padStart(7, '0') : '', prod: (uno(l.productos) || {}).nombre || '', cant: cantTz(l) }); })); } catch (e) { }
         sinLote.sort((a, b) => String(a.fent).localeCompare(String(b.fent)));
         datos = { desde, hasta, filas, sinLote, nLotes: lotes.length, nCompras: compras.length }; pintaRes();
       } catch (e) { res.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
@@ -6248,7 +6254,7 @@ function vistaTraza() {
     }
     async function cargarC() {
       const [y, m] = mes.split('-').map(Number); const a = mes + '-01'; const b = hoy(new Date(y, m, 1));
-      const r = await sb.from('v_trazabilidad').select('*').eq('cliente', cli.nombre).gte('fecha_entrega', a).lt('fecha_entrega', b).order('fecha_entrega', { ascending: true }).limit(500);
+      const r = await trazaCli(cli, q => q.gte('fecha_entrega', a).lt('fecha_entrega', b).order('fecha_entrega', { ascending: true }).limit(500));
       if (r.error) { lista.replaceChildren(h('p', { class: 'err' }, msgErr(r.error))); return; }
       lista.replaceChildren(...(r.data.length ? [csvTz('trazabilidad_' + cli.codigo + '_' + mes + '.csv', r.data), ...filasTz(r.data.map(x => Object.assign({}, x, { cliente: x.producto })))] : [h('p', { class: 'vacio' }, 'Sin entregas con lote en ese mes.')]));
     }
@@ -6267,27 +6273,27 @@ function vistaTraza() {
     }
     async function cargarF() {
       lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
-      const r = await sb.from('v_trazabilidad').select('*').eq('cliente', cli.nombre).gte('fecha_entrega', desde).lt('fecha_entrega', hoy(new Date(new Date(hasta + 'T00:00:00').getTime() + 86400000))).order('fecha_entrega', { ascending: true }).limit(1000);
+      const r = await trazaCli(cli, q => q.gte('fecha_entrega', desde).lt('fecha_entrega', hoy(new Date(new Date(hasta + 'T00:00:00').getTime() + 86400000))).order('fecha_entrega', { ascending: true }).limit(1000));
       if (r.error) { lista.replaceChildren(h('p', { class: 'err' }, msgErr(r.error))); return; }
       const grupos = {}; r.data.forEach(x => { const k = x.numero_albaran ? x.serie + ' ' + String(x.numero_albaran).padStart(7, '0') : 'Sin albarán · ' + x.fecha_entrega; (grupos[k] = grupos[k] || { k, fecha: x.fecha_entrega, filas: [], on: true }).filas.push(x); });
       const gs = Object.values(grupos);
       let sinLote = [];
       try {
-        const pr = await sb.from('pedidos').select('id,fecha_entrega,albaranes(serie,numero),lineas_pedido(id,estado,asignaciones_lote(id))').eq('cliente_id', cli.id).eq('estado', 'terminado').gte('fecha_entrega', desde).lte('fecha_entrega', hasta).limit(500);
-        if (!pr.error && pr.data) sinLote = pr.data.filter(p => (p.lineas_pedido || []).some(l => ['hecha', 'parcial'].includes(l.estado) && !(l.asignaciones_lote || []).length));
+        const pr = await sb.from('pedidos').select('id,fecha_entrega,albaranes(serie,numero),lineas_pedido(id,estado,peso_real,cantidad_pedida,unidad_precio,asignaciones_lote(id))').eq('cliente_id', cli.id).eq('estado', 'terminado').gte('fecha_entrega', desde).lte('fecha_entrega', hasta).limit(500);
+        if (!pr.error && pr.data) sinLote = pr.data.filter(p => (p.lineas_pedido || []).some(l => ['hecha', 'parcial'].includes(l.estado) && cantTz(l) > 0 && !(l.asignaciones_lote || []).length));
       } catch (e) { }
       const avisoSin = sinLote.length ? h('div', { class: 'aviso-card', style: 'border-left:4px solid var(--ambar)' }, '⚠ ' + sinLote.length + (sinLote.length > 1 ? ' albaranes de este cliente en esas fechas tienen' : ' albarán de este cliente en esas fechas tiene') + ' productos SIN lote asignado: ' + sinLote.map(p => { const a = uno(p.albaranes) || {}; return (a.numero ? (a.serie || 'F') + ' ' + a.numero : 'sin albarán') + ' (' + fechaES(p.fecha_entrega) + ')'; }).join(', ') + '. Asigna la trazabilidad antes de facturar (abre el albarán → «Asignar trazabilidad»).') : null;
       if (!gs.length) { lista.replaceChildren(...[avisoSin, h('p', { class: 'vacio' }, 'Sin albaranes con lote en esas fechas.')].filter(Boolean)); return; }
-      const textoG = g => 'Albarán ' + g.k + ' (' + fechaES(g.fecha) + ')\n' + g.filas.map(x => '  - ' + x.producto + ': lote ' + (x.codigo_lote || 'sin código') + (x.origen ? ', origen ' + x.origen : '') + ', ' + num(x.cantidad_entregada) + ' kg').join('\n');
+      const textoG = g => 'Albarán ' + g.k + ' (' + fechaES(g.fecha) + ')\n' + g.filas.map(x => '  - ' + x.producto + ': lote ' + (x.codigo_lote || 'sin código') + (x.origen ? ', origen ' + x.origen : '') + ', ' + num(x.cantidad_entregada) + ' ' + uTz(x)).join('\n');
       const sel = () => gs.filter(g => g.on);
       const tarjetas = gs.map(g => h('div', { class: 'card' },
         h('label', { class: 'fila', style: 'gap:8px;justify-content:flex-start' }, h('input', { type: 'checkbox', checked: true, onchange: e => { g.on = e.target.checked; } }), h('div', { class: 'nombre' }, 'Albarán ' + g.k + ' · ' + fechaES(g.fecha))),
-        ...g.filas.map(x => h('div', { class: 'sub' }, x.producto + ' · lote ' + (x.codigo_lote || 'sin código') + (x.origen ? ' · ' + x.origen : '') + ' · ' + num(x.cantidad_entregada) + ' kg'))));
+        ...g.filas.map(x => h('div', { class: 'sub' }, x.producto + ' · lote ' + (x.codigo_lote || 'sin código') + (x.origen ? ' · ' + x.origen : '') + ' · ' + num(x.cantidad_entregada) + ' ' + uTz(x)))));
       lista.replaceChildren(
         ...(avisoSin ? [avisoSin] : []),
         h('button', { style: 'width:100%;margin-bottom:6px', onclick: async () => { const t = sel().map(textoG).join('\n\n'); if (!t) { toast('Marca algún albarán.', 'err'); return; } try { await navigator.clipboard.writeText(t); toast('Trazabilidad copiada. Pégala en la factura.', 'ok'); } catch (e) { prompt('Copia este texto:', t); } } }, 'Copiar trazabilidad de los marcados'),
-        h('button', { class: 'ghost', style: 'width:100%;margin-bottom:6px', onclick: () => { const q = sel(); if (!q.length) { toast('Marca algún albarán.', 'err'); return; } imprimir('<div class="copia a4"><div class="cab"><div class="emp"><b>' + esc(EMPRESA.nombre) + '</b></div><div class="num">ANEXO DE TRAZABILIDAD<br>' + esc(nombreCli(cli)) + '</div></div>' + q.map(g => '<p><b>Albarán ' + esc(g.k) + '</b> · ' + esc(fechaES(g.fecha)) + '</p><table><tbody>' + g.filas.map(x => '<tr><td>' + esc(x.producto) + '</td><td>Lote ' + esc(x.codigo_lote || 'sin código') + '</td><td>' + esc(x.origen || '') + '</td><td class="d">' + esc(num(x.cantidad_entregada)) + ' kg</td></tr>').join('') + '</tbody></table>').join('') + '</div>'); } }, 'Imprimir anexo de trazabilidad'),
-        h('button', { class: 'ghost', style: 'width:100%;margin-bottom:8px', onclick: () => { const q = sel(); if (!q.length) { toast('Marca algún albarán.', 'err'); return; } descargarCSV('trazabilidad_factura_' + cli.codigo + '.csv', [['Albarán', 'Fecha', 'Producto', 'Lote', 'Origen', 'Proveedor', 'Kilos']].concat(q.flatMap(g => g.filas.map(x => [g.k, fechaES(g.fecha), x.producto, x.codigo_lote, x.origen, x.proveedor, x.cantidad_entregada])))); } }, 'Descargar Excel (CSV) de los marcados'),
+        h('button', { class: 'ghost', style: 'width:100%;margin-bottom:6px', onclick: () => { const q = sel(); if (!q.length) { toast('Marca algún albarán.', 'err'); return; } imprimir('<div class="copia a4"><div class="cab"><div class="emp"><b>' + esc(EMPRESA.nombre) + '</b></div><div class="num">ANEXO DE TRAZABILIDAD<br>' + esc(nombreCli(cli)) + '</div></div>' + q.map(g => '<p><b>Albarán ' + esc(g.k) + '</b> · ' + esc(fechaES(g.fecha)) + '</p><table><tbody>' + g.filas.map(x => '<tr><td>' + esc(x.producto) + '</td><td>Lote ' + esc(x.codigo_lote || 'sin código') + '</td><td>' + esc(x.origen || '') + '</td><td class="d">' + esc(num(x.cantidad_entregada) + ' ' + uTz(x)) + '</td></tr>').join('') + '</tbody></table>').join('') + '</div>'); } }, 'Imprimir anexo de trazabilidad'),
+        h('button', { class: 'ghost', style: 'width:100%;margin-bottom:8px', onclick: () => { const q = sel(); if (!q.length) { toast('Marca algún albarán.', 'err'); return; } descargarCSV('trazabilidad_factura_' + cli.codigo + '.csv', [['Albarán', 'Fecha', 'Producto', 'Lote', 'Origen', 'Proveedor', 'Cantidad', 'Unidad']].concat(q.flatMap(g => g.filas.map(x => [g.k, fechaES(g.fecha), x.producto, x.codigo_lote, x.origen, x.proveedor, x.cantidad_entregada, uTz(x)])))); } }, 'Descargar Excel (CSV) de los marcados'),
         ...tarjetas);
     }
     cont.replaceChildren(caja, lista); pintarSel();
