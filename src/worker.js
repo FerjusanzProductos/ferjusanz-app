@@ -27,9 +27,13 @@ import ej5_albaran from "../public/guia-img/ej5_albaran.jpg";
 import ej6_calendario from "../public/guia-img/ej6_calendario.jpg";
 
 const HTML = "text/html; charset=utf-8";
+/* La versión que muestra la app (APP_VERSION) se toma SIEMPRE de sw.js: así nunca se descuadran
+   (antes se quedó en v231 y el aviso «hay una nueva» salía aunque ya estuviera actualizada). */
+const VERSION = (/ferjusanz-v\d+/.exec(swJs) || [""])[0];
+const indexApp = VERSION ? indexHtml.replace(/const APP_VERSION = 'ferjusanz-v\d+'/, "const APP_VERSION = '" + VERSION + "'") : indexHtml;
 const ARCHIVOS = {
-  "/": [indexHtml, HTML],
-  "/index.html": [indexHtml, HTML],
+  "/": [indexApp, HTML],
+  "/index.html": [indexApp, HTML],
   "/guia.html": [guiaHtml, HTML],
   "/sw.js": [swJs, "application/javascript; charset=utf-8"],
   "/manifest.webmanifest": [manifest, "application/manifest+json; charset=utf-8"],
