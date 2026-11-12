@@ -17,8 +17,8 @@ Documentos de esta carpeta:
 
 ---
 
-## ⭐ Novedad 12/11/2026: FERJUSANZ ESTÁ EN EL SII (Jorge)
-- Según el **art. 3 del RD 1007/2023**, quien lleva los libros de IVA por el **SII** queda **fuera de Verifactu**. Mientras FERJUSANZ siga en el SII: **no hace falta** declaración responsable, ni huella, ni QR Verifactu, ni envío Verifactu.
+## ⭐ Pregunta clave para Jorge (12/11/2026): ¿estamos en el SII? (SIN CONFIRMAR)
+- Según el **art. 3 del RD 1007/2023**, quien lleva los libros de IVA por el **SII** queda **fuera de Verifactu**. Si FERJUSANZ está en el SII: **no hace falta** declaración responsable, ni huella, ni QR Verifactu, ni envío Verifactu.
 - **A cambio, el SII obliga a** mandar a Hacienda los datos de cada factura emitida y recibida en **4 días hábiles**. La app tendrá que darle esos datos a Jorge (o mandarlos ella misma).
 - **Sigue siendo obligatorio**: factura completa (RD 1619/2012), numeración sin huecos, no borrar facturas (rectificativas), conservarlas y no ocultar ventas (art. 29.2.j LGT).
 - **Si algún día se sale del SII**, vuelve todo lo de esta carpeta: lo dejamos preparado.
