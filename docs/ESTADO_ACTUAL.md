@@ -1,12 +1,12 @@
 # Estado actual de FERJUSANZ
-_Última revisión: 12/11/2026 (publicación v247). Actualizar en cada publicación._
+_Última revisión: 12/11/2026 (publicación v251). Actualizar en cada publicación._
 
 Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial · ⚠️ por confirmar
 
 ## Versiones
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
-| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v249** ✅ (publicada el 12/11/2026: v247 + cerrojo de entorno: si la base de datos no dice «produccion», no arranca) | GitLab `main` |
+| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v251** ✅ (publicada el 12/11/2026: v249 + arreglo del aviso falso «hay una nueva versión») | GitLab `main` |
 | **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v250** ✅ (12/11/2026: normal v249 + arreglo del aviso falso «hay una nueva versión»: la versión de la app la pone el Worker desde `sw.js`) | GitLab `main` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
