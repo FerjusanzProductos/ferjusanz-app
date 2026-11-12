@@ -1,6 +1,14 @@
 # Historial de FERJUSANZ
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
+## 13/11/2026
+- **Facturación fase 3 (facturas de proveedores: NIF, CP y desglose de IVA)**, en PRUEBAS. Código hecho (rama `claude/billing-phase-3-received-invoices-lrt925`); **SQL `supabase/migrations/20261113b_facturas_recibidas_fiscal.sql` todavía SIN aplicar** en la base de pruebas (el aviso de aprobación de Supabase no le llega a Fernando al móvil; caducó 4 veces). Falta que Fernando lo pegue en el SQL Editor de `ferjusanz-pruebas`.
+  - Lector (`fcFiscal` en `public/index.html`): saca NIF y CP del proveedor (no los nuestros), desglose por tipo de IVA (base, %, cuota y recargo) y el total que coincide con base + IVA. Probado leyendo (sin cambiar nada) 18 facturas reales: las 12 en PDF con texto, todas con el desglose bien y cuadrando; Pataleta y Perichán no traen su NIF como texto (se pone una vez en la ficha). Las 6 escaneadas van por el lector de fotos (sin probar aquí).
+  - Se guarda con la función `guardar_fiscal_factura_recibida`: lo leído solo rellena lo vacío y nunca pisa lo corregido por la oficina. Pantalla Compras → «🧾 NIF e IVA» (y botón en cada factura de la bandeja) con avisos: falta NIF, falta CP, falta nº, falta desglose, no cuadra con el total, o viene a nombre de otra empresa.
+  - Vista `v_libro_compras` (una fila por tipo de IVA) lista para la fase 4. Concepto: «Compra de mercaderías» (⚠️ que lo confirme Jorge).
+  - ⚠️ Encontrado: una factura de Ibérica de Patatas (FV-B-26-032668, 10/11/2026) viene a nombre de **FERJUSANZ C.B.** (E80746670), no de la S.L.
+  - Solo en la app naranja (`FISCAL_RECIBIDAS = ES_PRUEBAS`). En la normal no sale nada hasta «Autorizo publicar» y aplicar el SQL en la base real.
+
 ## 12/11/2026
 - **Vídeo de TikTok «find-skills» (@xabatzz)**, pedido por Fernando. Es `vercel-labs/skills`: una skill que busca e instala otras skills del catálogo skills.sh. **No se instala**: Claude ya hace esa búsqueda y revisión, y find-skills instala skills de cualquier autor sin revisarlas. Nota en la skill `kit-ferjusanz`. El vídeo no se pudo descargar desde la nube (TikTok bloqueado); se leyeron su texto y subtítulos.
 - **Facturas en PRUEBAS (v262): código del producto y trazabilidad** (lo echó en falta Fernando al probar la PRUEBA-2026-0002). En la factura (pantalla, imprimir y PDF) cada producto sale con su **código** delante («42 · Naranjas de zumo…») y debajo el **lote y el origen**, los mismos del albarán (o «Lote: sin lote» si no se asignó). En la base de pruebas todavía no hay ningún lote: por eso ahora sale «sin lote»; para verlo hay que registrar una compra con lote y asignarlo al preparar. Sin cambios en la base de datos.
