@@ -1,12 +1,12 @@
 # Estado actual de FERJUSANZ
-_Última revisión: 13/11/2026 (normal v260, pruebas v263). Actualizar en cada publicación._
+_Última revisión: 13/11/2026 (normal v264, pruebas v263). Actualizar en cada publicación._
 
 Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial · ⚠️ por confirmar
 
 ## Versiones
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
-| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v260** ✅ (publicada el 12/11/2026: mismo código que pruebas v259; el botón de facturas de la fase 2 **no sale** en la normal y la base real no tiene las tablas `sif_*`) | GitLab `main` |
+| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v264** ✅ (publicada el 13/11/2026, «Autorizo publicar»: mismo código que pruebas v263, con los arreglos de v261 «permission denied» y v262 código y lote en la factura. Los botones de facturas (fase 2) y de «🧾 NIF e IVA» (fase 3) **no salen** en la normal: la base real no tiene esas tablas) | GitLab `main` |
 | **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v263** ✅ (13/11/2026: **facturación fase 3**, Compras → «🧾 NIF e IVA» de las facturas de proveedores; v262, 12/11/2026: facturas con código de producto y lote/origen; v261: arreglo de la sesión antigua de la base real que daba «permission denied»; antes v259: normal v257 + **facturación fase 2**: «🧾 Facturas (desde la app) · PRUEBAS», serie «PRUEBA», SIN VALOR FISCAL; usa su base de PRUEBAS aparte `ferjusanz-pruebas`) | GitLab `main` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
