@@ -52,7 +52,7 @@ Dos listados: **VENTAS** (facturas emitidas) y **COMPRAS** (facturas recibidas).
 - **Recomendación de Claude**: una sola app y **todas las ventas facturadas**. Si a esos clientes se les quiere mantener el precio, se baja el **precio de venta** (y la factura sale con su base y su IVA). Hablarlo con Jorge.
 
 ## Fases (una por sesión)
-1. **Datos fiscales**: ficha de la empresa (emisor) y ficha de clientes completa (NIF, dirección, CP, teléfono, correo); lista de clientes a los que les falta algo. ✔️ Hecho en PRUEBAS (v252, 12/11/2026): «🏢 Datos de la empresa» con sello y «🧾 Clientes sin datos para facturar». Falta aplicar la tabla `empresa` y publicar.
+1. **Datos fiscales**: ficha de la empresa (emisor) y ficha de clientes completa (NIF, dirección, CP, teléfono, correo); lista de clientes a los que les falta algo. ✔️ Hecho en PRUEBAS (v252, 12/11/2026): «🏢 Datos de la empresa» con sello y «🧾 Clientes sin datos para facturar». Publicado en la normal (v255) y tabla `empresa` creada en las dos bases (12/11/2026). ✔️ Terminada.
 2. **Facturas emitidas** en PRUEBAS: numeración 2027-NNNN, rectificativas, concepto, desglose por producto y por tipo de IVA, forma de pago con el límite de efectivo, PDF con sello. Desde los albaranes entregados.
 3. **Facturas recibidas**: guardar NIF, CP y desglose de IVA del proveedor (el lector ya lee la factura).
 4. **Listados para Jorge** (ventas y compras, 10 columnas, mensual y trimestral) dentro de «Informes para Jorge».
