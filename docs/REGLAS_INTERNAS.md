@@ -114,3 +114,8 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - **WhatsApp:** hasta nueva orden lo manda **cada repartidor desde su propio WhatsApp** (botón que sale al marcar «Entregado»). Si el cliente no tiene móvil, el repartidor lo escribe y queda apuntado en «Móviles y correos de clientes».
 - **Aparcado:** envío automático por WhatsApp desde el 609 567 354 (coexistencia de WhatsApp Business con la API de Meta). Retomar cuando Fernando lo diga.
 
+
+## Condiciones comerciales (confirmadas por Fernando el 12/11/2026)
+- **Sin pedido mínimo.**
+- **Zonas de reparto: Madrid y Segovia.**
+- Usar solo estas condiciones en la web, anuncios y mensajes; no prometer otras sin confirmarlo con Fernando.
