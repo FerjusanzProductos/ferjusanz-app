@@ -21,6 +21,7 @@ en lugar de improvisar.
 | **codex** | plugin | `codex@openai-codex` (openai/codex-plugin-cc) | Segunda opinión de Codex (OpenAI): `/codex:review` (revisión), `/codex:adversarial-review` (pone a prueba el diseño), `/codex:rescue` (le delega una tarea). Requiere cuenta de ChatGPT (vale la gratuita) o clave de OpenAI y Node 18+; la primera vez `/codex:setup` y `!codex login`. |
 | **superpowers** | plugin | `superpowers@superpowers-marketplace` (obra/superpowers) | Método de trabajo: lluvia de ideas, plan, TDD, depuración sistemática, verificar antes de dar algo por hecho. Se solapa con agent-skills: usa la que encaje, sin duplicar pasos. |
 | **impeccable** | plugin | `impeccable@impeccable` (pbakaus/impeccable) | Diseño de pantallas: `/impeccable audit`, `critique`, `polish`… al tocar el aspecto de `public/index.html`. Respeta los colores y estilo actuales de la app (móvil, botones grandes). |
+| **shorts** | skill | `.claude/skills/shorts` (AgriciDaniel/claude-shorts, adaptada a la nube) | Sacar clips cortos verticales con subtítulos de un vídeo largo (YouTube/archivo) para TikTok, Reels o Shorts. Primero `bash .claude/skills/shorts/preparar-nube.sh`. |
 | **playwright** | MCP | `.mcp.json` | Abrir la app, hacer clic, capturas, probar flujos (PWA, `sw.js`, `manifest`). |
 | **firecrawl** | MCP | `.mcp.json` | Scraping/extracción de webs concretas, crawl de un sitio, convertir páginas a markdown. |
 | **perplexity** | MCP | `.mcp.json` | Investigación con respuestas citadas, preguntas de actualidad, comparar opciones. |
