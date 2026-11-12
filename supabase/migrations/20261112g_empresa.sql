@@ -30,7 +30,7 @@ create trigger trg_auditar after insert or delete or update on public.empresa fo
 
 insert into public.empresa (razon_social, nif, direccion, codigo_postal, localidad, provincia, telefono, moviles, email, registro_mercantil, lema)
 values ('FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L.', 'B87446670', 'C/ Carare, 2', '28033', 'Madrid', 'Madrid',
-        '91 763 21 86', '609 100 690 – 616 439 157 – 609 567 354', 'ferjusanz@hotmail.com',
+        '91 763 21 86', '609 100 690 – 616 439 157', 'ferjusanz@hotmail.com',
         'Inscrita en el Registro Mercantil de Madrid, Tomo 34.358, Folio 101, Sección 8.ª, Hoja M-618046, Inscripción 1.ª',
         'Mayoristas de patatas, frutas y verduras')
 on conflict (unica) do nothing;
