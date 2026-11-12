@@ -10733,7 +10733,26 @@ async function pFiscalRecibidas(cont) {
   let filtro = LS.get('fj_fiscal_filtro', 'avisos'), filas = null, dsPor = {};
   const lista = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')), chips = h('div', { class: 'chips' }), estado = h('div', { class: 'sub', style: 'margin:0 0 8px' });
   const leerBtn = h('button', { class: 'ghost', style: 'width:100%;min-height:48px;margin-bottom:8px' }, '📖 Leer NIF e IVA de las facturas que aún no lo tienen');
-  cont.replaceChildren(h('div', { class: 'aviso-card' }, 'Para el listado de COMPRAS de Jorge: cada factura de proveedor con su NIF, código postal y el IVA por tipos (base, %, cuota y total). La app lo lee sola de la factura; aquí se revisa y se corrige. Toca una factura para verla.'), leerBtn, chips, estado, lista);
+  const subirBox = h('div', {});
+  const pintarSubir = async () => {
+    let provs = []; try { const q = await sb.from('proveedores').select('id,nombre').eq('activo', true).order('nombre'); provs = q.data || []; } catch (e) { }
+    const sel = h('select', {}, [h('option', { value: '' }, 'Proveedor (si lo sabes)…')].concat(provs.map(p => h('option', { value: p.id }, p.nombre))));
+    const fi = h('input', { type: 'file', accept: 'application/pdf,image/*', multiple: true, style: 'display:none', onchange: async e => {
+      const fs = Array.from(e.target.files || []); fi.value = ''; if (!fs.length) return; let ok = 0, mal = 0;
+      for (let i = 0; i < fs.length; i++) { const file = fs[i]; toast('Subiendo ' + (i + 1) + ' de ' + fs.length + '…');
+        try { let blob = file, ext = (file.name.split('.').pop() || 'pdf').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5) || 'pdf', ct = file.type || 'application/pdf';
+          if ((file.type || '').startsWith('image/')) { blob = await reducirImagen(file, 1800, 0.75); ext = 'jpg'; ct = 'image/jpeg'; } else if (file.size > 15e6) throw new Error('pesa demasiado');
+          const d = hoy(); const ruta = 'recibidas/' + d.slice(0, 4) + '/' + d.slice(5, 7) + '/' + uuid() + '.' + ext;
+          const up = await sb.storage.from('facturas').upload(ruta, blob, { contentType: ct }); if (up.error) throw up.error;
+          const r = await sb.rpc('anadir_factura_recibida', { p_ruta: ruta, p_nombre: file.name, p_proveedor: sel.value || null }); if (r.error) throw r.error;
+          try { const rd = await fcLeerFactura(new File([blob], file.name, { type: ct }), () => { }); fcGuardarFiscalLeido({ id: r.data }, rd); if (rd.cab && rd.cab.fecha) await sb.from('facturas_recibidas').update({ fecha_factura: rd.cab.fecha }).eq('id', r.data).is('fecha_factura', null); } catch (e2) { }
+          ok++; } catch (e) { mal++; toast('No se pudo subir ' + file.name + ': ' + (isNetErr(e) ? 'sin conexión' : msgErr(e)), 'err'); } }
+      toast('Añadida(s) ' + ok + (mal ? ' · ' + mal + ' con error' : '') + '. También salen en la bandeja para registrar la compra.', mal ? 'warn' : 'ok'); setTimeout(cargar, 1200);
+    } });
+    subirBox.replaceChildren(h('div', { class: 'card', style: 'margin-bottom:8px' }, h('div', { class: 'nombre' }, '📎 Añadir una factura que no llegó por correo'), h('div', { class: 'sub', style: 'margin-bottom:6px' }, 'PDF o foto de la factura de papel. Entra en la bandeja y aquí, y la app lee el NIF y el IVA.'), sel, h('button', { class: 'small', style: 'margin-top:6px', onclick: () => fi.click() }, '📎 Elegir PDF o foto'), fi));
+  };
+  cont.replaceChildren(h('div', { class: 'aviso-card' }, 'Para el listado de COMPRAS de Jorge: cada factura de proveedor con su NIF, código postal y el IVA por tipos (base, %, cuota y total). La app lo lee sola de la factura; aquí se revisa y se corrige. Toca una factura para verla.'), subirBox, leerBtn, chips, estado, lista);
+  pintarSubir();
   const pintarChips = () => chips.replaceChildren(...[['avisos', 'Con avisos'], ['todas', 'Todas']].map(([m, n]) => h('button', { class: 'chip' + (filtro === m ? ' on' : ''), onclick: () => { filtro = m; LS.set('fj_fiscal_filtro', m); pintarChips(); pintar(); } }, n)));
   async function cargar() {
     try {

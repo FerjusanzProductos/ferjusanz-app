@@ -1,5 +1,5 @@
 # Estado actual de FERJUSANZ
-_Última revisión: 12/11/2026 (normal v260, pruebas v262). Actualizar en cada publicación._
+_Última revisión: 13/11/2026 (normal v260, pruebas v263). Actualizar en cada publicación._
 
 Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial · ⚠️ por confirmar
 
@@ -7,7 +7,7 @@ Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial 
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
 | **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v260** ✅ (publicada el 12/11/2026: mismo código que pruebas v259; el botón de facturas de la fase 2 **no sale** en la normal y la base real no tiene las tablas `sif_*`) | GitLab `main` |
-| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v262** ✅ (12/11/2026: facturas con código de producto y lote/origen; v261: arreglo de la sesión antigua de la base real que daba «permission denied»; antes v259: normal v257 + **facturación fase 2**: «🧾 Facturas (desde la app) · PRUEBAS», serie «PRUEBA», SIN VALOR FISCAL; usa su base de PRUEBAS aparte `ferjusanz-pruebas`) | GitLab `main` |
+| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v263** ✅ (13/11/2026: **facturación fase 3**, Compras → «🧾 NIF e IVA» de las facturas de proveedores; v262, 12/11/2026: facturas con código de producto y lote/origen; v261: arreglo de la sesión antigua de la base real que daba «permission denied»; antes v259: normal v257 + **facturación fase 2**: «🧾 Facturas (desde la app) · PRUEBAS», serie «PRUEBA», SIN VALOR FISCAL; usa su base de PRUEBAS aparte `ferjusanz-pruebas`) | GitLab `main` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
 La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la publicada: descargar el Worker desde la API de Cloudflare (`/workers/scripts/<nombre>/content/v2`) y buscar ese texto.
@@ -51,4 +51,5 @@ La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la pu
 - Desde la v248 de pruebas, la app naranja usa **su propia base de datos** (`ferjusanz-pruebas`); la normal, la real. Usuarios de prueba: `…@pruebas.invalid`.
   - Separación en marcha (`docs/PLAN_SEPARAR_PRUEBAS.md`): proyecto `ferjusanz-pruebas` (`pbeuxbwbpmlanbhhnpgy`) creado el 12/11/2026 con la estructura y los datos maestros copiados y 5 usuarios de prueba; lo usa la app naranja desde la v248 (12/11/2026). Estructura completa de la base: `supabase/esquema_completo.sql`.
   - **Facturas emitidas (fase 2)**: tablas y funciones `sif_*` (`supabase/migrations/20261113a_facturas_emitidas.sql`) **solo en la base de pruebas** (pegado por Fernando en el SQL Editor, 12/11/2026). En la base real **no existen**; cuando se creen, quedan bloqueadas (`sif_config.emision_real_activa = false`) hasta la declaración responsable firmada.
+  - **Facturas recibidas (fase 3)**: columnas nuevas en `proveedores` y `facturas_recibidas`, tabla `facturas_recibidas_iva` y vistas `v_facturas_recibidas_control` y `v_libro_compras` (`20261113b_…`) **solo en la base de pruebas** (13/11/2026).
   - **Arranque real previsto en 7-10 días desde el 12/11/2026** (todo menos facturas, que siguen en Golden hasta el 1/1/2027). Ese día: Supabase Pro para la base real y borrar los datos de prueba. Ver `docs/PENDIENTES.md`.
