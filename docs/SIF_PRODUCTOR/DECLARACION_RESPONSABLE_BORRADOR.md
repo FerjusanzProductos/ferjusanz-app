@@ -42,7 +42,7 @@ k) FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., como productora del sistema inform
 
 l) Fecha y lugar de suscripción: `[ ]`, a `[ ]` de `[ ]` de `[ ]`.
 
-Firmado: `[Fernando Sanz Orrillo o Julián Sanz Orrillo — los dos si son mancomunados]`, administrador, en nombre y representación de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L.
+Firmado: `[Fernando Sanz Horrillo o Julián Sanz Horrillo — los dos si son mancomunados]`, administrador, en nombre y representación de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L.
 
 ---
 _Notas para quien revise (no forman parte de la declaración):_
