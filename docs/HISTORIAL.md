@@ -2,7 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 12/11/2026
-- **Skills del vídeo «5 skills para Claude Code» (Fazt)**, pedido por Fernando. Revisados repos y hooks. Activados en `.claude/settings.json`: **superpowers** (`obra/superpowers`, método de trabajo: plan, TDD, depuración) e **impeccable** (`pbakaus/impeccable`, diseño de pantallas; sus hooks solo revisan cambios de interfaz). **Claude-Mem** (`thedotmack/claude-mem`) NO se instala en el proyecto: guarda todo lo que pasa por Claude (también datos de clientes), lleva un programa en segundo plano y estadísticas activadas por defecto, y en la nube no sirve (se borra al cerrar). Las skills 4 y 5 del vídeo no se veían en la captura: pendiente que Fernando las pase.
+- **Skills del vídeo «5 skills para Claude Code» (Fazt)**, pedido por Fernando. Revisados repos y hooks. Activados en `.claude/settings.json`: **superpowers** (`obra/superpowers`, método de trabajo: plan, TDD, depuración) e **impeccable** (`pbakaus/impeccable`, diseño de pantallas; sus hooks solo revisan cambios de interfaz). **Claude-Mem** (`thedotmack/claude-mem`) NO se instala en el proyecto: guarda todo lo que pasa por Claude (también datos de clientes), lleva un programa en segundo plano y estadísticas activadas por defecto, y en la nube no sirve (se borra al cerrar). La 4.ª es ponytail (ya estaba en el kit). La 5.ª no se ve en las capturas: pendiente.
 
 ## 11/11/2026
 - **v212 publicada en la app normal** («Autorizo publicar»): entrega en mano paso a paso. Juntado con `main`. Pruebas queda en v211 con lo mismo.
