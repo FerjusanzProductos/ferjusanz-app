@@ -72,7 +72,7 @@ La limpieza se hace **dentro** del proceso de copia: los datos personales nunca 
 
 ## 5. Copias de seguridad y prueba real de recuperación
 1. **Ampliar la copia nocturna de GitLab** (`scripts/copia-supabase.sh`): añadir el esquema `harvey`, las tareas automáticas y una copia de los **archivos** (PDF, fotos, firmas; hoy 55 MB).
-2. **Comprobar** que la copia nocturna está programada en GitLab y que sale bien (hoy está ⚠️ sin confirmar).
+2. **Comprobar** que la copia nocturna está programada en GitLab y que sale bien (✅ comprobado el 12/11/2026: programada a las 3:00 desde el 9/11, 4 copias bien).
 3. **Prueba real de recuperación**: se recupera la última copia **en el proyecto de pruebas** (limpiando los datos personales) y se comparan las filas de cada tabla con la real. Así cada vez que se refresquen las pruebas, se comprueba de paso que la copia sirve. **Una vez al mes** y siempre antes del 1/1/2027.
 4. **El día del arranque real** (ya no en diciembre): pasar la base **real** al plan **Pro** de Supabase (copias diarias de 7 días hechas por Supabase, y no se pausa nunca). Pruebas se queda gratis.
 

@@ -121,6 +121,6 @@ Orden recomendado; **una cosa por sesión**. Texto para empezar: `claude/08-text
 ## Comprobaciones técnicas
 - 🟡 Mantener al día `claude/00-resumen-general/` (LEEME.md, resumen.html y la página de Claude) al terminar cada tarea.
 - ⚪ Poner al día `claude/08-textos-para-empezar-chats/PROMPT_FERNANDO_NUEVO_CHAT.md` (tiene ramas antiguas y dice que GitHub está suspendido).
-- 🟡 Comprobar que la copia nocturna de GitLab se está ejecutando y que se puede restaurar.
+- ✅ La copia nocturna de GitLab se ejecuta (desde el 9/11/2026, todas bien). 🟡 Falta: añadir archivos (55 MB) y Harvey, y **probar a recuperarla**. Si sale bien antes del arranque, se puede evitar Supabase Pro (decisión de Fernando).
 - ⚪ Auditoría de seguridad de la app y de Supabase (skill `security-audit`).
 - ⚪ Hacer más pequeño `public/index.html` (más de 1 MB) para que cargue más rápido.

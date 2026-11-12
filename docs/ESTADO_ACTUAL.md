@@ -38,7 +38,7 @@ La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la pu
 - **Supabase** (`hvydnjaswdexttogsyen`): base de datos, inicio de sesión, archivos (fotos, PDF, audios) y funciones.
   - Funciones activas ✅: `harvey-v2` (Harvey de la app normal), `harvey-v2-pruebas` (Harvey de la app de pruebas), `harvey` (antigua, sin uso), `harvey2`, `ayuda-ia`, `albaranes-correo`, `recibir-factura`, `copia-archivo`.
   - Las funciones con IA usan la API de Anthropic (secreto `ANTHROPIC_API_KEY` en Supabase; modelo en `HARVEY_MODEL`).
-- **GitLab CI** (`.gitlab-ci.yml`): copia nocturna de la base de datos (90 días) y publicación manual. ⚠️ Comprobar que la programación está activa.
+- **GitLab CI** (`.gitlab-ci.yml`): copia nocturna de la base de datos (90 días) y publicación manual. ✅ Programación «Copia diaria» activa (todos los días a las 3:00, hora de Madrid, rama main); comprobado el 12/11/2026 con capturas de Fernando: 4 copias (9 a 12/11), todas bien. **Falta probar a recuperarla.**
 - **Roles en la app** 📝: admin, oficina, secretaria, comercial, compras, preparador, repartidor y dirección.
 
 ## Seguridad y copias
