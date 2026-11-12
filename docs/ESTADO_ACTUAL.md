@@ -6,7 +6,7 @@ Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial 
 ## Versiones
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
-| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v223** ✅ (publicada el 12/11/2026: v222 + entrega en mano en el orden nuevo: revisar y firmar → paga o debe → enviar) | GitLab `main` |
+| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v227** ✅ (publicada el 12/11/2026: v223 + facturas con nº real y nombre «PROVEEDOR · Fra. Nº»; sin «Facturas con retraso») | GitLab `main` |
 | **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v226** ✅ (normal v223 + facturas con nº real y nombre «PROVEEDOR · Fra. Nº» (MADREMIA); Harvey con la función `harvey-v2-pruebas`) | GitLab `main` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
