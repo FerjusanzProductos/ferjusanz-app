@@ -29,6 +29,7 @@ Dos listados: **VENTAS** (facturas emitidas) y **COMPRAS** (facturas recibidas).
 - **Una fila por cada tipo de IVA** de cada factura (si una factura lleva 4 % y 10 %, salen dos filas). Totales por tipo de IVA al final. Vale para todo.
 - Hace falta que las **facturas de proveedores** guarden NIF, CP y el desglose de IVA (hoy no se guardan).
 - En Excel. Mensual y trimestral.
+- **Formatos (Fernando, 12/11/2026)**: **Excel** (para editar u ordenar si hace falta), **CSV** y **PDF** (para verlas). Los tres en cada listado.
 
 ## 3. Banco (Norma 43)
 - Jorge registra el banco con el formato **Norma 43** (el banco lo da también en Excel; **un movimiento por línea**).
