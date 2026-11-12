@@ -1,6 +1,6 @@
 // Harvey v2 (orquestador): igual que «harvey» y además puede CAMBIAR datos, siempre con
 // confirmación de la persona. Acción 1: apuntar contactos y «volver a llamar el…» (apuntar_contacto).
-// Mientras se prueba, solo la usa la app de PRUEBAS; la normal sigue con «harvey».
+// La usan la app normal y la de pruebas desde v216.
 // Harvey: agente comercial de Ferjusanz (función de Supabase).
 // La app (Comercial › 🤵 Harvey) le manda la conversación y un resumen de los datos
 // comerciales (recomendaciones vigentes, contactos pendientes, quejas abiertas).
