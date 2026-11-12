@@ -7,7 +7,7 @@ Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial 
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
 | **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v247** ✅ (publicada el 12/11/2026: v239 + 🚚 Modo reparto completo, mover el orden con el dedo, venta en ruta con descuento sin IVA automático y recuerdo con/sin IVA) | GitLab `main` |
-| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v246** ✅ (12/11/2026: normal v239 + 🚚 Modo reparto fases 1, 2 y 3 + mover el orden con el dedo + venta en ruta (recalcula sola el descuento sin IVA) + recuerdo con/sin IVA, ya en `main`; Harvey con la función `harvey-v2-pruebas`) | GitLab `main` |
+| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v248** ✅ (12/11/2026: normal v247 + **base de datos de PRUEBAS aparte** `ferjusanz-pruebas`, cerrojo, envíos bloqueados y «SIN VALOR FISCAL») | GitLab `main` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
 La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la publicada: descargar el Worker desde la API de Cloudflare (`/workers/scripts/<nombre>/content/v2`) y buscar ese texto.
@@ -47,6 +47,6 @@ La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la pu
 
 ## Situación técnica conocida
 - `public/index.html` ocupa más de 1 MB; usar graphify o búsquedas para orientarse.
-- La app de pruebas y la normal comparten la **misma base de datos**: en pruebas, usar el Modo prácticas.
-  - Separación en marcha (`docs/PLAN_SEPARAR_PRUEBAS.md`): proyecto `ferjusanz-pruebas` (`pbeuxbwbpmlanbhhnpgy`) creado el 12/11/2026 con la estructura y los datos maestros copiados y 5 usuarios de prueba; **la app todavía no lo usa**. Estructura completa de la base: `supabase/esquema_completo.sql`.
+- Desde la v248 de pruebas, la app naranja usa **su propia base de datos** (`ferjusanz-pruebas`); la normal, la real. Usuarios de prueba: `…@pruebas.invalid`.
+  - Separación en marcha (`docs/PLAN_SEPARAR_PRUEBAS.md`): proyecto `ferjusanz-pruebas` (`pbeuxbwbpmlanbhhnpgy`) creado el 12/11/2026 con la estructura y los datos maestros copiados y 5 usuarios de prueba; lo usa la app naranja desde la v248 (12/11/2026). Estructura completa de la base: `supabase/esquema_completo.sql`.
   - **Arranque real previsto en 7-10 días desde el 12/11/2026** (todo menos facturas, que siguen en Golden hasta el 1/1/2027). Ese día: Supabase Pro para la base real y borrar los datos de prueba. Ver `docs/PENDIENTES.md`.

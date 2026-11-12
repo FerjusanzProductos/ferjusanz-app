@@ -131,8 +131,9 @@ footer a { color: var(--gris); }
 
 <script>
 (function () {
-  var URL_SB = 'https://hvydnjaswdexttogsyen.supabase.co';
-  var CLAVE = 'sb_publishable_B6ZWPBp54OT62yXU3khygQ_eIm6UnVq'; // clave pública (la misma que la app)
+  var PRUEBAS = /pruebas/.test(location.hostname); // en la app de PRUEBAS, la base de datos de pruebas
+  var URL_SB = PRUEBAS ? 'https://pbeuxbwbpmlanbhhnpgy.supabase.co' : 'https://hvydnjaswdexttogsyen.supabase.co';
+  var CLAVE = PRUEBAS ? 'sb_publishable_vi_yuPIC0lgWWgbz0ltbrw_x15mrdnY' : 'sb_publishable_B6ZWPBp54OT62yXU3khygQ_eIm6UnVq'; // claves públicas (las mismas que la app)
   var PRUEBAS = location.hostname.indexOf('pruebas') >= 0 || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
   if (PRUEBAS) document.getElementById('avisoPruebas').hidden = false;
   var f = document.getElementById('formulario'), err = document.getElementById('error'), btn = document.getElementById('enviar');

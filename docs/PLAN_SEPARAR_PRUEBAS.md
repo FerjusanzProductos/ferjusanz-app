@@ -23,6 +23,13 @@ _Preparado el 12/11/2026. Cada paso necesita «Autorizo» de Fernando._
 - La copia nocturna de GitLab copia `public` y los usuarios, pero **no** copia `harvey`, ni las tareas automáticas, ni los archivos (PDF, fotos, firmas). **Nunca se ha probado a recuperarla.**
 - La carpeta `supabase/migrations/` tiene solo 21 archivos: **no** está toda la estructura (parte se hizo a mano en el editor SQL).
 
+## Hecho: pasos 5 (en pruebas) y 6 (12/11/2026)
+- Ficha «entorno» (`supabase/migrations/20261112f_entorno.sql`) aplicada en **pruebas** con `pruebas`. **En la real falta** (con `produccion`): se enseña el SQL a Fernando y se aplica con su «Autorizo». Mientras no esté, la app normal sigue como siempre (si no hay ficha, no bloquea).
+- App **v248 en PRUEBAS**: la naranja usa la base `ferjusanz-pruebas` (también la página `/nuevos-clientes`); cerrojo con pantalla roja «⛔ Configuración equivocada» si la base no coincide; en pruebas se bloquean llamar, WhatsApp, correo, SMS y «Compartir» (aviso «🟠 App de PRUEBAS: aquí no se llama ni se envía nada a nadie»); albarán en pantalla y PDF con «PRUEBA · SIN VALOR FISCAL».
+- Probado en un navegador: entra `fernando@pruebas.invalid`, ve clientes «(en pruebas)», solo se conecta a la base de pruebas, `wa.me` bloqueado, cerrojo probado simulando la base real. La dirección normal sigue apuntando a la base real.
+- **Sin hacer todavía**: contadores de prueba y botón «poner a cero» (llegan con la fase 2 de facturación, cuando existan las facturas); funciones (Harvey, ayuda, correo) en pruebas: falta la clave de Anthropic aparte. En la naranja, Harvey y la ayuda con IA no funcionan hasta entonces.
+- Aviso: en pruebas sale «Hace más de 7 días sin copia de seguridad» porque la configuración de copias no se copió; es normal.
+
 ## 1. Qué se crea y qué sigue igual
 **Se crea:**
 1. **Un proyecto de Supabase nuevo «ferjusanz-pruebas»** (misma región, Irlanda). Base de datos, usuarios, archivos y funciones propios. El plan gratuito permite 2 proyectos: **0 €**.

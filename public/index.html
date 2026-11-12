@@ -561,8 +561,11 @@ nav.tabs button.on{background:linear-gradient(135deg,#dcfce7,#bbf7d0);border-col
 <script>
 'use strict';
 /* =====================  CONFIGURACIÓN  ===================== */
-const SUPABASE_URL = 'https://hvydnjaswdexttogsyen.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_B6ZWPBp54OT62yXU3khygQ_eIm6UnVq'; // clave pública: segura en la app
+/* App de PRUEBAS (dirección con «pruebas») = base de datos de PRUEBAS aparte (ferjusanz-pruebas). La normal, la de siempre. */
+const ES_PRUEBAS = /pruebas/.test(location.hostname);
+const ENTORNO_ESPERADO = ES_PRUEBAS ? 'pruebas' : 'produccion';
+const SUPABASE_URL = ES_PRUEBAS ? 'https://pbeuxbwbpmlanbhhnpgy.supabase.co' : 'https://hvydnjaswdexttogsyen.supabase.co';
+const SUPABASE_KEY = ES_PRUEBAS ? 'sb_publishable_vi_yuPIC0lgWWgbz0ltbrw_x15mrdnY' : 'sb_publishable_B6ZWPBp54OT62yXU3khygQ_eIm6UnVq'; // claves públicas: seguras en la app
 const EMPRESA = {
   nombre: 'FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L.',
   lema: 'Mayoristas de patatas, frutas y verduras',
@@ -805,6 +808,31 @@ function fetchConTiempo(url, opts) {
 function sesionLocal() {
   try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^sb-.*-auth-token$/.test(k)) { const x = JSON.parse(localStorage.getItem(k)); if (x && x.user && x.user.id) return x; } } } catch (e) { }
   return null;
+}
+/* ---- En PRUEBAS no se llama, ni se manda WhatsApp, correo o SMS a nadie (los clientes tienen sus datos reales) ---- */
+const RE_ENVIO = /^(tel:|mailto:|sms:|whatsapp:|https?:\/\/(wa\.me|api\.whatsapp\.com|web\.whatsapp\.com)\b)/i;
+function avisoPruebas() { try { toast('🟠 App de PRUEBAS: aquí no se llama ni se envía nada a nadie.', 'err'); } catch (e) { alert('App de PRUEBAS: aquí no se llama ni se envía nada a nadie.'); } }
+function abrirEnlace(u) { if (ES_PRUEBAS && RE_ENVIO.test(String(u))) { avisoPruebas(); return; } location.href = u; }
+if (ES_PRUEBAS) {
+  const abrir = window.open.bind(window);
+  window.open = function (u) { if (RE_ENVIO.test(String(u || ''))) { avisoPruebas(); return null; } return abrir.apply(window, arguments); };
+  document.addEventListener('click', ev => { const a = ev.target && ev.target.closest && ev.target.closest('a[href]'); if (a && RE_ENVIO.test(a.getAttribute('href') || '')) { ev.preventDefault(); ev.stopPropagation(); avisoPruebas(); } }, true);
+  try { if (navigator.share) Object.defineProperty(navigator, 'share', { configurable: true, value: async () => { avisoPruebas(); const e = new Error('pruebas'); e.name = 'AbortError'; throw e; } }); } catch (e) { }
+}
+/* Cerrojo: la base de datos dice si es «produccion» o «pruebas». Si no coincide con la app, no se arranca. */
+async function comprobarEntorno() {
+  if (PRACTICA || !sb) return true;
+  try {
+    const r = await Promise.race([sb.from('entorno').select('nombre').limit(1), new Promise((_, no) => setTimeout(() => no(new Error('tiempo')), 6000))]);
+    const nom = r && !r.error && r.data && r.data[0] && r.data[0].nombre;
+    if (!nom || nom === ENTORNO_ESPERADO) return true; /* sin conexión o sin ficha: se sigue (lo de siempre) */
+    document.body.style.background = '#b91c1c';
+    $app.replaceChildren(h('div', { class: 'login', style: 'background:#b91c1c;color:#fff;border-radius:14px;padding:22px' },
+      h('h1', { style: 'color:#fff' }, '⛔ Configuración equivocada'),
+      h('p', {}, 'Esta app es la ' + (ES_PRUEBAS ? 'de PRUEBAS' : 'NORMAL') + ', pero está conectada a la base de datos de ' + (nom === 'pruebas' ? 'PRUEBAS' : 'TRABAJO REAL') + '.'),
+      h('p', {}, h('b', {}, 'No uses la app y avisa a Fernando.'))));
+    return false;
+  } catch (e) { return true; }
 }
 const sb = PRACTICA ? crearSbPractica() : (window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { global: { fetch: fetchConTiempo } }) : null);
 /* Supabase devuelve como máximo 1000 filas por consulta, aunque la app pida 5000: con más de 1000 clientes los últimos (los nuevos) no salían.
@@ -2506,6 +2534,7 @@ async function pdfAlbaran(d) {
   const cabTabla = () => { txt(M, y, 'Artículo', 9, true); txt(335, y, 'Pedido', 9, true, true); txt(415, y, 'Cantidad', 9, true, true); txt(485, y, 'Precio', 9, true, true); txt(W - M, y, 'Importe', 9, true, true); y -= 4; raya(y); y -= 13; };
   const nueva = (cabecera) => { cur = []; pages.push(cur); y = H - M; if (cabecera) { txt(M, y, 'Albarán ' + num7 + ' · ' + nombreCli(cli) + ' (continuación)', 9, true); y -= 20; cabTabla(); } };
   nueva(false);
+  if (ES_PRUEBAS || PRACTICA) { txt(M, y, ES_PRUEBAS ? 'PRUEBA · SIN VALOR FISCAL' : 'SIMULACRO · SIN VALOR', 14, true); y -= 18; }
   txt(M, y, EMPRESA.nombre, 12, true); txt(W - M, y, 'ALBARÁN', 18, true, true); y -= 14;
   txt(M, y, EMPRESA.lema, 8.5); txt(W - M, y, num7, 12, true, true); y -= 11;
   txt(M, y, EMPRESA.tels, 8); txt(W - M, y, 'Fecha: ' + fechaES(a.fecha || p.fecha_entrega), 10, false, true); y -= 10;
@@ -2736,7 +2765,7 @@ async function abrirEnvioAlbaran(d) {
     historial, chips ? h('div', { class: 'sub', style: 'font-weight:700' }, 'Usados antes con este cliente:') : null, chips,
     comCampo('Nombre de quien lo recibe (opcional)', nom), comCampo('WhatsApp', tel), comCampo('Correo', mail),
     B('guardar', '📲 Enviar por WhatsApp', () => { let t = tel.value.replace(/\D/g, ''); if (t.length === 9) t = '34' + t; recordar('WhatsApp ' + (tel.value.trim() || '(elegido en WhatsApp)')); window.open('https://wa.me/' + t + '?text=' + encodeURIComponent(texto()), '_blank'); }),
-    B('ghost', '✉️ Enviar por correo', () => { if (!mail.value.trim()) { toast('Escribe el correo.', 'err'); return; } recordar('Correo ' + mail.value.trim()); location.href = 'mailto:' + encodeURIComponent(mail.value.trim()) + '?subject=' + encodeURIComponent('Albarán ' + num + ' · ' + EMPRESA.nombre) + '&body=' + encodeURIComponent(texto()); }),
+    B('ghost', '✉️ Enviar por correo', () => { if (!mail.value.trim()) { toast('Escribe el correo.', 'err'); return; } recordar('Correo ' + mail.value.trim()); abrirEnlace('mailto:' + encodeURIComponent(mail.value.trim()) + '?subject=' + encodeURIComponent('Albarán ' + num + ' · ' + EMPRESA.nombre) + '&body=' + encodeURIComponent(texto())); }),
     B('ghost', '📱 Enseñar QR (que lo escanee con su móvil)', async () => { try { const qs = qrDataUrl(U(), 8); recordar('QR en mano'); hojaQrEnlace('📱 Escanea para ver el albarán', U(), 'Albarán ' + num + ' · se queda guardado en su móvil. Si la cámara no lo lee, copia el enlace de abajo.'); } catch (e) { toast('No se pudo hacer el QR. Usa WhatsApp o copia el enlace.', 'err'); } }),
     B('ghost', '📤 Compartir en otra app…', async () => { try { recordar('Compartido'); if (navigator.share) await navigator.share({ title: 'Albarán ' + num, text: texto() }); else { await navigator.clipboard.writeText(texto()); toast('Texto copiado', 'ok'); } } catch (e) { } }),
     h('div', { class: 'sub', style: 'font-weight:800;margin-top:16px;border-top:2px solid var(--borde);padding-top:10px' }, '🏢 Página del cliente (todos SUS albaranes, solo los suyos)'),
@@ -2964,7 +2993,7 @@ function htmlAlbaran(d, formato, opt) {
     else if (tipo === 'AMARILLA') pie = firmaOk || firmaVacia;
     else pie = firmaOk;
     return '<div class="copia ' + formato + ' ' + c.cls + '">' +
-      '<div class="cab"><div class="emp"><b>' + esc(EMPRESA.nombre) + (PRACTICA ? ' — SIMULACRO, SIN VALOR' : '') + '</b><div>' + esc(EMPRESA.lema) + '</div><div>' + esc(EMPRESA.tels) + '</div><div>' + esc(EMPRESA.dir) + ' · ' + esc(EMPRESA.email) + '</div></div>' +
+      '<div class="cab"><div class="emp"><b>' + esc(EMPRESA.nombre) + (PRACTICA ? ' — SIMULACRO, SIN VALOR' : ES_PRUEBAS ? ' — PRUEBA · SIN VALOR FISCAL' : '') + '</b><div>' + esc(EMPRESA.lema) + '</div><div>' + esc(EMPRESA.tels) + '</div><div>' + esc(EMPRESA.dir) + ' · ' + esc(EMPRESA.email) + '</div></div>' +
       '<div class="num">ALBARÁN<b>' + esc(num7) + '</b>Fecha: ' + esc(fechaES(a.fecha || p.fecha_entrega)) + '<br><span class="tipo">COPIA ' + tipo + ' · ' + c.dest + '</span><div class="tz">' + esc(c.nota) + '</div></div></div>' +
       '<div class="cli"><b>' + esc(nombreCli(cli)) + '</b>' + (cli.nombre_comercial && cli.nombre ? '<br>' + esc(cli.nombre) : '') +
       '<br>' + esc([cli.direccion, cli.localidad].filter(Boolean).join(' · ')) + (cli.nif ? '<br>NIF: ' + esc(cli.nif) : '') + '</div>' +
@@ -5047,7 +5076,7 @@ async function vistaContactosPortal() {
               await marcar(x, 'guardado'); toast('Guardado en la ficha de ' + nombreCli(c), 'ok'); cargar();
             } catch (e) { toast(msgErr(e), 'err'); } } }, '✅ Guardar en su ficha') : null,
           x.movil ? h('button', { class: 'small', onclick: async () => { try { const u = await enlacePagina(x.cliente_id); window.open('https://wa.me/34' + x.movil + '?text=' + encodeURIComponent('Hola' + (x.nombre && x.origen !== 'repartidor' ? ' ' + x.nombre.split(' ')[0] : '') + ', somos ' + EMPRESA.nombre + '. Aquí tienes tu página con todos tus albaranes; cada entrega nueva aparece sola. Guarda este mensaje para abrirla cuando quieras:\n' + u), '_blank'); } catch (e) { toast(msgErr(e), 'err'); } } }, '💬 Mandarle su página por WhatsApp') : null,
-          x.email ? h('button', { class: 'ghost small', onclick: async () => { try { const u = await enlacePagina(x.cliente_id); location.href = 'mailto:' + x.email + '?subject=' + encodeURIComponent('Tus albaranes de ' + EMPRESA.nombre) + '&body=' + encodeURIComponent('Hola' + (x.nombre && x.origen !== 'repartidor' ? ' ' + x.nombre.split(' ')[0] : '') + ',\n\nAquí tienes tu página con todos tus albaranes. Cada entrega nueva aparece sola:\n' + u + '\n\nGuarda este correo para abrirla cuando quieras.\n\nUn saludo,\n' + EMPRESA.nombre + '\n' + EMPRESA.tels); } catch (e) { toast(msgErr(e), 'err'); } } }, '✉️ Mandarle su página por correo') : null,
+          x.email ? h('button', { class: 'ghost small', onclick: async () => { try { const u = await enlacePagina(x.cliente_id); abrirEnlace('mailto:' + x.email + '?subject=' + encodeURIComponent('Tus albaranes de ' + EMPRESA.nombre) + '&body=' + encodeURIComponent('Hola' + (x.nombre && x.origen !== 'repartidor' ? ' ' + x.nombre.split(' ')[0] : '') + ',\n\nAquí tienes tu página con todos tus albaranes. Cada entrega nueva aparece sola:\n' + u + '\n\nGuarda este correo para abrirla cuando quieras.\n\nUn saludo,\n' + EMPRESA.nombre + '\n' + EMPRESA.tels)); } catch (e) { toast(msgErr(e), 'err'); } } }, '✉️ Mandarle su página por correo') : null,
           x.estado === 'nuevo' ? h('button', { class: 'ghost small', onclick: async () => { if (!await confirmar('¿Descartar estos datos? (por ejemplo, si son de prueba o están mal)')) return; try { await marcar(x, 'descartado'); cargar(); } catch (e) { toast(msgErr(e), 'err'); } } }, 'Descartar') : null));
       kids.push(caja); });
     cont.replaceChildren(...kids);
@@ -11722,7 +11751,7 @@ async function tabHarveyChat(el) {
       const movil = /^[67]/.test(tel);
       caja.replaceChildren(copiarBtn(txt),
         movil ? h('button', { class: 'guardar small', onclick: () => window.open('https://wa.me/34' + tel + '?text=' + encodeURIComponent(limpiar(txt)), '_blank') }, '💬 WhatsApp a ' + nom)
-              : h('button', { class: 'ghost small', onclick: () => { location.href = 'tel:' + tel; } }, '📞 Llamar a ' + nom + ' (fijo)'),
+              : h('button', { class: 'ghost small', onclick: () => { abrirEnlace('tel:' + tel); } }, '📞 Llamar a ' + nom + ' (fijo)'),
         movil ? null : h('button', { class: 'ghost small', onclick: () => guiaWhatsApp(limpiar(txt)) }, '💬 WhatsApp (elegir chat)')); });
     return caja;
   };
@@ -13257,6 +13286,7 @@ async function init() {
       h('button', { onclick: () => location.reload() }, 'Reintentar')));
     return;
   }
+  if (!(await comprobarEntorno())) return;
   { const q = new URLSearchParams(location.search), pa = q.get('a'), pc = q.get('c'); if (pa && /^[a-f0-9]{32}$/.test(pa)) { vistaAlbaranPublico(pa); return; } if (pc && /^[a-f0-9]{32}$/.test(pc)) { vistaPortalCliente(pc); return; } }
   let ses = null;
   try { const r = await Promise.race([sb.auth.getSession(), new Promise((_, no) => setTimeout(() => no(new Error('tiempo')), 5000))]); ses = r && r.data && r.data.session; } catch (e) { }
