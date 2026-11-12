@@ -8,13 +8,13 @@ _Recogido de lo que habló Fernando con **Jorge Ruiz Onetti** (contable), 12–1
 - Jorge sigue haciendo los **libros de registro** (emitidas y recibidas) con lo que le mandemos. Control **mensual** y **trimestral**.
 
 ## 1. Requisitos de cada factura emitida
-1. **Emisor (nosotros), siempre completo**: FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. · NIF **B87446670** · dirección completa con CP **28033** (Madrid) · teléfono de la empresa · correo **ferjusanz@hotmail.com**. ⚠️ Confirmar con Fernando la dirección exacta y el teléfono (la web dice 91 763 21 86).
+1. **Emisor (nosotros), siempre completo**: FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. · NIF **B87446670** · dirección completa con CP **28033** (Madrid) · teléfono de la empresa · correo **ferjusanz@hotmail.com**. ✔️ Confirmado por Fernando (12/11/2026): C/ Carare, 2 – 28033 Madrid (también domicilio fiscal) y 91 763 21 86.
 2. **Receptor (cliente), siempre completo**: nombre o razón social, NIF/CIF, dirección con CP, teléfono y correo. La app **no deja emitir** la factura si falta nombre, NIF o dirección con CP (avisa de lo que falte).
 3. **Fecha de factura** = fecha en que se **emite** (la pone la app sola).
 4. **Número correlativo por año**, sin huecos, que lleve el año: p. ej. **2027-0001**, 2027-0002… Cada 1 de enero empieza de cero. **Una factura nunca se borra**: si está mal se hace una **rectificativa** (serie propia, p. ej. **R2027-0001**) que dice a qué factura corrige y por qué.
 5. **Concepto**: «Venta de fruta», «Venta de verdura», «Venta de patata» (y huevos), según lo vendido.
 6. **Importes**: en **cada producto**: base, % de IVA, cuota de IVA y total. Al final, **resumen por cada tipo de IVA** (base, cuota) y total de la factura.
-7. **Firmada o sellada**: el PDF lleva el sello/firma de la empresa (imagen que facilite Fernando).
+7. **Firmada o sellada**: el PDF lleva el sello de la empresa. **Sello = la cabecera de los albaranes de papel tal cual** (Fernando, 12/11/2026): FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., «Mayoristas de patatas, frutas y verduras», teléfonos, móviles, Carare, 2 - 28033 Madrid y correo. La app lo dibuja con los datos de la empresa.
 8. **Forma de pago**: efectivo, transferencia, tarjeta… **Efectivo (Ley 7/2012, art. 7)**: si la operación llega a **1.000 € o más**, con empresa o autónomo, **no se puede pagar nada en efectivo**, ni una parte (corregido 12/11/2026; antes decía «máximo 1.000 €»). La app bloquea el efectivo en esas operaciones y suma los pagos parciales. ⚠️ Jorge: qué cuenta como «operación» en una factura mensual.
 - **Siempre controladas** las facturas emitidas y las recibidas.
 - **Datos del Registro Mercantil, obligatorios** (art. 24 del Reglamento del Registro Mercantil), dados por Fernando el 12/11/2026: Registro Mercantil de Madrid, Tomo 34.358, Folio 101, Sección 8.ª, Hoja M-618046, Inscripción 1.ª. Domicilio: **C/ Carare, 2 — 28033 Madrid**. ⚠️ Comprobar con nota simple o escritura y que Jorge confirme el domicilio fiscal. Van en la fase 1 (ficha de empresa).
@@ -52,7 +52,7 @@ Dos listados: **VENTAS** (facturas emitidas) y **COMPRAS** (facturas recibidas).
 - **Recomendación de Claude**: una sola app y **todas las ventas facturadas**. Si a esos clientes se les quiere mantener el precio, se baja el **precio de venta** (y la factura sale con su base y su IVA). Hablarlo con Jorge.
 
 ## Fases (una por sesión)
-1. **Datos fiscales**: ficha de la empresa (emisor) y ficha de clientes completa (NIF, dirección, CP, teléfono, correo); lista de clientes a los que les falta algo.
+1. **Datos fiscales**: ficha de la empresa (emisor) y ficha de clientes completa (NIF, dirección, CP, teléfono, correo); lista de clientes a los que les falta algo. ✔️ Hecho en PRUEBAS (v252, 12/11/2026): «🏢 Datos de la empresa» con sello y «🧾 Clientes sin datos para facturar». Falta aplicar la tabla `empresa` y publicar.
 2. **Facturas emitidas** en PRUEBAS: numeración 2027-NNNN, rectificativas, concepto, desglose por producto y por tipo de IVA, forma de pago con el límite de efectivo, PDF con sello. Desde los albaranes entregados.
 3. **Facturas recibidas**: guardar NIF, CP y desglose de IVA del proveedor (el lector ya lee la factura).
 4. **Listados para Jorge** (ventas y compras, 10 columnas, mensual y trimestral) dentro de «Informes para Jorge».

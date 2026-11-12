@@ -140,6 +140,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 ## Facturas emitidas desde la app (Jorge, 12/11/2026; desde el 1/1/2027)
 - Emisor siempre completo: FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. · NIF B87446670 · dirección con CP 28033 · teléfono · ferjusanz@hotmail.com.
 - Cliente siempre completo (nombre, NIF, dirección con CP, teléfono, correo); sin nombre, NIF o dirección con CP no se emite.
+- **Datos mínimos para facturar a un cliente** (los que comprueba la app, 12/11/2026): nombre, **NIF válido** (la letra o dígito de control cuadra), dirección, **código postal de 5 cifras** y localidad. Teléfono y correo, si los hay. Los datos de la empresa (emisor) están en la ficha «🏢 Datos de la empresa» y **solo los cambia admin**; el sello es la cabecera de los albaranes de papel.
 - Fecha = la de emisión. Número correlativo por año con el año dentro (2027-0001…), empieza de cero cada año, sin huecos.
 - **Una factura nunca se borra**: se corrige con una **rectificativa** (serie propia) que dice qué factura corrige.
 - Concepto «Venta de fruta / verdura / patata» y, por producto, base, % IVA, cuota y total; resumen por tipo de IVA.

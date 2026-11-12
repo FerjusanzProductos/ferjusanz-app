@@ -53,8 +53,10 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
   **Plan completo, preguntas, riesgos y costes: `docs/PLAN_WEB.md`** (11/11/2026). Siguiente paso: Fernando mira contrato/facturas de Creativate y les envía las preguntas.
   Plan: dejar a Creativate, pedirles código de transferencia del dominio (y confirmar que el titular es FERJUSANZ), accesos de WordPress y del alojamiento, copia completa, buzones de correo del dominio (si los hay) y acceso a Google Tag Manager/Analytics. Que NO borren nada hasta el traslado. Luego la llevamos nosotros con Claude.
 - ✔️ **Reunión con Jorge (contable) el 13/11/2026**: hoja de preguntas https://claude.ai/artifact/1dM6shj1VjYVBsyr3wxtr7 (qué ve, qué le manda Carmen y que cuadre, legalidad, Golden mínimo). Al volver: pasar sus respuestas a la tabla del final y ajustar «Informes para Jorge» (p. ej. NIF e IVA de facturas de proveedores, que hoy no se guardan).
-- 🔴 **Facturar desde la app desde el 1/1/2027** (respuestas de Jorge, 12/11/2026). Plan, requisitos y fases: **`docs/PLAN_FACTURACION.md`** (una fase por sesión). Siguiente: **fase 1, datos fiscales** (empresa y clientes completos).
-  - 🟡 Fernando: confirmar dirección exacta y teléfono de la empresa para la factura; pasar imagen del sello/firma.
+- 🔴 **Facturar desde la app desde el 1/1/2027** (respuestas de Jorge, 12/11/2026). Plan, requisitos y fases: **`docs/PLAN_FACTURACION.md`** (una fase por sesión). Siguiente: **fase 2, facturas emitidas** en PRUEBAS.
+  - 🟡 **Fase 1 (datos fiscales) en PRUEBAS (v252)**: que Fernando la mire. Falta aplicar `supabase/migrations/20261112g_empresa.sql` (tabla `empresa`) en pruebas y en la real, con su «listo»; luego «Autorizo publicar».
+  - 🟡 **Carmen: completar los 96 clientes** sin NIF / dirección / CP (Clientes → «🧾 Faltan datos para facturar») antes del 1/1/2027.
+  - ✔️ 12/11/2026: dirección (C/ Carare, 2 – 28033 Madrid, también domicilio fiscal), teléfono 91 763 21 86 y sello (cabecera de los albaranes de papel) confirmados por Fernando.
   - 🟡 Fernando (y Jorge): decidir los **clientes sin IVA**. Claude recomienda una sola app con todo facturado (ver punto 6 del plan); no se puede montar una parte de ventas que no llegue a facturación ni al contable.
   - 🟡 Jorge: confirmar por escrito la fecha de Verifactu cuando salga la norma.
   - ⚪ Texto para ordenarlo con ChatGPT: `claude/08-textos-para-empezar-chats/PROMPT_CHATGPT_FACTURACION.md`.

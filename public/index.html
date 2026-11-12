@@ -603,7 +603,7 @@ function crearSbPractica(){
       __init.lineas_pedido=[]; ps.forEach((x,k)=>{const o=cs.length?(k%cs.length):0; if(cs.length) __init.lineas_pedido.push({id:'l'+(k+1),pedido_id:'o'+(o+1),producto_id:x.id,cantidad_pedida:1+(k%3),unidad_pedida:x.unidad_venta||'kg',peso_real:null,unidad_precio:x.unidad_precio||'kg',precio:tp(x.id),estado:'pendiente',version:1});});
     } } catch(e) {}
   const __j=JSON.parse(localStorage.getItem('p_stub_db')||'null'); const __saved=(__j&&__j.dia===H()&&__j.__reales===__init.__reales)?__j:null;
-  const DB = window.__DB = __saved || __init; DB.dia=H(); DB.perfiles.forEach(p=>{if(p.id==='u1'&&p.reparte==null)p.reparte=true;}); ['presentaciones','formatos_producto','formatos_cliente','abreviaturas','albaran_portal','albaran_enlaces','cliente_enlaces'].forEach(k=>{DB[k]=DB[k]||[];}); DB.carga_lineas=DB.carga_lineas||[]; DB.sobrante=DB.sobrante||[]; DB.mensajes=DB.mensajes||[]; DB.fichajes=DB.fichajes||[]; DB.fotos_perfil=DB.fotos_perfil||[]; DB.cobros=DB.cobros||[]; DB.proveedores=DB.proveedores||[]; DB.compras=DB.compras||[]; DB.lotes=DB.lotes||[]; DB.asignaciones_lote=DB.asignaciones_lote||[]; DB.entregas=DB.entregas||[]; DB.incidencias=DB.incidencias||[]; DB.documentos_compra=DB.documentos_compra||[]; DB.facturas_recibidas=DB.facturas_recibidas||[]; DB.facturas_clientes=DB.facturas_clientes||[]; if(!DB.golden_facturas){DB.golden_facturas=[{id:'g1',numero:'P/20.001',serie:'P',fecha:'2026-09-10',tipo:'Serie PC',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:100,descuentos:0,gastos:0,base:100,total:104,borrador:false,n_lineas:2},{id:'g2',numero:'BOR/5',serie:'BOR',fecha:'2026-09-11',tipo:'Facturas borrador',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:50,descuentos:0,gastos:0,base:50,total:52,borrador:true,n_lineas:1},{id:'g3',numero:'F1/9.001',serie:'F1',fecha:'2026-08-01',tipo:'Facturas Fernando',cliente_codigo:'TABERNA',cliente_nombre:'Taberna El Enano',bruto:30,descuentos:0,gastos:0,base:30,total:31.2,borrador:false,n_lineas:1}];DB.golden_lineas=[{id:'l1',factura_numero:'P/20.001',orden:1,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:20,precio:2,iva:4,importe:41.6},{id:'l2',factura_numero:'P/20.001',orden:2,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'01',descripcion:'Patata Agria',cantidad:100,precio:0.6,iva:4,importe:62.4},{id:'l3',factura_numero:'BOR/5',orden:1,albaran:null,producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:25,precio:2,iva:4,importe:52},{id:'l4',factura_numero:'F1/9.001',orden:1,albaran:null,producto_codigo:'21',descripcion:'Cebollas Gordas',cantidad:30,precio:1,iva:4,importe:31.2}];} DB.alias_compra=DB.alias_compra||[]; DB.albaranes_facturados=DB.albaranes_facturados||[]; DB.precios_compra_dia=DB.precios_compra_dia||[]; DB.lineas_factura_leida=DB.lineas_factura_leida||[]; DB.compra_ajustes=DB.compra_ajustes||[]; DB.listas_precios=DB.listas_precios||[]; DB.listas_precios_items=DB.listas_precios_items||[]; DB.recomendaciones=DB.recomendaciones||[]; DB.prospectos=DB.prospectos||[]; DB.avisos=DB.avisos||[]; DB.pedidos_habituales=DB.pedidos_habituales||[]; if(!DB.__fijosEj){DB.__fijosEj=1; const cs=DB.clientes.filter(c=>c.activo!==false); const c3=cs.slice(-3); const dl=[1,2,3,4,5,6,0];
+  const DB = window.__DB = __saved || __init; DB.dia=H(); DB.perfiles.forEach(p=>{if(p.id==='u1'&&p.reparte==null)p.reparte=true;}); ['presentaciones','formatos_producto','formatos_cliente','abreviaturas','albaran_portal','albaran_enlaces','cliente_enlaces'].forEach(k=>{DB[k]=DB[k]||[];}); if(!DB.empresa||!DB.empresa.length) DB.empresa=[{id:'e1',unica:true,razon_social:'FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L.',nif:'B87446670',direccion:'C/ Carare, 2',codigo_postal:'28033',localidad:'Madrid',provincia:'Madrid',telefono:'91 763 21 86',moviles:'609 100 690 – 616 439 157 – 609 567 354',email:'ferjusanz@hotmail.com',registro_mercantil:'Inscrita en el Registro Mercantil de Madrid, Tomo 34.358, Folio 101, Sección 8.ª, Hoja M-618046, Inscripción 1.ª',lema:'Mayoristas de patatas, frutas y verduras'}]; DB.carga_lineas=DB.carga_lineas||[]; DB.sobrante=DB.sobrante||[]; DB.mensajes=DB.mensajes||[]; DB.fichajes=DB.fichajes||[]; DB.fotos_perfil=DB.fotos_perfil||[]; DB.cobros=DB.cobros||[]; DB.proveedores=DB.proveedores||[]; DB.compras=DB.compras||[]; DB.lotes=DB.lotes||[]; DB.asignaciones_lote=DB.asignaciones_lote||[]; DB.entregas=DB.entregas||[]; DB.incidencias=DB.incidencias||[]; DB.documentos_compra=DB.documentos_compra||[]; DB.facturas_recibidas=DB.facturas_recibidas||[]; DB.facturas_clientes=DB.facturas_clientes||[]; if(!DB.golden_facturas){DB.golden_facturas=[{id:'g1',numero:'P/20.001',serie:'P',fecha:'2026-09-10',tipo:'Serie PC',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:100,descuentos:0,gastos:0,base:100,total:104,borrador:false,n_lineas:2},{id:'g2',numero:'BOR/5',serie:'BOR',fecha:'2026-09-11',tipo:'Facturas borrador',cliente_codigo:'LAFIGAL',cliente_nombre:'Restaurante La Figal',bruto:50,descuentos:0,gastos:0,base:50,total:52,borrador:true,n_lineas:1},{id:'g3',numero:'F1/9.001',serie:'F1',fecha:'2026-08-01',tipo:'Facturas Fernando',cliente_codigo:'TABERNA',cliente_nombre:'Taberna El Enano',bruto:30,descuentos:0,gastos:0,base:30,total:31.2,borrador:false,n_lineas:1}];DB.golden_lineas=[{id:'l1',factura_numero:'P/20.001',orden:1,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:20,precio:2,iva:4,importe:41.6},{id:'l2',factura_numero:'P/20.001',orden:2,albaran:'Alb. F/1 de 10/09/2026',producto_codigo:'01',descripcion:'Patata Agria',cantidad:100,precio:0.6,iva:4,importe:62.4},{id:'l3',factura_numero:'BOR/5',orden:1,albaran:null,producto_codigo:'91-D',descripcion:'Tomate pera',cantidad:25,precio:2,iva:4,importe:52},{id:'l4',factura_numero:'F1/9.001',orden:1,albaran:null,producto_codigo:'21',descripcion:'Cebollas Gordas',cantidad:30,precio:1,iva:4,importe:31.2}];} DB.alias_compra=DB.alias_compra||[]; DB.albaranes_facturados=DB.albaranes_facturados||[]; DB.precios_compra_dia=DB.precios_compra_dia||[]; DB.lineas_factura_leida=DB.lineas_factura_leida||[]; DB.compra_ajustes=DB.compra_ajustes||[]; DB.listas_precios=DB.listas_precios||[]; DB.listas_precios_items=DB.listas_precios_items||[]; DB.recomendaciones=DB.recomendaciones||[]; DB.prospectos=DB.prospectos||[]; DB.avisos=DB.avisos||[]; DB.pedidos_habituales=DB.pedidos_habituales||[]; if(!DB.__fijosEj){DB.__fijosEj=1; const cs=DB.clientes.filter(c=>c.activo!==false); const c3=cs.slice(-3); const dl=[1,2,3,4,5,6,0];
     if(c3[0]) DB.pedidos_habituales.push({id:'hf1',cliente_id:c3[0].id,nombre:'Fijo (ejemplo)',dias_semana:dl,notas:'2 sacos patatas, cebollas',activo:true,tipo:'fijo',repartidor_id:'u1',created_at:'2026-01-01'});
     if(c3[1]) DB.pedidos_habituales.push({id:'hf2',cliente_id:c3[1].id,nombre:'Fijo (ejemplo)',dias_semana:dl,notas:'',activo:true,tipo:'especifico',repartidor_id:'u1',created_at:'2026-01-02'});
     if(c3[2]) DB.pedidos_habituales.push({id:'hf3',cliente_id:c3[2].id,nombre:'Si llama (ejemplo)',dias_semana:dl,notas:'',activo:true,tipo:'si_llama',repartidor_id:'u1',created_at:'2026-01-03'});} DB.lineas_habituales=DB.lineas_habituales||[];
@@ -880,6 +880,43 @@ const eur = n => n == null ? '' : Number(n).toLocaleString('es-ES', { minimumFra
 const parseNum = s => { const n = parseFloat(String(s).trim().replace(',', '.')); return isNaN(n) ? null : n; };
 const fechaES = iso => { if (!iso) return ''; const [y, m, d] = String(iso).slice(0, 10).split('-'); return d + '/' + m + '/' + y; };
 const nombreCli = c => (c && (c.nombre_comercial || c.nombre)) || '';
+/* ---- Datos fiscales (fase 1 del plan de facturación) ---- */
+/* NIF español: DNI (8 cifras + letra), NIE (X/Y/Z + 7 cifras + letra) o CIF (letra + 7 cifras + control). Devuelve true si la letra/control cuadra. */
+function nifValido(v) {
+  const s = String(v || '').toUpperCase().replace(/[\s.\-\/]/g, ''); const L = 'TRWAGMYFPDXBNJZSQVHLCKE';
+  if (/^\d{8}[A-Z]$/.test(s)) return L[+s.slice(0, 8) % 23] === s[8];
+  if (/^[XYZ]\d{7}[A-Z]$/.test(s)) return L[+(('XYZ'.indexOf(s[0])) + s.slice(1, 8)) % 23] === s[8];
+  if (/^[ABCDEFGHJKLMNPQRSUVW]\d{7}[0-9A-J]$/.test(s)) {
+    let a = 0, b = 0; for (let i = 1; i <= 7; i++) { const d = +s[i]; if (i % 2 === 0) a += d; else { const x = d * 2; b += Math.floor(x / 10) + (x % 10); } }
+    const ctl = (10 - ((a + b) % 10)) % 10; const k = s[8];
+    return k === String(ctl) || k === 'JABCDEFGHI'[ctl];
+  }
+  return false;
+}
+/* Lo que le falta a un cliente para poder hacerle una factura (nombre, NIF válido, dirección, CP de 5 cifras y localidad) */
+function faltaFiscal(c) {
+  const f = []; const v = k => String((c && c[k]) || '').trim();
+  if (!v('nombre')) f.push('nombre');
+  if (!v('nif')) f.push('NIF'); else if (!nifValido(v('nif'))) f.push('NIF mal escrito');
+  if (!v('direccion')) f.push('dirección');
+  if (!v('codigo_postal')) f.push('código postal'); else if (!/^\d{5}$/.test(v('codigo_postal'))) f.push('código postal mal (5 cifras)');
+  if (!v('localidad')) f.push('localidad');
+  return f;
+}
+/* Sello de la empresa (igual que la cabecera de los albaranes de papel), en SVG */
+function selloEmpresaSVG(e) {
+  e = e || {}; const x = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const rs = String(e.razon_social || EMPRESA.nombre); const m = rs.match(/^(\S+)\s+(.*)$/) || [rs, rs, ''];
+  const dir = [e.direccion || 'Carare, 2', [e.codigo_postal || '28033', (e.localidad || 'Madrid')].join(' ')].join(' - ').replace(/^C\/\s*/i, '').toUpperCase();
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 150" width="100%" style="max-width:420px;display:block" font-family="Arial,Helvetica,sans-serif" fill="#111">' +
+    '<text x="6" y="38" font-size="34" font-weight="900" letter-spacing="1">' + x(m[1]) + '</text>' +
+    (() => { const x0 = 14 + m[1].length * 23; return '<text x="' + x0 + '" y="38" font-size="19" font-weight="700" textLength="' + (554 - x0) + '" lengthAdjust="spacingAndGlyphs">' + x(m[2]) + '</text>'; })() +
+    '<text x="6" y="62" font-size="13" font-weight="700">' + x((e.lema || EMPRESA.lema).toUpperCase()) + '</text>' +
+    '<text x="6" y="84" font-size="13">Tels: ' + x(e.telefono || '91 763 21 86') + '</text>' +
+    '<text x="6" y="104" font-size="13">Móviles: ' + x(e.moviles || '609 100 690 – 616 439 157 – 609 567 354') + '</text>' +
+    '<text x="6" y="124" font-size="13">' + x(dir) + '</text>' +
+    '<text x="6" y="144" font-size="13">' + x(e.email || EMPRESA.email) + '</text></svg>';
+}
 const LS = {
   get(k, def) { try { const v = localStorage.getItem(PRE + k); return v ? JSON.parse(v) : def; } catch (e) { return def; } },
   set(k, v) { try { localStorage.setItem(PRE + k, JSON.stringify(v)); } catch (e) { } }
@@ -4489,21 +4526,76 @@ function vistaPrefacturas() {
     h('label', { class: 'campo', style: 'flex-direction:row;gap:8px;align-items:center' }, chkFact, ' Mostrar también los ya facturados'), info, cont), { volver: volverIni })); renderBanner(); cargar();
 }
 const arr = x => Array.isArray(x) ? x : (x ? [x] : []);
+/* 🏢 Datos de la empresa: lo que sale arriba en cada factura (emisor). Lo ve oficina; solo admin lo cambia. Fase 1 del plan de facturación. */
+function vistaEmpresa() {
+  state.view = 'empresa'; if (!esOficina()) { go('inicio'); return; }
+  const puede = state.perfil.rol === 'admin'; const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
+  $app.replaceChildren(shell('Datos de la empresa', cont, { volver: volverIni })); renderBanner();
+  const CAMPOS = [['razon_social', 'Razón social *'], ['nif', 'NIF *'], ['direccion', 'Dirección *'], ['codigo_postal', 'Código postal *'], ['localidad', 'Localidad *'], ['provincia', 'Provincia'],
+    ['telefono', 'Teléfono'], ['moviles', 'Móviles'], ['email', 'Correo'], ['registro_mercantil', 'Datos del Registro Mercantil (obligatorios en la factura)'], ['lema', 'Lema (debajo del nombre)']];
+  async function cargar() {
+    try {
+      const r = await sb.from('empresa').select('*').maybeSingle();
+      if (r.error) throw r.error; if (!r.data) { cont.replaceChildren(h('p', { class: 'err' }, 'Todavía no está la ficha de la empresa en la base de datos.')); return; }
+      pintar(r.data);
+    } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver los datos de la empresa.' : /empresa|schema cache|relation/i.test(e.message || '') ? 'Falta crear la ficha de la empresa en la base de datos (cambio pendiente de aplicar).' : msgErr(e))); }
+  }
+  function pintar(e) {
+    const f = {};
+    const campo = ([k, t]) => { f[k] = k === 'registro_mercantil' ? h('textarea', { rows: 3, disabled: !puede }) : h('input', { value: e[k] || '', disabled: !puede, inputmode: k === 'codigo_postal' ? 'numeric' : undefined }); if (k === 'registro_mercantil') f[k].value = e[k] || ''; return h('label', { class: 'campo' }, t, f[k]); };
+    const sello = h('div', { class: 'card', style: 'background:#fff' }); sello.innerHTML = selloEmpresaSVG(e);
+    const nifOk = nifValido(e.nif);
+    async function guardar(btn) {
+      const fila = {}; CAMPOS.forEach(([k]) => { fila[k] = f[k].value.trim() || null; });
+      fila.nif = (fila.nif || '').toUpperCase().replace(/[\s.\-\/]/g, '') || null;
+      const falta = CAMPOS.filter(([k, t]) => /\*/.test(t) && !fila[k]).map(([, t]) => t.replace(' *', ''));
+      if (falta.length) { toast('Falta: ' + falta.join(', '), 'err'); return; }
+      if (!/^\d{5}$/.test(fila.codigo_postal)) { toast('El código postal tiene que tener 5 cifras', 'err'); return; }
+      if (!nifValido(fila.nif) && !confirm('El NIF no parece correcto. ¿Guardarlo igualmente?')) return;
+      if (!confirm('Estos datos salen en TODAS las facturas. ¿Guardar los cambios?')) return;
+      if (!navigator.onLine) { toast('Necesitas conexión para guardar.', 'err'); return; }
+      btn.disabled = true; const r = await sb.from('empresa').update(fila).eq('id', e.id).select().single(); btn.disabled = false;
+      if (r.error) { toast(msgErr(r.error), 'err'); return; } toast('Datos de la empresa guardados', 'ok'); pintar(r.data);
+    }
+    const btn = puede ? h('button', { class: 'guardar', style: 'width:100%', onclick: () => guardar(btn) }, 'Guardar cambios') : null;
+    const nCli = h('span', {}, '…');
+    sb.from('clientes').select('nombre,nif,direccion,codigo_postal,localidad,activo').eq('activo', true).range(0, 4999).then(r => { if (!r.error) nCli.textContent = String((r.data || []).filter(c => faltaFiscal(c).length).length); }).catch(() => { });
+    cont.replaceChildren(...[
+      h('div', { class: 'aviso-card' }, 'Son los datos de FERJUSANZ que saldrán arriba en cada factura desde el 1/1/2027. ' + (puede ? 'Si cambias algo, cambia en todas las facturas nuevas (las ya hechas no se tocan).' : 'Solo los puede cambiar un administrador.')),
+      nifOk ? null : h('p', { class: 'err' }, 'El NIF guardado no parece correcto: revísalo.'),
+      h('div', { class: 'nombre', style: 'margin:6px 0' }, 'Sello (cabecera de la factura)'), sello,
+      h('div', { class: 'sub', style: 'margin:-4px 0 12px' }, 'El NIF y los datos del Registro Mercantil van aparte, debajo del sello.'),
+      ...CAMPOS.map(campo), btn,
+      h('button', { class: 'ghost', style: 'width:100%;margin-top:14px;color:#b91c1c;border-color:#fca5a5', onclick: () => { window.__cliFiscal = true; go('clientes'); } }, '🧾 Clientes a los que les faltan datos para facturar: ', nCli)].filter(Boolean));
+  }
+  cargar();
+}
 function vistaClientes() {
   state.view = 'clientes'; const lectura = false;
-  let soloActivos = LS.get('fj_cli_activos', true), tope = 80;
+  let soloActivos = LS.get('fj_cli_activos', true), tope = 80, soloFiscal = !!(state.params.fiscal || window.__cliFiscal) && esOficina();
   const lista = h('div', {}); const info = h('p', { class: 'sub' });
   const inp = h('input', { placeholder: 'Buscar por nombre, código, NIF o teléfono…', oninput: debounce(() => { tope = 80; pintar(); }, 200) });
   const bAct = h('button', { class: 'chip', onclick: () => { soloActivos = true; LS.set('fj_cli_activos', true); marca(); pintar(); } }, 'Activos');
   const bTod = h('button', { class: 'chip', onclick: () => { soloActivos = false; LS.set('fj_cli_activos', false); marca(); pintar(); } }, 'Todos');
-  function marca() { bAct.className = 'chip' + (soloActivos ? ' on' : ''); bTod.className = 'chip' + (!soloActivos ? ' on' : ''); }
+  /* 🧾 Fase 1 de facturación: clientes activos a los que les falta algo para poder facturarles */
+  const bFis = esOficina() ? h('button', { class: 'chip', onclick: () => { soloFiscal = !soloFiscal; window.__cliFiscal = soloFiscal; if (soloFiscal) soloActivos = true; tope = 80; marca(); pintar(); } }, '🧾 Faltan datos para facturar') : null;
+  const avFis = h('div', {}); let cargadoFis = false;
+  function marca() { bAct.className = 'chip' + (soloActivos ? ' on' : ''); bTod.className = 'chip' + (!soloActivos ? ' on' : ''); if (bFis) { bFis.className = 'chip' + (soloFiscal ? ' on' : ''); bFis.style.cssText = soloFiscal ? '' : 'color:#b91c1c;border-color:#fca5a5'; } }
   function pintar() {
     marca();
     if (!clientesCache) { lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); return; }
     const t = sinTilde(limpiaBusqueda(inp.value));
     let r = clientesCache.filter(c => !soloActivos || c.activo);
+    const completo = cargadoFis; /* otra pantalla pudo guardar la lista sin direcciones: esperar a la carga de aquí */
+    const nFis = completo ? clientesCache.filter(c => c.activo && faltaFiscal(c).length).length : '…';
+    if (bFis) bFis.textContent = '🧾 Faltan datos para facturar (' + nFis + ')';
+    if (soloFiscal && !completo) { lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); return; }
+    if (soloFiscal) r = r.filter(c => c.activo && faltaFiscal(c).length);
     if (t) r = r.filter(c => sinTilde([c.nombre, c.nombre_comercial, c.codigo, lectura ? '' : c.nif, c.telefono, c.localidad].join(' ')).includes(t));
-    info.textContent = r.length + (r.length === 1 ? ' cliente' : ' clientes') + ' · de la A a la Z';
+    avFis.replaceChildren(...(soloFiscal ? [h('div', { class: 'aviso-card', style: 'border-color:#fca5a5;background:#fef2f2' },
+      h('b', {}, 'Desde el 1/1/2027 se factura con la app. '), 'A estos clientes no se les podrá hacer factura hasta tener ', h('b', {}, 'NIF, dirección, código postal y localidad'), '. Toca cada uno, rellena lo que sale en rojo y «Guardar cambios». Los datos suelen estar en Golden o en sus facturas.',
+      h('button', { class: 'ghost small', style: 'display:block;margin-top:8px', onclick: async () => { const txt = r.map(c => [c.codigo, nombreCli(c), 'falta: ' + faltaFiscal(c).join(', ')].join(' · ')).join('\n'); try { await navigator.clipboard.writeText(txt); toast('Lista copiada (' + r.length + ')', 'ok'); } catch (e) { toast('No se pudo copiar', 'err'); } } }, '📋 Copiar la lista'))] : []));
+    info.textContent = r.length + (r.length === 1 ? ' cliente' : ' clientes') + (soloFiscal ? ' sin datos completos para facturar' : '') + ' · de la A a la Z';
     const kids = []; let letra = '';
     for (const c of r.slice(0, tope)) {
       const n = nombreCli(c); const l = (sinTilde(n).charAt(0) || '#').toUpperCase(); const L = /[A-Z]/.test(l) ? l : '#';
@@ -4512,7 +4604,7 @@ function vistaClientes() {
       const btnF = esOficina() ? h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: e => { e.stopPropagation(); if (desp.style.display === 'none') { desp.style.display = ''; if (!desp.hasChildNodes()) desp.append(panelFacturasCli(c)); btnF.textContent = '▴ Ocultar facturas'; } else { desp.style.display = 'none'; btnF.textContent = '▾ Facturas'; } } }, '▾ Facturas') : null;
       kids.push(h('div', { class: 'card tap', onclick: () => go('cliente', { id: c.id }) },
         h('div', { class: 'fila' },
-          h('div', {}, h('div', { class: 'nombre' }, n), h('div', { class: 'sub' }, [c.codigo, c.localidad, c.telefono].filter(Boolean).join(' · '))),
+          h('div', {}, h('div', { class: 'nombre' }, n), h('div', { class: 'sub' }, [c.codigo, c.localidad, c.telefono].filter(Boolean).join(' · ')), soloFiscal ? h('div', { style: 'color:#b91c1c;font-weight:700;font-size:14px;margin-top:2px' }, '🧾 Falta: ' + faltaFiscal(c).join(', ')) : null),
           h('div', { style: 'text-align:right' }, c.activo ? null : h('span', { class: 'badge' }, 'Inactivo'), !lectura && c.forma_pago === 'contado' ? [' ', h('span', { class: 'badge cont' }, 'Contado')] : null)), btnF,
         h('div', { onclick: e => e.stopPropagation() }, desp)));
     }
@@ -4522,14 +4614,14 @@ function vistaClientes() {
   }
   async function cargar() {
     try {
-      const { data, error } = await sb.from('clientes').select(lectura ? 'id,codigo,nombre,nombre_comercial,telefono,localidad,activo' : 'id,codigo,nombre,nombre_comercial,nif,telefono,email,localidad,forma_pago,activo').range(0, 4999);
+      const { data, error } = await sb.from('clientes').select(lectura ? 'id,codigo,nombre,nombre_comercial,telefono,localidad,activo' : 'id,codigo,nombre,nombre_comercial,nif,telefono,email,direccion,codigo_postal,localidad,forma_pago,activo').range(0, 4999);
       if (error) throw error;
-      clientesCache = data.sort((a, b) => nombreCli(a).localeCompare(nombreCli(b), 'es')); pintar();
+      clientesCache = data.sort((a, b) => nombreCli(a).localeCompare(nombreCli(b), 'es')); cargadoFis = true; pintar();
     } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver los clientes.' : msgErr(e))); }
   }
   $app.replaceChildren(shell('Clientes', h('div', {},
     lectura ? h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Solo consulta: los datos los modifica administración.') : h('button', { style: 'width:100%;margin-bottom:10px', onclick: () => go('cliente', { id: null }) }, '+ Añadir cliente'),
-    h('div', { class: 'chips' }, bAct, bTod), inp, info, lista)));
+    h('div', { class: 'chips' }, bAct, bTod, bFis), avFis, inp, info, lista)));
   renderBanner(); pintar(); cargar();
 }
 /* Ficha de cliente de solo lectura (preparadores y repartidores): sin datos económicos */
@@ -4604,6 +4696,8 @@ function vistaCliente() {
         abre: f.abre.value || null, cierra: f.cierra.value || null, franja_desde: f.franja_desde.value || null, franja_hasta: f.franja_hasta.value || null,
         dias_pago: f.dias_pago.value.trim() === '' ? null : Math.max(0, parseInt(f.dias_pago.value, 10) || 0), tiempo_parada: Math.max(0, parseInt(f.tiempo_parada.value, 10) || 10), notas_reparto: f.notas_reparto.value.trim() || null, lat: ubic ? ubic.lat : null, lng: ubic ? ubic.lng : null };
       if (fila.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fila.email)) { toast('El correo no parece válido', 'err'); return; }
+      if (fila.nif) fila.nif = fila.nif.replace(/[\s.\-\/]/g, '');
+      if (fila.nif && !nifValido(fila.nif) && !confirm('El NIF «' + fila.nif + '» no parece correcto (la letra o el último número no cuadra).\n\n¿Guardarlo igualmente?')) return;
       btn.disabled = true;
       const r = id ? await sb.from('clientes').update(fila).eq('id', id).select().single() : await sb.from('clientes').insert(fila).select().single();
       btn.disabled = false;
@@ -4611,7 +4705,19 @@ function vistaCliente() {
       c = r.data; id = c.id; clientesCache = null; toast('Cliente guardado', 'ok'); state.params = { id, tab: 'datos' }; pintar();
     }
     const btn = h('button', { class: 'guardar', style: 'width:100%', onclick: () => guardar(btn) }, id ? 'Guardar cambios' : 'Crear cliente');
-    return h('div', {},
+    /* 🧾 Datos para facturar: aviso en rojo con lo que falta (se pone al día mientras se escribe) */
+    const avisoF = h('div', {});
+    function revisaF() {
+      if (!f.nif || !f.direccion) return;
+      const v = { nombre: f.nombre.value || f.nombre_comercial.value, nif: f.nif.value, direccion: f.direccion.value, codigo_postal: f.codigo_postal.value, localidad: f.localidad.value };
+      const fl = faltaFiscal(v); const rojo = '#dc2626';
+      f.nif.style.borderColor = fl.some(x => /NIF/.test(x)) ? rojo : ''; f.direccion.style.borderColor = fl.includes('dirección') ? rojo : '';
+      f.codigo_postal.style.borderColor = fl.some(x => /postal/.test(x)) ? rojo : ''; f.localidad.style.borderColor = fl.includes('localidad') ? rojo : '';
+      avisoF.replaceChildren(fl.length ? h('div', { class: 'aviso-card', style: 'border-color:#fca5a5;background:#fef2f2;color:#991b1b' }, h('b', {}, '🧾 Para poder hacerle factura falta: ' + fl.join(', ') + '.'), h('div', { class: 'sub', style: 'margin-top:4px' }, 'Se puede guardar igual. Desde el 1/1/2027 la app no dejará facturarle sin estos datos.'))
+        : h('div', { class: 'sub', style: 'color:#15803d;margin-bottom:8px' }, '✔ Datos completos para facturar'));
+    }
+    setTimeout(revisaF, 0);
+    return h('div', { oninput: revisaF }, avisoF,
       campo('nombre', 'Nombre o razón social *'), campo('nombre_comercial', 'Nombre comercial (opcional)'),
       campo('nif', 'NIF / CIF', { autocapitalize: 'characters' }), campo('email', 'Correo electrónico', { type: 'email', inputmode: 'email' }),
       campo('telefono', 'Teléfono', { type: 'tel', inputmode: 'tel' }), campo('direccion', 'Dirección'),
@@ -5165,8 +5271,8 @@ function vistaMas() {
       puedeCompras() ? c('💲', 'Precios de compra del día', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, V) : null, c('♻️', 'Sobrante', () => go('sobrante'), V)),
     ...g('Entregas y pedidos', c('🚦', 'Camino de los pedidos', () => go('camino'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a')),
     ...g('Compras y mercancía', puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('💶', 'Precios de compra', () => { if (LS.get('fj_precios_modo', 'dia') === 'hoy') LS.set('fj_precios_modo', 'dia'); go('precios'); }, A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null),
-    ...g('Clientes y productos', c('👥', 'Clientes', () => go('clientes'), Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z)),
-    ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
+    ...g('Clientes y productos', c('👥', 'Clientes', () => { window.__cliFiscal = false; go('clientes'); }, Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z)),
+    ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() ? c('🏢', 'Datos de la empresa', () => go('empresa'), Z) : null, esOficina() ? c('🧾', 'Clientes sin datos para facturar', () => { window.__cliFiscal = true; go('clientes'); }, Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('❓', 'Ayuda y guía', () => go('ayuda'), T), c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
@@ -12820,7 +12926,7 @@ const BUSCA_PANTALLAS = [
   ['♻️', 'Sobrante', 'sobrante sobra existencias stock almacen sobras', () => go('sobrante')],
   ['💰', 'Cobros', 'cobros cobrar cobrado pagos pago dinero efectivo tarjeta bizum transferencia', () => go('cobros')],
   ['🧮', 'Deudas', 'deudas deuda debe deben dinero pendiente cobro morosos impagados', () => go('deudas')],
-  ['👥', 'Clientes', 'clientes cliente ficha alta cliente telefono direccion', () => go('clientes')],
+  ['👥', 'Clientes', 'clientes cliente ficha alta cliente telefono direccion', () => { window.__cliFiscal = false; go('clientes'); }],
   ['🥬', 'Productos', 'productos producto catalogo articulos codigos', () => go('catalogo')],
   ['📋', 'Cómo se pone cada producto', 'reglas producto codigos golden nombres factura como se pone', () => go('reglasprod')],
   ['🔎', 'Productos sin reconocer', 'productos sin reconocer enlazar nombres facturas', () => go('sinreconocer'), 'o'],
@@ -12833,6 +12939,8 @@ const BUSCA_PANTALLAS = [
   ['🚦', 'Camino de los pedidos', 'camino pedidos estado preparado entregado enviado cobrado facturado golden falta donde esta pedido', () => go('camino')],
   ['📤', 'Facturas para Golden', 'facturas golden pasar facturar prefacturas', () => go('prefacturas'), 'o'],
   ['📄', 'Facturas de clientes', 'facturas clientes imprimir enviar factura cliente', () => go('facturascli'), 'o'],
+  ['🏢', 'Datos de la empresa', 'empresa datos fiscales nif cif sello registro mercantil direccion emisor factura ferjusanz', () => go('empresa'), 'o'],
+  ['🧾', 'Clientes sin datos para facturar', 'clientes faltan datos nif cif codigo postal direccion facturar fiscales', () => { window.__cliFiscal = true; go('clientes'); }, 'o'],
   ['🗂️', 'Histórico de Golden', 'historico golden ventas antiguas', () => go('golden'), 'o'],
   ['📊', 'Resumen', 'resumen ventas totales numeros informe', () => go('resumen'), 'o'],
   ['📈', 'Rentabilidad', 'rentabilidad ganancia beneficio margen ganamos perdemos', () => go('rentabilidad'), 'o'],
@@ -13242,7 +13350,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { modoreparto: vistaModoReparto, tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, camino: vistaCamino, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { empresa: vistaEmpresa, modoreparto: vistaModoReparto, tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, camino: vistaCamino, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   if (MR.dentro() && state.view === 'inicio' && !state.mrMirado) { state.mrMirado = true; return vistaModoReparto(); }   /* vuelve al modo reparto si se cerró la app */
   v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); if (state.view === 'inicio') setTimeout(mrAuto, 300); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
