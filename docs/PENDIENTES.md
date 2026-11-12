@@ -2,6 +2,8 @@
 _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.md. Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda._
 
 ## Por publicar o decidir
+- 🔴 12/11/2026: **Arreglos de Preparar → Entregar → Facturar** en PRUEBAS (v228): albaranes sin precios que desaparecían, «No servido», nombre del PDF, entrega sin precios y avisos en Preparar facturas (detalle en HISTORIAL). Falta: que Fernando lo vea y «Autorizo publicar» (usar v229 o más). Ojo: `main` ya lleva «Facturas con retraso» (v225): al publicar, decidir si va junto o se publica solo esto.
+  - ⚪ Propuestas sin hacer (que decida Fernando): hoja de **Carga** ordenada por repartidor y orden de reparto (ahora va por ruta del cliente); el correo automático del albarán (`albaranes-correo`) aún pone «0» en lo no servido; unidades «ud» en el albarán para cajas/bandejas.
 - 🔴 12/11/2026: **Facturas con retraso** en PRUEBAS (v225): la compra va al día de la factura, no al día en que llegó el correo. Falta: que Fernando lo vea, «Autorizo publicar» (usar v226 o más) y aplicar `supabase/migrations/20261112c_facturas_con_retraso.sql` con Fernando delante («listo»): pasa 2 compras de Ibérica del 11/11 al 10/11 y rellena la fecha de 24 facturas.
 - ✔️ 12/11/2026: **Entrega en mano, orden nuevo** (albarán arriba + firma → paga o debe → enviar) publicada en la normal (v223). Pruebas en v224 con lo mismo.
 - 🟡 Vídeo «5 skills para Claude Code»: superpowers e impeccable activados (12/11). La 4.ª es **ponytail** (ya instalada). La 5.ª no se vio; Fernando pidió **taste** (activada 12/11). Si en el vídeo la 5.ª es otra, pasar captura. Claude-Mem: solo en su ordenador si lo quiere.

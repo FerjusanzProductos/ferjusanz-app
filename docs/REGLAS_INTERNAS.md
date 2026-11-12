@@ -106,6 +106,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - El **90-95 %** de los albaranes **ya no se imprime**: se envían al cliente por su **portal de clientes** (se carga solo al marcar la entrega) o por WhatsApp/correo/QR. Se dice «albarán enviado», no «albarán impreso».
 - Excepción: clientes marcados en su ficha con **«📄 Quiere el albarán en PAPEL»** (no se manejan con el móvil). En Preparar llevan la etiqueta «📄 Papel» y en su albarán sale abierta la opción de imprimir.
 - La copia **ROSA** (oficina, con el código de Golden) se ve **en pantalla**, sin imprimir.
+- Lo que no se lleva («No hay», no disponible o «Se compra después») sale en el albarán como **«No servido»**, sin precio ni importe (12/11/2026).
 
 ## IVA y albaranes
 - Clientes **sin IVA = azul**, con IVA = dorado (solo en pantallas internas; el cliente nunca lo ve).

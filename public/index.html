@@ -1032,6 +1032,8 @@ function encolar(linea, peso, pedidoId, nombre) {
   setCola(cola);
 }
 const esDespues = l => !!l && l.estado === 'no_disponible' && /se compra despu/i.test(l.notas || '');
+/* Línea anotada a 0 («No hay») o no disponible: no se sirve ni se cobra; no necesita precio */
+const noServida = l => !!l && (l.estado === 'no_disponible' || (l.peso_real != null && l.peso_real !== '' && Number(l.peso_real) === 0));
 async function marcarDespues(l, nom) {
   if (!navigator.onLine) { toast('Necesitas conexión.', 'err'); return false; }
   try { setCola(getCola().filter(x => x.linea_id !== l.id)); const r = await sb.rpc('marcar_compra_despues', { p_linea: l.id }); if (r.error) throw r.error;
@@ -1201,7 +1203,7 @@ async function cargarPedidos(fecha) {
   const key = 'fj_pedidos_' + fecha;
   if (navigator.onLine) {
     const q = cols => sb.from('pedidos').select(cols).eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true);
-    let { data, error } = await q('id,cliente_id,estado,fecha_entrega,notas,preparador_id,repartidor_id,orden_reparto,hash_origen,clientes(codigo,nombre,nombre_comercial,forma_pago,sin_iva,albaran_papel),lineas_pedido(id,estado)');
+    let { data, error } = await q('id,cliente_id,estado,fecha_entrega,notas,preparador_id,repartidor_id,orden_reparto,hash_origen,clientes(codigo,nombre,nombre_comercial,forma_pago,sin_iva,albaran_papel),lineas_pedido(id,estado),entregas(entregado_at)');
     if (error && /sin_iva|albaran_papel/i.test(error.message || '')) ({ data, error } = await q('id,cliente_id,estado,fecha_entrega,notas,preparador_id,repartidor_id,orden_reparto,hash_origen,clientes(codigo,nombre,nombre_comercial,forma_pago),lineas_pedido(id,estado)'));
     if (error && /repartidor_id|orden_reparto|does not exist|schema cache/i.test(error.message || '')) ({ data, error } = await q('id,estado,fecha_entrega,notas,preparador_id,clientes(codigo,nombre,nombre_comercial,forma_pago),lineas_pedido(id,estado)'));
     if (!error) { LS.set(key, data); return { datos: data, cache: false }; }
@@ -1274,6 +1276,7 @@ function pintarLista(cache) {
           (hayReparto || reps.length) ? (repDe(p) ? h('div', { class: 'sub', style: 'font-weight:700;color:#14532d' }, h('span', { style: 'display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;background:' + (repDe(p).color_reparto || '#2f7d4a') }), '🚚 Reparte ' + repDe(p).nombre.split(' ')[0] + (p.orden_reparto ? ' · nº ' + p.orden_reparto : '')) : h('div', { class: 'sub', style: 'color:#b45309' }, '🚚 Sin repartidor')) : null),
         h('div', { style: 'text-align:right' },
           h('span', { class: 'badge ' + claseEst(p) }, textoEst(p)), ' ',
+          p.estado === 'terminado' && (uno(p.entregas) || colaE.get().some(x => x.pedido === p.id)) ? h('div', {}, h('span', { class: 'badge fin', style: 'margin-top:4px' }, '✔ Entregado')) : null,
           p.clientes && p.clientes.forma_pago === 'contado' ? h('span', { class: 'badge cont' }, 'Contado') : null,
           p.clientes && p.clientes.albaran_papel ? h('div', {}, h('span', { class: 'badge', style: 'background:#dbeafe;color:#1e3a8a;margin-top:4px' }, '📄 Papel')) : null)),
       h('div', { class: 'sub', style: 'margin-top:6px' }, hechas + ' de ' + ls.length + ' líneas'),
@@ -1360,9 +1363,9 @@ function pintarPedido() {
   if (state.perfil.rol === 'preparador' && d.pedido.preparador_id && d.pedido.preparador_id !== state.user.id && !cerrado)
     kids.push(h('div', { class: 'aviso-card' }, 'Este pedido lo está preparando otra persona.'));
   if (d.cache) kids.push(h('div', { class: 'aviso-card' }, 'Datos guardados en este móvil; se actualizarán al volver la conexión.'));
-  { const dd = ls.filter(esDespues); if (dd.length && !cerrado) kids.push(h('div', { class: 'aviso-card' }, '🛒 Se compra después: ' + dd.map(x => x.productos ? x.productos.nombre : '—').join(', ') + '. Puedes terminar el pedido, pero ese producto no saldrá en el albarán. Cuando llegue, toca la línea y anota la cantidad.')); }
+  { const dd = ls.filter(esDespues); if (dd.length && !cerrado) kids.push(h('div', { class: 'aviso-card' }, '🛒 Se compra después: ' + dd.map(x => x.productos ? x.productos.nombre : '—').join(', ') + '. Puedes terminar el pedido: en el albarán saldrá como «No servido», sin cobrar. Cuando llegue, toca la línea y anota la cantidad.')); }
   if (!ls.length) kids.push(h('p', { class: 'vacio' }, 'Este pedido no tiene líneas.'));
-  if (estado !== 'anulado') { const sinP = ls.filter(l => l.precio == null).length; kids.push(h('button', { class: sinP ? '' : 'ghost', style: 'width:100%;min-height:50px;margin-bottom:10px', onclick: () => abrirPrecios(d.pedido.id, () => actualizarPedido()) }, '💶 Poner / cambiar precios' + (sinP ? ' (' + sinP + ' sin precio)' : ''))); }
+  if (estado !== 'anulado') { const sinP = ls.filter(l => l.precio == null && !noServida(l)).length; kids.push(h('button', { class: sinP ? '' : 'ghost', style: 'width:100%;min-height:50px;margin-bottom:10px', onclick: () => abrirPrecios(d.pedido.id, () => actualizarPedido()) }, '💶 Poner / cambiar precios' + (sinP ? ' (' + sinP + ' sin precio)' : ''))); }
   for (const l of ls) {
     const u = udLinea(l);
     kids.push(h('div', {
@@ -1391,7 +1394,7 @@ function pintarPedido() {
     if (esOficina()) acciones.push(h('button', { class: 'peligro', onclick: () => anularPedido(d.pedido.id) }, 'Anular pedido'));
   }
   if (estado === 'terminado') acciones.push(h('button', { class: 'ghost', onclick: () => abrirVentaRuta(d) }, '➕ Venta en ruta (añadir producto después de entregar)'));
-  if (estado !== 'anulado') { const sinP = ls.filter(l => l.precio == null).length; if (sinP) acciones.push(h('div', { class: 'aviso-card' }, '💶 ' + textoSinPrecio(nombresSinPrecio(ls)) + '. ' + (estado === 'terminado' ? 'El albarán ya está cerrado: ponlos cuando los tengas.' : 'Puedes cerrar el albarán igualmente y ponerlos después.')));  }
+  if (estado !== 'anulado') { const sinP = ls.filter(l => l.precio == null && !noServida(l)).length; if (sinP) acciones.push(h('div', { class: 'aviso-card' }, '💶 ' + textoSinPrecio(nombresSinPrecio(ls)) + '. ' + (estado === 'terminado' ? 'El albarán ya está cerrado: ponlos cuando los tengas.' : 'Puedes cerrar el albarán igualmente y ponerlos después.')));  }
   if (esOficina() && estado !== 'terminado' && estado !== 'anulado') acciones.push(h('button', { class: 'ghost', onclick: () => go('importar', { anadir: d.pedido.id }) }, '➕ Añadir productos (texto, voz o foto)'));
   if (esOficina()) acciones.push(h('button', { class: 'ghost', onclick: async () => { if (!await confirmar('¿Archivar este pedido? Dejará de verse en las listas.')) return; const r = await sb.from('pedidos').update({ archivado: true }).eq('id', d.pedido.id); if (r.error) toast(msgErr(r.error), 'err'); else { toast('Pedido archivado', 'ok'); go('lista'); } } }, 'Archivar pedido'));
   if (esOficina()) acciones.push(h('button', { class: 'peligro', onclick: async () => {
@@ -1982,7 +1985,8 @@ function finPreparacion(id, pendientes) {
 }
 function abrirLinea(l) {
   state.sheetAbierta = true;
-  const unidad = l.unidad_precio === 'kg' ? 'kg' : (l.unidad_pedida === 'docena' ? 'docenas' : 'unidades');
+  const PLU = { pieza: 'piezas', caja: 'cajas', saco: 'sacos', bolsa: 'bolsas', bandeja: 'bandejas', manojo: 'manojos', docena: 'docenas', bote: 'botes' };
+  const unidad = l.unidad_precio === 'kg' ? 'kg' : (PLU[l.unidad_pedida] || 'unidades');
   const input = h('input', {
     class: 'big', type: 'text', inputmode: 'decimal', autocomplete: 'off',
     placeholder: num(l.cantidad_pedida), value: l._peso != null ? String(l._peso).replace('.', ',') : ''
@@ -2020,14 +2024,14 @@ function abrirLinea(l) {
   setTimeout(() => { input.focus(); input.select(); }, 50);
 }
 /* Aviso (no bloqueo) de productos sin precio: «Faltan precios de 3 productos: …» */
-const nombresSinPrecio = ls => Array.from(new Set((ls || []).filter(l => l.precio == null && l.estado !== 'no_disponible').map(l => (uno(l.productos) || {}).nombre || 'un producto')));
+const nombresSinPrecio = ls => Array.from(new Set((ls || []).filter(l => l.precio == null && l.estado !== 'no_disponible' && !noServida(l)).map(l => (uno(l.productos) || {}).nombre || 'un producto')));
 const textoSinPrecio = nm => nm.length ? 'Faltan precios de ' + nm.length + (nm.length === 1 ? ' producto' : ' productos') + ': ' + nm.slice(0, 4).join(', ') + (nm.length > 4 ? ' y ' + (nm.length - 4) + ' más' : '') : '';
 async function confirmarSinPrecios(id) {
   try {
     const r = await sb.from('lineas_pedido').select('precio,estado,notas,productos(nombre)').eq('pedido_id', id);
     if (r.error) return true;
     const dd = r.data.filter(esDespues);
-    if (dd.length && !await confirmar('🛒 Se compra después: ' + dd.map(x => (uno(x.productos) || {}).nombre || 'un producto').join(', ') + '.\n\nEl pedido se puede terminar, pero ese producto NO saldrá en el albarán (queda a 0).\n\nAceptar = terminar igualmente\nCancelar = volver')) return false;
+    if (dd.length && !await confirmar('🛒 Se compra después: ' + dd.map(x => (uno(x.productos) || {}).nombre || 'un producto').join(', ') + '.\n\nEl pedido se puede terminar: en el albarán saldrá como «No servido», sin cobrar.\n\nAceptar = terminar igualmente\nCancelar = volver')) return false;
     const nm = nombresSinPrecio(r.data.filter(x => !esDespues(x)));
     if (!nm.length) return true;
     return await confirmar('⚠ ' + textoSinPrecio(nm) + '.\n\nPuedes cerrar el albarán igualmente y poner los precios después (en el pedido, en el albarán o en «Precios pendientes»).\n\nAceptar = cerrar el albarán sin esos precios\nCancelar = volver y ponerlos antes');
@@ -2225,8 +2229,9 @@ function estadoLineaAlb(l) {
   const fallo = m => { tipo = 'fallo'; motivos.push(m); };
   const falta = m => { if (tipo !== 'fallo') tipo = 'falta'; motivos.push(m); };
   if (l.estado === 'no_disponible') falta(esDespues(l) ? 'se compra después' : 'producto no disponible');
+  else if (noServida(l)) motivos.push('no hay: sale como «no servido», sin cobrar');   /* «No hay (0)» es una decisión, no un fallo */
   else {
-    if (l.peso_real == null) falta('falta peso o cantidad real'); else if (!(Number(l.peso_real) > 0)) fallo('peso o cantidad en 0');
+    if (l.peso_real == null) falta('falta peso o cantidad real');
     if (l.precio == null || l.precio === '') falta('falta precio'); else if (!(Number(l.precio) > 0)) fallo('precio en 0');
     if ('iva_origen' in pr && pr.iva_origen == null && pr.iva == null) fallo('IVA sin definir');
   }
@@ -2235,7 +2240,7 @@ function estadoLineaAlb(l) {
 function cuerpoAlbaranVivo(d, acc) {
   acc = Object.assign({ precio: () => abrirPrecios(d.pedido.id), peso: () => go('pedido', { id: d.pedido.id }) }, acc || {});
   const ls = d.lineas || []; const est = ls.map(estadoLineaAlb); const nx = est.filter(e => e.tipo === 'fallo').length;
-  const sinPeso = ls.filter(l => l.estado !== 'no_disponible' && l.peso_real == null).length, sinPrecio = ls.filter(l => l.estado !== 'no_disponible' && (l.precio == null || l.precio === '')).length;
+  const sinPeso = ls.filter(l => l.estado !== 'no_disponible' && l.peso_real == null).length, sinPrecio = ls.filter(l => !noServida(l) && (l.precio == null || l.precio === '')).length;
   const despues = ls.filter(esDespues).length, nodisp = ls.filter(l => l.estado === 'no_disponible' && !esDespues(l)).length;
   const faltas = [sinPeso ? sinPeso + ' sin peso' : '', sinPrecio ? sinPrecio + ' sin precio' : '', despues ? despues + ' por comprar' : '', nodisp ? nodisp + ' no disponible' : ''].filter(Boolean);
   const irFalta = () => { if (sinPrecio) acc.precio(); else if (sinPeso) acc.peso(); else toast('Lo que falta se resuelve comprando o preparando el producto en el pedido', 'ok'); };
@@ -2326,7 +2331,7 @@ async function vistaAlbaran() {
       cajaIncidenciasAlb(d),
       cajaTraza(d),
       gananciaBox,
-      (() => { const sinP = d.lineas.filter(l => l.precio == null).length; return d.pedido.estado === 'anulado' ? null : h('button', { class: sinP ? '' : 'ghost', style: 'width:100%;margin-bottom:10px;min-height:48px', onclick: () => abrirPrecios(d.pedido.id, () => vistaAlbaran()) }, '💶 Poner / cambiar precios' + (sinP ? ' (' + sinP + ' sin precio)' : '')); })(),
+      (() => { const sinP = d.lineas.filter(l => l.precio == null && !noServida(l)).length; return d.pedido.estado === 'anulado' ? null : h('button', { class: sinP ? '' : 'ghost', style: 'width:100%;margin-bottom:10px;min-height:48px', onclick: () => abrirPrecios(d.pedido.id, () => vistaAlbaran()) }, '💶 Poner / cambiar precios' + (sinP ? ' (' + sinP + ' sin precio)' : '')); })(),
       (() => { const cli = uno(d.pedido.clientes) || {}; const contado = cli.forma_pago === 'contado';
         const copiaBtn = (cls, titulo, expl, rec) => h('button', { class: 'copia-btn ' + cls + (rec ? ' rec' : ''), onclick: () => { const el = wrap.querySelector('.copia.' + cls); if (el) imprimir(el.outerHTML); } },
           h('span', { class: 'ct' }, '🖨 Imprimir ' + titulo + (rec ? '  ✔ la que toca a este cliente' : '')), h('span', { class: 'ce' }, expl));
@@ -2402,9 +2407,10 @@ async function pdfAlbaran(d) {
   const p = d.pedido, cli = uno(p.clientes) || {}, a = d.albaran || {};
   const lineas = d.lineas.slice().sort((x, y) => (x.productos ? x.productos.nombre : '').localeCompare(y.productos ? y.productos.nombre : '', 'es'));
   let total = 0; const bases = {}; const filas = lineas.map(l => {
-    const imp = !d.sinPrecios && l.precio != null && l.peso_real != null ? Math.round(l.peso_real * l.precio * 100) / 100 : null;
+    const ns = noServida(l), imp = !ns && !d.sinPrecios && l.precio != null && l.peso_real != null ? Math.round(l.peso_real * l.precio * 100) / 100 : null;
     if (imp != null) { total = Math.round((total + imp) * 100) / 100; const t = l.iva != null ? Number(l.iva) : (l.productos && l.productos.iva != null ? Number(l.productos.iva) : 4); bases[t] = Math.round(((bases[t] || 0) + imp) * 100) / 100; }
-    return { n: l.productos ? l.productos.nombre : '', ped: num(l.cantidad_pedida) + ' ' + l.unidad_pedida, cant: l.peso_real != null ? num(l.peso_real) + ' ' + udLinea(l) : '—', pre: !d.sinPrecios && l.precio != null ? eur(l.precio) : '', imp: imp != null ? eur(imp) : '' };
+    /* El cliente ve el «nombre para el albarán» (como en el albarán de la app y en su portal), no el nombre interno */
+    return { n: l.productos ? (l.productos.nombre_albaran || l.productos.nombre || '') : '', ped: num(l.cantidad_pedida) + ' ' + l.unidad_pedida, cant: ns ? 'No servido' : l.peso_real != null ? num(l.peso_real) + ' ' + udLinea(l) : '—', pre: !ns && !d.sinPrecios && l.precio != null ? eur(l.precio) : '', imp: imp != null ? eur(imp) : '' };
   });
   const DESC = d.sinPrecios ? null : descPedido(p); if (DESC && total > 0) total = restaDescuento(DESC, bases, total);
   const RE = { 4: 0.5, 10: 1.4, 21: 5.2 }; let sumaIva = 0, sumaRe = 0;
@@ -2679,14 +2685,14 @@ function pubAlbaranNodos(x, cargaFirma) {
       h('div', { style: 'display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap' }, h('div', {}, h('b', {}, EMPRESA.nombre), h('div', { style: 'font-size:11px' }, EMPRESA.lema), h('div', { style: 'font-size:11px' }, EMPRESA.tels), h('div', { style: 'font-size:11px' }, EMPRESA.dir + ' · ' + EMPRESA.email)), h('div', { style: 'text-align:right' }, h('b', { style: 'font-size:18px' }, 'ALBARÁN'), h('div', { style: 'font-weight:700' }, num), h('div', {}, 'Fecha: ' + fechaES(x.fecha)))),
       h('div', { style: 'margin:10px 0;padding-top:8px;border-top:2px solid #111' }, h('b', {}, nombreCli(cli)), cli.nombre_comercial && cli.nombre ? h('div', {}, cli.nombre) : null, [cli.direccion, cli.localidad].filter(Boolean).length ? h('div', {}, [cli.direccion, cli.localidad].filter(Boolean).join(' · ')) : null, cli.nif ? h('div', {}, 'NIF: ' + cli.nif) : null),
       h('table', { style: 'width:100%;border-collapse:collapse' }, h('thead', {}, h('tr', {}, ['Artículo', 'Cantidad', 'Precio', 'Importe'].map((t, i) => h('th', { style: 'text-align:' + (i ? 'right' : 'left') + ';border-bottom:2px solid #111;padding:3px;font-size:12px' }, t)))),
-        h('tbody', {}, lin.slice().sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es')).map(l => h('tr', {}, td(l.nombre), td(l.peso_real != null ? num_(l.peso_real) + ' ' + udLinea(l) : '—', 1, 1), td(l.precio != null ? eur(l.precio) : '', 1), td(l.imp != null ? eur(l.imp) : '', 1))))),
+        h('tbody', {}, lin.slice().sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es')).map(l => h('tr', {}, td(l.nombre), td(noServida(l) ? 'No servido' : l.peso_real != null ? num_(l.peso_real) + ' ' + udLinea(l) : '—', 1, 1), td(!noServida(l) && l.precio != null ? eur(l.precio) : '', 1), td(!noServida(l) && l.imp != null ? eur(l.imp) : '', 1))))),
       T.hay ? h('div', { style: 'margin-top:8px;text-align:right' }, T.desc ? h('div', { style: 'font-size:12px;font-weight:700' }, 'Descuento (' + T.desc.motivo + '): -' + eur(T.desc.base) + ' €') : null, Object.keys(bases).map(Number).sort((a, b) => a - b).map(t => h('div', { style: 'font-size:12px' }, 'Base ' + num_(t) + ' %: ' + eur(bases[t]) + ' € · IVA ' + eur(Math.round(bases[t] * t) / 100) + ' €')), T.re ? h('div', { style: 'font-size:12px' }, 'Rec. equiv.: ' + eur(T.re) + ' €') : null, h('div', { style: 'font-size:17px;font-weight:800;margin-top:4px' }, 'TOTAL' + (cli.forma_pago === 'contado' ? ' A COBRAR' : '') + ': ' + eur(T.total) + ' € (IVA incl.)')) : h('div', { style: 'margin-top:8px' }, SP ? 'Albarán sin valorar: los importes se facturarán aparte.' : 'Importes pendientes de poner precio.'),
       h('div', { style: 'margin-top:8px;font-weight:700;font-size:12px' }, cli.forma_pago === 'contado' ? 'PAGO AL CONTADO' : 'PENDIENTE DE FACTURA'),
       x.firma_png ? h('div', { style: 'margin-top:8px;font-size:12px' }, 'Conforme: Recibí', h('br'), h('img', { src: x.firma_png, style: 'height:60px;border:1px solid #d1d5db;border-radius:6px' }), h('div', {}, 'Firmado' + (x.firma_nombre ? ' por ' + x.firma_nombre : '') + (x.firma_at ? ' el ' + fechaES(String(x.firma_at).slice(0, 10)) + ' ' + fmtHora(x.firma_at) : ''))) : null);
     hoja('👁️ Albarán ' + num, h('div', {}, papel, h('button', { class: 'guardar', style: 'width:100%;min-height:50px;margin:10px 0 6px', onclick: pdf }, '📄 Descargar PDF')));
   };
   return [h('h2', { style: 'margin:14px 0 2px' }, 'Albarán ' + num), h('div', { class: 'sub' }, fechaES(x.fecha) + ' · ' + nombreCli(cli) + (cli.localidad ? ' · ' + cli.localidad : '')),
-    h('div', { class: 'pub-lin' }, lin.map(l => h('div', { class: 'pub-l' }, h('div', { style: 'flex:1;min-width:0' }, h('div', { class: 'nombre' }, l.nombre), h('div', { class: 'sub' }, l.peso_real != null ? num_(l.peso_real) + ' ' + udLinea(l) + (l.precio != null ? ' × ' + eur(l.precio) + ' €' : '') : 'sin pesar / no entregado')), h('b', {}, l.imp != null ? eur(l.imp) + ' €' : '')))),
+    h('div', { class: 'pub-lin' }, lin.map(l => h('div', { class: 'pub-l' }, h('div', { style: 'flex:1;min-width:0' }, h('div', { class: 'nombre' }, l.nombre), h('div', { class: 'sub' }, noServida(l) ? 'No servido' : l.peso_real != null ? num_(l.peso_real) + ' ' + udLinea(l) + (l.precio != null ? ' × ' + eur(l.precio) + ' €' : '') : 'sin pesar / no entregado')), h('b', {}, !noServida(l) && l.imp != null ? eur(l.imp) + ' €' : '')))),
     T.hay ? h('div', { class: 'pub-tot' }, T.desc ? h('div', { class: 'sub', style: 'font-weight:700' }, 'Descuento (' + T.desc.motivo + '): -' + eur(T.desc.base) + ' €') : null, h('div', { class: 'sub' }, 'Base ' + eur(T.base) + ' € · IVA ' + eur(T.iva) + ' €' + (T.re ? ' · Rec. equiv. ' + eur(T.re) + ' €' : '')), h('div', { class: 'pub-total' }, 'TOTAL ' + eur(T.total) + ' €')) : h('div', { class: 'sub' }, SP ? 'Albarán sin valorar: los importes se facturarán aparte.' : 'Importes pendientes de poner precio.'),
     x.entregado_at ? h('div', { class: 'pub-ent' }, '📦 Entregado el ' + fechaES(String(x.entregado_at).slice(0, 10)) + ' a las ' + fmtHora(x.entregado_at) + (x.entrega_nota ? ' · ' + x.entrega_nota : '')) : null,
     x.firma_nombre || x.firma_png || x.firma_at ? h('div', { class: 'sub', style: 'margin:10px 0' }, '✍ Recibido y firmado' + (x.firma_nombre ? ' por ' + x.firma_nombre : '') + (x.firma_at ? ' el ' + fechaES(String(x.firma_at).slice(0, 10)) + ' ' + fmtHora(x.firma_at) : '')) : null,
@@ -2825,7 +2831,7 @@ function htmlAlbaran(d, formato, opt) {
   let total = 0, hayPrecio = false; const bases = {};
   const filas = lineas.map(l => {
     const u = udLinea(l);
-    const imp = l.precio != null && l.peso_real != null ? Math.round(l.peso_real * l.precio * 100) / 100 : null;
+    const ns = noServida(l), imp = !ns && l.precio != null && l.peso_real != null ? Math.round(l.peso_real * l.precio * 100) / 100 : null;
     if (imp != null) {
       total = Math.round((total + imp) * 100) / 100; hayPrecio = true;
       const t = l.iva != null ? Number(l.iva) : (l.productos && l.productos.iva != null ? Number(l.productos.iva) : 4);
@@ -2836,8 +2842,8 @@ function htmlAlbaran(d, formato, opt) {
     const ev = vivo ? estadoLineaAlb(l) : null; const ico = ev ? (ev.tipo === 'fallo' ? '❌ ' : ev.tipo === 'falta' ? '🟡 ' : '✅ ') : ''; const mot = ev && ev.motivos.length ? '<div class="vr">' + esc(ev.motivos.join(' · ')) + '</div>' : '';
     return '<tr' + (ev && ev.tipo !== 'ok' ? ' class="' + (ev.tipo === 'fallo' ? 'vx' : 'vf') + '"' : '') + '><td>' + ico + '@@NOM:' + l.id + '@@' + mot + tzTxt + '</td>' +
       '<td class="d oc-ticket">' + esc(num(l.cantidad_pedida) + ' ' + l.unidad_pedida) + '</td>' +
-      '<td class="d"><b>' + esc(l.peso_real != null ? num(l.peso_real) + ' ' + u : '—') + '</b></td>' +
-      '<td class="d">' + esc(l.precio != null ? eur(l.precio) : '') + '</td>' +
+      '<td class="d"><b>' + esc(ns ? 'No servido' : l.peso_real != null ? num(l.peso_real) + ' ' + u : '—') + '</b></td>' +
+      '<td class="d">' + esc(!ns && l.precio != null ? eur(l.precio) : '') + '</td>' +
       '<td class="d">' + esc(imp != null ? eur(imp) : '') + '</td></tr>';
   }).join('');
   const DESC = descPedido(p); if (DESC && hayPrecio) total = restaDescuento(DESC, bases, total);
@@ -4252,6 +4258,7 @@ function vistaFacturasCli() {
 function totalesFact(ped) {
   const cli = uno(ped.clientes) || {}; const bases = {}; let sinPrecio = 0, total = 0;
   (ped.lineas_pedido || []).forEach(l => {
+    if (noServida(l)) return;   /* «No hay» o no disponible: ni se cobra ni le falta precio */
     if (l.precio != null && l.peso_real != null) {
       const imp = Math.round(l.peso_real * l.precio * 100) / 100; total = Math.round((total + imp) * 100) / 100;
       const pr = uno(l.productos) || {}; const t = l.iva != null ? Number(l.iva) : (pr.iva != null ? Number(pr.iva) : 4);
@@ -4266,7 +4273,7 @@ function totalesFact(ped) {
 function vistaPrefacturas() {
   state.view = 'prefacturas';
   if (!esOficina()) { go('inicio'); return; }
-  let desde = LS.get('fj_pf_desde', hoy(new Date(new Date().getFullYear(), new Date().getMonth(), 1))), hasta = hoy(), verFact = false, texto = '', datos = null, fact = {}, sinParte51 = false;
+  let desde = LS.get('fj_pf_desde', hoy(new Date(new Date().getFullYear(), new Date().getMonth(), 1))), hasta = hoy(), verFact = false, texto = '', datos = null, fact = {}, sinParte51 = false, sinEnt = [];
   const sel = {}; /* pedido_id -> true */
   const cont = h('div', {}), info = h('p', { class: 'sub' });
   const iDesde = h('input', { type: 'date', value: desde, onchange: () => { desde = iDesde.value || desde; LS.set('fj_pf_desde', desde); cargar(); } });
@@ -4297,7 +4304,9 @@ function vistaPrefacturas() {
     cerrar = hoja('Ya la he hecho en Golden', h('div', {}, h('p', { class: 'sub' }, c.nombre + ' · ' + items.length + ' albarán(es) · ' + eur(tot) + ' €'), h('label', { class: 'campo' }, 'Número de la factura en Golden *', num), h('label', { class: 'campo' }, 'Fecha de la factura', fec),
       h('label', { class: 'campo', style: 'flex-direction:row;gap:8px;align-items:center' }, reg, ' Apuntarla también en «Facturas de clientes»'),
       h('button', { class: 'guardar', style: 'width:100%', onclick: async ev => {
-        const b = ev.target; if (!num.value.trim()) { toast('Escribe el número de factura', 'err'); return; } b.disabled = true;
+        const b = ev.target; if (!num.value.trim()) { toast('Escribe el número de factura', 'err'); return; }
+        const inc = items.filter(x => totalesFact(x).sinPrecio); if (inc.length && !await confirmar('⚠ ' + inc.length + (inc.length === 1 ? ' albarán tiene' : ' albaranes tienen') + ' líneas SIN PRECIO o sin peso: ' + inc.map(x => (albDe(x).serie || 'F') + ' ' + albDe(x).numero).join(', ') + '.\n\nSu total está incompleto. ¿Seguro que la factura de Golden ya lleva esos precios?\n\nAceptar = marcar igualmente\nCancelar = volver')) return;
+        b.disabled = true;
         const r = await sb.rpc('marcar_albaranes_facturados', { p_pedidos: items.map(x => x.id), p_numero: num.value.trim(), p_fecha: fec.value || null });
         if (r.error) { b.disabled = false; toast(/schema cache|does not exist|marcar_albaranes/i.test(r.error.message || '') ? 'Falta ejecutar en Supabase la Parte 51.' : msgErr(r.error), 'err'); return; }
         if (reg.checked) { const q = await sb.from('facturas_clientes').insert({ cliente_id: c.id, numero: num.value.trim(), fecha: fec.value || hoy(), importe: tot, nota: 'Preparada desde ' + items.length + ' albarán(es)', pagada: false }); if (q.error) toast(q.error.code === '23505' ? 'Albaranes marcados. Esa factura ya estaba en «Facturas de clientes».' : 'Albaranes marcados, pero no se pudo apuntar en «Facturas de clientes»: ' + msgErr(q.error), 'err'); else toast('Marcados y apuntada la factura', 'ok'); } else toast('Albaranes marcados como facturados', 'ok');
@@ -4309,7 +4318,7 @@ function vistaPrefacturas() {
     const ids = c.items.filter(x => !fact[x.id]); const marcados = () => c.items.filter(x => sel[x.id] && !fact[x.id]);
     const tot = () => Math.round(marcados().reduce((a, x) => a + totalesFact(x).total, 0) * 100) / 100;
     const totTxt = h('b', {}, ''); const nTxt = h('div', { class: 'sub' }, '');
-    const refresca = () => { const m = marcados(); totTxt.textContent = eur(tot()) + ' €'; nTxt.textContent = m.length + ' de ' + ids.length + ' albarán(es) seleccionados'; bR.disabled = bM.disabled = !m.length; };
+    const refresca = () => { const m = marcados(); totTxt.textContent = eur(tot()) + ' €'; const nsp = c.items.filter(x => !fact[x.id] && totalesFact(x).sinPrecio).length; nTxt.textContent = m.length + ' de ' + ids.length + ' albarán(es) seleccionados' + (nsp ? ' · ⚠ ' + nsp + ' con precios sin poner' : ''); bR.disabled = bM.disabled = !m.length; };
     const bR = h('button', { class: 'small', onclick: e => { e.stopPropagation(); hoja('Resumen para Golden', h('div', {}, (() => { const dv = h('div', {}); dv.innerHTML = resumenHtml(c, marcados()); return dv; })(), h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:10px 0' }, h('button', { class: 'small', onclick: () => imprimir(resumenHtml(c, marcados())) }, '🖨 Imprimir'), h('button', { class: 'ghost small', onclick: () => compartirTexto(textoCli(c, marcados())) }, 'Copiar / compartir texto')))); } }, '📋 Ver resumen para Golden');
     const bM = h('button', { class: 'guardar small', onclick: e => { e.stopPropagation(); marcar(c, marcados()); } }, '✔ Ya la he hecho en Golden');
     const filas = c.items.slice().sort((a, b) => String(a.fecha_entrega).localeCompare(String(b.fecha_entrega))).map(x => {
@@ -4332,6 +4341,9 @@ function vistaPrefacturas() {
     info.textContent = pend.length + ' albarán(es) entregados sin facturar · ' + eur(pend.reduce((a, x) => a + totalesFact(x).total, 0)) + ' €';
     const kids = [];
     if (sinParte51) kids.push(h('div', { class: 'aviso-card' }, 'Falta ejecutar la Parte 51 en Supabase: puedes preparar y ver los datos, pero no marcar albaranes como facturados.'));
+    if (sinEnt.length) kids.push(h('details', { class: 'aviso-card', style: 'border-left:5px solid #d97706' }, h('summary', { style: 'font-weight:700;cursor:pointer' }, '🚚 ' + sinEnt.length + (sinEnt.length === 1 ? ' albarán NO sale aquí: no está marcado como entregado' : ' albaranes NO salen aquí: no están marcados como entregados') + ' (toca para verlos)'),
+      h('div', { class: 'sub', style: 'margin:6px 0' }, 'Si ya se entregaron, ábrelos y pulsa «Marcar como ENTREGADO»; después saldrán aquí para facturar.'),
+      ...sinEnt.slice().sort((a, b) => String(a.fecha_entrega).localeCompare(String(b.fecha_entrega))).map(p => h('button', { class: 'ghost small', style: 'display:block;width:100%;text-align:left;margin-top:4px', onclick: () => go('pedido', { id: p.id }) }, (albDe(p).serie || 'F') + ' ' + albDe(p).numero + ' · ' + fechaES(p.fecha_entrega) + ' · ' + nombreCli(uno(p.clientes)) + ' ›'))));
     if (!gs.length) kids.push(h('p', { class: 'vacio' }, 'No hay albaranes entregados pendientes de facturar en estas fechas.'));
     cont.replaceChildren(...kids, ...gs.map(tarjeta));
   }
@@ -4339,13 +4351,15 @@ function vistaPrefacturas() {
     cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
     try {
       if (!navigator.onLine) throw new TypeError('network');
-      let r = await sb.from('pedidos').select('id,cliente_id,fecha_entrega,estado,archivado,descuento_base,descuento_iva,descuento_motivo,clientes(codigo,nombre,nombre_comercial,recargo_equivalencia),lineas_pedido(peso_real,precio,iva,productos(iva))').gte('fecha_entrega', desde).lte('fecha_entrega', hasta).neq('estado', 'anulado').limit(1500);
+      let r = await sb.from('pedidos').select('id,cliente_id,fecha_entrega,estado,archivado,descuento_base,descuento_iva,descuento_motivo,clientes(codigo,nombre,nombre_comercial,recargo_equivalencia),lineas_pedido(estado,peso_real,precio,iva,productos(iva))').gte('fecha_entrega', desde).lte('fecha_entrega', hasta).neq('estado', 'anulado').limit(1500);
       if (r.error && /descuento|column|schema cache/i.test(r.error.message || '')) r = await sb.from('pedidos').select('id,cliente_id,fecha_entrega,estado,archivado,clientes(codigo,nombre,nombre_comercial,recargo_equivalencia),lineas_pedido(peso_real,precio,iva,productos(iva))').gte('fecha_entrega', desde).lte('fecha_entrega', hasta).neq('estado', 'anulado').limit(1500);
       if (r.error) throw r.error; let ps = (r.data || []).filter(p => !p.archivado); const ids = ps.map(p => p.id); const alb = {}, ent = new Set();
       for (let i = 0; i < ids.length; i += 150) { const ch = ids.slice(i, i + 150);
         const [a, e] = await Promise.all([sb.from('albaranes').select('pedido_id,serie,numero,estado').in('pedido_id', ch), sb.from('entregas').select('pedido_id').in('pedido_id', ch)]);
         if (a.error) throw a.error; if (e.error) throw e.error; (a.data || []).forEach(x => alb[x.pedido_id] = x); (e.data || []).forEach(x => ent.add(x.pedido_id)); }
       datos = ps.filter(p => alb[p.id] && alb[p.id].estado !== 'anulado' && ent.has(p.id)).map(p => Object.assign({}, p, { albaranes: [alb[p.id]] }));
+      /* Con albarán pero sin marcar «Entregado»: no salen para facturar. Se avisan para que no se queden sin facturar */
+      sinEnt = ps.filter(p => alb[p.id] && alb[p.id].numero != null && alb[p.id].estado !== 'anulado' && !ent.has(p.id)).map(p => Object.assign({}, p, { albaranes: [alb[p.id]] }));
       fact = {}; sinParte51 = false;
       for (let i = 0; i < ids.length; i += 150) { const f = await sb.from('albaranes_facturados').select('pedido_id,numero_factura').in('pedido_id', ids.slice(i, i + 150)); if (f.error) { sinParte51 = true; break; } (f.data || []).forEach(x => fact[x.pedido_id] = x); }
       datos.forEach(x => { if (sel[x.id] === undefined) sel[x.id] = true; });
@@ -5813,6 +5827,12 @@ function vistaAlbaranes() {
       if (!navigator.onLine) throw new TypeError('network');
       const r = await sb.from('v_pedidos_importe').select('pedido_id,fecha_entrega,estado,cliente_nombre,serie,numero_albaran,total,cobrado,pendiente').gte('fecha_entrega', desde).lte('fecha_entrega', hasta).limit(1000);
       if (r.error) throw r.error; datos = r.data.filter(x => x.numero_albaran != null);
+      /* Los albaranes cerrados SIN ningún precio no salen en v_pedidos_importe: se añaden aquí para que no se pierdan (importe «por poner») */
+      try { const ya = new Set(datos.map(x => x.pedido_id));
+        const sp = await sb.from('pedidos').select('id,fecha_entrega,estado,archivado,clientes(nombre,nombre_comercial),albaranes(serie,numero,estado)').gte('fecha_entrega', desde).lte('fecha_entrega', hasta).eq('estado', 'terminado').limit(1000);
+        if (!sp.error) (sp.data || []).forEach(p => { const a = uno(p.albaranes); if (ya.has(p.id) || p.archivado || !a || a.numero == null) return;
+          datos.push({ pedido_id: p.id, fecha_entrega: p.fecha_entrega, estado: p.estado, cliente_nombre: nombreCli(uno(p.clientes)), serie: a.serie, numero_albaran: a.numero, total: null, cobrado: 0, pendiente: null, _sinImporte: true }); });
+      } catch (e4) { }
       const ids = datos.map(x => x.pedido_id); traza = {};
       if (ids.length) { const t = await sb.from('albaranes').select('pedido_id,traza_estado,estado').in('pedido_id', ids); (t.data || []).forEach(a => traza[a.pedido_id] = a); }
       ext = {};
@@ -5821,7 +5841,7 @@ function vistaAlbaranes() {
         for (let i = 0; i < ids.length; i += 150) { const fr = await sb.from('albaranes').select('pedido_id,firma_at,firma_nombre').in('pedido_id', ids.slice(i, i + 150)); if (!fr.error) (fr.data || []).forEach(a => { const e = ext[a.pedido_id] = ext[a.pedido_id] || { cobros: [], inc: [] }; e.firma = a.firma_at || a.firma_nombre || null; e.firmaNom = a.firma_nombre; }); } } catch (e3) { }
       sinPr = {}; pend = [];
       try {
-        for (let i = 0; i < ids.length; i += 150) { const lp = await sb.from('lineas_pedido').select('pedido_id,precio,estado').in('pedido_id', ids.slice(i, i + 150)); (lp.data || []).forEach(l => { if (l.precio == null && l.estado !== 'no_disponible') sinPr[l.pedido_id] = (sinPr[l.pedido_id] || 0) + 1; }); }
+        for (let i = 0; i < ids.length; i += 150) { const lp = await sb.from('lineas_pedido').select('pedido_id,precio,estado,peso_real').in('pedido_id', ids.slice(i, i + 150)); (lp.data || []).forEach(l => { if (l.precio == null && !noServida(l)) sinPr[l.pedido_id] = (sinPr[l.pedido_id] || 0) + 1; }); }
         const man = hoy(new Date(Date.now() + 86400000));
         const pr = await sb.from('pedidos').select('id,fecha_entrega,estado,archivado,clientes(codigo,nombre,nombre_comercial),lineas_pedido(estado,precio,peso_real)').gte('fecha_entrega', desde).lte('fecha_entrega', man).in('estado', ['pendiente', 'en_preparacion']).limit(500);
         pend = pr.error ? [] : (pr.data || []).filter(p => !p.archivado);
@@ -5841,11 +5861,11 @@ function vistaAlbaranes() {
     lista.forEach(x => {
       if (x.fecha_entrega !== dia) { dia = x.fecha_entrega; kids.push(h('div', { class: 'grupo' }, fechaES(dia) + ' · ' + lista.filter(y => y.fecha_entrega === dia).length + ' albaranes')); }
       const t = traza[x.pedido_id] || {}; const anul = t.estado === 'anulado';
-      const pagado = Number(x.pendiente) <= 0.009;
+      const pagado = !x._sinImporte && !sinPr[x.pedido_id] && Number(x.pendiente) <= 0.009;
       kids.push(h('div', { class: 'card tap fila', style: anul ? 'opacity:.55' : '', onclick: () => go('albaran', { id: x.pedido_id }) },
         h('div', {}, h('div', { class: 'nombre' }, (x.serie || 'F') + ' ' + x.numero_albaran + ' · ' + (x.cliente_nombre || '')),
-          h('div', { class: 'sub' }, [quien(x) ? '🚚 ' + nomG(quien(x)) : '🚚 sin repartidor', (ext[x.pedido_id] || {}).portal ? '🌐 en el portal' : '🌐 sin publicar', (ext[x.pedido_id] || {}).entNota && ext[x.pedido_id].entNota !== 'En mano' ? '📦 ' + ext[x.pedido_id].entNota : null, (ext[x.pedido_id] || {}).firma ? '✍ firmado' + ((ext[x.pedido_id] || {}).firmaNom ? ' (' + ext[x.pedido_id].firmaNom + ')' : '') : '✍ sin firma', ((ext[x.pedido_id] || {}).inc || []).length ? '⚠ ' + ext[x.pedido_id].inc.length + ' incidencia(s)' : null, sinPr[x.pedido_id] ? '⚠ ' + sinPr[x.pedido_id] + ' sin precio' : null, anul ? 'ANULADO' : (pagado ? '✔ Cobrado' : 'Pendiente de cobro ' + eur(x.pendiente)), esOficina() ? (t.traza_estado === 'confirmada' ? '✔ trazabilidad' : t.traza_estado === 'sin_trazabilidad' ? 'sin trazabilidad' : '⚠ trazabilidad pendiente') : null].filter(Boolean).join(' · '))),
-        h('b', { style: 'font-size:18px' }, eur(x.total))));
+          h('div', { class: 'sub' }, [quien(x) ? '🚚 ' + nomG(quien(x)) : '🚚 sin repartidor', (ext[x.pedido_id] || {}).portal ? '🌐 en el portal' : '🌐 sin publicar', (ext[x.pedido_id] || {}).entNota && ext[x.pedido_id].entNota !== 'En mano' ? '📦 ' + ext[x.pedido_id].entNota : null, (ext[x.pedido_id] || {}).firma ? '✍ firmado' + ((ext[x.pedido_id] || {}).firmaNom ? ' (' + ext[x.pedido_id].firmaNom + ')' : '') : '✍ sin firma', ((ext[x.pedido_id] || {}).inc || []).length ? '⚠ ' + ext[x.pedido_id].inc.length + ' incidencia(s)' : null, sinPr[x.pedido_id] ? '⚠ ' + sinPr[x.pedido_id] + ' sin precio' : null, anul ? 'ANULADO' : x._sinImporte ? '💶 sin precios: importe por poner' : (pagado ? '✔ Cobrado' : 'Pendiente de cobro ' + eur(Math.max(0, Number(x.pendiente) || 0)) + (sinPr[x.pedido_id] ? ' (de momento)' : '')), esOficina() ? (t.traza_estado === 'confirmada' ? '✔ trazabilidad' : t.traza_estado === 'sin_trazabilidad' ? 'sin trazabilidad' : '⚠ trazabilidad pendiente') : null].filter(Boolean).join(' · '))),
+        h('b', { style: 'font-size:18px' + (x._sinImporte ? ';color:#b45309' : '') }, x._sinImporte ? '— €' : eur(x.total))));
     });
     return kids;
   }
@@ -5874,7 +5894,7 @@ function vistaAlbaranes() {
     let dia = '';
     lista.forEach(p => {
       if (p.fecha_entrega !== dia) { dia = p.fecha_entrega; kids.push(h('div', { class: 'grupo' }, fechaES(dia) + ' · ' + lista.filter(y => y.fecha_entrega === dia).length + ' por hacer')); }
-      const ls = (p.lineas_pedido || []).filter(l => l.estado !== 'no_disponible'); const sp = ls.filter(l => l.peso_real == null).length, sc = ls.filter(l => l.precio == null).length;
+      const ls = (p.lineas_pedido || []).filter(l => !noServida(l)); const sp = ls.filter(l => l.peso_real == null).length, sc = ls.filter(l => l.precio == null).length;
       kids.push(h('div', { class: 'card tap fila', style: 'border-left:6px solid #d97706', onclick: () => go('albaran', { id: p.id }) },
         h('div', {}, h('div', { class: 'nombre' }, nombreCli(uno(p.clientes))), h('div', { class: 'sub' }, [p.estado === 'pendiente' ? 'Por preparar' : 'En preparación', sp ? sp + ' sin peso' : '', sc ? sc + ' sin precio' : ''].filter(Boolean).join(' · '))),
         h('span', { class: 'badge cont' }, 'Por hacer')));
@@ -6652,7 +6672,12 @@ async function entregaPasoAPaso(id, alTerminar) {
     d.traza = {}; d.incidencias = [];
     try { const ri = await sb.rpc('incidencias_de_pedido', { p_pedido: id }); if (!ri.error && Array.isArray(ri.data)) d.incidencias = ri.data; } catch (e) { }
     try { const r = await sb.from('v_pedidos_importe').select('total,pendiente').eq('pedido_id', id).maybeSingle(); if (!r.error && r.data) { total = Number(r.data.total); pendiente = pendienteLocal(id, r.data.pendiente); } } catch (e) { }
+    faltanPr = nombresSinPrecio(d.lineas);
   }
+  let faltanPr = [];
+  /* Sin todos los precios el total no es el de verdad: se dice claro en vez de enseñar un importe vacío o a medias */
+  const txtPend = t => faltanPr.length ? (t != null ? eur(t) + ' € de momento (faltan precios: el total subirá)' : 'el importe, cuando se pongan los precios') : eur(t) + ' €';
+  const avisoPrecios = () => faltanPr.length ? h('div', { class: 'ent-caja', style: 'border:2px solid #d97706;background:#fffbeb' }, h('b', {}, '💶 ' + textoSinPrecio(faltanPr) + '.'), h('div', { class: 'sub' }, (total == null ? 'Todavía no se sabe el total' : 'El total de abajo no está completo') + '. La oficina pondrá los precios; lo que no se cobre ahora queda pendiente.')) : null;
   const albaranGrande = () => { const w = h('div', { class: 'ent-alb' }); w.innerHTML = htmlAlbaran(d, 'a4'); const c = w.querySelector('.copia.' + (contado() ? 'blanca' : 'amarilla')) || w.querySelector('.copia'); if (c) w.replaceChildren(c); return w; };
   function pintar() {
     pasos.replaceChildren(...[1, 2, 3].map(n => h('div', { class: 'ent-paso' + (n <= paso ? ' on' : '') })));
@@ -6691,17 +6716,18 @@ async function entregaPasoAPaso(id, alTerminar) {
       const pintaImp = () => {
         const p = PAGOS_ENTREGA.find(x => x[0] === pago);
         pon(zonaImp, !p ? null : p[3] ? h('div', { class: 'ent-caja' }, h('label', { class: 'campo' }, '¿Cuánto paga ahora en ' + p[2].toLowerCase() + '? (€)', imp),
-            h('div', { class: 'ent-fila' }, B('ghost', 'Todo (' + eur(tot) + ' €)', () => { imp.value = String(tot).replace('.', ','); }), B('ghost', 'Paga una parte', () => { imp.value = ''; imp.focus(); })),
+            tot != null ? h('div', { class: 'ent-fila' }, B('ghost', 'Todo (' + eur(tot) + ' €)', () => { imp.value = String(tot).replace('.', ','); }), B('ghost', 'Paga una parte', () => { imp.value = ''; imp.focus(); })) : h('div', { class: 'sub' }, 'Escribe lo que te da.'),
             h('div', { class: 'sub' }, 'Si paga una parte, lo que falte queda pendiente.'))
-          : h('div', { class: 'ent-caja' }, h('b', {}, p[0] === 'transferencia' ? '🏦 Queda pendiente: ' + eur(tot) + ' €. Lo pagará por transferencia.' : '📒 Queda pendiente: ' + eur(tot) + ' € (lo debe).'), h('div', { class: 'sub' }, 'Sale en «Cobros · pendientes».')));
+          : h('div', { class: 'ent-caja' }, h('b', {}, p[0] === 'transferencia' ? '🏦 Queda pendiente: ' + txtPend(tot) + '. Lo pagará por transferencia.' : '📒 Queda pendiente: ' + txtPend(tot) + ' (lo debe).'), h('div', { class: 'sub' }, 'Sale en «Cobros · pendientes».')));
         botones.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === pago));
       };
       const botones = h('div', { class: 'ent-pagos' }, ...PAGOS_ENTREGA.map(([v, ico, txt]) => { const b = B('ent-pago', ico + ' ' + txt, () => { pago = v; pintaImp(); }); b.dataset.v = v; return b; }));
-      if (!pago) pago = tot != null && tot <= 0.009 ? null : (contado() ? 'efectivo' : 'transferencia');
+      if (!pago) pago = tot != null && tot <= 0.009 && !faltanPr.length ? null : (contado() ? 'efectivo' : 'transferencia');
       pon(cuerpo,
-        h('div', { class: 'ent-total' }, h('div', { class: 'sub' }, tot != null && tot <= 0.009 ? 'Este albarán ya está cobrado' : 'Total a pagar (IVA incluido)'), h('div', { class: 'ent-num' }, tot == null ? '—' : eur(tot <= 0.009 ? total : tot) + ' €'),
+        avisoPrecios(),
+        h('div', { class: 'ent-total' }, h('div', { class: 'sub' }, tot != null && tot <= 0.009 && !faltanPr.length ? 'Este albarán ya está cobrado' : faltanPr.length ? 'Total con los precios que hay (IVA incluido)' : 'Total a pagar (IVA incluido)'), h('div', { class: 'ent-num' }, tot == null ? '—' : eur(tot <= 0.009 ? total : tot) + ' €'),
           h('div', { class: 'sub' }, 'Este cliente ' + (contado() ? 'suele pagar al contado.' : 'suele pagar por transferencia o a cuenta.'))),
-        tot != null && tot <= 0.009 ? null : botones, zonaImp);
+        tot != null && tot <= 0.009 && !faltanPr.length ? null : botones, zonaImp);
       pintaImp();
       pie.append(B('guardar', '✔ Anotado · Siguiente: enviar el albarán', () => terminar(imp, tot)), B('ghost', '← Volver', () => { paso = 1; pintar(); }));
     } else {
@@ -6746,11 +6772,11 @@ async function entregaPasoAPaso(id, alTerminar) {
     const p = PAGOS_ENTREGA.find(x => x[0] === pago); let nota = 'En mano';
     if (p && p[3]) {
       const n = parseNum(imp.value); if (n === null || n <= 0) { toast('Escribe cuánto paga', 'err'); return; }
-      if (tot != null && n > tot + 0.01) { toast('Es más de lo que debe (' + eur(tot) + ' €)', 'err'); return; }
+      if (tot != null && !faltanPr.length && n > tot + 0.01) { toast('Es más de lo que debe (' + eur(tot) + ' €)', 'err'); return; }
       const e = await enviarCobro(id, Math.round(n * 100) / 100, pago, 'Cobrado al entregar'); if (e && e !== 'cola') { toast(e, 'err'); return; }
       const falta = tot != null ? Math.round((tot - n) * 100) / 100 : 0;
-      hecho = 'Ha pagado ' + eur(n) + ' € en ' + p[2].toLowerCase() + (falta > 0.009 ? ' · quedan ' + eur(falta) + ' € pendientes' : '');
-    } else if (p) hecho = p[0] === 'transferencia' ? 'Pagará por transferencia: ' + eur(tot) + ' € pendientes' : 'No paga ahora: ' + eur(tot) + ' € a deber';
+      hecho = 'Ha pagado ' + eur(n) + ' € en ' + p[2].toLowerCase() + (faltanPr.length ? ' · faltan precios: el resto, cuando se pongan' : falta > 0.009 ? ' · quedan ' + eur(falta) + ' € pendientes' : '');
+    } else if (p) hecho = faltanPr.length ? (p[0] === 'transferencia' ? 'Pagará por transferencia cuando se pongan los precios' : 'No paga ahora: a deber cuando se pongan los precios') : p[0] === 'transferencia' ? 'Pagará por transferencia: ' + eur(tot) + ' € pendientes' : 'No paga ahora: ' + eur(tot) + ' € a deber';
     else hecho = 'Ya estaba cobrado';
     nota += ' · ' + hecho;
     await marcarEntregado(id, nota); entregado = true; paso = 3; pintar();
