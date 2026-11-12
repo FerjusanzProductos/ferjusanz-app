@@ -55,7 +55,8 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - ✔️ **Reunión con Jorge (contable) el 13/11/2026**: hoja de preguntas https://claude.ai/artifact/1dM6shj1VjYVBsyr3wxtr7 (qué ve, qué le manda Carmen y que cuadre, legalidad, Golden mínimo). Al volver: pasar sus respuestas a la tabla del final y ajustar «Informes para Jorge» (p. ej. NIF e IVA de facturas de proveedores, que hoy no se guardan).
 - 🔴 **Facturar desde la app desde el 1/1/2027** (respuestas de Jorge, 12/11/2026). Plan, requisitos y fases: **`docs/PLAN_FACTURACION.md`** (una fase por sesión). Fase 2 hecha en PRUEBAS (v259). **Fase 3 (facturas recibidas)**: código hecho en PRUEBAS (13/11/2026).
   - ✔️ SQL `20261113b_facturas_recibidas_fiscal.sql` pegado por Fernando en pruebas (13/11). App de pruebas v263.
-  - 🔴 **Fernando: pegar `supabase/migrations/20261113c_subir_factura_recibida.sql`** en el SQL Editor de `ferjusanz-pruebas` (para subir facturas a mano) y subir unas cuantas facturas reales de proveedores para probar.
+  - ✔️ SQL `20261113c_subir_factura_recibida.sql` pegado por Fernando en pruebas (13/11).
+  - 🔴 Fernando: subir 3-4 facturas reales de proveedores en la app naranja (Compras → «🧾 NIF e IVA» → «📎 Añadir…») y revisarlas.
   - 🟡 Que Fernando lo pruebe en la app naranja: Compras → «🧾 NIF e IVA».
   - ✔️ Jorge: «Compra de mercaderías» le vale como concepto del listado de compras (13/11/2026).
   - 🟡 Avisar a Jorge (e Ibérica) de la factura FV-B-26-032668 a nombre de FERJUSANZ C.B.

@@ -8,7 +8,7 @@ _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab
   - Se guarda con la función `guardar_fiscal_factura_recibida`: lo leído solo rellena lo vacío y nunca pisa lo corregido por la oficina. Pantalla Compras → «🧾 NIF e IVA» (y botón en cada factura de la bandeja) con avisos: falta NIF, falta CP, falta nº, falta desglose, no cuadra con el total, o viene a nombre de otra empresa.
   - Vista `v_libro_compras` (una fila por tipo de IVA) lista para la fase 4. Concepto: «Compra de mercaderías» (⚠️ que lo confirme Jorge).
   - ⚠️ Encontrado: una factura de Ibérica de Patatas (FV-B-26-032668, 10/11/2026) viene a nombre de **FERJUSANZ C.B.** (E80746670), no de la S.L.
-  - Nuevo: «📎 Añadir una factura que no llegó por correo» (PDF o foto) en «🧾 NIF e IVA»: entra en la bandeja y se lee sola. Necesita `supabase/migrations/20261113c_subir_factura_recibida.sql` (**sin aplicar todavía** en pruebas). La base de pruebas no tiene facturas de proveedores y Claude no puede subir archivos a ella (sin permisos), así que Fernando sube unas cuantas para probar.
+  - Nuevo: «📎 Añadir una factura que no llegó por correo» (PDF o foto) en «🧾 NIF e IVA»: entra en la bandeja y se lee sola. Necesita `supabase/migrations/20261113c_subir_factura_recibida.sql` (pegado por Fernando en pruebas el 13/11; en la real no). La base de pruebas no tiene facturas de proveedores y Claude no puede subir archivos a ella (sin permisos), así que Fernando sube unas cuantas para probar.
   - Solo en la app naranja (`FISCAL_RECIBIDAS = ES_PRUEBAS`). En la normal no sale nada hasta «Autorizo publicar» y aplicar el SQL en la base real.
 
 ## 12/11/2026
