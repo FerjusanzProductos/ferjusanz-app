@@ -10450,11 +10450,73 @@ function vistaComercial() {
   state.view = 'comercial';
   if (!esOficina()) { $app.replaceChildren(shell('Comercial', h('p', { class: 'vacio' }, 'Solo la oficina puede entrar aquí.'), { volver: volverIni })); return; }
   let tab = (state.params && state.params.tab) || LS.get('fj_com_tab', 'listas'); const cont = h('div', {}); const cuerpo = h('div', {});
-  const TABS = [['harvey', '🤵 Harvey'], ['listas', '📄 Listas'], ['recs', '⭐ Recomendaciones'], ['avisos', '🔔 Avisos'], ['calc', '🧮 Calculadora'], ['pres', '🎬 Presentaciones'], ['guion', '🗣️ Guiones'], ['web', '🌐 Web y SEO']];
+  const TABS = [['harvey', '🤵 Harvey'], ['whatsapp', '💬 WhatsApp'], ['listas', '📄 Listas'], ['recs', '⭐ Recomendaciones'], ['avisos', '🔔 Avisos'], ['calc', '🧮 Calculadora'], ['pres', '🎬 Presentaciones'], ['guion', '🗣️ Guiones'], ['web', '🌐 Web y SEO']];
   const pintarTabs = () => chips.replaceChildren(...TABS.map(([k, t]) => h('button', { class: 'chip' + (tab === k ? ' on' : ''), onclick: () => { if (k === 'pres') { go('presentaciones'); return; } tab = k; LS.set('fj_com_tab', k); pintarTabs(); pintar(); } }, t)));
   const chips = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px' });
-  const pintar = () => { cuerpo.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); ({ harvey: tabHarvey, listas: tabListas, recs: tabRecs, avisos: tabAvisos, calc: tabCalc, guion: tabGuion, web: tabWeb })[tab](cuerpo); };
+  const pintar = () => { cuerpo.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); ({ harvey: tabHarvey, whatsapp: tabWhatsapp, listas: tabListas, recs: tabRecs, avisos: tabAvisos, calc: tabCalc, guion: tabGuion, web: tabWeb })[tab](cuerpo); };
   cont.append(chips, cuerpo); $app.replaceChildren(shell('Comercial', cont, { volver: volverIni })); renderBanner(); pintarTabs(); pintar();
+}
+/* 💬 WhatsApp automático (fase 1): los mensajes llegan por la API de Meta a la función «whatsapp»; Harvey propone la respuesta y la oficina la revisa y la envía. */
+async function tabWhatsapp(el) {
+  if (PRACTICA) { el.replaceChildren(h('p', { class: 'vacio' }, '💬 El WhatsApp no funciona en Modo prácticas: sal de prácticas para verlo.')); return; }
+  let abierto = state.params && state.params.tel || null; let temporizador = null;
+  const horaDe = f => { const d = new Date(f); const hoyS = new Date().toDateString() === d.toDateString(); return hoyS ? d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }); };
+  const verTel = t => { const d = String(t || ''); return d.startsWith('34') && d.length === 11 ? d.slice(2).replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3') : '+' + d; };
+  const parar = () => { if (temporizador) { clearInterval(temporizador); temporizador = null; } };
+  const pintar = async () => {
+    if (!el.isConnected) { parar(); return; }
+    const r = await sb.from('whatsapp_mensajes').select('*').order('created_at', { ascending: false }).limit(400);
+    if (r.error) { parar(); el.replaceChildren(h('p', { class: 'err' }, /does not exist|schema cache|relation/i.test(r.error.message || '') ? 'Falta crear en Supabase la tabla del WhatsApp (supabase/migrations/20261112a_whatsapp.sql).' : msgErr(r.error))); return; }
+    const ms = r.data || []; const cids = [...new Set(ms.map(m => m.cliente_id).filter(Boolean))]; const cn = {};
+    if (cids.length) { const c = await sb.from('clientes').select('id,codigo,nombre,nombre_comercial').in('id', cids); (c.data || []).forEach(x => { cn[x.id] = (x.nombre_comercial || x.nombre) + ' (' + x.codigo + ')'; }); }
+    const conv = {}; ms.forEach(m => { (conv[m.telefono] ??= []).push(m); });
+    const nombreDe = l => { const e = l.find(m => m.cliente_id); return e ? cn[e.cliente_id] || 'Cliente' : (l.find(m => m.nombre_contacto) || {}).nombre_contacto || 'Desconocido'; };
+    if (!abierto) {
+      el._ta = null;
+      const lista = Object.entries(conv).map(([t, l]) => ({ t, l, pend: l.filter(m => m.direccion === 'entra' && ['nuevo', 'propuesto'].includes(m.estado)).length }));
+      lista.sort((a, b) => (b.pend > 0) - (a.pend > 0) || String(b.l[0].created_at).localeCompare(a.l[0].created_at));
+      el.replaceChildren(
+        h('p', { class: 'sub' }, 'Mensajes que llegan al WhatsApp de la empresa. Harvey prepara la respuesta; tú la revisas y la envías. Nada sale solo.'),
+        ...(lista.length ? lista.map(x => { const u = x.l[0]; return h('div', { class: 'card tap', onclick: () => { abierto = x.t; pintar(); } },
+          h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, (x.pend ? '🟢 ' : '') + nombreDe(x.l)), h('div', { class: 'sub' }, verTel(x.t) + ' · ' + horaDe(u.created_at))), x.pend ? h('span', { style: 'font-weight:700;color:#166534' }, x.pend + ' sin contestar') : ''),
+          h('div', { class: 'sub', style: 'margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis' }, (u.direccion === 'sale' ? 'Tú: ' : '') + (u.texto || '[' + u.tipo + ']'))); })
+          : [h('p', { class: 'vacio' }, 'Todavía no ha llegado ningún WhatsApp.')]),
+        h('button', { class: 'ghost', style: 'width:100%;min-height:48px;margin-top:8px', onclick: () => pintar() }, '🔄 Actualizar'));
+      return;
+    }
+    const l = (conv[abierto] || []).slice().reverse();
+    const prop = [...l].reverse().find(m => m.direccion === 'entra' && m.estado === 'propuesto');
+    const pend = l.filter(m => m.direccion === 'entra' && ['nuevo', 'propuesto'].includes(m.estado));
+    const partes = String(prop && prop.propuesta || '').split(/\n\s*NOTA:/i);
+    const ta = h('textarea', { rows: 5, style: 'width:100%;font-size:17px', placeholder: pend.length && !prop ? '✍️ Harvey está preparando la respuesta… (o escríbela tú)' : 'Escribe la respuesta' });
+    ta.value = (partes[0] || '').trim();
+    el._ta = ta; ta._orig = ta.value;
+    const ultEntra = [...l].reverse().find(m => m.direccion === 'entra');
+    const fuera24 = !ultEntra || Date.now() - Date.parse(ultEntra.created_at) > 24 * 3600 * 1000;
+    const btn = h('button', { style: 'min-height:52px;flex:2', disabled: fuera24 }, '📨 Enviar por WhatsApp');
+    btn.onclick = async () => {
+      const t = ta.value.trim(); if (!t) { toast('Escribe la respuesta.', 'err'); return; }
+      if (!await confirmar('¿Enviar este WhatsApp a ' + nombreDe(l) + '?\n\n' + t)) return;
+      btn.disabled = true; btn.textContent = 'Enviando…';
+      const r2 = await sb.functions.invoke('whatsapp', { body: { accion: 'enviar', telefono: abierto, texto: t } });
+      const err = r2.error ? ((await r2.error.context?.json?.().catch(() => null))?.error || r2.error.message) : r2.data && r2.data.error;
+      if (err) { toast(err, 'err'); btn.disabled = false; btn.textContent = '📨 Enviar por WhatsApp'; return; }
+      toast('Enviado ✅', 'ok'); pintar();
+    };
+    const descartar = h('button', { class: 'ghost', style: 'min-height:52px;flex:1' }, '🙈 No contestar');
+    descartar.onclick = async () => { const ids = pend.map(m => m.id); if (!ids.length) return; const r3 = await sb.from('whatsapp_mensajes').update({ estado: 'descartado' }).in('id', ids); if (r3.error) toast(msgErr(r3.error), 'err'); else pintar(); };
+    el.replaceChildren(
+      h('button', { class: 'ghost', style: 'margin-bottom:8px', onclick: () => { abierto = null; pintar(); } }, '← Todas las conversaciones'),
+      h('div', { class: 'nombre', style: 'font-size:19px' }, nombreDe(l)), h('div', { class: 'sub', style: 'margin-bottom:8px' }, verTel(abierto) + (l.some(m => m.cliente_id) ? '' : ' · ⚠️ este teléfono no está en ninguna ficha de cliente')),
+      h('div', { class: 'chatlista', style: 'padding-bottom:0;margin:6px 0' }, ...l.map(m => h('div', { class: 'msg' + (m.direccion === 'sale' ? ' mio' : '') }, h('div', { class: 'burbuja', style: m.estado === 'error' ? 'border-color:#b91c1c' : '' },
+        h('span', { class: 'quien2' }, (m.direccion === 'sale' ? 'Ferjusanz' : 'Cliente') + ' · ' + horaDe(m.created_at)), m.texto || '[' + m.tipo + (m.tipo === 'audio' ? ': escúchalo en el móvil de la empresa' : '') + ']',
+        m.estado === 'error' ? h('div', { style: 'color:#b91c1c' }, '⚠️ ' + (m.error || 'No se entregó')) : '')))),
+      partes[1] ? h('div', { class: 'card', style: 'background:#fef9c3' }, h('b', {}, '📝 Para la oficina: '), partes[1].trim()) : '',
+      fuera24 ? h('p', { class: 'err' }, 'Han pasado más de 24 horas desde su último mensaje: WhatsApp no deja contestar desde aquí. Llámale o escríbele desde el móvil.') : '',
+      ta, h('div', { style: 'display:flex;gap:6px;margin-top:6px' }, btn, pend.length ? descartar : ''));
+  };
+  await pintar();
+  parar(); temporizador = setInterval(() => { if (!el.isConnected) parar(); else if (!abierto || !el._ta || (el._ta.value === el._ta._orig && document.activeElement !== el._ta)) pintar(); }, 20000);
 }
 async function tabListas(el) {
   try {
