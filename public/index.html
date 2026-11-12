@@ -4542,14 +4542,19 @@ async function sifCargar(id) {
   const [f, l, i, r] = await Promise.all([sb.from('sif_facturas').select('*').eq('id', id).single(), sb.from('sif_factura_lineas').select('*').eq('factura_id', id).order('orden'),
     sb.from('sif_factura_iva').select('*').eq('factura_id', id).order('tipo_iva'), sb.from('sif_facturas').select('id,codigo,fecha,total,motivo,anula').eq('rectifica_id', id).order('numero')]);
   for (const x of [f, l, i, r]) if (x.error) throw x.error;
-  return { f: f.data, L: l.data || [], I: i.data || [], R: r.data || [] };
+  /* Trazabilidad: lote y origen de cada línea (los mismos del albarán) */
+  const T = {}; const lp = (l.data || []).map(x => x.linea_pedido_id).filter(Boolean);
+  if (lp.length) { try { const tr = await sb.from('asignaciones_lote').select('linea_id,cantidad,lotes(codigo_lote,origen)').in('linea_id', lp); if (!tr.error) tr.data.forEach(a => (T[a.linea_id] = T[a.linea_id] || []).push({ cant: a.cantidad, lote: uno(a.lotes) || {} })); } catch (e) { } }
+  return { f: f.data, L: l.data || [], I: i.data || [], R: r.data || [], T };
 }
 /* Factura en HTML (pantalla e imprimir). Los datos salen de la FOTO guardada al emitir, no de las fichas actuales. */
+const sifDesc = l => (l.producto_id && l.codigo ? l.codigo + ' · ' : '') + (l.descripcion || '');
+function sifLote(d, l) { const tz = ((d.T || {})[l.linea_pedido_id]) || []; if (!l.producto_id) return ''; if (!tz.length) return 'Lote: sin lote'; return 'Lote: ' + tz.map(t => [t.lote.codigo_lote || 'sin código', t.lote.origen ? 'Origen ' + t.lote.origen : null].filter(Boolean).join(' · ') + (tz.length > 1 ? ' (' + num(t.cant) + ')' : '')).join(' / '); }
 function sifHtml(d) {
   const f = d.f, e = f.emisor || {}, c = f.cliente || {}, rect = f.tipo === 'rectificativa', re = f.recargo_equivalencia;
   const td = 'padding:3px 4px;border-bottom:1px solid #e5e7eb', R = td + ';text-align:right;white-space:nowrap';
   let alb = null; const filas = d.L.map(l => { let cab = ''; if (l.albaran && l.albaran !== alb) { alb = l.albaran; cab = '<tr><td colspan="7" style="padding:6px 4px 2px;font-weight:700;color:#374151">Albarán ' + esc(l.albaran) + '</td></tr>'; }
-    return cab + '<tr><td style="' + td + '">' + esc(l.descripcion) + '</td><td style="' + R + '">' + (l.producto_id ? esc(num(l.cantidad) + ' ' + (l.unidad || '')) : '') + '</td><td style="' + R + '">' + (l.producto_id ? esc(eur(l.precio)) : '') + '</td><td style="' + R + '">' + eur(l.base) + '</td><td style="' + R + '">' + num(l.tipo_iva) + ' %</td><td style="' + R + '">' + eur(l.cuota_iva) + '</td><td style="' + R + '">' + eur(l.total) + '</td></tr>'; }).join('');
+    const lt = sifLote(d, l); return cab + '<tr><td style="' + td + '">' + esc(sifDesc(l)) + (lt ? '<div style="font-size:10.5px;color:#6b7280">' + esc(lt) + '</div>' : '') + '</td><td style="' + R + '">' + (l.producto_id ? esc(num(l.cantidad) + ' ' + (l.unidad || '')) : '') + '</td><td style="' + R + '">' + (l.producto_id ? esc(eur(l.precio)) : '') + '</td><td style="' + R + '">' + eur(l.base) + '</td><td style="' + R + '">' + num(l.tipo_iva) + ' %</td><td style="' + R + '">' + eur(l.cuota_iva) + '</td><td style="' + R + '">' + eur(l.total) + '</td></tr>'; }).join('');
   return '<div style="font-family:Arial,Helvetica,sans-serif;font-size:12.5px;color:#111;background:#fff;padding:6px">' +
     (f.prueba ? '<div style="background:#b91c1c;color:#fff;font-weight:900;text-align:center;padding:6px;border-radius:6px;margin-bottom:8px;letter-spacing:1px">PRUEBA · SIN VALOR FISCAL</div>' : '') +
     '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start"><div style="flex:1;min-width:220px;border:1.5px solid #111;border-radius:6px;padding:4px">' + selloEmpresaSVG(e) + '<div style="font-size:11.5px;margin-top:2px"><b>NIF ' + esc(e.nif) + '</b></div></div>' +
@@ -4603,11 +4608,12 @@ function sifPdf(d) {
   d.L.forEach(l => {
     if (y > 790) nuevaPag();
     if (l.albaran && l.albaran !== alb) { alb = l.albaran; doc.texto('Albarán ' + l.albaran, M, y, 8.5, { neg: true, color: '#374151' }); y += 12; }
-    const ls = parte(l.descripcion, COL.cant - M - 50, 9);
+    const ls = parte(sifDesc(l), COL.cant - M - 50, 9), lt = sifLote(d, l), lts = lt ? parte(lt, COL.cant - M - 50, 7.5) : [];
     ls.forEach((t, k) => doc.texto(t, M + 6, y + k * 11, 9));
+    lts.forEach((t, k) => doc.texto(t, M + 6, y + ls.length * 11 + k * 9, 7.5, { color: '#6b7280' }));
     if (l.producto_id) { doc.texto(num(l.cantidad) + ' ' + (l.unidad || ''), COL.cant, y, 9, { align: 'right' }); doc.texto(eur(l.precio), COL.pre, y, 9, { align: 'right' }); }
     doc.texto(eur(l.base), COL.base, y, 9, { align: 'right' }); doc.texto(num(l.tipo_iva) + '%', COL.iva, y, 9, { align: 'right' }); doc.texto(eur(l.cuota_iva), COL.cuota, y, 9, { align: 'right' }); doc.texto(eur(l.total), COL.tot, y, 9, { align: 'right' });
-    y += 11 * ls.length + 2; doc.linea(M, y - 8, W - M, y - 8, '#e5e7eb', 0.4);
+    y += 11 * ls.length + 9 * lts.length + 2; doc.linea(M, y - 8, W - M, y - 8, '#e5e7eb', 0.4);
   });
   if (y > 650) { doc.pagina(); marcaPrueba(); y = 50; }
   /* Resumen por tipo de IVA */
