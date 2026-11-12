@@ -84,6 +84,10 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Desde el 11/11/2026 la unidad buena está en la ficha de cada producto (unidad de venta y precio por unidad). Lista aplicada: `supabase/migrations/20261111b_unidades_libro_ventas.sql`.
 - En la app: lista fija `UNIDAD_LIBRO` y función `fcUnidadLibro` de `public/index.html` (arándano/frambuesa/mora → bandeja, campestre/mezclum → bolsa; si no, la unidad de venta del producto). Unidades nuevas que diga Fernando: añadirlas ahí.
 
+## Facturas de proveedor que llegan tarde (12/11/2026)
+- La compra se apunta **en el día de la factura** (el escrito dentro), no en el día en que llegó el correo. Si la fecha leída es rara (más de 45 días antes o en el futuro), se usa el día de llegada y se puede cambiar a mano al revisarla.
+- Mientras no llega la factura, la ganancia usa el último precio conocido marcado **⏳ provisional** y se corrige sola al llegar.
+
 ## Aviso de margen (Fernando, 11/11/2026)
 - **No hay un margen mínimo fijo.** Se compara cada producto con **su propia media de compra de los últimos días** (14 días) y se avisa **cuando sube**, con lo que se pierde de margen frente al precio de venta de Golden. Pantalla «📈 Suben» en Precios de compra.
 
