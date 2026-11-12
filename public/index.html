@@ -187,6 +187,8 @@ label.campo{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(
 button.arr-fl{flex:1;min-height:30px!important;width:46px;padding:0!important;font-size:20px!important;font-weight:900;background:#fff!important;color:#166534!important;border:2px solid #86efac!important;border-radius:10px!important;box-shadow:none!important}
 button.arr-fl:disabled{opacity:.25}
 .mr-arr{display:flex;gap:6px;align-items:stretch;margin:0 0 8px}.mr .mr-arr>button.mr-fila{margin:0;flex:1;min-width:0}
+.mr-iva{border-radius:12px;padding:8px 12px;margin:2px 0 6px;font-size:19px;font-weight:900;border:2px solid}.mr-iva.sin{background:#dbeafe;color:#1d4ed8;border-color:#1d4ed8}.mr-iva.con{background:#fef3c7;color:#a16207;border-color:#d97706}
+.mr-iva-sub{display:block;font-size:15px;font-weight:700;margin-top:2px}
 .mr-ayuda{font-size:16px;color:#374151;margin:-2px 0 8px;font-weight:600}
 .mr-salir{position:relative;overflow:hidden;width:100%;min-height:46px;margin-top:28px;background:#f3f4f6!important;color:#6b7280!important;border:1px dashed #9ca3af!important;border-radius:12px;font-size:14px;box-shadow:none!important;user-select:none;-webkit-user-select:none;touch-action:none}
 .mr-salir-barra{position:absolute;left:0;top:0;bottom:0;width:0;background:#fca5a5}.mr-salir.carga .mr-salir-barra{width:100%;transition:width 3s linear}.mr-salir-t{position:relative}
@@ -1002,6 +1004,12 @@ function deslizarParaMover(el, p, alTerminar) {   // deslizar la tarjeta a un la
 }
 /* ===== Clientes sin IVA (azul) / con IVA (dorado) ===== */
 const claseIva = c => (c && c.sin_iva) ? 'cli-siniva' : 'cli-coniva';
+/* Recuerdo grande para el repartidor (Fernando, 12/11/2026: «para que no se hagan un lío») */
+function avisoIvaReparto(c) {
+  const sin = !!(c && c.sin_iva);
+  return h('div', { class: 'mr-iva ' + (sin ? 'sin' : 'con') }, sin ? '🔵 Cliente SIN IVA' : '🟡 Cliente CON IVA',
+    sin ? h('span', { class: 'mr-iva-sub' }, 'Paga el total sin IVA (el albarán lleva la línea de descuento).') : null);
+}
 function chipIva(c, clienteId, alTerminar) {
   const sin = !!(c && c.sin_iva);
   return h('button', { class: 'chip-iva ' + claseIva(c), title: 'Tocar para cambiar', onclick: async e => { e.stopPropagation();
@@ -2013,6 +2021,8 @@ function abrirVentaRuta(d, alTerminar) {   /* alTerminar: lo usa el Modo reparto
     } catch (e) { res.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); } }, 250) });
   uni.onchange = () => { cobro.value = uni.value === 'kg' ? 'kg' : 'unidad'; };
   cerrar = hoja('Venta en ruta · ' + nombreCli(cli), h('div', {},
+    avisoIvaReparto(cli),
+    cli && cli.sin_iva ? h('div', { class: 'sub', style: 'color:#1d4ed8;font-weight:700;margin-bottom:6px' }, 'El precio se pone como siempre (sin IVA). Después, avisa a la oficina: tiene que volver a calcular el descuento sin IVA de este albarán.') : null,
     h('p', { class: 'sub' }, 'Producto que se ha dejado al cliente sin estar en el pedido. Se añade al pedido y al albarán, y la oficina tendrá que asignarle el lote en «Confirmar trazabilidad».'),
     selP, inp, res, h('label', { class: 'campo' }, 'Cantidad', cant), h('label', { class: 'campo' }, 'Unidad', uni), h('label', { class: 'campo' }, 'Precio', precio), h('label', { class: 'campo' }, 'Cobrar', cobro), h('label', { class: 'campo' }, 'Nota', nota),
     h('button', { class: 'guardar', style: 'width:100%', onclick: async ev => {
@@ -7126,7 +7136,7 @@ function vistaModoReparto() {
     ultCarga = Date.now();
     try {
       if (!navigator.onLine) throw new TypeError('network');
-      const r = await sb.from('pedidos').select('id,estado,cliente_id,repartidor_id,orden_reparto,notas,clientes(id,codigo,nombre,nombre_comercial,direccion,codigo_postal,localidad,telefono,lat,lng,notas_reparto),lineas_pedido(id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,notas,productos(codigo,nombre,nombre_albaran)),entregas(entregado_at),albaranes(serie,numero)')
+      const r = await sb.from('pedidos').select('id,estado,cliente_id,repartidor_id,orden_reparto,notas,clientes(id,codigo,nombre,nombre_comercial,direccion,codigo_postal,localidad,telefono,lat,lng,notas_reparto,sin_iva),lineas_pedido(id,estado,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,notas,productos(codigo,nombre,nombre_albaran)),entregas(entregado_at),albaranes(serie,numero)')
         .eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true);
       if (r.error) throw r.error; datos = aplicarOrdenPendiente(r.data || [], fecha); cache = false; LS.set(MR.k(fecha), datos);
       if (!state.mrHab) { state.mrHab = true; puestosHabituales(yo, fecha); }   /* «orden de siempre» guardado para usarlo sin cobertura */
@@ -7166,7 +7176,8 @@ function vistaModoReparto() {
     const dir = [c.direccion, [c.codigo_postal, c.localidad].filter(Boolean).join(' ')].filter(Boolean).join(', ');
     out.push(h('div', { class: 'mr-caja mr-cli' + (g.hecho ? ' hecho' : '') },
       h('div', { class: 'mr-num' }, 'Cliente ' + (i + 1) + ' de ' + gs.length + (g.hecho ? ' · ✔ ENTREGADO' : '')),
-      h('div', { class: 'mr-nom' }, nombreCli(c)),
+      h('div', { class: 'mr-nom ' + claseIva(c) }, nombreCli(c)),
+      avisoIvaReparto(c),
       dir ? h('div', { class: 'mr-dir' }, '📍 ' + dir) : null,
       c.notas_reparto ? h('div', { class: 'mr-nota' }, '📝 ' + c.notas_reparto) : null,
       ...g.peds.filter(p => p.notas).map(p => h('div', { class: 'mr-nota' }, '📝 ' + p.notas)),
@@ -7233,13 +7244,13 @@ function vistaModoReparto() {
     gs.forEach((g, k) => cont.append(h('div', { class: 'mr-arr arr-f', 'data-id': g.id, 'data-mov': g.hecho ? '0' : '1' },
       h('button', { class: 'mr-fila' + (k === i ? ' act' : '') + (g.hecho ? ' hecho' : ''), onclick: () => irA(g.id) },
         h('span', { class: 'mr-fn' }, g.hecho ? '✔' : String(k + 1)),
-        h('span', { class: 'mr-lt' }, h('span', { class: 'mr-ln' }, nombreCli(g.cli)), h('span', { class: 'mr-lc' }, [g.cli.localidad, g.hecho ? 'entregado' : !g.listo ? '⏳ preparándose' : k === i ? 'ahora' : ''].filter(Boolean).join(' · ')))),
+        h('span', { class: 'mr-lt' }, h('span', { class: 'mr-ln ' + claseIva(g.cli) }, nombreCli(g.cli)), h('span', { class: 'mr-lc' }, [g.cli.sin_iva ? '🔵 sin IVA' : '🟡 con IVA', g.cli.localidad, g.hecho ? 'entregado' : !g.listo ? '⏳ preparándose' : k === i ? 'ahora' : ''].filter(Boolean).join(' · ')))),
       gs.length > 1 ? flechasOrden(k, gs.length, d => { const o = gs.map(x => x.id); const j = k + d; if (j < 0 || j >= o.length) return; [o[k], o[j]] = [o[j], o[k]]; ordenar(o); }) : null)));
     out.push(activarArrastre(cont, ids => ordenar(ids)));
     const sr = sinRep();
     out.push(h('div', { class: 'mr-sec' }, '🙋 Sin repartidor (' + sr.length + ')'));
     if (!sr.length) out.push(h('p', { class: 'vacio' }, 'Todos los pedidos de hoy tienen repartidor.'));
-    sr.forEach(g => out.push(h('div', { class: 'mr-caja' }, h('div', { class: 'mr-ln', style: 'font-size:19px' }, nombreCli(g.cli)), h('div', { class: 'sub' }, [g.cli.localidad, g.peds.length > 1 ? g.peds.length + ' pedidos' : null, gs.some(x => x.id === g.id) ? '⚠ es OTRO pedido de un cliente que ya llevas' : null].filter(Boolean).join(' · ')),
+    sr.forEach(g => out.push(h('div', { class: 'mr-caja' }, h('div', { class: 'mr-ln ' + claseIva(g.cli), style: 'font-size:19px' }, nombreCli(g.cli)), h('div', { class: 'sub' }, [g.cli.sin_iva ? '🔵 sin IVA' : '🟡 con IVA', g.cli.localidad, g.peds.length > 1 ? g.peds.length + ' pedidos' : null, gs.some(x => x.id === g.id) ? '⚠ es OTRO pedido de un cliente que ya llevas' : null].filter(Boolean).join(' · ')),
       B('guardar', '🙋 Me lo llevo yo', () => llevar(g), 'width:100%;min-height:58px;margin-top:8px;font-size:19px'))));
     return out;
   }
@@ -8658,7 +8669,7 @@ function vistaReparto() {
     try {
       if (!navigator.onLine) throw new TypeError('network');
       const [p, rp] = await Promise.all([
-        sb.from('pedidos').select('id,estado,repartidor_id,orden_reparto,clientes(id,codigo,nombre,nombre_comercial,direccion,codigo_postal,localidad,telefono,lat,lng,abre,cierra,franja_desde,franja_hasta,tiempo_parada,notas_reparto),entregas(entregado_at)').eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true),
+        sb.from('pedidos').select('id,estado,repartidor_id,orden_reparto,clientes(id,codigo,nombre,nombre_comercial,direccion,codigo_postal,localidad,telefono,lat,lng,abre,cierra,franja_desde,franja_hasta,tiempo_parada,notas_reparto,sin_iva),entregas(entregado_at)').eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true),
         sb.from('perfiles').select('id,nombre,rol,activo,reparte,color_reparto').eq('activo', true)]);
       const err = p.error || rp.error;
       if (err) { if (/repartidor_id|orden_reparto|reparte|color_reparto|does not exist|schema cache/i.test(err.message || '')) { falta = true; cuerpo.replaceChildren(h('div', { class: 'aviso-card' }, 'Falta ejecutar en Supabase la Parte 49 (reparto). Después, vuelve a abrir esta pantalla.')); return; } throw err; }
@@ -8739,7 +8750,7 @@ function vistaReparto() {
       h('div', { class: 'fila', style: 'gap:8px' },
         !ctx && !g.rep && !g.entregado ? h('input', { type: 'checkbox', class: 'chk-g', checked: !!marcados[g.id], onchange: e => { marcados[g.id] = e.target.checked; if (!e.target.checked) delete marcados[g.id]; pintarBarra(); } }) : null,
         ctx ? h('div', { class: 'nparada', style: 'background:' + ctx.col }, String(ctx.i + 1)) : null,
-        h('div', { style: 'flex:1;min-width:0' }, h('div', { class: 'nombre' }, nombreCli(g), g.est && Object.values(g.est).some(e => e === 'previsto') ? h('span', { class: 'badge prev', style: 'margin-left:6px;font-size:12px' }, '📅 previsto') : null), h('div', { class: 'sub' }, sub), g.notas_reparto ? h('div', { class: 'sub' }, '📝 ' + g.notas_reparto) : null),
+        h('div', { style: 'flex:1;min-width:0' }, h('div', { class: 'nombre ' + claseIva(g) }, nombreCli(g), h('span', { class: 'chip-iva ' + claseIva(g), style: 'margin-left:6px;font-size:12px;padding:2px 8px;display:inline-block' }, g.sin_iva ? '🔵 Sin IVA' : '🟡 Con IVA'), g.est && Object.values(g.est).some(e => e === 'previsto') ? h('span', { class: 'badge prev', style: 'margin-left:6px;font-size:12px' }, '📅 previsto') : null), h('div', { class: 'sub' }, sub), g.notas_reparto ? h('div', { class: 'sub' }, '📝 ' + g.notas_reparto) : null),
         edit ? h('div', { class: 'mov', style: 'display:flex;gap:6px;align-items:stretch' }, ctx.lista.length > 1 ? flechasOrden(ctx.i, ctx.lista.length, d => mover(ctx.lista, ctx.i, d, ctx.rep)) : null, ctx.soltar ? h('button', { class: 'ghost small arr-fl', 'aria-label': 'Soltar', style: 'align-self:center', onclick: () => asignar([g], null) }, '✕') : null) : null),
       !ctx && !g.entregado ? h('div', { style: 'display:flex;gap:8px;margin-top:6px;flex-wrap:wrap' }, soyRep() ? h('button', { class: 'guardar small', onclick: () => asignar([g], miId()) }, '🙋 Lo cojo yo') : null, gestor ? h('button', { class: 'ghost small', onclick: () => elegirRepartidor([g], 'Asignar «' + nombreCli(g) + '» a…') }, 'Asignar a…') : null) : null,
       h('div', { style: 'display:flex;gap:8px;margin-top:6px;flex-wrap:wrap' }, g.pedidos.map((id, k) => { const t = (g.est || {})[id] === 'terminado'; const n = g.pedidos.length > 1 ? ' ' + (k + 1) : ''; return h('button', { class: (t ? 'small' : 'ghost small'), onclick: () => go(t ? 'albaran' : 'pedido', { id, desde: 'reparto' }) }, t ? '🧾 Albarán' + n : '📋 Pedido' + n + ' (aún sin albarán)'); }))
@@ -8828,7 +8839,7 @@ function vistaRuta() {
     const key = 'fj_ruta_' + fecha; lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
     try {
       if (!navigator.onLine) throw new TypeError('network');
-      const r = await sb.from('pedidos').select('id,estado,clientes(id,codigo,nombre,nombre_comercial,direccion,codigo_postal,localidad,telefono,lat,lng,abre,cierra,franja_desde,franja_hasta,tiempo_parada,notas_reparto),entregas(entregado_at)').eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true);
+      const r = await sb.from('pedidos').select('id,estado,clientes(id,codigo,nombre,nombre_comercial,direccion,codigo_postal,localidad,telefono,lat,lng,abre,cierra,franja_desde,franja_hasta,tiempo_parada,notas_reparto,sin_iva),entregas(entregado_at)').eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true);
       if (r.error) throw r.error; LS.set(key, r.data); cache = false; armar(r.data); precargarPedidos(r.data.filter(p => p.estado === 'terminado' && !uno(p.entregas)).map(p => p.id));
     } catch (e) { if (!isNetErr(e)) { lista.replaceChildren(h('p', { class: 'err' }, msgErr(e))); return; } cache = true; armar(LS.get(key, [])); }
     pintarLista();
