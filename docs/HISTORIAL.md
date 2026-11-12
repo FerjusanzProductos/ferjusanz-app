@@ -2,6 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 13/11/2026
+- **v271 publicada en la normal** («Autorizo publicar»): botón «📧 Enviar a Jorge por correo» y aviso por WhatsApp. Pruebas en v272 (mismo código).
 - **Botón «📧 Enviar a Jorge por correo»** en «Informes para Jorge» (pedido por Fernando), en PRUEBAS (**v270**). Manda los listados (Excel y PDF) y los demás informes del periodo **adjuntos por correo** a Jorge (abogadoonetti@hotmail.com, el de su usuario en la app), desde el Gmail de la empresa, con copia oculta a ese Gmail. Antes enseña qué va, qué no y los avisos (y el ⛔ del IVA) y hay que confirmarlo. Después, botón «💬 Avisar a Jorge por WhatsApp» (+34 650 97 63 63, mensaje ya escrito). Siguen «📤 Compartir de otra forma» y «💬 WhatsApp a Jorge».
   - Función nueva `supabase/functions/informes-jorge` subida a la base REAL (solo oficina y admin; el destinatario está fijo en la función, la app no puede elegir otro; solo Excel, PDF y CSV, máx. 12 archivos y 15 MB). Comprobado que rechaza a quien no ha entrado. No toca la base de datos. En la app naranja no se envía nada (aviso de PRUEBAS).
 - **v268 publicada en la normal** («Autorizo publicar»): **listados de VENTAS y COMPRAS para Jorge** (fase 4) + **tipo de IVA siempre bien** (Fernando: «que el tipo de IVA siempre esté bien»). Pruebas en v269 (mismo código).
