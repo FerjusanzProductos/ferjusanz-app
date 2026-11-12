@@ -5537,7 +5537,7 @@ function vistaMas() {
     ...g('Entregas y pedidos', c('🚦', 'Camino de los pedidos', () => go('camino'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a')),
     ...g('Compras y mercancía', puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('💶', 'Precios de compra', () => { if (LS.get('fj_precios_modo', 'dia') === 'hoy') LS.set('fj_precios_modo', 'dia'); go('precios'); }, A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null),
     ...g('Clientes y productos', c('👥', 'Clientes', () => { window.__cliFiscal = false; go('clientes'); }, Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z)),
-    ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() && FACTURAR_APP ? c('🧾', 'Facturas (desde la app) · PRUEBAS', () => go('facturasapp'), Z) : null, esOficina() ? c('🏢', 'Datos de la empresa', () => go('empresa'), Z) : null, esOficina() ? c('🧾', 'Clientes sin datos para facturar', () => { window.__cliFiscal = true; go('clientes'); }, Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
+    ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() && FACTURAR_APP ? c('🧾', 'Facturas (desde la app) · PRUEBAS', () => go('facturasapp'), Z) : null, esOficina() ? c('🏢', 'Datos de la empresa', () => go('empresa'), Z) : null, esOficina() ? c('🧾', 'Clientes sin datos para facturar', () => { window.__cliFiscal = true; go('clientes'); }, Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() && CAJA_APP ? c('💵', 'Caja (efectivo) · PRUEBAS', () => go('caja'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('❓', 'Ayuda y guía', () => go('ayuda'), T), c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
@@ -13349,16 +13349,19 @@ function ljArchivo(l, formato, periodo, clave) {
   return new File([formato === 'xlsx' ? ljXlsx(l, l.tipo === 'ventas' ? 'Ventas ' + clave : 'Compras ' + clave) : ljPdf(l, periodo)], nombre, { type: LJ_MIME[formato] });
 }
 function ljBajar(f) { const u = URL.createObjectURL(f), a = h('a', { href: u, download: f.name }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); }
+const CAJA_APP = ES_PRUEBAS && !PRACTICA;   // Caja (fase 5): solo en la app naranja hasta «Autorizo publicar» y crear las tablas en la base real
 const GES_INFORMES = [
   ['ventas', '📗 Listado de VENTAS (facturas emitidas)', '10 columnas, una fila por tipo de IVA y totales por tipo. Hasta el 31/12/2026 salen de Golden.'],
   ['compras', '📕 Listado de COMPRAS (facturas de proveedores)', '10 columnas, una fila por tipo de IVA y totales por tipo. Concepto: «Compra de mercaderías».'],
   ['cobros', '💰 Cobros del mes', 'Fecha, cliente, forma de pago, importe y quién cobró'],
   ['sinfacturar', '📋 Albaranes sin facturar', 'Albaranes entregados del mes que no aparecen en ninguna factura de Golden'],
   ['fichajes', '⏱️ Registro de jornada', 'Entrada, salida y horas por trabajador y día'],
+  ...(CAJA_APP ? [['caja', '💵 Caja (efectivo)', 'Entra y sale efectivo: fecha, cuánto, de quién o a quién y la factura o justificante. Marca lo que falta y lo cambiado después.']] : []),
 ];
 async function gesInforme(tipo, desde, hasta) {
   const fin = hasta; const finTs = comSumaDias(hasta, 1);
   if (tipo === 'ventas' || tipo === 'compras') { const l = tipo === 'ventas' ? await ljVentas(desde, fin) : await ljCompras(desde, fin); return { lj: l, filas: ljFilasCSV(l), n: l.n, total: l.tot.total, aviso: l.avisos.join(' '), nota: l.nota }; }
+  if (tipo === 'caja') return await ljCaja(desde, fin);
   if (tipo === 'cobros') {
     const cs = await gesTodas(() => sb.from('cobros').select('created_at,importe,forma,nota,cobrado_por,clientes(codigo,nombre,nombre_comercial,nif)').gte('created_at', desde).lt('created_at', finTs).order('created_at'));
     const per = {}; (await gesTodas(() => sb.from('perfiles').select('id,nombre'))).forEach(p => { per[p.id] = p.nombre; });
@@ -13462,6 +13465,179 @@ function vistaGestoria() {
     chipsP, campoP, cuerpo, bCorreo, resultado, h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap' }, bCompartir, bWa),
     h('div', { class: 'sub', style: 'margin-top:6px' }, 'Jorge Ruiz Onetti (gestoría) · ' + JORGE_EMAIL + ' · ' + JORGE_TEL.replace(/^34(\d{3})(\d{3})(\d{3})$/, '+34 $1 $2 $3')))));
   pintarP(); pintar();
+}
+
+/* =====================  CAJA (EFECTIVO) · fase 5 de facturación  =====================
+   Lo que pide Jorge: entra efectivo (fecha, cuánto, de quién y qué factura) y sale efectivo (fecha, cuánto, a quién
+   y qué factura o justificante). El justificante puede llegar DESPUÉS (gasolina…): se apunta y se añade luego.
+   Un apunte nunca se borra: se corrige o se anula con motivo, y la base de datos guarda cada cambio (caja_cambios).
+   Los cobros en efectivo de los albaranes (tabla cobros) entran solos: no hay que apuntarlos. */
+const CAJA_CONCEPTOS = {
+  entrada: ['Cobro a cliente', 'Venta al contado', 'Devolución de un proveedor', 'Sacado del banco', 'Otra entrada'],
+  salida: ['Pago a proveedor', 'Gasolina', 'Peaje / aparcamiento', 'Comida / dietas', 'Material y envases', 'Taller / reparación', 'Ingreso en el banco', 'Otra salida'] };
+const CAJA_CAMPOS = { fecha: 'fecha', tipo: 'entra/sale', importe: 'importe', persona: 'de quién / a quién', nif: 'NIF', concepto: 'concepto', documento: 'factura o justificante', justificante_ruta: 'foto del justificante' };
+const cajaFaltaJust = m => !m.cobro && !m.documento && !m.justificante_ruta;
+function cajaTextoCambio(c, per) {
+  const quien = per[c.quien] ? ' por ' + per[c.quien] : ''; const cu = fechaES(hoy(new Date(c.cuando))); const d = c.detalle || {};
+  const val = (k, v) => v == null || v === '' ? '(vacío)' : k === 'fecha' ? fechaES(v) : k === 'importe' ? eur(v) + ' €' : k === 'justificante_ruta' ? 'foto' : k === 'tipo' ? (v === 'entrada' ? 'entra' : 'sale') : String(v);
+  if (c.accion === 'justificante') { const antes = Object.values(d).some(x => x.antes != null && x.antes !== '');
+    return cu + (antes ? ' justificante cambiado' : ' justificante añadido') + (d.documento && d.documento.despues ? ' («' + d.documento.despues + '»)' : '') + (d.justificante_ruta && d.justificante_ruta.despues ? ' con foto' : '') + quien; }
+  if (c.accion === 'anulado') return cu + ' ANULADO' + quien + (c.motivo ? ': ' + c.motivo : '');
+  return cu + ' corregido' + quien + ': ' + Object.entries(d).filter(([k]) => CAJA_CAMPOS[k]).map(([k, v]) => CAJA_CAMPOS[k] + ' ' + val(k, v.antes) + ' → ' + val(k, v.despues)).join('; ') + (c.motivo ? ' (motivo: ' + c.motivo + ')' : '');
+}
+async function cajaDatos(desde, hasta) {
+  const movs = await gesTodas(() => sb.from('caja_movimientos').select('*').gte('fecha', desde).lte('fecha', hasta).order('fecha').order('created_at'));
+  const ids = movs.map(m => m.id); const cam = {};
+  for (let i = 0; i < ids.length; i += 150) (await gesTodas(() => sb.from('caja_cambios').select('movimiento_id,cuando,quien,accion,detalle,motivo').in('movimiento_id', ids.slice(i, i + 150)).order('id'))).forEach(c => (cam[c.movimiento_id] || (cam[c.movimiento_id] = [])).push(c));
+  movs.forEach(m => { m.importe = Number(m.importe); m.cambios = (cam[m.id] || []).filter(c => c.accion !== 'alta'); });
+  let cobros = [];
+  try {   // cobros en efectivo de los albaranes: entran solos
+    const cs = await gesTodas(() => sb.from('cobros').select('id,created_at,importe,pedido_id,cobrado_por,clientes(nombre,nombre_comercial,nif)').eq('forma', 'efectivo').gte('created_at', desde).lt('created_at', comSumaDias(hasta, 1)).order('created_at'));
+    const peds = [...new Set(cs.map(c => c.pedido_id).filter(Boolean))]; const alb = {};
+    for (let i = 0; i < peds.length; i += 150) (await gesTodas(() => sb.from('albaranes').select('pedido_id,serie,numero').in('pedido_id', peds.slice(i, i + 150)))).forEach(a => { alb[a.pedido_id] = (a.serie ? a.serie + '-' : '') + a.numero; });
+    cobros = cs.map(c => { const cl = uno(c.clientes) || {}; return { cobro: true, id: 'cobro-' + c.id, fecha: hoy(new Date(c.created_at)), created_at: c.created_at, tipo: 'entrada', importe: Number(c.importe || 0), persona: cl.nombre || cl.nombre_comercial || '', nif: cl.nif || '', concepto: 'Cobro de albarán', documento: alb[c.pedido_id] ? 'Albarán ' + alb[c.pedido_id] : '', creado_por: c.cobrado_por, cambios: [] }; });
+  } catch (e) { }
+  const per = {}; try { (await gesTodas(() => sb.from('perfiles').select('id,nombre'))).forEach(p => { per[p.id] = p.nombre; }); } catch (e) { }
+  return { movs, cobros, per };
+}
+/* Informe para Jorge: una fila por entrada o salida; los cambios hechos después de apuntarlo, en la última columna */
+async function ljCaja(desde, hasta) {
+  const { movs, cobros, per } = await cajaDatos(desde, hasta);
+  const vivos = movs.filter(m => !m.anulado); const todos = [...vivos, ...cobros].sort((a, b) => a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : String(a.created_at).localeCompare(String(b.created_at)));
+  const filas = [['Fecha', 'Entra / Sale', 'Importe', 'De quién / A quién', 'NIF', 'Concepto', 'Factura o justificante', '¿Justificante?', 'Cambios después de apuntarlo']];
+  let ent = 0, sal = 0, falta = 0, camb = 0;
+  todos.forEach(m => { if (m.tipo === 'entrada') ent += m.importe; else sal += m.importe; const fj = cajaFaltaJust(m); if (fj) falta++; if (m.cambios.length) camb++;
+    filas.push([fechaES(m.fecha), m.tipo === 'entrada' ? 'Entra' : 'Sale', gesNum(m.importe), m.persona, m.nif || '', m.concepto, m.documento || (m.justificante_ruta ? 'foto o PDF guardado' : ''), m.cobro ? 'Albarán' : fj ? 'FALTA' : 'Sí', m.cambios.map(c => cajaTextoCambio(c, per)).join(' | ')]); });
+  filas.push([]); filas.push(['', 'Entradas', gesNum(ent)]); filas.push(['', 'Salidas', gesNum(sal)]); filas.push(['', 'Diferencia', gesNum(ent - sal)]);
+  const anul = movs.length - vivos.length;
+  return { filas, n: todos.length, aviso: falta ? '⚠️ ' + falta + ' apunte(s) SIN JUSTIFICANTE (salen con «FALTA»). Añádelo en Más › «💵 Caja (efectivo)» cuando llegue.' : '',
+    nota: 'Entradas ' + eur(ent) + ' € · Salidas ' + eur(sal) + ' € · Diferencia ' + eur(ent - sal) + ' €' + (cobros.length ? ' · ' + cobros.length + ' cobro(s) en efectivo de albaranes (entran solos)' : '') + (camb ? ' · ✏️ ' + camb + ' apunte(s) cambiados después de apuntarlos (columna «Cambios»)' : '') + (anul ? ' · ' + anul + ' anulado(s): no salen' : '') };
+}
+let cajaGente = null;
+async function cajaPersonas() {
+  if (cajaGente) return cajaGente;
+  const out = [];
+  try { (await gesTodas(() => sb.from('clientes').select('id,nombre,nombre_comercial,nif'))).forEach(c => out.push({ nombre: c.nombre || c.nombre_comercial, cliente_id: c.id, nif: c.nif || '' })); } catch (e) { }
+  try { (await gesTodas(() => sb.from('proveedores').select('*'))).forEach(p => out.push({ nombre: p.nombre, proveedor_id: p.id, nif: p.nif || '' })); } catch (e) { }
+  return (cajaGente = out.filter(x => x.nombre));
+}
+async function cajaSubir(file, fecha) {
+  let blob = file, ext = (file.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5) || 'bin', ct = file.type || 'application/octet-stream';
+  if ((file.type || '').startsWith('image/')) { blob = await reducirImagen(file, 1800, 0.75); ext = 'jpg'; ct = 'image/jpeg'; } else if (file.size > 15e6) throw new Error('El archivo pesa demasiado (máximo 15 MB).');
+  const ruta = 'caja/' + String(fecha || hoy()).slice(0, 4) + '/' + uuid() + '.' + ext;
+  const up = await sb.storage.from('facturas').upload(ruta, blob, { contentType: ct }); if (up.error) throw up.error; return ruta;
+}
+const cajaNum = v => { const n = parseFloat(String(v || '').trim().replace(/\./g, (m, i, s) => s.indexOf(',') >= 0 ? '' : m).replace(',', '.')); return Math.round(n * 100) / 100; };
+/* Formulario para apuntar (m = null) o corregir (m = el apunte) */
+function cajaFormulario(tipo, m, alGuardar) {
+  const ent = tipo === 'entrada'; const nuevo = !m; m = m || {};
+  const fec = comInput('date', m.fecha || hoy()); const imp = comInput('text', m.importe != null ? String(m.importe).replace('.', ',') : '', { inputmode: 'decimal', placeholder: '0,00' });
+  const idL = 'caja-p-' + uuid().slice(0, 8), idC = 'caja-c-' + uuid().slice(0, 8);
+  const per = comInput('text', m.persona || '', { list: idL, placeholder: ent ? 'Cliente o persona que lo da' : 'Proveedor, gasolinera, persona…', autocomplete: 'off' });
+  const nif = comInput('text', m.nif || '', { placeholder: 'Si es empresa o autónomo' });
+  const con = comInput('text', m.concepto || '', { list: idC, placeholder: ent ? 'p. ej. Cobro a cliente' : 'p. ej. Gasolina', autocomplete: 'off' });
+  const doc = comInput('text', m.documento || '', { placeholder: 'Nº de factura o ticket (si lo hay ya)' });
+  const arch = h('input', { type: 'file', accept: 'image/*,application/pdf' });
+  const motivo = comInput('text', '', { placeholder: 'Por qué se corrige (obligatorio)' });
+  const dlP = h('datalist', { id: idL }), dlC = h('datalist', { id: idC }, CAJA_CONCEPTOS[tipo].map(c => h('option', { value: c })));
+  let elegido = { cliente_id: m.cliente_id || null, proveedor_id: m.proveedor_id || null };
+  cajaPersonas().then(ps => dlP.replaceChildren(...ps.map(p => h('option', { value: p.nombre }, p.cliente_id ? 'cliente' : 'proveedor'))));
+  per.addEventListener('change', async () => { const ps = await cajaPersonas(); const p = ps.find(x => x.nombre.toLowerCase() === per.value.trim().toLowerCase());
+    elegido = { cliente_id: p && p.cliente_id || null, proveedor_id: p && p.proveedor_id || null }; if (p && p.nif && !nif.value.trim()) nif.value = p.nif; });
+  const guardar = h('button', { class: 'guardar', style: 'width:100%' }, nuevo ? (ent ? '➕ Apuntar entrada' : '➖ Apuntar salida') : '💾 Guardar corrección');
+  guardar.onclick = async () => {
+    const importe = cajaNum(imp.value);
+    if (!fec.value) { toast('Pon la fecha', 'err'); return; }
+    if (!(importe > 0)) { toast('Escribe cuánto (más de 0 €)', 'err'); return; }
+    if (!per.value.trim()) { toast(ent ? 'Escribe de quién es el dinero' : 'Escribe a quién se le paga', 'err'); return; }
+    if (!con.value.trim()) { toast('Escribe el concepto', 'err'); return; }
+    if (!nuevo && !motivo.value.trim()) { toast('Escribe el motivo de la corrección', 'err'); return; }
+    if (fec.value > hoy()) { toast('La fecha no puede ser de un día que aún no ha llegado', 'err'); return; }
+    if (importe >= 1000 && !await confirmar('OJO: con una empresa o un autónomo NO se puede pagar en efectivo una operación de 1.000 € o más (Ley 7/2012).\n\n¿Seguro que es en efectivo?')) return;
+    const fila = { fecha: fec.value, tipo, importe, persona: per.value.trim(), nif: nif.value.trim().toUpperCase().replace(/[\s.\-\/]/g, '') || null, concepto: con.value.trim(), cliente_id: elegido.cliente_id, proveedor_id: elegido.proveedor_id };
+    guardar.disabled = true; let ruta = null;
+    try {
+      if (nuevo) { const f = arch.files && arch.files[0]; if (f) ruta = await cajaSubir(f, fec.value);
+        fila.documento = doc.value.trim() || null; fila.justificante_ruta = ruta;
+        const r = await sb.from('caja_movimientos').insert(fila); if (r.error) { if (ruta) await sb.storage.from('facturas').remove([ruta]); throw r.error; }
+        toast(fila.documento || ruta ? '✔ Apuntado' : '✔ Apuntado. Falta el justificante: añádelo cuando llegue.', 'ok'); }
+      else { fila.motivo_cambio = motivo.value.trim(); const r = await sb.from('caja_movimientos').update(fila).eq('id', m.id); if (r.error) throw r.error; toast('✔ Corregido (queda apuntado el cambio)', 'ok'); }
+      alGuardar();
+    } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); guardar.disabled = false; }
+  };
+  return h('div', {}, dlP, dlC,
+    nuevo ? h('p', { class: 'sub' }, ent ? 'Dinero en efectivo que ENTRA en caja. Los cobros en efectivo de los albaranes ya entran solos: aquí, solo lo demás.' : 'Dinero en efectivo que SALE de caja. Si el ticket o la factura llega después, apúntalo igual y añádelo luego.') : h('p', { class: 'sub' }, 'Corregir deja apuntado lo de antes, lo de ahora, quién y por qué.'),
+    comCampo('Fecha', fec), comCampo('Cuánto (€)', imp), comCampo(ent ? 'De quién' : 'A quién', per), comCampo('NIF (si lo tiene)', nif), comCampo('Concepto', con),
+    nuevo ? comCampo(ent ? 'Factura o albarán' : 'Factura o justificante', doc) : null, nuevo ? comCampo('Foto o PDF del justificante (si lo tienes ya)', arch) : null,
+    nuevo ? null : comCampo('Motivo de la corrección', motivo), guardar);
+}
+function vistaCaja() {
+  state.view = 'caja'; if (!esOficina() || !CAJA_APP) { go('inicio'); return; }
+  let mes = LS.get('fj_caja_mes', hoy().slice(0, 7)); let filtro = LS.get('fj_caja_filtro', 'todo'); let datos = null;
+  const selMes = comInput('month', mes); const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
+  selMes.addEventListener('change', () => { if (selMes.value) { mes = selMes.value; LS.set('fj_caja_mes', mes); cargar(); } });
+  async function cargar() {
+    cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+    try { const [y, mm] = mes.split('-').map(Number); datos = await cajaDatos(mes + '-01', mes + '-' + String(new Date(y, mm, 0).getDate()).padStart(2, '0')); pintar(); }
+    catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver la caja.' : /caja_|schema cache|relation|PGRST205|42P01/i.test(((e && e.code) || '') + ' ' + ((e && e.message) || '')) ? 'Falta crear la caja en la base de datos (cambio pendiente de aplicar).' : msgErr(e))); }
+  }
+  const abrir = (tit, cuerpo) => { const c = hoja(tit, cuerpo); return c; };
+  const nuevo = tipo => { let cerrar = null; cerrar = abrir(tipo === 'entrada' ? '➕ Entra efectivo' : '➖ Sale efectivo', cajaFormulario(tipo, null, () => { cerrar(); cargar(); })); };
+  function detalle(m) {
+    let cerrar = null; const per = datos.per; const fj = cajaFaltaJust(m);
+    const lin = (a, b) => b ? h('div', { style: 'padding:3px 0' }, h('span', { class: 'sub' }, a + ': '), h('b', {}, b)) : null;
+    const hist = h('div', { class: 'sub', style: 'margin-top:8px;line-height:1.5' }, h('div', {}, '🕓 Apuntado el ' + fechaES(hoy(new Date(m.created_at))) + (per[m.creado_por] ? ' por ' + per[m.creado_por] : '')), ...m.cambios.map(c => h('div', { style: c.accion === 'anulado' ? 'color:var(--rojo)' : 'color:#b45309' }, '✏️ ' + cajaTextoCambio(c, per))));
+    const acc = h('div', {});
+    if (!m.anulado) {
+      const doc = comInput('text', m.documento || '', { placeholder: 'Nº de factura o qué ticket es' }); const arch = h('input', { type: 'file', accept: 'image/*,application/pdf' });
+      const bJ = h('button', { class: 'guardar', style: 'width:100%' }, fj ? '📎 Guardar justificante' : '📎 Guardar');
+      bJ.onclick = async () => { const f = arch.files && arch.files[0]; const d = doc.value.trim() || null;
+        if (!f && d === (m.documento || null)) { toast('Escribe el nº del justificante o elige la foto', 'err'); return; }
+        bJ.disabled = true; let ruta = null;
+        try { if (f) ruta = await cajaSubir(f, m.fecha); const cambio = { documento: d }; if (ruta) cambio.justificante_ruta = ruta;
+          const r = await sb.from('caja_movimientos').update(cambio).eq('id', m.id); if (r.error) { if (ruta) await sb.storage.from('facturas').remove([ruta]); throw r.error; }
+          toast('✔ Justificante guardado (queda marcado que se añadió hoy)', 'ok'); cerrar(); cargar(); }
+        catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); bJ.disabled = false; } };
+      const caja = h('div', { class: 'card', style: fj ? 'border-color:var(--rojo)' : '' }, h('b', {}, fj ? '⚠️ Falta el justificante' : '📎 Justificante'), fj ? h('div', { class: 'sub' }, 'Cuando llegue la factura o el ticket, ponlo aquí. Quedará marcado que se añadió después.') : null,
+        comCampo('Factura o justificante', doc), comCampo(m.justificante_ruta ? 'Cambiar la foto o PDF' : 'Foto o PDF', arch), bJ);
+      const bC = h('button', { class: 'ghost small', onclick: () => { cerrar(); let c2 = null; c2 = hoja('✏️ Corregir apunte', cajaFormulario(m.tipo, m, () => { c2(); cargar(); })); } }, '✏️ Corregir');
+      const bA = h('button', { class: 'peligro small', onclick: async () => { const mot = (window.prompt('¿Por qué se anula? (p. ej. «apuntado dos veces»)') || '').trim(); if (!mot) return;
+        if (!await confirmar('¿ANULAR este apunte de ' + eur(m.importe) + ' €? No se borra: queda tachado y con el motivo.')) return;
+        const r = await sb.from('caja_movimientos').update({ anulado: true, motivo_cambio: mot }).eq('id', m.id); if (r.error) { toast(msgErr(r.error), 'err'); return; } toast('Anulado', 'ok'); cerrar(); cargar(); } }, '🚫 Anular');
+      acc.append(caja, h('div', { style: 'display:flex;gap:8px;margin-top:8px' }, bC, bA));
+    }
+    cerrar = hoja((m.tipo === 'entrada' ? '➕ Entra ' : '➖ Sale ') + eur(m.importe) + ' €' + (m.anulado ? ' · ANULADO' : ''), h('div', {},
+      lin('Fecha', fechaES(m.fecha)), lin(m.tipo === 'entrada' ? 'De quién' : 'A quién', m.persona), lin('NIF', m.nif), lin('Concepto', m.concepto), lin('Factura o justificante', m.documento),
+      m.justificante_ruta ? h('button', { class: 'small', style: 'margin:6px 0', onclick: () => verDocumento(m.justificante_ruta, 'Justificante · ' + m.persona) }, '👁 Ver justificante') : null,
+      acc, hist));
+  }
+  function tarjeta(m) {
+    const fj = !m.anulado && cajaFaltaJust(m); const ent = m.tipo === 'entrada';
+    const marcas = [m.anulado ? h('span', { class: 'badge', style: 'background:#fee2e2;color:#991b1b' }, '🚫 ANULADO') : null, fj ? h('span', { class: 'badge', style: 'background:#fee2e2;color:#991b1b' }, '⚠️ Falta justificante') : null,
+      !m.anulado && m.cambios.length ? h('span', { class: 'badge', style: 'background:#fef3c7;color:#92400e' }, '✏️ Cambiado después') : null, m.cobro ? h('span', { class: 'badge', style: 'background:#e0f2fe;color:#075985' }, '💰 Cobro de albarán (entra solo)') : null].filter(Boolean);
+    return h('div', { class: 'card', style: 'cursor:' + (m.cobro ? 'default' : 'pointer') + (m.anulado ? ';opacity:.55;text-decoration:line-through' : ''), onclick: m.cobro ? null : () => detalle(m) },
+      h('div', { style: 'display:flex;justify-content:space-between;gap:8px;align-items:flex-start' },
+        h('div', { style: 'min-width:0' }, h('div', { class: 'nombre' }, m.persona || '(sin nombre)'), h('div', { class: 'sub' }, fechaES(m.fecha) + ' · ' + m.concepto + (m.documento ? ' · ' + m.documento : m.justificante_ruta ? ' · 📎 foto' : ''))),
+        h('b', { style: 'white-space:nowrap;font-size:17px;color:' + (ent ? '#15803d' : '#b91c1c') }, (ent ? '+' : '−') + eur(m.importe) + ' €')),
+      marcas.length ? h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' }, ...marcas) : null);
+  }
+  function pintar() {
+    const todos = [...datos.movs, ...datos.cobros].sort((a, b) => b.fecha.localeCompare(a.fecha) || String(b.created_at).localeCompare(String(a.created_at)));
+    const vivos = todos.filter(m => !m.anulado); const ent = vivos.filter(m => m.tipo === 'entrada').reduce((a, m) => a + m.importe, 0), sal = vivos.filter(m => m.tipo === 'salida').reduce((a, m) => a + m.importe, 0);
+    const faltan = vivos.filter(cajaFaltaJust).length;
+    if (filtro === 'falta' && !faltan) filtro = 'todo';
+    const lista = todos.filter(m => filtro === 'todo' ? true : filtro === 'falta' ? !m.anulado && cajaFaltaJust(m) : m.tipo === filtro);
+    const cifra = (t, v, col) => h('div', { style: 'flex:1;text-align:center' }, h('div', { class: 'sub' }, t), h('b', { style: 'font-size:17px;color:' + col }, eur(v) + ' €'));
+    cont.replaceChildren(
+      h('div', { class: 'card', style: 'display:flex;gap:6px' }, cifra('Entra', ent, '#15803d'), cifra('Sale', sal, '#b91c1c'), cifra('Diferencia', ent - sal, ent - sal < 0 ? '#b91c1c' : 'inherit')),
+      h('div', { style: 'display:flex;gap:8px;margin:8px 0' }, h('button', { class: 'guardar', style: 'flex:1;background:#15803d;background-image:none', onclick: () => nuevo('entrada') }, '➕ Entra efectivo'), h('button', { class: 'guardar', style: 'flex:1;background:#b91c1c;background-image:none', onclick: () => nuevo('salida') }, '➖ Sale efectivo')),
+      faltan ? h('div', { class: 'aviso-card' }, '⚠️ ' + faltan + ' apunte(s) sin justificante. Tócalos para añadirlo cuando llegue.') : null,
+      h('div', { class: 'chips' }, ...[['todo', 'Todo'], ['entrada', '➕ Entradas'], ['salida', '➖ Salidas'], ['falta', '⚠️ Sin justificante' + (faltan ? ' (' + faltan + ')' : '')]].map(([v, t]) => h('button', { class: 'chip' + (filtro === v ? ' on' : ''), onclick: () => { filtro = v; LS.set('fj_caja_filtro', v); pintar(); } }, t))),
+      ...(lista.length ? lista.map(tarjeta) : [h('p', { class: 'vacio' }, 'No hay apuntes de caja en este mes.')]));
+  }
+  $app.replaceChildren(shell('Caja (efectivo)', h('div', {},
+    h('p', { class: 'sub' }, 'Entradas y salidas de dinero en efectivo, como las pide Jorge: fecha, cuánto, de quién o a quién y la factura o el justificante. Sale en «Informes para Jorge».'),
+    comCampo('Mes', selMes), cont), { volver: volverIni })); renderBanner(); cargar();
 }
 
 function vistaCopia() {
@@ -13604,6 +13780,7 @@ const BUSCA_PANTALLAS = [
   ['📐', 'Formatos', 'formatos formato caja kilos peso cliente unidades bote bandeja compra venta se vende se compra', () => go('formatos'), 'o'],
   ['🌐', 'Portal de clientes', 'portal pagina clientes web qr enlace publicar albaranes', () => go('paginasclientes')],
   ['📲', 'Móviles y correos de clientes', 'moviles correos telefonos contactos clientes dejan qr whatsapp email', () => go('contactosportal'), 'o'],
+  ...(CAJA_APP ? [['💵', 'Caja (efectivo)', 'caja efectivo entradas salidas gasolina justificante ticket debe haber dinero metalico', () => go('caja'), 'o']] : []),
   ['📤', 'Informes para Jorge', 'jorge gestoria gestor contable informes cierre mes iva facturas emitidas recibidas trimestre', () => go('gestoria'), 'o'],
   ['🆘', 'Peticiones de ayuda', 'ayuda ayudas socorro atascado problema equipo', () => go('ayudas'), 'o'],
   ['🗂️', 'Secretaría hoy', 'secretaria oficina tareas hoy', () => go('secretaria'), 'o'],
@@ -14022,7 +14199,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { facturasapp: vistaFacturasApp, empresa: vistaEmpresa, modoreparto: vistaModoReparto, tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, camino: vistaCamino, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { facturasapp: vistaFacturasApp, caja: vistaCaja, empresa: vistaEmpresa, modoreparto: vistaModoReparto, tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, camino: vistaCamino, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   if (MR.dentro() && state.view === 'inicio' && !state.mrMirado) { state.mrMirado = true; return vistaModoReparto(); }   /* vuelve al modo reparto si se cerró la app */
   v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); if (state.view === 'inicio') setTimeout(mrAuto, 300); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }

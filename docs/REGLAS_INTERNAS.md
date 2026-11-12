@@ -156,3 +156,10 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - FERJUSANZ es la **productora** del programa de facturación de la app. Claude programa y prueba, pero **nunca firma** la declaración responsable ni dice que el programa cumple sin pruebas.
 - La app **no emite facturas reales** hasta que estén ✅ todas las pruebas de `docs/SIF_PRODUCTOR/PRUEBAS_TECNICAS.md` y haya declaración firmada de esa versión.
 - Todo cambio en la facturación (`public/sif/`, funciones o tablas `sif_*`) **sube la versión del SIF** y exige declaración nueva antes de usarla. Detalle: `docs/SIF_PRODUCTOR/LEEME.md`, punto 8.
+
+## Caja (efectivo) — fase 5 de facturación (13/11/2026)
+- Jorge solo quiere: **entra efectivo** (fecha, cuánto, de quién y qué factura) y **sale efectivo** (fecha, cuánto, a quién y qué factura o justificante). Sustituye al «Debe / Haber» que mandaba Carmen.
+- Los **cobros en efectivo de los albaranes entran solos** en la caja: no se apuntan otra vez.
+- Si el justificante llega después (gasolina…), se apunta igual y se añade luego: queda marcado con la fecha y quién.
+- **Un apunte de caja nunca se borra**: se corrige o se anula, siempre con motivo. Todo queda registrado y sale en el informe de Jorge.
+- Con empresas o autónomos, nada en efectivo si la operación llega a **1.000 €** (Ley 7/2012): la app avisa.

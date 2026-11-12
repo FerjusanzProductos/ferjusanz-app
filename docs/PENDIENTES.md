@@ -66,7 +66,9 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
   - ✔️ **Botón «📧 Enviar a Jorge por correo»** publicado en la normal (v271). ✔️ Primer envío hecho por Fernando (13/11/2026, la función respondió bien). 🟡 Que Jorge confirme que le llegaron los adjuntos y si le vale el formato.
   - 🟡 Enseñarle a Jorge un listado (p. ej. 3.er trimestre 2026) para que diga si le vale el formato.
   - 🟡 Fernando/oficina: revisar en Golden la factura **P/20.453 (30/09/2026)**: su IVA sale al 4,5 % (imposible); falta o sobra algo.
-  - Siguiente: **fase 5, caja** (entradas y salidas de efectivo).
+  - 🟡 **Fase 5 (caja, efectivo)** hecha en PRUEBAS (v273). Falta: aplicar `20261114a_caja_efectivo.sql` en la base de pruebas («Autorizo» de Fernando) y que Fernando/Carmen la prueben (Más → «💵 Caja (efectivo) · PRUEBAS»). Para la normal: «Autorizo publicar» + SQL en la base real + `CAJA_APP = true`.
+    - 🟡 Jorge: si le vale el informe de caja en CSV o lo quiere en Excel/PDF como ventas y compras; y si quiere un **saldo inicial** (hoy salen entradas, salidas y diferencia del periodo).
+  - Siguiente: **fase 6, banco** (Norma 43).
   - 🟡 **Fase 2 (facturas emitidas)** hecha en PRUEBAS (v259, 12/11/2026; v261 arregla el «permission denied»; v262 pone código y lote/origen en la factura: hay que entrar con `fernando@pruebas.invalid`). ✔️ Arreglo de la sesión publicado en la normal (v264, 13/11). Que Fernando la pruebe en la app naranja (Más → «🧾 Facturas (desde la app) · PRUEBAS»). Hay 2 albaranes de ensayo sin facturar (Aguila Rock, 1.037 € para probar el límite del efectivo; y un cliente sin NIF). Código publicado en la normal (v260, «Autorizo publicar»), pero allí el botón no sale y la base real no tiene las tablas: para facturar de verdad hace falta crearlas (quedan bloqueadas) y la declaración firmada.
     - ⚪ Mejora pequeña para el próximo SQL: en la factura, la unidad de lo que no va por kg sale «ud»; mejor la del pedido (manojo, caja, bandeja…).
     - ⚪ Poner el **IBAN** en «Datos de la empresa» para que salga en las facturas por transferencia.
