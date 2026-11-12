@@ -45,7 +45,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - 🟡 Confirmar la **lista completa de clientes sin IVA (azul)** y si «Bar Delfín» es la misma ficha que «Bar Delfines» (DEFINES).
 - 🟡 **Numeración real de albaranes**: al empezar de verdad, decir el último número de Golden (serie F).
 - ⚪ **Cambio de temporada de patata** (09-F → 01-F) cuando lo diga («cambio de temporada patata»).
-- 🟡 **WhatsApp automático, fase 1** (en PRUEBAS v217, rama `whatsapp`): falta 1) que Fernando cree la app en Meta con el número de pruebas y pase los dos identificadores; 2) crear la tabla `whatsapp_mensajes` (con Fernando delante, «listo»); 3) que Fernando guarde los secretos en Supabase (ver `supabase/functions/whatsapp/LEEME.md`); 4) configurar el webhook en Meta y probar; 5) «Autorizo publicar»; 6) más adelante, pasar el 609 567 354 (comprobar antes la coexistencia con la app del móvil). Plan y costes en `docs/PLAN_WHATSAPP.md`.
+- 🟡 **WhatsApp automático, fase 1** (en PRUEBAS v217, rama `whatsapp`): falta 1) que Fernando cree la app en Meta con el número de pruebas y pase los dos identificadores; 2) ✔️ tabla `whatsapp_mensajes` creada (12/11); 3) que Fernando guarde los secretos en Supabase (ver `supabase/functions/whatsapp/LEEME.md`); 4) configurar el webhook en Meta y probar; 5) «Autorizo publicar»; 6) más adelante, pasar el 609 567 354 (comprobar antes la coexistencia con la app del móvil). Plan y costes en `docs/PLAN_WHATSAPP.md`.
 - 🟡 Poner las claves de los conectores de Claude: `GEMINI_API_KEY`, `FIRECRAWL_API_KEY`, `PERPLEXITY_API_KEY` y `POSTHOG_API_KEY`.
 - 🟡 En GitLab, activar la copia automática a GitHub (Settings → Repository → Mirroring repositories). Mientras tanto, Claude copia a mano después de cada cambio.
 
