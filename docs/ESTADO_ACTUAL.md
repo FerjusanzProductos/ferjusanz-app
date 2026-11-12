@@ -6,8 +6,8 @@ Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial 
 ## Versiones
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
-| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v210** ✅ (publicada el 11/11/2026: v207 + «📦 Cómo se compra y se vende» en Más → 📐 Formatos, «Se compra por» en Productos, detección de formatos mal puestos y unidad «bote») | GitLab `main` |
-| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v211** ✅ (12/11/2026: normal v210 + página `/nuevos-clientes` para captar clientes) | rama `captacion-web` |
+| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v213** ✅ (publicada el 12/11/2026: v212 + página pública `/nuevos-clientes` para captar clientes; su formulario necesita la migración `20261112_web_captacion.sql`) | GitLab `main` |
+| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v214** ✅ (mismo contenido que la normal v213) | GitLab `main` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
 La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la publicada: descargar el Worker desde la API de Cloudflare (`/workers/scripts/<nombre>/content/v2`) y buscar ese texto.

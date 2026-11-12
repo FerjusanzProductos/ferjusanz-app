@@ -2,6 +2,9 @@
 _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.md. Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda._
 
 ## Por publicar o decidir
+- 🟡 Vídeo «5 skills para Claude Code»: superpowers e impeccable activados (12/11). La 4.ª es **ponytail** (ya instalada). La 5.ª no se vio; Fernando pidió **taste** (activada 12/11). Si en el vídeo la 5.ª es otra, pasar captura. Claude-Mem: solo en su ordenador si lo quiere.
+- 🟡 **Clips cortos de vídeos (skill `shorts`)**, 12/11/2026: lista y probada. Para usarla con YouTube, Fernando tiene que añadir `*.googlevideo.com` en los ajustes de red del entorno «ferjusanz-app» (Settings → Network access → Allowed domains). Luego mandar el primer enlace de un vídeo propio.
+- ✔️ 11/11/2026: **Entrega en mano paso a paso** publicada en la normal (v212) con «Autorizo publicar». Pruebas queda en v211 con lo mismo.
 - 🟡 Confirmar con Fernando: **Mango** (¿se compra por caja? ¿cuántas piezas trae?), **Bote Garbanzos** (¿por bote?), **Nabo, Cogollos de Tudela y Fresón 1ª** (se compran más caros de lo que se venden por kg: ¿caja/manojo?).
 - 🟢 **📦 Formatos de compra y venta** (Más → 📐 Formatos): base de datos aplicada (11/11) y publicado en la normal (v210) con detección automática. Piparras Tarro ya por bote (lo hizo Fernando). Fernando dice que hay «muchísimos» mal: la detección encuentra 9; pedirle ejemplos de los que vea mal para añadir la regla que falte.
 - ✔️ 11/11/2026: **«📄 Ver factura», «💶 Precios de venta» y avisos en Facturas de proveedores** publicados en la normal (v207).
@@ -34,7 +37,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 ## Captar clientes nuevos (empezado el 12/11/2026)
 - 🔴 **Aplicar en Supabase** `supabase/migrations/20261112_web_captacion.sql` con Fernando delante («listo») y probar el formulario en pruebas.
 - 🟡 Fernando revisa los textos de la página (pruebas: `/nuevos-clientes`) y graba un **vídeo de 1 minuto** en Mercamadrid.
-- 🟡 Después: «Autorizo publicar» → la dirección buena será `https://ferjusanz-productos.fernandosanzalba.workers.dev/nuevos-clientes`.
+- ✔️ 12/11: publicado (v213). Dirección para anuncios y QR: `https://ferjusanz-productos.fernandosanzalba.workers.dev/nuevos-clientes`.
 - ⚪ Siguiente: anuncio en Facebook/Instagram (cuenta publicitaria de Meta, 5–10 €/día, solo hostelería y colectividades de Madrid norte/noroeste y Segovia) y píxel de Meta en la página.
 - ⚪ Seguimiento automático por correo a los 2, 5 y 10 días (con el Gmail de `albaranes-correo`).
 
@@ -42,7 +45,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - 🟡 Confirmar la **lista completa de clientes sin IVA (azul)** y si «Bar Delfín» es la misma ficha que «Bar Delfines» (DEFINES).
 - 🟡 **Numeración real de albaranes**: al empezar de verdad, decir el último número de Golden (serie F).
 - ⚪ **Cambio de temporada de patata** (09-F → 01-F) cuando lo diga («cambio de temporada patata»).
-- ⚪ **WhatsApp automático** desde el 609 567 354 (API de Meta): aparcado hasta que lo diga.
+- ⚪ **WhatsApp automático** desde el 609 567 354 (API de Meta): aparcado hasta que lo diga. **Plan y costes en `docs/PLAN_WHATSAPP.md`** (12/11/2026): entre 1 y 30 €/mes de WhatsApp más la IA. Antes, Harvey v2.
 - 🟡 Poner las claves de los conectores de Claude: `GEMINI_API_KEY`, `FIRECRAWL_API_KEY`, `PERPLEXITY_API_KEY` y `POSTHOG_API_KEY`.
 - 🟡 En GitLab, activar la copia automática a GitHub (Settings → Repository → Mirroring repositories). Mientras tanto, Claude copia a mano después de cada cambio.
 
@@ -57,7 +60,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
    - ⚪ Productos mal apuntados según las reglas internas (fcRegla*).
    - ✔️ **Margen / subidas («📈 Suben»)**: publicado (v204). Sin % fijo: compara con la media de los 14 días anteriores de cada producto (decisión de Fernando).
    - ⚪ Comprobador Golden ↔ albaranes: **esperando el archivo de ejemplo** de Golden.
-7. 🟡 Harvey orquestador v2: apuntar contactos, confirmar previstos, pedidos desde WhatsApp y recordatorios de cobro (siempre con confirmación).
+7. 🟡 **Siguiente (Fernando, 12/11/2026)**: Harvey orquestador v2, en una conversación nueva (texto en `PROMPTS.md`, punto 7): apuntar contactos, confirmar previstos, pedidos desde WhatsApp y recordatorios de cobro (siempre con confirmación).
 8. 🔴 **Copia de seguridad de fotos, PDF y audios** de Supabase Storage (ahora no se copian).
 
 ## Comprobaciones técnicas

@@ -12,13 +12,25 @@
     },
     "openai-codex": {
       "source": { "source": "github", "repo": "openai/codex-plugin-cc" }
+    },
+    "superpowers-marketplace": {
+      "source": { "source": "github", "repo": "obra/superpowers-marketplace" }
+    },
+    "impeccable": {
+      "source": { "source": "github", "repo": "pbakaus/impeccable" }
+    },
+    "taste-skill": {
+      "source": { "source": "github", "repo": "Leonxlnx/taste-skill" }
     }
   },
   "enabledPlugins": {
     "ponytail@ponytail": true,
     "agent-skills@addy-agent-skills": true,
     "watch@claude-video": true,
-    "codex@openai-codex": true
+    "codex@openai-codex": true,
+    "superpowers@superpowers-marketplace": true,
+    "impeccable@impeccable": true,
+    "taste-skill@taste-skill": true
   },
   "enabledMcpjsonServers": ["playwright", "firecrawl", "perplexity", "posthog"]
 }

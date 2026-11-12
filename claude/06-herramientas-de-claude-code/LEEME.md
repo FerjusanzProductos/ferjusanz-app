@@ -24,7 +24,8 @@ Configuración: `.claude/settings.json` (plugins) y `.mcp.json` (conectores).
 ## Estado (11/11/2026)
 - 🟡 Faltan las claves de `GEMINI_API_KEY`, `FIRECRAWL_API_KEY`, `PERPLEXITY_API_KEY` y `POSTHOG_API_KEY` (se ponen en los secretos del entorno, **nunca** en el chat).
 - ⚠️ En esta sesión no conectaron **perplexity**, **posthog** ni **context7**.
-- Descartados: Composio (acceso a cuentas por un tercero) y OmniRoute en el proyecto (solo guía para el ordenador).
+- Añadidos el 12/11/2026 (vídeo «5 skills para Claude Code»): **superpowers** (método de trabajo) e **impeccable** (diseño de pantallas), y **taste** (diseño de webs de empresa).
+- Descartados: Claude-Mem en el proyecto (guarda todo, con estadísticas activadas; solo en el ordenador si se pide), Composio (acceso a cuentas por un tercero) y OmniRoute en el proyecto (solo guía para el ordenador).
 
 ## Tareas que hace Claude aquí
 - Elegir la herramienta adecuada para cada trabajo.
