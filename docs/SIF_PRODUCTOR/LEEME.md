@@ -32,6 +32,8 @@ Documentos de esta carpeta:
 - **No son productores**: Anthropic (Claude Code es una herramienta para escribir el código, como un editor), Cloudflare ni Supabase (son servicios genéricos de alojamiento y base de datos, no programas de facturación). Se citan como **componentes** en la declaración. ⚠️ Confirmar con Jorge que no tienen que «intervenir» en la declaración (el art. 15 pide que intervengan todos cuando hay componentes de varios productores; aquí lo razonable es que no, porque no producen nada de facturación).
 - **Quién firma**: la persona que **representa legalmente** a la S.L.: el **administrador** (único, solidario o mancomunado) o un **apoderado** con poder suficiente. **Claude no sabe quién es**: hay que mirarlo en la **escritura** o en una **nota simple** del Registro Mercantil (Madrid, Tomo 34.358, Folio 101, Hoja M-618046). Si es Fernando Sanz, firma él «en nombre y representación de FERJUSANZ…, como administrador».
 - **Cómo se firma**: mejor con **certificado electrónico de representante de persona jurídica** (el mismo que hará falta para enviar las facturas a la AEAT). Firma a mano escaneada también vale como documento, pero el certificado se necesita igualmente.
+- **Administradores (Fernando, 12/11/2026): Fernando Sanz Orrillo y Julián Sanz Orrillo.** Si son **solidarios**, firma uno; si son **mancomunados**, los dos. Mirarlo en la escritura.
+- **Lo que hace falta**: DNI del que firma, escritura o nota simple con el cargo vigente y, para el certificado de representante (FNMT), un **certificado del Registro Mercantil** de su nombramiento con menos de 15 días.
 - **Claude nunca firma.**
 
 ## 2. Nombre, código y versión (propuesta, a decidir por Fernando)
