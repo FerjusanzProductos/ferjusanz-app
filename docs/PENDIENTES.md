@@ -63,6 +63,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
   - ✔️ **Activado en la normal (v265, 13/11/2026)**: tablas creadas en la base real (Fernando).
   - 🟡 Oficina (Carmen): en Compras → «🧾 NIF e IVA», tocar «📖 Leer NIF e IVA de las facturas que aún no lo tienen» y revisar los avisos. Poner a mano el NIF de los proveedores que no lo traen como texto (Pataleta, Perichán…).
   - ✔️ **Fase 4 (listados para Jorge)** publicada en la normal (v268, «Autorizo publicar»), con comprobación del tipo de IVA en cada fila. Pruebas v269.
+  - 🟡 **Botón «📧 Enviar a Jorge por correo»** en PRUEBAS (v270); función `informes-jorge` ya en la base real. Falta «Autorizo publicar» y el primer envío de verdad (comprobar que le llega con los adjuntos).
   - 🟡 Enseñarle a Jorge un listado (p. ej. 3.er trimestre 2026) para que diga si le vale el formato.
   - 🟡 Fernando/oficina: revisar en Golden la factura **P/20.453 (30/09/2026)**: su IVA sale al 4,5 % (imposible); falta o sobra algo.
   - Siguiente: **fase 5, caja** (entradas y salidas de efectivo).

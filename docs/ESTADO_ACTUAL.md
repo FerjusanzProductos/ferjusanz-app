@@ -1,5 +1,5 @@
 # Estado actual de FERJUSANZ
-_Última revisión: 13/11/2026 (normal v268, pruebas v269). Actualizar en cada publicación._
+_Última revisión: 13/11/2026 (normal v268, pruebas v270). Actualizar en cada publicación._
 
 Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial · ⚠️ por confirmar
 
@@ -7,7 +7,7 @@ Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial 
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
 | **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v268** ✅ (13/11/2026, «Autorizo publicar»: **listados de VENTAS y COMPRAS para Jorge** con el tipo de IVA comprobado en cada fila (fase 4); v265: **«🧾 NIF e IVA» activado** en Compras, fase 3 de facturación; antes v264 con los arreglos «permission denied» y código/lote en la factura. El botón de facturas emitidas (fase 2) sigue **sin salir** en la normal) | GitLab `main` |
-| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v269** ✅ (13/11/2026: mismo código que la normal v268; v267: **facturación fase 4**, listados de VENTAS y COMPRAS para Jorge en «Informes para Jorge» (Excel, PDF y CSV, mensual o trimestral); v266: mismo código que la normal v265; v263: **facturación fase 3**, Compras → «🧾 NIF e IVA» de las facturas de proveedores; v262, 12/11/2026: facturas con código de producto y lote/origen; v261: arreglo de la sesión antigua de la base real que daba «permission denied»; antes v259: normal v257 + **facturación fase 2**: «🧾 Facturas (desde la app) · PRUEBAS», serie «PRUEBA», SIN VALOR FISCAL; usa su base de PRUEBAS aparte `ferjusanz-pruebas`) | GitLab `main` |
+| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v270** ✅ (13/11/2026: botón **«📧 Enviar a Jorge por correo»** con los informes adjuntos y aviso por WhatsApp; v269: mismo código que la normal v268; v267: **facturación fase 4**, listados de VENTAS y COMPRAS para Jorge en «Informes para Jorge» (Excel, PDF y CSV, mensual o trimestral); v266: mismo código que la normal v265; v263: **facturación fase 3**, Compras → «🧾 NIF e IVA» de las facturas de proveedores; v262, 12/11/2026: facturas con código de producto y lote/origen; v261: arreglo de la sesión antigua de la base real que daba «permission denied»; antes v259: normal v257 + **facturación fase 2**: «🧾 Facturas (desde la app) · PRUEBAS», serie «PRUEBA», SIN VALOR FISCAL; usa su base de PRUEBAS aparte `ferjusanz-pruebas`) | GitLab `main` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
 La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la publicada: descargar el Worker desde la API de Cloudflare (`/workers/scripts/<nombre>/content/v2`) y buscar ese texto.
@@ -36,7 +36,7 @@ La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la pu
 - **App web instalable (PWA)**: un único `public/index.html` muy grande, más `sw.js` (funciona sin conexión), `manifest.webmanifest`, `guia.html` y `ejemplos.html`.
 - **Cloudflare Workers**: `src/worker.js` sirve los archivos de `public/` (`wrangler.jsonc`). Cuenta de Cloudflare `9a4f085c6f3a0c2671fa344c288b3e46` (es un identificador, no una clave).
 - **Supabase** (`hvydnjaswdexttogsyen`): base de datos, inicio de sesión, archivos (fotos, PDF, audios) y funciones.
-  - Funciones activas ✅: `harvey-v2` (Harvey de la app normal), `harvey-v2-pruebas` (Harvey de la app de pruebas), `harvey` (antigua, sin uso), `harvey2`, `ayuda-ia`, `albaranes-correo`, `recibir-factura`, `copia-archivo`.
+  - Funciones activas ✅: `harvey-v2` (Harvey de la app normal), `harvey-v2-pruebas` (Harvey de la app de pruebas), `harvey` (antigua, sin uso), `harvey2`, `ayuda-ia`, `albaranes-correo`, `informes-jorge` (manda a Jorge los informes por correo), `recibir-factura`, `copia-archivo`.
   - Las funciones con IA usan la API de Anthropic (secreto `ANTHROPIC_API_KEY` en Supabase; modelo en `HARVEY_MODEL`).
 - **GitLab CI** (`.gitlab-ci.yml`): copia nocturna de la base de datos (90 días) y publicación manual. ✅ Programación «Copia diaria» activa (todos los días a las 3:00, hora de Madrid, rama main); comprobado el 12/11/2026 con capturas de Fernando: 4 copias (9 a 12/11), todas bien. Desde el 12/11 la copia lleva también Harvey, tareas automáticas y archivos (estos, con la variable `SUPABASE_SECRET_KEY`), y el trabajo `prueba_recuperacion` la recupera cada noche en una base desechable y compara tabla a tabla. ⚠️ Falta ver la primera en verde.
 - **Roles en la app** 📝: admin, oficina, secretaria, comercial, compras, preparador, repartidor y dirección.

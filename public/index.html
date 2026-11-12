@@ -13169,6 +13169,7 @@ const gesNum = n => n == null || n === '' ? '' : String(Math.round(Number(n) * 1
 /* ===== Fase 4 de facturación: listados de VENTAS y COMPRAS para Jorge =====
    10 columnas (docs/PLAN_FACTURACION.md, punto 2), UNA FILA POR TIPO DE IVA de cada factura y totales por tipo al final.
    Salen en Excel (.xlsx de verdad, con números y fechas), CSV y PDF. Mensual o trimestral. */
+const JORGE_EMAIL = 'abogadoonetti@hotmail.com', JORGE_TEL = '34650976363';   // Jorge Ruiz Onetti, gestoría (Fernando, 13/11/2026). El correo de verdad lo fija la función informes-jorge.
 const LJ_CAB = ['Fecha factura', 'Nº factura', 'Nombre', 'CIF/NIF', 'Código postal', 'Concepto', 'Base imponible', 'Tipo de IVA (%)', 'Cuota de IVA', 'Total'];
 const ljR = n => Math.round((Number(n) || 0) * 100) / 100;
 const ljPct = t => String(Number(t || 0)).replace('.', ',') + ' %';
@@ -13409,36 +13410,57 @@ function vistaGestoria() {
   selTri.addEventListener('change', () => { tri = selTri.value; LS.set('fj_ges_tri', tri); limpiar(); });
   const chipsP = h('div', { class: 'chips' }); const campoP = h('div', {});
   const pintarP = () => { chipsP.replaceChildren(...[['mes', '📅 Mensual'], ['tri', '🗓️ Trimestral']].map(([v, tx]) => h('button', { class: 'chip' + (modoP === v ? ' on' : ''), onclick: () => { if (modoP === v) return; modoP = v; LS.set('fj_ges_per', v); pintarP(); limpiar(); } }, tx))); campoP.replaceChildren(modoP === 'tri' ? comCampo('Trimestre', selTri) : comCampo('Mes', selMes)); };
-  const TXT_TODO = '📤 Preparar todo y compartir con Jorge';
-  const bTodo = h('button', { class: 'guardar', style: 'width:100%;margin-top:8px' }, TXT_TODO);
-  bTodo.onclick = async () => {
-    bTodo.disabled = true; bTodo.textContent = 'Preparando los informes…';
-    try { const files = []; const vacios = [], avisos = [], van = [];
-      for (const [t, titulo] of GES_INFORMES) { const r = await preparar(t); const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
-        const nom = titulo.replace(/^\S+\s/, '');
-        if (!r.n) { vacios.push(nom); continue; }   // los informes sin datos no se mandan
-        if (r.aviso) avisos.push(r.aviso);
-        if (r.lj) { van.push(nom + ' (' + r.n + ' facturas · Excel y PDF)'); files.push(ljArchivo(r.lj, 'xlsx', periodo(), clave()), ljArchivo(r.lj, 'pdf', periodo(), clave())); continue; }
-        van.push(nom + ' (' + r.n + ')');
-        files.push(new File(['﻿' + r.filas.map(f => f.map(q).join(';')).join('\r\n')], nombreArchivo(t), { type: 'text/csv' })); }
-      pintar();
-      if (!files.length) { toast('No hay datos de ' + periodo() + ' para mandar.', 'err'); return; }
-      const ivaMal = avisos.join(' ').match(/⛔[^⛔⚠]*/g) || [];
-      if (ivaMal.length && !await confirmar('⛔ HAY FACTURAS CON EL IVA MAL\n\n' + ivaMal.join('\n') + '\n\nLo correcto es corregirlas antes de mandar nada a Jorge.\n¿Seguro que quieres mandarlo IGUALMENTE?')) return;
-      if (!await confirmar(periodo() + '\n\nSE MANDAN:\n· ' + van.join('\n· ') + (vacios.length ? '\n\nNO SE MANDAN (sin datos):\n· ' + vacios.join('\n· ') : '') + (avisos.length ? '\n\nOJO, REVISA ANTES:\n' + avisos.join('\n') : '') + '\n\n¿Lo has revisado? Se abrirá «Compartir» (correo o WhatsApp). Nada se envía solo.')) return;
-      if (navigator.canShare && navigator.canShare({ files })) await navigator.share({ files, title: 'Ferjusanz · informes ' + periodo(), text: 'Hola Jorge, te mando los informes de Ferjusanz de ' + periodo().toLowerCase() + '.' });
-      else { files.forEach(ljBajar); toast('Descargados. Adjúntalos en un correo a Jorge.', 'ok'); }
-    } catch (x) { if (x && x.name !== 'AbortError') toast(x.message || msgErr(x), 'err'); }
-    finally { bTodo.disabled = false; bTodo.textContent = TXT_TODO; }
+  /* Prepara los archivos del periodo y pide confirmación (qué va, qué no, avisos e IVA). Devuelve null si se cancela. */
+  const prepararEnvio = async como => {
+    const files = []; const vacios = [], avisos = [], van = [];
+    for (const [t, titulo] of GES_INFORMES) { const r = await preparar(t); const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+      const nom = titulo.replace(/^\S+\s/, '');
+      if (!r.n) { vacios.push(nom); continue; }   // los informes sin datos no se mandan
+      if (r.aviso) avisos.push(r.aviso);
+      if (r.lj) { van.push(nom + ' (' + r.n + ' facturas · Excel y PDF)'); files.push(ljArchivo(r.lj, 'xlsx', periodo(), clave()), ljArchivo(r.lj, 'pdf', periodo(), clave())); continue; }
+      van.push(nom + ' (' + r.n + ')');
+      files.push(new File(['﻿' + r.filas.map(f => f.map(q).join(';')).join('\r\n')], nombreArchivo(t), { type: 'text/csv' })); }
+    pintar();
+    if (!files.length) { toast('No hay datos de ' + periodo() + ' para mandar.', 'err'); return null; }
+    const ivaMal = avisos.join(' ').match(/⛔[^⛔⚠]*/g) || [];
+    if (ivaMal.length && !await confirmar('⛔ HAY FACTURAS CON EL IVA MAL\n\n' + ivaMal.join('\n') + '\n\nLo correcto es corregirlas antes de mandar nada a Jorge.\n¿Seguro que quieres mandarlo IGUALMENTE?')) return null;
+    if (!await confirmar(periodo() + '\n\nSE MANDAN:\n· ' + van.join('\n· ') + (vacios.length ? '\n\nNO SE MANDAN (sin datos):\n· ' + vacios.join('\n· ') : '') + (avisos.length ? '\n\nOJO, REVISA ANTES:\n' + avisos.join('\n') : '') + '\n\n' + como)) return null;
+    return { files, van };
   };
+  const ocupado = async (b, txt, fn) => { const t0 = b.textContent; b.disabled = true; b.textContent = txt; try { await fn(); } catch (x) { if (x && x.name !== 'AbortError') toast(x.message || msgErr(x), 'err'); } finally { b.disabled = false; b.textContent = t0; } };
+  const resultado = h('div', {});
+  const waJorge = texto => abrirEnlace('https://wa.me/' + JORGE_TEL + '?text=' + encodeURIComponent(texto));
+  const bCorreo = h('button', { class: 'guardar', style: 'width:100%;margin-top:8px' }, '📧 Enviar a Jorge por correo');
+  bCorreo.onclick = () => ocupado(bCorreo, 'Preparando los informes…', async () => {
+    const x = await prepararEnvio('¿Lo has revisado? Se manda AHORA por correo a Jorge (' + JORGE_EMAIL + '), con los archivos adjuntos. Te llega una copia.'); if (!x) return;
+    if (ES_PRUEBAS) { avisoPruebas(); resultado.replaceChildren(h('div', { class: 'card', style: 'background:#fff7ed;border-color:#f97316' }, '🟠 PRUEBAS: no se ha enviado nada. En la app normal se mandarían a ' + JORGE_EMAIL + ' ' + x.files.length + ' archivo(s).')); return; }
+    bCorreo.textContent = 'Enviando a Jorge…';
+    const archivos = []; for (const f of x.files) { const u = new Uint8Array(await f.arrayBuffer()); let bin = ''; for (let i = 0; i < u.length; i += 8192) bin += String.fromCharCode.apply(null, u.subarray(i, i + 8192)); archivos.push({ nombre: f.name, base64: btoa(bin) }); }
+    const r = await sb.functions.invoke('informes-jorge', { body: { periodo: periodo(), lista: x.van.join('\n'), archivos } });
+    let err = r.error ? (r.error.message || 'No se pudo enviar') : (r.data && r.data.error); if (r.error && r.error.context && r.error.context.json) { try { const j = await r.error.context.json(); if (j && j.error) err = j.error; } catch (e) { } }
+    if (err) throw new Error('No se ha enviado: ' + err);
+    toast('✔ Enviado a Jorge (' + x.files.length + ' archivos).', 'ok');
+    resultado.replaceChildren(h('div', { class: 'card', style: 'background:#dcfce7;border-color:#22c55e' }, h('b', {}, '✔ Enviado por correo a Jorge'), h('div', { class: 'sub' }, periodo() + ' · ' + x.files.length + ' archivo(s) · ' + new Date().toLocaleString('es-ES')),
+      h('button', { class: 'small', style: 'margin-top:6px', onclick: () => waJorge('Hola Jorge, te acabo de mandar por correo los informes de Ferjusanz de ' + periodo().toLowerCase() + '. Un saludo.') }, '💬 Avisar a Jorge por WhatsApp')));
+  });
+  const bCompartir = h('button', { class: 'small', style: 'margin-top:8px' }, '📤 Compartir de otra forma');
+  bCompartir.onclick = () => ocupado(bCompartir, 'Preparando…', async () => {
+    const x = await prepararEnvio('¿Lo has revisado? Se abrirá «Compartir» (correo o WhatsApp) para que elijas tú.'); if (!x) return;
+    const files = x.files;
+    if (navigator.canShare && navigator.canShare({ files })) await navigator.share({ files, title: 'Ferjusanz · informes ' + periodo(), text: 'Hola Jorge, te mando los informes de Ferjusanz de ' + periodo().toLowerCase() + '.' });
+    else { files.forEach(ljBajar); toast('Descargados. Adjúntalos en un correo a Jorge.', 'ok'); }
+  });
+  const bWa = h('button', { class: 'small', style: 'margin-top:8px' }, '💬 WhatsApp a Jorge');
+  bWa.onclick = () => waJorge('Hola Jorge, ');
   $app.replaceChildren(shell('Informes para Jorge', h('div', {},
-    h('p', { class: 'sub' }, 'Listados de ventas y compras con las 10 columnas que pide Jorge (Excel, PDF y CSV) y el resto de informes del mes. Revísalos antes de mandarlos: la app no envía nada sola. Hasta el 31/12/2026 las facturas las sigue haciendo Golden.'),
+    h('p', { class: 'sub' }, 'Listados de ventas y compras con las 10 columnas que pide Jorge (Excel, PDF y CSV) y el resto de informes del mes. Revísalos antes de mandarlos: la app solo envía cuando tú lo confirmas. Hasta el 31/12/2026 las facturas las sigue haciendo Golden.'),
     h('div', { class: 'aviso-card' }, h('b', {}, '✅ Cierre del mes o del trimestre, en este orden'),
       h('div', { style: 'margin-top:4px;line-height:1.5' }, '1. En Golden, exporta las facturas del periodo y cárgalas en ', h('a', { href: '#', onclick: e => { e.preventDefault(); go('golden'); } }, '«Histórico de Golden»'), ' (hasta el último día).', h('br'),
         '2. En Compras › ', h('a', { href: '#', onclick: e => { e.preventDefault(); LS.set('fj_compras_modo', 'recib'); go('compras'); } }, 'facturas de proveedores'), ', que todas tengan su «🧾 NIF e IVA» (si no, no salen en COMPRAS).', h('br'),
-        '3. Pulsa «Preparar todo»: verás qué se manda, qué no (vacío) y los avisos.', h('br'),
-        '4. Compártelo con Jorge por correo o WhatsApp. Nada se envía solo.')),
-    chipsP, campoP, cuerpo, bTodo)));
+        '3. Pulsa «📧 Enviar a Jorge por correo»: antes verás qué se manda, qué no (vacío) y los avisos, y tienes que confirmarlo.', h('br'),
+        '4. Si quieres, avísale por WhatsApp de que se lo has mandado.')),
+    chipsP, campoP, cuerpo, bCorreo, resultado, h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap' }, bCompartir, bWa),
+    h('div', { class: 'sub', style: 'margin-top:6px' }, 'Jorge Ruiz Onetti (gestoría) · ' + JORGE_EMAIL + ' · ' + JORGE_TEL.replace(/^34(\d{3})(\d{3})(\d{3})$/, '+34 $1 $2 $3')))));
   pintarP(); pintar();
 }
 
