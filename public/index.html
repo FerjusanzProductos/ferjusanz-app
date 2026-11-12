@@ -2952,7 +2952,7 @@ async function cargarCarga(fecha) {
   if (navigator.onLine) {
     const d0 = new Date(fecha + 'T12:00:00'); const ant = x => { const d = new Date(d0.getTime() - x * 86400000); return hoy(d); };
     const [p, s, pv, rp] = await Promise.all([
-      sb.from('pedidos').select('id,estado,notas,clientes(codigo,nombre,nombre_comercial,forma_pago,ruta,direccion,localidad),albaranes(serie,numero,estado),lineas_pedido(id,estado,notas,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,productos(id,codigo,nombre),carga_lineas(cargado))')
+      sb.from('pedidos').select('id,estado,notas,repartidor_id,orden_reparto,clientes(codigo,nombre,nombre_comercial,forma_pago,ruta,direccion,localidad),albaranes(serie,numero,estado),lineas_pedido(id,estado,notas,cantidad_pedida,unidad_pedida,peso_real,unidad_precio,productos(id,codigo,nombre),carga_lineas(cargado))')
         .eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true),
       sb.from('sobrante').select('id,producto_id,cantidad,unidad,nota,repartidor_id,productos(codigo,nombre),perfiles(nombre)').eq('fecha', fecha),
       sb.from('sobrante').select('fecha,producto_id,cantidad,unidad,productos(codigo,nombre)').gte('fecha', ant(6)).lt('fecha', fecha),
@@ -2960,7 +2960,7 @@ async function cargarCarga(fecha) {
     const err = p.error || s.error || pv.error || rp.error;
     if (!err) {
       let previo = pv.data || []; const mx = previo.reduce((m, x) => x.fecha > m ? x.fecha : m, ''); previo = previo.filter(x => x.fecha === mx);
-      const d = { pedidos: p.data || [], sobrante: s.data || [], previo, previoFecha: mx, repartidores: (rp.data || []).filter(x => x.rol === 'preparador' || x.rol === 'admin').sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')) }; LS.set(key, d); return { datos: d, cache: false }; }
+      const d = { pedidos: p.data || [], sobrante: s.data || [], previo, previoFecha: mx, gente: (rp.data || []).map(x => ({ id: x.id, nombre: x.nombre })), repartidores: (rp.data || []).filter(x => x.rol === 'preparador' || x.rol === 'admin').sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')) }; LS.set(key, d); return { datos: d, cache: false }; }
     if (!isNetErr(err)) throw err;
   }
   return { datos: LS.get(key, { pedidos: [], sobrante: [], previo: [], previoFecha: '', repartidores: [] }), cache: true };
@@ -2972,9 +2972,14 @@ function lineasCarga(p) {
     return Object.assign({}, l, { _cargado: pend ? pend.cargado : !!(c && c.cargado), _pend: !!pend });
   }).sort((a, b) => nomProd(a).localeCompare(nomProd(b), 'es'));
 }
+/* Hoja de carga: por repartidor (cada furgoneta junta) y, dentro, en el orden de reparto; lo que no tiene orden va después, por ruta y nombre */
+const repCarga = (datos, p) => p && p.repartidor_id ? ((datos.gente || []).find(r => r.id === p.repartidor_id) || { id: p.repartidor_id, nombre: 'Repartidor' }) : null;
+const etqRepCarga = (datos, p) => { const r = repCarga(datos, p); return r ? '🚚 ' + r.nombre : '🚚 Sin repartidor asignado'; };
 function pedidosOrdenados(datos) {
   const ruta = p => (p.clientes && p.clientes.ruta) || '￿';
-  return datos.pedidos.slice().sort((a, b) => ruta(a).localeCompare(ruta(b), 'es') || nombreCli(a.clientes).localeCompare(nombreCli(b.clientes), 'es'));
+  const rn = p => { const r = repCarga(datos, p); return r ? r.nombre + '|' + r.id : '￿'; };
+  const ord = p => p.orden_reparto == null ? 99999 : Number(p.orden_reparto);
+  return datos.pedidos.slice().sort((a, b) => rn(a).localeCompare(rn(b), 'es') || ord(a) - ord(b) || ruta(a).localeCompare(ruta(b), 'es') || nombreCli(a.clientes).localeCompare(nombreCli(b.clientes), 'es'));
 }
 function totalesCarga(datos) {
   const m = new Map();
@@ -4042,14 +4047,15 @@ function abrirCorregirCarga(p, l) {
 function pintarCargaClientes(datos, kids) {
   const ps = pedidosOrdenados(datos);
   if (!ps.length) { kids.push(h('p', { class: 'vacio' }, 'No hay pedidos para esta fecha.')); return; }
-  let tl = 0, tc = 0;
+  let tl = 0, tc = 0, repAnt;
   const bloques = ps.map(p => {
+    const rk = p.repartidor_id || ''; const cab = rk !== repAnt ? h('h3', { style: 'margin:14px 0 8px;padding:8px 10px;background:#ecfdf5;border-left:5px solid #166534;border-radius:8px' }, etqRepCarga(datos, p) + ' · ' + ps.filter(x => (x.repartidor_id || '') === rk).length + ' pedidos') : null; repAnt = rk;
     const ls = lineasCarga(p); const nc = ls.filter(l => l._cargado).length; tl += ls.length; tc += nc;
     const cli = p.clientes || {}; const alb = uno(p.albaranes);
-    return h('div', { style: 'margin-bottom:14px' },
+    return [cab, h('div', { style: 'margin-bottom:14px' },
       h('div', { class: 'card', style: 'margin-bottom:8px' },
         h('div', { class: 'fila' },
-          h('div', {}, h('div', { class: 'nombre' }, nombreCli(cli)), h('div', { class: 'sub' }, [cli.codigo, cli.ruta ? 'Ruta ' + cli.ruta : null, cli.localidad].filter(Boolean).join(' · '))),
+          h('div', {}, h('div', { class: 'nombre' }, (p.orden_reparto ? p.orden_reparto + '. ' : '') + nombreCli(cli)), h('div', { class: 'sub' }, [cli.codigo, cli.ruta ? 'Ruta ' + cli.ruta : null, cli.localidad].filter(Boolean).join(' · '))),
           h('div', { style: 'text-align:right' },
             alb && alb.estado !== 'anulado' ? h('span', { class: 'badge fin' }, 'Albarán ' + alb.numero) : h('span', { class: 'badge pend' }, 'Sin albarán'),
             cli.forma_pago === 'contado' ? [' ', h('span', { class: 'badge cont' }, 'Contado')] : null)),
@@ -4065,13 +4071,13 @@ function pintarCargaClientes(datos, kids) {
           h('div', { class: 'peso' + (l._cargado ? '' : ' vacio') }, l._cargado ? '✔ Cargado' : 'Cargar'),
           h('button', { class: 'ghost small', title: 'Corregir cantidad o quitar', onclick: e => { e.stopPropagation(); abrirCorregirCarga(p, l); } }, '✏️')))),
       nc < ls.length ? h('button', { class: 'ghost small', style: 'width:100%', onclick: () => marcarTodo(p) }, 'Marcar todo como cargado') : null,
-      esOficina() ? h('button', { class: 'peligro small', style: 'width:100%;margin-top:6px', onclick: async () => { if (!await confirmar('¿Quitar de la carga el pedido de ' + nombreCli(cli) + '? Se archiva (se puede restaurar desde Archivo).')) return; const r = await sb.from('pedidos').update({ archivado: true }).eq('id', p.id); if (r.error) toast(msgErr(r.error), 'err'); else { toast('Pedido archivado', 'ok'); actualizarCarga(true); } } }, 'Quitar este pedido de la carga') : null);
+      esOficina() ? h('button', { class: 'peligro small', style: 'width:100%;margin-top:6px', onclick: async () => { if (!await confirmar('¿Quitar de la carga el pedido de ' + nombreCli(cli) + '? Se archiva (se puede restaurar desde Archivo).')) return; const r = await sb.from('pedidos').update({ archivado: true }).eq('id', p.id); if (r.error) toast(msgErr(r.error), 'err'); else { toast('Pedido archivado', 'ok'); actualizarCarga(true); } } }, 'Quitar este pedido de la carga') : null)];
   });
   kids.push(h('div', { class: 'card' },
     h('div', { class: 'nombre' }, tc + ' de ' + tl + ' líneas cargadas'),
-    h('div', { class: 'sub' }, ps.length + (ps.length === 1 ? ' pedido' : ' pedidos') + ' · ordenados por ruta'),
+    h('div', { class: 'sub' }, ps.length + (ps.length === 1 ? ' pedido' : ' pedidos') + ' · por repartidor y orden de reparto'),
     h('div', { class: 'progreso' }, h('i', { style: 'width:' + (tl ? Math.round(tc * 100 / tl) : 0) + '%' }))));
-  kids.push(...bloques);
+  kids.push(...bloques.flat().filter(Boolean));
 }
 function pintarCargaTotales(datos, kids) {
   const t = totalesCarga(datos);
@@ -4156,10 +4162,11 @@ function abrirSobrante(s) {
   document.body.append(ov); pintarProd();
 }
 function htmlHoja(datos) {
-  let out = '<div class="hoja"><h1>HOJA DE CARGA · ' + esc(fechaES(state.fecha)) + '</h1>';
+  let out = '<div class="hoja"><h1>HOJA DE CARGA · ' + esc(fechaES(state.fecha)) + '</h1>'; let repAnt;
   for (const p of pedidosOrdenados(datos)) {
     const cli = p.clientes || {}; const alb = uno(p.albaranes);
-    out += '<div class="blq"><div class="cb"><span>' + esc(nombreCli(cli)) + (cli.ruta ? ' · Ruta ' + esc(cli.ruta) : '') + '</span><span>' +
+    if ((p.repartidor_id || '') !== repAnt) { repAnt = p.repartidor_id || ''; out += '<h2>' + esc(etqRepCarga(datos, p).replace('🚚 ', '')) + '</h2>'; }
+    out += '<div class="blq"><div class="cb"><span>' + (p.orden_reparto ? esc(p.orden_reparto + '. ') : '') + esc(nombreCli(cli)) + (cli.ruta ? ' · Ruta ' + esc(cli.ruta) : '') + '</span><span>' +
       (alb && alb.estado !== 'anulado' ? 'Albarán ' + esc(alb.serie + ' ' + alb.numero) : 'Sin albarán') + (cli.forma_pago === 'contado' ? ' · CONTADO' : '') + '</span></div><table>' +
       lineasCarga(p).map(l => '<tr><td><span class="caja' + (l._cargado ? ' on' : '') + '"></span>' + esc(nomProd(l)) + '</td><td class="d">' + esc(num(l.cantidad_pedida) + ' ' + l.unidad_pedida) +
         '</td><td class="d">' + (l.peso_real != null ? esc(num(l.peso_real) + ' ' + udLinea(l)) : '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;') + '</td><td class="d">falta: ______</td></tr>').join('') + '</table></div>';
@@ -9984,7 +9991,7 @@ function termPdf(bl, ancho) {
 function termCarga(datos, que) {
   const bl = [{ k: 'tit', t: 'HOJA DE CARGA' }, { k: 'sub', t: fechaES(state.fecha) }, { k: 'sep' }];
   if (que === 'totales' || que === 'ambas') { bl.push({ k: 'cli', t: 'TOTAL A CARGAR' }); totalesCarga(datos).forEach(t => { bl.push({ k: 'fila', t: t.producto, d: num(t.total) + ' ' + t.unidad }); if (t.sobrante) bl.push({ k: 'nota', t: '   incluye sobrante ' + num(t.sobrante) + ' ' + t.unidad }); }); bl.push({ k: 'sep' }); }
-  if (que === 'clientes' || que === 'ambas') pedidosOrdenados(datos).forEach(p => { const cli = p.clientes || {}; bl.push({ k: 'cli', t: nombreCli(cli) + (cli.ruta ? ' · R' + cli.ruta : '') + (cli.forma_pago === 'contado' ? ' · CONTADO' : '') }); lineasCarga(p).forEach(l => bl.push({ k: 'fila', t: nomProd(l), d: num(l.cantidad_pedida) + ' ' + l.unidad_pedida })); bl.push({ k: 'sep' }); });
+  let repAnt; if (que === 'clientes' || que === 'ambas') pedidosOrdenados(datos).forEach(p => { const cli = p.clientes || {}; if ((p.repartidor_id || '') !== repAnt) { repAnt = p.repartidor_id || ''; bl.push({ k: 'cli', t: '>> ' + etqRepCarga(datos, p).replace('🚚 ', '').toUpperCase() }, { k: 'sep' }); } bl.push({ k: 'cli', t: (p.orden_reparto ? p.orden_reparto + '. ' : '') + nombreCli(cli) + (cli.ruta ? ' · R' + cli.ruta : '') + (cli.forma_pago === 'contado' ? ' · CONTADO' : '') }); lineasCarga(p).forEach(l => bl.push({ k: 'fila', t: nomProd(l), d: num(l.cantidad_pedida) + ' ' + l.unidad_pedida })); bl.push({ k: 'sep' }); });
   return bl;
 }
 function termCompra(fecha, datos) {

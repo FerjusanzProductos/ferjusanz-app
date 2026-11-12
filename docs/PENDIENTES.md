@@ -4,7 +4,8 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 ## Por publicar o decidir
 - ✔️ 12/11/2026: **Avisos en ROJO de precios y pesos que faltan + «atrás» en el portal del cliente** publicados en la normal (v234, «Autorizo publicar»). Pruebas en v233 con lo mismo.
 - ✔️ 12/11/2026: **Arreglos de Preparar → Entregar → Facturar** publicados en la normal (v232, «Autorizo publicar»).
-  - ⚪ Propuestas sin hacer (que decida Fernando): hoja de **Carga** ordenada por repartidor y orden de reparto (ahora va por ruta del cliente); el correo automático del albarán (`albaranes-correo`) aún pone «0» en lo no servido; unidades «ud» en el albarán para cajas/bandejas.
+  - ⚪ Propuestas sin hacer (que decida Fernando): unidades «ud» en el albarán para cajas/bandejas.
+  - 🟡 12/11/2026: hoja de **Carga** por repartidor y orden de reparto (v235 en PRUEBAS) y correo del albarán con «No servido» (función `albaranes-correo` cambiada en el código, **sin subir a Supabase** hasta «Autorizo publicar»).
 - ✔️ 12/11/2026: **🚦 Camino de los pedidos** publicado en la normal (v232, junto con los arreglos de arriba). Que Carmen, Jorge y los preparadores lo vayan mirando y digan qué echan en falta.
 - ✔️ 12/11/2026: **Facturas con retraso** publicado en la normal (v228, junto con el nº real). SQL `20261112c_facturas_con_retraso.sql` aplicado con Fernando («listo»).
 - ✔️ 12/11/2026: **Entrega en mano, orden nuevo** (albarán arriba + firma → paga o debe → enviar) publicada en la normal (v223). Pruebas en v224 con lo mismo.

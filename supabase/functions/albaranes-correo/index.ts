@@ -34,8 +34,11 @@ async function token(tabla: "albaran" | "cliente", id: string) {
   const [t2] = await sql`select token from public.cliente_enlaces where cliente_id = ${id}`; return t2.token as string;
 }
 
+// Lo que no se lleva («No hay», «Se compra después», «No ha llegado») se guarda con peso 0: en el albarán sale «No servido», como en la app.
+const noServida = (l: any) => l?.estado === "no_disponible" || (l?.peso_real != null && l.peso_real !== "" && Number(l.peso_real) === 0);
+
 function html(a: any, cli: string, urlAlb: string, urlCli: string, nota: string | null) {
-  const filas = (a.lineas || []).map((l: any) => `<tr><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb">${esc(l.nombre)}</td><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;text-align:right;white-space:nowrap"><b>${num(l.peso_real ?? l.cantidad_pedida)}</b> ${esc(l.unidad_precio === "kg" && l.peso_real != null ? "kg" : (l.unidad_pedida || l.unidad || ""))}</td></tr>`).join("");
+  const filas = (a.lineas || []).map((l: any) => `<tr><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb">${esc(l.nombre)}</td><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;text-align:right;white-space:nowrap">${noServida(l) ? `<b style="color:#b91c1c">No servido</b>` : `<b>${num(l.peso_real ?? l.cantidad_pedida)}</b> ${esc(l.unidad_precio === "kg" && l.peso_real != null ? "kg" : (l.unidad_pedida || l.unidad || ""))}`}</td></tr>`).join("");
   return `<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:auto;color:#111827">
   <div style="background:#166534;color:#fff;padding:18px 20px;border-radius:12px 12px 0 0"><div style="font-size:18px;font-weight:bold">${EMPRESA}</div><div style="color:#dcfce7;font-size:13px">${TELS}</div></div>
   <div style="border:1px solid #d1d5db;border-top:0;border-radius:0 0 12px 12px;padding:18px 20px">
