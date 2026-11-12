@@ -570,6 +570,7 @@ const EMPRESA = {
   nombre: 'FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L.',
   lema: 'Mayoristas de patatas, frutas y verduras',
   tels: 'Tels: 91 763 21 86 · Móviles: 609 100 690 – 616 439 157 – 609 567 354',
+  telsAlb: 'Tels: 91 763 21 86 · Móviles: 609 100 690 – 616 439 157',   /* albaranes: sin el 609 567 354 (Fernando, 12/11/2026) */
   dir: 'Carare, 2 – 28033 Madrid',
   email: 'ferjusanz@hotmail.com'
 };
@@ -2574,7 +2575,7 @@ async function pdfAlbaran(d) {
   if (ES_PRUEBAS || PRACTICA) { txt(M, y, ES_PRUEBAS ? 'PRUEBA · SIN VALOR FISCAL' : 'SIMULACRO · SIN VALOR', 14, true); y -= 18; }
   txt(M, y, EMPRESA.nombre, 12, true); txt(W - M, y, 'ALBARÁN', 18, true, true); y -= 14;
   txt(M, y, EMPRESA.lema, 8.5); txt(W - M, y, num7, 12, true, true); y -= 11;
-  txt(M, y, EMPRESA.tels, 8); txt(W - M, y, 'Fecha: ' + fechaES(a.fecha || p.fecha_entrega), 10, false, true); y -= 10;
+  txt(M, y, EMPRESA.telsAlb, 8); txt(W - M, y, 'Fecha: ' + fechaES(a.fecha || p.fecha_entrega), 10, false, true); y -= 10;
   txt(M, y, (EMPRESA.dir || '') + ' · ' + (EMPRESA.email || ''), 8); y -= 14; raya(y); y -= 18;
   txt(M, y, 'Cliente', 8.5); y -= 13; txt(M, y, nombreCli(cli), 12, true); y -= 13;
   if (cli.nombre_comercial && cli.nombre) { txt(M, y, cli.nombre, 9); y -= 11; }
@@ -2829,7 +2830,7 @@ function pubAlbaranNodos(x, cargaFirma) {
     const bases = {}; lin.forEach(l => { if (l.imp != null) { const t = l.iva != null ? Number(l.iva) : (l.iva_producto != null ? Number(l.iva_producto) : 4); bases[t] = Math.round(((bases[t] || 0) + l.imp) * 100) / 100; } }); if (T.desc) restaDescuento(T.desc, bases, 0);
     const td = (t, d, b) => h('td', { style: 'padding:4px 3px;border-bottom:1px solid #e5e7eb;' + (d ? 'text-align:right;white-space:nowrap;' : '') + (b ? 'font-weight:700' : '') }, t);
     const papel = h('div', { style: 'background:#fff;color:#111;border:1px solid #d1d5db;border-radius:6px;padding:12px;font-size:13px;line-height:1.35;text-align:left' },
-      h('div', { style: 'display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap' }, h('div', {}, h('b', {}, EMPRESA.nombre), h('div', { style: 'font-size:11px' }, EMPRESA.lema), h('div', { style: 'font-size:11px' }, EMPRESA.tels), h('div', { style: 'font-size:11px' }, EMPRESA.dir + ' · ' + EMPRESA.email)), h('div', { style: 'text-align:right' }, h('b', { style: 'font-size:18px' }, 'ALBARÁN'), h('div', { style: 'font-weight:700' }, num), h('div', {}, 'Fecha: ' + fechaES(x.fecha)))),
+      h('div', { style: 'display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap' }, h('div', {}, h('b', {}, EMPRESA.nombre), h('div', { style: 'font-size:11px' }, EMPRESA.lema), h('div', { style: 'font-size:11px' }, EMPRESA.telsAlb), h('div', { style: 'font-size:11px' }, EMPRESA.dir + ' · ' + EMPRESA.email)), h('div', { style: 'text-align:right' }, h('b', { style: 'font-size:18px' }, 'ALBARÁN'), h('div', { style: 'font-weight:700' }, num), h('div', {}, 'Fecha: ' + fechaES(x.fecha)))),
       h('div', { style: 'margin:10px 0;padding-top:8px;border-top:2px solid #111' }, h('b', {}, nombreCli(cli)), cli.nombre_comercial && cli.nombre ? h('div', {}, cli.nombre) : null, [cli.direccion, cli.localidad].filter(Boolean).length ? h('div', {}, [cli.direccion, cli.localidad].filter(Boolean).join(' · ')) : null, cli.nif ? h('div', {}, 'NIF: ' + cli.nif) : null),
       h('table', { style: 'width:100%;border-collapse:collapse' }, h('thead', {}, h('tr', {}, ['Artículo', 'Cantidad', 'Precio', 'Importe'].map((t, i) => h('th', { style: 'text-align:' + (i ? 'right' : 'left') + ';border-bottom:2px solid #111;padding:3px;font-size:12px' }, t)))),
         h('tbody', {}, lin.slice().sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es')).map(l => h('tr', {}, td(l.nombre), td(noServida(l) ? 'No servido' : l.peso_real != null ? num_(l.peso_real) + ' ' + udLinea(l) : '—', 1, 1), td(!noServida(l) && l.precio != null ? eur(l.precio) : '', 1), td(!noServida(l) && l.imp != null ? eur(l.imp) : '', 1))))),
@@ -2847,7 +2848,7 @@ function pubAlbaranNodos(x, cargaFirma) {
     h('button', { class: 'guardar', style: 'width:100%;min-height:54px;margin-top:14px', onclick: ver }, '👁️ Ver albarán'),
     h('button', { class: 'ghost', style: 'width:100%;min-height:54px;margin-top:8px', onclick: pdf }, '📄 Descargar PDF')].filter(Boolean);
 }
-const pubCabecera = () => h('div', { class: 'pub-cab' }, h('div', { class: 'pub-emp' }, EMPRESA.nombre), h('div', { class: 'sub', style: 'color:#dcfce7' }, EMPRESA.tels));
+const pubCabecera = () => h('div', { class: 'pub-cab' }, h('div', { class: 'pub-emp' }, EMPRESA.nombre), h('div', { class: 'sub', style: 'color:#dcfce7' }, EMPRESA.telsAlb));
 const pubPie = () => h('div', {}, h('button', { class: 'ghost', style: 'width:100%;min-height:50px;margin-top:14px', onclick: async () => { const u = location.href, t = document.title; try { if (navigator.share) await navigator.share({ title: t, text: 'Enlace de ' + EMPRESA.nombre + ' (solo para quien lo necesite):', url: u }); else { await navigator.clipboard.writeText(u); toast('Enlace copiado: pégalo en WhatsApp o en un correo', 'ok'); } } catch (e) { if (!e || e.name !== 'AbortError') { try { await navigator.clipboard.writeText(u); toast('Enlace copiado', 'ok'); } catch (er) { prompt('Copia este enlace:', u); } } } } }, '📲 Mandar este enlace a otra persona (jefe, gestoría…)'),
   h('p', { class: 'sub', style: 'margin-top:8px' }, 'Quien reciba el enlace lo abre en su móvil u ordenador, sin clave. Mándalo solo a personas de confianza.'),
   h('p', { class: 'sub', style: 'margin-top:8px' }, EMPRESA.dir + ' · ' + EMPRESA.email));
@@ -3030,7 +3031,7 @@ function htmlAlbaran(d, formato, opt) {
     else if (tipo === 'AMARILLA') pie = firmaOk || firmaVacia;
     else pie = firmaOk;
     return '<div class="copia ' + formato + ' ' + c.cls + '">' +
-      '<div class="cab"><div class="emp"><b>' + esc(EMPRESA.nombre) + (PRACTICA ? ' — SIMULACRO, SIN VALOR' : ES_PRUEBAS ? ' — PRUEBA · SIN VALOR FISCAL' : '') + '</b><div>' + esc(EMPRESA.lema) + '</div><div>' + esc(EMPRESA.tels) + '</div><div>' + esc(EMPRESA.dir) + ' · ' + esc(EMPRESA.email) + '</div></div>' +
+      '<div class="cab"><div class="emp"><b>' + esc(EMPRESA.nombre) + (PRACTICA ? ' — SIMULACRO, SIN VALOR' : ES_PRUEBAS ? ' — PRUEBA · SIN VALOR FISCAL' : '') + '</b><div>' + esc(EMPRESA.lema) + '</div><div>' + esc(EMPRESA.telsAlb) + '</div><div>' + esc(EMPRESA.dir) + ' · ' + esc(EMPRESA.email) + '</div></div>' +
       '<div class="num">ALBARÁN<b>' + esc(num7) + '</b>Fecha: ' + esc(fechaES(a.fecha || p.fecha_entrega)) + '<br><span class="tipo">COPIA ' + tipo + ' · ' + c.dest + '</span><div class="tz">' + esc(c.nota) + '</div></div></div>' +
       '<div class="cli"><b>' + esc(nombreCli(cli)) + '</b>' + (cli.nombre_comercial && cli.nombre ? '<br>' + esc(cli.nombre) : '') +
       '<br>' + esc([cli.direccion, cli.localidad].filter(Boolean).join(' · ')) + (cli.nif ? '<br>NIF: ' + esc(cli.nif) : '') + '</div>' +

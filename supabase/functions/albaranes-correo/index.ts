@@ -11,7 +11,7 @@ const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: 
 const sql = postgres(Deno.env.get("SUPABASE_DB_URL")!, { prepare: false, max: 2 });
 const APP = Deno.env.get("APP_URL") || "https://ferjusanz-productos.fernandosanzalba.workers.dev/";
 const EMPRESA = "FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L.";
-const TELS = "91 763 21 86 · 609 100 690 · 616 439 157 · 609 567 354";
+const TELS = "91 763 21 86 · 609 100 690 · 616 439 157";
 const esc = (s: unknown) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
 const fechaES = (iso: string) => iso ? iso.slice(8, 10) + "/" + iso.slice(5, 7) + "/" + iso.slice(0, 4) : "";
 const num = (n: unknown) => n == null ? "" : String(Math.round(Number(n) * 100) / 100).replace(".", ",");
