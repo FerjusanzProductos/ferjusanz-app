@@ -49,3 +49,4 @@ La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la pu
 - `public/index.html` ocupa más de 1 MB; usar graphify o búsquedas para orientarse.
 - La app de pruebas y la normal comparten la **misma base de datos**: en pruebas, usar el Modo prácticas.
   - Separación en marcha (`docs/PLAN_SEPARAR_PRUEBAS.md`): proyecto `ferjusanz-pruebas` (`pbeuxbwbpmlanbhhnpgy`) creado el 12/11/2026 con la estructura y los datos maestros copiados y 5 usuarios de prueba; **la app todavía no lo usa**. Estructura completa de la base: `supabase/esquema_completo.sql`.
+  - **Arranque real previsto en 7-10 días desde el 12/11/2026** (todo menos facturas, que siguen en Golden hasta el 1/1/2027). Ese día: Supabase Pro para la base real y borrar los datos de prueba. Ver `docs/PENDIENTES.md`.

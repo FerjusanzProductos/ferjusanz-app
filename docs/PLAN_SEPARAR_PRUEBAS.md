@@ -4,7 +4,8 @@ _Preparado el 12/11/2026. Cada paso necesita «Autorizo» de Fernando._
 ## Decisiones de Fernando (12/11/2026)
 1. ✔️ **Paso 1 autorizado y hecho**: proyecto **`ferjusanz-pruebas`** creado (id `pbeuxbwbpmlanbhhnpgy`, Irlanda, plan gratuito, 0 €). Está vacío. Lo único que existe en Supabase es la organización `FerjusanzProductosApp`, así que va ahí; **en diciembre, antes de pasar la real a Pro, mover pruebas a una organización gratuita aparte** (si no, costaría unos 10 $/mes más).
 2. **Clientes en pruebas con sus datos reales y bien puestos**, pero con **«(en pruebas)»** detrás del nombre (p. ej. «Bar La Torre (en pruebas)»). Esto **sustituye** la limpieza de datos personales del punto 2. Para que no llegue nada a un cliente de verdad: en pruebas no hay Gmail ni WhatsApp, y en el paso 6 la app naranja **bloquea los botones de llamar, WhatsApp y correo** («en pruebas no se envía»). Los prospectos, fichajes, mensajes y PDF siguen sin copiarse.
-3. ✔️ **Plan Pro para la base real desde el 1/12/2026** (≈ 23 €/mes).
+3. ✔️ **Plan Pro para la base real** (≈ 23 €/mes). ~~Desde el 1/12/2026~~ → **desde el día que se empiece a usar la app de verdad** (unos 7-10 días después del 12/11/2026; Fernando avisa 2-3 días antes).
+4. ✔️ **Arranque real antes de lo previsto** (12/11/2026): pedidos, hojas de compra y carga, preparación, albaranes y cobros de verdad en 7-10 días; facturas en Golden hasta el 1/1/2027, probándolas en paralelo **solo en la app naranja**. Por eso la separación tiene que estar hecha **antes del arranque**. Ese día se borran los datos de prueba de la base real (con el «sí» de Fernando).
 
 ## Hecho: pasos 2 a 4 (12/11/2026, «Autorizo pasos 2 a 4»)
 - **Estructura**: sacada de la real con `scripts/esquema/ddl.py` (solo lectura) → `supabase/esquema_completo.sql` (1.070 sentencias, sin datos ni claves). Aplicada en pruebas sin fallos. Comprobado igual que la real: 61 tablas, 5 vistas, 76 funciones, 43 disparadores, 116 reglas de permisos, 113 índices, 3 carpetas de archivos, 2 tareas de madrugada y la misma huella de columnas.
@@ -66,7 +67,7 @@ La limpieza se hace **dentro** del proceso de copia: los datos personales nunca 
 1. **Ampliar la copia nocturna de GitLab** (`scripts/copia-supabase.sh`): añadir el esquema `harvey`, las tareas automáticas y una copia de los **archivos** (PDF, fotos, firmas; hoy 55 MB).
 2. **Comprobar** que la copia nocturna está programada en GitLab y que sale bien (hoy está ⚠️ sin confirmar).
 3. **Prueba real de recuperación**: se recupera la última copia **en el proyecto de pruebas** (limpiando los datos personales) y se comparan las filas de cada tabla con la real. Así cada vez que se refresquen las pruebas, se comprueba de paso que la copia sirve. **Una vez al mes** y siempre antes del 1/1/2027.
-4. **Antes de facturar (diciembre)**: pasar la base **real** al plan **Pro** de Supabase (copias diarias de 7 días hechas por Supabase, y no se pausa nunca). Pruebas se queda gratis.
+4. **El día del arranque real** (ya no en diciembre): pasar la base **real** al plan **Pro** de Supabase (copias diarias de 7 días hechas por Supabase, y no se pausa nunca). Pruebas se queda gratis.
 
 ## 6. Coste al mes
 | Qué | Ahora | Desde diciembre (recomendado) |
