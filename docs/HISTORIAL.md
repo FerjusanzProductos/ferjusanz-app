@@ -3,6 +3,7 @@ _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab
 
 ## 12/11/2026
 - **Skills del vídeo «5 skills para Claude Code» (Fazt)**, pedido por Fernando. Revisados repos y hooks. Activados en `.claude/settings.json`: **superpowers** (`obra/superpowers`, método de trabajo: plan, TDD, depuración) e **impeccable** (`pbakaus/impeccable`, diseño de pantallas; sus hooks solo revisan cambios de interfaz). **Claude-Mem** (`thedotmack/claude-mem`) NO se instala en el proyecto: guarda todo lo que pasa por Claude (también datos de clientes), lleva un programa en segundo plano y estadísticas activadas por defecto, y en la nube no sirve (se borra al cerrar). La 4.ª es ponytail (ya estaba en el kit). La 5.ª no se ve en las capturas: pendiente.
+- **Plan del WhatsApp automático** (vídeo de redes «agente de IA para WhatsApp con Claude Code»): plan, normas de Meta y costes en `docs/PLAN_WHATSAPP.md`. Sin montar nada. **Decisión de Fernando:** primero Harvey v2 (en una conversación nueva) y el plan de WhatsApp para más adelante. Recomendado no activarlo hasta que la app se use de verdad.
 
 ## 11/11/2026
 - **v212 publicada en la app normal** («Autorizo publicar»): entrega en mano paso a paso. Juntado con `main`. Pruebas queda en v211 con lo mismo.
