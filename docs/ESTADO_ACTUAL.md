@@ -6,7 +6,7 @@ Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial 
 ## Versiones
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
-| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v247** ✅ (publicada el 12/11/2026: v239 + 🚚 Modo reparto completo, mover el orden con el dedo, venta en ruta con descuento sin IVA automático y recuerdo con/sin IVA) | GitLab `main` |
+| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v249** ✅ (publicada el 12/11/2026: v247 + cerrojo de entorno: si la base de datos no dice «produccion», no arranca) | GitLab `main` |
 | **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v248** ✅ (12/11/2026: normal v247 + **base de datos de PRUEBAS aparte** `ferjusanz-pruebas`, cerrojo, envíos bloqueados y «SIN VALOR FISCAL») | GitLab `main` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
