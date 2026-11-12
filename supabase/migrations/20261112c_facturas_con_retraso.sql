@@ -1,4 +1,4 @@
--- Facturas de proveedor que llegan con retraso (12/11/2026) — SIN APLICAR: esperar a que Fernando lo autorice.
+-- Facturas de proveedor que llegan con retraso (12/11/2026) — APLICADO el 12/11/2026 con Fernando («listo»).
 --
 -- Qué pasaba: si la factura llegaba un día tarde y la app no tenía guardada su fecha, la compra se apuntaba
 -- en el día en que llegó el correo. Desde v225 la app usa la fecha escrita dentro de la factura.
