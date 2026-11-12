@@ -1,4 +1,4 @@
--- Arreglos de TRAZABILIDAD (12/11/2026). Pendiente de aplicar con Fernando delante («listo»).
+-- Arreglos de TRAZABILIDAD (12/11/2026). APLICADA con Fernando («listo») el 12/11/2026.
 -- No borra datos ni toca precios, facturas, cobros ni permisos.
 --
 -- 1) guardar_peso: si se cambia el peso de una línea que ya tenía UN lote, el lote se queda con los kilos
@@ -57,7 +57,7 @@ begin
 end $function$;
 
 -- ============ 2) corregir_linea ============
-create or replace function public.corregir_linea(p_linea uuid, p_cantidad numeric, p_peso numeric, p_unidad text)
+create or replace function public.corregir_linea(p_linea uuid, p_cantidad numeric default null, p_peso numeric default null, p_unidad text default null)
 returns void language plpgsql security definer set search_path to 'public' as $function$
 declare v_rol text := public.rol_actual(); v_ped uuid; v_estado text; v_up text; v_reabrir boolean := false; v_nueva numeric;
 begin
