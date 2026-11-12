@@ -5638,6 +5638,7 @@ function vistaCompras() {
         return h('div', { class: 'card' },
           h('div', { class: 'nombre' }, pv ? pv.nombre : (f.remitente || 'Remitente desconocido')),
           h('div', { class: 'sub' }, [f.asunto, f.nombre, f.fecha_factura ? 'Factura del ' + fechaES(String(f.fecha_factura).slice(0, 10)) : 'Llegó el ' + fechaES(String(f.recibido_en).slice(0, 10)), pv ? null : 'proveedor sin identificar'].filter(Boolean).join(' · ')),
+          f.fecha_factura && fcAvisoRetraso(f, f.fecha_factura) ? h('div', { class: 'sub', style: 'color:var(--ambar);font-weight:700' }, fcAvisoRetraso(f, f.fecha_factura)) : null,
           huecos[f.id].el,
           h('div', { class: 'fila', style: 'gap:6px;margin-top:6px;justify-content:flex-start;flex-wrap:wrap' },
             h('button', { class: 'ghost small', onclick: () => verDocumento(f.ruta) }, '👁 Ver'),
@@ -9049,6 +9050,21 @@ function fcUnidadLibro(p, texto, uFac) {
 function fcAvisoUnidad(uFac, u) { return uFac && UNIDADES.includes(uFac) && uFac !== u && !(UNI_CONTEO.includes(uFac) && UNI_CONTEO.includes(u)) ? '⚠ En la factura viene por ' + uFac + ' y en ventas va por ' + u + ': revisa cantidad y precio' : ''; }
 /* Registra una compra entera de una factura llegada por correo, sin cambiar de pantalla.
    lineas: [{ pid, codigo, cant, unidad, precio, origen, texto, alias }] → { ok, n, omitidos } o lanza error */
+/* Facturas que llegan tarde: la compra va al DÍA DE LA FACTURA, no al día en que llegó el correo.
+   Orden: fecha ya guardada → fecha leída dentro del PDF (si es razonable: hasta 45 días antes de llegar) → día de llegada. */
+const fcDiaLlegada = f => f && f.recibido_en ? hoy(new Date(f.recibido_en)) : '';
+function fcFechaCompra(f, leida) {
+  if (f && f.fecha_factura) return String(f.fecha_factura).slice(0, 10);
+  const lleg = fcDiaLlegada(f) || hoy(); const l = String(leida || '').slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(l)) { const d = (new Date(lleg) - new Date(l)) / 86400000; if (d >= -1 && d <= 45) return l; }
+  return lleg;
+}
+/* «⏰ Llegó con N día(s) de retraso» si la factura es de antes del día en que llegó */
+function fcAvisoRetraso(f, fecha) {
+  const lleg = fcDiaLlegada(f); fecha = String(fecha || '').slice(0, 10); if (!lleg || !fecha || fecha >= lleg) return '';
+  const n = Math.round((new Date(lleg) - new Date(fecha)) / 86400000);
+  return '⏰ Llegó con ' + n + ' día' + (n === 1 ? '' : 's') + ' de retraso (el ' + fechaES(lleg) + '): se apunta en el día de la factura, el ' + fechaES(fecha) + '.';
+}
 async function fcRegistrarCompraDirecta(f, provId, fecha, lineas, numDoc) {
   if (!provId) throw new Error('Falta el proveedor');
   if (!lineas.length) throw new Error('No hay productos que registrar');
@@ -9064,7 +9080,7 @@ async function fcRegistrarCompraDirecta(f, provId, fecha, lineas, numDoc) {
     if (tf.length) { const ex = await sb.from('tarifas_compra').select('producto_id,fecha').eq('proveedor_id', provId).in('producto_id', tf.map(x => x.producto_id)); if (!ex.error && ex.data) { const mx = {}; ex.data.forEach(e => { mx[e.producto_id] = e.fecha; }); const n0 = tf.length; tf = tf.filter(x => !(mx[x.producto_id] && String(mx[x.producto_id]).slice(0, 10) > String(fecha).slice(0, 10))); omitidos = n0 - tf.length; } if (tf.length) await upsertTarifasCompra(tf); } } catch (e) { }
   if (f) {
     const di = await sb.from('documentos_compra').insert({ fecha: fecha, proveedor_id: provId, compra_id: c.data.id, tipo: 'factura', ruta: f.ruta, nombre: f.nombre }); if (di.error) throw di.error;
-    const fu = await sb.from('facturas_recibidas').update({ estado: 'enlazada', compra_id: c.data.id, proveedor_id: provId }).eq('id', f.id); if (fu.error) throw fu.error;
+    const fu = await sb.from('facturas_recibidas').update(Object.assign({ estado: 'enlazada', compra_id: c.data.id, proveedor_id: provId }, !f.fecha_factura && fecha ? { fecha_factura: String(fecha).slice(0, 10) } : {})).eq('id', f.id); if (fu.error) throw fu.error;
   }
   return { ok: true, n: filas.length, omitidos };
 }
@@ -9072,10 +9088,10 @@ async function fcRegistrarCompraDirecta(f, provId, fecha, lineas, numDoc) {
 async function fcLineasFactura(f, prods, indice) {
   const P = {}; prods.forEach(p => { P[p.id] = p; });
   const al = f.proveedor_id ? await fcAliasCargar(f.proveedor_id) : { map: {} }; const IGN = LS.get('fj_sin_ign', {});
-  let crudas = null;
-  try { const q = await sb.from('lineas_factura_leida').select('texto,cantidad,unidad,precio,producto_id,dudoso').eq('factura_id', f.id).limit(500); if (!q.error && q.data && q.data.length) crudas = q.data.map(l => ({ texto: l.texto, cantidad: Number(l.cantidad) || 0, unidad: l.unidad || '', precio: Number(l.precio), pid: l.producto_id, dudoso: !!l.dudoso })); } catch (e) { }
+  let crudas = null, fechaLeida = '';
+  try { const q = await sb.from('lineas_factura_leida').select('texto,cantidad,unidad,precio,producto_id,dudoso,fecha').eq('factura_id', f.id).limit(500); if (!q.error && q.data && q.data.length) { fechaLeida = String(q.data[0].fecha || '').slice(0, 10); crudas = q.data.map(l => ({ texto: l.texto, cantidad: Number(l.cantidad) || 0, unidad: l.unidad || '', precio: Number(l.precio), pid: l.producto_id, dudoso: !!l.dudoso })); } } catch (e) { }
   if (!crudas) {
-    const file = await fcDescargar(f); const rd = await fcLeerFactura(file, () => { }); guardarLineasLeidas(f, rd, prods, indice, al.map);
+    const file = await fcDescargar(f); const rd = await fcLeerFactura(file, () => { }); guardarLineasLeidas(f, rd, prods, indice, al.map); fechaLeida = (rd.cab && rd.cab.fecha) || '';
     crudas = rd.lineas.map(x => { const m = fcEmparejar(x, prods, indice, al.map); const ok = m.producto && (m.estado === 'ok' || m.estado === 'dudoso'); return { texto: x.texto, cantidad: Number(x.cantidad) || 0, unidad: x.unidad || '', precio: Number(x.precio), pid: ok ? m.producto.id : null, dudoso: m.estado === 'dudoso', origen: x.origen || '' }; });
   }
   const lineas = [], sin = [];
@@ -9085,7 +9101,7 @@ async function fcLineasFactura(f, prods, indice) {
     if (p) { const u = fcUnidadLibro(p, x.texto, x.unidad); lineas.push({ pid: p.id, nombre: p.nombre, codigo: p.codigo, cant: x.cantidad, unidad: u, uFac: x.unidad, precio: isFinite(x.precio) ? x.precio : null, texto: x.texto, dudoso: dud, origen: x.origen || '', alias: !dud }); }
     else if (!fcEsBasura(x.texto) && !IGN[fcClave(x.texto)]) sin.push({ texto: x.texto, cant: x.cantidad, unidad: x.unidad, precio: isFinite(x.precio) ? x.precio : null });
   });
-  return { lineas, sin };
+  return { lineas, sin, fecha: fcFechaCompra(f, fechaLeida) };
 }
 /* Revisar una factura y registrarla como compra en una hoja encima de la pantalla: al terminar se sigue en la misma pantalla */
 async function revisarFacturaHoja(f, alTerminar) {
@@ -9095,7 +9111,7 @@ async function revisarFacturaHoja(f, alTerminar) {
   let prods, indice, d, provs = [];
   try { prods = await waProductos(); indice = waIndice(prods); d = await fcLineasFactura(f, prods, indice); const pr = await sb.from('proveedores').select('id,nombre').eq('activo', true).order('nombre'); provs = pr.data || []; }
   catch (e) { caja.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : 'No he podido leer la factura: ' + msgErr(e))); return; }
-  const st = { prov: f.proveedor_id || '', fecha: String(f.fecha_factura || f.recibido_en || hoy()).slice(0, 10) };
+  const st = { prov: f.proveedor_id || '', fecha: d.fecha || fcFechaCompra(f) };
   const nuevaDe = (x, p) => ({ pid: p.id, nombre: p.nombre, codigo: p.codigo, cant: x.cant, unidad: fcUnidadLibro(p, x.texto, x.unidad), uFac: x.unidad, precio: x.precio, texto: x.texto, dudoso: false, alias: true });
   function buscadorP(alElegir) {
     const res = h('div', {}); const inp = h('input', { placeholder: 'Buscar el producto…', oninput: debounce(async () => { if (!inp.value.trim()) { res.replaceChildren(); return; } try { const r = await buscar('productos', inp.value, true, 8); res.replaceChildren(h('div', { class: 'res' }, r.map(p => h('button', { onclick: () => alElegir(p) }, p.nombre + ' · ' + p.codigo)))); } catch (e) { } }, 250) });
@@ -9137,7 +9153,8 @@ async function revisarFacturaHoja(f, alTerminar) {
     } }, '✅ Registrar compra');
     caja.replaceChildren(
       f.ruta ? h('button', { class: 'ghost small', style: 'margin-bottom:8px', onclick: () => verDocumento(f.ruta, pvN) }, '👁 Ver la factura') : null,
-      h('label', { class: 'campo' }, 'Proveedor', selP), h('label', { class: 'campo' }, 'Fecha de la compra', h('input', { type: 'date', value: st.fecha, onchange: e => { st.fecha = e.target.value || st.fecha; } })),
+      h('label', { class: 'campo' }, 'Proveedor', selP), h('label', { class: 'campo' }, 'Fecha de la compra', h('input', { type: 'date', value: st.fecha, onchange: e => { st.fecha = e.target.value || st.fecha; pintar(); } })),
+      fcAvisoRetraso(f, st.fecha) ? h('div', { class: 'aviso-card', style: 'margin:6px 0' }, fcAvisoRetraso(f, st.fecha)) : null,
       h('div', { class: 'sub', style: 'margin:6px 0' }, d.lineas.length + ' producto(s) · ' + eur(Math.round(tot * 100) / 100) + ' € sin IVA' + (d.sin.length ? ' · 🔴 ' + d.sin.length + ' sin reconocer' : '')),
       ...sinC, ...linC, btn);
   }
@@ -9162,9 +9179,9 @@ async function registrarTodasDelDia(facs, alTerminar) {
     } catch (e) { revisar.push(nom + ': no se ha podido leer'); }
   }
   if (!listas.length) { hoja('Nada listo para registrar', h('div', {}, h('p', { class: 'sub' }, 'Estas facturas hay que revisarlas una a una (botón «Revisar y registrar»):'), ...revisar.map(t => h('div', { class: 'sub', style: 'padding:4px 0' }, '• ' + t)))); return; }
-  if (!await confirmar('Se van a registrar ' + listas.length + ' compra(s):\n' + listas.map(x => '• ' + x.nom + ' (' + x.d.lineas.length + ' productos)').join('\n') + (revisar.length ? '\n\nSe quedan para revisar a mano:\n' + revisar.map(t => '• ' + t).join('\n') : '') + '\n\n¿Seguir?')) return;
+  if (!await confirmar('Se van a registrar ' + listas.length + ' compra(s):\n' + listas.map(x => '• ' + x.nom + ' (' + x.d.lineas.length + ' productos)' + (fcAvisoRetraso(x.f, x.d.fecha) ? ' ⏰ factura del ' + fechaES(x.d.fecha) + ', llegó tarde' : '')).join('\n') + (revisar.length ? '\n\nSe quedan para revisar a mano:\n' + revisar.map(t => '• ' + t).join('\n') : '') + '\n\n¿Seguir?')) return;
   let ok = 0; const fallos = [];
-  for (const x of listas) { try { await fcRegistrarCompraDirecta(x.f, x.f.proveedor_id, String(x.f.fecha_factura || x.f.recibido_en || hoy()).slice(0, 10), x.d.lineas, String(x.f.nombre || '').replace(/\.[A-Za-z0-9]{2,4}$/, '').slice(0, 60)); ok++; } catch (e) { fallos.push(x.nom + ': ' + msgErr(e)); } }
+  for (const x of listas) { try { await fcRegistrarCompraDirecta(x.f, x.f.proveedor_id, x.d.fecha || fcFechaCompra(x.f), x.d.lineas, String(x.f.nombre || '').replace(/\.[A-Za-z0-9]{2,4}$/, '').slice(0, 60)); ok++; } catch (e) { fallos.push(x.nom + ': ' + msgErr(e)); } }
   toast('✅ ' + ok + ' compra(s) registrada(s)' + (fallos.length ? ' · ' + fallos.length + ' con error' : '') + (revisar.length ? ' · ' + revisar.length + ' para revisar a mano' : ''), fallos.length ? 'err' : 'ok');
   if (fallos.length) hoja('Algunas no se han registrado', h('div', {}, ...fallos.map(t => h('div', { class: 'sub', style: 'padding:4px 0' }, '• ' + t))));
   if (alTerminar) alTerminar();
@@ -9340,8 +9357,10 @@ async function guardarLineasLeidas(f, rd, prods, indice, alias) {
   try {
     const lin = rd.lineas.map(x => { const m = fcEmparejar(x, prods, indice, alias || {}); const ok = m.producto && (m.estado === 'ok' || m.estado === 'dudoso');
       return { texto: x.texto, cantidad: x.cantidad, unidad: x.unidad || null, precio: x.precio, importe: x.importe, producto_id: ok ? m.producto.id : null, dudoso: m.estado === 'dudoso' }; });
-    const fecha = (rd.cab && rd.cab.fecha) || String(f.fecha_factura || f.recibido_en || '').slice(0, 10) || hoy();
+    const fecha = fcFechaCompra(f, rd.cab && rd.cab.fecha);
     const r = await sb.rpc('guardar_lineas_factura', { p_factura: f.id, p_proveedor: f.proveedor_id || null, p_fecha: fecha, p_lineas: lin });
+    // Se guarda también la fecha de la factura, para que una factura que llega tarde cuente en su día (y no en el día en que llegó el correo)
+    if (!f.fecha_factura && rd.cab && rd.cab.fecha && fecha === rd.cab.fecha) { try { const u = await sb.from('facturas_recibidas').update({ fecha_factura: fecha }).eq('id', f.id).is('fecha_factura', null); if (!u.error) f.fecha_factura = fecha; } catch (e) { } }
     if (r && r.error) { window.__sinP54 = true; return false; } return true;
   } catch (e) { return false; }
 }
