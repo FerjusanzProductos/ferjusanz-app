@@ -190,6 +190,13 @@ button.arr-fl:disabled{opacity:.25}
 .mr-iva{border-radius:12px;padding:8px 12px;margin:2px 0 6px;font-size:19px;font-weight:900;border:2px solid}.mr-iva.sin{background:#dbeafe;color:#1d4ed8;border-color:#1d4ed8}.mr-iva.con{background:#fef3c7;color:#a16207;border-color:#d97706}
 .mr-iva-sub{display:block;font-size:15px;font-weight:700;margin-top:2px}
 .mr-ayuda{font-size:16px;color:#374151;margin:-2px 0 8px;font-weight:600}
+.ent-albayuda{font-size:13px;font-weight:700;color:#4b5563;text-align:center;margin-bottom:4px}
+.ent-mr .ent-albfijo{position:relative;flex:0 0 auto;max-height:42vh;overflow:auto;-webkit-overflow-scrolling:touch;padding:6px;background:#f3f4f6;border-bottom:4px solid #166534}
+.ent-mr .ent-albfijo .ent-alb{border-radius:8px}
+.ent-gru{font-size:17px;font-weight:900;margin:12px 0 6px;color:#14532d}
+.ent-mr .ent-pago:last-child{grid-column:auto}.ent-mr .ent-pago:nth-child(odd):last-child{grid-column:1/-1}
+button.mr-volver{min-height:72px;font-size:22px;font-weight:900;background:#1d4ed8!important;color:#fff!important;border-radius:16px;width:100%}
+.ent-fila>button.ent-peq{flex:0 1 auto;min-height:42px;font-size:15px;margin-left:auto}
 .mr-salir{position:relative;overflow:hidden;width:100%;min-height:46px;margin-top:28px;background:#f3f4f6!important;color:#6b7280!important;border:1px dashed #9ca3af!important;border-radius:12px;font-size:14px;box-shadow:none!important;user-select:none;-webkit-user-select:none;touch-action:none}
 .mr-salir-barra{position:absolute;left:0;top:0;bottom:0;width:0;background:#fca5a5}.mr-salir.carga .mr-salir-barra{width:100%;transition:width 3s linear}.mr-salir-t{position:relative}
 .ent-caja{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin-top:10px}
@@ -1365,7 +1372,9 @@ async function cargarPedido(id) {
 }
 function vistaPedido() {
   state.view = 'pedido'; state.ped = null; state.hechasLoc = {};
-  $app.replaceChildren(shell('Pedido', h('div', { id: 'detalle' }, h('p', { class: 'vacio' }, 'Cargando…')), { volver: () => state.params.desde === 'reparto' ? go('reparto') : state.params.desde === 'camino' ? go('camino') : go('lista') }));
+  const desdeMR = state.params.desde === 'modoreparto';   /* «Cambiar algo» desde el Modo reparto: la edición de siempre y un botón grande para volver */
+  const volverMR = () => go('modoreparto', {}, { replace: true });
+  $app.replaceChildren(shell('Pedido', h('div', {}, desdeMR ? h('button', { class: 'mr-volver', style: 'width:100%;margin:0 0 10px', onclick: volverMR }, '← Volver al reparto') : null, h('div', { id: 'detalle' }, h('p', { class: 'vacio' }, 'Cargando…'))), { volver: () => desdeMR ? volverMR() : state.params.desde === 'reparto' ? go('reparto') : state.params.desde === 'camino' ? go('camino') : go('lista') }));
   renderBanner();
   actualizarPedido(true);
 }
@@ -6874,11 +6883,11 @@ async function marcarEntregado(pedidoId, nota) {
 }
 /* Cómo se ha entregado: en mano, en la puerta o en el almacén con llave. Queda anotado y el cliente lo ve en su página aunque no haya nadie */
 const MODOS_ENTREGA = [['En mano', '🤝 Entregado en mano', 'Había alguien y lo ha recibido (si quieres, recoge su firma).'], ['Dejado en la puerta', '🚪 Dejado en la puerta', 'No había nadie: se deja en la puerta.'], ['Metido en el almacén (con llave)', '🔑 Metido en el almacén (con llave)', 'No había nadie y lo hemos dejado dentro con nuestra llave.']];
-function elegirEntrega(ids, alTerminar) {
+function elegirEntrega(ids, alTerminar, opts) {
   let c; const lista = Array.isArray(ids) ? ids : [ids];
   c = hoja('¿Cómo se ha entregado?', h('div', {}, h('p', { class: 'sub' }, 'Queda anotado. Aunque no haya nadie ni firma, el cliente verá en su página que el albarán ya está entregado y cómo.'),
     ...MODOS_ENTREGA.map(([nota, tit, expl]) => h('button', { class: nota === 'En mano' ? 'guardar' : 'ghost', style: 'width:100%;min-height:60px;margin-top:8px;text-align:left', onclick: async () => { c();
-      if (nota === 'En mano' && lista.length === 1) { entregaPasoAPaso(lista[0], alTerminar); return; }   /* en mano: paso a paso (revisar, firmar, enviar, cobrar) */
+      if (nota === 'En mano' && lista.length === 1) { entregaPasoAPaso(lista[0], alTerminar, opts); return; }   /* en mano: paso a paso (revisar, firmar, enviar, cobrar) */
       for (const id of lista) await marcarEntregado(id, nota); if (alTerminar) alTerminar(nota); ofrecerWhatsAppAlbaran(lista); } },
       h('div', { style: 'font-size:17px;font-weight:800' }, nota === 'En mano' && lista.length === 1 ? tit + ' · paso a paso' : tit), h('div', { class: 'sub', style: 'font-weight:400' }, nota === 'En mano' && lista.length === 1 ? 'Revisáis juntos el albarán y firma, anotas si paga o lo debe, y se lo envías.' : expl)))));
 }
@@ -6886,10 +6895,12 @@ function elegirEntrega(ids, alTerminar) {
    1) el albarán en grande ARRIBA para revisarlo y, debajo, la firma · 2) paga (efectivo, tarjeta, Bizum) o lo debe (transferencia / a deber) · 3) enviarle el albarán firmado (Fernando, 12/11/2026).
    La entrega se registra al terminar (o al cerrar después de firmar), con una nota de cómo ha pagado que también ve el cliente en su página. */
 const PAGOS_ENTREGA = [['efectivo', '💶', 'Efectivo', true], ['tarjeta', '💳', 'Tarjeta', true], ['bizum', '📱', 'Bizum', true], ['transferencia', '🏦', 'Pagará por transferencia', false], ['deber', '📒', 'No paga ahora (a deber)', false]];
-async function entregaPasoAPaso(id, alTerminar) {
-  let d, paso = 1, total = null, pendiente = null, envio = null, pago = null, hecho = false;
+async function entregaPasoAPaso(id, alTerminar, opts) {
+  const MRP = !!(opts && opts.reparto);   /* 🚚 Modo reparto (fase 2): una sola pantalla con el albarán fijo arriba, el cobro y la firma debajo */
+  let d, paso = MRP ? 0 : 1, total = null, pendiente = null, envio = null, pago = null, hecho = false;
   const pasos = h('div', { class: 'ent-pasos' }), titulo = h('div', { class: 'ent-tit' }), cuerpo = h('div', { class: 'ent-cuerpo' }), pie = h('div', { class: 'ent-pie' });
-  const ov = h('div', { class: 'ent-ov' }, h('div', { class: 'ent-cab' }, h('button', { class: 'ent-x', onclick: () => salir() }, '✕'), titulo), pasos, cuerpo, pie);
+  const albFijo = h('div', { class: 'ent-albfijo' });
+  const ov = h('div', { class: 'ent-ov' + (MRP ? ' ent-mr' : '') }, h('div', { class: 'ent-cab' }, h('button', { class: 'ent-x', onclick: () => salir() }, '✕'), titulo), MRP ? albFijo : pasos, cuerpo, pie);
   document.body.append(ov);
   const pon = (el, ...k) => el.replaceChildren(...k.filter(x => x != null && x !== false));
   const cli = () => uno(d.pedido.clientes) || {};
@@ -6907,36 +6918,47 @@ async function entregaPasoAPaso(id, alTerminar) {
   /* Sin todos los precios el total no es el de verdad: se dice claro en vez de enseñar un importe vacío o a medias */
   const txtPend = t => faltanPr.length ? (t != null ? eur(t) + ' € de momento (faltan precios: el total subirá)' : 'el importe, cuando se pongan los precios') : eur(t) + ' €';
   const avisoPrecios = () => faltanPr.length ? h('div', { class: 'ent-caja', style: 'border:2px solid #dc2626;background:#fef2f2' }, h('b', {}, '💶 ' + textoSinPrecio(faltanPr) + '.'), h('div', { class: 'sub' }, (total == null ? 'Todavía no se sabe el total' : 'El total de abajo no está completo') + '. Ponlos ahora o la oficina los pondrá después; lo que no se cobre ahora queda pendiente.'),
-    botRojo('💶 Poner los precios ahora ›', () => abrirPrecios(id, async () => { await cargar(); if (paso === 2) pintar(); }))) : null;
+    botRojo('💶 Poner los precios ahora ›', () => abrirPrecios(id, async () => { await cargar(); if (paso === 2 || paso === 0) pintar(); }))) : null;
   const albaranGrande = () => { const w = h('div', { class: 'ent-alb' }); w.innerHTML = htmlAlbaran(d, 'a4'); const c = w.querySelector('.copia.' + (contado() ? 'blanca' : 'amarilla')) || w.querySelector('.copia'); if (c) w.replaceChildren(c); return w; };
+  /* Recuadro de firma con el dedo (el de siempre). guardar(): la deja en la cola del móvil y se envía sola. */
+  function crearFirma(tit) {
+    const a = d.albaran || {};
+    const cv = h('canvas', { width: 1200, height: 600, class: 'ent-firma' }); const ctx = cv.getContext('2d'); ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#111';
+    let dib = false, trazos = 0, ult = null;
+    const pos = e => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * cv.width / r.width, y: (e.clientY - r.top) * cv.height / r.height }; };
+    cv.addEventListener('pointerdown', e => { e.preventDefault(); cv.setPointerCapture(e.pointerId); dib = true; ult = pos(e); ctx.beginPath(); ctx.moveTo(ult.x, ult.y); ctx.lineTo(ult.x + 0.1, ult.y + 0.1); ctx.stroke(); trazos++; });
+    cv.addEventListener('pointermove', e => { if (!dib) return; e.preventDefault(); const q = pos(e); ctx.beginPath(); ctx.moveTo(ult.x, ult.y); ctx.lineTo(q.x, q.y); ctx.stroke(); ult = q; });
+    const fin = () => { dib = false; }; cv.addEventListener('pointerup', fin); cv.addEventListener('pointercancel', fin);
+    const nombre = h('input', { class: 'ent-input', placeholder: 'Nombre de quien firma (opcional)', value: a.firma_nombre || '' });
+    const zona = h('div', { class: 'ent-zfirma' },
+      h('div', { class: 'ent-ftit' }, tit || '✍ Firma aquí, con el dedo'),
+      a.firma_png ? h('div', { class: 'ent-ok' }, '✔ Ya estaba firmado. Si quiere, puede firmar de nuevo.') : null,
+      cv, nombre,
+      B('ghost', '🧽 Borrar y firmar otra vez', () => { ctx.clearRect(0, 0, cv.width, cv.height); trazos = 0; }, 'width:100%;min-height:48px;margin-top:8px'));
+    return { zona, hay: () => trazos > 0, ya: () => !!a.firma_png, guardar: () => {
+      const png = cv.toDataURL('image/png'), nm = nombre.value.trim(), at = new Date().toISOString();
+      colaFi.set(colaFi.get().filter(x => x.pedido !== id).concat([{ pedido: id, firma: png, nombre: nm, at, ts: Date.now() }]));
+      d.albaran = Object.assign({}, d.albaran, { firma_png: png, firma_nombre: nm || null, firma_at: at });
+      toast('Firma guardada', 'ok'); sincronizarFirmas(); } };
+  }
   function pintar() {
     pasos.replaceChildren(...[1, 2, 3].map(n => h('div', { class: 'ent-paso' + (n <= paso ? ' on' : '') })));
     pie.replaceChildren(); cuerpo.scrollTop = 0;
-    if (paso === 1) {
+    if (MRP) { albFijo.replaceChildren(...(paso === 0 ? [h('div', { class: 'ent-albayuda' }, '↕ El albarán se mueve dentro de este recuadro'), albaranGrande()] : []));
+      /* que se abra ya en los productos (lo que hay que revisar), no en los datos de la empresa */
+      if (paso === 0) requestAnimationFrame(() => { const t = albFijo.querySelector('.ent-alb table'); if (t) albFijo.scrollTop = Math.max(0, t.getBoundingClientRect().top - albFijo.getBoundingClientRect().top - 40); }); }
+    if (paso === 0) pintarReparto();
+    else if (paso === 1) {
       titulo.textContent = 'Paso 1 de 3 · Revisar y firmar';
       const a = d.albaran || {};
-      const cv = h('canvas', { width: 1200, height: 600, class: 'ent-firma' }); const ctx = cv.getContext('2d'); ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#111';
-      let dib = false, trazos = 0, ult = null;
-      const pos = e => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * cv.width / r.width, y: (e.clientY - r.top) * cv.height / r.height }; };
-      cv.addEventListener('pointerdown', e => { e.preventDefault(); cv.setPointerCapture(e.pointerId); dib = true; ult = pos(e); ctx.beginPath(); ctx.moveTo(ult.x, ult.y); ctx.lineTo(ult.x + 0.1, ult.y + 0.1); ctx.stroke(); trazos++; });
-      cv.addEventListener('pointermove', e => { if (!dib) return; e.preventDefault(); const q = pos(e); ctx.beginPath(); ctx.moveTo(ult.x, ult.y); ctx.lineTo(q.x, q.y); ctx.stroke(); ult = q; });
-      const fin = () => { dib = false; }; cv.addEventListener('pointerup', fin); cv.addEventListener('pointercancel', fin);
-      const nombre = h('input', { class: 'ent-input', placeholder: 'Nombre de quien firma (opcional)', value: a.firma_nombre || '' });
-      const zonaFirma = h('div', { class: 'ent-zfirma' },
-        h('div', { class: 'ent-ftit' }, '✍ Firma aquí, con el dedo'),
-        a.firma_png ? h('div', { class: 'ent-ok' }, '✔ Ya estaba firmado. Si quiere, puede firmar de nuevo.') : null,
-        cv, nombre,
-        B('ghost', '🧽 Borrar y firmar otra vez', () => { ctx.clearRect(0, 0, cv.width, cv.height); trazos = 0; }, 'width:100%;min-height:48px;margin-top:8px'));
+      const F = crearFirma(), zonaFirma = F.zona;
       pon(cuerpo,
         albaranGrande(),
         h('div', { class: 'ent-ayuda', style: 'margin-top:10px' }, '👀 Repasad producto por producto. Si algo no está bien, toca «✏️ Cambiar algo». Si está todo bien, que firme aquí debajo.'),
         zonaFirma);
       pie.append(B('guardar', '✔ Firmado · Siguiente: el pago', () => {
-          if (!trazos) { if (a.firma_png) { paso = 2; pintar(); return; } zonaFirma.scrollIntoView({ behavior: 'smooth', block: 'start' }); toast('Falta la firma: baja hasta el recuadro (o «Sin firma»)', 'err'); return; }
-          const png = cv.toDataURL('image/png'), nm = nombre.value.trim(), at = new Date().toISOString();
-          colaFi.set(colaFi.get().filter(x => x.pedido !== id).concat([{ pedido: id, firma: png, nombre: nm, at, ts: Date.now() }]));
-          d.albaran = Object.assign({}, d.albaran, { firma_png: png, firma_nombre: nm || null, firma_at: at });
-          toast('Firma guardada', 'ok'); sincronizarFirmas(); paso = 2; pintar(); }),
+          if (!F.hay()) { if (a.firma_png) { paso = 2; pintar(); return; } zonaFirma.scrollIntoView({ behavior: 'smooth', block: 'start' }); toast('Falta la firma: baja hasta el recuadro (o «Sin firma»)', 'err'); return; }
+          F.guardar(); paso = 2; pintar(); }),
         h('div', { class: 'ent-fila' }, B('ghost', '✏️ Cambiar algo', () => cambiarAlgo()), B('ghost', '✍ Ir a la firma', () => zonaFirma.scrollIntoView({ behavior: 'smooth', block: 'start' })), B('ghost', 'Sin firma →', () => { paso = 2; pintar(); })));
     } else if (paso === 2) {
       titulo.textContent = 'Paso 2 de 3 · ¿Paga o lo debe?';
@@ -6977,13 +6999,55 @@ async function entregaPasoAPaso(id, alTerminar) {
         zonaWa.replaceChildren(h('label', { class: 'campo' }, tel.value ? 'Su WhatsApp (puedes cambiarlo)' : 'No tenemos su móvil: pídeselo y escríbelo', tel));
       })();
       pie.append(B('guardar', '💬 Enviar por WhatsApp', () => enviarWa(tel.value)),
-        h('div', { class: 'ent-fila' }, B('ghost', '✉️ Otras formas', () => abrirEnvioAlbaran(d)), B(envio ? 'guardar' : 'ghost', '✔ Terminar', () => { ov.remove(); if (alTerminar) alTerminar('En mano'); })));
+        h('div', { class: 'ent-fila' }, B('ghost', '✉️ Otras formas', () => abrirEnvioAlbaran(d)), MRP ? null : B(envio ? 'guardar' : 'ghost', '✔ Terminar', () => { ov.remove(); if (alTerminar) alTerminar('En mano'); })),
+        MRP ? B('mr-volver', '← Volver al reparto', () => { ov.remove(); if (alTerminar) alTerminar('En mano'); }) : null);
     }
+  }
+  /* 🚚 Modo reparto: albarán fijo arriba (se mueve dentro de su recuadro); debajo, ¿paga ahora o queda pendiente?, y la firma si no paga */
+  function pintarReparto() {
+    titulo.replaceChildren(h('div', {}, '🧾 ' + nombreCli(cli())), h('div', { style: 'font-size:14px;font-weight:600;opacity:.9' }, 'Revisad el albarán de arriba · luego el pago'));
+    const tot = pendiente != null ? pendiente : total, cobrado = tot != null && tot <= 0.009 && !faltanPr.length;
+    const imp = h('input', { class: 'ent-input ent-imp', type: 'text', inputmode: 'decimal', value: tot != null ? String(tot).replace('.', ',') : '' });
+    const zona = h('div', {});
+    let F = null;
+    const bot = ([v, ico, txt]) => { const b = B('ent-pago' + (pago === v ? ' on' : ''), ico + ' ' + txt, () => { pago = v; pinta(); }); b.dataset.v = v; return b; };
+    const ahora = PAGOS_ENTREGA.filter(x => x[3]), luego = PAGOS_ENTREGA.filter(x => !x[3]);
+    const grupo = h('div', {});
+    function pinta() {
+      const p = PAGOS_ENTREGA.find(x => x[0] === pago);
+      grupo.replaceChildren(h('div', { class: 'ent-gru' }, '💶 Paga ahora (contado)'), h('div', { class: 'ent-pagos' }, ...ahora.map(bot)),
+        h('div', { class: 'ent-gru' }, '📒 Queda pendiente (no paga ahora)'), h('div', { class: 'ent-pagos' }, ...luego.map(bot)));
+      const k = [];
+      if (p && p[3]) k.push(h('div', { class: 'ent-caja' }, h('label', { class: 'campo' }, '¿Cuánto paga ahora en ' + p[2].toLowerCase() + '? (€)', imp),
+        tot != null ? h('div', { class: 'ent-fila' }, B('ghost', 'Todo (' + eur(tot) + ' €)', () => { imp.value = String(tot).replace('.', ','); }), B('ghost', 'Paga una parte', () => { imp.value = ''; imp.focus(); })) : h('div', { class: 'sub' }, 'Escribe lo que te da.'),
+        h('div', { class: 'sub' }, 'Si paga una parte, lo que falte queda pendiente.')));
+      if (p && !p[3]) k.push(h('div', { class: 'ent-caja' }, h('b', {}, p[0] === 'transferencia' ? '🏦 Queda pendiente: ' + txtPend(tot) + '. Lo pagará por transferencia.' : '📒 Queda pendiente: ' + txtPend(tot) + ' (lo debe).'), h('div', { class: 'sub' }, 'Sale en «Cobros · pendientes».')));
+      /* Firma: obligatoria a la vista si no paga; si paga, opcional */
+      if (!F) F = crearFirma('✍ Que firme aquí, con el dedo');
+      if (p && !p[3]) k.push(h('div', { class: 'ent-ayuda', style: 'margin-top:10px' }, 'Como no paga ahora, que firme el albarán:'), F.zona);
+      else if (p || cobrado) k.push(h('details', { class: 'ent-caja' }, h('summary', { style: 'font-weight:800;font-size:17px;cursor:pointer;padding:6px 0' }, '✍ Que firme también (si quiere)'), F.zona));
+      zona.replaceChildren(...k);
+    }
+    if (!pago && !cobrado) pago = contado() ? 'efectivo' : 'transferencia';
+    pon(cuerpo,
+      avisoPrecios(),
+      h('div', { class: 'ent-total' }, h('div', { class: 'sub' }, cobrado ? 'Este albarán ya está cobrado' : faltanPr.length ? 'Total con los precios que hay (IVA incluido)' : 'Total a pagar (IVA incluido)'), h('div', { class: 'ent-num' }, tot == null ? '—' : eur(cobrado ? total : tot) + ' €'),
+        h('div', { class: 'sub' }, 'Este cliente ' + (contado() ? 'suele pagar al contado.' : 'suele pagar por transferencia o a cuenta.')), avisoIvaReparto(cli())),
+      cli().sin_iva && !(Number(d.pedido.descuento_base) > 0) ? h('div', { class: 'ent-caja', style: 'border:2px solid #dc2626;background:#fef2f2' }, h('b', { style: 'font-size:17px' }, '⚠ Cliente SIN IVA, pero a este albarán le falta la línea de descuento.'), h('div', { class: 'sub' }, 'El total de arriba lleva el IVA. Llama a la oficina antes de cobrar.')) : null,
+      cobrado ? null : grupo, zona);
+    pinta();
+    pie.append(B('guardar', '✔ Terminar la entrega', async () => {
+        const p = PAGOS_ENTREGA.find(x => x[0] === pago);
+        if (p && !p[3] && !F.hay() && !F.ya()) { F.zona.scrollIntoView({ behavior: 'smooth', block: 'start' }); if (!await confirmar('No ha firmado.\n\n¿Terminar la entrega SIN firma?')) return; }
+        if (F.hay()) F.guardar();
+        terminar(imp, tot); }),
+      h('div', { class: 'ent-fila' }, B('ghost ent-peq', '✏️ Cambiar algo', () => cambiarAlgo())));
   }
   function cambiarAlgo() {
     const c = hoja('✏️ ¿Qué hay que cambiar?', h('div', {},
-      B('guardar', '⚖️ Un peso o una cantidad', () => { c(); ov.remove(); go('pedido', { id }); }, 'width:100%;min-height:56px;margin-top:8px'),
+      B('guardar', '⚖️ Un peso o una cantidad', () => { c(); ov.remove(); go('pedido', MRP ? { id, desde: 'modoreparto' } : { id }); }, 'width:100%;min-height:56px;margin-top:8px'),
       B('ghost', '💶 Un precio', () => { c(); abrirPrecios(id, async () => { await cargar(); pintar(); }); }, 'width:100%;min-height:56px;margin-top:8px'),
+      MRP ? B('ghost', '📋 Abrir el pedido entero', () => { c(); ov.remove(); go('pedido', { id, desde: 'modoreparto' }); }, 'width:100%;min-height:56px;margin-top:8px') : null,
       B('ghost', '⚠ Devuelve algo o viene mal (incidencia con foto)', () => { c(); abrirIncidencia({ cliente: Object.assign({ id: d.pedido.cliente_id }, cli()), pedido_id: id, tipo: 'devolucion' }, async () => { await cargar(); pintar(); }); }, 'width:100%;min-height:56px;margin-top:8px')));
   }
   async function enviarWa(m) {
@@ -7013,6 +7077,7 @@ async function entregaPasoAPaso(id, alTerminar) {
   }
   let entregado = false;
   async function salir() {
+    if (paso === 0 && !entregado) { if (!await confirmar('¿Volver al reparto?\n\nEl pedido NO se marca como entregado.')) return; ov.remove(); return; }
     if (paso >= 2 && !entregado) {   /* ya ha revisado y firmado: la entrega queda registrada aunque no se anote el pago */
       if (!await confirmar('¿Salir sin anotar el pago?\n\nEl pedido quedará ENTREGADO (en mano) y el importe, pendiente de cobro.')) return;
       ov.remove(); await marcarEntregado(id, 'En mano'); if (alTerminar) alTerminar('En mano'); return;
@@ -7235,7 +7300,7 @@ function vistaModoReparto() {
       B('ghost', 'No, todavía no', () => c(), 'width:100%;min-height:56px;margin-top:10px;font-size:18px')));
     function seguir() {
       const ids = g.peds.map(p => p.id);
-      elegirEntrega(ids, () => { ids.forEach(id => { try { localStorage.removeItem(PRE + kS(id)); } catch (e) { } }); pintar(); cargar(); });
+      elegirEntrega(ids, () => { ids.forEach(id => { try { localStorage.removeItem(PRE + kS(id)); } catch (e) { } }); pintar(); cargar(); }, { reparto: true });
     }
   }
   function pintaLista(gs, i) {
