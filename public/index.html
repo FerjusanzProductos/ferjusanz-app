@@ -13541,7 +13541,7 @@ const cajaNum = v => { const n = parseFloat(String(v || '').trim().replace(/\./g
 /* Formulario para apuntar (m = null) o corregir (m = el apunte) */
 function cajaFormulario(tipo, m, alGuardar) {
   const ent = tipo === 'entrada'; const nuevo = !m; m = m || {};
-  const fec = comInput('date', m.fecha || hoy()); const imp = comInput('text', m.importe != null ? String(m.importe).replace('.', ',') : '', { inputmode: 'decimal', placeholder: '0,00' });
+  const fec = comInput('date', m.fecha || hoy(), { max: hoy() }); const imp = comInput('text', m.importe != null ? String(m.importe).replace('.', ',') : '', { inputmode: 'decimal', placeholder: '0,00' });
   const idL = 'caja-p-' + uuid().slice(0, 8), idC = 'caja-c-' + uuid().slice(0, 8);
   const per = comInput('text', m.persona || '', { list: idL, placeholder: ent ? 'Cliente o persona que lo da' : 'Proveedor, gasolinera, persona…', autocomplete: 'off' });
   const nif = comInput('text', m.nif || '', { placeholder: 'Si es empresa o autónomo' });
@@ -13583,9 +13583,14 @@ function cajaFormulario(tipo, m, alGuardar) {
 }
 function vistaCaja() {
   state.view = 'caja'; if (!esOficina() || !CAJA_APP) { go('inicio'); return; }
-  let mes = LS.get('fj_caja_mes', hoy().slice(0, 7)); let filtro = LS.get('fj_caja_filtro', 'todo'); let datos = null;
-  const selMes = comInput('month', mes); const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
-  selMes.addEventListener('change', () => { if (selMes.value) { mes = selMes.value; LS.set('fj_caja_mes', mes); cargar(); } });
+  const mesHoy = hoy().slice(0, 7);
+  let mes = LS.get('fj_caja_mes', mesHoy); if (!/^\d{4}-\d{2}$/.test(mes) || mes > mesHoy) mes = mesHoy; let filtro = LS.get('fj_caja_filtro', 'todo'); let datos = null;
+  const MESES_C = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); const etqMes = h('b', { style: 'flex:1;text-align:center;font-size:18px' });
+  const bSig = h('button', { class: 'ghost', style: 'min-height:48px;min-width:56px', onclick: () => mover(1) }, '▶');
+  const mover = n => { const [y, m] = mes.split('-').map(Number); const d = new Date(y, m - 1 + n, 1); const v = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); if (v > mesHoy) return; mes = v; LS.set('fj_caja_mes', mes); pintarMes(); cargar(); };
+  const pintarMes = () => { const [y, m] = mes.split('-').map(Number); etqMes.textContent = MESES_C[m - 1][0].toUpperCase() + MESES_C[m - 1].slice(1) + ' ' + y; bSig.disabled = mes >= mesHoy; bSig.style.opacity = mes >= mesHoy ? '.35' : '1'; };
+  const selMes = h('div', { style: 'display:flex;gap:8px;align-items:center' }, h('button', { class: 'ghost', style: 'min-height:48px;min-width:56px', onclick: () => mover(-1) }, '◀'), etqMes, bSig); pintarMes();
   async function cargar() {
     cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
     try { const [y, mm] = mes.split('-').map(Number); datos = await cajaDatos(mes + '-01', mes + '-' + String(new Date(y, mm, 0).getDate()).padStart(2, '0')); pintar(); }
@@ -13638,12 +13643,12 @@ function vistaCaja() {
     if (filtro === 'falta' && !faltan) filtro = 'todo';
     const lista = todos.filter(m => filtro === 'todo' ? true : filtro === 'falta' ? !m.anulado && cajaFaltaJust(m) : m.tipo === filtro);
     const cifra = (t, v, col) => h('div', { style: 'flex:1;text-align:center' }, h('div', { class: 'sub' }, t), h('b', { style: 'font-size:17px;color:' + col }, eur(v) + ' €'));
-    cont.replaceChildren(
+    cont.replaceChildren(...[
       h('div', { class: 'card', style: 'display:flex;gap:6px' }, cifra('Entra', ent, '#15803d'), cifra('Sale', sal, '#b91c1c'), cifra('Diferencia', ent - sal, ent - sal < 0 ? '#b91c1c' : 'inherit')),
       h('div', { style: 'display:flex;gap:8px;margin:8px 0' }, h('button', { class: 'guardar', style: 'flex:1;background:#15803d;background-image:none', onclick: () => nuevo('entrada') }, '➕ Entra efectivo'), h('button', { class: 'guardar', style: 'flex:1;background:#b91c1c;background-image:none', onclick: () => nuevo('salida') }, '➖ Sale efectivo')),
       faltan ? h('div', { class: 'aviso-card', style: 'cursor:pointer', onclick: () => { const fs = vivos.filter(cajaFaltaJust); if (fs.length === 1) detalle(fs[0]); else { filtro = 'falta'; LS.set('fj_caja_filtro', 'falta'); pintar(); } } }, '⚠️ ' + faltan + ' apunte(s) sin justificante. 👉 Toca aquí para añadirlo.') : null,
       h('div', { class: 'chips' }, ...[['todo', 'Todo'], ['entrada', '➕ Entradas'], ['salida', '➖ Salidas'], ['falta', '⚠️ Sin justificante' + (faltan ? ' (' + faltan + ')' : '')]].map(([v, t]) => h('button', { class: 'chip' + (filtro === v ? ' on' : ''), onclick: () => { filtro = v; LS.set('fj_caja_filtro', v); pintar(); } }, t))),
-      ...(lista.length ? lista.map(tarjeta) : [h('p', { class: 'vacio' }, 'No hay apuntes de caja en este mes.')]));
+      ...(lista.length ? lista.map(tarjeta) : [h('p', { class: 'vacio' }, 'No hay apuntes de caja en este mes.')])].filter(Boolean));
   }
   $app.replaceChildren(shell('Caja (efectivo)', h('div', {},
     h('p', { class: 'sub' }, 'Entradas y salidas de dinero en efectivo, como las pide Jorge: fecha, cuánto, de quién o a quién y la factura o el justificante. Sale en «Informes para Jorge».'),
