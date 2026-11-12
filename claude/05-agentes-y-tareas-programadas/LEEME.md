@@ -8,6 +8,7 @@ mensajes y te avisa al móvil. **Solo leen y preparan**: no envían ni cambian n
 | Agente | Estado | Qué hace |
 |---|---|---|
 | **Seguimiento diario Ferjusanz** (tarea `trig_016V26ajMMcPLQ3Zvg1C2dw2`) | ⏸ **Pausado** hasta que se use la app de verdad | Cada día a las 7:03 (Madrid): previstos sin confirmar, a quién llamar, clientes que dejaron de pedir, cobros y mensajes de WhatsApp listos para revisar. |
+| **Resumen de correo Ferjusanz** (tarea `trig_01XauuDWFMvwzt9mGBonJ9Sh`) | ⏸ En pausa hasta ponerle Gmail en claude.ai | Lunes a sábado a las 7:47: resumen del Gmail de facturas (facturas, reclamaciones, clientes con borrador de respuesta). Solo lee. Ver `RESUMEN_CORREO.md`. |
 | Seguimiento dentro de la app (rama `seguimiento-app`) | ⏸ Hecho en pruebas, en espera | Lo mismo pero en una pantalla de la app. Cuando se active, se quita la tarea de Claude para no duplicar. |
 
 ## Agentes pedidos (sin hacer todavía)

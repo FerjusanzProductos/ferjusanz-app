@@ -121,7 +121,7 @@ Orden recomendado; **una cosa por sesión**. Texto para empezar: `claude/08-text
 - ⚠️ El trabajo de v244 (rama de GitHub `ccr-62762b2f-v7do7d`, ya aplicado en Supabase) **no está en GitLab main**: guardarlo.
 
 ## Esperando a Fernando
-- 🟡 **Resumen de correo de cada mañana** (pedido el 12/11/2026): falta que Fernando conecte **Gmail** en claude.ai/customize/connectors y abra un chat nuevo. Solo leer y avisar (facturas de proveedores, clientes que escriben con borrador de respuesta). Si la tarea programada no puede llevar el conector, crearla desde la pantalla de tareas de claude.ai.
+- 🟡 **Resumen de correo de cada mañana**: tarea «Resumen de correo Ferjusanz» creada (lunes a sábado 7:47, solo lee), **en pausa** porque desde Claude Code no se le puede poner Gmail. Falta que Fernando, en claude.ai → Tareas programadas, le añada el conector **Gmail** y la active (o la cree de nuevo con el texto de `claude/05-agentes-y-tareas-programadas/RESUMEN_CORREO.md`).
 - 🟡 Confirmar la **lista completa de clientes sin IVA (azul)** y si «Bar Delfín» es la misma ficha que «Bar Delfines» (DEFINES).
 - 🟡 **Numeración real de albaranes**: al empezar de verdad, decir el último número de Golden (serie F).
 - ⚪ **Cambio de temporada de patata** (09-F → 01-F) cuando lo diga («cambio de temporada patata»).
