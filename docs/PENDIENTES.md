@@ -2,7 +2,8 @@
 _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.md. Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda._
 
 ## Por publicar o decidir
-- 🟡 12/11/2026: **📦 Sacar de la furgoneta antes de entregar** en PRUEBAS (v237). Que Fernando lo mire y diga «Autorizo publicar» (la normal sería v238).
+- ✔️ 12/11/2026: **📦 Sacar de la furgoneta antes de entregar** publicado en la normal (v239, «Autorizo publicar»). Pruebas en v238.
+- 🔴 12/11/2026: **Modo reparto** (una sola pantalla para repartidores, 3 fases). Plan explicado; **esperando «sí»** de Fernando y respuesta a: 1) ¿entran directo solo los de puesto repartidor? 2) pedidos sin repartidor siguen sin salir hasta asignarlos; 3) ¿el puesto «dirección» puede cambiar el orden? (necesitaría SQL). Sin cambios en la base de datos si no.
 - ✔️ 12/11/2026: **Avisos en ROJO de precios y pesos que faltan + «atrás» en el portal del cliente** publicados en la normal (v234, «Autorizo publicar»). Pruebas en v233 con lo mismo.
 - ✔️ 12/11/2026: **Arreglos de Preparar → Entregar → Facturar** publicados en la normal (v232, «Autorizo publicar»).
   - ⚪ Propuestas sin hacer (que decida Fernando): unidades «ud» en el albarán para cajas/bandejas.

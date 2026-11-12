@@ -1,13 +1,13 @@
 # Estado actual de FERJUSANZ
-_Última revisión: 12/11/2026 (publicación v236). Actualizar en cada publicación._
+_Última revisión: 12/11/2026 (publicación v239). Actualizar en cada publicación._
 
 Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial · ⚠️ por confirmar
 
 ## Versiones
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
-| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v236** ✅ (publicada el 12/11/2026: v234 + hoja de carga por repartidor y orden de reparto + «No servido» en el correo del albarán) | GitLab `main` |
-| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v237** ✅ (12/11/2026: v236 + «📦 Sacar de la furgoneta» antes de entregar; Harvey con la función `harvey-v2-pruebas`) | GitLab `main` |
+| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v239** ✅ (publicada el 12/11/2026: v236 + «📦 Sacar de la furgoneta» antes de entregar, rápido para 30 pedidos) | GitLab `main` |
+| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v238** ✅ (12/11/2026: lo mismo que la normal v239; Harvey con la función `harvey-v2-pruebas`) | GitLab `main` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
 La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la publicada: descargar el Worker desde la API de Cloudflare (`/workers/scripts/<nombre>/content/v2`) y buscar ese texto.

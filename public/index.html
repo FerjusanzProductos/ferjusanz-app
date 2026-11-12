@@ -6852,9 +6852,11 @@ async function sacarDeFurgoneta(ids, alTerminar) {
   const ov = h('div', { class: 'ent-ov' }, h('div', { class: 'ent-cab' }, h('button', { class: 'ent-x', onclick: () => ov.remove() }, '✕'), titulo), cuerpo, pie);
   document.body.append(ov);
   cuerpo.replaceChildren(h('p', { class: 'vacio' }, 'Cargando lo que lleva…'));
-  let peds = [];
-  try { for (const id of lista) peds.push(await cargarPedido(id)); }
-  catch (e) { ov.remove(); toast(msgErr(e), 'err'); return; }
+  /* Rápido: si el pedido ya está guardado en el móvil se enseña al momento y se pone al día por detrás */
+  let peds = lista.map(id => LS.get('fj_pedido_' + id, null));
+  const alDia = Promise.all(lista.map(id => cargarPedido(id)));
+  if (peds.some(d => !d)) { try { peds = await alDia; } catch (e) { ov.remove(); toast(msgErr(e), 'err'); return; } }
+  else alDia.then(n => { peds = n; if (document.body.contains(ov)) pintar(); }).catch(() => { });
   const kS = id => 'fj_sacado_' + id;
   const marc = {}; peds.forEach(d => { marc[d.pedido.id] = new Set(LS.get(kS(d.pedido.id), [])); });
   const nomL = l => { const p = uno(l.productos) || {}; return p.nombre_albaran || p.nombre || '—'; };
@@ -6871,7 +6873,8 @@ async function sacarDeFurgoneta(ids, alTerminar) {
     const kids = [];
     if (peds.some(d => d.cache)) kids.push(h('div', { class: 'aviso-card' }, 'Sin conexión: es la lista guardada en este móvil.'));
     kids.push(h('div', { class: 'ent-ayuda' }, '👀 Mira lo que lleva este cliente y toca cada producto según lo vayas sacando.'));
-    kids.push(h('div', { class: 'ent-total' }, h('div', { class: 'ent-num', style: 'font-size:34px' }, x + ' de ' + t), h('div', { class: 'sub' }, x >= t && t ? '✔ Está todo fuera' : 'productos sacados')));
+    kids.push(h('div', { class: 'ent-total' }, h('div', { class: 'ent-num', style: 'font-size:34px' }, x + ' de ' + t), h('div', { class: 'sub' }, x >= t && t ? '✔ Está todo fuera' : 'productos sacados'),
+      t ? h('button', { class: 'ghost', style: 'width:100%;min-height:48px;margin-top:8px', onclick: () => { const todo = x < t; peds.forEach(d => { const s = marc[d.pedido.id]; lleva(d).forEach(l => todo ? s.add(l.id) : s.delete(l.id)); LS.set(kS(d.pedido.id), [...s]); }); pintar(); } }, x < t ? '✔ Marcar todo como sacado' : '↺ Desmarcar todo') : null));
     peds.forEach(d => {
       if (peds.length > 1) kids.push(h('div', { class: 'letra' }, 'Albarán' + (d.albaran && d.albaran.numero != null ? ' nº ' + d.albaran.numero : '') + ' · ' + lleva(d).length + ' productos'));
       if (d.pedido.notas) kids.push(h('div', { class: 'aviso-card' }, '📝 ' + d.pedido.notas));
@@ -6901,7 +6904,7 @@ async function sacarDeFurgoneta(ids, alTerminar) {
 let precargando = false;
 async function precargarPedidos(ids) {
   if (precargando || !navigator.onLine || PRACTICA) return; precargando = true;
-  try { for (const id of ids) { try { await cargarPedido(id); } catch (e) { } } } finally { precargando = false; }
+  try { for (let i = 0; i < ids.length; i += 6) await Promise.all(ids.slice(i, i + 6).map(id => cargarPedido(id).catch(() => { }))); } finally { precargando = false; }
 }
 function vistaEntregas() {
   state.view = 'entregas';
