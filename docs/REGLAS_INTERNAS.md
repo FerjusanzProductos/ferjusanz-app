@@ -112,7 +112,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Clientes **sin IVA = azul**, con IVA = dorado (solo en pantallas internas; el cliente nunca lo ve).
 - Clientes en azul (sin IVA) a 10/11/2026: **Bar Camarero (BACAM)**, **Bar La Torre (PVP)**, **Bar Andorra (BAAND)**, **Bar Delfín** y **Frutas Pedro** (fichas provisionales). Pendiente: que Fernando confirme el resto de la lista y si «Bar Delfín» es la misma ficha que «Bar Delfines» (DEFINES).
 - A los azules se les aplica la línea **«Descuento por productos»** (igual al IVA): pagan el total sin IVA; el IVA sigue en el albarán.
-- **Se factura siempre en Golden Soft**, no desde la app. La copia ROSA del albarán muestra el nombre interno y el código para teclearlo bien.
+- **Hasta el 31/12/2026 se factura en Golden Soft**, no desde la app. **Desde el 1/1/2027 se factura en la app** (plan en `docs/PLAN_FACTURACION.md`). La copia ROSA del albarán muestra el nombre interno y el código para teclearlo bien.
 
 ## Envío del albarán al cliente (desde 10/11/2026)
 - **Correo:** automático al marcar la entrega, desde fernandosanzalba@gmail.com, al correo de la ficha o al que dejó el cliente al escanear el QR.
@@ -136,3 +136,18 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - El **orden del reparto** lo puede cambiar **cualquiera** de la app (Fernando, 12/11/2026), arrastrando con el dedo o con ↑↓.
 - En las pantallas de reparto siempre se recuerda si el cliente es **CON IVA (dorado) o SIN IVA (azul)**, para que los repartidores no se líen (Fernando, 12/11/2026).
 - **Venta en ruta** (no suele ocurrir, pero pasa): dentro del Modo reparto, con su explicación. Si el cliente es sin IVA, se recalcula sola la línea «Descuento por productos» (si el pedido tenía otro descuento puesto a mano, no se toca) (Fernando, 12/11/2026: «que lo haga la app sola»).
+
+## Facturas emitidas desde la app (Jorge, 12/11/2026; desde el 1/1/2027)
+- Emisor siempre completo: FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. · NIF B87446670 · dirección con CP 28033 · teléfono · ferjusanz@hotmail.com.
+- Cliente siempre completo (nombre, NIF, dirección con CP, teléfono, correo); sin nombre, NIF o dirección con CP no se emite.
+- Fecha = la de emisión. Número correlativo por año con el año dentro (2027-0001…), empieza de cero cada año, sin huecos.
+- **Una factura nunca se borra**: se corrige con una **rectificativa** (serie propia) que dice qué factura corrige.
+- Concepto «Venta de fruta / verdura / patata» y, por producto, base, % IVA, cuota y total; resumen por tipo de IVA.
+- Sello o firma en el PDF. Forma de pago siempre. **Efectivo (Ley 7/2012, art. 7)**: si la operación con una empresa o autónomo es de **1.000 € o más, no se puede pagar NADA en efectivo** (ni una parte); se suman todos los pagos de la misma operación. Corregido el 12/11/2026 (antes decía «máximo 1.000 €», que estaba mal). ⚠️ Que Jorge confirme qué es «una operación» en una factura mensual con varios albaranes.
+- Todas las ventas se facturan; la app no tendrá ventas fuera de facturación.
+- Listados para Jorge (ventas y compras): fecha, nº, nombre, NIF, CP, concepto, base, % IVA, cuota, total; una fila por tipo de IVA.
+
+## Programa de facturación propio (Verifactu) — desde el 12/11/2026
+- FERJUSANZ es la **productora** del programa de facturación de la app. Claude programa y prueba, pero **nunca firma** la declaración responsable ni dice que el programa cumple sin pruebas.
+- La app **no emite facturas reales** hasta que estén ✅ todas las pruebas de `docs/SIF_PRODUCTOR/PRUEBAS_TECNICAS.md` y haya declaración firmada de esa versión.
+- Todo cambio en la facturación (`public/sif/`, funciones o tablas `sif_*`) **sube la versión del SIF** y exige declaración nueva antes de usarla. Detalle: `docs/SIF_PRODUCTOR/LEEME.md`, punto 8.

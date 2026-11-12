@@ -2,15 +2,17 @@
 _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.md. Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda._
 
 ## Por publicar o decidir
+- ✔️ 12/11/2026: **Usuario de Jorge Ruiz Onetti** (oficina) creado, con contraseña provisional.
+  - 🟡 Añadir a la app **«Cambiar mi contraseña»** (en Mi perfil) y **«He olvidado la contraseña»**, para que Jorge (y los demás) puedan poner la suya. Hoy no existe.
 - ✔️ 12/11/2026: **📦 Sacar de la furgoneta antes de entregar** publicado en la normal (v239, «Autorizo publicar»). Pruebas en v238.
-- 🔴 12/11/2026: **🚚 Modo reparto** (rama `modo-reparto` en GitLab, NO en main hasta que Fernando lo apruebe):
+- ✔️ 12/11/2026: **🚚 Modo reparto** publicado en la normal (v247, «Autorizo publicar»); rama `modo-reparto` ya juntada con `main`:
   - 🟡 **Fase 1** en PRUEBAS (v240): que Fernando la pruebe en Modo prácticas. No decir «terminado» hasta probarlo con él.
   - 🟡 **Mover con el dedo + flechas ↑↓ + «Poner el orden de siempre»** (v241) y **➕ Venta en ruta** dentro del Modo reparto (v242) y **recuerdo CON/SIN IVA** (v243) en PRUEBAS: que Fernando lo pruebe.
   - 🔴 Venta en ruta a cliente sin IVA: **recalcular sola** el descuento (Fernando: «que lo haga la app sola»). ✔️ Aplicado en Supabase y v244 en PRUEBAS: que Fernando lo pruebe.
   - ✔️ Aplicado en Supabase (12/11, «listo»): todos pueden cambiar el orden del reparto.
   - 🟡 Fase 2 en PRUEBAS (v245): albarán fijo arriba + cobro (contado/pendiente) + firma si no paga + «Cambiar algo» y «← Volver al reparto». Que Fernando la pruebe.
   - 🟡 Fase 3 en PRUEBAS (v246): «📦 Cómo cargar la furgoneta» (orden inverso). Que Fernando la pruebe.
-  - Cuando Fernando lo apruebe todo: juntar la rama `modo-reparto` con `main` y publicar en la normal **solo con «Autorizo publicar»**.
+  - ✔️ Juntado con `main` y publicado (v247). Queda: ver cómo va con los repartidores (la app sigue en pruebas: Modo prácticas).
   - ✔️ Fernando (12/11): el orden lo pueden cambiar **todos** (SQL pendiente de aplicar, arriba).
 - ✔️ 12/11/2026: **Avisos en ROJO de precios y pesos que faltan + «atrás» en el portal del cliente** publicados en la normal (v234, «Autorizo publicar»). Pruebas en v233 con lo mismo.
 - ✔️ 12/11/2026: **Arreglos de Preparar → Entregar → Facturar** publicados en la normal (v232, «Autorizo publicar»).
@@ -49,7 +51,12 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
   - 🟡 **Quitar la página de COVID** (pedido por Fernando el 11/11/2026): es «Entrega a domicilio» del menú principal (`/servicios-de-distribucion-y-exportacion/entrega-a-domicilio-frutas-y-verduras-por-covid19/`). Claude no tiene acceso a WordPress: se lo pide Fernando a Creativate (quitarla del menú, despublicarla y redirigir esa dirección a la portada). Si algún día tenemos los accesos, lo hace Claude.
   **Plan completo, preguntas, riesgos y costes: `docs/PLAN_WEB.md`** (11/11/2026). Siguiente paso: Fernando mira contrato/facturas de Creativate y les envía las preguntas.
   Plan: dejar a Creativate, pedirles código de transferencia del dominio (y confirmar que el titular es FERJUSANZ), accesos de WordPress y del alojamiento, copia completa, buzones de correo del dominio (si los hay) y acceso a Google Tag Manager/Analytics. Que NO borren nada hasta el traslado. Luego la llevamos nosotros con Claude.
-- 🟡 **Reunión con Jorge (contable) el 13/11/2026**: hoja de preguntas https://claude.ai/artifact/1dM6shj1VjYVBsyr3wxtr7 (qué ve, qué le manda Carmen y que cuadre, legalidad, Golden mínimo). Al volver: pasar sus respuestas a la tabla del final y ajustar «Informes para Jorge» (p. ej. NIF e IVA de facturas de proveedores, que hoy no se guardan).
+- ✔️ **Reunión con Jorge (contable) el 13/11/2026**: hoja de preguntas https://claude.ai/artifact/1dM6shj1VjYVBsyr3wxtr7 (qué ve, qué le manda Carmen y que cuadre, legalidad, Golden mínimo). Al volver: pasar sus respuestas a la tabla del final y ajustar «Informes para Jorge» (p. ej. NIF e IVA de facturas de proveedores, que hoy no se guardan).
+- 🔴 **Facturar desde la app desde el 1/1/2027** (respuestas de Jorge, 12/11/2026). Plan, requisitos y fases: **`docs/PLAN_FACTURACION.md`** (una fase por sesión). Siguiente: **fase 1, datos fiscales** (empresa y clientes completos).
+  - 🟡 Fernando: confirmar dirección exacta y teléfono de la empresa para la factura; pasar imagen del sello/firma.
+  - 🟡 Fernando (y Jorge): decidir los **clientes sin IVA**. Claude recomienda una sola app con todo facturado (ver punto 6 del plan); no se puede montar una parte de ventas que no llegue a facturación ni al contable.
+  - 🟡 Jorge: confirmar por escrito la fecha de Verifactu cuando salga la norma.
+  - ⚪ Texto para ordenarlo con ChatGPT: `claude/08-textos-para-empezar-chats/PROMPT_CHATGPT_FACTURACION.md`.
 
 - 🟡 **Tienda online** (plan en `docs/PLAN_TIENDA.md`, decidido el 11/11/2026): 1) «Haz tu pedido» gratis en la app/web nueva para clientes de hostelería y colectividades; 2) catálogo de WhatsApp Business y productos en Google; 3) más adelante Shopify Basic + Shopify Collective (comprobar antes que España está incluida). Hacerlo en una conversación nueva.
 
@@ -60,6 +67,22 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - ✔️ 12/11: publicado (v213). Dirección para anuncios y QR: `https://ferjusanz-productos.fernandosanzalba.workers.dev/nuevos-clientes`.
 - ⚪ Siguiente: anuncio en Facebook/Instagram (cuenta publicitaria de Meta, 5–10 €/día, solo hostelería y colectividades de Madrid norte/noroeste y Segovia) y píxel de Meta en la página.
 - ⚪ Seguimiento automático por correo a los 2, 5 y 10 días (con el Gmail de `albaranes-correo`).
+
+## Facturación 2027: lo que falta (revisión del texto de ChatGPT, 12/11/2026)
+Orden recomendado; **una cosa por sesión**. Texto para empezar: `claude/08-textos-para-empezar-chats/PROMPT_SEPARAR_PRUEBAS.md`.
+1. 🔴 **Separar pruebas y producción**: hoy las dos apps comparten la base de datos `hvydnjaswdexttogsyen`. Diseñar (sin crear nada sin autorización): proyecto Supabase aparte para pruebas (el plan gratuito permite 2 proyectos), archivos, contadores y configuración aparte, copia de datos maestros sin datos personales, coste y cómo volver atrás. ✔️ **Plan hecho el 12/11/2026: `docs/PLAN_SEPARAR_PRUEBAS.md`** (0 € ahora; ≈ 23 €/mes desde diciembre con Pro solo para la real). **Esperando a Fernando**: «Autorizo» del paso 1 (crear el proyecto de pruebas), nombres de clientes en pruebas y fecha del plan Pro.
+2. 🔴 **Copias de seguridad**: Supabase está en plan **gratuito** (sin copias propias). La copia nocturna de GitLab nunca se ha probado recuperándola. Fotos, PDF y firmas no se copian. Para facturar en 2027, valorar plan Pro (unos 25 $/mes).
+3. 🟡 **Contadores de prueba separados** (pedidos, cargas, albaranes, facturas) con reinicio controlado y archivo de lo ensayado. Hoy solo existe `albaran_f_seq` y está sin usar.
+4. 🟡 **Último nº real de albarán de Golden** (serie F, y si hay más series): lo dice Fernando. Antes del arranque, tabla «último nº / siguiente nº» de cada serie.
+5. 🟡 **Ficha de empresa** con NIF, domicilio y datos registrales (ya dados; comprobar con nota simple).
+6. 🟡 **Exportar a Golden**: esperando el archivo de ejemplo y qué formatos importa Golden.
+7. 🟡 **Verifactu**: Jorge dice octubre de 2028, pero a 12/11/2026 **no está en el BOE**. Pedir a Jorge confirmación por escrito y plan B: preguntar al proveedor de Golden si está adaptado para 2027.
+8. 🟡 **Jorge**: factura por entrega o mensual (recapitulativa) y qué es «una operación» para el límite de efectivo.
+9. 🟡 Auditoría de clientes para Carmen (la base ya está: «Revisar fichas», v198 en pruebas): falta añadir datos encontrados, fuente, confianza y estado.
+10. 🔴 **Productor del programa de facturación (Verifactu)**, 12/11/2026: diagnóstico y borrador en `docs/SIF_PRODUCTOR/LEEME.md`. Falta: Jorge confirma si hay SII, fecha vigente en el BOE y que FERJUSANZ es productora; escritura/nota simple para saber quién firma; certificado electrónico de representante; separar la facturación en un módulo con versión propia (SIF 1.0.0); programar registros, huella encadenada, bloqueo de borrado, QR y envío VERI\*FACTU; pasar `docs/SIF_PRODUCTOR/PRUEBAS_TECNICAS.md`; cotejar art. 13 RD 1007/2023 y art. 15 Orden HAC/1177/2024 en el BOE; firmar la declaración (nunca Claude). **Plan B: Golden** si el 1/1/2027 no está todo.
+   - Respuestas de Fernando (12/11/2026): ✔️ se pregunta a Jorge (SII, fecha, productor, quién firma, certificado; mensaje preparado en `docs/SIF_PRODUCTOR/MENSAJE_JORGE.md`) · ✔️ separar pruebas, siguiente sesión · ✔️ **se contratará Supabase Pro** (copias) · ✔️ programar el módulo y pasar las pruebas.
+   - ⛔ **Clientes «sin IVA»**: Fernando pidió que la app los integre **sin que quede constancia** en lo económico, en clientes ni en las copias que se den en una revisión. **Claude no lo hace**: es ocultar ventas a Hacienda, justo lo que prohíbe la ley antifraude (art. 29.2.j y 201 bis LGT), y haría falsa la declaración responsable. Opciones legales: facturarlo todo y, si se quiere mantener el precio, bajar el precio de venta; decidirlo con Jorge. Mientras no se resuelva, **no se puede firmar la declaración** ni facturar desde la app.
+- ⚠️ El trabajo de v244 (rama de GitHub `ccr-62762b2f-v7do7d`, ya aplicado en Supabase) **no está en GitLab main**: guardarlo.
 
 ## Esperando a Fernando
 - 🟡 Confirmar la **lista completa de clientes sin IVA (azul)** y si «Bar Delfín» es la misma ficha que «Bar Delfines» (DEFINES).
