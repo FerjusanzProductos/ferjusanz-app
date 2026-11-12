@@ -12,13 +12,21 @@
     },
     "openai-codex": {
       "source": { "source": "github", "repo": "openai/codex-plugin-cc" }
+    },
+    "superpowers-marketplace": {
+      "source": { "source": "github", "repo": "obra/superpowers-marketplace" }
+    },
+    "impeccable": {
+      "source": { "source": "github", "repo": "pbakaus/impeccable" }
     }
   },
   "enabledPlugins": {
     "ponytail@ponytail": true,
     "agent-skills@addy-agent-skills": true,
     "watch@claude-video": true,
-    "codex@openai-codex": true
+    "codex@openai-codex": true,
+    "superpowers@superpowers-marketplace": true,
+    "impeccable@impeccable": true
   },
   "enabledMcpjsonServers": ["playwright", "firecrawl", "perplexity", "posthog"]
 }

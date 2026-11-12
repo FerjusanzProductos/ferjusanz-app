@@ -1,6 +1,9 @@
 # Historial de FERJUSANZ
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
+## 12/11/2026
+- **Skills del vídeo «5 skills para Claude Code» (Fazt)**, pedido por Fernando. Revisados repos y hooks. Activados en `.claude/settings.json`: **superpowers** (`obra/superpowers`, método de trabajo: plan, TDD, depuración) e **impeccable** (`pbakaus/impeccable`, diseño de pantallas; sus hooks solo revisan cambios de interfaz). **Claude-Mem** (`thedotmack/claude-mem`) NO se instala en el proyecto: guarda todo lo que pasa por Claude (también datos de clientes), lleva un programa en segundo plano y estadísticas activadas por defecto, y en la nube no sirve (se borra al cerrar). Las skills 4 y 5 del vídeo no se veían en la captura: pendiente que Fernando las pase.
+
 ## 11/11/2026
 - **v212 publicada en la app normal** («Autorizo publicar»): entrega en mano paso a paso. Juntado con `main`. Pruebas queda en v211 con lo mismo.
 - **Entrega en mano paso a paso (v211 en PRUEBAS)**, pedido por Fernando: al marcar «Entregado» → «🤝 En mano», sale una pantalla completa con 4 pasos y botones grandes abajo (sin deslizar): 1) **revisar juntos el albarán en grande** (con «✏️ Hay que cambiar algo»: peso, precio o incidencia); 2) **firma** con el dedo; 3) **enviarle el albarán firmado** por WhatsApp (su móvil sale solo; si no lo tenemos, se escribe y queda apuntado) u otras formas; 4) **cómo paga**: total en grande y Efectivo / Tarjeta / Bizum (todo o una parte) / Pagará por transferencia / A deber. Al terminar, los dos ven la copia firmada con lo pagado. La entrega se registra al final con una nota de cómo ha pagado (el cliente la ve en su página); el cobro se apunta en Cobros. Si se sale después de firmar, queda entregado y pendiente de cobro. «Puerta» y «almacén» siguen como antes. Sin cambios en la base de datos. Probado en Modo prácticas.

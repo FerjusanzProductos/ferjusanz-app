@@ -2,6 +2,7 @@
 _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.md. Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda._
 
 ## Por publicar o decidir
+- 🟡 Vídeo «5 skills para Claude Code»: superpowers e impeccable activados (12/11). Faltan **la 4.ª y la 5.ª** (Fernando debe pasar sus nombres o enlaces). Claude-Mem: solo en su ordenador si lo quiere.
 - ✔️ 11/11/2026: **Entrega en mano paso a paso** publicada en la normal (v212) con «Autorizo publicar». Pruebas queda en v211 con lo mismo.
 - 🟡 Confirmar con Fernando: **Mango** (¿se compra por caja? ¿cuántas piezas trae?), **Bote Garbanzos** (¿por bote?), **Nabo, Cogollos de Tudela y Fresón 1ª** (se compran más caros de lo que se venden por kg: ¿caja/manojo?).
 - 🟢 **📦 Formatos de compra y venta** (Más → 📐 Formatos): base de datos aplicada (11/11) y publicado en la normal (v210) con detección automática. Piparras Tarro ya por bote (lo hizo Fernando). Fernando dice que hay «muchísimos» mal: la detección encuentra 9; pedirle ejemplos de los que vea mal para añadir la regla que falte.

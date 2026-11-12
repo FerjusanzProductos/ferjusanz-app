@@ -19,6 +19,8 @@ en lugar de improvisar.
 | **security-audit** | skill | `.claude/skills/security-audit` (cloudflare/security-audit-skill) | "Audita la seguridad", antes de publicar, al tocar Supabase/RLS, auth, pagos o datos de clientes. |
 | **watch** | plugin | `watch@claude-video` (bradautomates/claude-video) | Ver un vídeo (YouTube, TikTok, Instagram, local): `/watch <url> pregunta`. Con `GEMINI_API_KEY`, Gemini ve el vídeo entero. |
 | **codex** | plugin | `codex@openai-codex` (openai/codex-plugin-cc) | Segunda opinión de Codex (OpenAI): `/codex:review` (revisión), `/codex:adversarial-review` (pone a prueba el diseño), `/codex:rescue` (le delega una tarea). Requiere cuenta de ChatGPT (vale la gratuita) o clave de OpenAI y Node 18+; la primera vez `/codex:setup` y `!codex login`. |
+| **superpowers** | plugin | `superpowers@superpowers-marketplace` (obra/superpowers) | Método de trabajo: lluvia de ideas, plan, TDD, depuración sistemática, verificar antes de dar algo por hecho. Se solapa con agent-skills: usa la que encaje, sin duplicar pasos. |
+| **impeccable** | plugin | `impeccable@impeccable` (pbakaus/impeccable) | Diseño de pantallas: `/impeccable audit`, `critique`, `polish`… al tocar el aspecto de `public/index.html`. Respeta los colores y estilo actuales de la app (móvil, botones grandes). |
 | **playwright** | MCP | `.mcp.json` | Abrir la app, hacer clic, capturas, probar flujos (PWA, `sw.js`, `manifest`). |
 | **firecrawl** | MCP | `.mcp.json` | Scraping/extracción de webs concretas, crawl de un sitio, convertir páginas a markdown. |
 | **perplexity** | MCP | `.mcp.json` | Investigación con respuestas citadas, preguntas de actualidad, comparar opciones. |
@@ -28,6 +30,7 @@ en lugar de improvisar.
 Reglas de elección rápidas:
 - Código con una librería externa → context7 (documentación actual, no de memoria).
 - **Composio** (visto en redes, 11/11/2026): NO instalado. Da a la IA acceso a muchas cuentas (Gmail, Drive…) a través de un tercero; ya tenemos Gmail/Drive/Supabase conectados directamente. Solo si Fernando lo pide para algo concreto.
+- **Claude-Mem** (thedotmack/claude-mem, visto en redes, 12/11/2026): NO instalado en el proyecto. Guarda todo lo que hace Claude (también datos de clientes que salgan en pantalla) en el ordenador, con un programa en segundo plano y estadísticas de uso activadas por defecto; en la nube se pierde al cerrar la sesión. La memoria del proyecto ya son `CLAUDE.md` y `docs/`. Solo en el ordenador de Fernando si lo pide (`npx claude-mem telemetry disable`).
 - Web: dato puntual → perplexity; leer/extraer una página o sitio → firecrawl; interactuar con una web/app → playwright.
 - Código: entender estructura → graphify; implementar → agent-skills + ponytail; antes de mergear algo sensible → security-audit.
 - Vídeo o reel → watch.
@@ -68,7 +71,7 @@ Reglas de elección rápidas:
 ## 4. Comprobar el kit (`/kit-ferjusanz check`)
 
 Si el usuario pide comprobar el kit, haz esto y responde con una tabla ✅/❌:
-1. `/plugin` → que `ponytail`, `agent-skills`, `watch` y `codex` estén instalados y activos.
+1. `/plugin` → que `ponytail`, `agent-skills`, `watch`, `codex`, `superpowers` e `impeccable` estén instalados y activos.
 2. `/mcp` → que `playwright`, `firecrawl`, `perplexity` y `posthog` estén conectados. Si uno falla por clave, di cuál falta (sección 2), sin pedir que la pegue en el chat.
 3. Que existan `.claude/skills/graphify/SKILL.md` y `.claude/skills/security-audit/SKILL.md`.
 4. Para watch: `python3 "<dir de la skill watch>/scripts/setup.py" --check --json` y mira `engine` y `gemini_key_present`.
