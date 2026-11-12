@@ -10632,7 +10632,7 @@ async function leerFacturasRecientes(dias, progreso, forzar) {
 /* ---------- Fase 3 de facturación: NIF, CP y desglose de IVA de las facturas de proveedores ----------
    La app lo lee sola al leer la factura (origen «lector»: solo rellena lo vacío y nunca pisa lo que corrigió la oficina)
    y la oficina lo corrige en «🧾 NIF e IVA». Solo en la app de PRUEBAS hasta «Autorizo publicar» (y el SQL en la base real). */
-const FISCAL_RECIBIDAS = ES_PRUEBAS;
+const FISCAL_RECIBIDAS = true;   // activado en la normal el 13/11/2026 (tablas creadas en la base real)
 const fcR2 = n => Math.round(Number(n || 0) * 100) / 100;
 function fcGuardarFiscalLeido(f, rd) {
   if (!FISCAL_RECIBIDAS || !f || !f.id || !rd || !rd.fis || window.__sinFiscal) return;

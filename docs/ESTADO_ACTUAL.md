@@ -1,13 +1,13 @@
 # Estado actual de FERJUSANZ
-_Última revisión: 13/11/2026 (normal v264, pruebas v263). Actualizar en cada publicación._
+_Última revisión: 13/11/2026 (normal v265, pruebas v266). Actualizar en cada publicación._
 
 Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial · ⚠️ por confirmar
 
 ## Versiones
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
-| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v264** ✅ (publicada el 13/11/2026, «Autorizo publicar»: mismo código que pruebas v263, con los arreglos de v261 «permission denied» y v262 código y lote en la factura. Los botones de facturas (fase 2) y de «🧾 NIF e IVA» (fase 3) **no salen** en la normal: la base real no tiene esas tablas) | GitLab `main` |
-| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v263** ✅ (13/11/2026: **facturación fase 3**, Compras → «🧾 NIF e IVA» de las facturas de proveedores; v262, 12/11/2026: facturas con código de producto y lote/origen; v261: arreglo de la sesión antigua de la base real que daba «permission denied»; antes v259: normal v257 + **facturación fase 2**: «🧾 Facturas (desde la app) · PRUEBAS», serie «PRUEBA», SIN VALOR FISCAL; usa su base de PRUEBAS aparte `ferjusanz-pruebas`) | GitLab `main` |
+| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v265** ✅ (13/11/2026, «Autorizo publicar»: **«🧾 NIF e IVA» activado** en Compras, fase 3 de facturación; antes v264 con los arreglos «permission denied» y código/lote en la factura. El botón de facturas emitidas (fase 2) sigue **sin salir** en la normal) | GitLab `main` |
+| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v266** ✅ (13/11/2026: mismo código que la normal v265; (13/11/2026: **facturación fase 3**, Compras → «🧾 NIF e IVA» de las facturas de proveedores; v262, 12/11/2026: facturas con código de producto y lote/origen; v261: arreglo de la sesión antigua de la base real que daba «permission denied»; antes v259: normal v257 + **facturación fase 2**: «🧾 Facturas (desde la app) · PRUEBAS», serie «PRUEBA», SIN VALOR FISCAL; usa su base de PRUEBAS aparte `ferjusanz-pruebas`) | GitLab `main` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
 La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la publicada: descargar el Worker desde la API de Cloudflare (`/workers/scripts/<nombre>/content/v2`) y buscar ese texto.
@@ -51,5 +51,5 @@ La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la pu
 - Desde la v248 de pruebas, la app naranja usa **su propia base de datos** (`ferjusanz-pruebas`); la normal, la real. Usuarios de prueba: `…@pruebas.invalid`.
   - Separación en marcha (`docs/PLAN_SEPARAR_PRUEBAS.md`): proyecto `ferjusanz-pruebas` (`pbeuxbwbpmlanbhhnpgy`) creado el 12/11/2026 con la estructura y los datos maestros copiados y 5 usuarios de prueba; lo usa la app naranja desde la v248 (12/11/2026). Estructura completa de la base: `supabase/esquema_completo.sql`.
   - **Facturas emitidas (fase 2)**: tablas y funciones `sif_*` (`supabase/migrations/20261113a_facturas_emitidas.sql`) **solo en la base de pruebas** (pegado por Fernando en el SQL Editor, 12/11/2026). En la base real **no existen**; cuando se creen, quedan bloqueadas (`sif_config.emision_real_activa = false`) hasta la declaración responsable firmada.
-  - **Facturas recibidas (fase 3)**: columnas nuevas en `proveedores` y `facturas_recibidas`, tabla `facturas_recibidas_iva` y vistas `v_facturas_recibidas_control` y `v_libro_compras` (`20261113b_…`) **solo en la base de pruebas** (13/11/2026).
+  - **Facturas recibidas (fase 3)**: columnas nuevas en `proveedores` y `facturas_recibidas`, tabla `facturas_recibidas_iva` y vistas `v_facturas_recibidas_control` y `v_libro_compras` (`20261113b_…`) en las **dos bases** (pruebas el 13/11/2026; real el 13/11/2026, pegado por Fernando en el SQL Editor), con `anadir_factura_recibida` (`20261113c_…`).
   - **Arranque real previsto en 7-10 días desde el 12/11/2026** (todo menos facturas, que siguen en Golden hasta el 1/1/2027). Ese día: Supabase Pro para la base real y borrar los datos de prueba. Ver `docs/PENDIENTES.md`.

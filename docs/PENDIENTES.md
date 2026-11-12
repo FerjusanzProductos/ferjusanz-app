@@ -56,12 +56,12 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - 🔴 **Facturar desde la app desde el 1/1/2027** (respuestas de Jorge, 12/11/2026). Plan, requisitos y fases: **`docs/PLAN_FACTURACION.md`** (una fase por sesión). Fase 2 hecha en PRUEBAS (v259). **Fase 3 (facturas recibidas)**: código hecho en PRUEBAS (13/11/2026).
   - ✔️ SQL `20261113b_facturas_recibidas_fiscal.sql` pegado por Fernando en pruebas (13/11). App de pruebas v263.
   - ✔️ SQL `20261113c_subir_factura_recibida.sql` pegado por Fernando en pruebas (13/11).
-  - 🔴 Fernando: subir 3-4 facturas reales de proveedores en la app naranja (Compras → «🧾 NIF e IVA» → «📎 Añadir…») y revisarlas.
   - 🟡 Que Fernando lo pruebe en la app naranja: Compras → «🧾 NIF e IVA».
   - ✔️ Jorge: «Compra de mercaderías» le vale como concepto del listado de compras (13/11/2026).
   - 🟡 Avisar a Jorge (e Ibérica) de la factura FV-B-26-032668 a nombre de FERJUSANZ C.B.
   - ✔️ Código publicado en la normal (v264, 13/11), oculto allí.
-  - ⚪ Para usarlo en la normal (después de probarlo): aplicar `20261113b` y `20261113c` en la base real (solo añaden, no cambian facturas), cambiar `FISCAL_RECIBIDAS` a `true` y otra «Autorizo publicar».
+  - ✔️ **Activado en la normal (v265, 13/11/2026)**: tablas creadas en la base real (Fernando).
+  - 🟡 Oficina (Carmen): en Compras → «🧾 NIF e IVA», tocar «📖 Leer NIF e IVA de las facturas que aún no lo tienen» y revisar los avisos. Poner a mano el NIF de los proveedores que no lo traen como texto (Pataleta, Perichán…).
   - Siguiente: **fase 4, listados para Jorge**.
   - 🟡 **Fase 2 (facturas emitidas)** hecha en PRUEBAS (v259, 12/11/2026; v261 arregla el «permission denied»; v262 pone código y lote/origen en la factura: hay que entrar con `fernando@pruebas.invalid`). ✔️ Arreglo de la sesión publicado en la normal (v264, 13/11). Que Fernando la pruebe en la app naranja (Más → «🧾 Facturas (desde la app) · PRUEBAS»). Hay 2 albaranes de ensayo sin facturar (Aguila Rock, 1.037 € para probar el límite del efectivo; y un cliente sin NIF). Código publicado en la normal (v260, «Autorizo publicar»), pero allí el botón no sale y la base real no tiene las tablas: para facturar de verdad hace falta crearlas (quedan bloqueadas) y la declaración firmada.
     - ⚪ Mejora pequeña para el próximo SQL: en la factura, la unidad de lo que no va por kg sale «ud»; mejor la del pedido (manojo, caja, bandeja…).
