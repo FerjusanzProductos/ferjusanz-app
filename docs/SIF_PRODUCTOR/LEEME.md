@@ -17,6 +17,13 @@ Documentos de esta carpeta:
 
 ---
 
+## ⭐ Novedad 12/11/2026: FERJUSANZ ESTÁ EN EL SII (Jorge)
+- Según el **art. 3 del RD 1007/2023**, quien lleva los libros de IVA por el **SII** queda **fuera de Verifactu**. Mientras FERJUSANZ siga en el SII: **no hace falta** declaración responsable, ni huella, ni QR Verifactu, ni envío Verifactu.
+- **A cambio, el SII obliga a** mandar a Hacienda los datos de cada factura emitida y recibida en **4 días hábiles**. La app tendrá que darle esos datos a Jorge (o mandarlos ella misma).
+- **Sigue siendo obligatorio**: factura completa (RD 1619/2012), numeración sin huecos, no borrar facturas (rectificativas), conservarlas y no ocultar ventas (art. 29.2.j LGT).
+- **Si algún día se sale del SII**, vuelve todo lo de esta carpeta: lo dejamos preparado.
+- ⚠️ Pendiente: si el SII es **obligatorio** (más de 6 millones de facturación o devolución mensual) o **voluntario**, y quién lo envía hoy (Jorge o Golden).
+
 ## 0. Resumen para Fernando (lo importante en 6 líneas)
 1. **Hoy la app NO es un programa de facturación**: solo prepara «prefacturas» y apunta el número de la factura que se hace en **Golden**. Por eso hoy no hay nada que declarar.
 2. **El día que la app emita facturas, FERJUSANZ será «productor»** de ese programa (lo hace la empresa para sí misma; Claude es solo la herramienta) y tendrá que **firmar una declaración responsable** en la que dice que cumple. **No se puede firmar hasta que todas las pruebas pasen.**
