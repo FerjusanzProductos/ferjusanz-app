@@ -48,3 +48,4 @@ La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la pu
 ## Situación técnica conocida
 - `public/index.html` ocupa más de 1 MB; usar graphify o búsquedas para orientarse.
 - La app de pruebas y la normal comparten la **misma base de datos**: en pruebas, usar el Modo prácticas.
+  - Separación en marcha (`docs/PLAN_SEPARAR_PRUEBAS.md`): proyecto `ferjusanz-pruebas` (`pbeuxbwbpmlanbhhnpgy`) creado el 12/11/2026, **vacío y sin usar** todavía.
