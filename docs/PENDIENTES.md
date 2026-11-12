@@ -57,7 +57,8 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
   - ✔️ SQL `20261113b_facturas_recibidas_fiscal.sql` pegado por Fernando en pruebas (13/11). App de pruebas v263.
   - 🔴 **Fernando: pegar `supabase/migrations/20261113c_subir_factura_recibida.sql`** en el SQL Editor de `ferjusanz-pruebas` (para subir facturas a mano) y subir unas cuantas facturas reales de proveedores para probar.
   - 🟡 Que Fernando lo pruebe en la app naranja: Compras → «🧾 NIF e IVA».
-  - 🟡 Jorge: ¿vale «Compra de mercaderías» como concepto del listado de compras? Y avisarle de la factura de Ibérica a nombre de FERJUSANZ C.B.
+  - ✔️ Jorge: «Compra de mercaderías» le vale como concepto del listado de compras (13/11/2026).
+  - 🟡 Avisar a Jorge (e Ibérica) de la factura FV-B-26-032668 a nombre de FERJUSANZ C.B.
   - ✔️ Código publicado en la normal (v264, 13/11), oculto allí.
   - ⚪ Para usarlo en la normal (después de probarlo): aplicar `20261113b` y `20261113c` en la base real (solo añaden, no cambian facturas), cambiar `FISCAL_RECIBIDAS` a `true` y otra «Autorizo publicar».
   - Siguiente: **fase 4, listados para Jorge**.

@@ -128,6 +128,8 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 ## Facturas de proveedores (Fernando, 12/11/2026)
 - El **nº de documento** de cada compra es siempre el **número real** que pone en la factura, nunca el nombre del archivo (MADREMIA manda todas como «Factura_Electronica.pdf»).
 - El archivo de la factura se nombra **«PROVEEDOR · Fra. Nº»** para que se sepa de quién es.
+- Cada factura de proveedor guarda **NIF, CP y desglose de IVA** (base, %, cuota, recargo y total por tipo). Lo leído por la app solo rellena lo vacío; lo corregido por la oficina manda. En el listado de COMPRAS para Jorge el concepto es **«Compra de mercaderías»** (Jorge, 13/11/2026).
+- Las facturas deben venir a nombre de **FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. (B87446670)**; si vienen a nombre de FERJUSANZ C.B. (E80746670), la app avisa.
 
 ## Reparto (Fernando, 12/11/2026)
 - Reparten: **Dani** (Daniel Ferjusanz), **Cristian**, **Fernando Sanz (hijo)** y **Fernando Sanz Boss**. **Juli** (Julián) prepara pedidos; su ruta la lleva Dani.

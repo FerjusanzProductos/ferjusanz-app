@@ -27,7 +27,8 @@ Dos listados: **VENTAS** (facturas emitidas) y **COMPRAS** (facturas recibidas).
 | Fecha factura | Nº factura | Nombre cliente/proveedor | CIF/NIF | Código postal | Concepto | Base imponible | Tipo de IVA (%) | Cuota de IVA | Total |
 
 - **Una fila por cada tipo de IVA** de cada factura (si una factura lleva 4 % y 10 %, salen dos filas). Totales por tipo de IVA al final. Vale para todo.
-- Hace falta que las **facturas de proveedores** guarden NIF, CP y el desglose de IVA (hoy no se guardan).
+- Las **facturas de proveedores** guardan NIF, CP y el desglose de IVA desde la fase 3 (13/11/2026; en pruebas).
+- **Concepto en COMPRAS: «Compra de mercaderías»** (confirmado por Jorge, 13/11/2026).
 - En Excel. Mensual y trimestral.
 - **Formatos (Fernando, 12/11/2026)**: **Excel** (para editar u ordenar si hace falta), **CSV** y **PDF** (para verlas). Los tres en cada listado.
 
@@ -54,7 +55,7 @@ Dos listados: **VENTAS** (facturas emitidas) y **COMPRAS** (facturas recibidas).
 ## Fases (una por sesión)
 1. **Datos fiscales**: ficha de la empresa (emisor) y ficha de clientes completa (NIF, dirección, CP, teléfono, correo); lista de clientes a los que les falta algo. ✔️ Hecho en PRUEBAS (v252, 12/11/2026): «🏢 Datos de la empresa» con sello y «🧾 Clientes sin datos para facturar». Publicado en la normal (v255) y tabla `empresa` creada en las dos bases (12/11/2026). ✔️ Terminada.
 2. **Facturas emitidas** en PRUEBAS: numeración 2027-NNNN, rectificativas, concepto, desglose por producto y por tipo de IVA, forma de pago con el límite de efectivo, PDF con sello. Desde los albaranes entregados. ✔️ Hecho en PRUEBAS (v259, 12/11/2026), falta que lo pruebe Fernando. Ver `docs/HISTORIAL.md`.
-3. **Facturas recibidas**: guardar NIF, CP y desglose de IVA del proveedor (el lector ya lee la factura).
+3. **Facturas recibidas**: guardar NIF, CP y desglose de IVA del proveedor (el lector ya lee la factura). ✔️ Hecho en PRUEBAS (v263, 13/11/2026); código publicado en la normal (v264) pero oculto hasta crear las tablas en la base real.
 4. **Listados para Jorge** (ventas y compras, 10 columnas, mensual y trimestral) dentro de «Informes para Jorge».
 5. **Caja**: entradas y salidas de efectivo, de quién / a quién, con justificante que puede llegar después.
 6. **Banco**: importar Norma 43 / Excel y emparejar cada movimiento con cliente o proveedor.
