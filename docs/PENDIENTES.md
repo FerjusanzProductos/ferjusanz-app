@@ -5,6 +5,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - ✔️ 12/11/2026: **📦 Sacar de la furgoneta antes de entregar** publicado en la normal (v239, «Autorizo publicar»). Pruebas en v238.
 - 🔴 12/11/2026: **🚚 Modo reparto** (rama `modo-reparto` en GitLab, NO en main hasta que Fernando lo apruebe):
   - 🟡 **Fase 1** en PRUEBAS (v240): que Fernando la pruebe en Modo prácticas. No decir «terminado» hasta probarlo con él.
+  - 🔴 **Nuevo (Fernando, 12/11)**: mover los pedidos del reparto **deslizando con el dedo** para cambiar el orden (Modo reparto y pantalla Reparto). Va en otro chat: texto en `claude/08-textos-para-empezar-chats/PROMPT_MODO_REPARTO.md`.
   - ⚪ Fase 2: tras «Entregado», albarán fijo arriba + cobro (contado/pendiente) + firma si no paga, usando lo que ya existe; botón pequeño «Cambiar algo» (edición de pedidos de siempre, con «← Volver al reparto»).
   - ⚪ Fase 3: «↕ Orden de hoy» con flechas ↑↓ y «Poner el orden de siempre» (sacado de los últimos días; cambios en el historial; cola sin conexión) y «📦 Cómo cargar la furgoneta» (orden inverso).
   - Pendiente de Fernando: ¿el puesto «dirección» puede cambiar el orden? (hoy nadie lo tiene; necesitaría SQL).
