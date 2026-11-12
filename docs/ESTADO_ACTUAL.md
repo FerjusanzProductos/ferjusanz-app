@@ -1,12 +1,12 @@
 # Estado actual de FERJUSANZ
-_Última revisión: 12/11/2026 (pruebas v259, facturación fase 2). Actualizar en cada publicación._
+_Última revisión: 12/11/2026 (normal v260, pruebas v259). Actualizar en cada publicación._
 
 Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial · ⚠️ por confirmar
 
 ## Versiones
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
-| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v257** ✅ (publicada el 12/11/2026: v251 + facturación fase 1, albaranes sin el 609 567 354 y NIF sin el 0 de delante) | GitLab `main` |
+| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v260** ✅ (publicada el 12/11/2026: mismo código que pruebas v259; el botón de facturas de la fase 2 **no sale** en la normal y la base real no tiene las tablas `sif_*`) | GitLab `main` |
 | **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v259** ✅ (12/11/2026: normal v257 + **facturación fase 2**: «🧾 Facturas (desde la app) · PRUEBAS», serie «PRUEBA», SIN VALOR FISCAL; usa su base de PRUEBAS aparte `ferjusanz-pruebas`) | GitLab `main` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
