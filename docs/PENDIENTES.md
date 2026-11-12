@@ -63,7 +63,8 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
    - ⚪ Comprobador Golden ↔ albaranes: **esperando el archivo de ejemplo** de Golden.
 7. 🟡 **Harvey orquestador v2** (plan en `supabase/functions/harvey-v2/LEEME.md`):
    - ✔️ **Apuntar contactos y «volver a llamar el…»**: publicado en la normal (v216, 12/11/2026). ⚪ Más adelante, borrar la función antigua `harvey` de Supabase.
-   - ⚪ Confirmar pedidos previstos · ⚪ Preparar pedido desde un WhatsApp · ⚪ Preparar recordatorios de cobro (estos dos últimos, cuando la app se use de verdad).
+   - 🧪 **Confirmar o quitar pedidos previstos**: hecho en PRUEBAS (v219, 12/11). Falta que Fernando lo pruebe y diga «Autorizo publicar» (subir el código a `harvey-v2` y publicar la normal).
+   - ⚪ Preparar pedido desde un WhatsApp · ⚪ Preparar recordatorios de cobro (estos dos últimos, cuando la app se use de verdad).
 8. 🔴 **Copia de seguridad de fotos, PDF y audios** de Supabase Storage (ahora no se copian).
 
 ## Comprobaciones técnicas

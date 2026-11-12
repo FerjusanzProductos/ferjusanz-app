@@ -1,7 +1,9 @@
 # Harvey v2 — orquestador (acciones con confirmación)
 
 Función de Supabase `harvey-v2`. Es Harvey (ver `../harvey/LEEME.md`) **más acciones que cambian datos**,
-siempre con confirmación. Desde v216 (12/11/2026) la usan la app normal y la de pruebas; `harvey` ya no se usa.
+siempre con confirmación. La app normal usa `harvey-v2`; la de PRUEBAS usa `harvey-v2-pruebas` (mismo código).
+**Cómo trabajar:** cambiar `index.ts`, subirlo SOLO como `harvey-v2-pruebas`; con «Autorizo publicar», subir el mismo archivo como `harvey-v2`.
+`harvey` (la antigua) ya no se usa.
 
 ## Cómo se confirma (igual en la app y, más adelante, en WhatsApp)
 1. Harvey resume exactamente lo que va a guardar y termina con la línea `[CONFIRMAR]`.
@@ -14,7 +16,7 @@ siempre con confirmación. Desde v216 (12/11/2026) la usan la app normal y la de
 |---|---|---|---|
 | 1 | `apuntar_contacto`: contacto nuevo, nota, «volver a llamar el…», estado | tabla `prospectos` (nota se añade, nunca se borra) | ✔️ publicado (v216) |
 | — | `crear_cliente_provisional` (ya existía) | `clientes` | ahora con el mismo sistema de confirmar |
-| 2 | Confirmar pedidos previstos (✅ del día siguiente) | previstos → pedido confirmado | ⚪ siguiente |
+| 2 | `previstos_dia` + `decidir_previstos`: ver previstos de un día y ✅ confirmar / ❌ quitar | `confirmar_previsto` (la misma de los botones de la app) | 🧪 en pruebas (v219) |
 | 3 | Preparar pedido desde un WhatsApp pegado | borrador (`harvey.borradores`), nunca pedido real sin confirmar | ⚪ cuando se use la app de verdad |
 | 4 | Preparar recordatorios de cobro | solo texto + apuntar en `harvey.contactos`; nunca envía | ⚪ cuando se use la app de verdad |
 

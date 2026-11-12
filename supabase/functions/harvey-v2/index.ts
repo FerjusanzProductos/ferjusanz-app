@@ -1,5 +1,6 @@
 // Harvey v2 (orquestador): igual que «harvey» y además puede CAMBIAR datos, siempre con
 // confirmación de la persona. Acción 1: apuntar contactos y «volver a llamar el…» (apuntar_contacto).
+// Acción 2: ver y confirmar/quitar pedidos previstos (previstos_dia + decidir_previstos).
 // La usan la app normal y la de pruebas desde v216.
 // Harvey: agente comercial de Ferjusanz (función de Supabase).
 // La app (Comercial › 🤵 Harvey) le manda la conversación y un resumen de los datos
@@ -60,7 +61,7 @@ Nuestra forma de vender (muy importante):
 Consultas a la base de datos (casi todas de solo lectura):
 - Puedes consultar clientes, deudas, pedidos e importes, ventas por fechas, contactos pendientes (prospectos) y quejas abiertas. Úsalas cuando la pregunta necesite datos concretos y no estén ya en el CONTEXTO. Puedes hacer varias consultas seguidas.
 - Las cifras que des (importes, deudas, fechas) deben salir de esas consultas; si no lo encuentras, dilo. Los importes van con IVA y en euros, con coma decimal.
-- No puedes enviar mensajes ni borrar nada. Solo puedes cambiar datos con estas dos acciones, y SIEMPRE con confirmación: apuntar_contacto (contactos y «volver a llamar el…») y crear_cliente_provisional. Para todo lo demás (un cobro, un pedido…), prepara el texto y di qué tiene que apuntar la oficina y en qué pantalla de la app.
+- No puedes enviar mensajes ni borrar nada. Solo puedes cambiar datos con estas acciones, y SIEMPRE con confirmación: apuntar_contacto (contactos y «volver a llamar el…»), decidir_previstos (confirmar o quitar pedidos previstos) y crear_cliente_provisional. Para todo lo demás (un cobro, un pedido…), prepara el texto y di qué tiene que apuntar la oficina y en qué pantalla de la app.
 
 Acciones que cambian datos (muy importante):
 - Primero resume en pocas líneas EXACTAMENTE lo que vas a guardar y termina tu respuesta con una línea que diga solo [CONFIRMAR]. La app pondrá los botones «✅ Sí, hazlo» y «❌ No». No uses [CONFIRMAR] para nada más.
@@ -74,6 +75,13 @@ Contactos (prospectos) y «volver a llamar el…»:
 - Las notas se AÑADEN a las que ya tiene el contacto (con la fecha y quién lo apunta); nunca se borran las anteriores.
 - Estados posibles: nuevo, contactado, interesado, cliente (ya es cliente) y descartado. Cambia el estado solo si lo dicen o es evidente (por ejemplo, si se le ha llamado y estaba como «nuevo», pasa a «contactado»), y dilo en el resumen.
 - Si se convierte en cliente de verdad, además hay que darlo de alta como cliente: ofrécelo.
+
+Pedidos previstos (los crea la app cada madrugada a partir de los pedidos fijos):
+- Un previsto NO es un pedido hasta que se confirma: ✅ confirmar = pasa a pedido normal; ❌ quitar = ese día no se hace (no se vuelve a crear).
+- Para saber qué hay, usa previstos_dia (por defecto, mañana). Enséñalos como lista corta: cliente, qué suele llevar (pocos productos) y la nota si es «no siempre» o «específico» (esos hay que preguntarlos al cliente antes de confirmar).
+- Para confirmar o quitar: resume uno por línea con ✅ o ❌ y el cliente («✅ Bar Pepe · jueves 19»), di cuántos son en total y termina con [CONFIRMAR]. Solo cuando digan que sí, usa decidir_previstos con esos mismos pedidos.
+- «Confírmalos todos» = todos los del resumen, salvo los que hayan dicho que no. Si no está claro qué día o qué clientes, pregunta.
+- Nunca cambies productos ni cantidades: para eso, que lo hagan en la app (Pedidos › tocar el pedido).
 
 
 Clientes (muy importante):
@@ -122,6 +130,24 @@ const HERRAMIENTAS: Anthropic.Tool[] = [
       volver_a_llamar: { type: "string", description: "Opcional. Fecha AAAA-MM-DD para volver a llamar (hoy o después). Escribe «quitar» para borrar la fecha." },
       nota: { type: "string", description: "Opcional. Lo que se ha hablado o hay que recordar. Se añade a las notas que ya tiene." },
     } },
+  },
+  {
+    name: "previstos_dia",
+    description: "Pedidos previstos (sin confirmar) de un día: id del pedido, cliente, nota (tipo de fijo) y productos con cantidades. Por defecto, mañana. Úsala antes de decidir_previstos para tener los ids.",
+    input_schema: { type: "object", properties: {
+      fecha: { type: "string", description: "Opcional. AAAA-MM-DD. Por defecto, mañana." },
+      cliente_id: { type: "string", description: "Opcional. Solo los de este cliente (de buscar_clientes); con cliente_id se ven sus previstos de las próximas 2 semanas." },
+    } },
+  },
+  {
+    name: "decidir_previstos",
+    description: "Confirma (hacer=true, pasa a pedido normal) o quita (hacer=false, ese día no se hace) pedidos previstos. ÚSALA SOLO después de haber resumido uno por uno lo que vas a hacer (terminando con [CONFIRMAR]) y de que la persona haya contestado «sí» en su último mensaje; si no, no se cambia nada.",
+    input_schema: { type: "object", properties: {
+      pedidos: { type: "array", description: "Lista de pedidos (máximo 60).", items: { type: "object", properties: {
+        pedido_id: { type: "string", description: "id del pedido (de previstos_dia)." },
+        hacer: { type: "boolean", description: "true = confirmar; false = quitar." },
+      }, required: ["pedido_id", "hacer"] } },
+    }, required: ["pedidos"] },
   },
   {
     name: "deudas",
@@ -311,6 +337,37 @@ async function ejecutar(ctx: Ctx, nombre: string, a: any): Promise<unknown> {
       const r = await sb.from("prospectos").insert(fila).select("id,nombre,estado,proximo_contacto").single();
       if (r.error) return { guardado: false, motivo: "No se pudo crear: " + r.error.message };
       return { guardado: true, nuevo: true, contacto: r.data, donde_verlo: "Comercial › Avisos (o la lista de contactos)." };
+    }
+    case "previstos_dia": {
+      const manana = new Date(Date.parse(hoyISO()) + 86400000).toISOString().slice(0, 10);
+      let q = sb.from("pedidos").select("id,cliente_id,fecha_entrega,notas,origen").eq("estado", "previsto").or("archivado.is.null,archivado.eq.false");
+      let fecha = fechaOk(a.fecha) ? a.fecha : manana;
+      if (esUUID(a.cliente_id)) { q = q.eq("cliente_id", a.cliente_id).gte("fecha_entrega", hoyISO()).lte("fecha_entrega", new Date(Date.parse(hoyISO()) + 15 * 86400000).toISOString().slice(0, 10)); fecha = "próximas 2 semanas"; }
+      else q = q.eq("fecha_entrega", fecha);
+      const peds = chk(await q.order("fecha_entrega").limit(150)) as any[];
+      const cn = await nombresClientes(sb, peds.map(p => p.cliente_id));
+      const lin = peds.length ? chk(await sb.from("lineas_pedido").select("pedido_id,producto_id,cantidad_pedida,unidad_pedida").in("pedido_id", peds.map(p => p.id)).limit(3000)) as any[] : [];
+      const pids = [...new Set(lin.map(l => l.producto_id).filter(Boolean))];
+      const pn: Record<string, string> = {};
+      if (pids.length) for (const p of chk(await sb.from("productos").select("id,nombre").in("id", pids.slice(0, 500))) as any[]) pn[p.id] = p.nombre;
+      return { fecha, total: peds.length, previstos: peds.map(p => ({ pedido_id: p.id, cliente: cn[p.cliente_id] || "?", fecha: p.fecha_entrega, nota: p.notas || null,
+        productos: lin.filter(l => l.pedido_id === p.id).slice(0, 25).map(l => `${pn[l.producto_id] || "?"} ${r2(l.cantidad_pedida)} ${l.unidad_pedida || ""}`.trim()) })) };
+    }
+    case "decidir_previstos": {
+      if (!confirmado(ctx)) return { hecho: false, motivo: "Todavía no está confirmado. Resume uno por uno (✅/❌ y cliente) y termina con la línea [CONFIRMAR]." };
+      const lista = (Array.isArray(a.pedidos) ? a.pedidos : []).filter((x: any) => esUUID(x?.pedido_id) && typeof x.hacer === "boolean").slice(0, 60);
+      if (!lista.length) return { hecho: false, motivo: "No hay pedidos válidos: consigue los ids con previstos_dia." };
+      const info = chk(await sb.from("pedidos").select("id,cliente_id,fecha_entrega").in("id", lista.map((x: any) => x.pedido_id))) as any[];
+      const cn = await nombresClientes(sb, info.map(p => p.cliente_id));
+      const res = [];
+      for (const x of lista) {
+        const p = info.find(i => i.id === x.pedido_id);
+        const r = await sb.rpc("confirmar_previsto", { p_pedido: x.pedido_id, p_hacer: x.hacer });
+        const err = r.error ? (/NO_ES_PREVISTO/.test(r.error.message) ? "ya no estaba previsto (alguien lo ha confirmado o quitado)" : /PEDIDO_NO_EXISTE/.test(r.error.message) ? "no existe" : r.error.message) : null;
+        res.push({ cliente: p ? cn[p.cliente_id] : "?", fecha: p?.fecha_entrega, accion: x.hacer ? "confirmado" : "quitado", ok: !err, error: err || undefined });
+      }
+      return { hecho: true, confirmados: res.filter(r => r.ok && r.accion === "confirmado").length, quitados: res.filter(r => r.ok && r.accion === "quitado").length,
+        fallos: res.filter(r => !r.ok).length, detalle: res, donde_verlo: "Pedidos (los confirmados ya cuentan como pedidos normales)." };
     }
     case "deudas": {
       let q = sb.from("v_pedidos_importe").select("pedido_id,cliente_id,cliente_nombre,fecha_entrega,serie,numero_albaran,total,cobrado,pendiente,forma_pago")

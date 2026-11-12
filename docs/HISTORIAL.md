@@ -2,6 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 12/11/2026
+- **Harvey v2, acción 2: confirmar o quitar pedidos previstos (v219 en PRUEBAS)**. Herramientas nuevas `previstos_dia` (qué previstos hay un día, por defecto mañana, con productos) y `decidir_previstos` (✅ confirmar / ❌ quitar, usando la misma función `confirmar_previsto` que los botones de la app). Mismo sistema de confirmación con [CONFIRMAR] y botones. Atajo «📅 Previstos de mañana» en Harvey. Sin cambios en la base de datos. **Nuevo:** la app de PRUEBAS usa su propia función `harvey-v2-pruebas`, así los cambios de Harvey se prueban sin tocar la normal; al publicar se sube el mismo código a `harvey-v2`. `APP_VERSION` estaba otra vez desfasado (v216): igualado a `sw.js`.
 - **v218 publicada en la app normal** («Autorizo publicar»): sin pedido mínimo y reparto en Madrid y Segovia en `/nuevos-clientes`. Pruebas queda en v217 con lo mismo.
 - **Condiciones en `/nuevos-clientes` (v217 en PRUEBAS)**: Fernando confirma **sin pedido mínimo** y reparto en **Madrid y Segovia**. Añadido arriba, como primera ventaja y en la descripción para compartir. Apuntado en `REGLAS_INTERNAS.md`.
 - **v216 publicada en la app normal** («Autorizo publicar», 12/11/2026): v213 + Harvey v2 (apuntar contactos y «volver a llamar el…» con ✅/❌). La app normal y la de pruebas usan ya la función `harvey-v2`; `harvey` queda sin uso (se puede borrar más adelante). Pruebas sigue en v215 con lo mismo.
