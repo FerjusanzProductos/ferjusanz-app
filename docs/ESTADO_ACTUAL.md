@@ -6,7 +6,7 @@ Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial 
 ## Versiones
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
-| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v255** ✅ (publicada el 12/11/2026: v251 + facturación fase 1 y albaranes sin el 609 567 354) | GitLab `main` |
+| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v257** ✅ (publicada el 12/11/2026: v251 + facturación fase 1, albaranes sin el 609 567 354 y NIF sin el 0 de delante) | GitLab `main` |
 | **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v254** ✅ (12/11/2026: normal v251 + albaranes sin el 609 567 354 + facturación fase 1: «🏢 Datos de la empresa» y «🧾 Clientes sin datos para facturar»; usa su base de PRUEBAS aparte `ferjusanz-pruebas`) | GitLab `main` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
