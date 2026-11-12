@@ -4,10 +4,9 @@
 - **Cuándo**: de lunes a sábado a las 7:47 (Madrid). Aviso al móvil.
 - **Buzón**: el Gmail de facturas de la empresa (donde llega lo reenviado desde ferjusanz@hotmail.com).
 - **Qué hace**: SOLO LEE. Facturas de proveedores, reclamaciones y avisos de pago (🔴 cambios de IBAN), clientes que escriben (con borrador de respuesta solo en el resumen), administración y el resto contado en una línea.
-- **Estado**: ⏸ en pausa. Desde Claude Code no se le puede poner el conector de Gmail; hay que hacerlo en claude.ai → Tareas programadas:
-  1. Abrir «Resumen de correo Ferjusanz».
-  2. Añadir el conector **Gmail** y activarla.
-  3. Si no deja añadir el conector, crear una tarea nueva con Gmail, misma hora, y pegar el texto de abajo (y borrar la vieja).
+- **Estado**: ⏸ en pausa. En claude.ai → Tareas programadas **no se puede poner Gmail** (solo salen Drive y Supabase, aunque Gmail está conectado; comprobado por Fernando el 13/11/2026).
+- **Cómo se usa mientras tanto**: abrir un chat nuevo de Claude Code con este repositorio y escribir **/resumen-correo** (o «resumen de correo»). Skill: `.claude/skills/resumen-correo/SKILL.md`.
+- Si algún día sale Gmail en los conectores de la tarea: activarlo y encender la tarea.
 
 ## Texto de la tarea
 
