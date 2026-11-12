@@ -1,12 +1,12 @@
 # Estado actual de FERJUSANZ
-_Última revisión: 12/11/2026 (publicación v232). Actualizar en cada publicación._
+_Última revisión: 12/11/2026 (publicación v236). Actualizar en cada publicación._
 
 Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial · ⚠️ por confirmar
 
 ## Versiones
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
-| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v234** ✅ (publicada el 12/11/2026: v232 + avisos en ROJO de precios/pesos que llevan directo + «atrás» en el portal del cliente) | GitLab `main` |
+| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v236** ✅ (publicada el 12/11/2026: v234 + hoja de carga por repartidor y orden de reparto + «No servido» en el correo del albarán) | GitLab `main` |
 | **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v235** ✅ (12/11/2026: v234 + hoja de carga por repartidor y orden de reparto; Harvey con la función `harvey-v2-pruebas`) | GitLab `main` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
