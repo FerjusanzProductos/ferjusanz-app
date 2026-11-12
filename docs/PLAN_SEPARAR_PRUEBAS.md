@@ -1,5 +1,10 @@
 # Plan: separar la app de PRUEBAS de la app normal
-_Preparado el 12/11/2026. **No se ha creado, migrado, borrado ni publicado nada.** Cada paso necesita «Autorizo» de Fernando._
+_Preparado el 12/11/2026. Cada paso necesita «Autorizo» de Fernando._
+
+## Decisiones de Fernando (12/11/2026)
+1. ✔️ **Paso 1 autorizado y hecho**: proyecto **`ferjusanz-pruebas`** creado (id `pbeuxbwbpmlanbhhnpgy`, Irlanda, plan gratuito, 0 €). Está vacío. Lo único que existe en Supabase es la organización `FerjusanzProductosApp`, así que va ahí; **en diciembre, antes de pasar la real a Pro, mover pruebas a una organización gratuita aparte** (si no, costaría unos 10 $/mes más).
+2. **Clientes en pruebas con sus datos reales y bien puestos**, pero con **«(en pruebas)»** detrás del nombre (p. ej. «Bar La Torre (en pruebas)»). Esto **sustituye** la limpieza de datos personales del punto 2. Para que no llegue nada a un cliente de verdad: en pruebas no hay Gmail ni WhatsApp, y en el paso 6 la app naranja **bloquea los botones de llamar, WhatsApp y correo** («en pruebas no se envía»). Los prospectos, fichajes, mensajes y PDF siguen sin copiarse.
+3. ✔️ **Plan Pro para la base real desde el 1/12/2026** (≈ 23 €/mes).
 
 ## Cómo está hoy (comprobado el 12/11/2026)
 - Las dos apps (normal y naranja) usan **la misma base de datos** de Supabase (`hvydnjaswdexttogsyen`). La dirección está escrita en `public/index.html` (línea `SUPABASE_URL`) y en `public/nuevos-clientes.html`.
