@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ferjusanz · Fruta y verdura de Mercamadrid para tu cocina</title>
+<meta name="description" content="Mayorista de fruta, verdura, patatas y huevos en Mercamadrid. Pide tu primer pedido de prueba para tu restaurante, bar, colegio o residencia.">
+<meta property="og:title" content="Ferjusanz · Pide tu primer pedido de prueba">
+<meta property="og:description" content="Fruta y verdura de Mercamadrid para hostelería y colectividades. Te llamamos hoy.">
+<meta name="theme-color" content="#166534">
+<link rel="icon" href="/icon-192.png">
+<style>
+:root { --verde: #166534; --verde2: #15803d; --claro: #dcfce7; --tinta: #111827; --gris: #4b5563; --fondo: #f9fafb; --rojo: #b91c1c; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: var(--tinta); background: var(--fondo); line-height: 1.5; }
+.pruebas { background: #ea580c; color: #fff; text-align: center; padding: 8px 16px; font-weight: 700; font-size: 14px; }
+header { background: var(--verde); color: #fff; padding: 28px 16px 36px; }
+.ancho { max-width: 640px; margin: 0 auto; }
+.marca { font-weight: 800; letter-spacing: .5px; font-size: 15px; color: var(--claro); }
+h1 { font-size: 30px; line-height: 1.15; margin: 10px 0 12px; }
+header p { margin: 0 0 20px; font-size: 17px; color: #ecfdf5; }
+.boton { display: block; width: 100%; text-align: center; background: #facc15; color: #1f2937; font-weight: 800; font-size: 18px; padding: 16px; border-radius: 12px; border: 0; text-decoration: none; cursor: pointer; }
+.boton:disabled { opacity: .6; }
+.video { margin: 0 auto; max-width: 640px; padding: 0 16px; transform: translateY(-18px); }
+.video .marco { background: #000; border-radius: 14px; aspect-ratio: 16 / 9; display: flex; align-items: center; justify-content: center; color: #d1d5db; text-align: center; padding: 16px; overflow: hidden; }
+.video video, .video iframe { width: 100%; height: 100%; border: 0; }
+section { padding: 8px 16px 24px; }
+h2 { font-size: 22px; margin: 8px 0 14px; }
+.ventajas { display: grid; gap: 12px; }
+.ventaja { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px; display: flex; gap: 12px; align-items: flex-start; }
+.ventaja b { display: block; }
+.ventaja span.ico { font-size: 26px; line-height: 1; }
+.pasos { counter-reset: p; list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.pasos li { background: #fff; border-radius: 12px; padding: 12px 14px 12px 52px; position: relative; border: 1px solid #e5e7eb; }
+.pasos li::before { counter-increment: p; content: counter(p); position: absolute; left: 14px; top: 12px; width: 26px; height: 26px; border-radius: 50%; background: var(--verde); color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+form { background: #fff; border: 2px solid var(--verde); border-radius: 14px; padding: 18px 16px; display: grid; gap: 12px; }
+label { font-weight: 700; font-size: 15px; display: grid; gap: 4px; }
+label small { font-weight: 400; color: var(--gris); }
+input, select, textarea { font: inherit; padding: 12px; border: 1px solid #9ca3af; border-radius: 10px; width: 100%; background: #fff; color: var(--tinta); }
+textarea { min-height: 80px; }
+.trampa { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.acepto { font-weight: 400; display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--gris); }
+.acepto input { width: 22px; height: 22px; flex: none; margin-top: 2px; }
+.error { color: var(--rojo); font-weight: 700; min-height: 1em; }
+.gracias { background: var(--claro); border: 2px solid var(--verde2); border-radius: 14px; padding: 20px 16px; text-align: center; }
+.gracias h2 { margin-top: 0; }
+.tel { display: block; text-align: center; margin-top: 14px; font-weight: 800; color: var(--verde); font-size: 18px; text-decoration: none; }
+footer { text-align: center; color: var(--gris); font-size: 13px; padding: 24px 16px 40px; }
+footer a { color: var(--gris); }
+.wa { position: fixed; right: 16px; bottom: 16px; background: #25d366; color: #fff; border-radius: 50px; padding: 12px 16px; font-weight: 800; text-decoration: none; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+</style>
+</head>
+<body>
+<div class="pruebas" id="avisoPruebas" hidden>PÁGINA DE PRUEBAS · el formulario no guarda nada</div>
+
+<header>
+  <div class="ancho">
+    <div class="marca">FERJUSANZ · MERCAMADRID</div>
+    <h1>La fruta y verdura de Mercamadrid, en tu cocina</h1>
+    <p>Para restaurantes, bares, colegios, residencias y caterings. Compramos cada mañana en el mercado y te lo llevamos a tu negocio.</p>
+    <a class="boton" href="#pedido">Quiero mi pedido de prueba</a>
+  </div>
+</header>
+
+<div class="video">
+  <div class="marco" id="video">
+    <!-- AQUÍ VA EL VÍDEO DE FERNANDO (1–2 minutos en Mercamadrid). Cuando esté, poner: <video src="/guia-img/presentacion.mp4" controls playsinline poster="..."></video> -->
+    <div>🎬<br>Aquí irá el vídeo de 1 minuto<br>desde Mercamadrid</div>
+  </div>
+</div>
+
+<section class="ancho">
+  <h2>¿Por qué Ferjusanz?</h2>
+  <div class="ventajas">
+    <div class="ventaja"><span class="ico">🏪</span><div><b>Desde dentro de Mercamadrid</b>Mayorista de fruta, verdura, patatas y huevos. Tres generaciones en el sector.</div></div>
+    <div class="ventaja"><span class="ico">🥬</span><div><b>Género elegido para tu cocina</b>Te decimos qué está bueno y a buen precio cada semana.</div></div>
+    <div class="ventaja"><span class="ico">📲</span><div><b>Pedir es fácil</b>Por teléfono o WhatsApp. Si no ves un producto, te lo buscamos.</div></div>
+    <div class="ventaja"><span class="ico">🤝</span><div><b>Trato directo</b>Hablas con nosotros, no con una centralita.</div></div>
+  </div>
+</section>
+
+<section class="ancho">
+  <h2>Cómo funciona</h2>
+  <ol class="pasos">
+    <li><b>Déjanos tus datos</b> aquí abajo (1 minuto).</li>
+    <li><b>Te llamamos hoy</b> para saber qué compras y te mandamos nuestra lista de precios.</li>
+    <li><b>Haces un pedido de prueba</b> y compruebas la calidad tú mismo.</li>
+  </ol>
+</section>
+
+<section class="ancho" id="pedido">
+  <h2>Pide tu primer pedido de prueba</h2>
+  <form id="formulario" novalidate>
+    <label>Nombre del negocio<input name="nombre" autocomplete="organization" required maxlength="100" placeholder="Ej.: Restaurante El Olivo"></label>
+    <label>Tipo de negocio
+      <select name="tipo">
+        <option value="restaurante">Restaurante</option>
+        <option value="bar">Bar / cafetería</option>
+        <option value="colegio">Colegio</option>
+        <option value="residencia">Residencia</option>
+        <option value="escuela_infantil">Escuela infantil</option>
+        <option value="catering">Catering</option>
+        <option value="otro">Otro</option>
+      </select>
+    </label>
+    <label>Localidad<input name="localidad" autocomplete="address-level2" maxlength="80" placeholder="Ej.: Alcobendas"></label>
+    <label>Teléfono<input name="telefono" type="tel" inputmode="tel" autocomplete="tel" required placeholder="600 000 000"></label>
+    <label>Correo <small>(si quieres recibir la lista de precios)</small><input name="email" type="email" inputmode="email" autocomplete="email" maxlength="120"></label>
+    <label>¿Qué sueles comprar? <small>(opcional)</small><textarea name="mensaje" maxlength="500" placeholder="Ej.: patata, tomate, lechuga, fruta de temporada…"></textarea></label>
+    <div class="trampa" aria-hidden="true"><label>No rellenar<input name="web" tabindex="-1" autocomplete="off"></label></div>
+    <label class="acepto"><input type="checkbox" name="acepto" required><span>Acepto que FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. use estos datos solo para contactarme sobre este pedido. Puedo pedir que los borren cuando quiera.</span></label>
+    <div class="error" id="error" role="alert"></div>
+    <button class="boton" type="submit" id="enviar">Quiero mi pedido de prueba</button>
+  </form>
+  <div class="gracias" id="gracias" hidden>
+    <h2>¡Gracias! 🍅</h2>
+    <p>Te llamamos <b>hoy</b> (o el próximo día laborable) para preparar tu pedido de prueba.</p>
+    <p>Si tienes prisa, llámanos ya:</p>
+  </div>
+  <a class="tel" href="tel:+34917632186">📞 91 763 21 86</a>
+  <a class="tel" href="tel:+34609100690">📱 609 100 690</a>
+</section>
+
+<footer>
+  FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. · Mercamadrid<br>
+  <a href="https://www.ferjusanz-frutas-verduras.es/">www.ferjusanz-frutas-verduras.es</a>
+</footer>
+
+<a class="wa" href="https://wa.me/34609100690?text=Hola%2C%20quiero%20informaci%C3%B3n%20para%20un%20pedido%20de%20prueba" rel="noopener">💬 WhatsApp</a>
+
+<script>
+(function () {
+  var URL_SB = 'https://hvydnjaswdexttogsyen.supabase.co';
+  var CLAVE = 'sb_publishable_B6ZWPBp54OT62yXU3khygQ_eIm6UnVq'; // clave pública (la misma que la app)
+  var PRUEBAS = location.hostname.indexOf('pruebas') >= 0 || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  if (PRUEBAS) document.getElementById('avisoPruebas').hidden = false;
+  var f = document.getElementById('formulario'), err = document.getElementById('error'), btn = document.getElementById('enviar');
+  var MSG = { nombre: 'Escribe el nombre del negocio.', telefono: 'Revisa el teléfono (9 cifras).', email: 'Revisa el correo.', muchos: 'Ahora mismo no podemos recibir más. Llámanos, por favor.', acepto: 'Marca la casilla para poder llamarte.' };
+  f.addEventListener('submit', function (e) {
+    e.preventDefault(); err.textContent = '';
+    var d = new FormData(f);
+    if (!String(d.get('nombre') || '').trim()) { err.textContent = MSG.nombre; return; }
+    var tel = String(d.get('telefono') || '').replace(/\D/g, '').replace(/^34(\d{9})$/, '$1');
+    if (!/^[6789]\d{8}$/.test(tel)) { err.textContent = MSG.telefono; return; }
+    if (!d.get('acepto')) { err.textContent = MSG.acepto; return; }
+    btn.disabled = true; btn.textContent = 'Enviando…';
+    fetch(URL_SB + '/rest/v1/rpc/web_solicitud_prospecto', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: CLAVE, Authorization: 'Bearer ' + CLAVE },
+      body: JSON.stringify({ p_nombre: d.get('nombre'), p_tipo: d.get('tipo'), p_localidad: d.get('localidad'), p_telefono: tel,
+        p_email: d.get('email'), p_mensaje: d.get('mensaje'), p_trampa: d.get('web'), p_prueba: PRUEBAS })
+    }).then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error('servidor'); return j; }); })
+      .then(function (j) {
+        if (!j || !j.ok) { err.textContent = MSG[j && j.error] || 'No se ha podido enviar. Llámanos, por favor.'; return; }
+        f.hidden = true; document.getElementById('gracias').hidden = false;
+        if (window.fbq) window.fbq('track', 'Lead');
+        document.getElementById('pedido').scrollIntoView({ behavior: 'smooth' });
+      })
+      .catch(function () { err.textContent = 'No se ha podido enviar (¿sin conexión?). Llámanos, por favor.'; })
+      .then(function () { btn.disabled = false; btn.textContent = 'Quiero mi pedido de prueba'; });
+  });
+})();
+</script>
+</body>
+</html>

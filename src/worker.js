@@ -12,6 +12,7 @@ import paso2 from "../public/guia-img/paso2.jpg";
 import paso3 from "../public/guia-img/paso3.jpg";
 import paso4 from "../public/guia-img/paso4.jpg";
 import ejemplosHtml from "../public/ejemplos.html";
+import nuevosClientesHtml from "../public/nuevos-clientes.html";
 import videoSinIva from "../public/guia-img/cobro_sin_iva.mp4";
 import ej7_siniva_boton from "../public/guia-img/ej7_siniva_boton.jpg";
 import ej8_siniva_calculado from "../public/guia-img/ej8_siniva_calculado.jpg";
@@ -39,6 +40,9 @@ const ARCHIVOS = {
   "/guia-img/paso3.jpg": [paso3, "image/jpeg"],
   "/guia-img/paso4.jpg": [paso4, "image/jpeg"],
   "/ejemplos.html": [ejemplosHtml, HTML],
+  // Página pública para captar clientes nuevos (anuncios de Facebook/Instagram, QR, web).
+  "/nuevos-clientes": [nuevosClientesHtml, HTML],
+  "/nuevos-clientes.html": [nuevosClientesHtml, HTML],
   "/guia-img/cobro_sin_iva.mp4": [videoSinIva, "video/mp4"],
   "/guia-img/ej7_siniva_boton.jpg": [ej7_siniva_boton, "image/jpeg"],
   "/guia-img/ej8_siniva_calculado.jpg": [ej8_siniva_calculado, "image/jpeg"],
@@ -68,7 +72,7 @@ export default {
     if (request.method !== "GET" && request.method !== "HEAD") {
       return new Response("Método no permitido", { status: 405, headers: { Allow: "GET, HEAD" } });
     }
-    const url = new URL(request.url), ruta = url.pathname;
+    const url = new URL(request.url), ruta = url.pathname.replace(/\/+$/, "") || "/";
     const archivo = (url.hostname.includes("pruebas") && PRUEBAS[ruta]) || ARCHIVOS[ruta];
     if (!archivo) return new Response("No encontrado", { status: 404 });
     const [contenido, tipo] = archivo;
