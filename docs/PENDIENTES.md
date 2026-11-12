@@ -2,6 +2,7 @@
 _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.md. Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda._
 
 ## Por publicar o decidir
+- 🟡 12/11/2026: **📦 Sacar de la furgoneta antes de entregar** en PRUEBAS (v237). Que Fernando lo mire y diga «Autorizo publicar» (la normal sería v238).
 - ✔️ 12/11/2026: **Avisos en ROJO de precios y pesos que faltan + «atrás» en el portal del cliente** publicados en la normal (v234, «Autorizo publicar»). Pruebas en v233 con lo mismo.
 - ✔️ 12/11/2026: **Arreglos de Preparar → Entregar → Facturar** publicados en la normal (v232, «Autorizo publicar»).
   - ⚪ Propuestas sin hacer (que decida Fernando): unidades «ud» en el albarán para cajas/bandejas.

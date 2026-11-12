@@ -156,6 +156,10 @@ label.campo{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(
 .ent-ov button.ent-pago{background:#fff!important;color:#111827!important;border:2px solid #9ca3af!important;box-shadow:none!important}.ent-pago:last-child{grid-column:1/-1}.ent-ov button.ent-pago.on{background:#166534!important;color:#fff!important;border-color:#166534!important;box-shadow:0 0 0 3px #86efac!important}
 .ent-zfirma{margin-top:12px;padding-top:10px;border-top:3px solid #16a34a}.ent-ftit{font-size:20px;font-weight:900;color:#166534;margin-bottom:8px}
 .ent-caja{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin-top:10px}
+.ent-ov button.ent-sacar{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;margin:0 0 8px;padding:8px 12px;text-align:left;background:#fff!important;color:#111827!important;border:2px solid #d1d5db!important;border-radius:14px;box-shadow:none!important;font-weight:400}
+.ent-ov button.ent-sacar.on{background:#dcfce7!important;border-color:#16a34a!important}.ent-ov button.ent-sacar.on .ent-sacar-nom{text-decoration:line-through;color:#4b5563}
+.ent-sacar-ck{flex:0 0 38px;height:38px;border:3px solid #9ca3af;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:#fff}.ent-sacar.on .ent-sacar-ck{background:#16a34a;border-color:#16a34a}
+.ent-sacar-cant{flex:0 0 auto;min-width:76px;font-size:20px;font-weight:900;color:#166534}.ent-sacar-nom{flex:1;min-width:0;font-size:19px;font-weight:700;line-height:1.2}.ent-sacar-peso{display:block;font-size:14px;font-weight:600;color:#4b5563;text-decoration:none;margin-top:2px}
 .firma-card canvas{width:100%;height:230px;border:2px dashed #6b7280;border-radius:12px;touch-action:none;background:#fff}
 .copias-imp{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
 .copia-btn{width:100%;min-height:58px;text-align:left;display:flex;flex-direction:column;gap:2px;border-radius:14px;color:#111;border:2px solid #d1d5db;background:#fff;padding:10px 14px}
@@ -1393,7 +1397,7 @@ function pintarPedido() {
   if (estado === 'terminado') {
     const enCola = colaE.get().find(x => x.pedido === d.pedido.id);
     if (d.entrega || enCola) acciones.push(h('div', { class: 'aviso-card' }, '✔ Entregado a las ' + fmtHora(d.entrega ? d.entrega.entregado_at : enCola.at) + (enCola && !d.entrega ? ' (pendiente de enviar)' : '')));
-    else acciones.push(h('button', { class: 'guardar', onclick: () => elegirEntrega(d.pedido.id, () => { pintarPedido(); actualizarPedido(); }) }, 'Marcar como ENTREGADO'));
+    else acciones.push(h('button', { class: 'guardar', onclick: () => sacarDeFurgoneta(d.pedido.id, () => { pintarPedido(); actualizarPedido(); }) }, '📦 Sacar de la furgoneta y ENTREGAR'));
     acciones.push(h('button', { onclick: () => go('albaran', { id: d.pedido.id }) }, '📄 Ver / enviar albarán' + (d.albaran ? ' nº ' + d.albaran.numero : '')));
   } else if (estado === 'previsto') {
     acciones.push(h('div', { class: 'aviso-card' }, 'Primero confírmalo (arriba). Después se prepara como cualquier pedido.'));
@@ -6839,6 +6843,66 @@ async function entregaPasoAPaso(id, alTerminar) {
   try { await cargar(); if (!d.albaran || d.albaran.numero == null) { ov.remove(); toast('Este pedido todavía no tiene el albarán cerrado.', 'err'); return; } pintar(); }
   catch (e) { ov.remove(); toast(msgErr(e), 'err'); }
 }
+/* 📦 SACAR DE LA FURGONETA (Fernando, 12/11/2026): antes de dar a «Entregado», el repartidor ve la lista de lo que
+   lleva ese cliente (sin precios, en grande) y va marcando cada caja que saca. Después: «Entregado» → cómo se entrega
+   → (en mano) albarán y firma, si paga o lo debe, y enviarle el albarán. Lo marcado se queda guardado en el móvil. */
+async function sacarDeFurgoneta(ids, alTerminar) {
+  const lista = Array.isArray(ids) ? ids : [ids];
+  const titulo = h('div', { class: 'ent-tit' }, '📦 Sacar de la furgoneta'), cuerpo = h('div', { class: 'ent-cuerpo' }), pie = h('div', { class: 'ent-pie' });
+  const ov = h('div', { class: 'ent-ov' }, h('div', { class: 'ent-cab' }, h('button', { class: 'ent-x', onclick: () => ov.remove() }, '✕'), titulo), cuerpo, pie);
+  document.body.append(ov);
+  cuerpo.replaceChildren(h('p', { class: 'vacio' }, 'Cargando lo que lleva…'));
+  let peds = [];
+  try { for (const id of lista) peds.push(await cargarPedido(id)); }
+  catch (e) { ov.remove(); toast(msgErr(e), 'err'); return; }
+  const kS = id => 'fj_sacado_' + id;
+  const marc = {}; peds.forEach(d => { marc[d.pedido.id] = new Set(LS.get(kS(d.pedido.id), [])); });
+  const nomL = l => { const p = uno(l.productos) || {}; return p.nombre_albaran || p.nombre || '—'; };
+  /* En grande lo que se pidió (cajas, sacos, piezas…), que es lo que se saca; debajo, lo pesado si es otra cosa */
+  const cantL = l => num(l.cantidad_pedida) + ' ' + (l.unidad_pedida || '');
+  const pesoL = l => { if (l.peso_real == null || l.peso_real === '') return null; const t = num(l.peso_real) + ' ' + udLinea(l); return t === cantL(l) ? null : 'Pesado: ' + t; };
+  const lleva = d => d.lineas.filter(l => !noServida(l)).sort((a, b) => nomL(a).localeCompare(nomL(b), 'es'));
+  const total = () => peds.reduce((s, d) => s + lleva(d).length, 0);
+  const hechas = () => peds.reduce((s, d) => s + lleva(d).filter(l => marc[d.pedido.id].has(l.id)).length, 0);
+  const cli = uno(peds[0].pedido.clientes) || {};
+  titulo.replaceChildren('📦 ' + nombreCli(cli), h('div', { style: 'font-size:14px;font-weight:600;opacity:.9' }, 'Sacar de la furgoneta'));
+  function pintar() {
+    const t = total(), x = hechas();
+    const kids = [];
+    if (peds.some(d => d.cache)) kids.push(h('div', { class: 'aviso-card' }, 'Sin conexión: es la lista guardada en este móvil.'));
+    kids.push(h('div', { class: 'ent-ayuda' }, '👀 Mira lo que lleva este cliente y toca cada producto según lo vayas sacando.'));
+    kids.push(h('div', { class: 'ent-total' }, h('div', { class: 'ent-num', style: 'font-size:34px' }, x + ' de ' + t), h('div', { class: 'sub' }, x >= t && t ? '✔ Está todo fuera' : 'productos sacados')));
+    peds.forEach(d => {
+      if (peds.length > 1) kids.push(h('div', { class: 'letra' }, 'Albarán' + (d.albaran && d.albaran.numero != null ? ' nº ' + d.albaran.numero : '') + ' · ' + lleva(d).length + ' productos'));
+      if (d.pedido.notas) kids.push(h('div', { class: 'aviso-card' }, '📝 ' + d.pedido.notas));
+      lleva(d).forEach(l => {
+        const on = marc[d.pedido.id].has(l.id);
+        kids.push(h('button', { class: 'ent-sacar' + (on ? ' on' : ''), onclick: () => { const s = marc[d.pedido.id]; s.has(l.id) ? s.delete(l.id) : s.add(l.id); LS.set(kS(d.pedido.id), [...s]); pintar(); } },
+          h('span', { class: 'ent-sacar-ck' }, on ? '✔' : ''), h('span', { class: 'ent-sacar-cant' }, cantL(l)), h('span', { class: 'ent-sacar-nom' }, nomL(l), pesoL(l) ? h('span', { class: 'ent-sacar-peso' }, pesoL(l)) : null)));
+      });
+      const ns = d.lineas.filter(noServida);
+      if (ns.length) kids.push(h('div', { class: 'ent-caja' }, h('b', {}, '🚫 No servido (no va en la furgoneta)'), h('div', { class: 'sub' }, ns.map(nomL).join(', '))));
+      if (!d.lineas.length) kids.push(h('p', { class: 'vacio' }, 'Este pedido no tiene productos.'));
+    });
+    const sc = cuerpo.scrollTop; cuerpo.replaceChildren(...kids); cuerpo.scrollTop = sc;
+    pie.replaceChildren(
+      h('button', { class: 'guardar', onclick: async () => {
+        const f = total() - hechas();
+        if (f > 0 && !await confirmar('Faltan ' + f + ' productos por marcar como sacados.\n\n¿Seguir y marcarlo como ENTREGADO igualmente?')) return;
+        ov.remove(); elegirEntrega(lista, nota => { lista.forEach(id => { try { localStorage.removeItem(PRE + kS(id)); } catch (e) { } }); if (alTerminar) alTerminar(nota); });
+      } }, '✔ Entregado · Siguiente: cobro y firma'),
+      h('div', { class: 'ent-fila' },
+        h('button', { class: 'ghost', onclick: () => abrirIncidencia({ cliente: Object.assign({ id: peds[0].pedido.cliente_id }, cli), pedido_id: lista[0], tipo: 'falta' }, () => { }) }, '⚠ Falta algo o viene mal'),
+        h('button', { class: 'ghost', onclick: () => ov.remove() }, '← Volver')));
+  }
+  pintar();
+}
+/* Para que la lista de «Sacar de la furgoneta» se vea aunque no haya cobertura: se guarda en el móvil al abrir Entregas o la Ruta */
+let precargando = false;
+async function precargarPedidos(ids) {
+  if (precargando || !navigator.onLine || PRACTICA) return; precargando = true;
+  try { for (const id of ids) { try { await cargarPedido(id); } catch (e) { } } } finally { precargando = false; }
+}
 function vistaEntregas() {
   state.view = 'entregas';
   let fecha = state.fecha, datos = [], cache = false;
@@ -6861,13 +6925,14 @@ function vistaEntregas() {
     const info = p => { const e = uno(p.entregas); const l = q.find(x => x.pedido === p.id); return e ? { at: e.entregado_at, por: e.entregado_por, pend: false } : l ? { at: l.at, por: state.user.id, pend: true } : null; };
     const term = datos.filter(p => p.estado === 'terminado'); const ent = term.filter(p => info(p)).sort((a, b) => String(info(a).at).localeCompare(String(info(b).at)));
     const falta = term.filter(p => !info(p)); const sin = datos.length - term.length;
+    if (!cache) precargarPedidos(falta.map(p => p.id));
     if (cache) kids.push(h('div', { class: 'aviso-card' }, 'Mostrando los últimos datos guardados en este móvil.'));
     kids.push(h('div', { class: 'card' }, h('div', { class: 'nombre' }, ent.length + ' entregados de ' + datos.length + ' pedidos'),
       h('div', { class: 'sub' }, falta.length + ' terminados por entregar' + (sin ? ' · ' + sin + ' sin terminar de preparar' : ''))));
     if (falta.length) kids.push(h('div', { class: 'letra' }, 'Por entregar'));
     falta.forEach(p => kids.push(h('div', { class: 'card fila' }, h('div', { class: 'nombre' }, nombreCli(uno(p.clientes))),
       h('div', { style: 'display:flex;gap:6px' }, h('button', { class: 'ghost small', onclick: () => abrirIncidencia({ cliente: Object.assign({ id: p.cliente_id }, uno(p.clientes) || {}), pedido_id: p.id, tipo: 'devolucion' }, () => { }) }, '⚠ Incidencia'),
-        h('button', { class: 'guardar small', onclick: () => elegirEntrega(p.id, () => { pintar(); cargar(true); }) }, 'Entregado')))));
+        h('button', { class: 'guardar small', onclick: () => sacarDeFurgoneta(p.id, () => { pintar(); cargar(true); }) }, '📦 Sacar y entregar')))));
     if (ent.length) kids.push(h('div', { class: 'letra' }, 'Entregados'));
     ent.forEach(p => { const i = info(p); kids.push(h('div', { class: 'card fila' },
       h('div', {}, h('div', { class: 'nombre' }, '✔ ' + nombreCli(uno(p.clientes))), h('div', { class: 'sub' }, 'El pedido de ' + nombreCli(uno(p.clientes)) + ' ya ha sido entregado' + (quienEs(i.por) ? ' · ' + quienEs(i.por) : '') + (i.pend ? ' · pendiente de enviar' : ''))),
@@ -8382,7 +8447,7 @@ function vistaRuta() {
     try {
       if (!navigator.onLine) throw new TypeError('network');
       const r = await sb.from('pedidos').select('id,estado,clientes(id,codigo,nombre,nombre_comercial,direccion,codigo_postal,localidad,telefono,lat,lng,abre,cierra,franja_desde,franja_hasta,tiempo_parada,notas_reparto),entregas(entregado_at)').eq('fecha_entrega', fecha).neq('estado', 'anulado').neq('archivado', true);
-      if (r.error) throw r.error; LS.set(key, r.data); cache = false; armar(r.data);
+      if (r.error) throw r.error; LS.set(key, r.data); cache = false; armar(r.data); precargarPedidos(r.data.filter(p => p.estado === 'terminado' && !uno(p.entregas)).map(p => p.id));
     } catch (e) { if (!isNetErr(e)) { lista.replaceChildren(h('p', { class: 'err' }, msgErr(e))); return; } cache = true; armar(LS.get(key, [])); }
     pintarLista();
   }
@@ -8431,7 +8496,7 @@ function vistaRuta() {
         h('a', { href: enlaceMapas([c]), target: '_blank', rel: 'noopener', style: 'padding:8px 12px;border:1px solid var(--borde);border-radius:12px;text-decoration:none;color:var(--verde-osc);font-weight:700' }, 'Navegar'),
         c.telefono ? h('a', { href: 'tel:' + c.telefono, style: 'padding:8px 12px;border:1px solid var(--borde);border-radius:12px;text-decoration:none;color:var(--verde-osc);font-weight:700' }, 'Llamar') : null,
         h('button', { class: 'ghost small', onclick: async () => { try { const u = await miUbicacion(); await guardarUbicacion(c.id, u); c.lat = u.lat; c.lng = u.lng; toast('Ubicación del cliente guardada aquí', 'ok'); } catch (e) { toast(msgErr(e), 'err'); } } }, '📍 Estoy aquí'),
-        !c.entregado && c.pedidos ? h('button', { class: 'guardar small', onclick: () => elegirEntrega(c.pedidos, () => { c.entregado = true; }) }, 'Entregado') : null))); });
+        !c.entregado && c.pedidos ? h('button', { class: 'guardar small', onclick: () => sacarDeFurgoneta(c.pedidos, () => { c.entregado = true; }) }, '📦 Sacar y entregar') : null))); });
     if (faltan.length) kids.push(h('div', { class: 'aviso-card' }, 'Sin ubicación (no entran en la ruta): ' + faltan.map(nombreCli).join(', ') + '. Pulsa "📍 Estoy aquí" cuando estés en su puerta o escribe su dirección en la ficha del cliente.'));
     const pts = plan.det.map(x => x.p); const tramos = []; for (let i = 0; i < pts.length; i += 9) tramos.push(pts.slice(i, i + 9));
     tramos.forEach((t, k) => kids.push(h('a', { href: enlaceMapas(t, k === 0 ? ini : tramos[k - 1][tramos[k - 1].length - 1]), target: '_blank', rel: 'noopener', style: 'display:block;text-align:center;padding:14px;margin-bottom:8px;border-radius:14px;background:var(--verde);color:#fff;font-weight:700;text-decoration:none' }, tramos.length > 1 ? 'Abrir en Google Maps · tramo ' + (k + 1) : 'Abrir ruta completa en Google Maps')));
