@@ -153,6 +153,7 @@ label.campo{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(
 .ent-total{text-align:center;background:#f0fdf4;border:2px solid #86efac;border-radius:14px;padding:12px;margin-bottom:10px}.ent-num{font-size:40px;font-weight:900;color:#166534;line-height:1.1}
 .ent-pagos{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ent-pago{min-height:62px;font-size:17px;font-weight:800;background:#fff;color:#111827;border:2px solid #d1d5db;border-radius:14px;padding:6px}
 .ent-ov button.ent-pago{background:#fff!important;color:#111827!important;border:2px solid #9ca3af!important;box-shadow:none!important}.ent-pago:last-child{grid-column:1/-1}.ent-ov button.ent-pago.on{background:#166534!important;color:#fff!important;border-color:#166534!important;box-shadow:0 0 0 3px #86efac!important}
+.ent-zfirma{margin-top:12px;padding-top:10px;border-top:3px solid #16a34a}.ent-ftit{font-size:20px;font-weight:900;color:#166534;margin-bottom:8px}
 .ent-caja{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin-top:10px}
 .firma-card canvas{width:100%;height:230px;border:2px dashed #6b7280;border-radius:12px;touch-action:none;background:#fff}
 .copias-imp{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
@@ -6621,10 +6622,10 @@ function elegirEntrega(ids, alTerminar) {
     ...MODOS_ENTREGA.map(([nota, tit, expl]) => h('button', { class: nota === 'En mano' ? 'guardar' : 'ghost', style: 'width:100%;min-height:60px;margin-top:8px;text-align:left', onclick: async () => { c();
       if (nota === 'En mano' && lista.length === 1) { entregaPasoAPaso(lista[0], alTerminar); return; }   /* en mano: paso a paso (revisar, firmar, enviar, cobrar) */
       for (const id of lista) await marcarEntregado(id, nota); if (alTerminar) alTerminar(nota); ofrecerWhatsAppAlbaran(lista); } },
-      h('div', { style: 'font-size:17px;font-weight:800' }, nota === 'En mano' && lista.length === 1 ? tit + ' · paso a paso' : tit), h('div', { class: 'sub', style: 'font-weight:400' }, nota === 'En mano' && lista.length === 1 ? 'Revisáis juntos el albarán, firma, se lo envías y anotas cómo paga.' : expl)))));
+      h('div', { style: 'font-size:17px;font-weight:800' }, nota === 'En mano' && lista.length === 1 ? tit + ' · paso a paso' : tit), h('div', { class: 'sub', style: 'font-weight:400' }, nota === 'En mano' && lista.length === 1 ? 'Revisáis juntos el albarán y firma, anotas si paga o lo debe, y se lo envías.' : expl)))));
 }
 /* 🤝 Entrega EN MANO, paso a paso (Fernando, 11/11/2026):
-   1) revisar juntos el albarán en grande · 2) firma · 3) enviarle el albarán firmado · 4) cómo paga (efectivo, tarjeta, Bizum, transferencia o a deber) · 5) los dos ven el resumen.
+   1) el albarán en grande ARRIBA para revisarlo y, debajo, la firma · 2) paga (efectivo, tarjeta, Bizum) o lo debe (transferencia / a deber) · 3) enviarle el albarán firmado (Fernando, 12/11/2026).
    La entrega se registra al terminar (o al cerrar después de firmar), con una nota de cómo ha pagado que también ve el cliente en su página. */
 const PAGOS_ENTREGA = [['efectivo', '💶', 'Efectivo', true], ['tarjeta', '💳', 'Tarjeta', true], ['bizum', '📱', 'Bizum', true], ['transferencia', '🏦', 'Pagará por transferencia', false], ['deber', '📒', 'No paga ahora (a deber)', false]];
 async function entregaPasoAPaso(id, alTerminar) {
@@ -6645,15 +6646,10 @@ async function entregaPasoAPaso(id, alTerminar) {
   }
   const albaranGrande = () => { const w = h('div', { class: 'ent-alb' }); w.innerHTML = htmlAlbaran(d, 'a4'); const c = w.querySelector('.copia.' + (contado() ? 'blanca' : 'amarilla')) || w.querySelector('.copia'); if (c) w.replaceChildren(c); return w; };
   function pintar() {
-    pasos.replaceChildren(...[1, 2, 3, 4].map(n => h('div', { class: 'ent-paso' + (n <= paso ? ' on' : '') })));
+    pasos.replaceChildren(...[1, 2, 3].map(n => h('div', { class: 'ent-paso' + (n <= paso ? ' on' : '') })));
     pie.replaceChildren(); cuerpo.scrollTop = 0;
     if (paso === 1) {
-      titulo.textContent = 'Paso 1 de 4 · Revisad juntos el albarán';
-      pon(cuerpo, h('div', { class: 'ent-ayuda' }, '👀 Repasad producto por producto con quien lo recibe. Si falta algo o hay que cambiar algo, toca «Hay que cambiar algo».'), albaranGrande());
-      pie.append(B('guardar', '✔ Está todo bien · Firmar', () => { paso = 2; pintar(); }),
-        B('ghost', '✏️ Hay que cambiar algo', () => cambiarAlgo()));
-    } else if (paso === 2) {
-      titulo.textContent = 'Paso 2 de 4 · Firma de quien lo recibe';
+      titulo.textContent = 'Paso 1 de 3 · Revisar y firmar';
       const a = d.albaran || {};
       const cv = h('canvas', { width: 1200, height: 600, class: 'ent-firma' }); const ctx = cv.getContext('2d'); ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#111';
       let dib = false, trazos = 0, ult = null;
@@ -6662,25 +6658,51 @@ async function entregaPasoAPaso(id, alTerminar) {
       cv.addEventListener('pointermove', e => { if (!dib) return; e.preventDefault(); const q = pos(e); ctx.beginPath(); ctx.moveTo(ult.x, ult.y); ctx.lineTo(q.x, q.y); ctx.stroke(); ult = q; });
       const fin = () => { dib = false; }; cv.addEventListener('pointerup', fin); cv.addEventListener('pointercancel', fin);
       const nombre = h('input', { class: 'ent-input', placeholder: 'Nombre de quien firma (opcional)', value: a.firma_nombre || '' });
-      pon(cuerpo, 
-        h('div', { class: 'ent-ayuda' }, '✍ Que firme con el dedo en el recuadro. La firma sale en el albarán que se le envía.'),
-        a.firma_png ? h('div', { class: 'ent-ok' }, '✔ Ya estaba firmado. Si quiere, puede firmar de nuevo encima.') : null,
+      const zonaFirma = h('div', { class: 'ent-zfirma' },
+        h('div', { class: 'ent-ftit' }, '✍ Firma aquí, con el dedo'),
+        a.firma_png ? h('div', { class: 'ent-ok' }, '✔ Ya estaba firmado. Si quiere, puede firmar de nuevo.') : null,
         cv, nombre,
         B('ghost', '🧽 Borrar y firmar otra vez', () => { ctx.clearRect(0, 0, cv.width, cv.height); trazos = 0; }, 'width:100%;min-height:48px;margin-top:8px'));
-      pie.append(B('guardar', '✔ Guardar firma · Enviar albarán', async () => {
-          if (!trazos) { if (a.firma_png) { paso = 3; pintar(); return; } toast('Falta la firma (o pulsa «Seguir sin firma»)', 'err'); return; }
+      pon(cuerpo,
+        albaranGrande(),
+        h('div', { class: 'ent-ayuda', style: 'margin-top:10px' }, '👀 Repasad producto por producto. Si algo no está bien, toca «✏️ Cambiar algo». Si está todo bien, que firme aquí debajo.'),
+        zonaFirma);
+      pie.append(B('guardar', '✔ Firmado · Siguiente: el pago', () => {
+          if (!trazos) { if (a.firma_png) { paso = 2; pintar(); return; } zonaFirma.scrollIntoView({ behavior: 'smooth', block: 'start' }); toast('Falta la firma: baja hasta el recuadro (o «Sin firma»)', 'err'); return; }
           const png = cv.toDataURL('image/png'), nm = nombre.value.trim(), at = new Date().toISOString();
           colaFi.set(colaFi.get().filter(x => x.pedido !== id).concat([{ pedido: id, firma: png, nombre: nm, at, ts: Date.now() }]));
           d.albaran = Object.assign({}, d.albaran, { firma_png: png, firma_nombre: nm || null, firma_at: at });
-          toast('Firma guardada', 'ok'); sincronizarFirmas(); paso = 3; pintar(); }),
-        h('div', { class: 'ent-fila' }, B('ghost', '← Volver', () => { paso = 1; pintar(); }), B('ghost', 'Seguir sin firma →', () => { paso = 3; pintar(); })));
-    } else if (paso === 3) {
-      titulo.textContent = 'Paso 3 de 4 · Enviarle el albarán firmado';
+          toast('Firma guardada', 'ok'); sincronizarFirmas(); paso = 2; pintar(); }),
+        h('div', { class: 'ent-fila' }, B('ghost', '✏️ Cambiar algo', () => cambiarAlgo()), B('ghost', '✍ Ir a la firma', () => zonaFirma.scrollIntoView({ behavior: 'smooth', block: 'start' })), B('ghost', 'Sin firma →', () => { paso = 2; pintar(); })));
+    } else if (paso === 2) {
+      titulo.textContent = 'Paso 2 de 3 · ¿Paga o lo debe?';
+      const tot = pendiente != null ? pendiente : total;
+      const imp = h('input', { class: 'ent-input ent-imp', type: 'text', inputmode: 'decimal', value: tot != null ? String(tot).replace('.', ',') : '' });
+      const zonaImp = h('div', {});
+      const pintaImp = () => {
+        const p = PAGOS_ENTREGA.find(x => x[0] === pago);
+        pon(zonaImp, !p ? null : p[3] ? h('div', { class: 'ent-caja' }, h('label', { class: 'campo' }, '¿Cuánto paga ahora en ' + p[2].toLowerCase() + '? (€)', imp),
+            h('div', { class: 'ent-fila' }, B('ghost', 'Todo (' + eur(tot) + ' €)', () => { imp.value = String(tot).replace('.', ','); }), B('ghost', 'Paga una parte', () => { imp.value = ''; imp.focus(); })),
+            h('div', { class: 'sub' }, 'Si paga una parte, lo que falte queda pendiente.'))
+          : h('div', { class: 'ent-caja' }, h('b', {}, p[0] === 'transferencia' ? '🏦 Queda pendiente: ' + eur(tot) + ' €. Lo pagará por transferencia.' : '📒 Queda pendiente: ' + eur(tot) + ' € (lo debe).'), h('div', { class: 'sub' }, 'Sale en «Cobros · pendientes».')));
+        botones.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === pago));
+      };
+      const botones = h('div', { class: 'ent-pagos' }, ...PAGOS_ENTREGA.map(([v, ico, txt]) => { const b = B('ent-pago', ico + ' ' + txt, () => { pago = v; pintaImp(); }); b.dataset.v = v; return b; }));
+      if (!pago) pago = tot != null && tot <= 0.009 ? null : (contado() ? 'efectivo' : 'transferencia');
+      pon(cuerpo,
+        h('div', { class: 'ent-total' }, h('div', { class: 'sub' }, tot != null && tot <= 0.009 ? 'Este albarán ya está cobrado' : 'Total a pagar (IVA incluido)'), h('div', { class: 'ent-num' }, tot == null ? '—' : eur(tot <= 0.009 ? total : tot) + ' €'),
+          h('div', { class: 'sub' }, 'Este cliente ' + (contado() ? 'suele pagar al contado.' : 'suele pagar por transferencia o a cuenta.'))),
+        tot != null && tot <= 0.009 ? null : botones, zonaImp);
+      pintaImp();
+      pie.append(B('guardar', '✔ Anotado · Siguiente: enviar el albarán', () => terminar(imp, tot)), B('ghost', '← Volver', () => { paso = 1; pintar(); }));
+    } else {
+      titulo.textContent = 'Paso 3 de 3 · Enviarle el albarán';
       const tel = h('input', { class: 'ent-input', type: 'tel', inputmode: 'tel', placeholder: 'Móvil con WhatsApp (9 cifras)' });
       const zonaWa = h('div', {}, h('div', { class: 'sub' }, 'Buscando su móvil…'));
-      pon(cuerpo, 
+      pon(cuerpo,
+        h('div', { class: 'ent-total' }, h('div', { style: 'font-size:24px;font-weight:900;color:#166534' }, '✔ Entregado'), h('div', { style: 'font-size:17px;font-weight:700;margin-top:4px' }, hecho)),
         PRACTICA ? h('div', { class: 'aviso-card', style: 'border-left:6px solid #b91c1c;font-weight:700' }, '⚠ MODO PRÁCTICAS: no se manda nada a ningún cliente.') : null,
-        h('div', { class: 'ent-ayuda' }, '📲 Se lo mandas ahora a su WhatsApp: los dos veis la misma copia firmada. También le llega solo a su página de cliente y a su correo (si lo tiene).'),
+        h('div', { class: 'ent-ayuda' }, '📲 Mándaselo a su WhatsApp: los dos tenéis la misma copia firmada. También le llega solo a su página de cliente y a su correo (si lo tiene).'),
         envio ? h('div', { class: 'ent-ok' }, '✔ Enviado: ' + envio) : null,
         zonaWa, albaranGrande());
       (async () => {
@@ -6690,34 +6712,7 @@ async function entregaPasoAPaso(id, alTerminar) {
         zonaWa.replaceChildren(h('label', { class: 'campo' }, tel.value ? 'Su WhatsApp (puedes cambiarlo)' : 'No tenemos su móvil: pídeselo y escríbelo', tel));
       })();
       pie.append(B('guardar', '💬 Enviar por WhatsApp', () => enviarWa(tel.value)),
-        h('div', { class: 'ent-fila' }, B('ghost', '← Volver', () => { paso = 2; pintar(); }), B('ghost', '✉️ Otras formas', () => abrirEnvioAlbaran(d))),
-        B(envio ? 'guardar' : 'ghost', 'Siguiente: el pago →', () => { paso = 4; pintar(); }));
-    } else if (paso === 4) {
-      titulo.textContent = 'Paso 4 de 4 · ¿Cómo paga?';
-      const tot = pendiente != null ? pendiente : total;
-      const imp = h('input', { class: 'ent-input ent-imp', type: 'text', inputmode: 'decimal', value: tot != null ? String(tot).replace('.', ',') : '' });
-      const zonaImp = h('div', {});
-      const pintaImp = () => {
-        const p = PAGOS_ENTREGA.find(x => x[0] === pago);
-        pon(zonaImp, !p ? null : p[3] ? h('div', { class: 'ent-caja' }, h('label', { class: 'campo' }, '¿Cuánto paga ahora en ' + p[2].toLowerCase() + '? (€)', imp),
-            h('div', { class: 'ent-fila' }, B('ghost', 'Todo (' + eur(tot) + ' €)', () => { imp.value = String(tot).replace('.', ','); }), B('ghost', 'Paga una parte', () => { imp.value = ''; imp.focus(); })),
-            h('div', { class: 'sub' }, 'Si paga una parte, lo que falte queda pendiente.'))
-          : h('div', { class: 'ent-caja' }, h('b', {}, p[0] === 'transferencia' ? '🏦 Queda pendiente: ' + eur(tot) + ' €. Lo pagará por transferencia.' : '📒 Queda pendiente: ' + eur(tot) + ' € (a deber).'), h('div', { class: 'sub' }, 'Sale en «Cobros · pendientes». Por eso es importante que haya firmado.')));
-        botones.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === pago));
-      };
-      const botones = h('div', { class: 'ent-pagos' }, ...PAGOS_ENTREGA.map(([v, ico, txt]) => { const b = B('ent-pago', ico + ' ' + txt, () => { pago = v; pintaImp(); }); b.dataset.v = v; return b; }));
-      if (!pago) pago = tot != null && tot <= 0.009 ? null : (contado() ? 'efectivo' : 'transferencia');
-      pon(cuerpo, 
-        h('div', { class: 'ent-total' }, h('div', { class: 'sub' }, tot != null && tot <= 0.009 ? 'Este albarán ya está cobrado' : 'Total a pagar (IVA incluido)'), h('div', { class: 'ent-num' }, tot == null ? '—' : eur(tot <= 0.009 ? total : tot) + ' €'),
-          h('div', { class: 'sub' }, 'Este cliente ' + (contado() ? 'suele pagar al contado.' : 'suele pagar por transferencia o a cuenta.'))),
-        tot != null && tot <= 0.009 ? null : botones, zonaImp);
-      pintaImp();
-      pie.append(B('guardar', '✔ Terminar entrega', () => terminar(imp, tot)), B('ghost', '← Volver', () => { paso = 3; pintar(); }));
-    } else {
-      titulo.textContent = '✔ Pedido entregado';
-      pon(cuerpo, h('div', { class: 'ent-total' }, h('div', { class: 'ent-num' }, '✔ Entregado'), h('div', { style: 'font-size:18px;font-weight:700;margin-top:6px' }, hecho)),
-        h('div', { class: 'ent-ayuda' }, '👀 Esta es la copia firmada que tenéis los dos.'), albaranGrande());
-      pie.append(B('guardar', 'Cerrar', () => { ov.remove(); if (alTerminar) alTerminar('En mano'); }));
+        h('div', { class: 'ent-fila' }, B('ghost', '✉️ Otras formas', () => abrirEnvioAlbaran(d)), B(envio ? 'guardar' : 'ghost', '✔ Terminar', () => { ov.remove(); if (alTerminar) alTerminar('En mano'); })));
     }
   }
   function cambiarAlgo() {
@@ -6749,15 +6744,15 @@ async function entregaPasoAPaso(id, alTerminar) {
     } else if (p) hecho = p[0] === 'transferencia' ? 'Pagará por transferencia: ' + eur(tot) + ' € pendientes' : 'No paga ahora: ' + eur(tot) + ' € a deber';
     else hecho = 'Ya estaba cobrado';
     nota += ' · ' + hecho;
-    await marcarEntregado(id, nota); entregado = true; paso = 5; pintar();
+    await marcarEntregado(id, nota); entregado = true; paso = 3; pintar();
   }
   let entregado = false;
   async function salir() {
-    if (paso >= 3 && !entregado) {   /* ya ha firmado / se le ha enviado: la entrega queda registrada aunque no se anote el pago */
+    if (paso >= 2 && !entregado) {   /* ya ha revisado y firmado: la entrega queda registrada aunque no se anote el pago */
       if (!await confirmar('¿Salir sin anotar el pago?\n\nEl pedido quedará ENTREGADO (en mano) y el importe, pendiente de cobro.')) return;
       ov.remove(); await marcarEntregado(id, 'En mano'); if (alTerminar) alTerminar('En mano'); return;
     }
-    if (paso === 5) { ov.remove(); if (alTerminar) alTerminar('En mano'); return; }
+    if (entregado) { ov.remove(); if (alTerminar) alTerminar('En mano'); return; }
     if (!await confirmar('¿Salir? El pedido NO se marca como entregado.')) return; ov.remove();
   }
   pon(cuerpo, h('p', { class: 'vacio' }, 'Cargando el albarán…'));

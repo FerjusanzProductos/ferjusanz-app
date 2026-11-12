@@ -2,6 +2,7 @@
 _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.md. Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda._
 
 ## Por publicar o decidir
+- 🟡 **Entrega en mano, orden nuevo** (albarán arriba + firma → paga o debe → enviar): en PRUEBAS (v221). Falta «Autorizo publicar» (en la normal irá como v222).
 - 🟡 Vídeo «5 skills para Claude Code»: superpowers e impeccable activados (12/11). La 4.ª es **ponytail** (ya instalada). La 5.ª no se vio; Fernando pidió **taste** (activada 12/11). Si en el vídeo la 5.ª es otra, pasar captura. Claude-Mem: solo en su ordenador si lo quiere.
 - 🟡 **Clips cortos de vídeos (skill `shorts`)**, 12/11/2026: lista y probada. Para usarla con YouTube, Fernando tiene que añadir `*.googlevideo.com` en los ajustes de red del entorno «ferjusanz-app» (Settings → Network access → Allowed domains). Luego mandar el primer enlace de un vídeo propio.
 - ✔️ 11/11/2026: **Entrega en mano paso a paso** publicada en la normal (v212) con «Autorizo publicar». Pruebas queda en v211 con lo mismo.
