@@ -112,7 +112,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Clientes **sin IVA = azul**, con IVA = dorado (solo en pantallas internas; el cliente nunca lo ve).
 - Clientes en azul (sin IVA) a 10/11/2026: **Bar Camarero (BACAM)**, **Bar La Torre (PVP)**, **Bar Andorra (BAAND)**, **Bar Delfín** y **Frutas Pedro** (fichas provisionales). Pendiente: que Fernando confirme el resto de la lista y si «Bar Delfín» es la misma ficha que «Bar Delfines» (DEFINES).
 - A los azules se les aplica la línea **«Descuento por productos»** (igual al IVA): pagan el total sin IVA; el IVA sigue en el albarán.
-- **Se factura siempre en Golden Soft**, no desde la app. La copia ROSA del albarán muestra el nombre interno y el código para teclearlo bien.
+- **Hasta el 31/12/2026 se factura en Golden Soft**, no desde la app. **Desde el 1/1/2027 se factura en la app** (plan en `docs/PLAN_FACTURACION.md`). La copia ROSA del albarán muestra el nombre interno y el código para teclearlo bien.
 
 ## Envío del albarán al cliente (desde 10/11/2026)
 - **Correo:** automático al marcar la entrega, desde fernandosanzalba@gmail.com, al correo de la ficha o al que dejó el cliente al escanear el QR.
@@ -128,3 +128,13 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 ## Facturas de proveedores (Fernando, 12/11/2026)
 - El **nº de documento** de cada compra es siempre el **número real** que pone en la factura, nunca el nombre del archivo (MADREMIA manda todas como «Factura_Electronica.pdf»).
 - El archivo de la factura se nombra **«PROVEEDOR · Fra. Nº»** para que se sepa de quién es.
+
+## Facturas emitidas desde la app (Jorge, 12/11/2026; desde el 1/1/2027)
+- Emisor siempre completo: FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. · NIF B87446670 · dirección con CP 28033 · teléfono · ferjusanz@hotmail.com.
+- Cliente siempre completo (nombre, NIF, dirección con CP, teléfono, correo); sin nombre, NIF o dirección con CP no se emite.
+- Fecha = la de emisión. Número correlativo por año con el año dentro (2027-0001…), empieza de cero cada año, sin huecos.
+- **Una factura nunca se borra**: se corrige con una **rectificativa** (serie propia) que dice qué factura corrige.
+- Concepto «Venta de fruta / verdura / patata» y, por producto, base, % IVA, cuota y total; resumen por tipo de IVA.
+- Sello o firma en el PDF. Forma de pago siempre. **Efectivo: máximo 1.000 € por operación** con empresas o autónomos.
+- Todas las ventas se facturan; la app no tendrá ventas fuera de facturación.
+- Listados para Jorge (ventas y compras): fecha, nº, nombre, NIF, CP, concepto, base, % IVA, cuota, total; una fila por tipo de IVA.
