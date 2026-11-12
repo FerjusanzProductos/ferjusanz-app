@@ -6,8 +6,8 @@ Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial 
 ## Versiones
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
-| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v218** ✅ (publicada el 12/11/2026: «sin pedido mínimo · Madrid y Segovia» en `/nuevos-clientes` + v213 `/nuevos-clientes` + Harvey v2: apuntar contactos con confirmación) | GitLab `main` |
-| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v219** ✅ (normal v218 + Harvey: confirmar previstos, con la función `harvey-v2-pruebas`) | GitLab `main` |
+| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v220** ✅ (publicada el 12/11/2026: v218 + Harvey confirma o quita pedidos previstos) | GitLab `main` |
+| **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v219** ✅ (mismo contenido que la normal v220; Harvey con la función `harvey-v2-pruebas`) | GitLab `main` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
 La versión es el texto `ferjusanz-vNNN` de `public/sw.js`. Para comprobar la publicada: descargar el Worker desde la API de Cloudflare (`/workers/scripts/<nombre>/content/v2`) y buscar ese texto.

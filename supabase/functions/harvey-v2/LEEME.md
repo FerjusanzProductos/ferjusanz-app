@@ -16,7 +16,7 @@ siempre con confirmación. La app normal usa `harvey-v2`; la de PRUEBAS usa `har
 |---|---|---|---|
 | 1 | `apuntar_contacto`: contacto nuevo, nota, «volver a llamar el…», estado | tabla `prospectos` (nota se añade, nunca se borra) | ✔️ publicado (v216) |
 | — | `crear_cliente_provisional` (ya existía) | `clientes` | ahora con el mismo sistema de confirmar |
-| 2 | `previstos_dia` + `decidir_previstos`: ver previstos de un día y ✅ confirmar / ❌ quitar | `confirmar_previsto` (la misma de los botones de la app) | 🧪 en pruebas (v219) |
+| 2 | `previstos_dia` + `decidir_previstos`: ver previstos de un día y ✅ confirmar / ❌ quitar | `confirmar_previsto` (la misma de los botones de la app) | ✔️ publicado (v220) |
 | 3 | Preparar pedido desde un WhatsApp pegado | borrador (`harvey.borradores`), nunca pedido real sin confirmar | ⚪ cuando se use la app de verdad |
 | 4 | Preparar recordatorios de cobro | solo texto + apuntar en `harvey.contactos`; nunca envía | ⚪ cuando se use la app de verdad |
 
