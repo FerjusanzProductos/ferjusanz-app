@@ -60,6 +60,19 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - ⚪ Siguiente: anuncio en Facebook/Instagram (cuenta publicitaria de Meta, 5–10 €/día, solo hostelería y colectividades de Madrid norte/noroeste y Segovia) y píxel de Meta en la página.
 - ⚪ Seguimiento automático por correo a los 2, 5 y 10 días (con el Gmail de `albaranes-correo`).
 
+## Facturación 2027: lo que falta (revisión del texto de ChatGPT, 12/11/2026)
+Orden recomendado; **una cosa por sesión**. Texto para empezar: `claude/08-textos-para-empezar-chats/PROMPT_SEPARAR_PRUEBAS.md`.
+1. 🔴 **Separar pruebas y producción**: hoy las dos apps comparten la base de datos `hvydnjaswdexttogsyen`. Diseñar (sin crear nada sin autorización): proyecto Supabase aparte para pruebas (el plan gratuito permite 2 proyectos), archivos, contadores y configuración aparte, copia de datos maestros sin datos personales, coste y cómo volver atrás. **Siguiente paso.**
+2. 🔴 **Copias de seguridad**: Supabase está en plan **gratuito** (sin copias propias). La copia nocturna de GitLab nunca se ha probado recuperándola. Fotos, PDF y firmas no se copian. Para facturar en 2027, valorar plan Pro (unos 25 $/mes).
+3. 🟡 **Contadores de prueba separados** (pedidos, cargas, albaranes, facturas) con reinicio controlado y archivo de lo ensayado. Hoy solo existe `albaran_f_seq` y está sin usar.
+4. 🟡 **Último nº real de albarán de Golden** (serie F, y si hay más series): lo dice Fernando. Antes del arranque, tabla «último nº / siguiente nº» de cada serie.
+5. 🟡 **Ficha de empresa** con NIF, domicilio y datos registrales (ya dados; comprobar con nota simple).
+6. 🟡 **Exportar a Golden**: esperando el archivo de ejemplo y qué formatos importa Golden.
+7. 🟡 **Verifactu**: Jorge dice octubre de 2028, pero a 12/11/2026 **no está en el BOE**. Pedir a Jorge confirmación por escrito y plan B: preguntar al proveedor de Golden si está adaptado para 2027.
+8. 🟡 **Jorge**: factura por entrega o mensual (recapitulativa) y qué es «una operación» para el límite de efectivo.
+9. 🟡 Auditoría de clientes para Carmen (la base ya está: «Revisar fichas», v198 en pruebas): falta añadir datos encontrados, fuente, confianza y estado.
+- ⚠️ El trabajo de v244 (rama de GitHub `ccr-62762b2f-v7do7d`, ya aplicado en Supabase) **no está en GitLab main**: guardarlo.
+
 ## Esperando a Fernando
 - 🟡 Confirmar la **lista completa de clientes sin IVA (azul)** y si «Bar Delfín» es la misma ficha que «Bar Delfines» (DEFINES).
 - 🟡 **Numeración real de albaranes**: al empezar de verdad, decir el último número de Golden (serie F).

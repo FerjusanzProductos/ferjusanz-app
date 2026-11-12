@@ -15,9 +15,9 @@ _Recogido de lo que habló Fernando con **Jorge Ruiz Onetti** (contable), 12–1
 5. **Concepto**: «Venta de fruta», «Venta de verdura», «Venta de patata» (y huevos), según lo vendido.
 6. **Importes**: en **cada producto**: base, % de IVA, cuota de IVA y total. Al final, **resumen por cada tipo de IVA** (base, cuota) y total de la factura.
 7. **Firmada o sellada**: el PDF lleva el sello/firma de la empresa (imagen que facilite Fernando).
-8. **Forma de pago**: efectivo, transferencia, tarjeta… **Efectivo: máximo 1.000 € por operación** cuando el cliente es empresa o autónomo (ley española). La app avisa y no deja apuntar más de 1.000 € en efectivo para una misma factura.
+8. **Forma de pago**: efectivo, transferencia, tarjeta… **Efectivo (Ley 7/2012, art. 7)**: si la operación llega a **1.000 € o más**, con empresa o autónomo, **no se puede pagar nada en efectivo**, ni una parte (corregido 12/11/2026; antes decía «máximo 1.000 €»). La app bloquea el efectivo en esas operaciones y suma los pagos parciales. ⚠️ Jorge: qué cuenta como «operación» en una factura mensual.
 - **Siempre controladas** las facturas emitidas y las recibidas.
-- **Más adelante**: datos del Registro Mercantil (tomo, folio, hoja) en el pie de la factura.
+- **Datos del Registro Mercantil, obligatorios** (art. 24 del Reglamento del Registro Mercantil), dados por Fernando el 12/11/2026: Registro Mercantil de Madrid, Tomo 34.358, Folio 101, Sección 8.ª, Hoja M-618046, Inscripción 1.ª. Domicilio: **C/ Carare, 2 — 28033 Madrid**. ⚠️ Comprobar con nota simple o escritura y que Jorge confirme el domicilio fiscal. Van en la fase 1 (ficha de empresa).
 
 ## 2. Listados para Jorge (compras y ventas, mismo formato)
 Dos listados: **VENTAS** (facturas emitidas) y **COMPRAS** (facturas recibidas). Columnas, en este orden:
@@ -58,4 +58,6 @@ Dos listados: **VENTAS** (facturas emitidas) y **COMPRAS** (facturas recibidas).
 5. **Caja**: entradas y salidas de efectivo, de quién / a quién, con justificante que puede llegar después.
 6. **Banco**: importar Norma 43 / Excel y emparejar cada movimiento con cliente o proveedor.
 7. **Paso a 2027**: prueba completa en Modo prácticas en diciembre, «Autorizo publicar» y empezar el 1/1/2027.
-8. Más adelante: Registro Mercantil en el pie; Verifactu cuando sea obligatorio.
+8. Verifactu cuando sea obligatorio (Registro Mercantil pasa a la fase 1).
+
+**Antes de la fase 2 (revisión del 12/11/2026)**: separar la base de datos de pruebas de la normal, contadores de prueba aparte (serie «PRUEBA» con marca «SIN VALOR FISCAL») y copias de seguridad comprobadas. Ver `docs/PENDIENTES.md`, apartado «Facturación 2027: lo que falta».

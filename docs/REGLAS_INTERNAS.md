@@ -135,6 +135,6 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Fecha = la de emisión. Número correlativo por año con el año dentro (2027-0001…), empieza de cero cada año, sin huecos.
 - **Una factura nunca se borra**: se corrige con una **rectificativa** (serie propia) que dice qué factura corrige.
 - Concepto «Venta de fruta / verdura / patata» y, por producto, base, % IVA, cuota y total; resumen por tipo de IVA.
-- Sello o firma en el PDF. Forma de pago siempre. **Efectivo: máximo 1.000 € por operación** con empresas o autónomos.
+- Sello o firma en el PDF. Forma de pago siempre. **Efectivo (Ley 7/2012, art. 7)**: si la operación con una empresa o autónomo es de **1.000 € o más, no se puede pagar NADA en efectivo** (ni una parte); se suman todos los pagos de la misma operación. Corregido el 12/11/2026 (antes decía «máximo 1.000 €», que estaba mal). ⚠️ Que Jorge confirme qué es «una operación» en una factura mensual con varios albaranes.
 - Todas las ventas se facturan; la app no tendrá ventas fuera de facturación.
 - Listados para Jorge (ventas y compras): fecha, nº, nombre, NIF, CP, concepto, base, % IVA, cuota, total; una fila por tipo de IVA.
