@@ -6,7 +6,7 @@ Leyenda: ✅ comprobado por Claude · 📝 sacado de documentos o del historial 
 ## Versiones
 | App | Dirección | Versión | Origen |
 |---|---|---|---|
-| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v213** ✅ (publicada el 12/11/2026: v212 + página pública `/nuevos-clientes` para captar clientes; su formulario necesita la migración `20261112_web_captacion.sql`) | GitLab `main` |
+| **Normal** (la que usa el equipo) | https://ferjusanz-productos.fernandosanzalba.workers.dev | **v213** ✅ (publicada el 12/11/2026: v212 + página pública `/nuevos-clientes` para captar clientes; formulario funcionando) | GitLab `main` |
 | **Pruebas** (cabecera naranja) | https://ferjusanz-pruebas.fernandosanzalba.workers.dev | **v214** ✅ (mismo contenido que la normal v213) | GitLab `main` |
 | Worker `ferjusanz` | antiguo, sin contenido | — | ⚠️ se puede borrar |
 
