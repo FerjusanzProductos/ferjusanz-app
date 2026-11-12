@@ -150,6 +150,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Todas las ventas se facturan; la app no tendrá ventas fuera de facturación.
 - **Cómo factura la app (fase 2, 12/11/2026)**: solo albaranes **entregados**; una factura junta albaranes del **mismo cliente y del mismo mes** (factura recapitulativa); lo «No servido» no se factura; los descuentos del albarán van como línea en negativo. Series: `2027-0001` (ordinarias) y `R2027-0001` (rectificativas); en la base de pruebas `PRUEBA-…` con «SIN VALOR FISCAL». Rectificativa siempre con motivo; «anular entera» deja libres sus albaranes para la factura buena. Efectivo bloqueado si la factura (o la que se rectifica) llega a 1.000 €. La fecha y el número los pone la base de datos.
 - Listados para Jorge (ventas y compras): fecha, nº, nombre, NIF, CP, concepto, base, % IVA, cuota, total; una fila por tipo de IVA.
+- **El tipo de IVA siempre tiene que estar bien** (Fernando, 13/11/2026): solo tipos legales (0, 2, 4, 5, 10, 21 %) y la cuota de cada fila = base × tipo. La app lo comprueba en los listados y avisa en rojo (⛔) antes de mandar nada a Jorge.
 
 ## Programa de facturación propio (Verifactu) — desde el 12/11/2026
 - FERJUSANZ es la **productora** del programa de facturación de la app. Claude programa y prueba, pero **nunca firma** la declaración responsable ni dice que el programa cumple sin pruebas.

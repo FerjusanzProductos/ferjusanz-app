@@ -2,6 +2,10 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 13/11/2026
+- **v268 publicada en la normal** («Autorizo publicar»): **listados de VENTAS y COMPRAS para Jorge** (fase 4) + **tipo de IVA siempre bien** (Fernando: «que el tipo de IVA siempre esté bien»). Pruebas en v269 (mismo código).
+  - Golden: cuando una factura lleva dos tipos con IVA (4 % y 10 %, o 4 % y 21 %), la base de cada tipo ya **no se reparte con las líneas**: se calcula exacta con la base y la cuota de la factura, así la cuota de cada fila es siempre base × tipo.
+  - Comprobación de **cada fila** en los dos listados: el tipo tiene que ser uno legal (0, 2, 4, 5, 10 o 21 %) y la cuota tiene que corresponder al tipo (margen de redondeo de 3 céntimos). Si no, aviso rojo «⛔» con los números de factura, y «Preparar todo» pide confirmación aparte antes de mandarlo.
+  - Revisadas las 2.069 facturas de Golden de 2026: solo **P/20.453 (30/09/2026)** sale mal (base 323,53 y cuota 14,56 = 4,5 %, imposible; las líneas son todas al 4 %). Hay que mirarla en Golden.
 - **Facturación fase 4: listados de VENTAS y COMPRAS para Jorge**, en PRUEBAS (**v267**). Sin cambios en la base de datos.
   - En Más → «📤 Informes para Jorge»: dos listados nuevos con las **10 columnas** de Jorge (fecha, nº, nombre, NIF, CP, concepto, base, % IVA, cuota, total), **una fila por tipo de IVA** de cada factura y **totales por tipo** al final. **Mensual o trimestral** (botones «📅 Mensual / 🗓️ Trimestral»). Cada uno en **📊 Excel** (.xlsx de verdad: fechas y números que se pueden sumar y ordenar, con filtro en la cabecera), **📄 PDF** (apaisado, con páginas numeradas) y **🔤 CSV**. «Preparar todo» manda los dos en Excel y PDF más cobros, albaranes sin facturar y fichajes (CSV).
   - Sustituyen a los antiguos «Facturas emitidas (Golden)» y «Facturas recibidas» (formato viejo, sin desglose de IVA por fila).

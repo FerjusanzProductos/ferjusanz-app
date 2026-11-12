@@ -13187,6 +13187,19 @@ function ljRepartoGolden(f, lins) {
   const suma = tipos.reduce((a, t) => a + lins[t], 0); const conIva = Math.abs(suma - Number(f.total || 0)) < Math.abs(suma - base);
   let b = tipos.map(t => conIva ? lins[t] / (1 + t / 100) : lins[t]); const sb0 = b.reduce((a, x) => a + x, 0);
   if (Math.abs(sb0) > 0.004) b = b.map(x => x * base / sb0);
+  /* Dos tipos con IVA (p. ej. 4 % y 10 %): la base de cada uno sale EXACTA de la base y la cuota de la factura
+     (b1 + b2 = base sin la parte al 0 %; b1·t1 + b2·t2 = cuota). Las líneas de Golden solo se usan para la parte al 0 %. */
+  const conT = tipos.filter(t => t > 0);
+  if (conT.length === 2) {
+    const [t1, t2] = conT.sort((x, y) => x - y); const b0 = tipos.includes(0) ? ljR(b[tipos.indexOf(0)]) : 0; const resto = ljR(base - b0);
+    const b2 = ljR((cuota - resto * t1 / 100) / ((t2 - t1) / 100)), b1 = ljR(resto - b2);
+    const mismoSigno = x => resto === 0 || Math.sign(x) === 0 || Math.sign(x) === Math.sign(resto);
+    if (mismoSigno(b1) && mismoSigno(b2)) {
+      const partes = [b0 ? { tipo: 0, base: b0, cuota: 0 } : null, { tipo: t1, base: b1, cuota: ljR(b1 * t1 / 100) }, { tipo: t2, base: b2, cuota: ljR(b2 * t2 / 100) }].filter(p => p && (p.base || p.tipo === t1));
+      const dif = ljR(cuota - partes.reduce((a, p) => a + p.cuota, 0)); const dest = partes.filter(p => p.tipo > 0).reduce((m, p) => Math.abs(p.base) > Math.abs(m.base) ? p : m); dest.cuota = ljR(dest.cuota + dif);
+      return { partes, dudosa: Math.abs(dif) > 0.02 };
+    }
+  }
   const partes = tipos.map((t, i) => ({ tipo: t, base: ljR(b[i]) }));
   const may = partes.reduce((m, p, i) => Math.abs(p.base) > Math.abs(partes[m].base) ? i : m, 0);
   partes[may].base = ljR(partes[may].base + base - partes.reduce((a, p) => a + p.base, 0));
@@ -13195,6 +13208,19 @@ function ljRepartoGolden(f, lins) {
   const conIvaPos = partes.filter(p => p.tipo > 0); const dest = conIvaPos.length ? conIvaPos.reduce((m, p) => Math.abs(p.base) > Math.abs(m.base) ? p : m) : partes[may];
   dest.cuota = ljR(dest.cuota + dif);
   return { partes, dudosa: Math.abs(dif) > 0.05 };
+}
+/* Comprobación de cada fila: el tipo tiene que ser uno de los legales y la cuota = base × tipo (con margen de redondeo).
+   f[10] = recargo de equivalencia (solo compras; va sumado en la cuota que ve Jorge). */
+const LJ_TIPOS = [0, 2, 4, 5, 10, 21];
+function ljRevisarIva(filas) {
+  const malTipo = new Set(), malCuota = new Set();
+  filas.forEach(f => { const t = Number(f[7]), iva = f[8] - (f[10] || 0);
+    if (!LJ_TIPOS.includes(t)) malTipo.add(f[1] || '(sin nº)');
+    else if (Math.abs(iva - f[6] * t / 100) > Math.max(0.03, Math.abs(f[6]) * 0.0005)) malCuota.add(f[1] || '(sin nº)'); });
+  const out = [];
+  if (malTipo.size) out.push('⛔ TIPO DE IVA NO VÁLIDO en ' + malTipo.size + ' factura(s): ' + [...malTipo].slice(0, 8).join(', ') + (malTipo.size > 8 ? '…' : '') + '. Corrígelo antes de mandarlo.');
+  if (malCuota.size) out.push('⛔ LA CUOTA NO CORRESPONDE AL TIPO DE IVA en ' + malCuota.size + ' factura(s): ' + [...malCuota].slice(0, 8).join(', ') + (malCuota.size > 8 ? '…' : '') + '. Revísalas antes de mandarlo.');
+  return out;
 }
 async function ljVentas(desde, hasta) {
   const filas = [], avisos = []; let n = 0, dudosas = 0, prueba = 0;
@@ -13221,12 +13247,14 @@ async function ljVentas(desde, hasta) {
   const sinNif = new Set(filas.filter(f => !f[3]).map(f => f[1])).size, sinCp = new Set(filas.filter(f => !f[4]).map(f => f[1])).size;
   if (sinNif || sinCp) avisos.push('⚠️ Faltan datos del cliente: ' + [sinNif ? sinNif + ' factura(s) sin NIF' : '', sinCp ? sinCp + ' sin código postal' : ''].filter(Boolean).join(' y ') + ' (Más › «Clientes sin datos para facturar»).');
   if (dudosas) avisos.push('⚠️ En ' + dudosas + ' factura(s) de Golden el reparto por tipo de IVA no cuadra del todo: la cuota total sí es la de Golden, pero revisa esas filas.');
-  return { tipo: 'ventas', titulo: 'VENTAS (facturas emitidas)', filas, n, avisos, tot: ljTotales(filas), nota: fs.length ? 'Golden no guarda la base por tipo de IVA: la app la reparte con las líneas de cada factura y la cuadra con su base y su total.' : '' };
+  avisos.unshift(...ljRevisarIva(filas));
+  return { tipo: 'ventas', titulo: 'VENTAS (facturas emitidas)', filas, n, avisos, tot: ljTotales(filas), nota: fs.length ? 'Golden no guarda la base por tipo de IVA: la app la calcula con la base y la cuota de cada factura (y la comprueba fila a fila).' : '' };
 }
 async function ljCompras(desde, hasta) {
   const avisos = [];
   const v = await gesTodas(() => sb.from('v_libro_compras').select('factura_id,fecha_factura,numero_factura,proveedor,nif,codigo_postal,concepto,base_imponible,tipo_iva,cuota_iva,cuota_recargo,total').gte('fecha_factura', desde).lte('fecha_factura', hasta).order('fecha_factura').order('numero_factura').order('tipo_iva'));
-  const filas = v.map(x => [x.fecha_factura, x.numero_factura || '', x.proveedor || '', x.nif || '', x.codigo_postal || '', x.concepto || 'Compra de mercaderías', ljR(x.base_imponible), Number(x.tipo_iva), ljR(Number(x.cuota_iva || 0) + Number(x.cuota_recargo || 0)), ljR(x.total)]);
+  const filas = v.map(x => [x.fecha_factura, x.numero_factura || '', x.proveedor || '', x.nif || '', x.codigo_postal || '', x.concepto || 'Compra de mercaderías', ljR(x.base_imponible), Number(x.tipo_iva), ljR(Number(x.cuota_iva || 0) + Number(x.cuota_recargo || 0)), ljR(x.total), ljR(x.cuota_recargo)]);
+  avisos.push(...ljRevisarIva(filas));
   const re = v.filter(x => Number(x.cuota_recargo || 0) !== 0).length;
   try {
     const c = await gesTodas(() => sb.from('v_facturas_recibidas_control').select('id,sin_desglose,falta_nif,falta_cp,no_cuadra,numero').gte('fecha', desde).lte('fecha', hasta));
@@ -13395,6 +13423,8 @@ function vistaGestoria() {
         files.push(new File(['﻿' + r.filas.map(f => f.map(q).join(';')).join('\r\n')], nombreArchivo(t), { type: 'text/csv' })); }
       pintar();
       if (!files.length) { toast('No hay datos de ' + periodo() + ' para mandar.', 'err'); return; }
+      const ivaMal = avisos.join(' ').match(/⛔[^⛔⚠]*/g) || [];
+      if (ivaMal.length && !await confirmar('⛔ HAY FACTURAS CON EL IVA MAL\n\n' + ivaMal.join('\n') + '\n\nLo correcto es corregirlas antes de mandar nada a Jorge.\n¿Seguro que quieres mandarlo IGUALMENTE?')) return;
       if (!await confirmar(periodo() + '\n\nSE MANDAN:\n· ' + van.join('\n· ') + (vacios.length ? '\n\nNO SE MANDAN (sin datos):\n· ' + vacios.join('\n· ') : '') + (avisos.length ? '\n\nOJO, REVISA ANTES:\n' + avisos.join('\n') : '') + '\n\n¿Lo has revisado? Se abrirá «Compartir» (correo o WhatsApp). Nada se envía solo.')) return;
       if (navigator.canShare && navigator.canShare({ files })) await navigator.share({ files, title: 'Ferjusanz · informes ' + periodo(), text: 'Hola Jorge, te mando los informes de Ferjusanz de ' + periodo().toLowerCase() + '.' });
       else { files.forEach(ljBajar); toast('Descargados. Adjúntalos en un correo a Jorge.', 'ok'); }
