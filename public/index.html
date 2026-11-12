@@ -807,7 +807,7 @@ function fetchConTiempo(url, opts) {
 }
 /* Sesión guardada en el móvil (la deja Supabase al entrar): sirve para abrir la app sin conexión */
 function sesionLocal() {
-  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^sb-.*-auth-token$/.test(k)) { const x = JSON.parse(localStorage.getItem(k)); if (x && x.user && x.user.id) return x; } } } catch (e) { }
+  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k === 'sb-' + SUPABASE_URL.split('//')[1].split('.')[0] + '-auth-token') { /* solo la sesión de ESTA base (en pruebas quedaba la de la real y entraba sin permiso) */ const x = JSON.parse(localStorage.getItem(k)); if (x && x.user && x.user.id) return x; } } } catch (e) { }
   return null;
 }
 /* ---- En PRUEBAS no se llama, ni se manda WhatsApp, correo o SMS a nadie (los clientes tienen sus datos reales) ---- */
