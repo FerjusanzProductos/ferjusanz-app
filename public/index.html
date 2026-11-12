@@ -13527,6 +13527,16 @@ async function cajaSubir(file, fecha) {
   const ruta = 'caja/' + String(fecha || hoy()).slice(0, 4) + '/' + uuid() + '.' + ext;
   const up = await sb.storage.from('facturas').upload(ruta, blob, { contentType: ct }); if (up.error) throw up.error; return ruta;
 }
+/* Botones grandes para el justificante: «📷 Hacer foto» o «📎 Elegir foto o PDF». Devuelve { el, archivo() } */
+function cajaElegirArchivo() {
+  let elegido = null; const nom = h('div', { class: 'sub', style: 'margin-top:4px' });
+  const mk = attrs => { const i = h('input', Object.assign({ type: 'file', style: 'display:none' }, attrs)); i.addEventListener('change', () => { if (i.files && i.files[0]) { elegido = i.files[0]; nom.replaceChildren(h('b', { style: 'color:#15803d' }, '✔ Elegido: ' + (elegido.name || 'foto'))); } }); return i; };
+  const cam = mk({ accept: 'image/*', capture: 'environment' }), fic = mk({ accept: 'image/*,application/pdf' });
+  const el = h('div', {}, cam, fic, h('div', { style: 'display:flex;gap:8px' },
+    h('button', { type: 'button', class: 'ghost', style: 'flex:1;min-height:48px', onclick: e => { e.preventDefault(); e.stopPropagation(); cam.value = ''; cam.click(); } }, '📷 Hacer foto'),
+    h('button', { type: 'button', class: 'ghost', style: 'flex:1;min-height:48px', onclick: e => { e.preventDefault(); e.stopPropagation(); fic.value = ''; fic.click(); } }, '📎 Elegir foto o PDF')), nom);
+  return { el, archivo: () => elegido };
+}
 const cajaNum = v => { const n = parseFloat(String(v || '').trim().replace(/\./g, (m, i, s) => s.indexOf(',') >= 0 ? '' : m).replace(',', '.')); return Math.round(n * 100) / 100; };
 /* Formulario para apuntar (m = null) o corregir (m = el apunte) */
 function cajaFormulario(tipo, m, alGuardar) {
@@ -13537,7 +13547,7 @@ function cajaFormulario(tipo, m, alGuardar) {
   const nif = comInput('text', m.nif || '', { placeholder: 'Si es empresa o autónomo' });
   const con = comInput('text', m.concepto || '', { list: idC, placeholder: ent ? 'p. ej. Cobro a cliente' : 'p. ej. Gasolina', autocomplete: 'off' });
   const doc = comInput('text', m.documento || '', { placeholder: 'Nº de factura o ticket (si lo hay ya)' });
-  const arch = h('input', { type: 'file', accept: 'image/*,application/pdf' });
+  const arch = cajaElegirArchivo();
   const motivo = comInput('text', '', { placeholder: 'Por qué se corrige (obligatorio)' });
   const dlP = h('datalist', { id: idL }), dlC = h('datalist', { id: idC }, CAJA_CONCEPTOS[tipo].map(c => h('option', { value: c })));
   let elegido = { cliente_id: m.cliente_id || null, proveedor_id: m.proveedor_id || null };
@@ -13557,7 +13567,7 @@ function cajaFormulario(tipo, m, alGuardar) {
     const fila = { fecha: fec.value, tipo, importe, persona: per.value.trim(), nif: nif.value.trim().toUpperCase().replace(/[\s.\-\/]/g, '') || null, concepto: con.value.trim(), cliente_id: elegido.cliente_id, proveedor_id: elegido.proveedor_id };
     guardar.disabled = true; let ruta = null;
     try {
-      if (nuevo) { const f = arch.files && arch.files[0]; if (f) ruta = await cajaSubir(f, fec.value);
+      if (nuevo) { const f = arch.archivo(); if (f) ruta = await cajaSubir(f, fec.value);
         fila.documento = doc.value.trim() || null; fila.justificante_ruta = ruta;
         const r = await sb.from('caja_movimientos').insert(fila); if (r.error) { if (ruta) await sb.storage.from('facturas').remove([ruta]); throw r.error; }
         toast(fila.documento || ruta ? '✔ Apuntado' : '✔ Apuntado. Falta el justificante: añádelo cuando llegue.', 'ok'); }
@@ -13568,7 +13578,7 @@ function cajaFormulario(tipo, m, alGuardar) {
   return h('div', {}, dlP, dlC,
     nuevo ? h('p', { class: 'sub' }, ent ? 'Dinero en efectivo que ENTRA en caja. Los cobros en efectivo de los albaranes ya entran solos: aquí, solo lo demás.' : 'Dinero en efectivo que SALE de caja. Si el ticket o la factura llega después, apúntalo igual y añádelo luego.') : h('p', { class: 'sub' }, 'Corregir deja apuntado lo de antes, lo de ahora, quién y por qué.'),
     comCampo('Fecha', fec), comCampo('Cuánto (€)', imp), comCampo(ent ? 'De quién' : 'A quién', per), comCampo('NIF (si lo tiene)', nif), comCampo('Concepto', con),
-    nuevo ? comCampo(ent ? 'Factura o albarán' : 'Factura o justificante', doc) : null, nuevo ? comCampo('Foto o PDF del justificante (si lo tienes ya)', arch) : null,
+    nuevo ? comCampo(ent ? 'Factura o albarán' : 'Factura o justificante', doc) : null, nuevo ? h('div', { style: 'margin:8px 0' }, h('div', { class: 'sub', style: 'font-weight:600' }, 'Foto o PDF del justificante (si lo tienes ya)'), arch.el) : null,
     nuevo ? null : comCampo('Motivo de la corrección', motivo), guardar);
 }
 function vistaCaja() {
@@ -13589,17 +13599,17 @@ function vistaCaja() {
     const hist = h('div', { class: 'sub', style: 'margin-top:8px;line-height:1.5' }, h('div', {}, '🕓 Apuntado el ' + fechaES(hoy(new Date(m.created_at))) + (per[m.creado_por] ? ' por ' + per[m.creado_por] : '')), ...m.cambios.map(c => h('div', { style: c.accion === 'anulado' ? 'color:var(--rojo)' : 'color:#b45309' }, '✏️ ' + cajaTextoCambio(c, per))));
     const acc = h('div', {});
     if (!m.anulado) {
-      const doc = comInput('text', m.documento || '', { placeholder: 'Nº de factura o qué ticket es' }); const arch = h('input', { type: 'file', accept: 'image/*,application/pdf' });
+      const doc = comInput('text', m.documento || '', { placeholder: 'Nº de factura o qué ticket es' }); const arch = cajaElegirArchivo();
       const bJ = h('button', { class: 'guardar', style: 'width:100%' }, fj ? '📎 Guardar justificante' : '📎 Guardar');
-      bJ.onclick = async () => { const f = arch.files && arch.files[0]; const d = doc.value.trim() || null;
-        if (!f && d === (m.documento || null)) { toast('Escribe el nº del justificante o elige la foto', 'err'); return; }
-        bJ.disabled = true; let ruta = null;
+      bJ.onclick = async () => { const f = arch.archivo(); const d = doc.value.trim() || null;
+        if (!f && d === (m.documento || null)) { window.alert('Escribe el nº del ticket o la factura, o pulsa «📷 Hacer foto».'); return; }
+        bJ.disabled = true; const t0 = bJ.textContent; bJ.textContent = '⏳ Guardando…'; let ruta = null;
         try { if (f) ruta = await cajaSubir(f, m.fecha); const cambio = { documento: d }; if (ruta) cambio.justificante_ruta = ruta;
           const r = await sb.from('caja_movimientos').update(cambio).eq('id', m.id); if (r.error) { if (ruta) await sb.storage.from('facturas').remove([ruta]); throw r.error; }
           toast('✔ Justificante guardado (queda marcado que se añadió hoy)', 'ok'); cerrar(); cargar(); }
-        catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); bJ.disabled = false; } };
+        catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); window.alert('No se ha guardado el justificante: ' + (isNetErr(e) ? 'no hay conexión.' : msgErr(e))); bJ.disabled = false; bJ.textContent = t0; } };
       const caja = h('div', { class: 'card', style: fj ? 'border-color:var(--rojo)' : '' }, h('b', {}, fj ? '⚠️ Falta el justificante' : '📎 Justificante'), fj ? h('div', { class: 'sub' }, 'Cuando llegue la factura o el ticket, ponlo aquí. Quedará marcado que se añadió después.') : null,
-        comCampo('Factura o justificante', doc), comCampo(m.justificante_ruta ? 'Cambiar la foto o PDF' : 'Foto o PDF', arch), bJ);
+        comCampo('Factura o justificante', doc), h('div', { style: 'margin:8px 0' }, h('div', { class: 'sub', style: 'font-weight:600' }, m.justificante_ruta ? 'Cambiar la foto o PDF' : 'Foto o PDF'), arch.el), bJ);
       const bC = h('button', { class: 'ghost small', onclick: () => { cerrar(); let c2 = null; c2 = hoja('✏️ Corregir apunte', cajaFormulario(m.tipo, m, () => { c2(); cargar(); })); } }, '✏️ Corregir');
       const bA = h('button', { class: 'peligro small', onclick: async () => { const mot = (window.prompt('¿Por qué se anula? (p. ej. «apuntado dos veces»)') || '').trim(); if (!mot) return;
         if (!await confirmar('¿ANULAR este apunte de ' + eur(m.importe) + ' €? No se borra: queda tachado y con el motivo.')) return;
@@ -13613,7 +13623,7 @@ function vistaCaja() {
   }
   function tarjeta(m) {
     const fj = !m.anulado && cajaFaltaJust(m); const ent = m.tipo === 'entrada';
-    const marcas = [m.anulado ? h('span', { class: 'badge', style: 'background:#fee2e2;color:#991b1b' }, '🚫 ANULADO') : null, fj ? h('span', { class: 'badge', style: 'background:#fee2e2;color:#991b1b' }, '⚠️ Falta justificante') : null,
+    const marcas = [m.anulado ? h('span', { class: 'badge', style: 'background:#fee2e2;color:#991b1b' }, '🚫 ANULADO') : null, fj ? h('button', { class: 'small', style: 'background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;font-weight:700', onclick: e => { e.stopPropagation(); detalle(m); } }, '📎 Falta justificante: añadirlo') : null,
       !m.anulado && m.cambios.length ? h('span', { class: 'badge', style: 'background:#fef3c7;color:#92400e' }, '✏️ Cambiado después') : null, m.cobro ? h('span', { class: 'badge', style: 'background:#e0f2fe;color:#075985' }, '💰 Cobro de albarán (entra solo)') : null].filter(Boolean);
     return h('div', { class: 'card', style: 'cursor:' + (m.cobro ? 'default' : 'pointer') + (m.anulado ? ';opacity:.55;text-decoration:line-through' : ''), onclick: m.cobro ? null : () => detalle(m) },
       h('div', { style: 'display:flex;justify-content:space-between;gap:8px;align-items:flex-start' },
@@ -13631,7 +13641,7 @@ function vistaCaja() {
     cont.replaceChildren(
       h('div', { class: 'card', style: 'display:flex;gap:6px' }, cifra('Entra', ent, '#15803d'), cifra('Sale', sal, '#b91c1c'), cifra('Diferencia', ent - sal, ent - sal < 0 ? '#b91c1c' : 'inherit')),
       h('div', { style: 'display:flex;gap:8px;margin:8px 0' }, h('button', { class: 'guardar', style: 'flex:1;background:#15803d;background-image:none', onclick: () => nuevo('entrada') }, '➕ Entra efectivo'), h('button', { class: 'guardar', style: 'flex:1;background:#b91c1c;background-image:none', onclick: () => nuevo('salida') }, '➖ Sale efectivo')),
-      faltan ? h('div', { class: 'aviso-card' }, '⚠️ ' + faltan + ' apunte(s) sin justificante. Tócalos para añadirlo cuando llegue.') : null,
+      faltan ? h('div', { class: 'aviso-card', style: 'cursor:pointer', onclick: () => { const fs = vivos.filter(cajaFaltaJust); if (fs.length === 1) detalle(fs[0]); else { filtro = 'falta'; LS.set('fj_caja_filtro', 'falta'); pintar(); } } }, '⚠️ ' + faltan + ' apunte(s) sin justificante. 👉 Toca aquí para añadirlo.') : null,
       h('div', { class: 'chips' }, ...[['todo', 'Todo'], ['entrada', '➕ Entradas'], ['salida', '➖ Salidas'], ['falta', '⚠️ Sin justificante' + (faltan ? ' (' + faltan + ')' : '')]].map(([v, t]) => h('button', { class: 'chip' + (filtro === v ? ' on' : ''), onclick: () => { filtro = v; LS.set('fj_caja_filtro', v); pintar(); } }, t))),
       ...(lista.length ? lista.map(tarjeta) : [h('p', { class: 'vacio' }, 'No hay apuntes de caja en este mes.')]));
   }

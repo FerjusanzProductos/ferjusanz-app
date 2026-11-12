@@ -2,6 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 13/11/2026
+- **Caja en PRUEBAS v274**: Fernando avisó de que al pulsar para añadir el justificante «no hace caso». La base guarda bien (comprobado con una prueba que se deshace sola) y en un móvil simulado funcionaba; lo confuso era lo que se pulsaba. Ahora: el aviso amarillo «👉 Toca aquí para añadirlo» abre el apunte (o filtra si hay varios), la etiqueta roja es un botón «📎 Falta justificante: añadirlo», y la foto se elige con dos botones grandes «📷 Hacer foto» / «📎 Elegir foto o PDF» (dice «✔ Elegido» al escogerla). Al guardar pone «⏳ Guardando…» y, si falla, sale una ventana con el motivo.
 - **Facturación fase 5: CAJA (efectivo)**, en PRUEBAS (**v273**). Más → «💵 Caja (efectivo) · PRUEBAS» (solo oficina y admin, solo en la app naranja):
   - Botones «➕ Entra efectivo» y «➖ Sale efectivo»: fecha, cuánto, de quién / a quién (con los clientes y proveedores para elegir y su NIF), concepto, nº de factura o ticket y foto o PDF del justificante (opcional). Aviso si llega a 1.000 € (Ley 7/2012).
   - **Justificante que llega después** (gasolina…): se apunta sin él, sale «⚠️ Falta justificante» y se añade luego tocando el apunte; queda marcado «✏️ Cambiado después» con la fecha y quién.
