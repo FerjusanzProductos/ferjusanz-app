@@ -4557,6 +4557,12 @@ async function sifMirarActiva() {
     if (si !== FACTURAR_APP) { FACTURAR_APP = si; if (state.view === 'inicio') render(); }
   } catch (e) { sifActivaMirada = false; }
 }
+/* IBAN de la empresa (sale en la factura cuando se paga por transferencia) */
+const ibanLimpio = t => String(t || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+function ibanValido(t) { const s = ibanLimpio(t); if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(s) || (s.startsWith('ES') && s.length !== 24)) return false;
+  const r = (s.slice(4) + s.slice(0, 4)).replace(/[A-Z]/g, c => String(c.charCodeAt(0) - 55)); let m = 0; for (const d of r) m = (m * 10 + Number(d)) % 97; return m === 1; }
+const ibanBonito = t => ibanLimpio(t).replace(/(.{4})(?=.)/g, '$1 ');
+const sifIbanTxt = (f, e) => f.forma_pago === 'transferencia' && e && e.iban ? 'IBAN para la transferencia: ' + ibanBonito(e.iban) : '';
 const SIF_FORMAS = [['transferencia', '🏦 Transferencia'], ['tarjeta', '💳 Tarjeta'], ['bizum', '📱 Bizum'], ['domiciliacion', '🏧 Domiciliación (recibo)'], ['pagare', '📝 Pagaré o cheque'], ['efectivo', '💶 Efectivo']];
 const SIF_FORMA_TXT = { transferencia: 'Transferencia bancaria', tarjeta: 'Tarjeta', bizum: 'Bizum', domiciliacion: 'Domiciliación bancaria (recibo)', pagare: 'Pagaré o cheque', efectivo: 'Efectivo', compensacion: 'Compensación / abono en la próxima factura' };
 const sifErr = e => String(msgErr(e)).replace(/^[A-Z_]+:\s*/, '');
@@ -4593,6 +4599,7 @@ function sifHtml(d) {
     '<tr style="border-top:1.5px solid #111"><td style="padding:3px 6px"><b>Totales</b></td><td style="text-align:right;padding:3px 6px"><b>' + eur(f.base) + '</b></td><td style="text-align:right;padding:3px 6px"><b>' + eur(f.cuota_iva) + '</b></td>' + (re ? '<td style="text-align:right;padding:3px 6px"><b>' + eur(f.cuota_re) + '</b></td>' : '') + '<td></td></tr></tbody></table>' +
     '<div style="text-align:right;font-size:18px;font-weight:900;margin-top:6px">TOTAL FACTURA: ' + eur(f.total) + ' €</div>' +
     '<div style="margin-top:8px"><b>Forma de pago:</b> ' + esc(SIF_FORMA_TXT[f.forma_pago] || f.forma_pago) + (rect ? '' : ' · <b>Vencimiento:</b> ' + esc(sifVence(f))) + '</div>' +
+    (sifIbanTxt(f, e) ? '<div style="margin-top:4px;font-size:13.5px"><b>' + esc(sifIbanTxt(f, e)) + '</b> (' + esc(e.razon_social) + ')</div>' : '') +
     (f.notas ? '<div><b>Observaciones:</b> ' + esc(f.notas) + '</div>' : '') +
     '<div style="font-size:10px;color:#6b7280;margin-top:10px">' + esc(e.razon_social) + ' · NIF ' + esc(e.nif) + ' · ' + esc([e.direccion, e.codigo_postal, e.localidad].filter(Boolean).join(' ')) + '. ' + esc(e.registro_mercantil || '') + '. La cuota de IVA de cada producto es orientativa; la que vale es la del resumen por tipo de IVA.</div>' +
     (f.prueba ? '<div style="color:#b91c1c;font-weight:700;margin-top:6px;text-align:center">Documento de PRUEBA, hecho en la app de pruebas. SIN VALOR FISCAL.</div>' : '') + '</div>';
@@ -4650,6 +4657,7 @@ function sifPdf(d) {
   tot.forEach((t, k) => doc.texto(t, X[k], y, 9.5, { neg: true, align: k ? 'right' : 'left' })); y += 22;
   doc.rect(X[0] - 8, y - 15, W - M - X[0] + 8, 24, '#166534'); doc.texto('TOTAL FACTURA: ' + eur(f.total) + ' €', W - M - 6, y + 2, 13, { neg: true, color: '#ffffff', align: 'right' }); y += 28;
   doc.texto('Forma de pago: ' + (SIF_FORMA_TXT[f.forma_pago] || f.forma_pago) + (rect ? '' : ' · Vencimiento: ' + sifVence(f)), M, y, 10, { neg: true }); y += 14;
+  if (sifIbanTxt(f, e)) { doc.texto(sifIbanTxt(f, e), M, y, 10.5, { neg: true }); doc.texto('Titular: ' + rs, M, y + 12, 8.5, { color: '#374151' }); y += 26; }
   if (f.notas) parte('Observaciones: ' + f.notas, W - 2 * M, 9).forEach(t => { doc.texto(t, M, y, 9); y += 11; });
   /* Pie en todas las páginas */
   const n = doc.numPaginas();
@@ -4726,14 +4734,17 @@ async function sifRectificar(d, alCambiar) {
 async function sifNueva(pedidos, alTerminar) {
   const r = await sb.rpc('sif_vista_previa', { p_pedidos: pedidos }); if (r.error) { toast(sifErr(r.error), 'err'); return; }
   const v = r.data, c = v.cliente || {}, errs = v.errores || [], avs = v.avisos || [];
-  let forma = v.forma_pago_cliente === 'contado' ? 'efectivo' : 'transferencia'; if (forma === 'efectivo' && !v.efectivo_permitido) forma = 'transferencia';
+  let ibanEmp = null; try { const em = await sb.from('empresa').select('*').maybeSingle(); if (!em.error && em.data) ibanEmp = em.data.iban || ''; } catch (e) { }
+  const sinIban = () => forma === 'transferencia' && ibanEmp === '';
+  let forma =v.forma_pago_cliente === 'contado' ? 'efectivo' : 'transferencia'; if (forma === 'efectivo' && !v.efectivo_permitido) forma = 'transferencia';
   let plazo = v.forma_pago_cliente === 'contado' ? 0 : (v.dias_pago != null ? Number(v.dias_pago) : 30);
   const notas = h('input', { placeholder: 'Observaciones (opcional, salen en la factura)' });
   const chipsF = h('div', { class: 'chips' }), chipsV = h('div', { class: 'chips' }), aviF = h('div', {});
   const iPlazo = h('input', { type: 'number', min: 0, max: 120, value: plazo || 30, style: 'width:70px', oninput: () => { plazo = Math.max(0, parseInt(iPlazo.value || '0', 10)); pinta(); } });
   function pinta() {
     chipsF.replaceChildren(...SIF_FORMAS.map(([k, t]) => { const no = k === 'efectivo' && !v.efectivo_permitido; return h('button', { class: 'chip' + (forma === k ? ' on' : ''), disabled: no, onclick: () => { forma = k; pinta(); } }, t + (no ? ' 🚫' : '')); }));
-    aviF.replaceChildren(...[!v.efectivo_permitido ? h('div', { class: 'aviso-card', style: 'border-left:5px solid #b91c1c;font-size:14px' }, '🚫 EFECTIVO no permitido: la factura llega a ' + eur(v.total) + ' € (1.000 € o más). Entre empresas o profesionales no se puede pagar NADA en efectivo, ni una parte (Ley 7/2012, art. 7).') : Number(v.total) >= 800 && forma === 'efectivo' ? h('div', { class: 'aviso-card', style: 'font-size:14px' }, '⚠️ Cerca del límite: si se le suman más compras de la misma operación y llega a 1.000 €, ya no puede pagar nada en efectivo.') : null].filter(Boolean));
+    aviF.replaceChildren(...[!v.efectivo_permitido ? h('div', { class: 'aviso-card', style: 'border-left:5px solid #b91c1c;font-size:14px' }, '🚫 EFECTIVO no permitido: la factura llega a ' + eur(v.total) + ' € (1.000 € o más). Entre empresas o profesionales no se puede pagar NADA en efectivo, ni una parte (Ley 7/2012, art. 7).') : Number(v.total) >= 800 && forma === 'efectivo' ? h('div', { class: 'aviso-card', style: 'font-size:14px' }, '⚠️ Cerca del límite: si se le suman más compras de la misma operación y llega a 1.000 €, ya no puede pagar nada en efectivo.') : null,
+      sinIban() ? h('div', { class: 'aviso-card', style: 'border-left:5px solid #b45309;font-size:14px' }, '⚠️ Falta el IBAN de la empresa: la factura saldría SIN número de cuenta para la transferencia. Un administrador lo pone en Más → «🏢 Datos de la empresa».') : null].filter(Boolean));
     chipsV.replaceChildren(h('button', { class: 'chip' + (plazo === 0 ? ' on' : ''), onclick: () => { plazo = 0; pinta(); } }, 'Al contado'), h('button', { class: 'chip' + (plazo > 0 ? ' on' : ''), onclick: () => { plazo = Math.max(1, parseInt(iPlazo.value || '30', 10)); pinta(); } }, 'A plazo'), plazo > 0 ? h('label', { class: 'sub' }, iPlazo, ' días (vence el ' + fechaES(hoyMas(plazo)) + ')') : '');
   }
   const L = v.lineas || [], I = v.iva || [];
@@ -4744,7 +4755,7 @@ async function sifNueva(pedidos, alTerminar) {
     '<tr><td colspan="' + (v.recargo_equivalencia ? 4 : 3) + '"><b>TOTAL</b></td><td style="text-align:right;padding-left:12px"><b>' + eur(v.total) + ' €</b></td></tr></table>';
   const bOk = h('button', { class: 'guardar', style: 'width:100%;min-height:54px;font-size:17px;margin-top:10px', disabled: errs.length > 0, onclick: async () => {
     if (forma === 'efectivo' && !v.efectivo_permitido) { toast('Efectivo no permitido en facturas de 1.000 € o más.', 'err'); return; }
-    if (!await confirmar('¿Emitir la factura de ' + nombreCli(c) + ' por ' + eur(v.total) + ' €?\n\nForma de pago: ' + SIF_FORMA_TXT[forma] + '\n\nUna vez emitida tiene número y NO se puede cambiar ni borrar (si hay un error, se hace una rectificativa).')) return;
+    if (!await confirmar('¿Emitir la factura de ' + nombreCli(c) + ' por ' + eur(v.total) + ' €?\n\nForma de pago: ' + SIF_FORMA_TXT[forma] + (sinIban() ? '\n\n⚠️ Saldrá SIN el IBAN (falta en «Datos de la empresa»).' : '') + '\n\nUna vez emitida tiene número y NO se puede cambiar ni borrar (si hay un error, se hace una rectificativa).')) return;
     bOk.disabled = true; bOk.textContent = 'Emitiendo…';
     const q = await sb.rpc('sif_emitir_factura', { p_pedidos: pedidos, p_forma_pago: forma, p_vencimiento: plazo > 0 ? hoyMas(plazo) : null, p_notas: notas.value.trim() || null });
     if (q.error) { bOk.disabled = false; bOk.textContent = '✅ Emitir la factura'; toast(sifErr(q.error), 'err'); return; }
@@ -4821,7 +4832,8 @@ function vistaEmpresa() {
   const puede = state.perfil.rol === 'admin'; const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
   $app.replaceChildren(shell('Datos de la empresa', cont, { volver: volverIni })); renderBanner();
   const CAMPOS = [['razon_social', 'Razón social *'], ['nif', 'NIF *'], ['direccion', 'Dirección *'], ['codigo_postal', 'Código postal *'], ['localidad', 'Localidad *'], ['provincia', 'Provincia'],
-    ['telefono', 'Teléfono'], ['moviles', 'Móviles'], ['email', 'Correo'], ['registro_mercantil', 'Datos del Registro Mercantil (obligatorios en la factura)'], ['lema', 'Lema (debajo del nombre)']];
+    ['telefono', 'Teléfono'], ['moviles', 'Móviles'], ['email', 'Correo'], ['registro_mercantil', 'Datos del Registro Mercantil (obligatorios en la factura)'], ['lema', 'Lema (debajo del nombre)'],
+    ['iban', 'IBAN de la cuenta (sale en las facturas que se pagan por transferencia)']];
   async function cargar() {
     try {
       const r = await sb.from('empresa').select('*').maybeSingle();
@@ -4831,12 +4843,13 @@ function vistaEmpresa() {
   }
   function pintar(e) {
     const f = {};
-    const campo = ([k, t]) => { f[k] = k === 'registro_mercantil' ? h('textarea', { rows: 3, disabled: !puede }) : h('input', { value: e[k] || '', disabled: !puede, inputmode: k === 'codigo_postal' ? 'numeric' : undefined }); if (k === 'registro_mercantil') f[k].value = e[k] || ''; return h('label', { class: 'campo' }, t, f[k]); };
+    const campo = ([k, t]) => { f[k] = k === 'registro_mercantil' ? h('textarea', { rows: 3, disabled: !puede }) : h('input', { value: k === 'iban' ? ibanBonito(e[k]) : e[k] || '', disabled: !puede, placeholder: k === 'iban' ? 'ES00 0000 0000 0000 0000 0000' : undefined, autocapitalize: k === 'iban' ? 'characters' : undefined, inputmode: k === 'codigo_postal' ? 'numeric' : undefined }); if (k === 'registro_mercantil') f[k].value = e[k] || ''; return h('label', { class: 'campo' }, t, f[k]); };
     const sello = h('div', { class: 'card', style: 'background:#fff' }); sello.innerHTML = selloEmpresaSVG(e);
     const nifOk = nifValido(e.nif);
     async function guardar(btn) {
       const fila = {}; CAMPOS.forEach(([k]) => { fila[k] = f[k].value.trim() || null; });
       fila.nif = (fila.nif || '').toUpperCase().replace(/[\s.\-\/]/g, '') || null;
+      if ('iban' in e) { fila.iban = ibanLimpio(fila.iban) || null; if (fila.iban && !ibanValido(fila.iban)) { toast('El IBAN no es correcto: revisa que estén todos los números (en España son ES + 22 cifras).', 'err'); return; } } else delete fila.iban;
       const falta = CAMPOS.filter(([k, t]) => /\*/.test(t) && !fila[k]).map(([, t]) => t.replace(' *', ''));
       if (falta.length) { toast('Falta: ' + falta.join(', '), 'err'); return; }
       if (!/^\d{5}$/.test(fila.codigo_postal)) { toast('El código postal tiene que tener 5 cifras', 'err'); return; }
@@ -4854,7 +4867,7 @@ function vistaEmpresa() {
       nifOk ? null : h('p', { class: 'err' }, 'El NIF guardado no parece correcto: revísalo.'),
       h('div', { class: 'nombre', style: 'margin:6px 0' }, 'Sello (cabecera de la factura)'), sello,
       h('div', { class: 'sub', style: 'margin:-4px 0 12px' }, 'El NIF y los datos del Registro Mercantil van aparte, debajo del sello.'),
-      ...CAMPOS.map(campo), btn,
+      ...CAMPOS.filter(([k]) => k !== 'iban' || 'iban' in e).map(campo), btn,
       h('button', { class: 'ghost', style: 'width:100%;margin-top:14px;color:#b91c1c;border-color:#fca5a5', onclick: () => { window.__cliFiscal = true; go('clientes'); } }, '🧾 Clientes a los que les faltan datos para facturar: ', nCli)].filter(Boolean));
   }
   cargar();
