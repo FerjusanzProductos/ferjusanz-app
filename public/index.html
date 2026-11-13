@@ -13315,7 +13315,7 @@ function ljArchivo(l, formato, periodo, clave) {
 }
 function ljBajar(f) { const u = URL.createObjectURL(f), a = h('a', { href: u, download: f.name }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); }
 const CAJA_APP = !PRACTICA;   // Caja (fase 5): publicada en la normal («Autorizo publicar», 13/11/2026). En el Modo prácticas no sale
-const BANCO_APP = ES_PRUEBAS && !PRACTICA;   // Banco (fase 6): de momento SOLO en la app de PRUEBAS
+const BANCO_APP = !PRACTICA;   // Banco (fase 6): publicado en la normal («Autorizo publicar», 13/11/2026). En el Modo prácticas no sale
 const GES_INFORMES = [
   ['ventas', '📗 Listado de VENTAS (facturas emitidas)', '10 columnas, una fila por tipo de IVA y totales por tipo. Hasta el 31/12/2026 salen de Golden.'],
   ['compras', '📕 Listado de COMPRAS (facturas de proveedores)', '10 columnas, una fila por tipo de IVA y totales por tipo. Concepto: «Compra de mercaderías».'],
