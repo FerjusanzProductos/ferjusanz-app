@@ -5252,6 +5252,39 @@ function panelPush() {
   if (pushSoportado()) pushSuscripcion().then(sub => { activo = !!sub && Notification.permission === 'granted'; pinta(); });
   return caja;
 }
+function panelClave() {
+  if (PRACTICA) return null; // en prácticas no hay usuario real
+  const tipo = { type: 'password', style: 'width:100%;margin-top:6px' };
+  const actual = h('input', Object.assign({ placeholder: 'Contraseña de ahora', autocomplete: 'current-password' }, tipo));
+  const nueva = h('input', Object.assign({ placeholder: 'Contraseña nueva (mínimo 8)', autocomplete: 'new-password' }, tipo));
+  const otra = h('input', Object.assign({ placeholder: 'Repite la nueva', autocomplete: 'new-password' }, tipo));
+  const ver = h('label', { class: 'interruptor', style: 'margin-top:6px' }, h('input', { type: 'checkbox', onchange: e => { [actual, nueva, otra].forEach(i => { i.type = e.target.checked ? 'text' : 'password'; }); } }), 'Mostrar');
+  const msg = h('p', { class: 'sub' });
+  const btn = h('button', { style: 'width:100%;margin-top:8px', onclick: async () => {
+    msg.className = 'err';
+    if (!actual.value || !nueva.value) { msg.textContent = 'Rellena la de ahora y la nueva.'; return; }
+    if (nueva.value.length < 8) { msg.textContent = 'La nueva tiene que tener al menos 8 letras o números.'; return; }
+    if (nueva.value !== otra.value) { msg.textContent = 'Las dos nuevas no son iguales.'; return; }
+    if (nueva.value === actual.value) { msg.textContent = 'La nueva es igual que la de ahora.'; return; }
+    if (!navigator.onLine) { msg.textContent = 'Necesitas conexión.'; return; }
+    btn.disabled = true; msg.className = 'sub'; msg.textContent = 'Cambiando…';
+    try {
+      // Se comprueba la de ahora: así nadie la cambia con el móvil desbloqueado de otro.
+      const r1 = await sb.auth.signInWithPassword({ email: state.user.email, password: actual.value });
+      if (r1.error) throw /invalid login/i.test(String(r1.error.message)) ? new Error('La contraseña de ahora no es correcta.') : r1.error;
+      const r2 = await sb.auth.updateUser({ password: nueva.value });
+      if (r2.error) throw r2.error;
+      actual.value = nueva.value = otra.value = '';
+      msg.className = 'sub'; msg.textContent = '✅ Contraseña cambiada. La próxima vez entra con la nueva.'; toast('Contraseña cambiada', 'ok');
+    } catch (e) {
+      const m = String(e.message || '');
+      msg.className = 'err';
+      msg.textContent = isNetErr(e) ? 'Cobertura muy débil. Prueba otra vez.' : /weak|pwned|characters/i.test(m) ? 'Esa contraseña es muy fácil. Pon otra más larga o con números.' : /same/i.test(m) ? 'La nueva es igual que la de ahora.' : m || 'No se pudo cambiar.';
+    } finally { btn.disabled = false; }
+  } }, 'Cambiar contraseña');
+  return h('details', { class: 'card' }, h('summary', { class: 'nombre' }, '🔑 Cambiar mi contraseña'),
+    h('div', { class: 'sub', style: 'margin-top:6px' }, 'Pon la de ahora y la nueva dos veces. Solo cambia la tuya.'), actual, nueva, otra, ver, btn, msg);
+}
 function panelTema() {
   const t = FJ_TEMA(); const op = (v, n) => h('button', { class: 'chip' + (t === v ? ' on' : ''), onclick: () => { ponTema(v); if (state.view === 'perfil') vistaPerfil(); } }, n);
   return h('div', { class: 'card' }, h('div', { class: 'nombre', style: 'margin-bottom:6px' }, 'Pantalla'),
@@ -5315,7 +5348,7 @@ function vistaPerfil() {
         abierto ? h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Entrada hoy a las ' + fmtHora(abierto.entrada) + (abierto.pendiente ? ' (pendiente de enviar)' : '')) : h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Todavía no has fichado la entrada.'),
         h('button', { class: 'fichar-btn' + (abierto ? ' sal' : ''), onclick: fichar }, abierto ? 'Fichar SALIDA' : 'Fichar ENTRADA'),
         filas.length ? h('div', { style: 'margin-top:12px' }, h('div', { class: 'sub', style: 'margin-bottom:4px' }, 'Mis últimos fichajes'), ...lista) : null),
-      panelAvisos(), panelPush(), panelTema(), panelPracticas(),
+      panelAvisos(), panelPush(), panelTema(), panelClave(), panelPracticas(),
       esOficina() ? h('button', { class: 'ghost', style: 'width:100%;margin-bottom:10px', onclick: () => go('fichajes') }, 'Fichajes del equipo') : null,
       h('button', { class: 'peligro', style: 'width:100%', onclick: salir }, 'Cerrar sesión'));
   }
