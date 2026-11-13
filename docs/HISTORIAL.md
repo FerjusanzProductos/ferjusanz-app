@@ -2,6 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 13/11/2026
+- **SQL del banco aplicado en la base REAL** (Fernando: «Autorizo»), por la API de Supabase, y comprobado: 3 tablas, 6 reglas, 6 permisos (oficina y admin), nada para quien no ha entrado, 0 movimientos. **El banco ya funciona en la app normal (v285).**
 - **Banco publicado en la normal (v285)** («Autorizo publicar»). `BANCO_APP = !PRACTICA`: sale en las dos apps (no en el Modo prácticas). El informe «🏦 Banco» (CSV) va en «📧 Enviar a Jorge por correo» junto a los demás. Si la base no tiene las tablas, la pantalla avisa y el informe sale vacío y no se manda. **Falta el SQL en la base REAL** (`20261115b_banco_norma43.sql`), pendiente del «Autorizo» de Fernando. Pruebas en v286 (mismo código).
 - **Banco probado por Fernando con el fichero de ejemplo (PRUEBAS)**: subió los 9 movimientos y confirmó 4. Dijo que tardaba y no sabía si cargaba → **v284**: el botón va diciendo qué hace («Leyendo el fichero…», «Mirando si ya estaban…», «Guardando N movimientos…»); los movimientos salen enseguida y luego las propuestas («⏳ Buscando de quién es cada movimiento…»); las fichas y facturas se guardan 10 minutos para que al confirmar no vuelva a cargarlo todo.
 - **Banco en PRUEBAS v283**: si se elige un informe de la app (p. ej. «ferjusanz_ventas_2026-T3.xlsx») dice que es un informe para Jorge, no el fichero del banco.
