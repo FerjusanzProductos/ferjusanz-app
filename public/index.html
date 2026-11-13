@@ -13831,6 +13831,7 @@ async function ljBanco(desde, hasta) {
 }
 /* ---------- Subir el fichero ---------- */
 async function bancoSubir(file, alTerminar) {
+  if (/\.(pdf|jpe?g|png|heic|webp|docx?)$/i.test(file.name) || /^(image\/|application\/pdf)/.test(file.type || '')) throw new Error('«' + file.name + '» es un PDF o una foto, no el fichero del banco. Elige el fichero de movimientos que da el banco: Norma 43 (.n43 o .txt) o Excel (.xls, .xlsx, .csv).');
   const buf = await file.arrayBuffer(); const txt = bancoTexto(new Uint8Array(buf.slice(0, 2e6)));
   let movs, origen, cuenta = '';
   if (/\.(n43|aeb|q43|c43|txt|dat)$/i.test(file.name) || bancoEsN43(txt)) {
@@ -13930,7 +13931,7 @@ function vistaBanco() {
   const mover = n => { const [y, m] = mes.split('-').map(Number); const d = new Date(y, m - 1 + n, 1); const v = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); if (v > mesHoy) return; irMes(v); };
   const pintarMes = () => { const [y, m] = mes.split('-').map(Number); etqMes.textContent = MESES_B[m - 1][0].toUpperCase() + MESES_B[m - 1].slice(1) + ' ' + y; bSig.disabled = mes >= mesHoy; bSig.style.opacity = mes >= mesHoy ? '.35' : '1'; };
   const selMes = h('div', { style: 'display:flex;gap:8px;align-items:center;margin:10px 0' }, h('button', { class: 'ghost', style: 'min-height:48px;width:64px;flex:none', onclick: () => mover(-1) }, '◀'), etqMes, bSig); pintarMes();
-  const fic = h('input', { type: 'file', accept: '.n43,.aeb,.q43,.c43,.txt,.dat,.xls,.xlsx,.csv,text/plain,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', style: 'display:none' });
+  const fic = h('input', { type: 'file', style: 'display:none' });   // sin filtro: en Android los .n43 salían grises
   const bSubir = h('button', { class: 'guardar', style: 'width:100%' }, '📥 Subir fichero del banco (Norma 43 o Excel)');
   bSubir.onclick = () => { fic.value = ''; fic.click(); };
   fic.addEventListener('change', async () => { const f = fic.files && fic.files[0]; if (!f) return; const t0 = bSubir.textContent; bSubir.disabled = true; bSubir.textContent = '⏳ Leyendo ' + f.name + '…';
