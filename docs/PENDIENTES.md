@@ -87,7 +87,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
     - ✅ Unidad del pedido en la factura (manojos, cajas, bandejas…): SQL `20261120a` en las dos bases. ⚪ Opcional: igualarla al albarán (singular si es 1, piezas como «ud»).
     - ✅ Poner el **IBAN** en «Datos de la empresa» (hecho el 13/11/2026 en las dos bases).
     - ✅ Bloquear también el EFECTIVO al cobrar en la entrega si el albarán llega a 1.000 €: publicado en la normal (v298). ✅ También en «Cobros» de la oficina (y Deudas y el albarán): publicado en la normal (v300, sin SQL).
-    - ✅ Jorge (13/11/2026): «una operación» es **cada albarán**. Cobrar juntos varios albaranes pequeños en efectivo sí se puede. ⚪ La factura mensual sigue bloqueando el efectivo si llega a 1.000 € (más prudente); cambiarlo solo si Fernando lo pide.
+    - ✅ Jorge (13/11/2026): «una operación» es **cada albarán**. Cobrar juntos varios albaranes pequeños en efectivo sí se puede. ✅ La factura mensual sigue bloqueando el efectivo si llega a 1.000 €: **Fernando decide dejarlo así** (13/11/2026).
     - ⚪ Para facturar de verdad: crear las tablas en la base real (quedan bloqueadas), huella encadenada, QR y envío Verifactu (fase 8) y declaración firmada.
   - ✔️ **Fase 1 (datos fiscales)** publicada en la normal (v255, «Autorizo publicar»). ✔️ Tabla `empresa` creada en pruebas y en la real («listo», 12/11/2026).
   - ✔️ 12/11/2026: 609 567 354 quitado de la factura y de los **albaranes** (v254 en PRUEBAS). Publicado (v255) y función `albaranes-correo` subida.
