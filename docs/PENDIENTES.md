@@ -143,7 +143,7 @@ Orden recomendado; **una cosa por sesión**. Texto para empezar: `claude/08-text
 - 🟡 En GitLab, activar la copia automática a GitHub (Settings → Repository → Mirroring repositories). Mientras tanto, Claude copia a mano después de cada cambio.
 
 ## Plugin «Small Business» (plan del 13/11/2026: `docs/PLAN_SMALL_BUSINESS.md`)
-- 🟡 Fernando elige por dónde empezar: Fase 0 (usar ya las 10 skills con datos de Golden) o Fase 1.1 **«Harvey investiga y prepara la oferta»** (recomendada).
+- 🟡 Fase 1.1 **«Harvey investiga y prepara la oferta»**: hecha en PRUEBAS (v289, 13/11/2026). **Falta para probarla**: (1) Fernando crea una clave de Anthropic aparte con tope de 5 $/mes y la pone en Supabase › proyecto `ferjusanz-pruebas` › Edge Functions › Secrets como `ANTHROPIC_API_KEY` (nunca por el chat); (2) Claude sube `supabase/functions/harvey-v2/index.ts` como `harvey-v2-pruebas` en ese proyecto (conector de Supabase, `verify_jwt` false); (3) Fernando lo prueba; (4) con «Autorizo publicar», subir el mismo código como `harvey-v2` en la real y publicar la app.
 - ⚪ Copiar las skills recomendadas (speed-to-lead, proposal-builder, grant-rfp-writer, grow-pipeline, crm-autopilot, monday-brief, inbox-manager, ticket-deflector, restock, seo-ai-visibility, review-reputation) cuando Fernando lo autorice.
 
 ## Mejoras pedidas (de `claude/08-textos-para-empezar-chats/PROMPTS.md`; recomendado empezar por la 3 y la 6)

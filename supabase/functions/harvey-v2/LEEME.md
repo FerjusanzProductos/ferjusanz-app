@@ -17,10 +17,14 @@ siempre con confirmación. La app normal usa `harvey-v2`; la de PRUEBAS usa `har
 | 1 | `apuntar_contacto`: contacto nuevo, nota, «volver a llamar el…», estado | tabla `prospectos` (nota se añade, nunca se borra) | ✔️ publicado (v216) |
 | — | `crear_cliente_provisional` (ya existía) | `clientes` | ahora con el mismo sistema de confirmar |
 | 2 | `previstos_dia` + `decidir_previstos`: ver previstos de un día y ✅ confirmar / ❌ quitar | `confirmar_previsto` (la misma de los botones de la app) | ✔️ publicado (v220) |
+| 5 | Investigar una empresa en internet (`web_search`/`web_fetch` de Anthropic) y guardar su ficha con `apuntar_contacto` (también correo, web y redes) | `prospectos` | 🟡 en PRUEBAS (v289) |
+| 6 | `tarifa_general` + `crear_oferta`: oferta con productos de la tarifa general (precios copiados, nunca de la IA); la app enseña «📄 Abrir la oferta» con la marca `[OFERTA id=…]` | `listas_precios`, `listas_precios_items`, nota en `prospectos` | 🟡 en PRUEBAS (v289) |
 | 3 | Preparar pedido desde un WhatsApp pegado | borrador (`harvey.borradores`), nunca pedido real sin confirmar | ⚪ cuando se use la app de verdad |
 | 4 | Preparar recordatorios de cobro | solo texto + apuntar en `harvey.contactos`; nunca envía | ⚪ cuando se use la app de verdad |
 
 ## Coste
 Igual que Harvey: cada pregunta son 1–3 llamadas a la IA (con Opus 5.5 y caché, del orden de **1–3 céntimos**;
 con `HARVEY_MODEL=claude-sonnet-5-5`, bastante menos). Confirmar añade un mensaje más (≈1 céntimo).
-No hay costes fijos nuevos ni cambios en la base de datos.
+No hay costes fijos nuevos ni cambios en la base de datos. Investigar una empresa: 1 céntimo por búsqueda (máx. 5) más lo leído, en total unos 5–20 céntimos.
+
+**Ojo (13/11/2026):** la app naranja llama a las funciones del proyecto de pruebas (`pbeuxbwbpmlanbhhnpgy`), que aún no tiene `harvey-v2-pruebas` ni clave de Anthropic. La copia `harvey-v2-pruebas` del proyecto real ya no la usa nadie.
