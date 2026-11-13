@@ -21,7 +21,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
   - ✔️ Fernando (12/11): el orden lo pueden cambiar **todos** (SQL pendiente de aplicar, arriba).
 - ✔️ 12/11/2026: **Avisos en ROJO de precios y pesos que faltan + «atrás» en el portal del cliente** publicados en la normal (v234, «Autorizo publicar»). Pruebas en v233 con lo mismo.
 - ✔️ 12/11/2026: **Arreglos de Preparar → Entregar → Facturar** publicados en la normal (v232, «Autorizo publicar»).
-  - 🟡 Unidades en el albarán (cajas, bandejas… en vez de «ud»): hecho en PRUEBAS v295 (13/11/2026), igual que la factura; falta que Fernando lo vea y «Autorizo publicar».
+  - ✔️ Unidades en el albarán igual que la factura (cajas, bandejas, piezas…): publicado en la normal v297 (13/11/2026).
   - ✔️ 12/11/2026: hoja de **Carga** por repartidor y orden de reparto y correo del albarán con «No servido», publicados en la normal (v236, «Autorizo publicar»).
 - ✔️ 12/11/2026: **🚦 Camino de los pedidos** publicado en la normal (v232, junto con los arreglos de arriba). Que Carmen, Jorge y los preparadores lo vayan mirando y digan qué echan en falta.
 - ✔️ 12/11/2026: **Facturas con retraso** publicado en la normal (v228, junto con el nº real). SQL `20261112c_facturas_con_retraso.sql` aplicado con Fernando («listo»).
