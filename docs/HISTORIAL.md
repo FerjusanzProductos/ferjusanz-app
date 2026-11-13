@@ -2,6 +2,12 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 13/11/2026
+- **Menú más limpio + «Resumen y correo»**, en PRUEBAS (**v278**). Fernando pidió buscar pantallas repetidas (sin tocar el portal de clientes ni pedidos) y decidió:
+  - **Quitada la pantalla «Facturas» (documentos de compra)**: lo mismo se hace en Compras → «Facturas de proveedores». Los documentos no se borran; en la lupa, los que no tienen archivo llevan ahora a Deudas → «Facturas por pagar».
+  - **Un solo botón de precios de compra**: queda «💲 Precios de compra del día» y dentro tiene todas las pestañas (Del día, Por día, Por producto, ⚠️ Raros, 📈 Suben). Quitado «Precios de compra».
+  - **Quitado «Compra para hoy»**; se queda «🧺 Hoja de compra para hoy». La lista de la compra sigue dentro de Compras.
+  - **«Resumen» → «Resumen y correo»**: arriba sale el **📬 Resumen de correo** del día (o el último). Lo guarda Claude con `/resumen-correo` en la tabla nueva `resumen_correo` (`supabase/migrations/20261115a_resumen_correo.sql`, solo lectura para oficina y admin). SQL **pendiente de «Autorizo»**.
+  - Propuestas que quedan sin decidir: juntar Cobros y Deudas (y las 3 «cajas»), «A quién compramos hoy» frente a Trazabilidad, y «Facturas de clientes» cuando se facture desde la app.
 - **SQL de la caja aplicado en la base REAL** (Fernando: «Hazlo tú»). El conector de Supabase volvió a pedir «Aprobar» y caducó (2 veces); se lanzó por la API de Supabase (`api.supabase.com/v1/projects/…/database/query`) y se comprobó: 2 tablas, 5 reglas, 4 permisos. **La caja ya funciona en la app normal (v276).** Fernando: «siempre usa esos caminos» → apuntado en `CLAUDE.md` (regla 7).
 - **Caja publicada en la normal (v276)** («Autorizo publicar»; Fernando: «que le llegue a Jorge también»). `CAJA_APP = !PRACTICA`: sale en las dos apps (no en el Modo prácticas). El informe «💵 Caja (efectivo)» (CSV) va en «📧 Enviar a Jorge por correo» junto a los demás (la función `informes-jorge` ya admite CSV; con la caja son 8 archivos, el máximo es 12). Si la base no tiene las tablas, la pantalla avisa y el informe sale vacío y no se manda (no rompe el envío). SQL en la base REAL aplicado después (ver arriba). Pruebas en v277 (mismo código).
 - **Caja probada por Fernando en la app naranja (v275): «Ya funciona».** Comprobado en la base de pruebas: una salida de 10 € apuntada sin ticket y con el justificante «Ticket1» añadido después (queda registrado como «justificante»).

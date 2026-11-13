@@ -5532,17 +5532,17 @@ function vistaMas() {
       if (navigator.onLine) albaranesSinPublicar(3650).then(l => { num.textContent = String(l.length); num.className = 'num' + (l.length ? '' : ' cero'); b.classList.toggle('nuevo', l.length > 0); window.__PORTAL_PEND = l.length; document.querySelectorAll('.portalbtn').forEach(x => x.classList.toggle('nuevo', l.length > 0)); }).catch(() => { num.textContent = ''; }); else num.textContent = '';
       return b; })(),
     ...g('Trabajo diario', c('✍️', 'Apuntar pedido', () => go('rapido'), V), c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Hoja de carga', () => go('carga'), V), c('🧑‍✈️', 'Reparto', () => go('reparto'), V), c('💶', 'Poner precios', () => go('preciosp'), V),
-      c('🧺', 'Hoja de compra para hoy', () => go('hojacompra'), V), c('🛒', 'Compra para hoy', () => { if (puedeCompras()) { LS.set('fj_compras_modo', 'lista'); go('compras'); } else go('hojacompra'); }, V),
+      c('🧺', 'Hoja de compra para hoy', () => go('hojacompra'), V),
       puedeCompras() ? c('💲', 'Precios de compra del día', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, V) : null, c('♻️', 'Sobrante', () => go('sobrante'), V)),
     ...g('Entregas y pedidos', c('🚦', 'Camino de los pedidos', () => go('camino'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a')),
-    ...g('Compras y mercancía', puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('💶', 'Precios de compra', () => { if (LS.get('fj_precios_modo', 'dia') === 'hoy') LS.set('fj_precios_modo', 'dia'); go('precios'); }, A) : null, puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null, puedeCompras() ? c('🧾', 'Facturas', () => go('facturas'), A) : null),
+    ...g('Compras y mercancía', puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Clientes y productos', c('👥', 'Clientes', () => { window.__cliFiscal = false; go('clientes'); }, Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z)),
-    ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() && FACTURAR_APP ? c('🧾', 'Facturas (desde la app) · PRUEBAS', () => go('facturasapp'), Z) : null, esOficina() ? c('🏢', 'Datos de la empresa', () => go('empresa'), Z) : null, esOficina() ? c('🧾', 'Clientes sin datos para facturar', () => { window.__cliFiscal = true; go('clientes'); }, Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() && CAJA_APP ? c('💵', 'Caja (efectivo)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('caja'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
+    ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() && FACTURAR_APP ? c('🧾', 'Facturas (desde la app) · PRUEBAS', () => go('facturasapp'), Z) : null, esOficina() ? c('🏢', 'Datos de la empresa', () => go('empresa'), Z) : null, esOficina() ? c('🧾', 'Clientes sin datos para facturar', () => { window.__cliFiscal = true; go('clientes'); }, Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen y correo', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() && CAJA_APP ? c('💵', 'Caja (efectivo)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('caja'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('❓', 'Ayuda y guía', () => go('ayuda'), T), c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
   /* «Ver arriba»: cada uno elige qué círculo quiere primero (se recuerda en este móvil). Los círculos se MUEVEN, no se duplican. */
-  const ESPECIAL = { reparto: ['Preparar y repartir', ['Preparar', 'Camino de los pedidos', 'Hoja de carga', 'Reparto', 'Entregas', 'Albaranes', 'Ruta', 'Cobros']], compra: ['Compra en Mercamadrid', ['Hoja de compra para hoy', 'Compra para hoy', 'A quién compramos hoy', 'Compras', 'Facturas de proveedores', 'Precios de compra del día', 'Precios de compra', 'Hoja de carga']] };
+  const ESPECIAL = { reparto: ['Preparar y repartir', ['Preparar', 'Camino de los pedidos', 'Hoja de carga', 'Reparto', 'Entregas', 'Albaranes', 'Ruta', 'Cobros']], compra: ['Compra en Mercamadrid', ['Hoja de compra para hoy', 'A quién compramos hoy', 'Compras', 'Facturas de proveedores', 'Precios de compra del día', 'Hoja de carga']] };
   const modoV = LS.get('fj_vista', state.perfil.rol === 'compras' ? 'compra' : state.perfil.rol === 'preparador' ? 'reparto' : 'todo');
   const lab = n => { const l = n.querySelector('.l'); return l ? (n.title || l.textContent) : ''; };
   let lista = defs; const esp = ESPECIAL[modoV];
@@ -5559,7 +5559,7 @@ function vistaMas() {
     const pool = {}; lista.forEach(([, it]) => it.forEach(n => { pool[lab(n)] = n; }));
     pool['Calendario'] = c('📅', 'Calendario', () => go('calendario'), '#ea580c');
     const PRINC = modoV === 'reparto' ? ['Preparar', 'Camino de los pedidos', 'Hoja de carga', 'Reparto', 'Entregas', 'Cobros', 'Albaranes', 'Ruta', 'Calendario']
-      : modoV === 'compra' ? ['Hoja de compra para hoy', 'Compra para hoy', 'A quién compramos hoy', 'Facturas de proveedores', 'Precios de compra del día', 'Calendario']
+      : modoV === 'compra' ? ['Hoja de compra para hoy', 'A quién compramos hoy', 'Facturas de proveedores', 'Precios de compra del día', 'Calendario']
       : ['Apuntar pedido', 'Calendario', 'Preparar', 'Hoja de carga', 'Reparto', 'Cobros', 'Facturas de proveedores', 'Clientes'];
     const grandes = PRINC.filter(x => pool[x]).map(x => pool[x]);
     bloqueGrande = h('div', { class: 'rej grande' }, ...grandes);
@@ -8170,7 +8170,7 @@ function vistaPrecios() {
   let modo = LS.get('fj_precios_modo', 'dia'), fecha = hoy();
   const cont = h('div', {}), chips = h('div', { class: 'chips' });
   const pintarChips = () => chips.replaceChildren(...[['hoy', 'Del día'], ['dia', 'Por día'], ['producto', 'Por producto'], ['raros', '⚠️ Raros'], ['suben', '📈 Suben']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { LS.set('fj_precios_modo', m); vistaPrecios(); } }, n)));
-  $app.replaceChildren(shell(modo === 'hoy' ? 'Precios de compra del día' : 'Precios de compra', h('div', {}, chips, h('button', { class: 'ghost small', style: 'width:100%;margin:6px 0', onclick: () => rellenarPreciosCompra(() => vistaPrecios()) }, '💶 Rellenar con las facturas los precios que faltan'), cont), { volver: volverIni })); renderBanner(); pintarChips();
+  $app.replaceChildren(shell('Precios de compra del día', h('div', {}, chips, h('button', { class: 'ghost small', style: 'width:100%;margin:6px 0', onclick: () => rellenarPreciosCompra(() => vistaPrecios()) }, '💶 Rellenar con las facturas los precios que faltan'), cont), { volver: volverIni })); renderBanner(); pintarChips();
   const pintar = () => modo === 'hoy' ? pHoy() : modo === 'dia' ? pDia() : modo === 'raros' ? panelPreciosRaros(cont) : modo === 'suben' ? panelSuben(cont) : pProducto();
   async function editarPrecio(l) {
     if (!puedeCompras()) return;
@@ -8807,64 +8807,29 @@ async function visorDoc(url, esPdf, titulo) {
   }
 }
 const TIPOS_DOC = { factura: 'Factura', albaran: 'Albarán del proveedor', hoja: 'Hoja de compra', otro: 'Otro' };
-function vistaFacturas() {
-  state.view = 'facturas'; if (!puedeCompras()) { go('inicio'); return; }
-  let mes = hoy().slice(0, 7), provs = [], docs = [];
-  const cont = h('div', {}), lista = h('div', {});
-  const f = { tipo: h('select', {}, Object.keys(TIPOS_DOC).map(k => h('option', { value: k }, TIPOS_DOC[k]))), prov: h('select', {}), fecha: h('input', { type: 'date', value: hoy() }), importe: h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Opcional' }), nota: h('input', { placeholder: 'Opcional' }) };
-  const foto = h('input', { type: 'file', accept: 'image/*', capture: 'environment', style: 'display:none', onchange: e => subir(e.target.files) });
-  const arch = h('input', { type: 'file', accept: 'image/*,application/pdf', multiple: true, style: 'display:none', onchange: e => subir(e.target.files) });
-  async function subir(files) {
-    files = Array.from(files || []); if (!files.length) return;
-    if (!navigator.onLine) { toast('Necesitas conexión para subir archivos.', 'err'); return; }
-    const imp = f.importe.value.trim() ? parseNum(f.importe.value) : null; let ok = 0;
-    for (const fi of files) { try { await subirDoc(fi, { fecha: f.fecha.value || hoy(), prov: f.prov.value, tipo: f.tipo.value, importe: imp, nota: f.nota.value.trim() }); ok++; } catch (e) { toast(fi.name + ': ' + msgErr(e), 'err'); } }
-    foto.value = ''; arch.value = ''; if (ok) { toast(ok + ' archivo(s) subido(s)', 'ok'); f.nota.value = ''; f.importe.value = ''; mes = (f.fecha.value || hoy()).slice(0, 7); cargar(); }
-  }
-  const sig = (m) => { const [y, mm] = m.split('-').map(Number); const d = new Date(y, mm, 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
-  async function cargar() {
-    lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
-    try {
-      const r = await sb.from('documentos_compra').select('id,fecha,tipo,ruta,nombre,importe,nota,subido_por,created_at,proveedores(nombre)').gte('fecha', mes + '-01').lt('fecha', sig(mes) + '-01').neq('archivado', true).order('fecha', { ascending: false }); if (r.error) throw r.error;
-      docs = r.data; const kids = []; let dia = '';
-      const tot = {}; docs.forEach(d => { if (d.importe != null) tot[d.fecha] = (tot[d.fecha] || 0) + Number(d.importe); });
-      docs.forEach(d => {
-        if (d.fecha !== dia) { dia = d.fecha; kids.push(h('div', { class: 'letra', style: 'text-transform:capitalize' }, fmtDiaLargo(d.fecha + 'T12:00:00') + (tot[d.fecha] ? ' · ' + eur(tot[d.fecha]) : ''))); }
-        const pv = d.proveedores ? uno(d.proveedores) : null;
-        kids.push(h('div', { class: 'card tap fila', onclick: () => ver(d) }, h('div', {}, h('div', { class: 'nombre' }, (d.ruta.endsWith('.pdf') ? '📄 ' : '🧾 ') + (pv ? pv.nombre : 'Sin proveedor')),
-          h('div', { class: 'sub' }, [TIPOS_DOC[d.tipo], d.nota, quienEs(d.subido_por) && 'Subió ' + quienEs(d.subido_por)].filter(Boolean).join(' · '))), d.importe != null ? h('b', {}, eur(d.importe)) : null));
-      });
-      if (!docs.length) kids.push(h('p', { class: 'vacio' }, 'No hay documentos este mes.'));
-      lista.replaceChildren(...kids);
-    } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver los documentos.' : msgErr(e))); }
-  }
-  async function ver(d) {
-    const r = await sb.storage.from('facturas').createSignedUrl(d.ruta, 900); if (r.error) { toast(msgErr(r.error), 'err'); return; }
-    const url = r.data.signedUrl; const esPdf = d.ruta.endsWith('.pdf'); let cerrar;
-    const acc = [h('a', { href: url, target: '_blank', rel: 'noopener', style: 'display:block;text-align:center;padding:12px;border:1px solid var(--borde);border-radius:12px;text-decoration:none;color:var(--verde-osc);font-weight:700' }, esPdf ? 'Abrir PDF' : 'Abrir en grande')];
-    if (esOficina()) acc.push(h('button', { class: 'peligro', onclick: async () => { if (!await confirmar('¿ELIMINAR este documento y su archivo? No se podrá recuperar.')) return; if (!await confirmar('Última confirmación: ¿eliminar de verdad?')) return; const x = await sb.from('documentos_compra').delete().eq('id', d.id); if (x.error) { toast(msgErr(x.error), 'err'); return; } await sb.storage.from('facturas').remove([d.ruta]); cerrar(); cargar(); } }, 'Eliminar documento'));
-    if (esOficina()) acc.push(h('button', { class: 'ghost', onclick: async () => { if (!await confirmar('¿Archivar este documento? Dejará de verse en la lista (no se borra).')) return; const x = await sb.from('documentos_compra').update({ archivado: true }).eq('id', d.id); if (x.error) toast(msgErr(x.error), 'err'); else { cerrar(); cargar(); } } }, 'Archivar documento'));
-    cerrar = hoja(fechaES(d.fecha) + ' · ' + TIPOS_DOC[d.tipo], h('div', { style: 'display:flex;flex-direction:column;gap:10px' }, esPdf ? null : h('img', { src: url, style: 'width:100%;border-radius:10px' }), ...acc));
-  }
-  const mesInp = h('input', { type: 'month', value: mes, onchange: e => { mes = e.target.value || hoy().slice(0, 7); cargar(); } });
-  cont.append(h('div', { class: 'card' }, h('div', { class: 'nombre', style: 'margin-bottom:8px' }, 'Subir factura u hoja de compra'),
-    h('label', { class: 'campo' }, 'Tipo', f.tipo), h('label', { class: 'campo' }, 'Proveedor (puesto de Mercamadrid)', f.prov), h('label', { class: 'campo' }, 'Fecha', f.fecha),
-    h('label', { class: 'campo' }, 'Importe total €', f.importe), h('label', { class: 'campo' }, 'Nota', f.nota),
-    h('div', { style: 'display:flex;gap:8px' }, h('button', { style: 'flex:1', onclick: () => foto.click() }, '📷 Hacer foto'), h('button', { class: 'ghost', style: 'flex:1', onclick: () => arch.click() }, '📎 Elegir archivos')), foto, arch),
-    h('div', { class: 'barra' }, mesInp), lista);
-  $app.replaceChildren(shell('Facturas de compra', cont, { volver: volverIni })); renderBanner();
-  sb.from('proveedores').select('id,nombre').eq('activo', true).order('nombre').then(r => { provs = r.data || []; f.prov.replaceChildren(h('option', { value: '' }, '— sin elegir —'), ...provs.map(p => h('option', { value: p.id }, p.nombre))); });
-  cargar();
-}
-
 /* ---------- Resumen del día (oficina) ---------- */
+/* 📬 Resumen de correo: lo escribe Claude cada mañana (skill /resumen-correo) en la tabla resumen_correo. Aquí solo se lee: el del día elegido o, si no hay, el último anterior. */
+async function pintaResumenCorreo(box, fecha) {
+  const caja = (t, s, cuerpo) => h('details', { class: 'card', style: 'border-left:6px solid #2563eb', open: !!cuerpo },
+    h('summary', { style: 'cursor:pointer' }, h('div', { class: 'nombre' }, '📬 Resumen de correo'), h('div', { class: 'sub' }, t)), cuerpo ? h('div', { style: 'white-space:pre-wrap;margin-top:8px;line-height:1.45' }, cuerpo) : (s ? h('div', { class: 'sub', style: 'margin-top:6px' }, s) : null));
+  box.replaceChildren(caja('Cargando…'));
+  try {
+    const r = await sb.from('resumen_correo').select('fecha,texto,creado').lte('fecha', fecha).order('fecha', { ascending: false }).limit(1);
+    if (r.error) throw r.error;
+    const x = (r.data || [])[0];
+    if (!x) { box.replaceChildren(caja('Todavía no hay resumen de correo', 'Pídeselo a Claude escribiendo «resumen de correo»: lo guarda aquí.')); return; }
+    const mismo = String(x.fecha).slice(0, 10) === fecha;
+    box.replaceChildren(caja(mismo ? 'De este día · ' + fmtHora(x.creado) : 'No hay de este día · el último es del ' + fechaES(String(x.fecha).slice(0, 10)), '', x.texto));
+  } catch (e) { box.replaceChildren(caja(isNetErr(e) ? 'Necesitas conexión para verlo.' : 'Todavía no está disponible.')); }
+}
 function vistaResumen() {
   state.view = 'resumen'; if (!esOficina()) { go('inicio'); return; }
   let fecha = hoy(); const cont = h('div', {});
-  $app.replaceChildren(shell('Resumen del día', cont, { volver: volverIni })); renderBanner();
+  $app.replaceChildren(shell('Resumen del día y correo', cont, { volver: volverIni })); renderBanner();
   async function cargar() {
     const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); cargar(); } });
-    const caja = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); cont.replaceChildren(h('div', { class: 'barra' }, inp, h('button', { class: 'ghost', onclick: () => cargar() }, '↻')), caja);
+    const caja = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); const correo = h('div', {}); cont.replaceChildren(h('div', { class: 'barra' }, inp, h('button', { class: 'ghost', onclick: () => cargar() }, '↻')), correo, caja);
+    pintaResumenCorreo(correo, fecha);
     try {
       try { await cargarGente(); } catch (e) { }
       const d0 = new Date(fecha + 'T00:00:00'), d1 = new Date(d0.getTime() + 86400000);
@@ -13780,13 +13745,11 @@ const BUSCA_PANTALLAS = [
   ['📑', 'Lista de pedidos', 'lista pedidos todos los pedidos historial pedidos', () => go('pedidos')],
   ['💶', 'Poner precios a los pedidos', 'poner precios precio pedidos sin precio', () => go('preciosp')],
   ['🧺', 'Hoja de compra para hoy', 'hoja compra comprar que comprar mercamadrid', () => go('hojacompra')],
-  ['🛒', 'Compra para hoy', 'compra hoy comprar mercamadrid', () => { if (puedeCompras()) { LS.set('fj_compras_modo', 'lista'); go('compras'); } else go('hojacompra'); }],
   ['📥', 'Facturas de proveedores', 'facturas proveedores proveedor factura compra recibidas llegadas correo', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, 'c'],
   ['🛒', 'Compras', 'compras compra lotes lote proveedor', () => go('compras'), 'c'],
   ['🔎', 'A quién compramos hoy', 'quien compramos proveedor proveedores a quien', () => go('quien')],
-  ['💲', 'Precios de compra', 'precios compra coste costes precio compra del dia', () => go('precios'), 'c'],
+  ['💲', 'Precios de compra del día', 'precios compra coste costes precio compra del dia raros suben por producto', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, 'c'],
   ['🔎', 'Trazabilidad', 'trazabilidad lotes lote asignar lotes fifo', () => go('traza'), 'c'],
-  ['🧾', 'Facturas y documentos de compra', 'facturas documentos compra pagadas pagos proveedores', () => go('facturas'), 'c'],
   ['♻️', 'Sobrante', 'sobrante sobra existencias stock almacen sobras', () => go('sobrante')],
   ['💰', 'Cobros', 'cobros cobrar cobrado pagos pago dinero efectivo tarjeta bizum transferencia', () => go('cobros')],
   ['🧮', 'Deudas', 'deudas deuda debe deben dinero pendiente cobro morosos impagados', () => go('deudas')],
@@ -13808,7 +13771,7 @@ const BUSCA_PANTALLAS = [
   ['🏢', 'Datos de la empresa', 'empresa datos fiscales nif cif sello registro mercantil direccion emisor factura ferjusanz', () => go('empresa'), 'o'],
   ['🧾', 'Clientes sin datos para facturar', 'clientes faltan datos nif cif codigo postal direccion facturar fiscales', () => { window.__cliFiscal = true; go('clientes'); }, 'o'],
   ['🗂️', 'Histórico de Golden', 'historico golden ventas antiguas', () => go('golden'), 'o'],
-  ['📊', 'Resumen', 'resumen ventas totales numeros informe', () => go('resumen'), 'o'],
+  ['📊', 'Resumen del día y correo', 'resumen ventas totales numeros informe correo email gmail mañana', () => go('resumen'), 'o'],
   ['📈', 'Rentabilidad', 'rentabilidad ganancia beneficio margen ganamos perdemos', () => go('rentabilidad'), 'o'],
   ['🤝', 'Comercial', 'comercial listas precios recomendaciones guiones web seo', () => go('comercial'), 'o'],
   ['🤵', 'Harvey · a quién escribir hoy', 'harvey whatsapp escribir clientes mensajes leads comercial', () => { LS.set('fj_h2_sub', 'hoy'); go('comercial', { tab: 'harvey' }); }, 'o'],
@@ -13922,7 +13885,7 @@ function vistaBuscar() {
         if (lf.length) kids.push(grupo('📄 Facturas de proveedores · toca para verlas aquí', lf.slice(0, 10).map(x => fila((x.prov || 'Factura') + (x.imp != null ? ' · ' + eur(x.imp) + ' €' : ''), (x.nombre || 'Factura') + ' · ' + (x.fecha ? fechaES(x.fecha) : ''), () => verDocumento(x.ruta, (x.prov || 'Factura') + ' · ' + (x.fecha ? fechaES(x.fecha) : '')), '👁️ Ver')), lf.length > 10));
         else if (mFe && totalF) kids.push(h('p', { class: 'sub' }, 'No hay facturas de ese proveedor con fecha ' + fechaES(mFe) + ' (hay ' + totalF + ' de otras fechas: quita el día para verlas).'));
         const docsSin = docsV.filter(d => !d.ruta).slice(0, 8);
-        kids.push(grupo('Facturas y documentos de compra (sin archivo)', docsSin.map(d => fila(((uno(d.proveedores) || {}).nombre || 'Sin proveedor') + (d.importe != null ? ' · ' + eur(d.importe) + ' €' : ''), (TIPOS_DOC[d.tipo] || d.tipo) + ' · ' + fechaES(d.fecha) + (d.pagada ? ' · pagada' : ''), () => go('facturas')))));
+        kids.push(grupo('Facturas y documentos de compra (sin archivo)', docsSin.map(d => fila(((uno(d.proveedores) || {}).nombre || 'Sin proveedor') + (d.importe != null ? ' · ' + eur(d.importe) + ' €' : ''), (TIPOS_DOC[d.tipo] || d.tipo) + ' · ' + fechaES(d.fecha) + (d.pagada ? ' · pagada' : ''), () => { LS.set('fj_deudas_modo', 'proveedores'); go('deudas'); }))));
       }
       kids.push(grupo('Sobrante (existencias sin vender)', (out.sobra || []).slice(0, 5).map(s => fila((mapP[s.producto_id] ? mapP[s.producto_id].nombre : '') + ' · ' + num(s.cantidad) + ' ' + s.unidad, fechaES(s.fecha), () => go('carga')))));
       if (oficina) {
@@ -14216,7 +14179,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { facturasapp: vistaFacturasApp, caja: vistaCaja, empresa: vistaEmpresa, modoreparto: vistaModoReparto, tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturas: vistaFacturas, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, camino: vistaCamino, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { facturasapp: vistaFacturasApp, caja: vistaCaja, empresa: vistaEmpresa, modoreparto: vistaModoReparto, tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, camino: vistaCamino, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   if (MR.dentro() && state.view === 'inicio' && !state.mrMirado) { state.mrMirado = true; return vistaModoReparto(); }   /* vuelve al modo reparto si se cerró la app */
   v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); if (state.view === 'inicio') setTimeout(mrAuto, 300); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }

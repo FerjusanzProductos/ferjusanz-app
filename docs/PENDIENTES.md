@@ -2,6 +2,8 @@
 _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.md. Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda._
 
 ## Por publicar o decidir
+- 🔴 13/11/2026: **Menú más limpio + «Resumen y correo»** en PRUEBAS (v278). Falta: «Autorizo» para crear la tabla `resumen_correo` (SQL `20261115a_resumen_correo.sql`, en las dos bases), que Fernando lo vea y «Autorizo publicar».
+  - ⚪ Propuestas sin decidir: juntar **Cobros y Deudas** (y Caja del día / Caja (efectivo) / Cuadre de ayer); **«A quién compramos hoy»** frente a Trazabilidad → Confirmar; **«Facturas de clientes»** cuando se facture desde la app (1/1/2027).
 - ✔️ 12/11/2026: **Arreglo del aviso falso «hay una nueva versión»** publicado en la normal (v251, «Autorizo publicar»). Pruebas en v250.
 - ✔️ 12/11/2026: **Usuario de Jorge Ruiz Onetti** (oficina) creado, con contraseña provisional.
   - 🟡 Añadir a la app **«Cambiar mi contraseña»** (en Mi perfil) y **«He olvidado la contraseña»**, para que Jorge (y los demás) puedan poner la suya. Hoy no existe.
