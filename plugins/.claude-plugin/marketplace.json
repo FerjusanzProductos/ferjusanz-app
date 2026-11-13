@@ -1,0 +1,13 @@
+{
+  "name": "ferjusanz-local",
+  "owner": { "name": "Ferjusanz" },
+  "description": "Plugins revisados y guardados dentro del proyecto Ferjusanz.",
+  "plugins": [
+    {
+      "name": "becario-mods",
+      "source": "./becario-mods",
+      "description": "Portero (Explore con Haiku), vigilante de caché y panel de consumo (/mods, /consumo). Revisado 13/11/2026: no abre archivos, no ejecuta programas, no usa internet.",
+      "version": "1.3.0"
+    }
+  ]
+}

@@ -2,6 +2,7 @@
 _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.md. Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda._
 
 ## Por publicar o decidir
+- ⚪ 13/11/2026: **becario-mods** instalado en el proyecto. Si Fernando lo quiere también en su ordenador para otros proyectos: Personalizar → Plugins → Subir plugin con el ZIP. Comprobar en la próxima sesión que `/mods` y `/consumo` responden.
 - 🔴 13/11/2026: **Menú más limpio + «Resumen y correo»** publicado en la normal (v280). ✔️ Tabla `resumen_correo` creada en la real (13/11). ⚪ En la base de pruebas no se pudo (la API no tiene permiso allí); no hace falta salvo que se quiera ver en la naranja.
   - ⚪ Propuestas sin decidir: juntar **Cobros y Deudas** (y Caja del día / Caja (efectivo) / Cuadre de ayer); **«A quién compramos hoy»** frente a Trazabilidad → Confirmar; **«Facturas de clientes»** cuando se facture desde la app (1/1/2027).
 - ✔️ 12/11/2026: **Arreglo del aviso falso «hay una nueva versión»** publicado en la normal (v251, «Autorizo publicar»). Pruebas en v250.
