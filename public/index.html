@@ -7324,6 +7324,10 @@ async function entregaPasoAPaso(id, alTerminar, opts) {
   const cli = () => uno(d.pedido.clientes) || {};
   const contado = () => cli().forma_pago === 'contado';
   const B = (cls, txt, fn, st) => h('button', { class: cls, style: st || '', onclick: fn }, txt);
+  /* Ley 7/2012: si el albarán llega a 1.000 € no se puede cobrar NADA en efectivo (ni una parte). Se mira el total, no lo pendiente. */
+  const sinEfec = () => total != null && total >= 1000;
+  const avisoEfec = () => sinEfec() ? h('div', { class: 'ent-caja', style: 'border:2px solid #b91c1c;background:#fef2f2' }, h('b', {}, '🚫 Efectivo NO: el albarán llega a ' + eur(total) + ' € (1.000 € o más).'), h('div', { class: 'sub' }, 'Por ley no se puede pagar nada en efectivo. Que pague con tarjeta, Bizum o transferencia.')) : null;
+  const botPago = (b, v) => { b.dataset.v = v; if (v === 'efectivo' && sinEfec()) { b.disabled = true; b.textContent += ' 🚫'; } return b; };
   async function cargar() {
     d = await cargarPedido(id);
     const pf = colaFi.get().find(x => x.pedido === id); if (pf) d.albaran = Object.assign({}, d.albaran, { firma_png: pf.firma, firma_nombre: pf.nombre || null, firma_at: pf.at });
@@ -7391,13 +7395,13 @@ async function entregaPasoAPaso(id, alTerminar, opts) {
           : h('div', { class: 'ent-caja' }, h('b', {}, p[0] === 'transferencia' ? '🏦 Queda pendiente: ' + txtPend(tot) + '. Lo pagará por transferencia.' : '📒 Queda pendiente: ' + txtPend(tot) + ' (lo debe).'), h('div', { class: 'sub' }, 'Sale en «Cobros · pendientes».')));
         botones.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === pago));
       };
-      const botones = h('div', { class: 'ent-pagos' }, ...PAGOS_ENTREGA.map(([v, ico, txt]) => { const b = B('ent-pago', ico + ' ' + txt, () => { pago = v; pintaImp(); }); b.dataset.v = v; return b; }));
-      if (!pago) pago = tot != null && tot <= 0.009 && !faltanPr.length ? null : (contado() ? 'efectivo' : 'transferencia');
+      const botones = h('div', { class: 'ent-pagos' }, ...PAGOS_ENTREGA.map(([v, ico, txt]) => botPago(B('ent-pago', ico + ' ' + txt, () => { pago = v; pintaImp(); }), v)));
+      if (!pago) pago = tot != null && tot <= 0.009 && !faltanPr.length ? null : (contado() && !sinEfec() ? 'efectivo' : 'transferencia');
       pon(cuerpo,
         avisoPrecios(),
         h('div', { class: 'ent-total' }, h('div', { class: 'sub' }, tot != null && tot <= 0.009 && !faltanPr.length ? 'Este albarán ya está cobrado' : faltanPr.length ? 'Total con los precios que hay (IVA incluido)' : 'Total a pagar (IVA incluido)'), h('div', { class: 'ent-num' }, tot == null ? '—' : eur(tot <= 0.009 ? total : tot) + ' €'),
           h('div', { class: 'sub' }, 'Este cliente ' + (contado() ? 'suele pagar al contado.' : 'suele pagar por transferencia o a cuenta.'))),
-        tot != null && tot <= 0.009 && !faltanPr.length ? null : botones, zonaImp);
+        tot != null && tot <= 0.009 && !faltanPr.length ? null : avisoEfec(), tot != null && tot <= 0.009 && !faltanPr.length ? null : botones, zonaImp);
       pintaImp();
       pie.append(B('guardar', '✔ Anotado · Siguiente: enviar el albarán', () => terminar(imp, tot)), B('ghost', '← Volver', () => { paso = 1; pintar(); }));
     } else {
@@ -7428,7 +7432,7 @@ async function entregaPasoAPaso(id, alTerminar, opts) {
     const imp = h('input', { class: 'ent-input ent-imp', type: 'text', inputmode: 'decimal', value: tot != null ? String(tot).replace('.', ',') : '' });
     const zona = h('div', {});
     let F = null;
-    const bot = ([v, ico, txt]) => { const b = B('ent-pago' + (pago === v ? ' on' : ''), ico + ' ' + txt, () => { pago = v; pinta(); }); b.dataset.v = v; return b; };
+    const bot = ([v, ico, txt]) => botPago(B('ent-pago' + (pago === v ? ' on' : ''), ico + ' ' + txt, () => { pago = v; pinta(); }), v);
     const ahora = PAGOS_ENTREGA.filter(x => x[3]), luego = PAGOS_ENTREGA.filter(x => !x[3]);
     const grupo = h('div', {});
     function pinta() {
@@ -7446,13 +7450,13 @@ async function entregaPasoAPaso(id, alTerminar, opts) {
       else if (p || cobrado) k.push(h('details', { class: 'ent-caja' }, h('summary', { style: 'font-weight:800;font-size:17px;cursor:pointer;padding:6px 0' }, '✍ Que firme también (si quiere)'), F.zona));
       zona.replaceChildren(...k);
     }
-    if (!pago && !cobrado) pago = contado() ? 'efectivo' : 'transferencia';
+    if (!pago && !cobrado) pago = contado() && !sinEfec() ? 'efectivo' : 'transferencia';
     pon(cuerpo,
       avisoPrecios(),
       h('div', { class: 'ent-total' }, h('div', { class: 'sub' }, cobrado ? 'Este albarán ya está cobrado' : faltanPr.length ? 'Total con los precios que hay (IVA incluido)' : 'Total a pagar (IVA incluido)'), h('div', { class: 'ent-num' }, tot == null ? '—' : eur(cobrado ? total : tot) + ' €'),
         h('div', { class: 'sub' }, 'Este cliente ' + (contado() ? 'suele pagar al contado.' : 'suele pagar por transferencia o a cuenta.')), avisoIvaReparto(cli())),
       cli().sin_iva && !(Number(d.pedido.descuento_base) > 0) ? h('div', { class: 'ent-caja', style: 'border:2px solid #dc2626;background:#fef2f2' }, h('b', { style: 'font-size:17px' }, '⚠ Cliente SIN IVA, pero a este albarán le falta la línea de descuento.'), h('div', { class: 'sub' }, 'El total de arriba lleva el IVA. Llama a la oficina antes de cobrar.')) : null,
-      cobrado ? null : grupo, zona);
+      cobrado ? null : avisoEfec(), cobrado ? null : grupo, zona);
     pinta();
     pie.append(B('guardar', '✔ Terminar la entrega', async () => {
         const p = PAGOS_ENTREGA.find(x => x[0] === pago);
@@ -7482,6 +7486,7 @@ async function entregaPasoAPaso(id, alTerminar, opts) {
   }
   async function terminar(imp, tot) {
     const p = PAGOS_ENTREGA.find(x => x[0] === pago); let nota = 'En mano';
+    if (pago === 'efectivo' && sinEfec()) { toast('Efectivo no permitido: el albarán llega a 1.000 € o más.', 'err'); return; }
     if (p && p[3]) {
       const n = parseNum(imp.value); if (n === null || n <= 0) { toast('Escribe cuánto paga', 'err'); return; }
       if (tot != null && !faltanPr.length && n > tot + 0.01) { toast('Es más de lo que debe (' + eur(tot) + ' €)', 'err'); return; }
