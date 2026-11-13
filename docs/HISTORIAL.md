@@ -2,6 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 13/11/2026
+- **Banco en PRUEBAS v281**: el texto «(en pruebas)» de los nombres de la base de pruebas ya no cuenta al comparar nombres. Fichero Norma 43 de EJEMPLO con datos INVENTADOS (cuenta …2345, 9 movimientos con clientes de la base de pruebas) para que Fernando lo pruebe sin fichero del banco; esos movimientos se quedan en la base de pruebas (no se pueden borrar).
 - **Tabla `resumen_correo` creada en la base REAL** («Autorizo»), por la API de Supabase; comprobado: tabla, protección (RLS) y 1 regla de lectura (oficina y admin). En la base de **pruebas** la API responde «sin permisos», así que allí no está: la app naranja enseña «Todavía no está disponible» en el recuadro del correo. La skill `/resumen-correo` guarda solo en la real.
 - **v280 publicada en la normal** («Autorizo publicar»): menú más limpio y «📊 Resumen y correo» (código de pruebas v278, sin el banco de la fase 6). Se publicó primero como v279, pero otra sesión había puesto v279 en pruebas a la vez; se republicó como v280 para no repetir número. La tabla `resumen_correo` sigue pendiente de «Autorizo»: hasta entonces el recuadro del correo dice «Todavía no está disponible».
 - **Facturación fase 6: BANCO (Norma 43 / Excel)**, en PRUEBAS (**v279**; junta lo del menú más limpio de la v278). Más → «🏦 Banco · PRUEBAS» (solo oficina y admin, solo en la app naranja):
