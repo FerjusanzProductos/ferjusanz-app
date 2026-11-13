@@ -25,7 +25,7 @@ Se enciende **solo si están las 5 cosas**:
 | Cuándo | Qué |
 |---|---|
 | ✔️ 13/11 | SQL de la fase 7 preparado y probado en una base de ensayo (ver «Lo que queda listo»). Cambio en la app: el botón «🧾 Facturas» sale en la normal **solo** cuando la base lo diga (hoy, no). App naranja v287. |
-| Tras «Autorizo» | Crear las tablas de facturas **apagadas** en la base real y comprobar que la siguiente es **2027-0001** y que no se puede emitir nada. |
+| ✔️ 13/11 | Tablas de facturas creadas **apagadas** en la base real («Autorizo»): siguiente **2027-0001**, no se puede emitir nada. |
 | 16–30/11 (una por sesión) | Mejoras que pide la prueba: **marcar la factura como cobrada** al confirmar la transferencia en el Banco (hoy se marca a mano); **IBAN** en la factura cuando es por transferencia; **unidad buena** en la factura (manojo, caja, bandeja… en vez de «ud»); **bloquear el efectivo** también al cobrar en la entrega si llega a 1.000 €; «**Cambiar mi contraseña**». |
 | Cada lunes hasta el 22/12 | Mirar si el aplazamiento de Verifactu ha salido en el BOE y avisar a Fernando. |
 | Día de la prueba (15–18/12) | Preparar el **fichero del banco de prueba** con el importe exacto de la factura de transferencia; acompañar la prueba y apuntar fallos. |
@@ -38,7 +38,7 @@ Se enciende **solo si están las 5 cosas**:
 ### 👤 Fernando
 | Cuándo | Qué |
 |---|---|
-| Ahora | Leer el SQL (abajo) y escribir **«Autorizo»** para crearlo en la base real (queda apagado). Pegar `supabase/pegar/FACTURAS_2027_PRUEBAS.sql` en la base de **pruebas** (Supabase › ferjusanz-pruebas › SQL Editor). |
+| Ahora | ✔️ «Autorizo» dado (13/11). Pegar `supabase/pegar/FACTURAS_2027_PRUEBAS.sql` en la base de **pruebas** (Supabase › ferjusanz-pruebas › SQL Editor). |
 | Antes del 20/11 | 🔴 Sacar de Golden la **lista de clientes en Excel** (código, nombre, NIF, dirección, CP, localidad) para cargar los NIF que faltan. |
 | Antes del 30/11 | 🔴 Decidir con Jorge los **clientes «sin IVA»** (todas las ventas facturadas; si se quiere, bajar el precio). Sin esto no se factura desde la app. |
 | Antes del 30/11 | Hablar con **Golden**: que siga disponible en enero (Plan B) y **cómo guardar todo el histórico** de facturas (hay que conservarlas 4–6 años aunque se deje Golden). |
