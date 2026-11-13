@@ -87,7 +87,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
     - ✅ Unidad del pedido en la factura (manojos, cajas, bandejas…): SQL `20261120a` en las dos bases. ⚪ Opcional: igualarla al albarán (singular si es 1, piezas como «ud»).
     - ✅ Poner el **IBAN** en «Datos de la empresa» (hecho el 13/11/2026 en las dos bases).
     - ✅ Bloquear también el EFECTIVO al cobrar en la entrega si el albarán llega a 1.000 €: publicado en la normal (v298). ✅ También en «Cobros» de la oficina (y Deudas y el albarán): publicado en la normal (v300, sin SQL).
-    - 🟡 Jorge: si «una operación» para el efectivo es la factura mensual o cada albarán (hoy la app usa el total de la factura, lo más prudente).
+    - ✅ Jorge (13/11/2026): «una operación» es **cada albarán**. Cobrar juntos varios albaranes pequeños en efectivo sí se puede. ⚪ La factura mensual sigue bloqueando el efectivo si llega a 1.000 € (más prudente); cambiarlo solo si Fernando lo pide.
     - ⚪ Para facturar de verdad: crear las tablas en la base real (quedan bloqueadas), huella encadenada, QR y envío Verifactu (fase 8) y declaración firmada.
   - ✔️ **Fase 1 (datos fiscales)** publicada en la normal (v255, «Autorizo publicar»). ✔️ Tabla `empresa` creada en pruebas y en la real («listo», 12/11/2026).
   - ✔️ 12/11/2026: 609 567 354 quitado de la factura y de los **albaranes** (v254 en PRUEBAS). Publicado (v255) y función `albaranes-correo` subida.
@@ -125,7 +125,7 @@ Orden recomendado; **una cosa por sesión**. Texto para empezar: `claude/08-text
 5. 🟡 **Ficha de empresa** con NIF, domicilio y datos registrales (ya dados; comprobar con nota simple).
 6. 🟡 **Exportar a Golden**: esperando el archivo de ejemplo y qué formatos importa Golden.
 7. 🟡 **Verifactu**: Jorge dice octubre de 2028, pero a 12/11/2026 **no está en el BOE**. Pedir a Jorge confirmación por escrito y plan B: preguntar al proveedor de Golden si está adaptado para 2027.
-8. 🟡 **Jorge**: factura por entrega o mensual (recapitulativa) y qué es «una operación» para el límite de efectivo.
+8. 🟡 **Jorge**: factura por entrega o mensual (recapitulativa) (✅ «una operación» para el efectivo = cada albarán, confirmado el 13/11/2026).
 9. 🟡 Auditoría de clientes para Carmen (la base ya está: «Revisar fichas», v198 en pruebas): falta añadir datos encontrados, fuente, confianza y estado.
 10. 🔴 **Productor del programa de facturación (Verifactu)**, 12/11/2026: diagnóstico y borrador en `docs/SIF_PRODUCTOR/LEEME.md`. Falta: Jorge confirma si hay SII, fecha vigente en el BOE y que FERJUSANZ es productora; escritura/nota simple para saber quién firma; certificado electrónico de representante; separar la facturación en un módulo con versión propia (SIF 1.0.0); programar registros, huella encadenada, bloqueo de borrado, QR y envío VERI\*FACTU; pasar `docs/SIF_PRODUCTOR/PRUEBAS_TECNICAS.md`; cotejar art. 13 RD 1007/2023 y art. 15 Orden HAC/1177/2024 en el BOE; firmar la declaración (nunca Claude). **Plan B: Golden** si el 1/1/2027 no está todo.
    - ⭐ **NO estamos en el SII** (Fernando, 12/11/2026) → **Verifactu SÍ aplica desde octubre de 2028** (según Jorge). Desde el 1/1/2027 la app factura ya preparada para Verifactu; antes de oct. 2028: QR, envío a la AEAT, pruebas, certificado FNMT y declaración firmada. Listados para Jorge en Excel, CSV y PDF.

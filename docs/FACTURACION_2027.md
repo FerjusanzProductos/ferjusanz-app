@@ -60,7 +60,7 @@ Se enciende **solo si están las 5 cosas**:
 ### 🧮 Jorge (contable) — mejor por escrito, antes del 15/12
 1. ¿Ha salido en el BOE el aplazamiento de Verifactu? ¿Nos da el visto bueno para facturar con la app desde el 1/1/2027 sin la declaración (que se firmaría antes de oct. 2028)?
 2. Clientes «sin IVA»: cómo dejarlo todo facturado.
-3. ¿Qué es «una operación» para el límite de 1.000 € en efectivo: cada albarán o la factura del mes? (La app usa la factura: lo más prudente.)
+3. ¿Qué es «una operación» para el límite de 1.000 € en efectivo: cada albarán o la factura del mes? ✅ Jorge, 13/11/2026: **cada albarán**. (La app sigue usando la factura: más prudente.)
 4. ¿Factura por entrega o una al mes por cliente? (La app hace la mensual, con todos los albaranes del mes.)
 5. Las facturas de diciembre que se hagan en Golden: ¿con fecha 31/12/2026 aunque se hagan en enero?
 6. Series: **2027-0001** (ordinarias) y **R2027-0001** (rectificativas), ¿bien?
