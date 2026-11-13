@@ -2,6 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 13/11/2026
+- **Banco probado por Fernando con el fichero de ejemplo (PRUEBAS)**: subió los 9 movimientos y confirmó 4. Dijo que tardaba y no sabía si cargaba → **v284**: el botón va diciendo qué hace («Leyendo el fichero…», «Mirando si ya estaban…», «Guardando N movimientos…»); los movimientos salen enseguida y luego las propuestas («⏳ Buscando de quién es cada movimiento…»); las fichas y facturas se guardan 10 minutos para que al confirmar no vuelva a cargarlo todo.
 - **Banco en PRUEBAS v283**: si se elige un informe de la app (p. ej. «ferjusanz_ventas_2026-T3.xlsx») dice que es un informe para Jorge, no el fichero del banco.
 - **Banco en PRUEBAS v282**: Fernando eligió sin querer un PDF (comprobante de alquiler de coche) y salió un aviso confuso de «Excel». Ahora, si se elige un PDF o una foto, lo dice claro; y el selector de archivos ya no filtra (en Android los .n43 podían salir grises). Ejemplo también en .txt.
 - **Banco en PRUEBAS v281**: el texto «(en pruebas)» de los nombres de la base de pruebas ya no cuenta al comparar nombres. Fichero Norma 43 de EJEMPLO con datos INVENTADOS (cuenta …2345, 9 movimientos con clientes de la base de pruebas) para que Fernando lo pruebe sin fichero del banco; esos movimientos se quedan en la base de pruebas (no se pueden borrar).

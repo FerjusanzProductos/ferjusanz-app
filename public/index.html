@@ -13569,6 +13569,7 @@ function vistaCaja() {
   const abrir = (tit, cuerpo) => { const c = hoja(tit, cuerpo); return c; };
   const nuevo = tipo => { let cerrar = null; cerrar = abrir(tipo === 'entrada' ? '➕ Entra efectivo' : '➖ Sale efectivo', cajaFormulario(tipo, null, () => { cerrar(); cargar(); })); };
   function detalle(m) {
+    if (!M) { toast('Un momento: estoy buscando las propuestas…', 'err'); return; }
     let cerrar = null; const per = datos.per; const fj = cajaFaltaJust(m);
     const lin = (a, b) => b ? h('div', { style: 'padding:3px 0' }, h('span', { class: 'sub' }, a + ': '), h('b', {}, b)) : null;
     const hist = h('div', { class: 'sub', style: 'margin-top:8px;line-height:1.5' }, h('div', {}, '🕓 Apuntado el ' + fechaES(hoy(new Date(m.created_at))) + (per[m.creado_por] ? ' por ' + per[m.creado_por] : '')), ...m.cambios.map(c => h('div', { style: c.accion === 'anulado' ? 'color:var(--rojo)' : 'color:#b45309' }, '✏️ ' + cajaTextoCambio(c, per))));
@@ -13736,14 +13737,17 @@ function bancoParecido(nombre, pal) {
 async function bancoMaestros(desde) {
   const M = { clientes: [], proveedores: [], facturas: [], memoria: [], usadas: {} };
   const tryq = async f => { try { return await f(); } catch (e) { return []; } };
+  const cache = bancoMaestros.cache; const fresco = cache && cache.desde === desde && Date.now() - cache.t < 600000;   // fichas y facturas: 10 min
   const [cl, pr, gf, sf, fr, conf] = await Promise.all([
+    ...(fresco ? cache.datos.map(x => Promise.resolve(x)) : [
     tryq(() => gesTodas(() => sb.from('clientes').select('id,codigo,nombre,nombre_comercial,nif,codigo_postal,alias'))),
     tryq(() => gesTodas(() => sb.from('proveedores').select('*'))),
     tryq(() => gesTodas(() => sb.from('golden_facturas').select('id,numero,serie,fecha,cliente_codigo,cliente_nombre,total,borrador').gte('fecha', desde).eq('borrador', false))),
     tryq(() => gesTodas(() => sb.from('sif_facturas').select('id,codigo,fecha,cliente_id,cliente,total').gte('fecha', desde))),
-    tryq(() => gesTodas(() => sb.from('facturas_recibidas').select('id,fecha_factura,numero_factura,proveedor_id,total_factura,nif_proveedor,cp_proveedor').gte('fecha_factura', desde))),
+    tryq(() => gesTodas(() => sb.from('facturas_recibidas').select('id,fecha_factura,numero_factura,proveedor_id,total_factura,nif_proveedor,cp_proveedor').gte('fecha_factura', desde))),]),
     tryq(() => gesTodas(() => sb.from('banco_movimientos').select('id,tipo,concepto,quien_tipo,cliente_id,proveedor_id,persona,facturas').eq('estado', 'confirmado').gte('fecha', comSumaDias(desde, -200)))),
   ]);
+  if (!fresco) bancoMaestros.cache = { desde, t: Date.now(), datos: [cl, pr, gf, sf, fr] };
   M.clientes = cl.map(c => ({ tipo: 'cliente', id: c.id, codigo: c.codigo, nombre: c.nombre || c.nombre_comercial || '', nombres: [c.nombre, c.nombre_comercial, c.alias].filter(Boolean), nif: c.nif || '', cp: c.codigo_postal || '' })).filter(c => c.nombre);
   M.proveedores = pr.map(p => ({ tipo: 'proveedor', id: p.id, nombre: p.razon_social || p.nombre || '', nombres: [p.nombre, p.razon_social].filter(Boolean), nif: p.nif || '', cp: p.codigo_postal || '' })).filter(p => p.nombre);
   const porCodigo = {}; M.clientes.forEach(c => { if (c.codigo) porCodigo[String(c.codigo).trim()] = c; });
@@ -13830,7 +13834,8 @@ async function ljBanco(desde, hasta) {
     nota: 'Entradas ' + eur(ent) + ' € · Salidas ' + eur(sal) + ' € · ' + (movs.length - pend) + ' de ' + movs.length + ' confirmados' };
 }
 /* ---------- Subir el fichero ---------- */
-async function bancoSubir(file, alTerminar) {
+async function bancoSubir(file, alTerminar, paso) {
+  paso = paso || (() => { });
   if (/\.(pdf|jpe?g|png|heic|webp|docx?)$/i.test(file.name) || /^(image\/|application\/pdf)/.test(file.type || '')) throw new Error('«' + file.name + '» es un PDF o una foto, no el fichero del banco. Elige el fichero de movimientos que da el banco: Norma 43 (.n43 o .txt) o Excel (.xls, .xlsx, .csv).');
   const buf = await file.arrayBuffer(); const txt = bancoTexto(new Uint8Array(buf.slice(0, 2e6)));
   let movs, origen, cuenta = '';
@@ -13845,13 +13850,14 @@ async function bancoSubir(file, alTerminar) {
     else if (cs.length > 1) { const r = (window.prompt('El Excel no dice de qué cuenta es. Escribe los 4 últimos números de la cuenta:\n' + cs.map(c => '· …' + c.slice(-4)).join('\n')) || '').trim(); cuenta = cs.find(c => r && c.endsWith(r)) || ''; if (!cuenta) throw new Error('No se ha elegido la cuenta.'); }
     movs.forEach(m => { m.cuenta = cuenta; });
   }
-  bancoHuellas(movs);
+  bancoHuellas(movs); paso('⏳ Mirando si ya estaban (' + movs.length + ' movimientos)…');
   const ya = new Set(); for (let i = 0; i < movs.length; i += 150) (await gesTodas(() => sb.from('banco_movimientos').select('huella').in('huella', movs.slice(i, i + 150).map(m => m.huella)))).forEach(x => ya.add(x.huella));
   const nuevos = movs.filter(m => !ya.has(m.huella)); const fechas = movs.map(m => m.fecha).sort();
   const ent = nuevos.filter(m => m.tipo === 'entrada').reduce((a, m) => a + m.importe, 0), sal = nuevos.filter(m => m.tipo === 'salida').reduce((a, m) => a + m.importe, 0);
   if (!nuevos.length) { window.alert('Este fichero ya estaba subido: sus ' + movs.length + ' movimientos ya están en la app. No se ha repetido nada.'); return; }
   if (!await confirmar(file.name + '\n' + (origen === 'norma43' ? 'Norma 43' : 'Excel') + (cuenta ? ' · cuenta …' + cuenta.slice(-4) : '') + '\nDel ' + fechaES(fechas[0]) + ' al ' + fechaES(fechas[fechas.length - 1]) + '\n\n' +
     movs.length + ' movimiento(s) leídos:\n· ' + nuevos.length + ' NUEVOS (entran ' + eur(ent) + ' €, salen ' + eur(sal) + ' €)\n· ' + (movs.length - nuevos.length) + ' ya estaban (no se repiten)\n\n¿Los guardo?')) return;
+  paso('⏳ Guardando ' + nuevos.length + ' movimiento(s)…');
   let ruta = null;
   try { const ext = (file.name.split('.').pop() || 'txt').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5) || 'txt'; const rr = 'banco/' + fechas[0].slice(0, 4) + '/' + uuid() + '.' + ext; const up = await sb.storage.from('facturas').upload(rr, file, { contentType: file.type || 'application/octet-stream' }); if (!up.error) ruta = rr; } catch (e) { }
   const sid = uuid();
@@ -13923,7 +13929,7 @@ function bancoFormulario(M, m, prop, alGuardar) {
 function vistaBanco() {
   state.view = 'banco'; if (!esOficina() || !BANCO_APP) { go('inicio'); return; }
   const mesHoy = hoy().slice(0, 7);
-  let mes = LS.get('fj_banco_mes', mesHoy); if (!/^\d{4}-\d{2}$/.test(mes) || mes > mesHoy) mes = mesHoy; let filtro = LS.get('fj_banco_filtro', 'pend'); let datos = null, M = null, props = {};
+  let mes = LS.get('fj_banco_mes', mesHoy); if (!/^\d{4}-\d{2}$/.test(mes) || mes > mesHoy) mes = mesHoy; let filtro = LS.get('fj_banco_filtro', 'pend'); let datos = null, M = null, props = {}, buscando = false;
   const MESES_B = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); const etqMes = h('b', { style: 'flex:1;text-align:center;font-size:18px' });
   const bSig = h('button', { class: 'ghost', style: 'min-height:48px;width:64px;flex:none', onclick: () => mover(1) }, '▶');
@@ -13934,18 +13940,20 @@ function vistaBanco() {
   const fic = h('input', { type: 'file', style: 'display:none' });   // sin filtro: en Android los .n43 salían grises
   const bSubir = h('button', { class: 'guardar', style: 'width:100%' }, '📥 Subir fichero del banco (Norma 43 o Excel)');
   bSubir.onclick = () => { fic.value = ''; fic.click(); };
-  fic.addEventListener('change', async () => { const f = fic.files && fic.files[0]; if (!f) return; const t0 = bSubir.textContent; bSubir.disabled = true; bSubir.textContent = '⏳ Leyendo ' + f.name + '…';
-    try { await bancoSubir(f, ultimo => { M = null; irMes(ultimo); }); } catch (e) { const t = isNetErr(e) ? 'Necesitas conexión.' : (e && e.message) || msgErr(e); toast(t, 'err'); window.alert('No se ha subido: ' + t); }
+  fic.addEventListener('change', async () => { const f = fic.files && fic.files[0]; if (!f) return; const t0 = bSubir.textContent; bSubir.disabled = true; bSubir.textContent = '⏳ Leyendo el fichero ' + f.name + '…';
+    try { await bancoSubir(f, ultimo => { M = null; irMes(ultimo); }, t => { bSubir.textContent = t; }); } catch (e) { const t = isNetErr(e) ? 'Necesitas conexión.' : (e && e.message) || msgErr(e); toast(t, 'err'); window.alert('No se ha subido: ' + t); }
     bSubir.disabled = false; bSubir.textContent = t0; });
   async function cargar() {
     cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
     try { const [y, mm] = mes.split('-').map(Number); const fin = mes + '-' + String(new Date(y, mm, 0).getDate()).padStart(2, '0');
-      datos = await bancoDatos(mes + '-01', fin); M = await bancoMaestros(comSumaDias(mes + '-01', -200)); props = {};
-      datos.movs.forEach(m => { if (m.estado !== 'confirmado') props[m.id] = bancoProponer(M, m); }); pintar(); }
+      datos = await bancoDatos(mes + '-01', fin); props = {}; buscando = datos.movs.some(m => m.estado !== 'confirmado'); M = null; pintar();
+      M = await bancoMaestros(comSumaDias(mes + '-01', -200));
+      datos.movs.forEach(m => { if (m.estado !== 'confirmado') props[m.id] = bancoProponer(M, m); }); buscando = false; pintar(); }
     catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver el banco.' : /banco_|schema cache|relation|PGRST205|42P01/i.test(((e && e.code) || '') + ' ' + ((e && e.message) || '')) ? 'Falta crear el banco en la base de datos (cambio pendiente de aplicar).' : msgErr(e))); }
   }
   const icono = m => ({ cliente: '🧑‍🍳', proveedor: '🚚', otro: '🏦' }[m] || '');
   function detalle(m) {
+    if (!M) { toast('Un momento: estoy buscando las propuestas…', 'err'); return; }
     let cerrar = null; const per = datos.per;
     const hist = h('div', { class: 'sub', style: 'margin-top:8px;line-height:1.5' }, h('div', {}, '🕓 Subido el ' + fechaES(hoy(new Date(m.created_at))) + (per[m.subido_por] ? ' por ' + per[m.subido_por] : '') + ' (' + (m.origen === 'norma43' ? 'Norma 43' : 'Excel') + ')'), ...m.cambios.map(c => h('div', { style: c.accion === 'confirmado' ? 'color:#15803d' : 'color:#b45309' }, (c.accion === 'confirmado' ? '✔ ' : '✏️ ') + bancoTextoCambio(c, per))));
     const lin = (a, b) => b ? h('div', { style: 'padding:3px 0' }, h('span', { class: 'sub' }, a + ': '), h('b', {}, b)) : null;
@@ -13969,7 +13977,7 @@ function vistaBanco() {
     const quien = conf ? h('div', { style: 'margin-top:6px;color:#15803d;font-weight:600' }, '✔ ' + icono(m.quien_tipo) + ' ' + m.persona + (m.nif ? ' · ' + m.nif : '') + (m.cp ? ' · CP ' + m.cp : '') + (m.facturas.length ? ' · ' + bancoFactTxt(m.facturas) : ''))
       : p ? h('div', { style: 'margin-top:6px;padding:6px 8px;border-radius:10px;background:' + (p.nivel === 'alta' ? '#dcfce7' : p.nivel === 'media' ? '#fef9c3' : '#ffedd5') },
         h('div', { style: 'font-weight:600' }, '💡 ' + icono(p.quien_tipo) + ' ' + (p.persona ? p.persona.nombre : p.otro) + (p.facturas.length ? ' · ' + bancoFactTxt(p.facturas) : '')), h('div', { class: 'sub' }, p.motivo))
-        : h('div', { class: 'sub', style: 'margin-top:6px;color:#b45309' }, '❓ Sin propuesta: toca para decir de quién es');
+        : buscando ? h('div', { class: 'sub', style: 'margin-top:6px' }, '⏳ Buscando…') : h('div', { class: 'sub', style: 'margin-top:6px;color:#b45309' }, '❓ Sin propuesta: toca para decir de quién es');
     const marcas = [conf && m.cambios.some(c => c.accion !== 'confirmado') ? h('span', { class: 'badge', style: 'background:#fef3c7;color:#92400e' }, '✏️ Cambiado después') : null].filter(Boolean);
     return h('div', { class: 'card', style: 'cursor:pointer' + (conf ? '' : ';border-left:4px solid #f59e0b'), onclick: () => detalle(m) },
       h('div', { style: 'display:flex;justify-content:space-between;gap:8px;align-items:flex-start' },
@@ -13986,6 +13994,7 @@ function vistaBanco() {
     const cifra = (t, v, col) => h('div', { style: 'flex:1;text-align:center' }, h('div', { class: 'sub' }, t), h('b', { style: 'font-size:17px;color:' + col }, eur(v) + ' €'));
     cont.replaceChildren(...[
       h('div', { class: 'card', style: 'display:flex;gap:6px' }, cifra('Entra', ent, '#15803d'), cifra('Sale', sal, '#b91c1c'), h('div', { style: 'flex:1;text-align:center' }, h('div', { class: 'sub' }, 'Confirmados'), h('b', { style: 'font-size:17px' }, (todos.length - pend.length) + ' / ' + todos.length))),
+      buscando ? h('div', { class: 'card', style: 'background:#e0f2fe;border-color:#38bdf8;font-weight:600' }, '⏳ Buscando de quién es cada movimiento y qué factura paga…') : null,
       pend.length ? h('div', { class: 'aviso-card' }, '⚠️ ' + pend.length + ' movimiento(s) sin confirmar. Toca cada uno: la app te propone de quién es y qué factura paga.') : null,
       seguras ? h('button', { class: 'guardar', style: 'width:100%;background:#15803d;background-image:none;margin:6px 0', onclick: confirmarSeguras }, '✔ Confirmar las ' + seguras + ' propuestas seguras (verdes)') : null,
       h('div', { class: 'chips' }, ...[['pend', '⚠️ Sin confirmar' + (pend.length ? ' (' + pend.length + ')' : '')], ['conf', '✔ Confirmados'], ['entrada', '➕ Entradas'], ['salida', '➖ Salidas'], ['todo', 'Todo']].map(([v, t]) => h('button', { class: 'chip' + (filtro === v ? ' on' : ''), onclick: () => { filtro = v; LS.set('fj_banco_filtro', v); pintar(); } }, t))),
