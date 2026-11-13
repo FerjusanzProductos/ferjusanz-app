@@ -2,6 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 13/11/2026
+- **v280 publicada en la normal** («Autorizo publicar»): menú más limpio y «📊 Resumen y correo» (código de pruebas v278, sin el banco de la fase 6). Se publicó primero como v279, pero otra sesión había puesto v279 en pruebas a la vez; se republicó como v280 para no repetir número. La tabla `resumen_correo` sigue pendiente de «Autorizo»: hasta entonces el recuadro del correo dice «Todavía no está disponible».
 - **Facturación fase 6: BANCO (Norma 43 / Excel)**, en PRUEBAS (**v279**; junta lo del menú más limpio de la v278). Más → «🏦 Banco · PRUEBAS» (solo oficina y admin, solo en la app naranja):
   - «📥 Subir fichero del banco»: lee **Norma 43** (cuaderno 43 de la AEB: registros 11, 22, 23, 33, 88) o el **Excel/CSV** del banco (busca la fila de títulos: fecha, concepto, importe o cargo/abono, saldo). Antes de guardar dice cuántos son nuevos y cuántos ya estaban. Guarda también el fichero original (carpeta «facturas», banco/AÑO/…).
   - **No se duplica nada**: cada movimiento lleva una huella (cuenta, fecha, entra/sale, importe y cuál es si hay varios iguales ese día) que la base de datos no deja repetir. Probado: el mismo Norma 43 dos veces no mete nada; un Excel de los mismos días solo mete lo nuevo (Norma 43 y Excel dan la misma huella).
