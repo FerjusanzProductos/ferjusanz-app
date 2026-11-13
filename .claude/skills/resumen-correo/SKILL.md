@@ -24,8 +24,8 @@ Buzón: es el Gmail de facturas de la empresa. Casi todo llega reenviado («RV:�
    No inventes datos: si algo no se ve en el correo, dilo.
 4. Si no hay correo nuevo, responde solo «📬 Hoy no hay correo nuevo».
 5. GUARDARLO EN LA APP (pantalla «Resumen del día y correo»). Es lo ÚNICO que se escribe: una fila en la tabla `resumen_correo` (un resumen por día; si ya hay uno de hoy, se reescribe). Nada más de la base, la app ni el repositorio.
-   Escribe un archivo JSON `{"query": "insert into public.resumen_correo (fecha, texto) values ('AAAA-MM-DD', $resumen$<TEXTO DEL RESUMEN>$resumen$) on conflict (fecha) do update set texto = excluded.texto, creado = now();"}` (fecha de hoy en Madrid; el texto tal cual, sin la palabra `$resumen$` dentro) y lánzalo a las DOS bases con la API de Supabase (la clave la pone el entorno):
-   `curl -sS -X POST https://api.supabase.com/v1/projects/hvydnjaswdexttogsyen/database/query -H "Authorization: Bearer proxy-injected" -H "Content-Type: application/json" --data @consulta.json` y lo mismo con `pbeuxbwbpmlanbhhnpgy` (app de pruebas).
+   Escribe un archivo JSON `{"query": "insert into public.resumen_correo (fecha, texto) values ('AAAA-MM-DD', $resumen$<TEXTO DEL RESUMEN>$resumen$) on conflict (fecha) do update set texto = excluded.texto, creado = now();"}` (fecha de hoy en Madrid; el texto tal cual, sin la palabra `$resumen$` dentro) y lánzalo a la base REAL con la API de Supabase (la clave la pone el entorno):
+   `curl -sS -X POST https://api.supabase.com/v1/projects/hvydnjaswdexttogsyen/database/query -H "Authorization: Bearer proxy-injected" -H "Content-Type: application/json" --data @consulta.json`. (En la base de pruebas no: la API no tiene permiso allí.)
    Si falla, no insistas: dilo en una línea al final («No he podido guardarlo en la app»).
    Termina con: «Lo tienes también en la app: Resumen y correo».
 
