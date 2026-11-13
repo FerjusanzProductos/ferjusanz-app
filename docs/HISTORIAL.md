@@ -2,6 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 13/11/2026
+- **Efectivo bloqueado en «Cobros» publicado en la normal (v300)** («Autorizo publicar»). Se publicó la v298 + solo este cambio (lo demás de pruebas no va). Comprobado en un navegador antes de publicar y la versión publicada después. Código en la rama `publicado-v300`.
 - **Efectivo bloqueado también en «Cobros» de la oficina (v299 en PRUEBAS)**. Faltaba tras bloquearlo en la entrega (v296/v298). La ventana «Registrar cobro» (la usan Cobros, Deudas y el propio albarán) ya no deja elegir «Efectivo» si el **total** de un albarán llega a 1.000 € (aunque lo pendiente sea menos): botón tachado 🚫, aviso en rojo y, si estaba elegido efectivo, pasa a transferencia. Al cobrar varios albaranes juntos, basta con que uno llegue a 1.000 €. Comprobado en un navegador (1.037 € bloquea; 300 € no). Sin SQL.
 - **Efectivo bloqueado en la entrega publicado en la normal (v298)** («Autorizo publicar»). Se publicó la v297 + solo este cambio (lo demás de pruebas no va). Comprobado antes en un navegador en modo prácticas: con 1.092 € el efectivo sale apagado y con aviso, y aunque se fuerce no apunta el cobro; con 156 € funciona como siempre. Código en la rama `publicado-v298`.
 - **Unidad del albarán publicada en la normal (v297)** («Autorizo publicar»). Se publicó la v293 + solo este cambio (lo demás de pruebas no va). Código en la rama `publicado-v297`. La v296 la usa otro chat en pruebas.
