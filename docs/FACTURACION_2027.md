@@ -26,7 +26,7 @@ Se enciende **solo si están las 5 cosas**:
 |---|---|
 | ✔️ 13/11 | SQL de la fase 7 preparado y probado en una base de ensayo (ver «Lo que queda listo»). Cambio en la app: el botón «🧾 Facturas» sale en la normal **solo** cuando la base lo diga (hoy, no). App naranja v287. |
 | ✔️ 13/11 | Tablas de facturas creadas **apagadas** en la base real («Autorizo»): siguiente **2027-0001**, no se puede emitir nada. |
-| 16–30/11 (una por sesión) | Mejoras que pide la prueba: **marcar la factura como cobrada** al confirmar la transferencia en el Banco (hoy se marca a mano); **IBAN** en la factura cuando es por transferencia (🟡 hecho en PRUEBAS v292, 13/11); **unidad buena** en la factura (manojo, caja, bandeja… en vez de «ud»); **bloquear el efectivo** también al cobrar en la entrega si llega a 1.000 €; «**Cambiar mi contraseña**». |
+| 16–30/11 (una por sesión) | Mejoras que pide la prueba: **marcar la factura como cobrada** al confirmar la transferencia en el Banco (hoy se marca a mano); **IBAN** en la factura cuando es por transferencia (✔️ hecho, 13/11: pruebas v292 y normal v293, IBAN en las dos bases); **unidad buena** en la factura (manojo, caja, bandeja… en vez de «ud»); **bloquear el efectivo** también al cobrar en la entrega si llega a 1.000 €; «**Cambiar mi contraseña**». |
 | Cada lunes hasta el 22/12 | Mirar si el aplazamiento de Verifactu ha salido en el BOE y avisar a Fernando. |
 | Día de la prueba (15–18/12) | Preparar el **fichero del banco de prueba** con el importe exacto de la factura de transferencia; acompañar la prueba y apuntar fallos. |
 | 18–22/12 | Arreglar los fallos de la prueba en la naranja; «Autorizo publicar» para la normal. |
