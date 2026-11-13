@@ -2,6 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 13/11/2026
+- **«Cambiar mi contraseña» publicado en la normal (v302)** («Autorizo publicar»). Se publicó la v300 + solo este cambio (lo demás de pruebas no va). Código en la rama `publicado-v302`. Comprobado: la normal da v302 y abre sin errores.
 - **«🔑 Cambiar mi contraseña» en Mi perfil (v301 en PRUEBAS)**, última mejora de la lista de la prueba de diciembre. Cada uno cambia la suya (para Jorge y los demás con contraseña provisional). Pide la de ahora (así nadie la cambia con el móvil desbloqueado de otro), la nueva dos veces y mínimo 8. No sale en Modo prácticas. Sin SQL. Claude lo comprobó en la naranja (avisa bien si la de ahora está mal o las nuevas no coinciden); el cambio de verdad no se probó para no tocar la contraseña de los usuarios de prueba. Falta «He olvidado la contraseña».
 - **Jorge confirma: para el límite de 1.000 € en efectivo, cada albarán es una operación.** Cobrar juntos varios albaranes pequeños en efectivo sí se puede, aunque sumen más. La app ya funciona así (v300); no hace falta cambiar nada. Apuntado en `REGLAS_INTERNAS.md`.
 - **Efectivo bloqueado en «Cobros» publicado en la normal (v300)** («Autorizo publicar»). Se publicó la v298 + solo este cambio (lo demás de pruebas no va). Comprobado en un navegador antes de publicar y la versión publicada después. Código en la rama `publicado-v300`.
