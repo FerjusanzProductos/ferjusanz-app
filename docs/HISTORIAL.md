@@ -2,6 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 13/11/2026
+- **📈 Mercado publicado en la normal (v291)** («Autorizo publicar»). Se publicó la v285 + solo el recuadro de Mercado, para no sacar a la vez lo de otras sesiones que sigue en pruebas (Harvey investiga, factura cobrada desde el Banco con SQL aún no aplicado en la real). Código publicado en la rama `publicado-v291`. **Tarea programada cada martes a las 7:37** (Fernando: «el resumen cada martes»): busca y guarda el resumen en `resumen_mercado`; lleva las instrucciones dentro porque las tareas programadas se abren sin el repositorio.
 - **🏦 IBAN en la factura por transferencia (v291 en PRUEBAS)**, mejora de la prueba de diciembre (`docs/FACTURACION_2027.md`). Fernando: «que en la factura salga el IBAN cuando la forma de pago es transferencia».
   - «🏢 Datos de la empresa» tiene la casilla **IBAN** (solo admin la cambia; se guarda sin espacios y la app comprueba los dígitos de control).
   - La factura (pantalla y PDF) pone, debajo de la forma de pago, **«IBAN para la transferencia: ES.. …»** y el titular, **solo si la forma de pago es transferencia**. Sale de la foto del emisor guardada al emitir: las facturas ya hechas no cambian.
