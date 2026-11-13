@@ -17,7 +17,7 @@ Fernando trabaja **solo desde su Samsung** (Android, Chrome). Su ordenador tiene
 5. **No pedirle usar un ordenador** sin haber comprobado antes las alternativas desde Android.
 6. Si no hay forma desde Chrome, decirlo claro y proponer otra alternativa que funcione en el Samsung.
 7. **No inventar enlaces** ni decir que algo se aprueba desde Chrome sin haberlo comprobado (si no se ha podido comprobar, decirlo).
-8. Siguen todas las medidas de seguridad: nada destructivo, ni publicaciones, ni cambios en producción sin su autorización.
+8. Siguen las medidas de seguridad: nada destructivo sin su autorización expresa. Publicar y el SQL, ver «Autorización permanente».
 
 ## Antes de tocar nada (en este orden)
 1. `docs/ESTADO_ACTUAL.md`: versión publicada, ramas y cómo se publica.
@@ -32,16 +32,21 @@ Fernando trabaja **solo desde su Samsung** (Android, Chrome). Su ordenador tiene
 - App: `public/` (sobre todo `public/index.html`). Publicación: `src/worker.js` y `wrangler.jsonc` (Cloudflare).
 - Base de datos: Supabase, proyecto `hvydnjaswdexttogsyen`. Cambios en `supabase/migrations/` y funciones en `supabase/functions/`.
 
+## Autorización permanente (Fernando, 13/11/2026: «Te autorizo todo, así que no me preguntes» · «Pues sí. Como siempre»)
+- **No preguntar** para publicar en la app normal ni para lanzar el SQL en la base real o de pruebas: se hace sin esperar a «Autorizo publicar» ni a «Autorizo». Antes, siempre: probarlo en PRUEBAS y comprobarlo uno mismo (`scripts/claude-entra.mjs`). Después, contárselo en corto (qué se publicó, versión y SQL lanzado).
+- **Siguen necesitando que Fernando lo diga expresamente** (lo irreversible o lo que habla en nombre de la empresa): borrar datos reales, cambiar precios, tocar facturas o cobros ya hechos, cambiar permisos de usuarios, enviar algo de verdad a Hacienda, firmar la declaración responsable (nunca Claude) y mandar mensajes a clientes.
+- Las reglas 3, 6 y 7 de abajo quedan así.
+
 ## Reglas de trabajo (no saltarse)
 1. **Una tarea por sesión.**
 2. Cambios **primero en la app de PRUEBAS** (naranja, Worker `ferjusanz-pruebas`). Enseñárselo a Fernando.
-3. Publicar en la app normal (Worker `ferjusanz-productos`) **solo** cuando Fernando escriba «Autorizo publicar».
+3. Publicar en la app normal (Worker `ferjusanz-productos`) después de probar en PRUEBAS, sin preguntar (autorización permanente, arriba).
 4. Cada publicación: subir la versión en `public/sw.js` (`ferjusanz-vNNN`), con número **distinto** del de pruebas.
 5. La app está en pruebas: **no crear pedidos ni datos reales para probar**; usar el **Modo prácticas**.
    **Todavía NO se usa de verdad** (el trabajo real sigue en Golden Soft): los pedidos, previstos y cobros de la app son de prueba. No sacar conclusiones ni mensajes a clientes de esos datos. Lo real: historial de Golden (`golden_*`), clientes, productos, contactos (prospectos) y facturas de proveedores.
 6. Nada de borrar datos, cambiar precios o tocar facturas, cobros o permisos sin confirmación expresa.
 7. Antes de cambiar la base de datos, enseñar el SQL y explicar qué hace.
-   Los cambios de Supabase ya no piden botón «Aprobar» (permitidos en `.claude/settings.json` para poder hacerlo desde el móvil). Por eso el permiso es **por el chat**: enseñar el SQL y no lanzarlo hasta que Fernando escriba «Autorizo».
+   Los cambios de Supabase ya no piden botón «Aprobar» (permitidos en `.claude/settings.json` para poder hacerlo desde el móvil). Con la autorización permanente se lanza sin esperar; decir en el resumen qué SQL se lanzó y qué hace (salvo lo de la lista de «Siguen necesitando»).
    **Cómo lanzarlo (Fernando, 13/11/2026: «siempre usa esos caminos»)**: NO con `apply_migration`/`execute_sql` del conector Supabase para escribir (piden un «Aprobar» que no le llega al móvil y caducan). Usar la API de Supabase, que tiene la clave puesta por el entorno:
    `curl -sS -X POST https://api.supabase.com/v1/projects/<ref>/database/query -H "Authorization: Bearer proxy-injected" -H "Content-Type: application/json" --data @consulta.json` (con `{"query": "<SQL>"}`). Real `hvydnjaswdexttogsyen`, pruebas `pbeuxbwbpmlanbhhnpgy`. Después, comprobar con otra consulta que ha quedado bien. Ni pedirle a Fernando que lo pegue.
 8. **Al terminar cada tarea**: actualizar `docs/HISTORIAL.md` (qué se hizo y por qué), `docs/PENDIENTES.md` y, si cambia la versión, `docs/ESTADO_ACTUAL.md`. Las reglas nuevas de productos o negocio van en `docs/REGLAS_INTERNAS.md`.
