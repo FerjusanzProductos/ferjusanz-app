@@ -1,0 +1,13 @@
+// Web pública de Ferjusanz (copia mejorada de www.ferjusanz-frutas-verduras.es), Worker "ferjusanz-web".
+// Publicar: cd web && node construir.cjs && npx -y wrangler@4 deploy
+{
+  "name": "ferjusanz-web",
+  "main": "worker.js",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  "rules": [
+    { "type": "Text", "globs": ["**/*.html", "**/*.css", "**/*.txt", "**/*.xml"], "fallthrough": true },
+    { "type": "Data", "globs": ["**/*.png", "**/*.jpg", "**/*.jpeg"], "fallthrough": true }
+  ]
+}

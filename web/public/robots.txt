@@ -1,0 +1,4 @@
+# Web de PRUEBAS: que Google no la lea (la de verdad sigue siendo la antigua).
+# Al pasar al dominio: cambiar por «Allow: /» y «Sitemap: https://www.ferjusanz-frutas-verduras.es/sitemap.xml».
+User-agent: *
+Disallow: /
