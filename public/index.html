@@ -4736,7 +4736,7 @@ async function sifNueva(pedidos, alTerminar) {
   const v = r.data, c = v.cliente || {}, errs = v.errores || [], avs = v.avisos || [];
   let ibanEmp = null; try { const em = await sb.from('empresa').select('*').maybeSingle(); if (!em.error && em.data) ibanEmp = em.data.iban || ''; } catch (e) { }
   const sinIban = () => forma === 'transferencia' && ibanEmp === '';
-  let forma =v.forma_pago_cliente === 'contado' ? 'efectivo' : 'transferencia'; if (forma === 'efectivo' && !v.efectivo_permitido) forma = 'transferencia';
+  let forma = v.forma_pago_cliente === 'contado' ? 'efectivo' : 'transferencia'; if (forma === 'efectivo' && !v.efectivo_permitido) forma = 'transferencia';
   let plazo = v.forma_pago_cliente === 'contado' ? 0 : (v.dias_pago != null ? Number(v.dias_pago) : 30);
   const notas = h('input', { placeholder: 'Observaciones (opcional, salen en la factura)' });
   const chipsF = h('div', { class: 'chips' }), chipsV = h('div', { class: 'chips' }), aviF = h('div', {});
