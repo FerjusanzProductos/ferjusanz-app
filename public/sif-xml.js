@@ -29,7 +29,7 @@
         rect = t('TipoRectificativa', 'I') + '<sf:FacturasRectificadas><sf:IDFacturaRectificada>' + t('IDEmisorFactura', r.nif_emisor) +
           t('NumSerieFactura', f.rectifica_codigo) + t('FechaExpedicionFactura', o.fecha_expedicion) + '</sf:IDFacturaRectificada></sf:FacturasRectificadas>';
       }
-      // ⚠️ ClaveRegimen 01 (régimen general) también con recargo de equivalencia: cotejar con la AEAT o Jorge
+      // ClaveRegimen 01 también con recargo de equivalencia: válido (AEAT, Validaciones y errores v1.0.7/1.1.2 quitó la obligación de usar la 18)
       const desglose = x.iva.map(d => '<sf:DetalleDesglose>' + t('Impuesto', '01') + t('ClaveRegimen', '01') + t('CalificacionOperacion', 'S1') +
         t('TipoImpositivo', imp(d.tipo_iva)) + t('BaseImponibleOimporteNoSujeto', imp(d.base)) + t('CuotaRepercutida', imp(d.cuota_iva)) +
         (Number(d.tipo_re) ? t('TipoRecargoEquivalencia', imp(d.tipo_re)) + t('CuotaRecargoEquivalencia', imp(d.cuota_re)) : '') + '</sf:DetalleDesglose>').join('');

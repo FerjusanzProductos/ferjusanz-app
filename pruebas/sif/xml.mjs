@@ -2,7 +2,7 @@
 // Ejecutar:  node pruebas/sif/xml.mjs [datos.json]
 //   Sin fichero: usa los dos registros de ejemplo de abajo (factura con recargo + rectificativa).
 //   Con fichero: {"regs": [...sif_registros en orden...], "facts": {factura_id: {f, iva}}} sacado de la base de PRUEBAS.
-// Necesita xmllint. Esquemas copiados en pruebas/sif/xsd (dos copias publicadas, iguales; ⚠️ cotejar con la sede de la AEAT).
+// Necesita xmllint. Esquemas copiados en pruebas/sif/xsd (cotejados 13/11/2026 con la sede de la AEAT: iguales, salvo la ruta local de xmldsig).
 import { readFileSync, writeFileSync, mkdtempSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
