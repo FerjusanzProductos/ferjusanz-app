@@ -39,7 +39,7 @@ Para la web nueva (`web/`, Worker `ferjusanz-web`). Los artículos se añaden en
 15. **Calendario de fruta y verdura de temporada mes a mes** (una página fija, la más útil; sustituye a los artículos repetidos).
 16. Uno corto **cada mes**: «Qué está bueno en diciembre», «…en enero»… con lo que de verdad entra en el puesto ese mes.
 
-## Calendario (2 al mes)
+## Calendario (orden de los temas; ahora sale uno cada 2 días)
 | Mes | Artículos |
 |---|---|
 | Diciembre 2026 | 15 Calendario de temporada · 7 Huevos |
@@ -51,7 +51,7 @@ Para la web nueva (`web/`, Worker `ferjusanz-web`). Los artículos se añaden en
 | Junio 2027 | 8 Cuarta gama · 14 Desperdicio |
 
 ## Reglas para escribirlos
-- Los escribe Claude; **Fernando lo lee y dice «vale» antes de publicarlo** (habla en nombre de la empresa).
+- Los escribe Claude. **Cambio del 13/11/2026 (Fernando: «un artículo cada 2 o 3 días… ni me preguntes»)**: los publica sola la tarea automática cada 2 días (`web/TAREA_AUTOMATICA.md`), sin esperar al «vale», siguiendo esta lista en orden y luego los de temporada. Los marcados con ⚠️ solo se escriben tras comprobar la fuente oficial (y se enlaza). Fernando puede pedir quitar o cambiar cualquiera.
 - **Fotos propias** del puesto siempre que se pueda.
 - **Sin precios** (cambian cada día) y sin prometer nada que no hagamos (horarios, zonas de reparto: confirmarlo con Fernando).
 - Nada de «cura» o «previene enfermedades»: salud, solo lo comprobado y con la fuente.
