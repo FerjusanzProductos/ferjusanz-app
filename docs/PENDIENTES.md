@@ -141,6 +141,10 @@ Orden recomendado; **una cosa por sesión**. Texto para empezar: `claude/08-text
 - 🟡 Poner las claves de los conectores de Claude: `GEMINI_API_KEY`, `FIRECRAWL_API_KEY`, `PERPLEXITY_API_KEY` y `POSTHOG_API_KEY`.
 - 🟡 En GitLab, activar la copia automática a GitHub (Settings → Repository → Mirroring repositories). Mientras tanto, Claude copia a mano después de cada cambio.
 
+## Plugin «Small Business» (plan del 13/11/2026: `docs/PLAN_SMALL_BUSINESS.md`)
+- 🟡 Fernando elige por dónde empezar: Fase 0 (usar ya las 10 skills con datos de Golden) o Fase 1.1 **«Harvey investiga y prepara la oferta»** (recomendada).
+- ⚪ Copiar las skills recomendadas (speed-to-lead, proposal-builder, grant-rfp-writer, grow-pipeline, crm-autopilot, monday-brief, inbox-manager, ticket-deflector, restock, seo-ai-visibility, review-reputation) cuando Fernando lo autorice.
+
 ## Mejoras pedidas (de `claude/08-textos-para-empezar-chats/PROMPTS.md`; recomendado empezar por la 3 y la 6)
 1. 🟡 Revisión de diseño y usabilidad en el móvil (lista priorizada, sin cambiar nada hasta elegir).
 2. ⚪ Agente buscador de clientes nuevos con cocina propia (Madrid norte y noroeste, Segovia), sin duplicados.
