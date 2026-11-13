@@ -13685,7 +13685,7 @@ async function bancoLeerExcel(file) {
     const filas = XL.utils.sheet_to_json(wb.Sheets[nom], { header: 1, raw: true, defval: '' });
     const r = bancoFilasExcel(filas); if (r.movs.length) return r;
   }
-  throw new Error('No encuentro los movimientos en el Excel: tiene que tener una fila de títulos con «Fecha», «Concepto» e «Importe» (o «Cargo» y «Abono»).');
+  throw new Error(/^ferjusanz_/i.test(file.name) ? '«' + file.name + '» es un informe de la app (para Jorge), no el fichero del banco. Elige el fichero de movimientos que da el banco (o el de ejemplo «banco_EJEMPLO_INVENTADO»).' : '«' + file.name + '» no parece un fichero de movimientos del banco: no encuentro una fila de títulos con «Fecha», «Concepto» e «Importe» (o «Cargo» y «Abono»).');
 }
 function bancoFilasExcel(filas) {
   const T = v => bancoMayus(v instanceof Date ? '' : v);

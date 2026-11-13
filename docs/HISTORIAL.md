@@ -2,6 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 13/11/2026
+- **Banco en PRUEBAS v283**: si se elige un informe de la app (p. ej. «ferjusanz_ventas_2026-T3.xlsx») dice que es un informe para Jorge, no el fichero del banco.
 - **Banco en PRUEBAS v282**: Fernando eligió sin querer un PDF (comprobante de alquiler de coche) y salió un aviso confuso de «Excel». Ahora, si se elige un PDF o una foto, lo dice claro; y el selector de archivos ya no filtra (en Android los .n43 podían salir grises). Ejemplo también en .txt.
 - **Banco en PRUEBAS v281**: el texto «(en pruebas)» de los nombres de la base de pruebas ya no cuenta al comparar nombres. Fichero Norma 43 de EJEMPLO con datos INVENTADOS (cuenta …2345, 9 movimientos con clientes de la base de pruebas) para que Fernando lo pruebe sin fichero del banco; esos movimientos se quedan en la base de pruebas (no se pueden borrar).
 - **Tabla `resumen_correo` creada en la base REAL** («Autorizo»), por la API de Supabase; comprobado: tabla, protección (RLS) y 1 regla de lectura (oficina y admin). En la base de **pruebas** la API responde «sin permisos», así que allí no está: la app naranja enseña «Todavía no está disponible» en el recuadro del correo. La skill `/resumen-correo` guarda solo en la real.
