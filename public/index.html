@@ -4543,6 +4543,18 @@ const SIF_FORMAS = [['transferencia', '🏦 Transferencia'], ['tarjeta', '💳 T
 const SIF_FORMA_TXT = { transferencia: 'Transferencia bancaria', tarjeta: 'Tarjeta', bizum: 'Bizum', domiciliacion: 'Domiciliación bancaria (recibo)', pagare: 'Pagaré o cheque', efectivo: 'Efectivo', compensacion: 'Compensación / abono en la próxima factura' };
 const sifErr = e => String(msgErr(e)).replace(/^[A-Z_]+:\s*/, '');
 const sifVence = f => !f.vencimiento || f.vencimiento === f.fecha ? 'Al contado' : fechaES(f.vencimiento);
+/* 🔗 Registro con huella encadenada (Verifactu, SIF 0.3.0): la base recalcula todas las huellas y dice si alguna factura se ha tocado */
+function sifBotonCadena() {
+  const res = h('div', {});
+  const b = h('button', { class: 'small', style: 'margin:4px 0 8px', onclick: async () => {
+    b.disabled = true; res.replaceChildren(h('p', { class: 'sub' }, 'Comprobando…'));
+    try { const r = await sb.rpc('sif_comprobar_cadena'); if (r.error) throw r.error; const d = r.data || {};
+      res.replaceChildren(d.ok ? h('div', { class: 'aviso-card', style: 'border-left:5px solid #15803d' }, h('b', {}, '✅ Cadena correcta: '), (d.registros || 0) + ' registro(s) con su huella, ninguna factura tocada.')
+        : h('div', { class: 'aviso-card', style: 'border-left:5px solid #b91c1c' }, h('b', {}, '❌ La cadena NO cuadra. Avisa a Fernando:'), ...(d.fallos || []).map(x => h('div', {}, '• ' + x))));
+    } catch (e) { res.replaceChildren(h('p', { class: 'err' }, /sif_comprobar_cadena|schema cache|does not exist/i.test(e.message || '') ? 'Falta el SQL del registro con huella (fase 8).' : sifErr(e))); }
+    b.disabled = false; } }, '🔗 Comprobar que ninguna factura se ha tocado');
+  return h('div', {}, b, res);
+}
 /* Carga completa de una factura (cabecera, líneas, IVA, rectificativas) */
 async function sifCargar(id) {
   const [f, l, i, r] = await Promise.all([sb.from('sif_facturas').select('*').eq('id', id).single(), sb.from('sif_factura_lineas').select('*').eq('factura_id', id).order('orden'),
@@ -4779,7 +4791,7 @@ function vistaFacturasApp() {
         if (!soloPintar || !emitidas) { const r = await sb.from('sif_facturas').select('id,codigo,tipo,fecha,cliente,total,forma_pago,rectifica_id,rectifica_codigo,anula,prueba').order('emitida_at', { ascending: false }).limit(500); if (r.error) throw r.error; emitidas = r.data || []; }
         const rects = {}; emitidas.forEach(f => { if (f.rectifica_id) (rects[f.rectifica_id] = rects[f.rectifica_id] || []).push(f); });
         const lista = emitidas.filter(f => !texto || sinTilde(((f.cliente || {}).nombre || '') + ' ' + ((f.cliente || {}).nombre_comercial || '') + ' ' + f.codigo).toLowerCase().includes(texto.toLowerCase()));
-        cont.replaceChildren(h('p', { class: 'sub' }, lista.length + ' factura(s). Las emitidas no se pueden cambiar ni borrar.'), ...(lista.length ? lista.map(f => { const rs = rects[f.id] || [], anul = rs.some(x => x.anula);
+        cont.replaceChildren(h('p', { class: 'sub' }, lista.length + ' factura(s). Las emitidas no se pueden cambiar ni borrar.'), sifBotonCadena(), ...(lista.length ? lista.map(f => { const rs = rects[f.id] || [], anul = rs.some(x => x.anula);
           return h('div', { class: 'card tap', onclick: () => sifVer(f.id, () => { emitidas = null; cargar(); }) }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, f.codigo + ' · ' + ((f.cliente || {}).nombre_comercial || (f.cliente || {}).nombre || '')), h('div', { class: 'sub' }, fechaES(f.fecha) + ' · ' + (SIF_FORMA_TXT[f.forma_pago] || f.forma_pago)),
             f.tipo === 'rectificativa' ? h('span', { class: 'badge', style: 'background:#fef3c7;color:#92400e' }, 'Rectificativa de ' + f.rectifica_codigo + (f.anula ? ' (anula)' : '')) : null, anul ? h('span', { class: 'badge', style: 'background:#fee2e2;color:#991b1b' }, 'ANULADA') : rs.length ? h('span', { class: 'badge' }, 'Rectificada (' + rs.length + ')') : null),
             h('b', { style: Number(f.total) < 0 ? 'color:#b91c1c' : '' }, eur(f.total) + ' €'))); }) : [h('p', { class: 'vacio' }, 'Todavía no hay facturas emitidas.')]));
