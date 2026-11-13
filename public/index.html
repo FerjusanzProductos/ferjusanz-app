@@ -5537,7 +5537,7 @@ function vistaMas() {
     ...g('Entregas y pedidos', c('🚦', 'Camino de los pedidos', () => go('camino'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a')),
     ...g('Compras y mercancía', puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Clientes y productos', c('👥', 'Clientes', () => { window.__cliFiscal = false; go('clientes'); }, Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z)),
-    ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() && FACTURAR_APP ? c('🧾', 'Facturas (desde la app) · PRUEBAS', () => go('facturasapp'), Z) : null, esOficina() ? c('🏢', 'Datos de la empresa', () => go('empresa'), Z) : null, esOficina() ? c('🧾', 'Clientes sin datos para facturar', () => { window.__cliFiscal = true; go('clientes'); }, Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen y correo', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() && CAJA_APP ? c('💵', 'Caja (efectivo)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('caja'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
+    ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() && FACTURAR_APP ? c('🧾', 'Facturas (desde la app) · PRUEBAS', () => go('facturasapp'), Z) : null, esOficina() ? c('🏢', 'Datos de la empresa', () => go('empresa'), Z) : null, esOficina() ? c('🧾', 'Clientes sin datos para facturar', () => { window.__cliFiscal = true; go('clientes'); }, Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen y correo', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() && CAJA_APP ? c('💵', 'Caja (efectivo)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('caja'), Z) : null, esOficina() && BANCO_APP ? c('🏦', 'Banco' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('banco'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('❓', 'Ayuda y guía', () => go('ayuda'), T), c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
@@ -13315,6 +13315,7 @@ function ljArchivo(l, formato, periodo, clave) {
 }
 function ljBajar(f) { const u = URL.createObjectURL(f), a = h('a', { href: u, download: f.name }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); }
 const CAJA_APP = !PRACTICA;   // Caja (fase 5): publicada en la normal («Autorizo publicar», 13/11/2026). En el Modo prácticas no sale
+const BANCO_APP = ES_PRUEBAS && !PRACTICA;   // Banco (fase 6): de momento SOLO en la app de PRUEBAS
 const GES_INFORMES = [
   ['ventas', '📗 Listado de VENTAS (facturas emitidas)', '10 columnas, una fila por tipo de IVA y totales por tipo. Hasta el 31/12/2026 salen de Golden.'],
   ['compras', '📕 Listado de COMPRAS (facturas de proveedores)', '10 columnas, una fila por tipo de IVA y totales por tipo. Concepto: «Compra de mercaderías».'],
@@ -13322,11 +13323,13 @@ const GES_INFORMES = [
   ['sinfacturar', '📋 Albaranes sin facturar', 'Albaranes entregados del mes que no aparecen en ninguna factura de Golden'],
   ['fichajes', '⏱️ Registro de jornada', 'Entrada, salida y horas por trabajador y día'],
   ...(CAJA_APP ? [['caja', '💵 Caja (efectivo)', 'Entra y sale efectivo: fecha, cuánto, de quién o a quién y la factura o justificante. Marca lo que falta y lo cambiado después.']] : []),
+  ...(BANCO_APP ? [['banco', '🏦 Banco', 'Cada movimiento del banco con nombre, NIF, CP y la factura que paga. Marca los que falta confirmar y lo cambiado después.']] : []),
 ];
 async function gesInforme(tipo, desde, hasta) {
   const fin = hasta; const finTs = comSumaDias(hasta, 1);
   if (tipo === 'ventas' || tipo === 'compras') { const l = tipo === 'ventas' ? await ljVentas(desde, fin) : await ljCompras(desde, fin); return { lj: l, filas: ljFilasCSV(l), n: l.n, total: l.tot.total, aviso: l.avisos.join(' '), nota: l.nota }; }
   if (tipo === 'caja') return await ljCaja(desde, fin);
+  if (tipo === 'banco') return await ljBanco(desde, fin);
   if (tipo === 'cobros') {
     const cs = await gesTodas(() => sb.from('cobros').select('created_at,importe,forma,nota,cobrado_por,clientes(codigo,nombre,nombre_comercial,nif)').gte('created_at', desde).lt('created_at', finTs).order('created_at'));
     const per = {}; (await gesTodas(() => sb.from('perfiles').select('id,nombre'))).forEach(p => { per[p.id] = p.nombre; });
@@ -13622,6 +13625,376 @@ function vistaCaja() {
     comCampo('Mes', selMes), cont), { volver: volverIni })); renderBanner(); cargar();
 }
 
+/* =====================  BANCO (Norma 43 / Excel del banco) · fase 6 de facturación  =====================
+   Lo que pide Jorge: en cada movimiento del banco, de quién es (cliente o proveedor, con nombre, NIF y CP)
+   y qué factura paga. La app lo PROPONE sola (por importe y por nombre) y la oficina lo CONFIRMA o lo corrige.
+   - Se sube el fichero Norma 43 (cuaderno 43 de la AEB) o el Excel/CSV del banco (un movimiento por línea).
+   - Cada movimiento lleva una «huella» (cuenta, fecha, entra/sale, importe y cuál es si hay varios iguales ese día):
+     si se sube dos veces el mismo fichero, los que ya estaban no se repiten (lo asegura la base de datos).
+   - Lo que dice el banco no se cambia nunca; cambiar algo ya confirmado pide motivo y queda apuntado (banco_cambios). */
+const BANCO_XLSX = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+const BANCO_OTROS = { entrada: ['Cobros con tarjeta (datáfono)', 'Traspaso entre cuentas', 'Devolución', 'Préstamo', 'Ingreso de efectivo', 'Otra entrada'],
+  salida: ['Comisión del banco', 'Impuestos (Hacienda)', 'Seguridad Social', 'Nóminas', 'Seguros', 'Préstamo / leasing', 'Traspaso entre cuentas', 'Luz, agua, teléfono', 'Otra salida'] };
+/* Movimientos que no son de un cliente ni de un proveedor: se reconocen por el texto del banco */
+const BANCO_REGLAS = [
+  [/\b(TPV|DATAFONO|LIQ(UIDACION)? ?TARJ|REMESA TARJ|ABONO TARJ)/, 'entrada', 'Cobros con tarjeta (datáfono)'],
+  [/\b(COMISION|COMIS\b|CUOTA MANTEN|MANTENIMIENTO CTA|GASTOS CORREO|COMIS\.)/, 'salida', 'Comisión del banco'],
+  [/\b(AEAT|AGENCIA TRIB|HACIENDA|IMPUESTO|MODELO \d{3}|AYUNTAMIENTO|IBI\b|IVTM)/, 'salida', 'Impuestos (Hacienda)'],
+  [/\b(SEG(URIDAD)? ?SOCIAL|TGSS|TESORERIA GENERAL|TESORERIA GRAL)/, 'salida', 'Seguridad Social'],
+  [/\b(NOMINA|NOMINAS)\b/, 'salida', 'Nóminas'],
+  [/\b(PRESTAMO|LEASING|RENTING|AMORTIZACION)/, 'salida', 'Préstamo / leasing'],
+  [/\b(SEGURO|MAPFRE|ALLIANZ|AXA|MUTUA|REALE|GENERALI)\b/, 'salida', 'Seguros'],
+  [/\b(IBERDROLA|ENDESA|NATURGY|CANAL DE ISABEL|MOVISTAR|TELEFONICA|VODAFONE|ORANGE|REPSOL LUZ)\b/, 'salida', 'Luz, agua, teléfono'],
+  [/\b(TRASPASO)\b/, null, 'Traspaso entre cuentas'],
+  [/\b(INGRESO EFECTIVO|INGRESO EN EFECTIVO|INGR\.? EFECT)/, 'entrada', 'Ingreso de efectivo'],
+];
+const BANCO_N43_CONCEPTOS = { '01': 'Talones / reintegros', '02': 'Abonarés / entregas / ingresos', '03': 'Domiciliado / recibos / letras', '04': 'Giros / transferencias / traspasos', '05': 'Amortizaciones préstamos', '06': 'Remesas efectos', '07': 'Suscripciones / dividendos', '08': 'Dividendos / cupones', '09': 'Compra/venta de valores', '10': 'Cheques gasolina', '11': 'Cajero automático', '12': 'Tarjetas de crédito / débito', '13': 'Operaciones extranjero', '14': 'Devoluciones / impagados', '15': 'Nóminas / Seguros sociales', '16': 'Timbres / corretaje', '17': 'Intereses / comisiones / gastos', '98': 'Anulaciones / correcciones', '99': 'Varios' };
+const bancoR = n => Math.round((Number(n) || 0) * 100) / 100;
+const bancoCts = n => Math.round((Number(n) || 0) * 100);
+const bancoMayus = t => sinTilde(t).toUpperCase().replace(/[^A-Z0-9Ñ]+/g, ' ').trim();
+const bancoCuenta = t => { const d = String(t || '').replace(/\D/g, ''); return d.length >= 10 ? d.slice(-10) : ''; };
+/* ---------- Leer el fichero ---------- */
+function bancoTexto(buf) {   // Norma 43 suele venir en Latin-1; si es UTF-8 válido, mejor
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(buf); } catch (e) { return new TextDecoder('iso-8859-1').decode(buf); }
+}
+function bancoEsN43(txt) { const ls = txt.split(/\r?\n/).filter(l => l.trim()); return ls.length >= 2 && /^11\d{4}/.test(ls[0]) && ls.some(l => /^22/.test(l)); }
+/* Norma 43 (cuaderno 43 AEB): registros de 80 caracteres. 11 = cabecera de cuenta, 22 = movimiento, 23 = concepto complementario, 33 = fin de cuenta, 88 = fin de fichero */
+function bancoLeerN43(txt) {
+  const movs = []; let cuenta = '', cur = null; const fecha = s => { const y = +s.slice(0, 2), m = s.slice(2, 4), d = s.slice(4, 6); return /^\d{6}$/.test(s) ? (2000 + y) + '-' + m + '-' + d : null; };
+  const cierra = () => { if (cur) { cur.concepto = cur.textos.map(x => x.trim()).filter(Boolean).join(' · ').replace(/\s+/g, ' '); delete cur.textos; movs.push(cur); cur = null; } };
+  txt.split(/\r?\n/).forEach(l => {
+    const r = l.slice(0, 2);
+    if (r === '11') { cierra(); cuenta = bancoCuenta(l.slice(10, 20)); }
+    else if (r === '22') {
+      cierra(); const imp = Number(l.slice(28, 42)) / 100;
+      cur = { cuenta, fecha: fecha(l.slice(10, 16)), fecha_valor: fecha(l.slice(16, 22)), concepto_comun: l.slice(22, 24).trim() || null, tipo: l.charAt(27) === '1' ? 'salida' : 'entrada', importe: bancoR(imp),
+        documento: l.slice(42, 52).trim().replace(/^0+/, '') || null, referencia1: l.slice(52, 64).trim().replace(/^0+/, '') || null, referencia2: l.slice(64, 80).trim() || null, saldo: null, textos: [] };
+      if (cur.referencia2) cur.textos.push(cur.referencia2);
+    } else if (r === '23' && cur) { cur.textos.push(l.slice(4, 42), l.slice(42, 80)); }
+    else if (r === '33' || r === '88') cierra();
+  });
+  cierra();
+  return movs.filter(m => m.fecha && m.importe > 0);
+}
+/* Excel / CSV del banco: busca la fila de títulos (fecha, concepto, importe o cargo/abono, saldo…) */
+async function bancoLeerExcel(file) {
+  await waCargarScript(BANCO_XLSX);
+  const XL = window.XLSX; if (!XL) throw new Error('No se pudo cargar el lector de Excel (¿hay internet?)');
+  const wb = XL.read(await file.arrayBuffer(), { type: 'array', cellDates: true, raw: false, codepage: 1252 });
+  for (const nom of wb.SheetNames) {
+    const filas = XL.utils.sheet_to_json(wb.Sheets[nom], { header: 1, raw: true, defval: '' });
+    const r = bancoFilasExcel(filas); if (r.movs.length) return r;
+  }
+  throw new Error('No encuentro los movimientos en el Excel: tiene que tener una fila de títulos con «Fecha», «Concepto» e «Importe» (o «Cargo» y «Abono»).');
+}
+function bancoFilasExcel(filas) {
+  const T = v => bancoMayus(v instanceof Date ? '' : v);
+  let cuenta = ''; for (const f of filas.slice(0, 30)) for (const c of f) { const s = String(c || ''); const m = s.replace(/\s/g, '').match(/ES\d{22}/i) || s.match(/\b\d{4}[\s-]?\d{4}[\s-]?\d{2}[\s-]?\d{10}\b/); if (m && !cuenta) cuenta = bancoCuenta(m[0]); }
+  let hi = -1, col = {};
+  for (let i = 0; i < Math.min(filas.length, 40); i++) {
+    const t = filas[i].map(T); const busca = re => t.findIndex(x => re.test(x));
+    const c = { fecha: busca(/^(F(ECHA)?\.? ?(OPER(ACION)?|CONTABLE|MOVIMIENTO)|FECHA)$/), valor: busca(/^(F(ECHA)?\.? ?VALOR|VALOR)$/), concepto: busca(/^(CONCEPTO|DESCRIPCION|MOVIMIENTO|DETALLE|CONCEPTO COMUN)/),
+      importe: busca(/^(IMPORTE|CANTIDAD|IMPORTE EUR|IMPORTE EUROS)$/), cargo: busca(/^(CARGO|CARGOS|DEBE|GASTOS?|SALIDAS?)$/), abono: busca(/^(ABONO|ABONOS|HABER|INGRESOS?|ENTRADAS?)$/), saldo: busca(/^SALDO/) };
+    if (c.fecha < 0) c.fecha = busca(/^F(ECHA)?\b/);
+    if (c.fecha >= 0 && (c.importe >= 0 || (c.cargo >= 0 && c.abono >= 0))) { hi = i; col = c; col.extra = t.map((x, k) => k).filter(k => ![c.fecha, c.valor, c.importe, c.cargo, c.abono, c.saldo].includes(k) && t[k]); break; }
+  }
+  if (hi < 0) return { movs: [], cuenta };
+  const fecha = v => { if (v instanceof Date) return hoy(new Date(v.getTime() + 12 * 3600000)); if (typeof v === 'number' && v > 20000 && v < 80000) { const d = new Date(Math.round((v - 25569) * 86400000)); return d.toISOString().slice(0, 10); }
+    const m = String(v || '').trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/); if (m) { const y = m[3].length === 2 ? 2000 + +m[3] : +m[3]; return y + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0'); }
+    const m2 = String(v || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})/); return m2 ? m2[0] : null; };
+  const num = v => { if (typeof v === 'number') return v; let s = String(v || '').replace(/[€\s]|EUR/gi, ''); if (!s) return null; if (/,\d{1,2}$/.test(s)) s = s.replace(/\./g, '').replace(',', '.'); else s = s.replace(/,/g, ''); const n = parseFloat(s); return isNaN(n) ? null : n; };
+  const movs = [];
+  for (const f of filas.slice(hi + 1)) {
+    const fe = fecha(f[col.fecha]); if (!fe) continue;
+    let imp = col.importe >= 0 ? num(f[col.importe]) : null;
+    if (imp == null && col.cargo >= 0) { const ca = num(f[col.cargo]), ab = num(f[col.abono]); if (ca) imp = -Math.abs(ca); else if (ab) imp = Math.abs(ab); }
+    if (!imp) continue;
+    const textos = col.extra.map(k => f[k] instanceof Date ? '' : String(f[k] == null ? '' : f[k]).trim()).filter(Boolean);
+    movs.push({ cuenta, fecha: fe, fecha_valor: col.valor >= 0 ? fecha(f[col.valor]) : null, concepto_comun: null, tipo: imp < 0 ? 'salida' : 'entrada', importe: bancoR(Math.abs(imp)), documento: null, referencia1: null, referencia2: null,
+      saldo: col.saldo >= 0 && num(f[col.saldo]) != null ? bancoR(num(f[col.saldo])) : null, concepto: textos.join(' · ').replace(/\s+/g, ' ') });
+  }
+  return { movs, cuenta };
+}
+/* Huella: cuenta | fecha | entra/sale | importe | nº de orden entre los iguales de ese día (en el fichero) */
+function bancoHuellas(movs) {
+  const n = {}; movs.forEach(m => { const k = [m.cuenta || '', m.fecha, m.tipo === 'entrada' ? 'E' : 'S', bancoCts(m.importe)].join('|'); n[k] = (n[k] || 0) + 1; m.huella = k + '|' + n[k]; });
+  return movs;
+}
+/* ---------- Proponer de quién es y qué factura paga ---------- */
+const BANCO_RUIDO = new Set(('S L SL SLU SA SAU SC CB SCOOP SOCIEDAD LIMITADA ANONIMA DE DEL LA LAS LOS EL Y E EN CON POR PARA TRANSFERENCIA TRANSF TRF TRANS RECIBO RECIBOS ABONO CARGO SEPA INMEDIATA INMED ' +
+  'CONCEPTO ORDENANTE BENEFICIARIO ORD BEN REF REFERENCIA FRA FACT FACTURA FACTURAS PAGO PAGOS NUM NO EUR EUROS CTA CUENTA BIZUM DOMICILIADO ADEUDO EMISORA EMISOR ENTIDAD OFICINA FAV FAVOR ' +
+  'TRASPASO OPERACION OBS OBSERVACIONES DATOS MAS VARIOS ENERO FEBRERO MARZO ABRIL MAYO JUNIO JULIO AGOSTO SEPTIEMBRE OCTUBRE NOVIEMBRE DICIEMBRE MES').split(' '));
+const BANCO_GENERICAS = new Set('BAR BARES RESTAURANTE RESTAURANTES CAFETERIA CAFE MESON TABERNA CERVECERIA HOSTELERIA GRUPO HERMANOS HNOS FRUTAS FRUTERIA VERDURAS COMERCIAL DISTRIBUCIONES DISTRIBUIDORA ALIMENTACION SERVICIOS MADRID ESPANA HOTEL CASA'.split(' '));
+const bancoPalabras = t => bancoMayus(t).split(' ').filter(w => w.length >= 3 && !BANCO_RUIDO.has(w) && !/^\d+$/.test(w));
+/* Cuánto se parece un nombre al texto del banco (0 a 1): las palabras del nombre que salen en el texto */
+function bancoParecido(nombre, pal) {
+  const ws = [...new Set(bancoPalabras(nombre))]; if (!ws.length) return 0;
+  let tot = 0, ok = 0;
+  ws.forEach(w => { const p = BANCO_GENERICAS.has(w) ? 0.3 : 1; tot += p; if (pal.has(w) || (w.length >= 5 && [...pal].some(x => (x.length >= 5 && x.startsWith(w)) || (x.length >= 4 && w.startsWith(x))))) ok += p; });
+  return tot ? ok / tot : 0;
+}
+async function bancoMaestros(desde) {
+  const M = { clientes: [], proveedores: [], facturas: [], memoria: [], usadas: {} };
+  const tryq = async f => { try { return await f(); } catch (e) { return []; } };
+  const [cl, pr, gf, sf, fr, conf] = await Promise.all([
+    tryq(() => gesTodas(() => sb.from('clientes').select('id,codigo,nombre,nombre_comercial,nif,codigo_postal,alias'))),
+    tryq(() => gesTodas(() => sb.from('proveedores').select('*'))),
+    tryq(() => gesTodas(() => sb.from('golden_facturas').select('id,numero,serie,fecha,cliente_codigo,cliente_nombre,total,borrador').gte('fecha', desde).eq('borrador', false))),
+    tryq(() => gesTodas(() => sb.from('sif_facturas').select('id,codigo,fecha,cliente_id,cliente,total').gte('fecha', desde))),
+    tryq(() => gesTodas(() => sb.from('facturas_recibidas').select('id,fecha_factura,numero_factura,proveedor_id,total_factura,nif_proveedor,cp_proveedor').gte('fecha_factura', desde))),
+    tryq(() => gesTodas(() => sb.from('banco_movimientos').select('id,tipo,concepto,quien_tipo,cliente_id,proveedor_id,persona,facturas').eq('estado', 'confirmado').gte('fecha', comSumaDias(desde, -200)))),
+  ]);
+  M.clientes = cl.map(c => ({ tipo: 'cliente', id: c.id, codigo: c.codigo, nombre: c.nombre || c.nombre_comercial || '', nombres: [c.nombre, c.nombre_comercial, c.alias].filter(Boolean), nif: c.nif || '', cp: c.codigo_postal || '' })).filter(c => c.nombre);
+  M.proveedores = pr.map(p => ({ tipo: 'proveedor', id: p.id, nombre: p.razon_social || p.nombre || '', nombres: [p.nombre, p.razon_social].filter(Boolean), nif: p.nif || '', cp: p.codigo_postal || '' })).filter(p => p.nombre);
+  const porCodigo = {}; M.clientes.forEach(c => { if (c.codigo) porCodigo[String(c.codigo).trim()] = c; });
+  gf.forEach(f => { const c = porCodigo[String(f.cliente_codigo || '').trim()]; if (Number(f.total) > 0) M.facturas.push({ tipo: 'golden', id: f.id, numero: (f.serie ? f.serie + ' ' : '') + f.numero, fecha: f.fecha, total: bancoR(f.total), cliente_id: c ? c.id : null, nombre: f.cliente_nombre || (c && c.nombre) || '' }); });
+  sf.forEach(f => { const cj = f.cliente || {}; if (Number(f.total) > 0) M.facturas.push({ tipo: 'emitida', id: f.id, numero: f.codigo, fecha: f.fecha, total: bancoR(f.total), cliente_id: f.cliente_id, nombre: cj.nombre || '' }); });
+  fr.forEach(f => { if (Number(f.total_factura) > 0) M.facturas.push({ tipo: 'recibida', id: f.id, numero: f.numero_factura || '(sin nº)', fecha: f.fecha_factura, total: bancoR(f.total_factura), proveedor_id: f.proveedor_id, nombre: '' }); });
+  conf.forEach(m => { (m.facturas || []).forEach(f => { if (f && f.id) M.usadas[f.tipo + ':' + f.id] = m.id; }); M.memoria.push({ id: m.id, tipo: m.tipo, pal: new Set(bancoPalabras(m.concepto)), quien_tipo: m.quien_tipo, cliente_id: m.cliente_id, proveedor_id: m.proveedor_id, persona: m.persona }); });
+  M.porId = {}; [...M.clientes, ...M.proveedores].forEach(p => { M.porId[p.tipo + ':' + p.id] = p; });
+  return M;
+}
+/* Facturas que suman justo el importe (de 1 a 6 facturas), las más antiguas primero */
+function bancoSuma(facts, cts) {
+  const fs = facts.filter(f => bancoCts(f.total) <= cts).sort((a, b) => a.fecha < b.fecha ? -1 : 1).slice(-24);
+  for (let k = 1; k <= Math.min(6, fs.length); k++) {
+    const sel = []; let res = null;
+    const dfs = (i, falta) => { if (res) return; if (sel.length === k) { if (falta === 0) res = sel.slice(); return; } for (let j = i; j < fs.length && !res; j++) { const c = bancoCts(fs[j].total); if (c > falta) continue; sel.push(fs[j]); dfs(j + 1, falta - c); sel.pop(); } };
+    dfs(0, cts); if (res) return res;
+  }
+  return null;
+}
+function bancoFacturasDe(M, p, m, excluir) {
+  const lim0 = comSumaDias(m.fecha, -200), lim1 = comSumaDias(m.fecha, 7);
+  return M.facturas.filter(f => (p.tipo === 'cliente' ? f.cliente_id === p.id && f.tipo !== 'recibida' : f.proveedor_id === p.id && f.tipo === 'recibida') && f.fecha >= lim0 && f.fecha <= lim1 && (!M.usadas[f.tipo + ':' + f.id] || M.usadas[f.tipo + ':' + f.id] === excluir));
+}
+/* Devuelve { quien_tipo, persona (ficha), otro, facturas, nivel: 'alta'|'media'|'baja', motivo } o null */
+function bancoProponer(M, m) {
+  const txt = bancoMayus(m.concepto); const pal = new Set(bancoPalabras(m.concepto)); const cts = bancoCts(m.importe);
+  const lista = m.tipo === 'entrada' ? M.clientes : M.proveedores; const otraLista = m.tipo === 'entrada' ? M.proveedores : M.clientes;
+  // 1. Lo que ya se confirmó antes con un texto del banco parecido (la app aprende)
+  let mem = null, memP = 0;
+  M.memoria.forEach(x => { if (x.id === m.id || x.tipo !== m.tipo || !x.pal.size || !pal.size) return; let com = 0; x.pal.forEach(w => { if (pal.has(w)) com++; }); const j = com / (x.pal.size + pal.size - com); if (j > memP) { memP = j; mem = x; } });
+  // 2. Parecido del nombre (y NIF en el texto)
+  const cands = [];
+  const nifTxt = txt.replace(/\s/g, '');
+  [...lista, ...otraLista].forEach(p => { let s = Math.max(...p.nombres.map(n => bancoParecido(n, pal))); if (p.nif && p.nif.length >= 8 && nifTxt.includes(bancoMayus(p.nif).replace(/\s/g, ''))) s = Math.max(s, 0.95);
+    if (mem && memP >= 0.6 && ((p.tipo === 'cliente' && mem.cliente_id === p.id) || (p.tipo === 'proveedor' && mem.proveedor_id === p.id))) s = Math.max(s, 0.9);
+    if (s >= 0.5) cands.push({ p, s: p.tipo === (m.tipo === 'entrada' ? 'cliente' : 'proveedor') ? s : s - 0.15 }); });
+  cands.sort((a, b) => b.s - a.s);
+  for (const c of cands.slice(0, 4)) {
+    const fs = bancoFacturasDe(M, c.p, m); const suma = bancoSuma(fs, cts);
+    if (suma) return { quien_tipo: c.p.tipo, persona: c.p, facturas: suma, nivel: c.s >= 0.75 ? 'alta' : 'media', motivo: (suma.length > 1 ? suma.length + ' facturas suman' : 'Factura de') + ' justo ' + eur(m.importe) + ' € y el nombre ' + (c.s >= 0.75 ? 'coincide' : 'se parece') };
+  }
+  // 3. Movimientos que no son de clientes ni proveedores (comisiones, impuestos, TPV…)
+  for (const [re, t, otro] of BANCO_REGLAS) if ((!t || t === m.tipo) && re.test(txt)) return { quien_tipo: 'otro', otro, facturas: [], nivel: 'media', motivo: 'El texto del banco parece «' + otro + '»' };
+  if (mem && memP >= 0.6 && mem.quien_tipo === 'otro') return { quien_tipo: 'otro', otro: mem.persona, facturas: [], nivel: 'media', motivo: 'Igual que otro movimiento ya confirmado' };
+  if (cands.length && cands[0].s >= 0.6) return { quien_tipo: cands[0].p.tipo, persona: cands[0].p, facturas: [], nivel: 'media', motivo: 'El nombre ' + (cands[0].s >= 0.75 ? 'coincide' : 'se parece') + ', pero ninguna factura suma ' + eur(m.importe) + ' €' };
+  // 4. Solo por importe: una única factura con ese total
+  const tipoF = m.tipo === 'entrada' ? f => f.tipo !== 'recibida' : f => f.tipo === 'recibida';
+  const lim0 = comSumaDias(m.fecha, -200), lim1 = comSumaDias(m.fecha, 7);
+  const exactas = M.facturas.filter(f => tipoF(f) && bancoCts(f.total) === cts && f.fecha >= lim0 && f.fecha <= lim1 && !M.usadas[f.tipo + ':' + f.id]);
+  if (exactas.length === 1) { const f = exactas[0]; const p = M.porId[(f.tipo === 'recibida' ? 'proveedor:' + f.proveedor_id : 'cliente:' + f.cliente_id)];
+    if (p) return { quien_tipo: p.tipo, persona: p, facturas: [f], nivel: 'baja', motivo: 'Solo coincide el importe (una factura de ' + eur(m.importe) + ' €): compruébalo' }; }
+  return null;
+}
+/* ---------- Datos del mes ---------- */
+async function bancoDatos(desde, hasta) {
+  const movs = await gesTodas(() => sb.from('banco_movimientos').select('*').gte('fecha', desde).lte('fecha', hasta).order('fecha').order('created_at'));
+  const ids = movs.map(m => m.id); const cam = {};
+  for (let i = 0; i < ids.length; i += 150) (await gesTodas(() => sb.from('banco_cambios').select('movimiento_id,cuando,quien,accion,detalle,motivo').in('movimiento_id', ids.slice(i, i + 150)).order('id'))).forEach(c => (cam[c.movimiento_id] || (cam[c.movimiento_id] = [])).push(c));
+  movs.forEach(m => { m.importe = Number(m.importe); m.facturas = Array.isArray(m.facturas) ? m.facturas : []; m.cambios = cam[m.id] || []; });
+  const per = {}; try { (await gesTodas(() => sb.from('perfiles').select('id,nombre'))).forEach(p => { per[p.id] = p.nombre; }); } catch (e) { }
+  return { movs, per };
+}
+const BANCO_CAMPOS = { quien_tipo: 'tipo', persona: 'nombre', nif: 'NIF', cp: 'CP', facturas: 'factura(s)', nota: 'nota', estado: 'estado' };
+const bancoFactTxt = fs => (fs || []).map(f => (f.tipo === 'recibida' ? 'Fra. prov. ' : 'Fra. ') + f.numero + (f.fecha ? ' (' + fechaES(f.fecha) + ')' : '')).join(', ');
+function bancoTextoCambio(c, per) {
+  const quien = per[c.quien] ? ' por ' + per[c.quien] : ''; const cu = fechaES(hoy(new Date(c.cuando))); const d = c.detalle || {};
+  if (c.accion === 'confirmado') return cu + ' confirmado' + quien;
+  const val = (k, v) => v == null || v === '' || (Array.isArray(v) && !v.length) ? '(vacío)' : k === 'facturas' ? bancoFactTxt(v) : String(v);
+  return cu + (c.accion === 'deshecho' ? ' vuelto a «sin confirmar»' : ' cambiado') + quien + ': ' + Object.entries(d).filter(([k]) => BANCO_CAMPOS[k] && k !== 'estado').map(([k, v]) => BANCO_CAMPOS[k] + ' ' + val(k, v.antes) + ' → ' + val(k, v.despues)).join('; ') + (c.motivo ? ' (motivo: ' + c.motivo + ')' : '');
+}
+/* Informe para Jorge: un movimiento por fila con nombre, NIF, CP y factura(s) */
+async function ljBanco(desde, hasta) {
+  let dd; try { dd = await bancoDatos(desde, hasta); }
+  catch (e) { if (/banco_|schema cache|relation|PGRST205|42P01/i.test(((e && e.code) || '') + ' ' + ((e && e.message) || ''))) return { filas: [['Fecha']], n: 0, aviso: '', nota: 'El banco todavía no está creado en la base de datos: no se manda.' }; throw e; }
+  const { movs, per } = dd;
+  const filas = [['Fecha', 'Fecha valor', 'Entra / Sale', 'Importe', 'Concepto del banco', 'Cliente / Proveedor / Otro', 'Nombre', 'NIF', 'Código postal', 'Factura(s)', 'Estado', 'Cambios después de confirmar']];
+  let ent = 0, sal = 0, pend = 0;
+  movs.forEach(m => { if (m.tipo === 'entrada') ent += m.importe; else sal += m.importe; const ok = m.estado === 'confirmado'; if (!ok) pend++;
+    filas.push([fechaES(m.fecha), m.fecha_valor ? fechaES(m.fecha_valor) : '', m.tipo === 'entrada' ? 'Entra' : 'Sale', gesNum(m.importe), m.concepto, ok ? ({ cliente: 'Cliente', proveedor: 'Proveedor', otro: 'Otro' }[m.quien_tipo] || '') : '',
+      ok ? m.persona || '' : '', ok ? m.nif || '' : '', ok ? m.cp || '' : '', ok ? bancoFactTxt(m.facturas) : '', ok ? 'Confirmado' : 'SIN CONFIRMAR', m.cambios.filter(c => c.accion !== 'confirmado').map(c => bancoTextoCambio(c, per)).join(' | ')]); });
+  filas.push([]); filas.push(['', '', 'Entradas', gesNum(ent)]); filas.push(['', '', 'Salidas', gesNum(sal)]); filas.push(['', '', 'Diferencia', gesNum(ent - sal)]);
+  return { filas, n: movs.length, aviso: pend ? '⚠️ ' + pend + ' movimiento(s) del banco SIN CONFIRMAR (salen sin nombre). Confírmalos en Más › «🏦 Banco».' : '',
+    nota: 'Entradas ' + eur(ent) + ' € · Salidas ' + eur(sal) + ' € · ' + (movs.length - pend) + ' de ' + movs.length + ' confirmados' };
+}
+/* ---------- Subir el fichero ---------- */
+async function bancoSubir(file, alTerminar) {
+  const buf = await file.arrayBuffer(); const txt = bancoTexto(new Uint8Array(buf.slice(0, 2e6)));
+  let movs, origen, cuenta = '';
+  if (/\.(n43|aeb|q43|c43|txt|dat)$/i.test(file.name) || bancoEsN43(txt)) {
+    if (!bancoEsN43(txt)) throw new Error('Este fichero no parece Norma 43. Si el banco te da Excel, sube el Excel.');
+    movs = bancoLeerN43(bancoTexto(new Uint8Array(buf))); origen = 'norma43'; cuenta = movs.length ? movs[0].cuenta : '';
+  } else { const r = await bancoLeerExcel(file); movs = r.movs; cuenta = r.cuenta; origen = 'excel'; }
+  if (!movs.length) throw new Error('No he encontrado movimientos en el fichero.');
+  if (origen === 'excel' && !cuenta) {   // el Excel no dice la cuenta: si solo hay una conocida, es esa
+    let cs = []; try { cs = [...new Set((await gesTodas(() => sb.from('banco_subidas').select('cuenta'))).map(x => x.cuenta).filter(Boolean))]; } catch (e) { }
+    if (cs.length === 1) cuenta = cs[0];
+    else if (cs.length > 1) { const r = (window.prompt('El Excel no dice de qué cuenta es. Escribe los 4 últimos números de la cuenta:\n' + cs.map(c => '· …' + c.slice(-4)).join('\n')) || '').trim(); cuenta = cs.find(c => r && c.endsWith(r)) || ''; if (!cuenta) throw new Error('No se ha elegido la cuenta.'); }
+    movs.forEach(m => { m.cuenta = cuenta; });
+  }
+  bancoHuellas(movs);
+  const ya = new Set(); for (let i = 0; i < movs.length; i += 150) (await gesTodas(() => sb.from('banco_movimientos').select('huella').in('huella', movs.slice(i, i + 150).map(m => m.huella)))).forEach(x => ya.add(x.huella));
+  const nuevos = movs.filter(m => !ya.has(m.huella)); const fechas = movs.map(m => m.fecha).sort();
+  const ent = nuevos.filter(m => m.tipo === 'entrada').reduce((a, m) => a + m.importe, 0), sal = nuevos.filter(m => m.tipo === 'salida').reduce((a, m) => a + m.importe, 0);
+  if (!nuevos.length) { window.alert('Este fichero ya estaba subido: sus ' + movs.length + ' movimientos ya están en la app. No se ha repetido nada.'); return; }
+  if (!await confirmar(file.name + '\n' + (origen === 'norma43' ? 'Norma 43' : 'Excel') + (cuenta ? ' · cuenta …' + cuenta.slice(-4) : '') + '\nDel ' + fechaES(fechas[0]) + ' al ' + fechaES(fechas[fechas.length - 1]) + '\n\n' +
+    movs.length + ' movimiento(s) leídos:\n· ' + nuevos.length + ' NUEVOS (entran ' + eur(ent) + ' €, salen ' + eur(sal) + ' €)\n· ' + (movs.length - nuevos.length) + ' ya estaban (no se repiten)\n\n¿Los guardo?')) return;
+  let ruta = null;
+  try { const ext = (file.name.split('.').pop() || 'txt').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5) || 'txt'; const rr = 'banco/' + fechas[0].slice(0, 4) + '/' + uuid() + '.' + ext; const up = await sb.storage.from('facturas').upload(rr, file, { contentType: file.type || 'application/octet-stream' }); if (!up.error) ruta = rr; } catch (e) { }
+  const sid = uuid();
+  const rs = await sb.from('banco_subidas').insert({ id: sid, nombre: file.name.slice(0, 200), origen, cuenta: cuenta || null, desde: fechas[0], hasta: fechas[fechas.length - 1], leidos: movs.length, nuevos: nuevos.length, repetidos: movs.length - nuevos.length, ruta });
+  if (rs.error) throw rs.error;
+  for (let i = 0; i < nuevos.length; i += 200) {
+    const r = await sb.from('banco_movimientos').upsert(nuevos.slice(i, i + 200).map(m => ({ cuenta: m.cuenta || '', fecha: m.fecha, fecha_valor: m.fecha_valor, tipo: m.tipo, importe: m.importe, concepto: (m.concepto || '').slice(0, 2000), concepto_comun: m.concepto_comun, documento: m.documento, referencia1: m.referencia1, referencia2: m.referencia2, saldo: m.saldo, huella: m.huella, origen, subida_id: sid })), { onConflict: 'huella', ignoreDuplicates: true });
+    if (r.error) throw r.error;
+  }
+  toast('✔ ' + nuevos.length + ' movimiento(s) nuevos guardados', 'ok');
+  alTerminar(fechas[fechas.length - 1].slice(0, 7));
+}
+/* ---------- Confirmar o corregir un movimiento ---------- */
+function bancoFormulario(M, m, prop, alGuardar) {
+  const conf = m.estado === 'confirmado'; const ent = m.tipo === 'entrada';
+  let qt = conf ? m.quien_tipo : prop ? prop.quien_tipo : (ent ? 'cliente' : 'proveedor');
+  let pers = conf ? (m.quien_tipo === 'cliente' ? M.porId['cliente:' + m.cliente_id] : m.quien_tipo === 'proveedor' ? M.porId['proveedor:' + m.proveedor_id] : null) : prop && prop.persona || null;
+  let sel = new Set((conf ? m.facturas : prop ? prop.facturas : []).map(f => f.tipo + ':' + f.id));
+  const extra = {}; (conf ? m.facturas : []).forEach(f => { extra[f.tipo + ':' + f.id] = f; });
+  const chips = h('div', { class: 'chips' }); const cuerpo = h('div', {});
+  const idL = 'bco-p-' + uuid().slice(0, 8), idO = 'bco-o-' + uuid().slice(0, 8);
+  const busc = comInput('text', pers ? pers.nombre : '', { list: idL, placeholder: 'Escribe el nombre…', autocomplete: 'off' }); const dl = h('datalist', { id: idL });
+  const otro = comInput('text', conf && m.quien_tipo === 'otro' ? m.persona : prop && prop.quien_tipo === 'otro' ? prop.otro : '', { list: idO, placeholder: ent ? 'p. ej. Cobros con tarjeta' : 'p. ej. Comisión del banco', autocomplete: 'off' });
+  const dlO = h('datalist', { id: idO }, BANCO_OTROS[m.tipo].map(x => h('option', { value: x })));
+  const nif = comInput('text', conf ? m.nif || '' : pers ? pers.nif : '', { placeholder: 'NIF / CIF' }); const cp = comInput('text', conf ? m.cp || '' : pers ? pers.cp : '', { placeholder: 'Código postal', inputmode: 'numeric' });
+  const nota = comInput('text', conf ? m.nota || '' : '', { placeholder: 'Opcional' }); const motivo = comInput('text', '', { placeholder: 'Por qué se cambia (obligatorio)' });
+  const facts = h('div', {}); const sumaEl = h('div', { class: 'sub', style: 'margin-top:4px;font-weight:700' });
+  const pintaFacts = () => {
+    if (qt === 'otro' || !pers) { facts.replaceChildren(h('div', { class: 'sub' }, qt === 'otro' ? 'Sin factura.' : 'Elige primero el ' + qt + '.')); sumaEl.textContent = ''; return; }
+    const fs = bancoFacturasDe(M, pers, m, m.id); Object.values(extra).forEach(f => { if (!fs.some(x => x.tipo === f.tipo && x.id === f.id)) fs.push(f); });
+    fs.sort((a, b) => a.fecha < b.fecha ? 1 : -1);
+    const suma = () => { const s = fs.filter(f => sel.has(f.tipo + ':' + f.id)).reduce((a, f) => a + bancoCts(f.total), 0); const dif = s - bancoCts(m.importe);
+      sumaEl.style.color = !s ? '' : dif === 0 ? '#15803d' : '#b45309'; sumaEl.textContent = !s ? 'Ninguna factura elegida (se puede confirmar sin factura).' : 'Facturas elegidas: ' + eur(s / 100) + ' € de ' + eur(m.importe) + ' €' + (dif === 0 ? ' ✔ cuadra' : dif > 0 ? ' (sobran ' + eur(dif / 100) + ' €: pago parcial)' : ' (faltan ' + eur(-dif / 100) + ' €)'); };
+    facts.replaceChildren(...(fs.length ? fs.slice(0, 40).map(f => { const k = f.tipo + ':' + f.id; const cb = h('input', { type: 'checkbox', style: 'width:24px;height:24px;min-height:0;flex:none;padding:0', checked: sel.has(k), onchange: () => { if (cb.checked) sel.add(k); else sel.delete(k); suma(); } });
+      return h('label', { style: 'display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid #f3f4f6' }, cb, h('div', { style: 'flex:1' }, h('b', {}, (f.tipo === 'recibida' ? 'Fra. proveedor ' : f.tipo === 'golden' ? 'Fra. Golden ' : 'Fra. ') + f.numero), h('div', { class: 'sub' }, fechaES(f.fecha))), h('b', {}, eur(f.total) + ' €')); })
+      : [h('div', { class: 'sub' }, 'No hay facturas suyas sin pagar en los últimos meses.')]));
+    suma();
+  };
+  const elegir = p => { if (p === pers) return; pers = p; sel = new Set(); if (p) { nif.value = p.nif || ''; cp.value = p.cp || ''; const s = bancoSuma(bancoFacturasDe(M, p, m, m.id), bancoCts(m.importe)); if (s) s.forEach(f => sel.add(f.tipo + ':' + f.id)); } pintaFacts(); };
+  const alEscribir = () => { const v = busc.value.trim().toLowerCase(); const l = qt === 'cliente' ? M.clientes : M.proveedores; elegir(l.find(p => p.nombre.toLowerCase() === v || p.nombres.some(n => n.toLowerCase() === v)) || null); };
+  busc.addEventListener('change', alEscribir); busc.addEventListener('input', alEscribir);
+  const pintar = () => {
+    chips.replaceChildren(...[['cliente', '🧑‍🍳 Cliente'], ['proveedor', '🚚 Proveedor'], ['otro', '🏦 Otro (comisión, impuestos…)']].map(([v, t]) => h('button', { class: 'chip' + (qt === v ? ' on' : ''), onclick: () => { if (qt === v) return; qt = v; if (!pers || pers.tipo !== v) { pers = null; busc.value = ''; } sel = new Set(); pintar(); } }, t)));
+    if (qt !== 'otro') dl.replaceChildren(...(qt === 'cliente' ? M.clientes : M.proveedores).map(p => h('option', { value: p.nombre }, (p.codigo ? p.codigo + ' · ' : '') + (p.nif || ''))));
+    cuerpo.replaceChildren(...(qt === 'otro' ? [comCampo('Qué es', otro), dlO] : [comCampo(qt === 'cliente' ? 'Cliente' : 'Proveedor', busc), dl, comCampo('NIF', nif), comCampo('Código postal', cp), h('div', { class: 'sub', style: 'font-weight:600;margin-top:8px' }, 'Factura(s) que paga'), facts, sumaEl]));
+    pintaFacts();
+  };
+  pintar();
+  const bOk = h('button', { class: 'guardar', style: 'width:100%;margin-top:8px' }, conf ? '💾 Guardar el cambio' : '✔ Confirmar');
+  bOk.onclick = async () => {
+    const fila = { estado: 'confirmado', quien_tipo: qt, nota: nota.value.trim() || null };
+    if (qt === 'otro') { if (!otro.value.trim()) { toast('Escribe qué es (p. ej. «Comisión del banco»)', 'err'); return; } Object.assign(fila, { persona: otro.value.trim(), cliente_id: null, proveedor_id: null, nif: null, cp: null, facturas: [] }); }
+    else { if (!pers) { toast('Elige el ' + qt + ' de la lista', 'err'); return; }
+      const todas = [...bancoFacturasDe(M, pers, m, m.id), ...Object.values(extra)];
+      const fs = []; sel.forEach(k => { const f = todas.find(x => x.tipo + ':' + x.id === k); if (f && !fs.some(y => y.tipo + ':' + y.id === k)) fs.push({ tipo: f.tipo, id: f.id, numero: f.numero, fecha: f.fecha, total: f.total }); });
+      Object.assign(fila, { persona: pers.nombre, cliente_id: qt === 'cliente' ? pers.id : null, proveedor_id: qt === 'proveedor' ? pers.id : null, nif: nif.value.trim().toUpperCase().replace(/[\s.\-\/]/g, '') || null, cp: cp.value.trim() || null, facturas: fs });
+      if (!fila.nif || !fila.cp) { if (!await confirmar('Falta ' + [!fila.nif ? 'el NIF' : '', !fila.cp ? 'el código postal' : ''].filter(Boolean).join(' y ') + ' de ' + pers.nombre + '. Jorge lo necesita.\n\n¿Confirmar igualmente? (mejor completar su ficha)')) return; } }
+    if (conf) { if (!motivo.value.trim()) { toast('Escribe el motivo del cambio', 'err'); return; } fila.motivo_cambio = motivo.value.trim(); }
+    bOk.disabled = true;
+    try { const r = await sb.from('banco_movimientos').update(fila).eq('id', m.id); if (r.error) throw r.error; toast(conf ? '✔ Cambiado (queda apuntado)' : '✔ Confirmado', 'ok'); alGuardar(); }
+    catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); bOk.disabled = false; }
+  };
+  const bDes = conf ? h('button', { class: 'ghost small', style: 'margin-top:8px', onclick: async () => { if (!motivo.value.trim()) { toast('Escribe arriba el motivo', 'err'); return; } if (!await confirmar('¿Volver a dejar este movimiento SIN CONFIRMAR?')) return;
+    const r = await sb.from('banco_movimientos').update({ estado: 'pendiente', motivo_cambio: motivo.value.trim() }).eq('id', m.id); if (r.error) { toast(msgErr(r.error), 'err'); return; } toast('Vuelto a «sin confirmar»', 'ok'); alGuardar(); } }, '↩️ Dejar sin confirmar') : null;
+  return h('div', {}, prop && !conf ? h('div', { class: 'aviso-card', style: 'margin-bottom:8px' }, '💡 Propuesta de la app: ' + prop.motivo + '. Revísalo y confirma o cambia lo que haga falta.') : null,
+    chips, cuerpo, comCampo('Nota', nota), conf ? comCampo('Motivo del cambio', motivo) : null, bOk, bDes);
+}
+/* ---------- Pantalla ---------- */
+function vistaBanco() {
+  state.view = 'banco'; if (!esOficina() || !BANCO_APP) { go('inicio'); return; }
+  const mesHoy = hoy().slice(0, 7);
+  let mes = LS.get('fj_banco_mes', mesHoy); if (!/^\d{4}-\d{2}$/.test(mes) || mes > mesHoy) mes = mesHoy; let filtro = LS.get('fj_banco_filtro', 'pend'); let datos = null, M = null, props = {};
+  const MESES_B = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); const etqMes = h('b', { style: 'flex:1;text-align:center;font-size:18px' });
+  const bSig = h('button', { class: 'ghost', style: 'min-height:48px;width:64px;flex:none', onclick: () => mover(1) }, '▶');
+  const irMes = v => { mes = v > mesHoy ? mesHoy : v; LS.set('fj_banco_mes', mes); pintarMes(); cargar(); };
+  const mover = n => { const [y, m] = mes.split('-').map(Number); const d = new Date(y, m - 1 + n, 1); const v = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); if (v > mesHoy) return; irMes(v); };
+  const pintarMes = () => { const [y, m] = mes.split('-').map(Number); etqMes.textContent = MESES_B[m - 1][0].toUpperCase() + MESES_B[m - 1].slice(1) + ' ' + y; bSig.disabled = mes >= mesHoy; bSig.style.opacity = mes >= mesHoy ? '.35' : '1'; };
+  const selMes = h('div', { style: 'display:flex;gap:8px;align-items:center;margin:10px 0' }, h('button', { class: 'ghost', style: 'min-height:48px;width:64px;flex:none', onclick: () => mover(-1) }, '◀'), etqMes, bSig); pintarMes();
+  const fic = h('input', { type: 'file', accept: '.n43,.aeb,.q43,.c43,.txt,.dat,.xls,.xlsx,.csv,text/plain,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', style: 'display:none' });
+  const bSubir = h('button', { class: 'guardar', style: 'width:100%' }, '📥 Subir fichero del banco (Norma 43 o Excel)');
+  bSubir.onclick = () => { fic.value = ''; fic.click(); };
+  fic.addEventListener('change', async () => { const f = fic.files && fic.files[0]; if (!f) return; const t0 = bSubir.textContent; bSubir.disabled = true; bSubir.textContent = '⏳ Leyendo ' + f.name + '…';
+    try { await bancoSubir(f, ultimo => { M = null; irMes(ultimo); }); } catch (e) { const t = isNetErr(e) ? 'Necesitas conexión.' : (e && e.message) || msgErr(e); toast(t, 'err'); window.alert('No se ha subido: ' + t); }
+    bSubir.disabled = false; bSubir.textContent = t0; });
+  async function cargar() {
+    cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+    try { const [y, mm] = mes.split('-').map(Number); const fin = mes + '-' + String(new Date(y, mm, 0).getDate()).padStart(2, '0');
+      datos = await bancoDatos(mes + '-01', fin); M = await bancoMaestros(comSumaDias(mes + '-01', -200)); props = {};
+      datos.movs.forEach(m => { if (m.estado !== 'confirmado') props[m.id] = bancoProponer(M, m); }); pintar(); }
+    catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver el banco.' : /banco_|schema cache|relation|PGRST205|42P01/i.test(((e && e.code) || '') + ' ' + ((e && e.message) || '')) ? 'Falta crear el banco en la base de datos (cambio pendiente de aplicar).' : msgErr(e))); }
+  }
+  const icono = m => ({ cliente: '🧑‍🍳', proveedor: '🚚', otro: '🏦' }[m] || '');
+  function detalle(m) {
+    let cerrar = null; const per = datos.per;
+    const hist = h('div', { class: 'sub', style: 'margin-top:8px;line-height:1.5' }, h('div', {}, '🕓 Subido el ' + fechaES(hoy(new Date(m.created_at))) + (per[m.subido_por] ? ' por ' + per[m.subido_por] : '') + ' (' + (m.origen === 'norma43' ? 'Norma 43' : 'Excel') + ')'), ...m.cambios.map(c => h('div', { style: c.accion === 'confirmado' ? 'color:#15803d' : 'color:#b45309' }, (c.accion === 'confirmado' ? '✔ ' : '✏️ ') + bancoTextoCambio(c, per))));
+    const lin = (a, b) => b ? h('div', { style: 'padding:3px 0' }, h('span', { class: 'sub' }, a + ': '), h('b', {}, b)) : null;
+    cerrar = hoja((m.tipo === 'entrada' ? '➕ Entra ' : '➖ Sale ') + eur(m.importe) + ' €', h('div', {},
+      h('div', { class: 'card', style: 'background:#f9fafb' }, h('div', { class: 'sub' }, 'Lo que dice el banco (no se cambia)'), lin('Fecha', fechaES(m.fecha) + (m.fecha_valor && m.fecha_valor !== m.fecha ? ' (valor ' + fechaES(m.fecha_valor) + ')' : '')), lin('Concepto', m.concepto || '(sin texto)'),
+        lin('Tipo', BANCO_N43_CONCEPTOS[m.concepto_comun] || null), lin('Documento', m.documento), lin('Referencia', [m.referencia1, m.referencia2].filter(Boolean).join(' · ') || null), lin('Saldo', m.saldo != null ? eur(m.saldo) + ' €' : null)),
+      bancoFormulario(M, m, props[m.id], () => { cerrar(); cargar(); }), hist));
+  }
+  async function confirmarSeguras() {
+    const ls = datos.movs.filter(m => m.estado !== 'confirmado' && props[m.id] && props[m.id].nivel === 'alta' && props[m.id].persona && props[m.id].persona.nif && props[m.id].persona.cp);
+    if (!ls.length) { toast('No hay propuestas seguras para confirmar de golpe', 'err'); return; }
+    if (!await confirmar('Se confirman ' + ls.length + ' movimiento(s) en los que el NOMBRE coincide y la(s) factura(s) suman JUSTO el importe:\n\n' + ls.slice(0, 12).map(m => '· ' + eur(m.importe) + ' € → ' + props[m.id].persona.nombre + ' (' + bancoFactTxt(props[m.id].facturas) + ')').join('\n') + (ls.length > 12 ? '\n…' : '') + '\n\n¿Confirmarlos?')) return;
+    let ok = 0, mal = 0;
+    for (const m of ls) { const p = props[m.id];
+      const r = await sb.from('banco_movimientos').update({ estado: 'confirmado', quien_tipo: p.quien_tipo, persona: p.persona.nombre, cliente_id: p.quien_tipo === 'cliente' ? p.persona.id : null, proveedor_id: p.quien_tipo === 'proveedor' ? p.persona.id : null, nif: p.persona.nif.toUpperCase().replace(/[\s.\-\/]/g, ''), cp: p.persona.cp, facturas: p.facturas.map(f => ({ tipo: f.tipo, id: f.id, numero: f.numero, fecha: f.fecha, total: f.total })) }).eq('id', m.id).eq('estado', 'pendiente');
+      if (r.error) mal++; else ok++; }
+    toast('✔ ' + ok + ' confirmado(s)' + (mal ? ' · ' + mal + ' con error' : ''), mal ? 'err' : 'ok'); cargar();
+  }
+  function tarjeta(m) {
+    const ent = m.tipo === 'entrada'; const conf = m.estado === 'confirmado'; const p = props[m.id];
+    const quien = conf ? h('div', { style: 'margin-top:6px;color:#15803d;font-weight:600' }, '✔ ' + icono(m.quien_tipo) + ' ' + m.persona + (m.nif ? ' · ' + m.nif : '') + (m.cp ? ' · CP ' + m.cp : '') + (m.facturas.length ? ' · ' + bancoFactTxt(m.facturas) : ''))
+      : p ? h('div', { style: 'margin-top:6px;padding:6px 8px;border-radius:10px;background:' + (p.nivel === 'alta' ? '#dcfce7' : p.nivel === 'media' ? '#fef9c3' : '#ffedd5') },
+        h('div', { style: 'font-weight:600' }, '💡 ' + icono(p.quien_tipo) + ' ' + (p.persona ? p.persona.nombre : p.otro) + (p.facturas.length ? ' · ' + bancoFactTxt(p.facturas) : '')), h('div', { class: 'sub' }, p.motivo))
+        : h('div', { class: 'sub', style: 'margin-top:6px;color:#b45309' }, '❓ Sin propuesta: toca para decir de quién es');
+    const marcas = [conf && m.cambios.some(c => c.accion !== 'confirmado') ? h('span', { class: 'badge', style: 'background:#fef3c7;color:#92400e' }, '✏️ Cambiado después') : null].filter(Boolean);
+    return h('div', { class: 'card', style: 'cursor:pointer' + (conf ? '' : ';border-left:4px solid #f59e0b'), onclick: () => detalle(m) },
+      h('div', { style: 'display:flex;justify-content:space-between;gap:8px;align-items:flex-start' },
+        h('div', { style: 'min-width:0' }, h('div', { class: 'sub' }, fechaES(m.fecha) + (BANCO_N43_CONCEPTOS[m.concepto_comun] ? ' · ' + BANCO_N43_CONCEPTOS[m.concepto_comun] : '')), h('div', { style: 'font-size:15px;word-break:break-word' }, m.concepto || '(sin texto)')),
+        h('b', { style: 'white-space:nowrap;font-size:17px;color:' + (ent ? '#15803d' : '#b91c1c') }, (ent ? '+' : '−') + eur(m.importe) + ' €')),
+      quien, marcas.length ? h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' }, ...marcas) : null);
+  }
+  function pintar() {
+    const todos = datos.movs.slice().sort((a, b) => b.fecha.localeCompare(a.fecha) || String(b.created_at).localeCompare(String(a.created_at)));
+    const ent = todos.filter(m => m.tipo === 'entrada').reduce((a, m) => a + m.importe, 0), sal = todos.filter(m => m.tipo === 'salida').reduce((a, m) => a + m.importe, 0);
+    const pend = todos.filter(m => m.estado !== 'confirmado'); const seguras = pend.filter(m => props[m.id] && props[m.id].nivel === 'alta' && props[m.id].persona && props[m.id].persona.nif && props[m.id].persona.cp).length;
+    if (filtro === 'pend' && !pend.length && todos.length) filtro = 'todo';
+    const lista = todos.filter(m => filtro === 'todo' ? true : filtro === 'pend' ? m.estado !== 'confirmado' : filtro === 'conf' ? m.estado === 'confirmado' : m.tipo === filtro);
+    const cifra = (t, v, col) => h('div', { style: 'flex:1;text-align:center' }, h('div', { class: 'sub' }, t), h('b', { style: 'font-size:17px;color:' + col }, eur(v) + ' €'));
+    cont.replaceChildren(...[
+      h('div', { class: 'card', style: 'display:flex;gap:6px' }, cifra('Entra', ent, '#15803d'), cifra('Sale', sal, '#b91c1c'), h('div', { style: 'flex:1;text-align:center' }, h('div', { class: 'sub' }, 'Confirmados'), h('b', { style: 'font-size:17px' }, (todos.length - pend.length) + ' / ' + todos.length))),
+      pend.length ? h('div', { class: 'aviso-card' }, '⚠️ ' + pend.length + ' movimiento(s) sin confirmar. Toca cada uno: la app te propone de quién es y qué factura paga.') : null,
+      seguras ? h('button', { class: 'guardar', style: 'width:100%;background:#15803d;background-image:none;margin:6px 0', onclick: confirmarSeguras }, '✔ Confirmar las ' + seguras + ' propuestas seguras (verdes)') : null,
+      h('div', { class: 'chips' }, ...[['pend', '⚠️ Sin confirmar' + (pend.length ? ' (' + pend.length + ')' : '')], ['conf', '✔ Confirmados'], ['entrada', '➕ Entradas'], ['salida', '➖ Salidas'], ['todo', 'Todo']].map(([v, t]) => h('button', { class: 'chip' + (filtro === v ? ' on' : ''), onclick: () => { filtro = v; LS.set('fj_banco_filtro', v); pintar(); } }, t))),
+      ...(lista.length ? lista.map(tarjeta) : [h('p', { class: 'vacio' }, todos.length ? 'No hay movimientos con este filtro.' : 'No hay movimientos del banco en este mes. Sube el fichero del banco (arriba).')])].filter(Boolean));
+  }
+  $app.replaceChildren(shell('Banco', h('div', {},
+    h('p', { class: 'sub' }, 'Sube el fichero del banco (Norma 43 o el Excel, un movimiento por línea). La app propone de quién es cada movimiento (cliente o proveedor, con NIF y CP) y qué factura paga; tú lo confirmas o lo corriges. Si subes dos veces el mismo fichero, no se repite nada. Sale en «Informes para Jorge».'),
+    fic, bSubir, selMes, cont), { volver: volverIni })); renderBanner(); cargar();
+}
+
 function vistaCopia() {
   state.view = 'copia';
   if (state.perfil.rol !== 'admin') { go('inicio'); return; }
@@ -13761,6 +14134,7 @@ const BUSCA_PANTALLAS = [
   ['🌐', 'Portal de clientes', 'portal pagina clientes web qr enlace publicar albaranes', () => go('paginasclientes')],
   ['📲', 'Móviles y correos de clientes', 'moviles correos telefonos contactos clientes dejan qr whatsapp email', () => go('contactosportal'), 'o'],
   ...(CAJA_APP ? [['💵', 'Caja (efectivo)', 'caja efectivo entradas salidas gasolina justificante ticket debe haber dinero metalico', () => go('caja'), 'o']] : []),
+  ...(BANCO_APP ? [['🏦', 'Banco', 'banco norma 43 n43 cuaderno 43 extracto movimientos transferencias cobros pagos conciliar conciliacion excel', () => go('banco'), 'o']] : []),
   ['📤', 'Informes para Jorge', 'jorge gestoria gestor contable informes cierre mes iva facturas emitidas recibidas trimestre', () => go('gestoria'), 'o'],
   ['🆘', 'Peticiones de ayuda', 'ayuda ayudas socorro atascado problema equipo', () => go('ayudas'), 'o'],
   ['🗂️', 'Secretaría hoy', 'secretaria oficina tareas hoy', () => go('secretaria'), 'o'],
@@ -14179,7 +14553,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { facturasapp: vistaFacturasApp, caja: vistaCaja, empresa: vistaEmpresa, modoreparto: vistaModoReparto, tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, camino: vistaCamino, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { facturasapp: vistaFacturasApp, caja: vistaCaja, banco: vistaBanco, empresa: vistaEmpresa, modoreparto: vistaModoReparto, tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, camino: vistaCamino, rentabilidad: vistaRentabilidad, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   if (MR.dentro() && state.view === 'inicio' && !state.mrMirado) { state.mrMirado = true; return vistaModoReparto(); }   /* vuelve al modo reparto si se cerró la app */
   v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); if (state.view === 'inicio') setTimeout(mrAuto, 300); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
