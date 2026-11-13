@@ -4532,7 +4532,21 @@ const arr = x => Array.isArray(x) ? x : (x ? [x] : []);
    Hoy SOLO en la app de PRUEBAS (serie «PRUEBA», SIN VALOR FISCAL). En la app normal no sale el botón y la base real lo bloquea
    (sif_config.emision_real_activa = false) hasta que haya declaración responsable firmada (docs/SIF_PRODUCTOR).
    Todo el cálculo y la numeración los hace la base de datos (funciones sif_*); la app solo enseña, elige y pide. */
-const FACTURAR_APP = ES_PRUEBAS && !PRACTICA;
+let FACTURAR_APP = ES_PRUEBAS && !PRACTICA;
+/* Fase 7 (paso a 2027): en la app NORMAL el botón de facturas sale SOLO cuando la base real lo diga:
+   sif_config.emision_real_activa = true y ya es su fecha_inicio (1/1/2027). Hoy está en false: no sale.
+   Activarlo es un SQL aparte, con «Autorizo» de Fernando y la decisión del 1/1/2027 tomada (docs/FACTURACION_2027.md). */
+let sifActivaMirada = false;
+async function sifMirarActiva() {
+  if (ES_PRUEBAS || PRACTICA || sifActivaMirada || !sb || !navigator.onLine || !esOficina()) return;
+  sifActivaMirada = true;
+  try {
+    const r = await sb.from('sif_config').select('emision_real_activa,fecha_inicio').maybeSingle();
+    const c = r && !r.error && r.data;
+    const si = !!(c && c.emision_real_activa && (!c.fecha_inicio || hoy() >= c.fecha_inicio));
+    if (si !== FACTURAR_APP) { FACTURAR_APP = si; if (state.view === 'inicio') render(); }
+  } catch (e) { sifActivaMirada = false; }
+}
 const SIF_FORMAS = [['transferencia', '🏦 Transferencia'], ['tarjeta', '💳 Tarjeta'], ['bizum', '📱 Bizum'], ['domiciliacion', '🏧 Domiciliación (recibo)'], ['pagare', '📝 Pagaré o cheque'], ['efectivo', '💶 Efectivo']];
 const SIF_FORMA_TXT = { transferencia: 'Transferencia bancaria', tarjeta: 'Tarjeta', bizum: 'Bizum', domiciliacion: 'Domiciliación bancaria (recibo)', pagare: 'Pagaré o cheque', efectivo: 'Efectivo', compensacion: 'Compensación / abono en la próxima factura' };
 const sifErr = e => String(msgErr(e)).replace(/^[A-Z_]+:\s*/, '');
@@ -5496,6 +5510,7 @@ function vistaSecretaria() {
 
 function vistaMas() {
   state.view = 'inicio'; state.desdeSec = false;
+  sifMirarActiva();
   { const ay = LS.get('fj_ir_ayuda', null); if (ay) { LS.set('fj_ir_ayuda', null); setTimeout(() => abrirAyuda(ay), 0); } }
   if (LS.get('fj_ir', null) === 'recib') { LS.set('fj_ir', null); LS.set('fj_compras_modo', 'recib'); setTimeout(() => go('compras'), 0); return; }
   const c = (ico, t, f, color, badge) => h('button', { class: 'circ', onclick: f }, h('span', { class: 'c', style: '--c:' + color }, ico, badge ? h('span', { class: 'insig' }, badge) : null), h('span', { class: 'l' }, t));
@@ -5537,7 +5552,7 @@ function vistaMas() {
     ...g('Entregas y pedidos', c('🚦', 'Camino de los pedidos', () => go('camino'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a')),
     ...g('Compras y mercancía', puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Clientes y productos', c('👥', 'Clientes', () => { window.__cliFiscal = false; go('clientes'); }, Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z)),
-    ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() && FACTURAR_APP ? c('🧾', 'Facturas (desde la app) · PRUEBAS', () => go('facturasapp'), Z) : null, esOficina() ? c('🏢', 'Datos de la empresa', () => go('empresa'), Z) : null, esOficina() ? c('🧾', 'Clientes sin datos para facturar', () => { window.__cliFiscal = true; go('clientes'); }, Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen y correo', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() && CAJA_APP ? c('💵', 'Caja (efectivo)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('caja'), Z) : null, esOficina() && BANCO_APP ? c('🏦', 'Banco' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('banco'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
+    ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() && FACTURAR_APP ? c('🧾', 'Facturas (desde la app)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('facturasapp'), Z) : null, esOficina() ? c('🏢', 'Datos de la empresa', () => go('empresa'), Z) : null, esOficina() ? c('🧾', 'Clientes sin datos para facturar', () => { window.__cliFiscal = true; go('clientes'); }, Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen y correo', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() && CAJA_APP ? c('💵', 'Caja (efectivo)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('caja'), Z) : null, esOficina() && BANCO_APP ? c('🏦', 'Banco' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('banco'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('❓', 'Ayuda y guía', () => go('ayuda'), T), c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
