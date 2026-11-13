@@ -93,7 +93,7 @@ begin
     if r.huella <> public.sif__huella_alta(r.nif_emisor, r.num_serie, r.fecha_expedicion, r.tipo_factura, r.cuota_total, r.importe_total, r.huella_anterior, r.fecha_hora_gen) then
       fallos := fallos || (r.num_serie || ': la huella no cuadra (el registro se ha tocado)'); end if;
     if r.num_serie <> r.codigo or r.fecha_expedicion <> to_char(r.fecha, 'DD-MM-YYYY') or r.importe_total <> r.total::numeric(12,2)::text
-       or r.cuota_total <> (r.cuota_iva + r.cuota_re)::numeric(12,2)::text or r.tipo_factura <> case when r.tipo = 'rectificativa' then 'R1' else 'F1' end then
+       or r.cuota_total <> (r.cuota_iva + r.cuota_re)::numeric(12,2)::text or r.tipo_factura <> (case when r.tipo = 'rectificativa' then 'R1' else 'F1' end) then
       fallos := fallos || (r.num_serie || ': la factura no coincide con su registro'); end if;
     v_ant := r.huella;
   end loop;
