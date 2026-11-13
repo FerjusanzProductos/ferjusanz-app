@@ -8,6 +8,17 @@ Dueño y quien decide: **Fernando Sanz**.
 - Respuestas cortas. Cuando haya que elegir, dar una recomendación clara.
 - **Nunca** pedir contraseñas, tokens ni claves por el chat. Si hace falta una, usar el formulario seguro de credenciales.
 
+## Todo desde el móvil (instrucción permanente de Fernando, 13/11/2026)
+Fernando trabaja **solo desde su Samsung** (Android, Chrome). Su ordenador tiene Windows 7 y **no quiere depender de él**. Cuando algo no se pueda hacer desde la app de Claude:
+1. Dar el **enlace directo** a la página exacta donde hacerlo desde Chrome.
+2. Decir si hace falta activar **«Sitio para ordenador»** en Chrome (menú ⋮ arriba a la derecha → «Sitio para ordenador»).
+3. Explicar **paso a paso** dónde pulsar y qué hacer, de forma sencilla.
+4. Para permisos, herramientas, integraciones o entrar en GitLab, Cloudflare, Supabase o Claude Code: **buscar primero cómo hacerlo desde el navegador del móvil** (o hacerlo Claude con las herramientas del entorno).
+5. **No pedirle usar un ordenador** sin haber comprobado antes las alternativas desde Android.
+6. Si no hay forma desde Chrome, decirlo claro y proponer otra alternativa que funcione en el Samsung.
+7. **No inventar enlaces** ni decir que algo se aprueba desde Chrome sin haberlo comprobado (si no se ha podido comprobar, decirlo).
+8. Siguen todas las medidas de seguridad: nada destructivo, ni publicaciones, ni cambios en producción sin su autorización.
+
 ## Antes de tocar nada (en este orden)
 1. `docs/ESTADO_ACTUAL.md`: versión publicada, ramas y cómo se publica.
 2. `docs/REGLAS_INTERNAS.md`: reglas de productos, IVA y albaranes. **Obligatorias.**
