@@ -2,8 +2,12 @@
 _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.md. Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda._
 
 ## Por publicar o decidir
+<<<<<<< Updated upstream
 - 🔴 13/11/2026: **📈 Recuadro de Mercado** en «Resumen del día y correo», en PRUEBAS (v290). Lo rellena Claude con la skill **/mercado-semanal** (precios de los Mercas y noticias de aguacate, patata, tomate, limón, naranja, plátano y huevos). ✔️ Tabla `resumen_mercado` creada en la REAL («Autorizo», 13/11) y primer resumen guardado (13/11). ✔️ **Publicado en la normal v291** («Autorizo publicar»; solo esto, sin lo demás de pruebas). ✔️ **Tarea programada «Resumen de mercado Ferjusanz (martes)»** (martes 7:37, Madrid; solo busca y guarda en `resumen_mercado`; primera el 17/11): comprobar el martes 17 que el recuadro tiene el resumen nuevo. ⚪ Falta la tabla en PRUEBAS (la API no tiene permiso; el conector pidió aprobar y caducó).
 - ⚪ 13/11/2026: **becario-mods** instalado en el proyecto. Si Fernando lo quiere también en su ordenador para otros proyectos: Personalizar → Plugins → Subir plugin con el ZIP. Comprobar en la próxima sesión que `/mods` y `/consumo` responden.
+=======
+- ⚪ 13/11/2026: **becario-mods**: en la nube los plugins del proyecto NO se instalaban solos (tampoco los del kit: ponytail, superpowers…). Arreglado con el script de preparación del entorno «ferjusanz-app» (aprobado por Fernando desde la app), que instala becario-mods al arrancar. Comprobar en una sesión NUEVA que `/mods` y `/consumo` responden. ⚪ Ver si se hace lo mismo con los plugins del kit.
+>>>>>>> Stashed changes
 - 🔴 13/11/2026: **Menú más limpio + «Resumen y correo»** publicado en la normal (v280). ✔️ Tabla `resumen_correo` creada en la real (13/11). ⚪ En la base de pruebas no se pudo (la API no tiene permiso allí); no hace falta salvo que se quiera ver en la naranja.
   - ⚪ Propuestas sin decidir: juntar **Cobros y Deudas** (y Caja del día / Caja (efectivo) / Cuadre de ayer); **«A quién compramos hoy»** frente a Trazabilidad → Confirmar; **«Facturas de clientes»** cuando se facture desde la app (1/1/2027).
 - ✔️ 12/11/2026: **Arreglo del aviso falso «hay una nueva versión»** publicado en la normal (v251, «Autorizo publicar»). Pruebas en v250.
