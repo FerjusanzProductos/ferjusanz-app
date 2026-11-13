@@ -75,7 +75,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
     - ✔️ Tablas de facturas creadas **apagadas** en la base REAL (13/11/2026, «Autorizo»; comprobado: siguiente 2027-0001 / R2027-0001, no deja emitir).
     - ✔️ Mismo SQL aplicado en la base de PRUEBAS (13/11/2026, por Claude con el conector de Supabase).
     - 🔴 **Verifactu: el aplazamiento a 2028 NO está en el BOE** (13/11). Claude lo mira cada lunes. **Decisión el 22/12** con Jorge (5 condiciones); si no, **Plan B: Golden en enero**.
-    - 🟡 Mejoras antes de la prueba (una por sesión): factura cobrada al confirmar en el Banco · IBAN en la factura · unidad buena en la factura · efectivo bloqueado en la entrega si llega a 1.000 € · «Cambiar mi contraseña».
+    - 🟡 Mejoras antes de la prueba (una por sesión): 🟡 factura cobrada al confirmar en el Banco (hecha en PRUEBAS v288; falta el SQL `20261117a` en pruebas con «Autorizo», que Fernando lo pruebe y «Autorizo publicar» + SQL en la real) · IBAN en la factura · unidad buena en la factura · efectivo bloqueado en la entrega si llega a 1.000 € · «Cambiar mi contraseña».
     - 🟡 Prueba completa en la naranja el 15–18/12 (Carmen y Fernando) con el guion.
     - 🟡 Hablar con Golden: seguir en enero (Plan B) y guardar el histórico de facturas (4–6 años). Después: que Fernando/Carmen suban un fichero de verdad del banco (Norma 43 o Excel) en la app naranja y digan si acierta las propuestas.
     - 🟡 Preguntar al banco/Carmen qué fichero dan (Norma 43 o Excel) y si hay más de una cuenta.

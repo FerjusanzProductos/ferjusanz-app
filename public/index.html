@@ -4014,7 +4014,7 @@ const TIPS = {
   hojacompra: ['🧺', 'Elige el día con el calendario: sale lo que hay que comprar. Pulsa «Imprimir» para llevarla al mercado.', 'compra'],
   quien: ['🛒', 'Anota el proveedor de cada producto que has comprado. No pasa nada si lo dejas en blanco.', 'quien'],
   traza: ['🔎', 'Revisa lo que propone la app (en naranja lo dudoso) y confirma pedido a pedido.', 'traza'],
-  facturascli: ['📄', 'Las facturas se hacen en Golden. Aquí las apuntas para ver las de cada cliente y si están cobradas.', 'fclientes'],
+  facturascli: ['📄', 'Las facturas se hacen en Golden. Aquí las apuntas para ver las de cada cliente y si están cobradas. Las que se pagan por transferencia se marcan cobradas solas al confirmar el movimiento en «🏦 Banco» (si el importe cuadra).', 'fclientes'],
   golden: ['🗂️', 'Aquí ves las facturas que ya están en Golden. Busca por cliente o número, o mira «Por producto» para saber cuánto se ha vendido. Solo consulta.', 'golden'],
   pedidos: ['📑', 'Elige «Desde» y «Hasta» y filtra por estado. Toca un pedido para abrirlo.', 'pedidos'],
   calendario: ['📅', 'Cada día muestra cuántos pedidos tiene. Toca un día para verlos o crear pedidos habituales.', 'pedidos'],
@@ -4327,17 +4327,27 @@ async function guardarTarifa(productoId, clienteId, precio) {
 let clientesCache = null;
 const sinTilde = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 /* ===== FACTURAS DE CLIENTES (las emite Golden; aquí se registran para consultarlas por cliente) ===== */
+let fcliPer = {};   // id → nombre, para decir quién marcó el cobro
 async function cargarFacturasCli(clienteId) {
   let q = sb.from('facturas_clientes').select('*');
   if (clienteId) q = q.eq('cliente_id', clienteId);
   const r = await q.order('fecha', { ascending: false }).limit(1000);
-  if (r.error) throw r.error; return r.data || [];
+  if (r.error) throw r.error;
+  if ((r.data || []).some(f => f.cobro_por && !fcliPer[f.cobro_por])) { try { const p = await sb.from('perfiles').select('id,nombre'); (p.data || []).forEach(x => { fcliPer[x.id] = x.nombre; }); } catch (e) { } }
+  return r.data || [];
 }
 function filaFacturaCli(f, nom, refrescar) {
   const det = h('div', { class: 'sub', style: 'display:none;margin-top:8px' });
   const pintaDet = () => {
-    const kids = [f.nota ? h('div', {}, 'Nota: ' + f.nota) : null, h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' },
-      h('button', { class: 'small', onclick: async e => { e.stopPropagation(); const r = await sb.from('facturas_clientes').update({ pagada: !f.pagada, fecha_pago: f.pagada ? null : hoy() }).eq('id', f.id); if (r.error) { toast(msgErr(r.error), 'err'); return; } toast(f.pagada ? 'Marcada como pendiente' : 'Marcada como cobrada', 'ok'); refrescar(); } }, f.pagada ? 'Marcar como pendiente' : 'Marcar como cobrada'),
+    const kids = [f.nota ? h('div', {}, 'Nota: ' + f.nota) : null,
+      f.cobro_nota ? h('div', { style: 'margin-top:4px;color:' + (f.pagada ? '#15803d' : '#b45309') }, (f.cobro_banco_id ? '🏦 ' : f.pagada ? '✔ ' : '↩️ ') + f.cobro_nota + (f.cobro_en ? ' · ' + fechaES(hoy(new Date(f.cobro_en))) : '') + (f.cobro_por && fcliPer[f.cobro_por] ? ' · ' + fcliPer[f.cobro_por] : '')) : null,
+      h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' },
+      h('button', { class: 'small', onclick: async e => { e.stopPropagation();
+        if (f.pagada && f.cobro_banco_id && !await confirmar('Esta factura la marcó COBRADA el banco (transferencia confirmada en «🏦 Banco»).\n\n¿Seguro que quieres dejarla PENDIENTE a mano? (Lo normal es corregir el movimiento en el Banco.)')) return;
+        const base = { pagada: !f.pagada, fecha_pago: f.pagada ? null : hoy() };
+        let r = await sb.from('facturas_clientes').update(Object.assign({}, base, { cobro_banco_id: null, cobro_por: state.user && state.user.id || null, cobro_en: new Date().toISOString(), cobro_nota: f.pagada ? 'Marcada como pendiente a mano' : 'Marcada como cobrada a mano' })).eq('id', f.id);
+        if (r.error && /cobro_|PGRST204|42703/.test((r.error.code || '') + ' ' + (r.error.message || ''))) r = await sb.from('facturas_clientes').update(base).eq('id', f.id);   // base sin las columnas nuevas
+        if (r.error) { toast(msgErr(r.error), 'err'); return; } toast(f.pagada ? 'Marcada como pendiente' : 'Marcada como cobrada', 'ok'); refrescar(); } }, f.pagada ? 'Marcar como pendiente' : 'Marcar como cobrada'),
       f.ruta ? h('button', { class: 'ghost small', onclick: e => { e.stopPropagation(); verDocumento(f.ruta); } }, 'Ver archivo') : null,
       h('button', { class: 'peligro small', onclick: async e => { e.stopPropagation(); if (!await confirmar('¿Quitar esta factura de la lista? (No afecta a Golden.)')) return; const r = await sb.from('facturas_clientes').delete().eq('id', f.id); if (r.error) { toast(msgErr(r.error), 'err'); return; } if (f.ruta) await sb.storage.from('facturas').remove([f.ruta]); toast('Factura quitada', 'ok'); refrescar(); } }, 'Quitar'))];
     det.replaceChildren(...kids.filter(Boolean));
@@ -4345,7 +4355,7 @@ function filaFacturaCli(f, nom, refrescar) {
   pintaDet();
   const card = h('div', { class: 'card tap', onclick: () => { det.style.display = det.style.display === 'none' ? '' : 'none'; } },
     h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, 'Factura ' + f.numero), h('div', { class: 'sub' }, [nom, fechaES(f.fecha)].filter(Boolean).join(' · '))),
-      h('div', { style: 'text-align:right' }, h('b', {}, eur(f.importe) + ' €'), h('div', {}, h('span', { class: 'badge' + (f.pagada ? '' : ' cont') }, f.pagada ? 'Cobrada' : 'Pendiente')))), det);
+      h('div', { style: 'text-align:right' }, h('b', {}, eur(f.importe) + ' €'), h('div', {}, h('span', { class: 'badge' + (f.pagada ? '' : ' cont') }, f.pagada ? (f.cobro_banco_id ? 'Cobrada 🏦' : 'Cobrada') : 'Pendiente')))), det);
   return card;
 }
 function abrirNuevaFacturaCli(clienteFijo, hecho) {
@@ -13885,6 +13895,12 @@ async function bancoSubir(file, alTerminar, paso) {
   toast('✔ ' + nuevos.length + ' movimiento(s) nuevos guardados', 'ok');
   alTerminar(fechas[fechas.length - 1].slice(0, 7));
 }
+/* La base de datos marca COBRADAS las facturas del cliente solo si suman justo lo del banco (20261117a_banco_factura_cobrada.sql) */
+function bancoCobroFacturas(m, fila) {
+  const fs = fila.estado === 'confirmado' && fila.quien_tipo === 'cliente' && m.tipo === 'entrada' ? (fila.facturas || []).filter(f => f.tipo !== 'recibida') : [];
+  const cts = fs.reduce((a, f) => a + bancoCts(f.total), 0);
+  return { hay: fs.length > 0, n: fs.length, suma: cts / 100, cuadra: fs.length > 0 && cts === bancoCts(m.importe) };
+}
 /* ---------- Confirmar o corregir un movimiento ---------- */
 function bancoFormulario(M, m, prop, alGuardar) {
   const conf = m.estado === 'confirmado'; const ent = m.tipo === 'entrada';
@@ -13930,12 +13946,16 @@ function bancoFormulario(M, m, prop, alGuardar) {
       const fs = []; sel.forEach(k => { const f = todas.find(x => x.tipo + ':' + x.id === k); if (f && !fs.some(y => y.tipo + ':' + y.id === k)) fs.push({ tipo: f.tipo, id: f.id, numero: f.numero, fecha: f.fecha, total: f.total }); });
       Object.assign(fila, { persona: pers.nombre, cliente_id: qt === 'cliente' ? pers.id : null, proveedor_id: qt === 'proveedor' ? pers.id : null, nif: nif.value.trim().toUpperCase().replace(/[\s.\-\/]/g, '') || null, cp: cp.value.trim() || null, facturas: fs });
       if (!fila.nif || !fila.cp) { if (!await confirmar('Falta ' + [!fila.nif ? 'el NIF' : '', !fila.cp ? 'el código postal' : ''].filter(Boolean).join(' y ') + ' de ' + pers.nombre + '. Jorge lo necesita.\n\n¿Confirmar igualmente? (mejor completar su ficha)')) return; } }
-    if (conf) { if (!motivo.value.trim()) { toast('Escribe el motivo del cambio', 'err'); return; } fila.motivo_cambio = motivo.value.trim(); }
+    if (conf && !motivo.value.trim()) { toast('Escribe el motivo del cambio', 'err'); return; }
+    const cobro = bancoCobroFacturas(m, fila);   // ¿se marcarán cobradas las facturas del cliente?
+    if (cobro.hay && !cobro.cuadra && !await confirmar('⚠️ EL IMPORTE NO CUADRA\n\nLas facturas elegidas suman ' + eur(cobro.suma) + ' € y el banco dice ' + eur(m.importe) + ' €.\n\nSe confirma el movimiento, pero las facturas NO se marcan como cobradas: márcalas a mano en «📄 Facturas de clientes» cuando esté claro (p. ej. un pago parcial).\n\n¿Confirmar así?')) return;
+    if (conf) fila.motivo_cambio = motivo.value.trim();
     bOk.disabled = true;
-    try { const r = await sb.from('banco_movimientos').update(fila).eq('id', m.id); if (r.error) throw r.error; toast(conf ? '✔ Cambiado (queda apuntado)' : '✔ Confirmado', 'ok'); alGuardar(); }
+    try { const r = await sb.from('banco_movimientos').update(fila).eq('id', m.id); if (r.error) throw r.error;
+      toast((conf ? '✔ Cambiado (queda apuntado)' : '✔ Confirmado') + (cobro.hay && cobro.cuadra ? ' · factura' + (cobro.n > 1 ? 's' : '') + ' marcada' + (cobro.n > 1 ? 's' : '') + ' como COBRADA' + (cobro.n > 1 ? 'S' : '') : cobro.hay ? ' · facturas sin marcar (no cuadra)' : ''), 'ok'); alGuardar(); }
     catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); bOk.disabled = false; }
   };
-  const bDes = conf ? h('button', { class: 'ghost small', style: 'margin-top:8px', onclick: async () => { if (!motivo.value.trim()) { toast('Escribe arriba el motivo', 'err'); return; } if (!await confirmar('¿Volver a dejar este movimiento SIN CONFIRMAR?')) return;
+  const bDes = conf ? h('button', { class: 'ghost small', style: 'margin-top:8px', onclick: async () => { if (!motivo.value.trim()) { toast('Escribe arriba el motivo', 'err'); return; } if (!await confirmar('¿Volver a dejar este movimiento SIN CONFIRMAR?' + (m.quien_tipo === 'cliente' && m.facturas.some(f => f.tipo !== 'recibida') ? '\n\nSi este movimiento había marcado su(s) factura(s) como COBRADA(S), vuelven a quedar PENDIENTES (queda apuntado quién, cuándo y el motivo).' : ''))) return;
     const r = await sb.from('banco_movimientos').update({ estado: 'pendiente', motivo_cambio: motivo.value.trim() }).eq('id', m.id); if (r.error) { toast(msgErr(r.error), 'err'); return; } toast('Vuelto a «sin confirmar»', 'ok'); alGuardar(); } }, '↩️ Dejar sin confirmar') : null;
   return h('div', {}, prop && !conf ? h('div', { class: 'aviso-card', style: 'margin-bottom:8px' }, '💡 Propuesta de la app: ' + prop.motivo + '. Revísalo y confirma o cambia lo que haga falta.') : null,
     chips, cuerpo, comCampo('Nota', nota), conf ? comCampo('Motivo del cambio', motivo) : null, bOk, bDes);
@@ -13980,12 +14000,12 @@ function vistaBanco() {
   async function confirmarSeguras() {
     const ls = datos.movs.filter(m => m.estado !== 'confirmado' && props[m.id] && props[m.id].nivel === 'alta' && props[m.id].persona && props[m.id].persona.nif && props[m.id].persona.cp);
     if (!ls.length) { toast('No hay propuestas seguras para confirmar de golpe', 'err'); return; }
-    if (!await confirmar('Se confirman ' + ls.length + ' movimiento(s) en los que el NOMBRE coincide y la(s) factura(s) suman JUSTO el importe:\n\n' + ls.slice(0, 12).map(m => '· ' + eur(m.importe) + ' € → ' + props[m.id].persona.nombre + ' (' + bancoFactTxt(props[m.id].facturas) + ')').join('\n') + (ls.length > 12 ? '\n…' : '') + '\n\n¿Confirmarlos?')) return;
+    if (!await confirmar('Se confirman ' + ls.length + ' movimiento(s) en los que el NOMBRE coincide y la(s) factura(s) suman JUSTO el importe:\n\n' + ls.slice(0, 12).map(m => '· ' + eur(m.importe) + ' € → ' + props[m.id].persona.nombre + ' (' + bancoFactTxt(props[m.id].facturas) + ')').join('\n') + (ls.length > 12 ? '\n…' : '') + '\n\nSus facturas quedarán marcadas como COBRADAS en «📄 Facturas de clientes».\n\n¿Confirmarlos?')) return;
     let ok = 0, mal = 0;
     for (const m of ls) { const p = props[m.id];
       const r = await sb.from('banco_movimientos').update({ estado: 'confirmado', quien_tipo: p.quien_tipo, persona: p.persona.nombre, cliente_id: p.quien_tipo === 'cliente' ? p.persona.id : null, proveedor_id: p.quien_tipo === 'proveedor' ? p.persona.id : null, nif: p.persona.nif.toUpperCase().replace(/[\s.\-\/]/g, ''), cp: p.persona.cp, facturas: p.facturas.map(f => ({ tipo: f.tipo, id: f.id, numero: f.numero, fecha: f.fecha, total: f.total })) }).eq('id', m.id).eq('estado', 'pendiente');
       if (r.error) mal++; else ok++; }
-    toast('✔ ' + ok + ' confirmado(s)' + (mal ? ' · ' + mal + ' con error' : ''), mal ? 'err' : 'ok'); cargar();
+    toast('✔ ' + ok + ' confirmado(s)' + (ok ? ' y sus facturas COBRADAS' : '') + (mal ? ' · ' + mal + ' con error' : ''), mal ? 'err' : 'ok'); cargar();
   }
   function tarjeta(m) {
     const ent = m.tipo === 'entrada'; const conf = m.estado === 'confirmado'; const p = props[m.id];

@@ -54,7 +54,9 @@ Más → «🏦 Banco · PRUEBAS».
 - [ ] Subir el **fichero de prueba** que prepara Claude ese día (lleva la transferencia de **B** y la de **C**).
 - [ ] La app **propone** cliente y factura de cada movimiento. Confirmar los correctos y corregir el que falle.
 - [ ] Subir el mismo fichero otra vez: **no debe duplicar** movimientos.
-- [ ] Más → «📄 Facturas de clientes»: marcar como **cobradas** las de B y C (si para entonces Claude ya lo hace solo al confirmar en el banco, comprobar que salen cobradas).
+- [ ] Al confirmar la de **B** (importe exacto): sale «factura marcada como COBRADA». Más → «📄 Facturas de clientes»: la de B sale **Cobrada 🏦**, con la fecha del banco.
+- [ ] Si la de **C** no llega entera (importe distinto): la app **avisa** «el importe no cuadra» y la factura sigue **pendiente**.
+- [ ] En el Banco, abrir el de B → «↩️ Dejar sin confirmar» con motivo: la factura vuelve a **Pendiente** y dice quién, cuándo y el motivo. Volver a confirmarlo.
 
 ## 7. Listados para Jorge
 Más → «📤 Informes para Jorge», mes de **diciembre**.
