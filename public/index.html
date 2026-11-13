@@ -8847,14 +8847,27 @@ async function pintaResumenCorreo(box, fecha) {
     box.replaceChildren(caja(mismo ? 'De este día · ' + fmtHora(x.creado) : 'No hay de este día · el último es del ' + fechaES(String(x.fecha).slice(0, 10)), '', x.texto));
   } catch (e) { box.replaceChildren(caja(isNetErr(e) ? 'Necesitas conexión para verlo.' : 'Todavía no está disponible.')); }
 }
+/* 📈 Mercado: lo escribe Claude (skill /mercado-semanal) en la tabla resumen_mercado: qué se dice este mes de los precios de los productos que vendemos. Aquí solo se lee: el último hasta el día elegido. */
+async function pintaResumenMercado(box, fecha) {
+  const caja = (t, s, cuerpo) => h('details', { class: 'card', style: 'border-left:6px solid #16a34a' },
+    h('summary', { style: 'cursor:pointer' }, h('div', { class: 'nombre' }, '📈 Mercado: qué se dice de los precios'), h('div', { class: 'sub' }, t)), cuerpo ? h('div', { style: 'white-space:pre-wrap;margin-top:8px;line-height:1.45' }, cuerpo) : (s ? h('div', { class: 'sub', style: 'margin-top:6px' }, s) : null));
+  box.replaceChildren(caja('Cargando…'));
+  try {
+    const r = await sb.from('resumen_mercado').select('fecha,texto,creado').lte('fecha', fecha).order('fecha', { ascending: false }).limit(1);
+    if (r.error) throw r.error;
+    const x = (r.data || [])[0];
+    if (!x) { box.replaceChildren(caja('Todavía no hay resumen de mercado', 'Pídeselo a Claude escribiendo «mercado semanal»: lo guarda aquí.')); return; }
+    box.replaceChildren(caja('Del ' + fechaES(String(x.fecha).slice(0, 10)) + ' · toca para abrir', '', x.texto));
+  } catch (e) { box.replaceChildren(caja(isNetErr(e) ? 'Necesitas conexión para verlo.' : 'Todavía no está disponible.')); }
+}
 function vistaResumen() {
   state.view = 'resumen'; if (!esOficina()) { go('inicio'); return; }
   let fecha = hoy(); const cont = h('div', {});
   $app.replaceChildren(shell('Resumen del día y correo', cont, { volver: volverIni })); renderBanner();
   async function cargar() {
     const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); cargar(); } });
-    const caja = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); const correo = h('div', {}); cont.replaceChildren(h('div', { class: 'barra' }, inp, h('button', { class: 'ghost', onclick: () => cargar() }, '↻')), correo, caja);
-    pintaResumenCorreo(correo, fecha);
+    const caja = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); const correo = h('div', {}), mercado = h('div', {}); cont.replaceChildren(h('div', { class: 'barra' }, inp, h('button', { class: 'ghost', onclick: () => cargar() }, '↻')), correo, mercado, caja);
+    pintaResumenCorreo(correo, fecha); pintaResumenMercado(mercado, fecha);
     try {
       try { await cargarGente(); } catch (e) { }
       const d0 = new Date(fecha + 'T00:00:00'), d1 = new Date(d0.getTime() + 86400000);
