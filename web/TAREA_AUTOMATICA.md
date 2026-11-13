@@ -1,5 +1,7 @@
 # Tarea automática: web viva (cada 2 días)
 
+Tarea programada `trig_01AXKhyzZyg7sMDufq37Ahuw` (cada 2 días a las 11:43, hora de Madrid; primera el 15/11/2026). ⚠️ Se creó **sin el conector de Google Drive** (la organización no deja guardarlo en la tarea): si Drive no está, se salta el paso 1. Para que lea la carpeta, Fernando tendría que crearla desde claude.ai → Rutinas con Google Drive; mientras, sus fotos se publican cuando las manda en una conversación con Claude.
+
 Pedido por Fernando el 13/11/2026: «que esté activa, que le pongas fotos cada 2 o 3 días, un artículo también».
 Una tarea programada abre una sesión nueva cada 2 días y sigue estos pasos **sin preguntar** (autorización de Fernando).
 Solo toca la web (`web/`). **Nunca**: la app, la base de datos (solo leer), precios, mensajes a clientes ni redes sociales.
