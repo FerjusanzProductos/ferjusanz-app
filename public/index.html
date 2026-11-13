@@ -4587,8 +4587,25 @@ async function sifCargar(id) {
   /* Trazabilidad: lote y origen de cada línea (los mismos del albarán) */
   const T = {}; const lp = (l.data || []).map(x => x.linea_pedido_id).filter(Boolean);
   if (lp.length) { try { const tr = await sb.from('asignaciones_lote').select('linea_id,cantidad,lotes(codigo_lote,origen)').in('linea_id', lp); if (!tr.error) tr.data.forEach(a => (T[a.linea_id] = T[a.linea_id] || []).push({ cant: a.cantidad, lote: uno(a.lotes) || {} })); } catch (e) { } }
-  return { f: f.data, L: l.data || [], I: i.data || [], R: r.data || [], T };
+  return { f: f.data, L: l.data || [], I: i.data || [], R: r.data || [], T, qr: await sifQR(f.data) };
 }
+/* QR tributario (Orden HAC/1177/2024, art. 21; ⚠️ cotejar con la AEAT): 35 mm, corrección M, arriba en la factura.
+   Aún no se envían los registros a la AEAT → modo «No VERI*FACTU» (otra dirección y sin la frase). Las facturas PRUEBA van al entorno de pruebas de la AEAT. */
+const SIF_VERIFACTU = false;
+function sifUrlQR(f) {
+  return (f.prueba ? 'https://prewww2.aeat.es' : 'https://www2.agenciatributaria.gob.es') + '/wlpl/TIKE-CONT/' + (SIF_VERIFACTU ? 'ValidarQR' : 'ValidarQRNoVerifactu') +
+    '?nif=' + encodeURIComponent(String((f.emisor || {}).nif || '').trim()) + '&numserie=' + encodeURIComponent(f.codigo) + '&fecha=' + String(f.fecha).split('-').reverse().join('-') + '&importe=' + Number(f.total).toFixed(2);
+}
+async function sifQR(f) {
+  try { await cargaScript('https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js'); } catch (e) { throw new Error('No se pudo preparar el QR de la factura (¿hay internet?)'); }
+  const url = sifUrlQR(f), q = qrcode(0, 'M'); q.addData(url); q.make();
+  const n = q.getModuleCount(), tr = []; /* tramos negros por fila: [fila, columna, largo] */
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) { let k = c; while (k < n && q.isDark(r, k)) k++; tr.push([r, c, k - c]); c = k; }
+  return { url, n, tr };
+}
+const sifQrSvg = q => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 ' + (q.n + 8) + ' ' + (q.n + 8) + '" style="width:' + (35 * (q.n + 8) / q.n).toFixed(1) + 'mm;height:' + (35 * (q.n + 8) / q.n).toFixed(1) + 'mm;display:block;margin:auto" shape-rendering="crispEdges"><rect x="-4" y="-4" width="' + (q.n + 8) + '" height="' + (q.n + 8) + '" fill="#fff"/><path fill="#000" d="' + q.tr.map(([r, c, l]) => 'M' + c + ' ' + r + 'h' + l + 'v1h-' + l + 'z').join('') + '"/></svg>';
+/* S = lado del dibujo sin el margen blanco (35 mm = 99,2 pt); el margen blanco (4 módulos) queda alrededor */
+function sifQrPdf(doc, q, x, y, S) { const s = S / q.n; q.tr.forEach(([r, c, l]) => doc.rect(x + c * s, y + r * s, l * s, s, '#000000')); }
 /* Factura en HTML (pantalla e imprimir). Los datos salen de la FOTO guardada al emitir, no de las fichas actuales. */
 const sifDesc = l => (l.producto_id && l.codigo ? l.codigo + ' · ' : '') + (l.descripcion || '');
 function sifLote(d, l) { const tz = ((d.T || {})[l.linea_pedido_id]) || []; if (!l.producto_id) return ''; if (!tz.length) return 'Lote: sin lote'; return 'Lote: ' + tz.map(t => [t.lote.codigo_lote || 'sin código', t.lote.origen ? 'Origen ' + t.lote.origen : null].filter(Boolean).join(' · ') + (tz.length > 1 ? ' (' + num(t.cant) + ')' : '')).join(' / '); }
@@ -4600,7 +4617,8 @@ function sifHtml(d) {
   return '<div style="font-family:Arial,Helvetica,sans-serif;font-size:12.5px;color:#111;background:#fff;padding:6px">' +
     (f.prueba ? '<div style="background:#b91c1c;color:#fff;font-weight:900;text-align:center;padding:6px;border-radius:6px;margin-bottom:8px;letter-spacing:1px">PRUEBA · SIN VALOR FISCAL</div>' : '') +
     '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start"><div style="flex:1;min-width:220px;border:1.5px solid #111;border-radius:6px;padding:4px">' + selloEmpresaSVG(e) + '<div style="font-size:11.5px;margin-top:2px"><b>NIF ' + esc(e.nif) + '</b></div></div>' +
-    '<div style="text-align:right;min-width:150px"><div style="font-size:19px;font-weight:900">' + (rect ? 'FACTURA RECTIFICATIVA' : 'FACTURA') + '</div><div style="font-size:16px;font-weight:700">Nº ' + esc(f.codigo) + '</div><div>Fecha: ' + fechaES(f.fecha) + '</div></div></div>' +
+    '<div style="text-align:right;min-width:150px"><div style="font-size:19px;font-weight:900">' + (rect ? 'FACTURA RECTIFICATIVA' : 'FACTURA') + '</div><div style="font-size:16px;font-weight:700">Nº ' + esc(f.codigo) + '</div><div>Fecha: ' + fechaES(f.fecha) + '</div></div>' +
+    '<div style="text-align:center;font-size:10px;font-weight:700"><div>QR tributario:</div>' + sifQrSvg(d.qr) + (SIF_VERIFACTU ? '<div>VERI*FACTU</div>' : '') + '</div></div>' +
     '<div style="border:1px solid #9ca3af;border-radius:6px;padding:6px 8px;margin:10px 0"><div style="font-size:11px;color:#6b7280">CLIENTE</div><b>' + esc(c.nombre) + '</b>' + (c.nombre_comercial && c.nombre_comercial !== c.nombre ? ' (' + esc(c.nombre_comercial) + ')' : '') +
     '<div>NIF ' + esc(c.nif) + '</div><div>' + esc(c.direccion) + '</div><div>' + esc((c.codigo_postal || '') + ' ' + (c.localidad || '')) + '</div>' + (c.telefono || c.email ? '<div>' + esc([c.telefono, c.email].filter(Boolean).join(' · ')) + '</div>' : '') + '</div>' +
     (rect ? '<div style="border:2px solid #b45309;background:#fffbeb;border-radius:6px;padding:6px 8px;margin-bottom:8px"><b>Rectifica la factura Nº ' + esc(f.rectifica_codigo) + '</b>' + (f.anula ? ' (la deja sin efecto, a cero)' : ' (por diferencias)') + '<div><b>Motivo:</b> ' + esc(f.motivo) + '</div></div>' : '') +
@@ -4636,10 +4654,15 @@ function sifPdf(d) {
   doc.texto([String(e.direccion || '').replace(/^C\/\s*/i, ''), [e.codigo_postal, e.localidad].filter(Boolean).join(' ')].join(' - ').toUpperCase(), M + 6, y + 77, 8.5);
   doc.texto(e.email || '', M + 6, y + 89, 8.5); doc.texto('NIF ' + (e.nif || ''), M + 6, y + 102, 9, { neg: true });
   /* Nº y fecha */
-  doc.texto(rect ? 'FACTURA RECTIFICATIVA' : 'FACTURA', W - M, y + 22, rect ? 14 : 20, { neg: true, align: 'right' });
-  doc.texto('Nº ' + f.codigo, W - M, y + 44, 13, { neg: true, align: 'right' });
-  doc.texto('Fecha: ' + fechaES(f.fecha), W - M, y + 62, 10.5, { align: 'right' });
-  y += 122;
+  /* QR tributario arriba a la derecha (35 mm con su margen blanco); el título y el Nº, a su izquierda */
+  const S = 99.2, qx = W - M - S, xr = qx - 4 * S / d.qr.n - 2, cabe = (t, sz) => { while (sz > 7 && pdfAncho(t, sz, true) > xr - M - 306) sz -= 0.25; return sz; };
+  doc.texto('QR tributario:', qx + S / 2, y + 3, 7.5, { neg: true, align: 'center' }); sifQrPdf(doc, d.qr, qx, y + 14, S);
+  if (SIF_VERIFACTU) doc.texto('VERI*FACTU', qx + S / 2, y + S + 25, 8, { neg: true, align: 'center' });
+  if (rect) { doc.texto('FACTURA', xr, y + 20, 16, { neg: true, align: 'right' }); doc.texto('RECTIFICATIVA', xr, y + 34, cabe('RECTIFICATIVA', 12), { neg: true, align: 'right' }); }
+  else doc.texto('FACTURA', xr, y + 24, cabe('FACTURA', 20), { neg: true, align: 'right' });
+  const nf = 'Nº ' + f.codigo; doc.texto(nf, xr, y + 52, cabe(nf, 13), { neg: true, align: 'right' });
+  doc.texto('Fecha: ' + fechaES(f.fecha), xr, y + 68, 10.5, { align: 'right' });
+  y += 130;
   /* Cliente */
   const lc = [c.nombre + (c.nombre_comercial && c.nombre_comercial !== c.nombre ? ' (' + c.nombre_comercial + ')' : ''), 'NIF ' + (c.nif || ''), c.direccion || '', [c.codigo_postal, c.localidad].filter(Boolean).join(' '), [c.telefono, c.email].filter(Boolean).join(' · ')].filter(Boolean);
   doc.caja(M, y, W - 2 * M, 16 + lc.length * 13, '#f9fafb', '#9ca3af'); doc.texto('CLIENTE', M + 8, y + 11, 7.5, { color: '#6b7280' });

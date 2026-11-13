@@ -46,8 +46,8 @@ _Una prueba solo se marca ✅ con la prueba hecha y su resultado guardado (captu
 | ID | Qué | Cómo | Esperado | Estado |
 |---|---|---|---|---|
 | T-QR-01 | URL del QR bien formada | Script de referencia | Caracteres especiales codificados | ✅ 12/11/2026 (fórmula) |
-| T-QR-02 | QR en el PDF | Imprimir PDF y leer el QR con el móvil | Abre el cotejo de la AEAT (entorno de pruebas) con NIF, número, fecha e importe correctos | ⬜ |
-| T-QR-03 | Tamaño, posición y frase | Medir en el PDF | Tamaño y posición que fija la Orden (⚠️ cotejar: 30–40 mm, al principio) y frase «VERI\*FACTU» | ⬜ |
+| T-QR-02 | QR en el PDF | Imprimir PDF y leer el QR con el móvil | Abre el cotejo de la AEAT (entorno de pruebas) con NIF, número, fecha e importe correctos | 🟡 13/11/2026: Claude leyó el QR (pantalla) en la naranja v305 y la dirección es exacta; falta escanearlo en papel con el móvil |
+| T-QR-03 | Tamaño, posición y frase | Medir en el PDF | Tamaño y posición que fija la Orden (⚠️ cotejar: 30–40 mm, al principio) y frase «VERI\*FACTU» | 🟡 35 mm arriba a la derecha, «QR tributario:»; sin la frase mientras no se envíe a la AEAT (modo No VERI\*FACTU). ⚠️ Cotejar la Orden |
 | T-FAC-01 | Datos obligatorios | Revisar 10 facturas | Emisor y cliente completos, Registro Mercantil, desglose por IVA, forma de pago | ⬜ |
 | T-FAC-02 | Bloqueo si falta algo | Cliente sin NIF o sin CP | No deja emitir y dice qué falta | ⬜ |
 | T-FAC-03 | Efectivo | Factura de 1.000 € o más a empresa | No deja cobrar nada en efectivo | ⬜ |
