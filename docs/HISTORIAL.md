@@ -2,6 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 13/11/2026
+- **Revisada la guía «Las 5 skills que le faltan a tu Claude»** (foto que mandó Fernando): ninguna se instala (repiten lo que ya hay o no sirven para la empresa). Apuntado en el kit (`kit-ferjusanz`).
 - **Ficha del Bar Molinero (BAMO) rellenada en la base REAL** («Autorizo»), con la foto que mandó Fernando: ANDIBERICA FOODS S.L. (nombre comercial «Bar Molinero»), CIF B26638478, Av. López de Hoyos 389, 28043 Madrid, tel. 641 22 14 20, andiberica@andibericafoods.com; alias «bar molinero» para seguir encontrándolo. Comprobado.
 - **10 skills del plugin «Small Business» de Anthropic copiadas al proyecto** (Fernando: «instala tú los 10 que mejor nos vengan»): reactivate, lead-finder, lead-triage, call-list, outreach-composer, invoice-chase, cash-flow-snapshot, ap-processor, business-pulse y contract-review, en `.claude/skills/`, con `.claude/shared/` y las reglas de Ferjusanz (`.claude/shared/FERJUSANZ.md`: solo datos reales, solo borradores, nunca enviar). No tocan la app ni la base de datos.
 - **Revisado el plugin «Small Business» de Anthropic** (reel de Instagram que mandó Fernando): oficial y seguro, 44 habilidades, pero pensado para herramientas de EE. UU. No se instala en el proyecto; apuntado en el kit (`kit-ferjusanz`) qué partes podrían servir (recuperar clientes, prospectos).
