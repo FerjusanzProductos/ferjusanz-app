@@ -47,6 +47,13 @@ Fernando trabaja **solo desde su Samsung** (Android, Chrome). Su ordenador tiene
 8. **Al terminar cada tarea**: actualizar `docs/HISTORIAL.md` (qué se hizo y por qué), `docs/PENDIENTES.md` y, si cambia la versión, `docs/ESTADO_ACTUAL.md`. Las reglas nuevas de productos o negocio van en `docs/REGLAS_INTERNAS.md`.
 9. Guardar en GitLab y copiar a GitHub. Nunca dejar trabajo sin guardar.
 
+## Comprobar los cambios tú mismo (Fernando, 13/11/2026: «quiero que siempre puedas entrar en la aplicación»)
+Después de subir algo a PRUEBAS, **entra tú y compruébalo** antes de pedirle nada a Fernando:
+`NODE_USE_ENV_PROXY=1 node --no-warnings scripts/claude-entra.mjs [usuario@pruebas.invalid] [captura.png]`
+- Entra en la app naranja con un usuario de pruebas (por defecto `fernando@pruebas.invalid`, admin) sin contraseñas: pide a Supabase un enlace de un solo uso. Solo funciona con la base de PRUEBAS.
+- Para hacer clic y recorrer pantallas, copia el script y sigue con Playwright desde la misma página. Mira la captura antes de decir que funciona.
+- Ya está permitido en el entorno: las dos apps (`*.workers.dev`), `cdn.jsdelivr.net` y la llave de Supabase que abre **las dos bases** (real y pruebas). La API de Supabase ya vale también para la base de pruebas.
+
 ## Publicar (cuando esté autorizado)
 `CLOUDFLARE_API_TOKEN=proxy-injected CLOUDFLARE_ACCOUNT_ID=<ver ESTADO_ACTUAL> npx -y wrangler@4 deploy`
 Después, comprobar la versión publicada (ver `docs/ESTADO_ACTUAL.md`).
