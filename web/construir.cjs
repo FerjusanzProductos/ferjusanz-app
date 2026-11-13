@@ -20,11 +20,46 @@ const MENU = [
   ['/contacto/', 'Contacto'],
 ];
 const PRODUCTOS = [
-  ['/productos/frutas-2/', 'Frutas', '/wp-content/uploads/2019/10/frutas-de-invierno-300x150.jpg'],
-  ['/productos/verduras-y-hortalizas/', 'Verduras y hortalizas', null],
+  ['/productos/frutas-2/', 'Frutas', '/fotos/mango-y-papaya.jpg'],
+  ['/productos/verduras-y-hortalizas/', 'Verduras y hortalizas', '/fotos/verduras-gourmet-hosteleria.jpg'],
   ['/productos/patatas-2/', 'Patatas', '/wp-content/uploads/2019/10/distribuidor-de-patatas.jpg'],
-  ['/productos/setas-y-champinones-2/', 'Setas y champiñones', null],
+  ['/productos/setas-y-champinones-2/', 'Setas y champiñones', '/fotos/champinon-y-portobello.jpg'],
 ];
+
+// Fotos propias del puesto en Mercamadrid (web/public/fotos/) y en qué páginas salen.
+const FOTO = {
+  'tomate-asurcado': 'Tomate asurcado',
+  'tomate-la-campechana': 'Tomate de La Campechana',
+  'tomate-de-temporada': 'Tomate de temporada en caja de madera',
+  'tomate-rosa': 'Tomate rosa',
+  'niscalos': 'Níscalos de temporada',
+  'setas-de-ostra': 'Setas de ostra (Cuenca)',
+  'champinon-y-portobello': 'Champiñón blanco y champiñón portobello',
+  'pitahaya-amarilla': 'Pitahaya amarilla',
+  'mango-y-papaya': 'Mango listo para comer, papaya y naranja',
+  'granada-mollar-de-elche': 'Granada Mollar de Elche D.O.P.',
+  'grosellas-rojas': 'Grosellas rojas',
+  'verduras-gourmet-hosteleria': 'Tomates, pepino mini, tirabeque, tamarillo, pimiento snack, cherry y arándanos para hostelería',
+};
+const GALERIAS = {
+  '/': ['verduras-gourmet-hosteleria', 'niscalos', 'tomate-la-campechana', 'pitahaya-amarilla', 'granada-mollar-de-elche', 'champinon-y-portobello', 'tomate-rosa', 'grosellas-rojas'],
+  '/productos/': ['mango-y-papaya', 'verduras-gourmet-hosteleria', 'niscalos', 'tomate-asurcado'],
+  '/productos/frutas-2/': ['mango-y-papaya', 'pitahaya-amarilla', 'granada-mollar-de-elche', 'grosellas-rojas'],
+  '/productos/verduras-y-hortalizas/': ['verduras-gourmet-hosteleria', 'tomate-asurcado', 'tomate-rosa', 'tomate-la-campechana'],
+  '/productos/setas-y-champinones-2/': ['niscalos', 'setas-de-ostra', 'champinon-y-portobello'],
+  '/mayorista-de-frutas-y-verduras-madrid/': ['verduras-gourmet-hosteleria', 'niscalos'],
+  '/distribucion-y-venta-de-frutas-madrid/': ['granada-mollar-de-elche', 'mango-y-papaya'],
+  '/distribucion-y-venta-de-verduras-madrid/': ['tomate-rosa', 'champinon-y-portobello'],
+  '/distribucion-y-venta-de-hortalizas-madrid/': ['tomate-de-temporada', 'verduras-gourmet-hosteleria'],
+  '/blog/tipos-de-tomates/': ['tomate-asurcado', 'tomate-la-campechana', 'tomate-de-temporada', 'tomate-rosa'],
+  '/blog/setas-y-champinones-beneficios-salud/': ['niscalos', 'setas-de-ostra', 'champinon-y-portobello'],
+  '/blog/frutas-exoticas-como-conservarlas/': ['pitahaya-amarilla', 'mango-y-papaya'],
+  '/blog/frutas-tropicales-propiedades-y-beneficios-para-la-salud/': ['mango-y-papaya', 'pitahaya-amarilla'],
+  '/blog/todo-sobre-los-frutos-rojos/': ['grosellas-rojas', 'verduras-gourmet-hosteleria'],
+  '/blog/frutas-de-temporada-otono/': ['granada-mollar-de-elche', 'niscalos'],
+};
+const galeria = ruta => GALERIAS[ruta] ? `<section class="texto"><h2>Hoy en nuestro puesto de Mercamadrid</h2><div class="galeria">${GALERIAS[ruta].map(n =>
+  `<figure><img src="/fotos/${n}.jpg" alt="${esc(FOTO[n])} en el puesto de Ferjusanz en Mercamadrid" loading="lazy"><figcaption>${esc(FOTO[n])}</figcaption></figure>`).join('')}</div></section>` : '';
 const SERVICIOS = [
   ['/mayorista-de-frutas-y-verduras-madrid/', 'Mayorista de frutas y verduras en Madrid'],
   ['/mayorista-de-frutas-y-verduras-para-colectividades-madrid/', 'Mayorista para colectividades'],
@@ -145,6 +180,7 @@ for (const p of paginas) {
 ${PRODUCTOS.map(([h, t, img]) => `<a class="tarjeta" href="${h}">${img ? `<img src="${img}" alt="" loading="lazy">` : ''}<strong>${t}</strong></a>`).join('\n')}
 </section>
 <article class="texto">${limpiar(p.html).replace(/^[\s\S]*?<\/p>\s*/, '')}</article>
+${galeria('/')}
 <section class="texto"><h2>Del blog</h2><div class="cuadricula">${articulos.slice(0, 4).map(tarjeta).join('')}</div><p><a href="/blog/">Ver todos los artículos →</a></p></section>`;
   } else if (p.path === '/blog/') {
     cuerpo = `<article class="texto"><h1>Blog</h1><p>Consejos, temporadas y recetas con fruta y verdura.</p></article>
@@ -158,9 +194,10 @@ ${PRODUCTOS.map(([h, t, img]) => `<a class="tarjeta" href="${h}">${img ? `<img s
 ${p.ogImage ? `<img class="destacada" src="${p.ogImage}" alt="">` : ''}
 ${limpiar(p.html)}
 </article>
+${galeria(p.path)}
 <section class="texto"><h2>Más artículos</h2><div class="cuadricula">${otros.map(tarjeta).join('')}</div></section>`;
   } else {
-    cuerpo = `<article class="texto">${limpiar(p.html)}</article>`;
+    cuerpo = `<article class="texto">${limpiar(p.html)}</article>${galeria(p.path)}`;
   }
   escribir(p.path, plantilla({ ruta: p.path, titulo: p.title, descripcion: p.description, imagen: p.ogImage, cuerpo, portada: p.path === '/' }));
 }
