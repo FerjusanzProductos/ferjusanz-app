@@ -73,7 +73,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
   - 🟡 **Fase 6 (banco, Norma 43 / Excel)** hecha en PRUEBAS (v279, 13/11/2026): Más → «🏦 Banco · PRUEBAS» e informe «🏦 Banco» en «Informes para Jorge». ✔️ SQL `20261115b_banco_norma43.sql` en la base de PRUEBAS y en la REAL (13/11/2026). ✔️ Fernando lo probó con el fichero de EJEMPLO (9 movimientos, 4 confirmados). ✔️ Publicado en la normal (v285). ✔️ SQL en la base real (13/11/2026). 🟡 Subir el primer fichero real del banco en la app normal (pedirlo a Jorge o a Carmen) y revisar las propuestas.
   - 🔴 **Fase 7, paso a 2027** (13/11/2026): plan por persona y fechas en **`docs/FACTURACION_2027.md`** y guion de la prueba de diciembre en **`docs/GUION_PRUEBA_DICIEMBRE.md`**. App naranja v287.
     - ✔️ Tablas de facturas creadas **apagadas** en la base REAL (13/11/2026, «Autorizo»; comprobado: siguiente 2027-0001 / R2027-0001, no deja emitir).
-    - 🟡 Fernando: pegar `supabase/pegar/FACTURAS_2027_PRUEBAS.sql` en la base de pruebas.
+    - ✔️ Mismo SQL aplicado en la base de PRUEBAS (13/11/2026, por Claude con el conector de Supabase).
     - 🔴 **Verifactu: el aplazamiento a 2028 NO está en el BOE** (13/11). Claude lo mira cada lunes. **Decisión el 22/12** con Jorge (5 condiciones); si no, **Plan B: Golden en enero**.
     - 🟡 Mejoras antes de la prueba (una por sesión): factura cobrada al confirmar en el Banco · IBAN en la factura · unidad buena en la factura · efectivo bloqueado en la entrega si llega a 1.000 € · «Cambiar mi contraseña».
     - 🟡 Prueba completa en la naranja el 15–18/12 (Carmen y Fernando) con el guion.

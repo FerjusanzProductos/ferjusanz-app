@@ -2,6 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 13/11/2026
+- **SQL de la fase 7 aplicado en la base de PRUEBAS** (Fernando: «Hazlo tú»). La API de Supabase no tiene permiso en ese proyecto, pero el **conector de Supabase sí** (lee y escribe en `pbeuxbwbpmlanbhhnpgy`). Comprobado: versión SIF 0.2.0, fecha de inicio 1/1/2027, sigue saliendo la serie PRUEBA, 3 facturas de ensayo intactas, `sif_preparado` y el control de 2027 creados.
 - **Tablas de facturas creadas en la base REAL, APAGADAS** (Fernando: «Autorizo»), por la API de Supabase: `20261113a_facturas_emitidas.sql` + `20261116a_facturacion_2027.sql`. Comprobado: 6 tablas `sif_*`, 10 reglas de «no se cambia ni se borra», 6 permisos de solo lectura (oficina y admin), la app no puede escribir directamente, `emision_real_activa = false`, fecha de inicio 1/1/2027, contadores F/2027 y R/2027 a 0 (primera 2027-0001 / R2027-0001), 0 facturas, y al intentar emitir responde «FACTURACION_NO_ACTIVA».
 - **Revisada la guía «Las 5 skills que le faltan a tu Claude»** (foto que mandó Fernando): ninguna se instala (repiten lo que ya hay o no sirven para la empresa). Apuntado en el kit (`kit-ferjusanz`).
 - **Facturación fase 7 (paso a 2027) preparada, sin activar nada.** Plan por persona y fechas en `docs/FACTURACION_2027.md`; guion de la prueba completa de diciembre (en la app naranja) en `docs/GUION_PRUEBA_DICIEMBRE.md`.
