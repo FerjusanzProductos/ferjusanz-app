@@ -4555,6 +4555,29 @@ function sifBotonCadena() {
     b.disabled = false; } }, '🔗 Comprobar que ninguna factura se ha tocado');
   return h('div', {}, b, res);
 }
+/* 📤 Fase 8c: prepara los registros en el XML de la AEAT (public/sif-xml.js). NO envía nada: falta el certificado de representante (FNMT). */
+function sifBotonXml() {
+  const res = h('div', {});
+  const b = h('button', { class: 'small', style: 'margin:0 0 8px', onclick: async () => {
+    b.disabled = true; res.replaceChildren(h('p', { class: 'sub' }, 'Preparando…'));
+    try {
+      await cargaScript('sif-xml.js');
+      const [g, f, i] = await Promise.all([sb.from('sif_registros').select('*').order('id').range(0, 999999), sb.from('sif_facturas').select('*').range(0, 999999), sb.from('sif_factura_iva').select('*').order('tipo_iva').range(0, 999999)]);
+      for (const x of [g, f, i]) if (x.error) throw x.error;
+      if (!g.data.length) throw new Error('Todavía no hay ninguna factura emitida.');
+      const facts = {}; f.data.forEach(x => { facts[x.id] = { f: x, iva: [] }; }); i.data.forEach(x => facts[x.factura_id] && facts[x.factura_id].iva.push(x));
+      const lotes = window.sifXml(g.data, facts);
+      res.replaceChildren(h('div', { class: 'aviso-card', style: 'border-left:5px solid #15803d' }, h('b', {}, '✅ Preparado: '), g.data.length + ' registro(s) en el formato de Hacienda' + (lotes.length > 1 ? ' (' + lotes.length + ' ficheros de 1.000)' : '') + '. ',
+        h('b', {}, 'No se ha enviado nada'), ': para enviarlo falta el certificado electrónico de la empresa.'),
+        ...lotes.map((x, n) => h('button', { class: 'small', style: 'margin:4px 6px 0 0', onclick: async () => {
+          const nom = 'Registros-Hacienda-' + hoy() + (lotes.length > 1 ? '-' + (n + 1) : '') + '.xml', blob = new Blob([x], { type: 'application/xml' });
+          try { const file = new File([blob], nom, { type: 'application/xml' }); if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: nom }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+          const u = URL.createObjectURL(blob), lk = h('a', { href: u, download: nom }); document.body.append(lk); lk.click(); lk.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000);
+        } }, '⬇️ Descargar fichero' + (lotes.length > 1 ? ' ' + (n + 1) : ''))));
+    } catch (e) { res.replaceChildren(h('p', { class: 'err' }, /sif_registros|schema cache|does not exist/i.test(e.message || '') ? 'Falta el SQL del registro con huella (fase 8).' : sifErr(e))); }
+    b.disabled = false; } }, '📤 Preparar el envío a Hacienda (no envía nada)');
+  return h('div', {}, b, res);
+}
 /* Carga completa de una factura (cabecera, líneas, IVA, rectificativas) */
 async function sifCargar(id) {
   const [f, l, i, r] = await Promise.all([sb.from('sif_facturas').select('*').eq('id', id).single(), sb.from('sif_factura_lineas').select('*').eq('factura_id', id).order('orden'),
@@ -4814,7 +4837,7 @@ function vistaFacturasApp() {
         if (!soloPintar || !emitidas) { const r = await sb.from('sif_facturas').select('id,codigo,tipo,fecha,cliente,total,forma_pago,rectifica_id,rectifica_codigo,anula,prueba').order('emitida_at', { ascending: false }).limit(500); if (r.error) throw r.error; emitidas = r.data || []; }
         const rects = {}; emitidas.forEach(f => { if (f.rectifica_id) (rects[f.rectifica_id] = rects[f.rectifica_id] || []).push(f); });
         const lista = emitidas.filter(f => !texto || sinTilde(((f.cliente || {}).nombre || '') + ' ' + ((f.cliente || {}).nombre_comercial || '') + ' ' + f.codigo).toLowerCase().includes(texto.toLowerCase()));
-        cont.replaceChildren(h('p', { class: 'sub' }, lista.length + ' factura(s). Las emitidas no se pueden cambiar ni borrar.'), sifBotonCadena(), ...(lista.length ? lista.map(f => { const rs = rects[f.id] || [], anul = rs.some(x => x.anula);
+        cont.replaceChildren(h('p', { class: 'sub' }, lista.length + ' factura(s). Las emitidas no se pueden cambiar ni borrar.'), sifBotonCadena(), sifBotonXml(), ...(lista.length ? lista.map(f => { const rs = rects[f.id] || [], anul = rs.some(x => x.anula);
           return h('div', { class: 'card tap', onclick: () => sifVer(f.id, () => { emitidas = null; cargar(); }) }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, f.codigo + ' · ' + ((f.cliente || {}).nombre_comercial || (f.cliente || {}).nombre || '')), h('div', { class: 'sub' }, fechaES(f.fecha) + ' · ' + (SIF_FORMA_TXT[f.forma_pago] || f.forma_pago)),
             f.tipo === 'rectificativa' ? h('span', { class: 'badge', style: 'background:#fef3c7;color:#92400e' }, 'Rectificativa de ' + f.rectifica_codigo + (f.anula ? ' (anula)' : '')) : null, anul ? h('span', { class: 'badge', style: 'background:#fee2e2;color:#991b1b' }, 'ANULADA') : rs.length ? h('span', { class: 'badge' }, 'Rectificada (' + rs.length + ')') : null),
             h('b', { style: Number(f.total) < 0 ? 'color:#b91c1c' : '' }, eur(f.total) + ' €'))); }) : [h('p', { class: 'vacio' }, 'Todavía no hay facturas emitidas.')]));

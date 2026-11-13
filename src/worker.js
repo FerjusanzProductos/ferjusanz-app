@@ -2,6 +2,7 @@
 import indexHtml from "../public/index.html";
 import guiaHtml from "../public/guia.html";
 import swJs from "../public/sw.js";
+import sifXmlJs from "../public/sif-xml.js";
 import manifest from "../public/manifest.webmanifest";
 import icon192 from "../public/icon-192.png";
 import icon512 from "../public/icon-512.png";
@@ -36,6 +37,7 @@ const ARCHIVOS = {
   "/index.html": [indexApp, HTML],
   "/guia.html": [guiaHtml, HTML],
   "/sw.js": [swJs, "application/javascript; charset=utf-8"],
+  "/sif-xml.js": [sifXmlJs, "application/javascript; charset=utf-8"],
   "/manifest.webmanifest": [manifest, "application/manifest+json; charset=utf-8"],
   "/icon-192.png": [icon192, "image/png"],
   "/icon-512.png": [icon512, "image/png"],
