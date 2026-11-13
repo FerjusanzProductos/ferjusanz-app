@@ -1109,8 +1109,8 @@ const puedeCompras = () => !!state.perfil && ['compras', 'oficina', 'admin'].inc
 const UNIDADES = ['kg', 'pieza', 'caja', 'saco', 'bolsa', 'bandeja', 'manojo', 'docena', 'bote'];
 /* Texto de «Se cobra por»: kg, o la unidad del pedido (docena, caja, pieza…) */
 const etqCobro = (u, uni) => u === 'kg' ? 'kg' : (uni && uni !== 'kg' ? uni : 'unidad');
-/* Unidad con la que se muestra una cantidad preparada: kg, docenas o ud */
-const udLinea = l => l.unidad_precio === 'kg' ? 'kg' : (l.unidad_pedida === 'docena' ? 'docenas' : 'ud');
+/* Unidad con la que se muestra una cantidad preparada: misma regla que la factura (sif, 20261120a): kg, o la unidad del pedido en plural */
+const udLinea = l => { const u = String(l.unidad_pedida || '').trim(); return l.unidad_precio === 'kg' ? 'kg' : ['', 'kg', 'unidad', 'ud'].includes(u) ? 'ud' : u + (/[aeiou]$/.test(u) ? 's' : ''); };
 const limpiaBusqueda = s => String(s).replace(/[,()%*\\]/g, ' ').trim();
 
 /* =====================  GENTE, FOTOS Y HORAS  ===================== */
