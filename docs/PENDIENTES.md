@@ -8,7 +8,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
   - ⚪ Propuestas sin decidir: juntar **Cobros y Deudas** (y Caja del día / Caja (efectivo) / Cuadre de ayer); **«A quién compramos hoy»** frente a Trazabilidad → Confirmar; **«Facturas de clientes»** cuando se facture desde la app (1/1/2027).
 - ✔️ 12/11/2026: **Arreglo del aviso falso «hay una nueva versión»** publicado en la normal (v251, «Autorizo publicar»). Pruebas en v250.
 - ✔️ 12/11/2026: **Usuario de Jorge Ruiz Onetti** (oficina) creado, con contraseña provisional.
-  - 🟡 ✔️ **«Cambiar mi contraseña»** publicado en la normal (v302, 13/11/2026). Falta **«He olvidado la contraseña»**, para que Jorge (y los demás) puedan poner la suya. Hoy no existe.
+  - ✔️ **«Cambiar mi contraseña»** (v302) y **«He olvidado la contraseña»** (v312, 14/11/2026) publicados en la normal. 🟡 Falta que Fernando lo pruebe una vez con su correo (el envío real no lo ha probado Claude) y avisar a Jorge.
 - ✔️ 12/11/2026: **📦 Sacar de la furgoneta antes de entregar** publicado en la normal (v239, «Autorizo publicar»). Pruebas en v238.
 - ✔️ 12/11/2026: **🚚 Modo reparto** publicado en la normal (v247, «Autorizo publicar»); rama `modo-reparto` ya juntada con `main`:
   - 🟡 **Fase 1** en PRUEBAS (v240): que Fernando la pruebe en Modo prácticas. No decir «terminado» hasta probarlo con él.

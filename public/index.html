@@ -1321,8 +1321,59 @@ function vistaLogin() {
       }
       await cargarPerfil(data.user); state.view = 'inicio'; aplicarCompartido(); render();
     }
-  }, h('h1', {}, 'Ferjusanz'), h('p', { class: 'sub' }, 'Entra con tu usuario'), email, pass, ver, btn, err);
+  }, h('h1', {}, 'Ferjusanz'), h('p', { class: 'sub' }, 'Entra con tu usuario'), email, pass, ver, btn, err,
+    h('button', { type: 'button', class: 'ghost', style: 'margin-top:10px', onclick: () => vistaOlvido(email.value.trim()) }, 'He olvidado la contraseña'));
   $app.replaceChildren(form);
+}
+/* «He olvidado la contraseña»: la función recuperar-clave manda un enlace (…/?recuperar=…) al correo; vistaClaveNueva lo usa. */
+function vistaOlvido(correo) {
+  const email = h('input', { type: 'email', placeholder: 'Tu correo', autocomplete: 'username', value: correo || '', required: true });
+  const msg = h('p', { class: 'sub' });
+  const btn = h('button', { type: 'submit' }, 'Mandarme el enlace');
+  $app.replaceChildren(h('form', { class: 'login', onsubmit: async ev => {
+    ev.preventDefault(); if (!navigator.onLine) { msg.className = 'err'; msg.textContent = 'Necesitas conexión.'; return; }
+    btn.disabled = true; msg.className = 'sub'; msg.textContent = 'Mandando…';
+    try {
+      const r = await sb.functions.invoke('recuperar-clave', { body: { email: email.value.trim() } });
+      const d = r.data || {}; let e = d.error; if (!e && r.error) { try { e = (await r.error.context.json()).error; } catch (x) { e = 'No se pudo mandar. Prueba otra vez.'; } }
+      if (e) throw new Error(e);
+      if (d.enlace_prueba) window.__enlacePrueba = d.enlace_prueba; // solo la base de pruebas y usuarios @pruebas.invalid
+      msg.className = 'sub'; msg.textContent = '✅ ' + d.mensaje;
+    } catch (e) { msg.className = 'err'; msg.textContent = isNetErr(e) ? 'Cobertura muy débil. Prueba otra vez.' : e.message; }
+    finally { btn.disabled = false; }
+  } }, h('h1', {}, 'Ferjusanz'), h('p', { class: 'sub' }, 'Escribe tu correo y te mandamos un enlace para poner una contraseña nueva.'), email, btn, msg,
+    h('button', { type: 'button', class: 'ghost', style: 'margin-top:10px', onclick: vistaLogin }, 'Volver')));
+}
+function vistaClaveNueva(token) {
+  let hecho = false;
+  const quitar = () => { try { history.replaceState(null, '', location.pathname); } catch (e) { } };
+  const nueva = h('input', { type: 'password', placeholder: 'Contraseña nueva (mínimo 8)', autocomplete: 'new-password' });
+  const otra = h('input', { type: 'password', placeholder: 'Repite la nueva', autocomplete: 'new-password' });
+  const ver = h('label', { class: 'interruptor' }, h('input', { type: 'checkbox', onchange: e => { nueva.type = otra.type = e.target.checked ? 'text' : 'password'; } }), 'Mostrar');
+  const msg = h('p', { class: 'err' });
+  const btn = h('button', { type: 'submit' }, 'Guardar contraseña');
+  $app.replaceChildren(h('form', { class: 'login', onsubmit: async ev => {
+    ev.preventDefault(); msg.className = 'err';
+    if (nueva.value.length < 8) { msg.textContent = 'Tiene que tener al menos 8 letras o números.'; return; }
+    if (nueva.value !== otra.value) { msg.textContent = 'Las dos no son iguales.'; return; }
+    if (!navigator.onLine) { msg.textContent = 'Necesitas conexión.'; return; }
+    btn.disabled = true; msg.className = 'sub'; msg.textContent = 'Guardando…';
+    try {
+      if (!hecho) { // siempre con el enlace (no con la sesión que hubiera abierta en este móvil)
+        const r1 = await sb.auth.verifyOtp({ token_hash: token, type: 'recovery' });
+        if (r1.error) throw /expired|invalid|not found/i.test(String(r1.error.message)) ? new Error('El enlace ha caducado o ya se usó. Pide otro desde «He olvidado la contraseña».') : r1.error;
+        hecho = true;
+      }
+      const r2 = await sb.auth.updateUser({ password: nueva.value });
+      if (r2.error) throw r2.error;
+      msg.className = 'sub'; msg.textContent = '✅ Contraseña guardada. Entrando…'; location.replace(location.pathname);
+    } catch (e) {
+      const m = String(e.message || ''); msg.className = 'err';
+      msg.textContent = isNetErr(e) ? 'Cobertura muy débil. Prueba otra vez.' : /weak|pwned|characters/i.test(m) ? 'Esa contraseña es muy fácil. Pon otra más larga o con números.' : /same/i.test(m) ? 'Es la misma que tenías. Ya puedes entrar con ella.' : m || 'No se pudo guardar.';
+      btn.disabled = false;
+    }
+  } }, h('h1', {}, 'Ferjusanz'), h('p', { class: 'sub' }, 'Pon tu contraseña nueva dos veces.'), nueva, otra, ver, btn, msg,
+    h('button', { type: 'button', class: 'ghost', style: 'margin-top:10px', onclick: () => { quitar(); vistaLogin(); } }, 'Cancelar')));
 }
 function vistaSinPerfil() {
   $app.replaceChildren(h('div', { class: 'login' }, h('h1', {}, 'Ferjusanz'),
@@ -14773,7 +14824,7 @@ async function init() {
     return;
   }
   if (!(await comprobarEntorno())) return;
-  { const q = new URLSearchParams(location.search), pa = q.get('a'), pc = q.get('c'); if (pa && /^[a-f0-9]{32}$/.test(pa)) { vistaAlbaranPublico(pa); return; } if (pc && /^[a-f0-9]{32}$/.test(pc)) { vistaPortalCliente(pc); return; } }
+  { const q = new URLSearchParams(location.search), pa = q.get('a'), pc = q.get('c'); if (pa && /^[a-f0-9]{32}$/.test(pa)) { vistaAlbaranPublico(pa); return; } if (pc && /^[a-f0-9]{32}$/.test(pc)) { vistaPortalCliente(pc); return; } const pr = q.get('recuperar'); if (pr && !PRACTICA && /^[\w-]{20,200}$/.test(pr)) { vistaClaveNueva(pr); return; } }
   let ses = null;
   try { const r = await Promise.race([sb.auth.getSession(), new Promise((_, no) => setTimeout(() => no(new Error('tiempo')), 5000))]); ses = r && r.data && r.data.session; } catch (e) { }
   if (ses) await cargarPerfil(ses.user);
