@@ -14248,6 +14248,15 @@ function vistaCopia() {
   $app.replaceChildren(shell('Copia de seguridad', h('div', {},
     h('p', {}, 'Descarga un archivo con todos los datos de Ferjusanz (clientes, productos, pedidos, cobros, compras, etc.). Si algún día algo se borra o se rompe, con este archivo se pueden recuperar.'),
     info, btn, estado,
+    // Solo app de PRUEBAS: la función solo existe en la base de pruebas (20261122a_contadores_pruebas.sql)
+    ES_PRUEBAS && !PRACTICA ? h('div', { class: 'card', style: 'margin-top:12px;border-color:#ea580c' }, h('b', {}, '🔄 Poner contadores de prueba a cero'),
+      h('div', { class: 'sub' }, 'Guarda una copia de lo ensayado y borra los pedidos, albaranes, cobros y cargas de prueba que no estén en una factura. El próximo albarán vuelve a ser PRUEBA-F 0000001. Las facturas de prueba no se borran (no se puede). Los previstos de los pedidos fijos se quedan.'),
+      h('button', { class: 'peligro', style: 'width:100%;margin-top:8px', onclick: async ev => {
+        if (!await confirmar('¿Poner los contadores de prueba a cero? Se borran los pedidos, albaranes y cobros de prueba sin factura (queda copia).')) return;
+        ev.target.disabled = true; const r = await sb.rpc('poner_contadores_a_cero'); ev.target.disabled = false;
+        if (r.error) { toast(msgErr(r.error), 'err'); return; }
+        const d = r.data; toast('Hecho: ' + d.pedidos + ' pedidos y ' + d.albaranes + ' albaranes quitados. Próximo albarán ' + d.siguiente_albaran + '.', 'ok');
+      } }, 'Poner contadores a cero')) : null,
     h('div', { class: 'card', style: 'margin-top:12px' }, h('b', {}, 'Cómo guardarla bien'), h('div', { class: 'sub' }, '1) Hazla una vez por semana (la app te avisa con un «!» si pasan más de 7 días).  2) Se guarda en Descargas del móvil: súbela también a Google Drive o envíatela por correo.  3) No la compartas: contiene datos de clientes.  4) Las fotos de perfil y los archivos de facturas y pedidos escaneados no van dentro de este archivo.'))), { volver: volverIni })); renderBanner();
 }
 /* ===== Productos que llegan en las facturas y no están dados de alta: lista para pasar a Golden Soft y botón para crearlos aquí ===== */

@@ -96,7 +96,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
   Los previstos ya cuentan en la hoja de compra. Más allá de 2 semanas, el calendario los calcula al momento.
 - Pantalla **Semana**: mover pedidos de día («solo esta vez» o «siempre») y ordenar el reparto.
 - **📆 Pasar a otro día** (botón en el previsto o deslizar su tarjeta en Preparar): lo mismo que Semana, eligiendo el día de una lista o la fecha.
-- **«Contador a cero»**: mientras la app está en pruebas, ver `supabase/contador_a_cero.sql`.
+- **«Contador a cero»**: en la app de PRUEBAS, botón «🔄 Poner contadores a cero» (Copia de seguridad, solo admin; albaranes de prueba en la serie PRUEBA-F). En la base REAL no existe: allí, `supabase/contador_a_cero.sql` solo si Fernando lo pide con esas palabras.
 - **Numeración de albaranes**: cuando se empiece de verdad, la app **sigue la numeración que ya se tenía** (Golden, serie F). Fernando avisará y dirá el último número; entonces `setval('public.albaran_f_seq', <último + 1>, false)` en lugar de empezar en 1.
 
 ## Imprimir
