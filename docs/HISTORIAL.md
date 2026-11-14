@@ -2,6 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 14/11/2026
+- **Web: el móvil enseñaba el diseño viejo** (Fernando mandó captura con letra de imprenta y botones verdes: «Quiero el estilo de la primera captura»). El diseño «Sobrio de mercado» ya estaba publicado; el Chrome del móvil tenía guardada la página y la hoja de estilos viejas (caché de 5 min). Arreglo: las páginas se comprueban siempre al abrirlas (`no-cache` en `web/worker.js`) y la hoja de estilos lleva su versión (`estilo.css?v=…`, en `web/construir.cjs`), así cada diseño nuevo se ve al momento. Comprobado en local con captura de móvil y publicado en `ferjusanz-web`.
 - **Web: SEO y textos para clientes profesionales sobre el diseño «Sobrio de mercado»** (Fernando, en otra sesión: «Prioriza SEO técnico y local… restaurantes, hoteles, colegios, residencias y colectividades»; vio la vista previa y dijo «Sí»). Esa sesión hizo su propia versión del diseño a la vez que la sesión del rediseño; se juntaron: se queda el diseño de la sesión del rediseño (Barlow, papel y granate) y se añaden estos textos y páginas. Subido a la web de **pruebas** (`ferjusanz-web`, oculta a Google); la web antigua de Creativate no se ha tocado.
   - Velocidad: sin animaciones (ya quitadas en el rediseño) y la foto de portada se precarga.
   - Textos en **«usted»** en las páginas comerciales (portada, contacto, sectores, legales, mayorista, colectividades). Los artículos del blog siguen en «tú».

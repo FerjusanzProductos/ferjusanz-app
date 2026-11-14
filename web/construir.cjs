@@ -3,6 +3,8 @@
 //   novedades.json  fotos y avisos del almacén (los añade la tarea automática cada 2 días)
 // Uso: node web/construir.cjs
 const fs = require('fs');
+// Cambia con cada estilo nuevo: el móvil no se queda con la hoja vieja en caché.
+const VERSION_CSS = require('crypto').createHash('md5').update(fs.readFileSync(require('path').join(__dirname, 'public/estilo.css'))).digest('hex').slice(0, 8);
 const path = require('path');
 const DIR = __dirname;
 const OUT = path.join(DIR, 'public');
@@ -257,7 +259,7 @@ function plantilla({ ruta, titulo, descripcion, imagen, cuerpo, datos = [], tipo
 <link rel="preload" href="/fuentes/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fuentes/barlow-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 ${precarga ? `<link rel="preload" href="${precarga}" as="image" fetchpriority="high">` : ''}
-<link rel="stylesheet" href="/estilo.css">
+<link rel="stylesheet" href="/estilo.css?v=${VERSION_CSS}">
 ${datos.map(d => `<script type="application/ld+json">${JSON.stringify(d)}</script>`).join('\n')}
 </head>
 <body>

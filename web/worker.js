@@ -26,7 +26,7 @@ export default {
     if (!ARCHIVOS[ruta] && ARCHIVOS[ruta + "/"]) return Response.redirect(url.origin + ruta + "/" + url.search, 301);
     if (ruta === "/robots.txt" && !PRUEBAS) return new Response("User-agent: *\nAllow: /\nSitemap: https://www.ferjusanz-frutas-verduras.es/sitemap.xml\n");
     const archivo = ARCHIVOS[ruta] || ARCHIVOS["/404.html"];
-    const headers = { "content-type": archivo[1], "cache-control": ruta.startsWith("/wp-content/") || ruta.startsWith("/fuentes/") ? "public, max-age=2592000" : "public, max-age=300" };
+    const headers = { "content-type": archivo[1], "cache-control": ruta.startsWith("/wp-content/") || ruta.startsWith("/fuentes/") ? "public, max-age=2592000" : archivo[1].startsWith("text/html") ? "no-cache" : "public, max-age=300" };
     if (PRUEBAS) headers["x-robots-tag"] = "noindex, nofollow";
     return new Response(archivo[0], { status: ARCHIVOS[ruta] ? 200 : 404, headers });
   },
