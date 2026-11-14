@@ -651,6 +651,37 @@ function paginaLegal(ruta, titulo, html) {
   return plantilla({ ruta, titulo: `${titulo} | Ferjusanz`, descripcion: `${titulo} de la web de ${EMPRESA}.`, cuerpo, datos: [m.datos] });
 }
 
+// Tarjeta virtual (14/11/2026): lo que Fernando manda por WhatsApp o enseña en QR a quien pregunta quiénes somos.
+// Sin precios: el precio se lo pasa Fernando después por WhatsApp. La app la abre en /tarjeta (redirige aquí).
+function tarjeta() {
+  const m = miga('/tarjeta/', 'Tarjeta');
+  const vcf = ['BEGIN:VCARD', 'VERSION:3.0', 'FN:Fernando Sanz · Ferjusanz', 'ORG:' + EMPRESA, 'TEL;TYPE=CELL:+34609567354', 'TEL;TYPE=WORK:+34917632186',
+    'EMAIL:' + EMAIL, 'ADR;TYPE=WORK:;;C/ Carare, 2;Madrid;;28033;España', 'URL:' + DOMINIO + '/', 'END:VCARD'].join('\r\n');
+  const fer = WHATSAPP.find(w => w.nombre === 'Fernando');
+  const cuerpo = `<section class="bloque"><div class="envoltura lectura">${m.html}
+  <h1>Ferjusanz: fruta, verdura, patatas y huevos para su negocio</h1>
+  <p class="entradilla">${EMPRESA}: empresa familiar, tercera generación, ${ANIOS} sirviendo a restaurantes, bares, hoteles, colegios, residencias y fruterías de Madrid y Segovia.</p>
+  <div class="acciones apiladas"><a class="btn btn-wa" href="${wa(fer.num, 'Hola Fernando, he visto la tarjeta de Ferjusanz y quería información de: ')}" rel="nofollow">${I.wa}<span>Escribir a Fernando por WhatsApp <small>(${fer.ver})</small></span></a>
+  <a class="btn btn-borde" href="tel:+34917632186">${I.tel}<span>Llamar a la oficina: ${TEL}</span></a>
+  <a class="btn btn-borde" href="data:text/vcard;charset=utf-8,${encodeURIComponent(vcf)}" download="Ferjusanz.vcf"><span>📇 Guardar el contacto en el móvil</span></a></div>
+  <div class="texto">
+  <h2>¿De dónde sale el género?</h2>
+  <p>Parte es de <strong>cosecha propia</strong> y de agricultores con los que trabajamos desde hace años; el resto lo elegimos nosotros mismos cada mañana en <strong>Mercamadrid</strong>. Preparamos los pedidos de madrugada y los llevamos en camiones y furgonetas refrigerados.</p>
+  <h2>¿Qué servimos?</h2>
+  <p>Más de 200 productos frescos: ${FAMILIAS.map(f => f.ruta ? `<a href="${f.ruta}">${f.nombre.toLowerCase()}</a>` : f.nombre.toLowerCase()).join(', ')}. También patata, cebolla y ajo pelados. Si no ve un producto, se lo buscamos.</p>
+  <h2>¿Cuándo y cómo se hace el pedido?</h2>
+  <ul><li>Por <strong>WhatsApp</strong> o por <strong>teléfono</strong>, cualquier día: le confirmamos el día de entrega.</li><li><strong>Repartimos de lunes a sábado.</strong> Sin pedido mínimo.</li><li>Oficina: ${HORARIO.toLowerCase()}.</li></ul>
+  <h2>¿Dónde repartimos?</h2>
+  <ul>${ZONAS.map(([z, l]) => `<li><strong>${z}</strong>: ${l}.</li>`).join('')}</ul>
+  <h2>¿Y el precio?</h2>
+  <p>Cambia con el mercado de cada día, por eso no lo publicamos. <strong>Díganos por WhatsApp qué productos le interesan</strong> y le pasamos el precio de ese día, sin compromiso.</p>
+  <h2>Nuestros datos</h2>
+  <p>${EMPRESA} · NIF ${NIF}<br>${DIRECCION}<br>Oficina: <a href="tel:+34917632186">${TEL}</a> · <a href="mailto:${EMAIL}">${EMAIL}</a><br>WhatsApp: ${WHATSAPP.map(w => `<a href="${wa(w.num, 'Hola')}" rel="nofollow">${w.ver}${w.nombre ? ` (${w.nombre})` : ''}</a>`).join(' · ')}</p>
+  </div>
+</div></section>`;
+  return plantilla({ ruta: '/tarjeta/', titulo: 'Quiénes somos y cómo hacer el pedido | Ferjusanz', descripcion: 'Ferjusanz: mayorista de fruta, verdura, patatas y huevos en Madrid. De dónde sale el género, cuándo pedir y cómo pedir precio por WhatsApp.', cuerpo, datos: [m.datos, NEGOCIO] });
+}
+
 // ───────── Páginas nuevas (no estaban en la web antigua) ─────────
 const NUEVAS = [
   { path: '/productos/huevos/', familia: 'huevos', title: 'Huevos al por mayor para hostelería en Madrid | Ferjusanz',
@@ -753,6 +784,7 @@ for (const p of [...paginas, ...NUEVAS]) {
   escribir(p.path, html);
   sitemap.push([p.path, (p.modified || p.date || '').slice(0, 10)]);
 }
+escribir('/tarjeta/', tarjeta());
 escribir('/novedades/', paginaNovedades());
 sitemap.push(['/novedades/', (ultimasNovedades[0]?.fecha || '').slice(0, 10)]);
 for (const [ruta, titulo, html] of LEGALES) { escribir(ruta, paginaLegal(ruta, titulo, html)); sitemap.push([ruta, '']); }

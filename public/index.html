@@ -2740,6 +2740,31 @@ function qrMatriz(texto) {
 }
 function qrDataUrl(texto, escala) { const R = qrMatriz(texto), q = 4, e = escala || 8, N = R.length + 2 * q, c = document.createElement('canvas'); c.width = c.height = N * e; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.fillStyle = '#000'; R.forEach((f, r) => f.forEach((x, k) => { if (x) g.fillRect((k + q) * e, (r + q) * e, e, e); })); return c.toDataURL('image/png'); }
 
+/* 📇 Tarjeta virtual para posibles clientes: QR y mensaje con el enlace a quiénes somos (sin precios; el precio va después por WhatsApp).
+   Siempre la dirección de la app normal (también desde la naranja), para que el QR impreso no caduque. */
+const URL_TARJETA = 'https://ferjusanz-productos.fernandosanzalba.workers.dev/tarjeta';
+function hojaTarjeta() {
+  const yo = state.perfil ? state.perfil.nombre.split(' ')[0] : '';
+  const msg = h('textarea', { rows: 6, style: 'width:100%;font-size:15px' });
+  msg.value = 'Hola, soy ' + yo + ', de Ferjusanz (fruta, verdura, patatas y huevos en Mercamadrid). Aquí tiene quiénes somos, de dónde sale el género y cómo hacer el pedido:\n' + URL_TARJETA + '\n\nDígame qué productos le interesan y le paso el precio por WhatsApp.';
+  const tel = h('input', { type: 'tel', inputmode: 'tel', placeholder: 'Su móvil (opcional): 600 000 000', style: 'width:100%' });
+  const abrirWa = () => {
+    let t = tel.value.replace(/\D/g, ''); if (t.length === 9) t = '34' + t;
+    if (t && !/^\d{11,15}$/.test(t)) { toast('Revisa el móvil (9 cifras) o déjalo en blanco', 'err'); return; }
+    window.open('https://wa.me/' + t + '?text=' + encodeURIComponent(msg.value), '_blank'); // sin número, WhatsApp deja elegir el chat
+  };
+  const copiar = async () => { try { await navigator.clipboard.writeText(msg.value); toast('Mensaje copiado: pégalo en WhatsApp', 'ok'); } catch (e) { msg.select(); toast('Mantén pulsado el texto para copiarlo', 'err'); } };
+  const B = (cls, t, f) => h('button', { class: cls, style: 'width:100%;min-height:50px;margin-top:8px', onclick: f }, t);
+  hoja('📇 Tarjeta para clientes', h('div', {},
+    h('p', { class: 'sub' }, 'Para quien pregunta quiénes somos o de dónde sale el género. La página NO enseña precios: el precio se lo pasas tú después por WhatsApp.'),
+    h('div', { style: 'text-align:center' }, h('img', { src: qrDataUrl(URL_TARJETA, 8), alt: 'QR de la tarjeta', style: 'width:100%;max-width:260px;image-rendering:pixelated' }),
+      h('div', { class: 'sub' }, 'Que lo escanee con la cámara del móvil (o se lo pase a su jefe).')),
+    h('label', { class: 'campo' }, 'Mensaje', msg),
+    h('label', { class: 'campo' }, 'Móvil de la persona', tel),
+    B('guardar', '💬 Abrir WhatsApp con el mensaje', abrirWa),
+    B('ghost', '📋 Copiar mensaje', copiar),
+    B('ghost', '👀 Ver la tarjeta', () => window.open(URL_TARJETA, '_blank'))));
+}
 function hojaQrEnlace(titulo, url, nota, wa) {
   const copiar = async () => { try { await navigator.clipboard.writeText(url); toast('Enlace copiado', 'ok'); } catch (e) { toast('Mantén pulsado el enlace de arriba para copiarlo', 'err'); } };
   return hoja(titulo, h('div', { style: 'text-align:center' }, h('img', { src: qrDataUrl(url, 8), style: 'width:100%;max-width:320px;image-rendering:pixelated' }), h('p', { class: 'sub' }, nota || ''),
@@ -5779,7 +5804,7 @@ function vistaMas() {
       puedeCompras() ? c('💲', 'Precios de compra del día', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, V) : null, c('♻️', 'Sobrante', () => go('sobrante'), V)),
     ...g('Entregas y pedidos', c('🚦', 'Camino de los pedidos', () => go('camino'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a')),
     ...g('Compras y mercancía', puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
-    ...g('Clientes y productos', c('👥', 'Clientes', () => { window.__cliFiscal = false; go('clientes'); }, Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z)),
+    ...g('Clientes y productos', c('👥', 'Clientes', () => { window.__cliFiscal = false; go('clientes'); }, Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z), c('📇', 'Tarjeta para clientes', hojaTarjeta, Z)),
     ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() && FACTURAR_APP ? c('🧾', 'Facturas (desde la app)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('facturasapp'), Z) : null, esOficina() ? c('🏢', 'Datos de la empresa', () => go('empresa'), Z) : null, FACTURAR_APP ? c('ℹ️', 'Programa de facturación', () => go('programasif'), Z) : null, esOficina() ? c('🧾', 'Clientes sin datos para facturar', () => { window.__cliFiscal = true; go('clientes'); }, Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen y correo', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() && CAJA_APP ? c('💵', 'Caja (efectivo)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('caja'), Z) : null, esOficina() && BANCO_APP ? c('🏦', 'Banco' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('banco'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
