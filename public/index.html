@@ -8376,6 +8376,29 @@ async function rellenarPreciosCompra(alTerminar) {
       h('button', { class: 'guardar', style: 'width:100%;margin-top:8px', onclick: async () => { const sel = filas.filter(f => f.ok && f.precio != null); if (!sel.length) { toast('No has marcado ninguno.', 'err'); return; } let n = 0; for (const f of sel) { const r = await sb.from('lotes').update({ precio_compra: f.precio }).eq('id', f.lo.id).is('precio_compra', null); if (!r.error) n++; } cerrar(); toast(n + ' precio(s) de compra rellenados', 'ok'); if (alTerminar) alTerminar(); } }, 'Rellenar los marcados')));
   } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); }
 }
+/* Último precio conocido hasta «hasta» de cada producto (o del texto de la factura si no está reconocido), por proveedor y unidad,
+   y el precio anterior del MISMO producto, proveedor y unidad (el último de un día anterior). Solo calcula, no cambia nada. */
+function ultimosPreciosCalc(lineas, hasta) {
+  const g = {};
+  lineas.forEach(l => {
+    const f = String(l.fecha || '').slice(0, 10), pr = Number(l.precio);
+    if (!f || f > hasta || !(pr > 0) || (!l.producto_id && fcEsBasura(l.texto))) return;
+    const k = (l.producto_id || 'T:' + fcClave(l.texto)) + '|' + (l.proveedor_id || '') + '|' + String(l.unidad || '').trim().toLowerCase();
+    (g[k] = g[k] || []).push({ f, pr, l });
+  });
+  return Object.values(g).map(a => {
+    a.sort((x, y) => y.f.localeCompare(x.f));
+    const u = a[0], ant = a.find(x => x.f < u.f), l = u.l;
+    return { pid: l.producto_id || null, nombre: (uno(l.productos) || {}).nombre || l.texto || 'Producto', prov: (uno(l.proveedores) || {}).nombre || '', unidad: l.unidad || '', fecha: u.f, precio: u.pr,
+      fechaAnt: ant ? ant.f : null, precioAnt: ant ? ant.pr : null, pct: ant ? (u.pr / ant.pr - 1) * 100 : null, dudoso: !!l.dudoso };
+  });
+}
+/* ▲ sube (rojo) · ▼ baja (verde) · = igual, con el precio anterior. Vacío si no hay con qué comparar. */
+function flechaPrecio(r) {
+  if (r.precioAnt == null) return null;
+  const p = Math.round(r.pct), col = p > 0 ? '#dc2626' : p < 0 ? '#16a34a' : '#6b7280';
+  return h('div', { class: 'sub', style: 'color:' + col + ';font-weight:700' }, (p > 0 ? '▲ +' + p + ' %' : p < 0 ? '▼ ' + p + ' %' : '= igual') + ' · antes ' + eur(r.precioAnt) + ' €' + (r.unidad ? '/' + r.unidad : '') + ' (' + fechaES(r.fechaAnt) + ')');
+}
 function vistaPrecios() {
   state.view = 'precios'; if (!puedeCompras()) { go('inicio'); return; }
   let modo = LS.get('fj_precios_modo', 'dia'), fecha = hoy();
@@ -8441,6 +8464,12 @@ function vistaPrecios() {
           }
         }
       } catch (e) { }
+      /* Último precio de cada producto hasta este día y su precio anterior (mismo proveedor y unidad): flechas, «Subidas de precio» y días sin compras */
+      let ult = [], subAbierto = false;
+      try {
+        const L = []; for (let i = 0; i < 10000; i += 1000) { const r = await sb.from('lineas_factura_leida').select('texto,unidad,precio,fecha,producto_id,proveedor_id,dudoso,proveedores(nombre),productos(nombre)').lte('fecha', fecha).order('fecha', { ascending: false }).range(i, i + 999); if (r.error) throw r.error; L.push(...(r.data || [])); if ((r.data || []).length < 1000) break; }
+        ult = ultimosPreciosCalc(L, fecha);
+      } catch (e) { }
       /* Elegir a qué producto corresponde una línea que la app no reconoció: se apunta en la lista y la app lo recuerda para ese proveedor */
       async function vincularSin(origen) {
         const x = origen.x; let prods, indice;
@@ -8498,7 +8527,17 @@ function vistaPrecios() {
       const filas = preparaFilas();
       let total = 0, sinP = 0;
       const kids = filas.map(f => { const s = fuente(f); if (!s) sinP++; else if (f.cant && s.unidad === f.unidad) total += f.cant * s.precio;
-        return h('div', { class: 'card tap fila', style: s ? '' : 'border-left:6px solid #d97706', onclick: () => editar(f) }, h('div', {}, h('div', { class: 'nombre' }, f.producto), h('div', { class: 'sub' }, [f.cant ? num(f.cant) + ' ' + f.unidad : 'Sin cantidad registrada', f.provs.size ? Array.from(f.provs).join(', ') : '', s ? s.txt : '⚠ sin precio: toca para anotarlo'].filter(Boolean).join(' · '))), h('div', { style: 'text-align:right' }, h('b', {}, s ? eur(s.precio) + ' €' + (s.unidad ? '/' + s.unidad : '') : '—'))); });
+        const cmp = ult.filter(r => r.pid === f.pid && r.fecha === fecha && r.precioAnt != null), r1 = cmp.find(r => r.prov && s && s.txt.includes(r.prov)) || cmp[0];
+        return h('div', { class: 'card tap fila', style: s ? '' : 'border-left:6px solid #d97706', onclick: () => editar(f) }, h('div', {}, h('div', { class: 'nombre' }, f.producto), h('div', { class: 'sub' }, [f.cant ? num(f.cant) + ' ' + f.unidad : 'Sin cantidad registrada', f.provs.size ? Array.from(f.provs).join(', ') : '', s ? s.txt : '⚠ sin precio: toca para anotarlo'].filter(Boolean).join(' · ')), r1 ? flechaPrecio(r1) : null), h('div', { style: 'text-align:right' }, h('b', {}, s ? eur(s.precio) + ' €' + (s.unidad ? '/' + s.unidad : '') : '—'))); });
+      const suben = ult.filter(r => r.pct > 0).sort((a, b) => b.pct - a.pct), fuertes = suben.filter(r => r.pct > 50).length, conU = r => r.unidad ? '/' + r.unidad : '';
+      const subidas = suben.length ? h('details', { class: 'card', open: subAbierto, ontoggle: e => { subAbierto = e.target.open; } }, h('summary', { class: 'nombre', style: 'cursor:pointer' }, '📈 Subidas de precio (' + suben.length + ')' + (fuertes ? ' · 🟠 ' + fuertes + ' más del 50 %' : '')),
+        h('p', { class: 'sub' }, 'Último precio de cada producto frente al anterior del mismo proveedor y la misma unidad, de mayor a menor subida. En naranja, las que suben más del 50 %: revisa si la factura se leyó bien.'),
+        ...suben.map(r => h('div', { class: 'fila', style: 'padding:6px;border-top:1px solid var(--borde)' + (r.pct > 50 ? ';background:rgba(234,88,12,.15);border-left:5px solid #ea580c' : '') },
+          h('div', {}, h('div', { style: 'font-weight:700' }, r.nombre), h('div', { class: 'sub' }, [r.prov, fechaES(r.fecha), eur(r.precioAnt) + ' → ' + eur(r.precio) + ' €' + conU(r)].filter(Boolean).join(' · '))),
+          h('b', { style: 'white-space:nowrap;color:' + (r.pct > 50 ? '#ea580c' : '#dc2626') }, '▲ +' + Math.round(r.pct) + ' %')))) : null;
+      const masReciente = ult.reduce((m, r) => r.fecha > m ? r.fecha : m, '');
+      const ultimos = !kids.length && !facs.length && ult.length ? [h('div', { class: 'aviso-card' }, 'No hay compras el ' + fechaES(fecha) + '. Te enseño el último precio conocido de cada producto (lo más reciente es del ' + fechaES(masReciente) + ').'),
+        ...ult.slice().sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')).map(r => h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'nombre' }, r.nombre), h('div', { class: 'sub' }, [r.prov, fechaES(r.fecha), r.dudoso ? 'producto por confirmar' : ''].filter(Boolean).join(' · ')), flechaPrecio(r)), h('b', { style: 'white-space:nowrap' }, eur(r.precio) + ' €' + conU(r))))] : null;
       const cab = [];
       if (sinP52) cab.push(h('div', { class: 'aviso-card' }, 'Falta ejecutar la Parte 52 en Supabase para poder anotar precios a mano. Mientras tanto verás los de las compras y las facturas.'));
       cab.push(h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'sub' }, 'Comprado el ' + fechaES(fecha)), h('div', { class: 'sub' }, sinP ? '⚠ ' + sinP + ' producto(s) sin precio' : (filas.length ? 'Todos con precio' : ''))), h('b', { style: 'font-size:20px' }, eur(Math.round(total * 100) / 100) + ' €')));
@@ -8518,7 +8557,7 @@ function vistaPrecios() {
         ...facs.map(f => { const c = cacheF[f.id]; const nS = c && c.sin ? c.sin.filter(x => !x.sinLeer && !fcEsBasura(x.texto) && !IGN[fcClave(x.texto)]).length : 0;
           return h('div', { class: 'fila', style: 'padding:6px 0;border-top:1px solid var(--borde);gap:6px;flex-wrap:wrap' }, h('div', {}, h('div', { style: 'font-weight:700' }, pvDe(f)), h('div', { class: 'sub' }, c ? c.lineas.length + ' producto(s)' + (nS ? ' · ' : '') : 'sin leer todavía', nS ? h('span', { style: 'color:#dc2626;font-weight:700' }, '🔴 ' + nS + ' sin reconocer') : null)),
             h('div', { style: 'display:flex;gap:6px' }, f.ruta ? h('button', { class: 'ghost small', onclick: () => verDocumento(f.ruta, pvDe(f)) }, '👁') : null, h('button', { class: 'small', onclick: () => revisarFacturaHoja(f, () => pHoy()) }, 'Revisar y registrar'))); })) : null;
-      lista.replaceChildren(...cab, ...(regBox ? [regBox] : []), ...sinRec, mas, estado, ...(verFacs && !regBox ? [verFacs] : []), ...(kids.length ? kids : [h('p', { class: 'vacio' }, facs.length ? 'Hay ' + facs.length + ' factura(s) llegadas este día. Se están leyendo; los precios saldrán aquí.' : 'Todavía no hay compras, facturas ni precios para este día. También puedes apuntar un precio a mano con el botón de arriba.')]));
+      lista.replaceChildren(...cab, ...(subidas ? [subidas] : []), ...(regBox ? [regBox] : []), ...sinRec, mas, estado, ...(verFacs && !regBox ? [verFacs] : []), ...(kids.length ? kids : ultimos || [h('p', { class: 'vacio' }, facs.length ? 'Hay ' + facs.length + ' factura(s) llegadas este día. Se están leyendo; los precios saldrán aquí.' : 'Todavía no hay compras, facturas ni precios para este día. También puedes apuntar un precio a mano con el botón de arriba.')]));
       };
       montar();
       const pend = facs.filter(f => !cacheF[f.id] && f.ruta);
