@@ -111,9 +111,20 @@ const SERVICIOS = [
   ['/servicios-de-distribucion-y-exportacion/', 'Distribución y exportación'],
 ];
 
+const ZONAS = [
+  ['Madrid capital', 'Centro, Chamartín, Hortaleza, Fuencarral, Moncloa y más distritos'],
+  ['Zona norte', 'Alcobendas, San Sebastián de los Reyes, Tres Cantos'],
+  ['Noroeste', 'Aravaca, Pozuelo, Majadahonda, Las Rozas'],
+  ['Segovia', 'Segovia capital y alrededores'],
+];
+
 const PREGUNTAS = [
   ['¿Cómo solicito precio o tarifa?', 'Escríbanos por WhatsApp al 609 100 690 o al 609 567 354, o llame al 91 763 21 86. Los precios de la fruta y la verdura cambian cada día según el mercado, por eso le pasamos el del día y una tarifa ajustada a su volumen de consumo.'],
-  ['¿Dónde reparten?', 'En Madrid capital, la Comunidad de Madrid y Segovia, con nuestros propios camiones y furgonetas refrigerados, a restaurantes, hoteles, colegios, residencias y colectividades.'],
+  ['¿Dónde reparten?', 'En Madrid capital, la zona norte (Alcobendas, San Sebastián de los Reyes, Tres Cantos), el noroeste (Aravaca, Pozuelo, Majadahonda, Las Rozas) y Segovia, con nuestros propios camiones y furgonetas refrigerados. ¿No ve su localidad? Llámenos y le decimos si pasamos cerca.'],
+  ['¿Hay pedido mínimo?', 'No. Pida lo que necesite, aunque sea poco.'],
+  ['¿Hasta qué hora puedo pedir?', 'Hasta la tarde anterior al reparto, por WhatsApp o por teléfono. También puede dejar pedidos fijos para ciertos días de la semana.'],
+  ['¿Venden a particulares?', 'No. Trabajamos con hostelería, colegios, residencias, escuelas infantiles, catering, fruterías y otros negocios con cocina.'],
+  ['¿Cómo se paga?', 'Al contado en la entrega o con factura, según lo que acordemos. Cada albarán lleva el peso real, el precio y el IVA: paga lo que recibe.'],
   ['¿Venden también huevos?', 'Sí, huevos de gallina y de codorniz, que le llevamos en el mismo reparto que la fruta y la verdura.'],
   ['¿Tienen patata pelada y producto cortado?', 'Sí: patata pelada en bastón, en dados, panadera, para ensaladilla o envasada al vacío, y cebolla y ajo pelados.'],
   ['¿De dónde viene el género?', 'Parte es de cosecha propia y de agricultores que conocemos desde hace años; el resto lo elegimos cada mañana en Mercamadrid.'],
@@ -284,7 +295,15 @@ ${cuerpo}
       <p>Indíquenos qué necesita, para qué tipo de negocio y con qué frecuencia. Le enviamos el precio del mercado de hoy, sin compromiso.</p>
     </div>
     <div class="pedir-botones">
-      ${botonesWA('Hola, quería información de precios para mi negocio.')}
+      <form class="tarifa" action="https://wa.me/${WHATSAPP[0].num}" method="get" target="_blank">
+        <label>Nombre del negocio<input name="negocio" required autocomplete="organization"></label>
+        <label>Tipo de negocio<select name="tipo"><option>Restaurante / bar / hotel</option><option>Colegio / escuela infantil</option><option>Residencia</option><option>Catering / colectividad</option><option>Frutería / tienda</option><option>Otro</option></select></label>
+        <label>Teléfono<input name="telefono" type="tel" required autocomplete="tel" inputmode="tel"></label>
+        <label>Localidad<input name="localidad" required autocomplete="address-level2"></label>
+        <input type="hidden" name="text">
+        <button class="btn btn-wa" type="submit">${I.wa}<span>Quiero mi tarifa</span></button>
+        <small>Se abre WhatsApp con estos datos para que nos los envíe. La web no guarda nada.</small>
+      </form>
       <a class="btn btn-borde" href="tel:+34917632186">${I.tel}<span>Llamar al ${TEL}</span></a>
     </div>
   </div>
@@ -311,6 +330,7 @@ ${cuerpo}
   </div>
   <p class="envoltura pie-legal">© ${new Date().getFullYear()} ${EMPRESA} · NIF ${NIF}</p>
 </footer>
+<script>document.querySelector('.tarifa').addEventListener('submit',e=>{const f=e.target;f.text.value='Hola, quería vuestra tarifa.\\nNegocio: '+f.negocio.value+' ('+f.tipo.value+')\\nTeléfono: '+f.telefono.value+'\\nLocalidad: '+f.localidad.value;for(const n of['negocio','tipo','telefono','localidad'])f[n].disabled=true;setTimeout(()=>{for(const n of['negocio','tipo','telefono','localidad'])f[n].disabled=false},0)});</script>
 <div class="barra-movil">
   <details class="wa-flotante">
     <summary>${I.wa}<span>WhatsApp</span></summary>
@@ -419,13 +439,21 @@ function inicio(p) {
   </div>
 </section>
 
+<section class="bloque bloque-crema" id="zonas">
+  <div class="envoltura zonas-in">
+    <div><p class="antetitulo">Zonas de reparto</p><h2>Reparto de fruta y verdura en Madrid y Segovia</h2><p class="entradilla">Rutas diarias propias. ¿No ve su localidad? Llámenos y le decimos si pasamos cerca.</p></div>
+    <ul class="zonas">${ZONAS.map(([z, l]) => `<li><strong>${z}</strong><span>${l}</span></li>`).join('')}</ul>
+  </div>
+</section>
+
 <section class="bloque bloque-granate">
   <div class="envoltura">
-    <div class="bloque-cabeza centrada"><div><p class="antetitulo">Alta de cliente</p><h2>Empiece a trabajar con nosotros en tres pasos</h2></div></div>
-    <ol class="pasos">
-      <li><span>1</span><strong>Nos escribe</strong><p>Por WhatsApp o teléfono: qué necesita, en qué cantidad y con qué frecuencia.</p></li>
-      <li><span>2</span><strong>Le enviamos tarifa</strong><p>Con el precio del mercado de esa mañana. Sin compromiso.</p></li>
-      <li><span>3</span><strong>Recibe el pedido</strong><p>En camión o furgoneta refrigerados, a la hora acordada.</p></li>
+    <div class="bloque-cabeza centrada"><div><p class="antetitulo">Cómo trabajamos</p><h2>De Mercamadrid a su cocina en una mañana</h2></div></div>
+    <ol class="pasos pasos-4">
+      <li><span>1</span><strong>Hace su pedido</strong><p>Por WhatsApp o teléfono, hasta la tarde anterior. También pedidos fijos por días de la semana.</p></li>
+      <li><span>2</span><strong>Compramos de madrugada</strong><p>Elegimos el género en Mercamadrid cada día, con el ojo de tres generaciones.</p></li>
+      <li><span>3</span><strong>Peso real</strong><p>Pesamos cada producto y lo anotamos en su albarán. Paga lo que recibe.</p></li>
+      <li><span>4</span><strong>Se lo llevamos</strong><p>En nuestros camiones y furgonetas refrigerados, siempre el mismo repartidor en su ruta.</p></li>
     </ol>
     <div class="centro"><a class="btn btn-wa btn-grande" href="${wa(WHATSAPP[0].num, textoWA)}" rel="nofollow">${I.wa}<span>Empezar por WhatsApp</span></a></div>
   </div>
@@ -556,7 +584,7 @@ function contacto(p) {
 <section class="bloque"><div class="envoltura contacto-in">
   <div class="contacto-caja"><h2>WhatsApp</h2>${botonesWA('Hola, quería información de precios para mi negocio.', 'apiladas')}</div>
   <div class="contacto-caja"><h2>Teléfono y correo</h2><p><a class="grande" href="tel:+34917632186">${TEL}</a></p><p><a href="mailto:${EMAIL}">${EMAIL}</a></p></div>
-  <div class="contacto-caja"><h2>Dónde estamos</h2><p>${DIRECCION}</p><p>${HORARIO}</p><p><strong>Zona de reparto</strong>: Madrid capital, Comunidad de Madrid y Segovia.</p><p><a class="enlace" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Calle Carare 2, 28033 Madrid')}" rel="nofollow">Cómo llegar ${I.flecha}</a></p></div>
+  <div class="contacto-caja"><h2>Dónde estamos</h2><p>${DIRECCION}</p><p>${HORARIO}</p><p><strong>Zona de reparto</strong>: ${ZONAS.map(([z, l]) => `${z} (${l})`).join('; ')}.</p><p><a class="enlace" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Calle Carare 2, 28033 Madrid')}" rel="nofollow">Cómo llegar ${I.flecha}</a></p></div>
 </div></section>`;
   return plantilla({ ruta: '/contacto/', titulo: p.title, descripcion: p.description, cuerpo, datos: [m.datos, NEGOCIO] });
 }
