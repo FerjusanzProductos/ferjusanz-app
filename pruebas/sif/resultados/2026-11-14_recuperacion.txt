@@ -1,0 +1,29 @@
+1537 sentencias
+80 tablas, 12932 filas
+ schedule 
+----------
+        1
+(1 row)
+
+ schedule 
+----------
+        1
+(1 row)
+
+Copia a recuperar: ferjusanz-prueba
+1/4 Preparando una base vacía parecida a Supabase…
+Usuarios recuperados: 5
+2/4 Recuperando la copia…
+Errores al recuperar: 0
+3/4 Comparando filas tabla a tabla…
+Tablas iguales: 80 de 80 · filas recuperadas: 12927
+4/4 Resto de la copia…
+AVISO: esta copia no lleva los archivos (falta SUPABASE_SECRET_KEY en GitLab).
+✔ Recuperación comprobada: la copia se puede recuperar entera.
+Cadena en el origen:    {"ok": true, "fallos": [], "registros": 7, "ultima_huella": "095C25BC1C7A5F27600372C36C3B5E5A62E97E7EB9FD78B16F5DD3A681EE3E26"}
+Cadena recuperada:      {"ok": true, "fallos": [], "registros": 7, "ultima_huella": "095C25BC1C7A5F27600372C36C3B5E5A62E97E7EB9FD78B16F5DD3A681EE3E26"}
+Borrar una factura:     sif_no_tocar
+Tocar un registro:      sif_no_tocar
+Seguir la cadena:       {"id": "58428374-17a0-4d3a-a14e-9765ff3e98e0", "codigo": "PRUEBA-2026-0002"}
+Cadena después:         {"ok": true, "fallos": [], "registros": 8, "ultima_huella": "E39CC7C8E61AF8AAE8412603350273703BF3B849140CBA17812B336392422CDF"}
+FIN codigo=0

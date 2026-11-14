@@ -65,8 +65,8 @@ _Una prueba solo se marca ✅ con la prueba hecha y su resultado guardado (captu
 ## H. Conservación y exportación
 | ID | Qué | Cómo | Esperado | Estado |
 |---|---|---|---|---|
-| T-CON-01 | Restaurar copia | Recuperar la copia nocturna en una base de datos vacía | Facturas, registros y cadena completos y verificables | ⬜ |
-| T-CON-02 | PDF guardados | Restaurar los PDF de Storage | Todos presentes | ⬜ |
+| T-CON-01 | Restaurar copia | Recuperar la copia nocturna en una base de datos vacía | Facturas, registros y cadena completos y verificables | ✅ 14/11/2026 con la base de PRUEBAS (la real aún no tiene facturas): réplica local, mismos `pg_dump` que la copia nocturna y mismo `scripts/prueba-recuperacion.sh`. 80 de 80 tablas, 0 errores; cadena correcta con la misma última huella; los cerrojos siguen; se pudo seguir la cadena (una anulación más, cadena correcta). `pruebas/sif/recuperacion/prueba.sh`, `resultados/2026-11-14_recuperacion.txt` |
+| T-CON-02 | PDF guardados | Restaurar los PDF de Storage | Todos presentes | 🟡 Las facturas emitidas no se guardan en PDF: se rehacen de los datos guardados (que sí se recuperan). La copia nocturna baja todos los archivos (14/11: 128 de 128). Cuando haya declaraciones firmadas (`sif-declaraciones`), mirar que entran en la copia |
 | T-CON-03 | Exportar para Hacienda/Jorge | Exportar un año completo | Archivo legible con todas las facturas y registros | ⬜ |
 
 ## I. Separación pruebas / real
