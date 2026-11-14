@@ -182,7 +182,7 @@ const tarjetaFamilia = f => {
 };
 
 const tarjetaArticulo = a => `<a class="articulo" href="${a.path}">
-  <span class="articulo-foto">${a.ogImage ? `<img src="${a.ogImage}" alt="" loading="lazy" width="600" height="375">` : ''}</span>
+  <span class="articulo-foto">${a.ogImage ? `<img src="${a.ogImage}" alt="" loading="lazy" width="600" height="375">` : `<span class="sin-foto">${I.huevo}${I.huevo}${I.huevo}</span>`}</span>
   <span class="articulo-info"><time datetime="${(a.date || '').slice(0, 10)}">${fecha(a.date)}</time><strong>${esc(tituloCorto(a.h1 || a.title))}</strong></span>
 </a>`;
 
@@ -384,6 +384,7 @@ const sitemap = [];
 
 function inicio(p) {
   const textoWA = 'Hola, quería el precio de hoy para mi negocio.';
+  const atajos = `<p class="atajos"><a class="enlace" href="${wa(WHATSAPP[0].num, 'Hola, quería hacer un pedido.')}" rel="nofollow">Hacer un pedido ${I.flecha}</a><a class="enlace" href="#pedir-precio">Pedir presupuesto ${I.flecha}</a></p>`;
   const mosaico = ['verduras-gourmet-hosteleria', 'niscalos', 'granada-mollar-de-elche', 'tomate-asurcado', 'mango-y-papaya', 'champinon-y-portobello', 'tomate-la-campechana'];
   const cuerpo = `
 <section class="heroe" style="--foto:url(/fotos/tomate-la-campechana.jpg)">
@@ -410,7 +411,7 @@ function inicio(p) {
 
 <section class="bloque">
   <div class="envoltura">
-    <div class="bloque-cabeza"><div><p class="antetitulo">Por qué Ferjusanz</p><h2>Un proveedor en el que su cocina puede confiar</h2></div></div>
+    <div class="bloque-cabeza"><div><p class="antetitulo">Por qué Ferjusanz</p><h2>Un proveedor en el que su cocina puede confiar</h2></div><a class="enlace" href="#pedir-precio">Pedir presupuesto ${I.flecha}</a></div>
     <ul class="ventajas">
       <li>${I.hoja}<strong>Calidad homogénea, pedido tras pedido</strong><span>Seleccionamos caja a caja a primera hora en Mercamadrid y contamos con cosecha propia y agricultores de confianza.</span></li>
       <li>${I.camion}<strong>Reparto puntual con cadena de frío</strong><span>Flota propia de camiones y furgonetas refrigerados. Entregamos a la hora que marca su servicio.</span></li>
@@ -460,7 +461,7 @@ function inicio(p) {
 
 <section class="bloque bloque-crema" id="zonas">
   <div class="envoltura zonas-in">
-    <div><p class="antetitulo">Zonas de reparto</p><h2>Reparto de fruta y verdura en Madrid y Segovia</h2><p class="entradilla">Rutas diarias propias. ¿No ve su localidad? Llámenos y le decimos si pasamos cerca.</p></div>
+    <div><p class="antetitulo">Zonas de reparto</p><h2>Reparto de fruta y verdura en Madrid y Segovia</h2><p class="entradilla">Rutas diarias propias. ¿No ve su localidad? Llámenos y le decimos si pasamos cerca.</p>${atajos}</div>
     <ul class="zonas">${ZONAS.map(([z, l]) => `<li><strong>${z}</strong><span>${l}</span></li>`).join('')}</ul>
   </div>
 </section>
@@ -480,7 +481,9 @@ function inicio(p) {
 
 <section class="bloque">
   <div class="envoltura preguntas-in">
-    <div><p class="antetitulo">Preguntas frecuentes</p><h2>Lo que nos preguntan antes del primer pedido</h2><p class="entradilla">¿Tiene otra duda? Escríbanos y le contestamos personalmente.</p></div>
+    <div><p class="antetitulo">Preguntas frecuentes</p><h2>Lo que nos preguntan antes del primer pedido</h2><p class="entradilla">¿Tiene otra duda? Escríbanos y le contestamos personalmente.</p>
+      <div class="recientes"><p class="antetitulo">Noticias recientes</p><ul>${ultimasNovedades.slice(0, 3).map(n => `<li><a href="/novedades/"><time datetime="${n.fecha}">${fecha(n.fecha)}</time><strong>${esc(n.titulo)}</strong></a></li>`).join('')}</ul><a class="enlace" href="/novedades/">Ver todas las novedades ${I.flecha}</a></div>
+      ${atajos}</div>
     <div class="preguntas">${PREGUNTAS.map(([q, r]) => `<details><summary>${q}</summary><p>${r}</p></details>`).join('')}</div>
   </div>
 </section>
