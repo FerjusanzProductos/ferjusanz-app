@@ -264,7 +264,7 @@ ${datos.map(d => `<script type="application/ld+json">${JSON.stringify(d)}</scrip
 </head>
 <body>
 <a class="saltar" href="#contenido">Saltar al contenido</a>
-<div class="aviso"><span>Género fresco cada día</span><span>Reparto en Madrid</span><span class="solo-ancho">${HORARIO}</span><a href="tel:+34917632186">${TEL}</a></div>
+<div class="aviso"><span>Género fresco cada día</span><span>Reparto en Madrid y Segovia</span><span class="solo-ancho">${HORARIO}</span><a href="tel:+34917632186">${TEL}</a></div>
 <header class="cabecera">
   <div class="cabecera-in">
     <a href="/" class="logo" aria-label="Ferjusanz, inicio"><img src="${F}2019/10/logotipo.png" alt="Ferjusanz" width="185" height="32"></a>
@@ -350,7 +350,7 @@ function inicio(p) {
 <section class="heroe" style="--foto:url(/fotos/tomate-la-campechana.jpg)">
   <div class="envoltura heroe-in">
     <p class="antetitulo">Mayorista hortofrutícola · Mercamadrid</p>
-    <h1><span class="h1-pre">Proveedor mayorista de</span> <span class="h1-main">patatas, fruta y verdura</span> <span class="h1-post">para hostelería y colectividades en Madrid</span></h1>
+    <h1><span class="h1-pre">Proveedor mayorista de</span> <span class="h1-main">patatas, fruta y verdura</span> <span class="h1-post">para hostelería y colectividades en Madrid y Segovia</span></h1>
     <p class="entradilla">Abastecemos a restaurantes, hoteles, colegios, residencias y empresas de restauración colectiva con producto fresco seleccionado cada mañana. Tercera generación y ${ANIOS} de oficio.</p>
     <div class="heroe-acciones">
       <a class="btn btn-wa btn-grande" href="${wa(WHATSAPP[0].num, textoWA)}" rel="nofollow">${I.wa}<span>Pedir precio por WhatsApp</span></a>
