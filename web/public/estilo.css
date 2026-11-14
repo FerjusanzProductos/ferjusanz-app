@@ -375,3 +375,23 @@ p { margin: 0 0 1em; }
 /* Barra de arriba: fijo, los dos móviles y el correo juntos (14/11/2026, Fernando) */
 .aviso-contacto { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 2px 14px; }
 @media (max-width: 699px) { .aviso > span:first-child { display: none; } }
+/* Blog en portada: uno destacado + lista corta, y temas (14/11/2026) */
+.blog-portada { display: grid; gap: 8px; border-top: 1px solid var(--tinta); }
+.blog-portada .articulo-destacado { border-bottom: 0; }
+.blog-lista { list-style: none; padding: 0; margin: 0; }
+.blog-lista li { border-bottom: 1px solid var(--linea); }
+.blog-lista a { display: block; padding: 14px 0; text-decoration: none; color: var(--tinta); font-weight: 600; line-height: 1.3; }
+.blog-lista a:hover { color: var(--granate); }
+.blog-lista span { display: block; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--tinta-2); font-weight: 600; margin-bottom: 3px; }
+.temas { list-style: none; padding: 0; margin: 24px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.temas a { display: inline-flex; align-items: center; min-height: 40px; padding: 6px 14px; border: 1px solid var(--linea); border-radius: 2px; text-decoration: none; color: var(--tinta); font-size: .9rem; font-weight: 600; }
+.temas a:hover { border-color: var(--granate); color: var(--granate); }
+.bloque-tema { padding-top: 0; }
+@media (min-width: 1000px) {
+  .blog-portada { grid-template-columns: 1.1fr 1fr; gap: 48px; }
+  .blog-portada .articulo-destacado { grid-template-columns: 1fr; }
+  .blog-portada .articulo-destacado .articulo-foto { aspect-ratio: 16 / 9; }
+  .blog-portada .articulo-destacado strong { font-size: 2rem; }
+}
+@media (max-width: 699px) { .blog-lista li:nth-child(n+4) { display: none; } }
+.temas + .bloque-cabeza { margin-top: 48px; }

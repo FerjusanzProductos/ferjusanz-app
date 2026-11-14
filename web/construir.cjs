@@ -360,6 +360,24 @@ const cabeceraPagina = (m, h1, entradilla, foto) => `<section class="titular${fo
 
 // ───────── Páginas ─────────
 const articulos = paginas.filter(p => p.isPost).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+// Temas del blog (grupos para Google y para el lector). Va al primero que encaje, por la dirección del artículo.
+const TEMAS = [
+  { id: 'colectividades', nombre: 'Colegios y residencias', re: /colegio|escolar|comedor|residenc|mayores|ninos/, paginas: /colegio|residenc|colectividad/ },
+  { id: 'hosteleria', nombre: 'Hostelería y cocina', re: /hosteleria|restaurante|guarnicion|cremas|gazpacho|guiso|barbacoa|tipos-de-tomates|pimientos|sandia|piel/, paginas: /hosteleria|hoteles/ },
+  { id: 'temporada', nombre: 'Temporada', re: /temporada|invierno|verano|otono|calendario/, paginas: /frutas|verduras|hortalizas/ },
+  { id: 'salud', nombre: 'Salud y alimentación', re: /beneficio|dieta|corazon|embarazo|harvard|propiedades|salud|importancia/, paginas: /^$/ },
+  { id: 'producto', nombre: 'Producto y conservación', re: /./, paginas: /patata|cebolla|legumbre|cuarta|huevo|setas|mayorista|distribucion|reparto/ },
+];
+const temaDe = a => TEMAS.find(t => t.re.test(a.path.replace('/blog/', '')));
+// Artículos que encajan con una página de producto o de sector (enlazado interno).
+function articulosPara(ruta) {
+  const t = TEMAS.find(t => t.paginas.test(ruta));
+  const lista = t ? articulos.filter(a => temaDe(a) === t).slice(0, 3) : [];
+  return lista.length ? `<section class="bloque"><div class="envoltura">
+  <div class="bloque-cabeza"><div><h2>Para leer: ${t.nombre.toLowerCase()}</h2></div><a class="enlace" href="/blog/#${t.id}">Más de este tema ${I.flecha}</a></div>
+  <div class="articulos">${lista.map(tarjetaArticulo).join('')}</div>
+</div></section>` : '';
+}
 const ultimasNovedades = [...novedades].sort((a, b) => b.fecha.localeCompare(a.fecha));
 const familiaDeRuta = r => FAMILIAS.find(f => f.ruta === r);
 const sitemap = [];
@@ -469,8 +487,12 @@ function inicio(p) {
 
 <section class="bloque bloque-crema">
   <div class="envoltura">
-    <div class="bloque-cabeza"><div><p class="antetitulo">Blog</p><h2>Temporadas, consejos y recetas</h2></div><a class="enlace" href="/blog/">Ver todos ${I.flecha}</a></div>
-    <div class="articulos">${articulos.slice(0, 3).map(tarjetaArticulo).join('')}</div>
+    <div class="bloque-cabeza"><div><p class="antetitulo">Blog</p><h2>Guías para cocinas profesionales</h2></div><a class="enlace" href="/blog/">Ver todos ${I.flecha}</a></div>
+    <div class="blog-portada">
+      ${tarjetaArticulo(articulos[0]).replace('class="articulo"', 'class="articulo articulo-destacado"')}
+      <ul class="blog-lista">${articulos.slice(1, 6).map(a => `<li><a href="${a.path}"><span>${esc(temaDe(a).nombre)}</span>${esc(tituloCorto(a.h1 || a.title))}</a></li>`).join('')}</ul>
+    </div>
+    <ul class="temas">${TEMAS.map(t => `<li><a href="/blog/#${t.id}">${t.nombre}</a></li>`).join('')}</ul>
   </div>
 </section>`;
   return plantilla({
@@ -547,6 +569,7 @@ function paginaTexto(p, opciones = {}) {
 </div></section>
 ${galeria(p.path)}
 ${opciones.despues || ''}
+${articulosPara(p.path)}
 ${enlacesSectores(p.path)}
 ${relacionados('')}`;
   return plantilla({ ruta: p.path, titulo: p.title, descripcion: p.description, imagen: foto, cuerpo, datos: [m.datos, ...(opciones.datos || [])] });
@@ -554,15 +577,23 @@ ${relacionados('')}`;
 
 function blog(p) {
   const m = miga('/blog/', 'Blog');
-  const cuerpo = `${cabeceraPagina(m, 'Blog de fruta y verdura', 'Temporadas, consejos de cocina y conservación, y lo que llega cada semana al almacén.')}
-<section class="bloque"><div class="envoltura"><div class="articulos">${articulos.map(tarjetaArticulo).join('\n')}</div></div></section>`;
-  return plantilla({ ruta: '/blog/', titulo: 'Blog de fruta y verdura | Ferjusanz', descripcion: 'Consejos, temporadas y recetas con fruta, verdura y patatas, de una familia de mayoristas de Madrid con más de 40 años en el sector.', cuerpo, datos: [m.datos] });
+  const cuerpo = `${cabeceraPagina(m, 'Guías de fruta y verdura para cocinas profesionales', 'Para restaurantes, hoteles, colegios y residencias: normas de menús, temporada, cuánto pedir y cómo conservar el género. Escrito desde nuestro puesto de Mercamadrid.')}
+<section class="bloque"><div class="envoltura">
+  <ul class="temas">${TEMAS.map(t => `<li><a href="#${t.id}">${t.nombre}</a></li>`).join('')}</ul>
+  <div class="bloque-cabeza"><div><h2>Lo último</h2></div></div>
+  <div class="articulos">${articulos.slice(0, 3).map(tarjetaArticulo).join('')}</div>
+</div></section>
+${TEMAS.map(t => { const l = articulos.filter(a => temaDe(a) === t); return l.length ? `<section class="bloque bloque-tema" id="${t.id}"><div class="envoltura">
+  <div class="bloque-cabeza"><div><h2>${t.nombre}</h2></div></div>
+  <div class="articulos">${l.map(tarjetaArticulo).join('\n')}</div>
+</div></section>` : ''; }).join('\n')}`;
+  return plantilla({ ruta: '/blog/', titulo: 'Blog de fruta y verdura para hostelería, colegios y residencias | Ferjusanz', descripcion: 'Guías para cocinas profesionales de Madrid: menús escolares y de residencias, temporada, cuánto pedir y cómo conservar la fruta y la verdura.', cuerpo, datos: [m.datos] });
 }
 
 function articulo(p) {
   const titulo = tituloCorto(p.h1 || p.title);
   const m = miga(p.path, titulo, ['/blog/', 'Blog']);
-  const otros = articulos.filter(a => a.path !== p.path).slice(0, 3);
+  const otros = [...articulos.filter(a => a.path !== p.path && temaDe(a) === temaDe(p)), ...articulos.filter(a => temaDe(a) !== temaDe(p))].slice(0, 3);
   const cuerpo = `<article class="bloque"><div class="envoltura lectura">
   ${m.html}
   <h1>${esc(titulo)}</h1>
@@ -572,7 +603,7 @@ function articulo(p) {
   <aside class="nota"><strong>¿Tiene un restaurante, un hotel, un colegio o una residencia?</strong><p>Le llevamos la fruta, la verdura, las patatas y los huevos cada día. Solicite su tarifa.</p>${botonesWA('Hola, he leído vuestro blog y quería información de precios.')}</aside>
 </div></article>
 ${galeria(p.path)}
-<section class="bloque"><div class="envoltura"><div class="bloque-cabeza"><div><h2>Más artículos</h2></div><a class="enlace" href="/blog/">Ver el blog ${I.flecha}</a></div><div class="articulos">${otros.map(tarjetaArticulo).join('')}</div></div></section>`;
+<section class="bloque"><div class="envoltura"><div class="bloque-cabeza"><div><h2>Más artículos</h2></div><a class="enlace" href="/blog/#${temaDe(p).id}">Más de ${temaDe(p).nombre.toLowerCase()} ${I.flecha}</a></div><div class="articulos">${otros.map(tarjetaArticulo).join('')}</div></div></section>`;
   return plantilla({ ruta: p.path, titulo: p.title, descripcion: p.description, imagen: p.ogImage, tipo: 'article', cuerpo, datos: [m.datos, {
     '@context': 'https://schema.org', '@type': 'BlogPosting', headline: titulo, datePublished: p.date, dateModified: p.modified || p.date,
     image: p.ogImage ? DOMINIO + p.ogImage : undefined, mainEntityOfPage: DOMINIO + p.path, description: p.description,

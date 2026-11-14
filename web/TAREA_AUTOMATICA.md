@@ -36,6 +36,7 @@ Solo productos **activos** del catálogo (leer, nunca escribir):
   - Sobre todo párrafos; listas solo cuando de verdad son una lista. Poca negrita (como mucho una por párrafo). Frases de distinto largo.
   - Que el título diga lo que el lector va a ganar, no solo el tema («…y cuándo pedirla madura»).
   - Releer el texto entero antes de publicar y quitar todo lo que suene a relleno o a cosa que diría cualquiera.
+- **Tema del blog**: el tema sale de la dirección (`slug`). Que lleve una palabra de su tema (`colegio`/`residencia`/`comedor`, `hosteleria`/`restaurante`, `temporada`, `beneficios`/`dieta`) o irá a «Producto y conservación» (lista `TEMAS` en `web/construir.cjs`).
 - Palabras que busca la gente (p. ej. «proveedor de fruta para restaurantes en Madrid») en el título, la descripción (≤ 160 letras) y un `<h2>`, de forma natural.
 - **Nada inventado**: ni precios, ni cifras, ni clientes, ni premios; de salud, solo lo general y sabido. De Ferjusanz, solo lo de `web/LEEME.md`.
 - Último párrafo: invitar a pedir precio por WhatsApp.
