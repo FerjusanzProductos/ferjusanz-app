@@ -27,7 +27,7 @@ Cada vez que Fernando cuente algo útil en una conversación con Claude (un truc
 - Si el género tiene calidad, es difícil que se estropee.
 
 **Colegios y residencias**
-- Piden mucha fruta en **calibres más pequeños**, porque es para niños y mayores: manzana golden y pera conferencia en calibre 24 o 26 (así lo dice Fernando; confirmar con él qué medida es antes de dar el número en la web).
+- Piden mucha fruta en **calibres más pequeños**, porque es para niños y mayores: manzana golden y pera conferencia en calibre 24 o 26, que es el **número de piezas de la caja** (Fernando, 14/11/2026: «ambas cosas en cajas de esos formatos»). En la web: «manzana golden y pera conferencia en cajas de calibre 24 o 26 (piezas por caja), más pequeñas y fáciles de comer».
 - Hacen muchas cremas y purés: necesitan mucha **verdura selecta y fresca**.
 - Son volúmenes muy grandes y, gracias a eso, Ferjusanz tiene **muy buenos precios** para ellos (en la web no dar cifras: «precios ajustados por volumen, pide el tuyo»).
 
