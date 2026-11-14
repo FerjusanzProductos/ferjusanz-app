@@ -288,10 +288,13 @@ ${cuerpo}
   </div>
   <p class="envoltura pie-legal">© ${new Date().getFullYear()} ${EMPRESA} · NIF ${NIF}</p>
 </footer>
-<details class="wa-flotante">
-  <summary aria-label="Escribir por WhatsApp">${I.wa}</summary>
-  <div class="wa-opciones"><p>¿Con quién quieres hablar?</p>${WHATSAPP.map(w => `<a href="${wa(w.num, 'Hola, quería información.')}" rel="nofollow">${I.wa}<span>${w.ver}${w.nombre ? ` · ${w.nombre}` : ''}</span></a>`).join('')}</div>
-</details>
+<div class="barra-movil">
+  <details class="wa-flotante">
+    <summary>${I.wa}<span>WhatsApp</span></summary>
+    <div class="wa-opciones"><p>¿Con quién quieres hablar?</p>${WHATSAPP.map(w => `<a href="${wa(w.num, 'Hola, quería información.')}" rel="nofollow">${I.wa}<span>${w.ver}${w.nombre ? ` · ${w.nombre}` : ''}</span></a>`).join('')}</div>
+  </details>
+  <a class="llamar" href="tel:+34917632186">${I.tel}<span>Llamar</span></a>
+</div>
 </body>
 </html>
 `;
@@ -318,87 +321,103 @@ const familiaDeRuta = r => FAMILIAS.find(f => f.ruta === r);
 const sitemap = [];
 
 function inicio(p) {
+  const textoWA = 'Hola, quería el precio de hoy para mi negocio.';
+  const mosaico = ['verduras-gourmet-hosteleria', 'niscalos', 'granada-mollar-de-elche', 'tomate-asurcado', 'mango-y-papaya', 'champinon-y-portobello', 'tomate-la-campechana'];
   const cuerpo = `
-<section class="portada">
-  <div class="envoltura portada-in">
-    <div class="portada-texto">
-      <p class="antetitulo">Tercera generación · ${ANIOS[0].toUpperCase() + ANIOS.slice(1)}</p>
-      <h1>Fruta, verdura, patatas y huevos para hostelería y colectividades en Madrid</h1>
-      <p class="entradilla">Somos Ferjusanz, mayoristas de toda la vida. Cosecha propia y lo mejor de Mercamadrid, en tu cocina cada día con nuestros camiones refrigerados.</p>
-      ${botonesWA('Hola, quería información de precios para mi negocio.')}
-      <ul class="sellos">
-        <li>${I.familia}<span><strong>3.ª generación</strong> de la misma familia</span></li>
-        <li>${I.hoja}<span><strong>Cosecha propia</strong> y agricultores de confianza</span></li>
-        <li>${I.camion}<span><strong>Reparto diario</strong> en camión refrigerado</span></li>
-      </ul>
+<section class="heroe" style="--foto:url(/fotos/tomate-la-campechana.jpg)">
+  <div class="envoltura heroe-in">
+    <p class="antetitulo">Mayoristas en Mercamadrid · 3.ª generación</p>
+    <h1>Tu proveedor de fruta, verdura, patatas y huevos en Madrid</h1>
+    <p class="entradilla">Para restaurantes, bares, colegios, residencias y fruterías. Elegido cada mañana por la misma familia desde hace ${ANIOS}.</p>
+    <div class="heroe-acciones">
+      <a class="btn btn-wa btn-grande" href="${wa(WHATSAPP[0].num, textoWA)}" rel="nofollow">${I.wa}<span>Pide el precio de hoy</span></a>
+      <a class="btn btn-transparente" href="#catalogo"><span>Ver productos</span>${I.flecha}</a>
     </div>
-    <div class="portada-fotos">
-      <img class="foto-grande" src="/fotos/verduras-gourmet-hosteleria.jpg" alt="Tomates, pepino, tirabeque y frutos rojos en el puesto de Ferjusanz en Mercamadrid" width="1100" height="619" fetchpriority="high">
-      <img class="foto-chica" src="${F}2019/10/proveedores-distribucion_crs2.jpg" alt="Camión de reparto de Ferjusanz" width="621" height="465">
+    <p class="heroe-nota">Por WhatsApp · Sin compromiso</p>
+  </div>
+</section>
+
+<section class="cifras" aria-label="Ferjusanz en cifras">
+  <div class="envoltura cifras-in">
+    <div><strong>+40</strong><span>años en el sector</span></div>
+    <div><strong>3.ª</strong><span>generación de la familia</span></div>
+    <div><strong>+200</strong><span>productos frescos</span></div>
+    <div><strong>1</strong><span>solo pedido para todo</span></div>
+  </div>
+</section>
+
+<section class="bloque">
+  <div class="envoltura">
+    <div class="bloque-cabeza centrada"><div><p class="antetitulo">¿Te suena?</p><h2>Comprar género no debería darte dolores de cabeza</h2></div></div>
+    <div class="dolores">
+      <div class="dolor"><p class="dolor-mal">El género llega flojo y lo pagas como bueno.</p><p class="dolor-bien">${I.hoja}<span><strong>Elegido caja a caja</strong> a primera hora en Mercamadrid, y parte de cosecha propia.</span></p></div>
+      <div class="dolor"><p class="dolor-mal">Cinco proveedores, cinco repartos y cinco albaranes.</p><p class="dolor-bien">${I.camion}<span><strong>Todo en un pedido</strong>: fruta, verdura, patata pelada, huevos y setas.</span></p></div>
+      <div class="dolor"><p class="dolor-mal">Llamas y nadie te coge el teléfono.</p><p class="dolor-bien">${I.familia}<span><strong>Hablas con la familia</strong>, directamente por WhatsApp.</span></p></div>
     </div>
   </div>
 </section>
 
-<section class="bloque" id="catalogo">
+<section class="bloque bloque-crema" id="catalogo">
   <div class="envoltura">
-    <div class="bloque-cabeza"><div><p class="antetitulo">Catálogo</p><h2>Todo lo de la huerta, en un solo proveedor</h2></div><a class="enlace" href="/productos/">Ver catálogo completo ${I.flecha}</a></div>
+    <div class="bloque-cabeza"><div><p class="antetitulo">Catálogo</p><h2>Lo que te llevamos a la cocina</h2></div><a class="enlace" href="/productos/">Ver catálogo completo ${I.flecha}</a></div>
     <div class="productos">${FAMILIAS.slice(0, 8).map(tarjetaFamilia).join('\n')}</div>
+  </div>
+</section>
+
+<section class="bloque">
+  <div class="envoltura">
+    <div class="bloque-cabeza"><div><p class="antetitulo">Fotos reales, sin retoques</p><h2>Así está hoy nuestro puesto en Mercamadrid</h2></div><a class="enlace" href="/novedades/">Ver más fotos ${I.flecha}</a></div>
+    <div class="mosaico">${mosaico.map((n, i) => `<a href="/novedades/" class="mosaico-${i}"><img src="/fotos/${n}.jpg" alt="${esc(FOTO[n])} en el puesto de Ferjusanz" loading="lazy" width="600" height="600"></a>`).join('')}</div>
   </div>
 </section>
 
 <section class="bloque bloque-crema">
   <div class="envoltura">
     <div class="bloque-cabeza"><div><p class="antetitulo">Para tu negocio</p><h2>Trabajamos para quien cocina y vende cada día</h2></div></div>
-    <div class="sectores">${SECTORES.map(s => `<a class="sector" href="${s.ruta}"><span class="sector-foto"><img src="${s.foto}" alt="" loading="lazy" width="600" height="400"></span><strong>${s.nombre}</strong><span>${s.texto}</span><em>Saber más ${I.flecha}</em></a>`).join('')}</div>
+    <div class="sectores">${SECTORES.map(s => `<a class="sector" href="${s.ruta}"><span class="sector-foto"><img src="${s.foto}" alt="" loading="lazy" width="600" height="400"></span><strong>${s.nombre}</strong><span>${s.texto}</span><em>Ver cómo trabajamos ${I.flecha}</em></a>`).join('')}</div>
   </div>
 </section>
 
 <section class="bloque historia">
   <div class="envoltura historia-in">
     <div class="historia-fotos">
-      <img src="${F}2019/10/ferjusanz.jpg" alt="Furgonetas de reparto de Ferjusanz" loading="lazy" width="600" height="350">
-      <img src="${F}2020/09/recoleccion-de-las-patatas.jpg" alt="Recogida de patatas en el campo" loading="lazy" width="600" height="400">
+      <img src="${F}2019/10/proveedores-distribucion_crs2.jpg" alt="Camión de reparto de Ferjusanz" loading="lazy" width="621" height="465">
+      <img src="/fotos/tomate-de-temporada.jpg" alt="Caja de tomate de temporada en el puesto de Ferjusanz" loading="lazy" width="619" height="1100">
     </div>
     <div>
       <p class="antetitulo">Nuestra historia</p>
       <h2>Tres generaciones alegrando la mesa de Madrid</h2>
-      <p>Empezamos con las patatas y las cebollas hace ${ANIOS}. El abuelo, luego el padre y hoy el hijo: la misma familia, el mismo trato y la misma manera de elegir el género, una caja detrás de otra.</p>
-      <p>Supervisamos el cultivo de buena parte de lo que vendemos, así lo recogemos en su punto. Lo demás lo elegimos a primera hora en Mercamadrid, y sale en nuestros camiones refrigerados hacia restaurantes, colegios, residencias y fruterías.</p>
-      <p class="firma">«Si no lo pondríamos en nuestra mesa, no lo llevamos a la tuya.»</p>
-      <a class="btn btn-borde" href="/empresa-de-venta-y-distribucion-de-fruta-y-verdura/"><span>Conoce a la familia</span>${I.flecha}</a>
+      <p>Empezamos con las patatas y las cebollas hace ${ANIOS}. El abuelo, luego el padre y hoy el hijo: la misma familia, el mismo trato y la misma manera de elegir el género.</p>
+      <p>Lo que no cultivamos nosotros lo escogemos a primera hora en Mercamadrid, y sale en nuestros camiones refrigerados hacia tu cocina.</p>
+      <blockquote class="firma">«Si no lo pondríamos en nuestra mesa, no lo llevamos a la tuya.»</blockquote>
+      <a class="enlace" href="/empresa-de-venta-y-distribucion-de-fruta-y-verdura/">Conoce a la familia ${I.flecha}</a>
     </div>
   </div>
 </section>
 
 <section class="bloque bloque-granate">
   <div class="envoltura">
-    <div class="bloque-cabeza"><div><p class="antetitulo">Cómo trabajamos</p><h2>Pedir es tan fácil como mandar un WhatsApp</h2></div></div>
+    <div class="bloque-cabeza centrada"><div><p class="antetitulo">Así de fácil</p><h2>Tu primer pedido, en tres pasos</h2></div></div>
     <ol class="pasos">
-      <li><span>1</span><strong>Nos escribes</strong><p>Por WhatsApp o por teléfono: qué necesitas, cuánto y para cuándo.</p></li>
-      <li><span>2</span><strong>Te pasamos el precio del día</strong><p>Según el mercado de esa mañana, sin compromiso.</p></li>
-      <li><span>3</span><strong>Lo llevamos a tu puerta</strong><p>En nuestros camiones y furgonetas refrigerados.</p></li>
+      <li><span>1</span><strong>Nos escribes</strong><p>Por WhatsApp: qué necesitas, cuánto y para cuándo.</p></li>
+      <li><span>2</span><strong>Te pasamos el precio de hoy</strong><p>El del mercado de esa mañana. Sin compromiso.</p></li>
+      <li><span>3</span><strong>Lo llevamos a tu puerta</strong><p>En camión o furgoneta refrigerados.</p></li>
     </ol>
-  </div>
-</section>
-
-${ultimasNovedades.length ? `<section class="bloque">
-  <div class="envoltura">
-    <div class="bloque-cabeza"><div><p class="antetitulo">Fotos reales, sin retoques</p><h2>Hoy en nuestro puesto de Mercamadrid</h2></div><a class="enlace" href="/novedades/">Ver todas ${I.flecha}</a></div>
-    <div class="novedades">${ultimasNovedades.slice(0, 8).map(tarjetaNovedad).join('')}</div>
-  </div>
-</section>` : ''}
-
-<section class="bloque${ultimasNovedades.length ? ' bloque-crema' : ''}">
-  <div class="envoltura">
-    <div class="bloque-cabeza"><div><p class="antetitulo">Blog</p><h2>Temporadas, consejos y recetas</h2></div><a class="enlace" href="/blog/">Ver todos ${I.flecha}</a></div>
-    <div class="articulos">${articulos.slice(0, 3).map(tarjetaArticulo).join('')}</div>
+    <div class="centro"><a class="btn btn-wa btn-grande" href="${wa(WHATSAPP[0].num, textoWA)}" rel="nofollow">${I.wa}<span>Empezar por WhatsApp</span></a></div>
   </div>
 </section>
 
 <section class="bloque">
   <div class="envoltura preguntas-in">
-    <div><p class="antetitulo">Preguntas frecuentes</p><h2>Lo que nos preguntan antes del primer pedido</h2></div>
+    <div><p class="antetitulo">Preguntas frecuentes</p><h2>Lo que nos preguntan antes del primer pedido</h2><p class="entradilla">¿Otra duda? Escríbenos y te contestamos nosotros, no un robot.</p></div>
     <div class="preguntas">${PREGUNTAS.map(([q, r]) => `<details><summary>${q}</summary><p>${r}</p></details>`).join('')}</div>
+  </div>
+</section>
+
+<section class="bloque bloque-crema">
+  <div class="envoltura">
+    <div class="bloque-cabeza"><div><p class="antetitulo">Blog</p><h2>Temporadas, consejos y recetas</h2></div><a class="enlace" href="/blog/">Ver todos ${I.flecha}</a></div>
+    <div class="articulos">${articulos.slice(0, 3).map(tarjetaArticulo).join('')}</div>
   </div>
 </section>`;
   return plantilla({
