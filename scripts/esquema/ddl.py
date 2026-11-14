@@ -9,7 +9,9 @@ w("-- Estructura completa de la base de FERJUSANZ (public + harvey), generada de
 w("create extension if not exists pg_cron with schema pg_catalog;")
 w("create schema if not exists harvey;")
 # secuencias
-for r in q(f"""select format('create sequence if not exists %I.%I as %s increment %s minvalue %s maxvalue %s start %s cache %s%s;', schemaname, sequencename, data_type, increment_by, min_value, max_value, start_value, cache_size, case when cycle then ' cycle' else '' end) s from pg_sequences where schemaname in {S} order by 1"""):
+for r in q(f"""select format('create sequence if not exists %I.%I as %s increment %s minvalue %s maxvalue %s start %s cache %s%s;', schemaname, sequencename, data_type, increment_by, min_value, max_value, start_value, cache_size, case when cycle then ' cycle' else '' end) s from pg_sequences where schemaname in {S}
+  and not exists (select 1 from pg_depend dp join pg_class sc on sc.oid = dp.objid join pg_namespace sn on sn.oid = sc.relnamespace where sn.nspname = schemaname and sc.relname = sequencename and dp.deptype = 'i')  -- las de «identity» las crea su tabla; si no, salían dos
+  order by 1"""):
     w(r["s"])
 # tablas
 cols = q(f"""select n.nspname s, c.relname t, a.attnum, format('%I %s', a.attname, format_type(a.atttypid,a.atttypmod))
