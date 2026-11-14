@@ -107,6 +107,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - 🟡 **Tienda online** (plan en `docs/PLAN_TIENDA.md`, decidido el 11/11/2026): 1) «Haz tu pedido» gratis en la app/web nueva para clientes de hostelería y colectividades; 2) catálogo de WhatsApp Business y productos en Google; 3) más adelante Shopify Basic + Shopify Collective (comprobar antes que España está incluida). Hacerlo en una conversación nueva.
 
 ## Captar clientes nuevos (empezado el 12/11/2026)
+- 🟡 14/11: **Tarjeta virtual** publicada (normal v316, web `/tarjeta/`). Falta: que Fernando la pruebe con un cliente y diga si cambia algo del texto; al tener el dominio, cambiar la redirección de `/tarjeta` en `src/worker.js`. Idea si la pide: imprimir el QR en pegatina o en la furgoneta.
 - ✔️ 12/11: «Sin pedido mínimo · Madrid y Segovia» publicado (v218).
 - ✔️ 12/11: migración `20261112_web_captacion.sql` aplicada con Fernando («listo») y probada (guarda contacto + aviso, no repite teléfono, rechaza teléfono malo y robots). El formulario ya funciona.
 - 🟡 Fernando revisa los textos de la página (pruebas: `/nuevos-clientes`) y graba un **vídeo de 1 minuto** en Mercamadrid.
