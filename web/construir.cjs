@@ -42,7 +42,7 @@ const FAMILIAS = [
     lema: 'De temporada y tropicales, todo el año.',
     lista: ['Manzana', 'Pera', 'Naranja de mesa y de zumo', 'Mandarina y clementina', 'Limón y lima', 'Plátano y banana', 'Kiwi', 'Uva', 'Melón y sandía', 'Piña', 'Mango', 'Aguacate', 'Papaya', 'Maracuyá', 'Granada', 'Caqui', 'Chirimoya', 'Higos y brevas', 'Cereza y picota', 'Melocotón y nectarina', 'Albaricoque', 'Ciruela', 'Fresón', 'Frambuesa, arándano y mora', 'Frutos del bosque', 'Pomelo'] },
   { id: 'verduras', nombre: 'Verduras y hortalizas', ruta: '/productos/verduras-y-hortalizas/', foto: '/fotos/tomate-la-campechana.jpg',
-    lema: 'De la huerta a tu cocina en el día.',
+    lema: 'De la huerta a su cocina en el día.',
     lista: ['Tomate (varias clases)', 'Lechuga y cogollos', 'Escarola y endivias', 'Canónigos, rúcula y kale', 'Espinaca y acelga', 'Brócoli y coliflor', 'Repollo, lombarda y berza', 'Calabacín y calabaza', 'Berenjena', 'Pimiento', 'Pepino', 'Judía verde', 'Alcachofa', 'Espárrago', 'Puerro y apio', 'Zanahoria', 'Remolacha, nabo y chirivía', 'Rabanitos', 'Cardo, borraja y grelos', 'Maíz', 'Brotes y germinados'] },
   { id: 'patatas', nombre: 'Patatas', ruta: '/productos/patatas-2/', foto: F + '2020/09/distribuidor-patatas-beneficios.jpg',
     lema: 'Nuestra especialidad desde el primer día.',
@@ -68,18 +68,33 @@ const FAMILIAS = [
 ];
 
 const SECTORES = [
-  { nombre: 'Hostelería', ruta: '/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', foto: F + '2023/03/Tipos-de-guarniciones-de-verduras.jpg',
-    texto: 'Restaurantes, bares, hoteles y catering. Género del día y patata, cebolla y ajo ya pelados.' },
-  { nombre: 'Colectividades', ruta: '/mayorista-de-frutas-y-verduras-para-colectividades-madrid/', foto: F + '2020/09/frutas-verduras-comedor-colegio.jpg',
-    texto: 'Colegios, residencias y comedores de empresa. Cantidades grandes, calidad igual todos los días.' },
+  { nombre: 'Restaurantes y bares', ruta: '/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', foto: F + '2023/03/Tipos-de-guarniciones-de-verduras.jpg',
+    texto: 'Producto del día, gama gourmet y patata, cebolla y ajo pelados para agilizar la cocina.' },
+  { nombre: 'Hoteles', ruta: '/proveedor-de-frutas-y-verduras-para-hoteles-madrid/', foto: '/fotos/mango-y-papaya.jpg',
+    texto: 'Fruta para desayunos y bufé, verdura para cocina y eventos, con reparto los días que marque el hotel.' },
+  { nombre: 'Colegios', ruta: '/proveedor-de-frutas-y-verduras-para-colegios-madrid/', foto: F + '2020/09/frutas-verduras-comedor-colegio.jpg',
+    texto: 'Fruta y verdura para menús escolares, con calibres y cantidades constantes durante todo el curso.' },
+  { nombre: 'Residencias', ruta: '/proveedor-de-frutas-y-verduras-para-residencias-madrid/', foto: F + '2020/09/verduras-residencias-ancianos.jpg',
+    texto: 'Producto de temporada, fácil de preparar y servido con la regularidad que exige una residencia.' },
+  { nombre: 'Colectividades y catering', ruta: '/mayorista-de-frutas-y-verduras-para-colectividades-madrid/', foto: '/fotos/verduras-gourmet-hosteleria.jpg',
+    texto: 'Grandes volúmenes para comedores de empresa y cocinas centrales, con reparto planificado.' },
   { nombre: 'Fruterías y tiendas', ruta: '/mayorista-de-frutas-y-verduras-madrid/', foto: '/fotos/tomate-rosa.jpg',
     texto: 'Género de primera para el mostrador, con la variedad de Mercamadrid y precio de mayorista.' },
 ];
+// Enlaces a los sectores en las páginas de producto y servicio (enlazado interno para Google).
+const enlacesSectores = (ruta = '') => `<section class="bloque bloque-sectores"><div class="envoltura">
+  <p class="antetitulo">Sectores</p><h2>Servimos a</h2>
+  <ul class="sectores-lista">${SECTORES.filter(x => x.ruta !== ruta).map(x => `<li><a href="${x.ruta}">${x.nombre} ${I.flecha}</a></li>`).join('')}</ul>
+</div></section>`;
 
 const SERVICIOS = [
   ['/mayorista-de-frutas-y-verduras-madrid/', 'Mayorista de frutas y verduras en Madrid'],
   ['/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', 'Proveedor para hostelería'],
   ['/mayorista-de-frutas-y-verduras-para-colectividades-madrid/', 'Mayorista para colectividades'],
+  ['/proveedor-de-frutas-y-verduras-para-hoteles-madrid/', 'Proveedor para hoteles'],
+  ['/proveedor-de-frutas-y-verduras-para-colegios-madrid/', 'Proveedor para colegios'],
+  ['/proveedor-de-frutas-y-verduras-para-residencias-madrid/', 'Proveedor para residencias'],
+  ['/productos/patata-pelada-para-hosteleria/', 'Patata pelada para hostelería'],
   ['/distribucion-y-venta-de-frutas-madrid/', 'Distribución de frutas'],
   ['/distribucion-y-venta-de-verduras-madrid/', 'Distribución de verduras'],
   ['/distribucion-y-venta-de-hortalizas-madrid/', 'Distribución de hortalizas'],
@@ -95,12 +110,12 @@ const SERVICIOS = [
 ];
 
 const PREGUNTAS = [
-  ['¿Cómo os pido precio?', 'Escríbenos por WhatsApp al 609 100 690 o al 609 567 354, o llama al 91 763 21 86. Los precios de la fruta y la verdura cambian cada día según el mercado, por eso te pasamos el del día.'],
-  ['¿Repartís en Madrid?', 'Sí. Repartimos con nuestros propios camiones y furgonetas refrigeradas a restaurantes, colegios, residencias, fruterías y colectividades.'],
-  ['¿Vendéis también huevos?', 'Sí, huevos de gallina y de codorniz, que te llevamos en el mismo reparto que la fruta y la verdura.'],
-  ['¿Tenéis patata pelada y producto cortado?', 'Sí: patata pelada en bastón, en dados, panadera, para ensaladilla o envasada al vacío, y cebolla y ajo pelados.'],
+  ['¿Cómo solicito precio o tarifa?', 'Escríbanos por WhatsApp al 609 100 690 o al 609 567 354, o llame al 91 763 21 86. Los precios de la fruta y la verdura cambian cada día según el mercado, por eso le pasamos el del día y una tarifa ajustada a su volumen de consumo.'],
+  ['¿Reparten en toda Madrid?', 'Sí. Repartimos en Madrid capital y en la Comunidad de Madrid con nuestros propios camiones y furgonetas refrigerados, a restaurantes, hoteles, colegios, residencias y colectividades.'],
+  ['¿Venden también huevos?', 'Sí, huevos de gallina y de codorniz, que le llevamos en el mismo reparto que la fruta y la verdura.'],
+  ['¿Tienen patata pelada y producto cortado?', 'Sí: patata pelada en bastón, en dados, panadera, para ensaladilla o envasada al vacío, y cebolla y ajo pelados.'],
   ['¿De dónde viene el género?', 'Parte es de cosecha propia y de agricultores que conocemos desde hace años; el resto lo elegimos cada mañana en Mercamadrid.'],
-  ['¿Cuál es vuestro horario?', HORARIO + '.'],
+  ['¿Cuál es su horario?', HORARIO + '.'],
 ];
 
 // ───────── Utilidades ─────────
@@ -178,7 +193,9 @@ const NEGOCIO = {
   description: `Mayorista de fruta, verdura, patatas y huevos en Madrid para hostelería, colectividades y fruterías. Tercera generación, ${ANIOS} en el sector.`,
   telephone: '+34917632186', email: EMAIL, logo: DOMINIO + F + '2019/10/logotipo.png', image: DOMINIO + F + '2019/10/proveedores-distribucion_crs2.jpg',
   address: { '@type': 'PostalAddress', streetAddress: 'C/ Carare, 2', postalCode: '28033', addressLocality: 'Madrid', addressRegion: 'Madrid', addressCountry: 'ES' },
-  areaServed: 'Comunidad de Madrid',
+  areaServed: [{ '@type': 'City', name: 'Madrid' }, { '@type': 'AdministrativeArea', name: 'Comunidad de Madrid' }],
+  hasMap: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('Ferjusanz, Calle Carare 2, 28033 Madrid'),
+  knowsAbout: ['Fruta al por mayor', 'Verdura al por mayor', 'Patata pelada', 'Huevos', 'Productos de cuarta gama', 'Suministro a hostelería', 'Suministro a colectividades'],
   openingHoursSpecification: [{ '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '08:00', closes: '18:00' }],
   contactPoint: WHATSAPP.map(w => ({ '@type': 'ContactPoint', telephone: '+' + w.num, contactType: 'sales', availableLanguage: 'es' })),
 };
@@ -210,12 +227,12 @@ const GALERIAS = {
   '/blog/frutas-de-temporada-otono/': ['granada-mollar-de-elche', 'niscalos'],
 };
 const galeria = ruta => GALERIAS[ruta] ? `<section class="bloque bloque-crema"><div class="envoltura">
-  <div class="bloque-cabeza"><div><h2>Hoy en nuestro puesto de Mercamadrid</h2></div><a class="enlace" href="/novedades/">Más fotos ${I.flecha}</a></div>
+  <div class="bloque-cabeza"><div><p class="antetitulo">Fotos reales</p><h2>Hoy en nuestro puesto de Mercamadrid</h2></div><a class="enlace" href="/novedades/">Más fotos ${I.flecha}</a></div>
   <div class="novedades">${GALERIAS[ruta].map(n => `<figure class="novedad"><img src="/fotos/${n}.jpg" alt="${esc(FOTO[n])} en el puesto de Ferjusanz en Mercamadrid" loading="lazy" width="600" height="600"><figcaption><strong>${esc(FOTO[n])}</strong></figcaption></figure>`).join('')}</div>
 </div></section>` : '';
 
 // ───────── Plantilla ─────────
-function plantilla({ ruta, titulo, descripcion, imagen, cuerpo, datos = [], tipo = 'website' }) {
+function plantilla({ ruta, titulo, descripcion, imagen, cuerpo, datos = [], tipo = 'website', precarga = '' }) {
   const nav = MENU.map(([h, t]) => `<a href="${h}"${ruta === h || (h !== '/' && ruta.startsWith(h)) ? ' aria-current="page"' : ''}>${t}</a>`).join('');
   const og = imagen || F + '2019/10/proveedores-distribucion_crs2.jpg';
   return `<!doctype html>
@@ -239,6 +256,7 @@ function plantilla({ ruta, titulo, descripcion, imagen, cuerpo, datos = [], tipo
 <meta name="theme-color" content="#161210">
 <link rel="preload" href="/fuentes/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fuentes/barlow-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+${precarga ? `<link rel="preload" href="${precarga}" as="image" fetchpriority="high">` : ''}
 <link rel="stylesheet" href="/estilo.css">
 ${datos.map(d => `<script type="application/ld+json">${JSON.stringify(d)}</script>`).join('\n')}
 </head>
@@ -259,9 +277,9 @@ ${cuerpo}
 <section class="pedir" id="pedir-precio">
   <div class="envoltura pedir-in">
     <div>
-      
-      <h2>¿Quieres precios? Escríbenos por WhatsApp.</h2>
-      <p>Dinos qué necesitas y para qué negocio. Te pasamos el precio del mercado de hoy, sin compromiso.</p>
+      <p class="antetitulo">Precio del día</p>
+      <h2>Solicite su tarifa por WhatsApp</h2>
+      <p>Indíquenos qué necesita, para qué tipo de negocio y con qué frecuencia. Le enviamos el precio del mercado de hoy, sin compromiso.</p>
     </div>
     <div class="pedir-botones">
       ${botonesWA('Hola, quería información de precios para mi negocio.')}
@@ -294,7 +312,7 @@ ${cuerpo}
 <div class="barra-movil">
   <details class="wa-flotante">
     <summary>${I.wa}<span>WhatsApp</span></summary>
-    <div class="wa-opciones"><p>¿Con quién quieres hablar?</p>${WHATSAPP.map(w => `<a href="${wa(w.num, 'Hola, quería información.')}" rel="nofollow">${I.wa}<span>${w.ver}${w.nombre ? ` · ${w.nombre}` : ''}</span></a>`).join('')}</div>
+    <div class="wa-opciones"><p>¿Con quién desea hablar?</p>${WHATSAPP.map(w => `<a href="${wa(w.num, 'Hola, quería información.')}" rel="nofollow">${I.wa}<span>${w.ver}${w.nombre ? ` · ${w.nombre}` : ''}</span></a>`).join('')}</div>
   </details>
   <a class="llamar" href="tel:+34917632186">${I.tel}<span>Llamar</span></a>
 </div>
@@ -329,14 +347,14 @@ function inicio(p) {
   const cuerpo = `
 <section class="heroe" style="--foto:url(/fotos/tomate-la-campechana.jpg)">
   <div class="envoltura heroe-in">
-    
-    <h1>Tu proveedor de fruta, verdura, patatas y huevos en Madrid</h1>
-    <p class="entradilla">Para restaurantes, bares, colegios, residencias y fruterías. Elegido cada mañana por la misma familia desde hace ${ANIOS}.</p>
+    <p class="antetitulo">Mayorista hortofrutícola · Mercamadrid</p>
+    <h1>Proveedor mayorista de fruta y verdura para hostelería y colectividades en Madrid</h1>
+    <p class="entradilla">Abastecemos a restaurantes, hoteles, colegios, residencias y empresas de restauración colectiva con producto fresco seleccionado cada mañana. Tercera generación y ${ANIOS} de oficio.</p>
     <div class="heroe-acciones">
-      <a class="btn btn-wa btn-grande" href="${wa(WHATSAPP[0].num, textoWA)}" rel="nofollow">${I.wa}<span>Pide el precio de hoy</span></a>
-      <a class="btn btn-transparente" href="#catalogo"><span>Ver productos</span>${I.flecha}</a>
+      <a class="btn btn-wa btn-grande" href="${wa(WHATSAPP[0].num, textoWA)}" rel="nofollow">${I.wa}<span>Pedir precio por WhatsApp</span></a>
+      <a class="btn btn-transparente" href="${wa(WHATSAPP[0].num, 'Hola, quería recibir vuestra tarifa para mi negocio.')}" rel="nofollow"><span>Solicitar tarifa</span>${I.flecha}</a>
     </div>
-    <p class="heroe-nota">Por WhatsApp · Sin compromiso</p>
+    <ul class="heroe-sellos"><li>Reparto refrigerado diario</li><li>Un solo pedido: fruta, verdura, patata y huevos</li><li>Trato directo con la familia</li></ul>
   </div>
 </section>
 
@@ -351,32 +369,33 @@ function inicio(p) {
 
 <section class="bloque">
   <div class="envoltura">
-    <div class="bloque-cabeza centrada"><div><h2>Comprar género no debería darte dolores de cabeza</h2></div></div>
-    <div class="dolores">
-      <div class="dolor"><p class="dolor-mal">El género llega flojo y lo pagas como bueno.</p><p class="dolor-bien">${I.hoja}<span><strong>Elegido caja a caja</strong> a primera hora en Mercamadrid, y parte de cosecha propia.</span></p></div>
-      <div class="dolor"><p class="dolor-mal">Cinco proveedores, cinco repartos y cinco albaranes.</p><p class="dolor-bien">${I.camion}<span><strong>Todo en un pedido</strong>: fruta, verdura, patata pelada, huevos y setas.</span></p></div>
-      <div class="dolor"><p class="dolor-mal">Llamas y nadie te coge el teléfono.</p><p class="dolor-bien">${I.familia}<span><strong>Hablas con la familia</strong>, directamente por WhatsApp.</span></p></div>
-    </div>
+    <div class="bloque-cabeza"><div><p class="antetitulo">Por qué Ferjusanz</p><h2>Un proveedor en el que su cocina puede confiar</h2></div></div>
+    <ul class="ventajas">
+      <li>${I.hoja}<strong>Calidad homogénea, pedido tras pedido</strong><span>Seleccionamos caja a caja a primera hora en Mercamadrid y contamos con cosecha propia y agricultores de confianza.</span></li>
+      <li>${I.camion}<strong>Reparto puntual con cadena de frío</strong><span>Flota propia de camiones y furgonetas refrigerados. Entregamos a la hora que marca su servicio.</span></li>
+      <li>${I.reloj}<strong>Precio de mercado, cada día</strong><span>Tarifa según la lonja del día y el volumen de su consumo, sin intermediarios añadidos.</span></li>
+      <li>${I.familia}<strong>Un interlocutor directo</strong><span>Pedidos, cambios e incidencias se resuelven con la familia, por WhatsApp o teléfono.</span></li>
+    </ul>
   </div>
 </section>
 
 <section class="bloque bloque-crema" id="catalogo">
   <div class="envoltura">
-    <div class="bloque-cabeza"><div><h2>Lo que te llevamos a la cocina</h2></div><a class="enlace" href="/productos/">Ver catálogo completo ${I.flecha}</a></div>
+    <div class="bloque-cabeza"><div><p class="antetitulo">Catálogo</p><h2>Catálogo profesional de fruta, verdura, patata y huevos</h2></div><a class="enlace" href="/productos/">Ver catálogo completo ${I.flecha}</a></div>
     <div class="productos">${FAMILIAS.slice(0, 8).map(tarjetaFamilia).join('\n')}</div>
   </div>
 </section>
 
 <section class="bloque">
   <div class="envoltura">
-    <div class="bloque-cabeza"><div><h2>Así está hoy nuestro puesto en Mercamadrid</h2></div><a class="enlace" href="/novedades/">Ver más fotos ${I.flecha}</a></div>
+    <div class="bloque-cabeza"><div><p class="antetitulo">Producto real</p><h2>Género de esta semana en nuestro puesto de Mercamadrid</h2></div><a class="enlace" href="/novedades/">Ver más fotos ${I.flecha}</a></div>
     <div class="mosaico">${mosaico.map((n, i) => `<a href="/novedades/" class="mosaico-${i}"><img src="/fotos/${n}.jpg" alt="${esc(FOTO[n])} en el puesto de Ferjusanz" loading="lazy" width="600" height="600"></a>`).join('')}</div>
   </div>
 </section>
 
 <section class="bloque bloque-crema">
   <div class="envoltura">
-    <div class="bloque-cabeza"><div><h2>Trabajamos para quien cocina y vende cada día</h2></div></div>
+    <div class="bloque-cabeza"><div><p class="antetitulo">Sectores</p><h2>Soluciones para cada tipo de cliente profesional</h2></div></div>
     <div class="sectores">${SECTORES.map(s => `<a class="sector" href="${s.ruta}"><span class="sector-foto"><img src="${s.foto}" alt="" loading="lazy" width="600" height="400"></span><strong>${s.nombre}</strong><span>${s.texto}</span><em>Ver cómo trabajamos ${I.flecha}</em></a>`).join('')}</div>
   </div>
 </section>
@@ -388,23 +407,23 @@ function inicio(p) {
       <img src="/fotos/tomate-de-temporada.jpg" alt="Caja de tomate de temporada en el puesto de Ferjusanz" loading="lazy" width="619" height="1100">
     </div>
     <div>
-      
+      <p class="antetitulo">Nuestra historia</p>
       <h2>Tres generaciones alegrando la mesa de Madrid</h2>
       <p>Empezamos con las patatas y las cebollas hace ${ANIOS}. El abuelo, luego el padre y hoy el hijo: la misma familia, el mismo trato y la misma manera de elegir el género.</p>
-      <p>Lo que no cultivamos nosotros lo escogemos a primera hora en Mercamadrid, y sale en nuestros camiones refrigerados hacia tu cocina.</p>
+      <p>Lo que no cultivamos nosotros lo escogemos a primera hora en Mercamadrid, y sale en nuestros camiones refrigerados hacia su cocina.</p>
       <blockquote class="firma">«Si no lo pondríamos en nuestra mesa, no lo llevamos a la tuya.»</blockquote>
-      <a class="enlace" href="/empresa-de-venta-y-distribucion-de-fruta-y-verdura/">Conoce a la familia ${I.flecha}</a>
+      <a class="enlace" href="/empresa-de-venta-y-distribucion-de-fruta-y-verdura/">Quiénes somos ${I.flecha}</a>
     </div>
   </div>
 </section>
 
 <section class="bloque bloque-granate">
   <div class="envoltura">
-    <div class="bloque-cabeza centrada"><div><h2>Tu primer pedido, en tres pasos</h2></div></div>
+    <div class="bloque-cabeza centrada"><div><p class="antetitulo">Alta de cliente</p><h2>Empiece a trabajar con nosotros en tres pasos</h2></div></div>
     <ol class="pasos">
-      <li><span>1</span><strong>Nos escribes</strong><p>Por WhatsApp: qué necesitas, cuánto y para cuándo.</p></li>
-      <li><span>2</span><strong>Te pasamos el precio de hoy</strong><p>El del mercado de esa mañana. Sin compromiso.</p></li>
-      <li><span>3</span><strong>Lo llevamos a tu puerta</strong><p>En camión o furgoneta refrigerados.</p></li>
+      <li><span>1</span><strong>Nos escribe</strong><p>Por WhatsApp o teléfono: qué necesita, en qué cantidad y con qué frecuencia.</p></li>
+      <li><span>2</span><strong>Le enviamos tarifa</strong><p>Con el precio del mercado de esa mañana. Sin compromiso.</p></li>
+      <li><span>3</span><strong>Recibe el pedido</strong><p>En camión o furgoneta refrigerados, a la hora acordada.</p></li>
     </ol>
     <div class="centro"><a class="btn btn-wa btn-grande" href="${wa(WHATSAPP[0].num, textoWA)}" rel="nofollow">${I.wa}<span>Empezar por WhatsApp</span></a></div>
   </div>
@@ -412,21 +431,21 @@ function inicio(p) {
 
 <section class="bloque">
   <div class="envoltura preguntas-in">
-    <div><h2>Lo que nos preguntan antes del primer pedido</h2><p class="entradilla">¿Otra duda? Escríbenos y te contestamos nosotros, no un robot.</p></div>
+    <div><p class="antetitulo">Preguntas frecuentes</p><h2>Lo que nos preguntan antes del primer pedido</h2><p class="entradilla">¿Tiene otra duda? Escríbanos y le contestamos personalmente.</p></div>
     <div class="preguntas">${PREGUNTAS.map(([q, r]) => `<details><summary>${q}</summary><p>${r}</p></details>`).join('')}</div>
   </div>
 </section>
 
 <section class="bloque bloque-crema">
   <div class="envoltura">
-    <div class="bloque-cabeza"><div><h2>Temporadas, consejos y recetas</h2></div><a class="enlace" href="/blog/">Ver todos ${I.flecha}</a></div>
+    <div class="bloque-cabeza"><div><p class="antetitulo">Blog</p><h2>Temporadas, consejos y recetas</h2></div><a class="enlace" href="/blog/">Ver todos ${I.flecha}</a></div>
     <div class="articulos">${articulos.slice(0, 3).map(tarjetaArticulo).join('')}</div>
   </div>
 </section>`;
   return plantilla({
-    ruta: '/',
-    titulo: 'Ferjusanz | Mayorista de fruta, verdura, patatas y huevos en Madrid',
-    descripcion: `Proveedor de fruta, verdura, patatas y huevos para hostelería, colectividades y fruterías en Madrid. Tercera generación, ${ANIOS}, cosecha propia y reparto diario. Pide precio por WhatsApp.`,
+    ruta: '/', precarga: '/fotos/tomate-la-campechana.jpg',
+    titulo: 'Mayorista de fruta y verdura en Madrid para hostelería | Ferjusanz',
+    descripcion: `Proveedor mayorista de fruta, verdura, patatas y huevos para restaurantes, hoteles, colegios, residencias y colectividades en Madrid. Solicite tarifa.`,
     cuerpo,
     datos: [NEGOCIO, { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Ferjusanz', url: DOMINIO + '/' },
       { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: PREGUNTAS.map(([q, r]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: r } })) }],
@@ -435,7 +454,7 @@ function inicio(p) {
 
 function catalogo(p) {
   const m = miga('/productos/', 'Productos');
-  const cuerpo = `${cabeceraPagina(m, 'Catálogo de fruta, verdura, patatas y huevos al por mayor', 'Más de 200 productos frescos cada día. No publicamos precios porque cambian con el mercado: pídenos el de hoy por WhatsApp.')}
+  const cuerpo = `${cabeceraPagina(m, 'Catálogo de fruta, verdura, patatas y huevos al por mayor', 'Más de 200 productos frescos cada día. No publicamos precios porque cambian con el mercado: solicite el de hoy por WhatsApp.')}
 <section class="bloque"><div class="envoltura">
   <div class="productos">${FAMILIAS.map(tarjetaFamilia).join('\n')}</div>
   <div class="familias">${FAMILIAS.map(f => `<div class="familia"><h2>${f.nombre}</h2><ul class="chips">${f.lista.map(x => `<li>${x}</li>`).join('')}</ul>${f.ruta ? `<a class="enlace" href="${f.ruta}">Ver ${f.nombre.toLowerCase()} ${I.flecha}</a>` : ''}</div>`).join('')}</div>
@@ -463,6 +482,7 @@ function paginaFamilia(p, f, textoHtml) {
 </div></section>
 <section class="bloque"><div class="envoltura"><article class="texto">${resto}</article></div></section>
 ${galeria(p.path)}
+${enlacesSectores()}
 ${relacionados(p.path)}`;
   return plantilla({ ruta: p.path, titulo: p.title, descripcion: p.description, imagen: f.foto, cuerpo, datos: [m.datos] });
 }
@@ -470,7 +490,7 @@ ${relacionados(p.path)}`;
 function relacionados(ruta) {
   const otras = FAMILIAS.filter(f => f.ruta && f.ruta !== ruta).slice(0, 4);
   return `<section class="bloque bloque-crema"><div class="envoltura">
-  <div class="bloque-cabeza"><div><h2>También te llevamos</h2></div><a class="enlace" href="/productos/">Todo el catálogo ${I.flecha}</a></div>
+  <div class="bloque-cabeza"><div><h2>También le llevamos</h2></div><a class="enlace" href="/productos/">Todo el catálogo ${I.flecha}</a></div>
   <div class="productos">${otras.map(tarjetaFamilia).join('')}</div>
 </div></section>`;
 }
@@ -487,8 +507,8 @@ function paginaTexto(p, opciones = {}) {
   <article class="texto">${opciones.antes || ''}${sinFotoRepetida}</article>
   <aside class="lateral">
     <div class="lateral-caja">
-      
-      <strong>Pídenos precio por WhatsApp</strong>
+      <p class="antetitulo">Precio del día</p>
+      <strong>Solicite precio por WhatsApp</strong>
       ${botonesWA(`Hola, quería información: ${titulo}.`, 'apiladas')}
       <ul class="garantias"><li>${I.familia} 3.ª generación, ${ANIOS}</li><li>${I.camion} Reparto diario en Madrid</li><li>${I.reloj} ${HORARIO}</li></ul>
     </div>
@@ -496,6 +516,7 @@ function paginaTexto(p, opciones = {}) {
 </div></section>
 ${galeria(p.path)}
 ${opciones.despues || ''}
+${enlacesSectores(p.path)}
 ${relacionados('')}`;
   return plantilla({ ruta: p.path, titulo: p.title, descripcion: p.description, imagen: foto, cuerpo, datos: [m.datos, ...(opciones.datos || [])] });
 }
@@ -517,7 +538,7 @@ function articulo(p) {
   <p class="meta"><time datetime="${(p.date || '').slice(0, 10)}">${fecha(p.date)}</time> · Ferjusanz</p>
   ${p.ogImage ? `<img class="destacada" src="${p.ogImage}" alt="${esc(titulo)}" width="1200" height="750" fetchpriority="high">` : ''}
   <div class="texto">${limpiar(p.html)}</div>
-  <aside class="nota"><strong>¿Tienes un restaurante, un colegio o una frutería?</strong><p>Te llevamos la fruta, la verdura, las patatas y los huevos cada día. Pídenos precio.</p>${botonesWA('Hola, he leído vuestro blog y quería información de precios.')}</aside>
+  <aside class="nota"><strong>¿Tiene un restaurante, un hotel, un colegio o una residencia?</strong><p>Le llevamos la fruta, la verdura, las patatas y los huevos cada día. Solicite su tarifa.</p>${botonesWA('Hola, he leído vuestro blog y quería información de precios.')}</aside>
 </div></article>
 ${galeria(p.path)}
 <section class="bloque"><div class="envoltura"><div class="bloque-cabeza"><div><h2>Más artículos</h2></div><a class="enlace" href="/blog/">Ver el blog ${I.flecha}</a></div><div class="articulos">${otros.map(tarjetaArticulo).join('')}</div></div></section>`;
@@ -529,11 +550,11 @@ ${galeria(p.path)}
 
 function contacto(p) {
   const m = miga('/contacto/', 'Contacto');
-  const cuerpo = `${cabeceraPagina(m, 'Contacto: pide precio de fruta, verdura, patatas y huevos', 'La forma más rápida es WhatsApp: te pasamos el precio del mercado de ese día.')}
+  const cuerpo = `${cabeceraPagina(m, 'Contacto: solicite precio de fruta, verdura, patatas y huevos', 'La forma más rápida es WhatsApp: le pasamos el precio del mercado de ese día.')}
 <section class="bloque"><div class="envoltura contacto-in">
   <div class="contacto-caja"><h2>WhatsApp</h2>${botonesWA('Hola, quería información de precios para mi negocio.', 'apiladas')}</div>
   <div class="contacto-caja"><h2>Teléfono y correo</h2><p><a class="grande" href="tel:+34917632186">${TEL}</a></p><p><a href="mailto:${EMAIL}">${EMAIL}</a></p></div>
-  <div class="contacto-caja"><h2>Dónde estamos</h2><p>${DIRECCION}</p><p>${HORARIO}</p><p><a class="enlace" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Calle Carare 2, 28033 Madrid')}" rel="nofollow">Cómo llegar ${I.flecha}</a></p></div>
+  <div class="contacto-caja"><h2>Dónde estamos</h2><p>${DIRECCION}</p><p>${HORARIO}</p><p><strong>Zona de reparto</strong>: Madrid capital y Comunidad de Madrid.</p><p><a class="enlace" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Calle Carare 2, 28033 Madrid')}" rel="nofollow">Cómo llegar ${I.flecha}</a></p></div>
 </div></section>`;
   return plantilla({ ruta: '/contacto/', titulo: p.title, descripcion: p.description, cuerpo, datos: [m.datos, NEGOCIO] });
 }
@@ -570,41 +591,81 @@ const NUEVAS = [
 <p>Trabajamos huevo de gallina para cocina diaria (tortillas, rebozados, repostería, desayunos) y huevo de codorniz para tapas, ensaladas y presentaciones.</p>
 <h2>Por qué pedir los huevos con la fruta</h2>
 <ul><li><strong>Un solo proveedor</strong>: menos llamadas, menos albaranes y una sola entrega.</li><li><strong>Reparto refrigerado</strong> en nuestros camiones y furgonetas.</li><li><strong>Precio de mayorista</strong>, según cantidad y frecuencia.</li></ul>
-<p>Dinos cuántas docenas necesitas a la semana y te pasamos precio.</p>` },
-  { path: '/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', foto: F + '2023/03/Tipos-de-guarniciones-de-verduras.jpg', title: 'Proveedor de frutas y verduras para hostelería en Madrid | Ferjusanz',
-    description: 'Proveedor de fruta, verdura, patatas peladas y huevos para restaurantes, bares, hoteles y catering en Madrid. Tercera generación, reparto diario y precio del mercado.',
+<p>Indíquenos cuántas docenas necesita a la semana y le pasamos precio.</p>` },
+  { path: '/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', foto: F + '2023/03/Tipos-de-guarniciones-de-verduras.jpg', title: 'Proveedor de fruta y verdura para restaurantes en Madrid | Ferjusanz',
+    description: 'Proveedor de fruta, verdura, patata pelada y huevos para restaurantes, bares y catering en Madrid. Reparto refrigerado diario y precio de mercado.',
     html: `<h1>Proveedor de frutas y verduras para hostelería en Madrid</h1>
-<p>Un restaurante vive de su género. Por eso llevamos ${ANIOS} sirviendo a <strong>restaurantes, bares, hoteles y empresas de catering</strong> de Madrid con fruta, verdura, patatas y huevos elegidos cada mañana.</p>
-<h2>Lo que necesita una cocina, en un solo pedido</h2>
-<ul><li><strong>Verdura y hortaliza</strong> de temporada para guarniciones, ensaladas y menús del día.</li><li><strong>Patata</strong> para freír, cocer o asar, y <strong>patata pelada</strong> en bastón, dados o panadera, lista para la freidora.</li><li><strong>Cebolla y ajo pelados</strong>, para ahorrar horas de cocina.</li><li><strong>Fruta</strong> para postres, zumos y desayunos, también tropical.</li><li><strong>Hierbas frescas</strong> y <strong>huevos</strong> de gallina y de codorniz.</li></ul>
+<p>Un restaurante vive de su género. Por eso llevamos ${ANIOS} sirviendo a <strong>restaurantes, bares, hoteles y empresas de catering</strong> de Madrid con fruta, verdura, patatas y huevos seleccionados cada mañana en Mercamadrid y en nuestra cosecha propia.</p>
+<h2>Todo lo que necesita una cocina, en un solo pedido</h2>
+<ul><li><strong>Verdura y hortaliza</strong> de temporada para guarniciones, ensaladas y menú del día.</li><li><strong>Patata</strong> para freír, cocer o asar, y <a href="/productos/patata-pelada-para-hosteleria/">patata pelada</a> en bastón, dados o panadera, lista para la freidora.</li><li><strong>Cebolla y ajo pelados</strong>, que ahorran horas de cocina.</li><li><strong>Fruta</strong> para postres, zumos y desayunos, también tropical y exótica.</li><li><strong>Gama gourmet</strong>: tomates de variedad, setas de temporada, brotes y hierbas frescas.</li><li><a href="/productos/huevos/">Huevos</a> de gallina y de codorniz.</li></ul>
 <h2>Cómo trabajamos con la hostelería</h2>
-<p>Nos mandas el pedido por WhatsApp, te confirmamos el precio del día y te lo llevamos en nuestros camiones y furgonetas refrigerados.</p>
+<p>Nos envía el pedido por WhatsApp o por teléfono, le confirmamos el precio del día y se lo llevamos en nuestros camiones y furgonetas refrigerados a la hora que marque su servicio. Si algo no llega como debe, se cambia: hablamos directamente con usted, sin centralitas.</p>
 <h2>Por qué Ferjusanz</h2>
 <p>Somos la tercera generación de una familia de mayoristas, con cosecha propia y puesto en Mercamadrid. Conocemos el producto y conocemos las prisas de una cocina.</p>` },
+  { path: '/proveedor-de-frutas-y-verduras-para-hoteles-madrid/', foto: '/fotos/mango-y-papaya.jpg', title: 'Proveedor de frutas y verduras para hoteles en Madrid | Ferjusanz',
+    description: 'Fruta y verdura al por mayor para hoteles de Madrid: desayunos, bufé, cocina y eventos. Reparto refrigerado y calidad constante.',
+    html: `<h1>Proveedor de frutas y verduras para hoteles en Madrid</h1>
+<p>En un hotel la fruta y la verdura están en todas partes: el bufé del desayuno, la carta del restaurante, el room service y los eventos. Ferjusanz abastece a <strong>hoteles de Madrid</strong> con producto fresco, de calidad homogénea y servido con la regularidad que exige una ocupación cambiante.</p>
+<h2>Producto para cada servicio del hotel</h2>
+<ul><li><strong>Desayunos y bufé</strong>: fruta de temporada y tropical (piña, mango, papaya, kiwi, frutos rojos), naranja de zumo y fruta lista para cortar.</li><li><strong>Cocina y carta</strong>: verdura y hortaliza de temporada, tomates de variedad, setas, brotes y hierbas frescas.</li><li><strong>Eventos y banquetes</strong>: volúmenes grandes con antelación y calibres uniformes para la presentación.</li><li><strong>Ahorro de tiempo</strong>: <a href="/productos/patata-pelada-para-hosteleria/">patata pelada</a>, cebolla y ajo pelados y productos de <a href="/distribucion-y-venta-de-productos-de-cuarta-gama-madrid/">cuarta gama</a>.</li><li><a href="/productos/huevos/">Huevos</a> de gallina y de codorniz en el mismo reparto.</li></ul>
+<h2>Un servicio pensado para el hotel</h2>
+<p>Ajustamos el pedido a la ocupación de cada semana y repartimos con camiones y furgonetas refrigerados los días que necesite. Su responsable de compras o su jefe de cocina hablan siempre con las mismas personas, por WhatsApp o por teléfono.</p>
+<h2>Tarifa según su consumo</h2>
+<p>No publicamos precios porque cambian con el mercado. Indíquenos el volumen aproximado y la frecuencia y le enviamos una tarifa ajustada, sin compromiso.</p>` },
+  { path: '/proveedor-de-frutas-y-verduras-para-colegios-madrid/', foto: F + '2020/09/frutas-verduras-comedor-colegio.jpg', title: 'Fruta y verdura para comedores escolares en Madrid | Ferjusanz',
+    description: 'Fruta y verdura al por mayor para colegios y comedores escolares de Madrid. Calibres constantes, producto de temporada y reparto puntual.',
+    html: `<h1>Proveedor de fruta y verdura para colegios en Madrid</h1>
+<p>Un comedor escolar necesita lo mismo cada día: <strong>producto fresco, cantidades exactas y que llegue a su hora</strong>. Ferjusanz sirve fruta, verdura, patatas y huevos a colegios, escuelas infantiles y empresas que gestionan comedores escolares en Madrid.</p>
+<h2>Pensado para el menú escolar</h2>
+<ul><li><strong>Fruta de postre</strong> en calibres adecuados para niños: manzana, pera, plátano, mandarina, naranja y fruta de temporada.</li><li><strong>Verdura y hortaliza</strong> para cremas, purés, guisos y ensaladas, según la planificación del menú.</li><li><strong>Patata</strong> para cocer, guisar o freír, y patata pelada para ahorrar tiempo de cocina.</li><li><a href="/distribucion-y-venta-de-legumbres-madrid/">Legumbres</a> y <a href="/productos/huevos/">huevos</a> en el mismo pedido.</li></ul>
+<h2>Constancia durante todo el curso</h2>
+<p>Trabajamos con la planificación del menú mensual para tener el producto a tiempo y mantener calibres y calidad homogéneos semana tras semana. Repartimos con vehículos refrigerados y nos adaptamos al calendario escolar.</p>
+<h2>Producto de temporada</h2>
+<p>La fruta y la verdura de temporada está en su mejor momento y a mejor precio. Le proponemos alternativas cuando un producto sube o escasea, para que el menú no se resienta.</p>` },
+  { path: '/proveedor-de-frutas-y-verduras-para-residencias-madrid/', foto: F + '2020/09/verduras-residencias-ancianos.jpg', title: 'Fruta y verdura para residencias de mayores en Madrid | Ferjusanz',
+    description: 'Fruta, verdura, patatas y huevos al por mayor para residencias de mayores de Madrid. Producto fresco, reparto regular y trato directo.',
+    html: `<h1>Proveedor de fruta y verdura para residencias en Madrid</h1>
+<p>En una residencia la alimentación es parte del cuidado. Ferjusanz abastece a <strong>residencias de mayores, centros de día y centros sociosanitarios</strong> de Madrid con fruta y verdura fresca, servida con la regularidad que exige una cocina que funciona todos los días del año.</p>
+<h2>Producto adaptado a la cocina de una residencia</h2>
+<ul><li><strong>Fruta madura y de temporada</strong>, fácil de comer y de preparar: plátano, pera, manzana, melocotón, mandarina, kiwi.</li><li><strong>Verdura para cremas, purés y dietas blandas</strong>: calabacín, calabaza, zanahoria, puerro, judía verde, acelga, espinaca.</li><li><strong>Patata, cebolla y ajo</strong>, también pelados, para ahorrar tiempo al personal de cocina.</li><li><a href="/productos/huevos/">Huevos</a> y <a href="/distribucion-y-venta-de-legumbres-madrid/">legumbres</a> en el mismo reparto.</li></ul>
+<h2>Regularidad y confianza</h2>
+<p>Repartimos con camiones y furgonetas refrigerados en los días y horarios que fije la residencia. Mantenemos la calidad estable pedido tras pedido y, si hay una incidencia, se resuelve directamente con la familia Ferjusanz.</p>
+<h2>Tarifa sin compromiso</h2>
+<p>Indíquenos el número de plazas y el consumo aproximado y le enviamos precio según el mercado del día.</p>` },
+  { path: '/productos/patata-pelada-para-hosteleria/', foto: F + '2020/09/distribuidor-patatas-beneficios.jpg', title: 'Patata pelada y cortada para hostelería en Madrid | Ferjusanz',
+    description: 'Patata pelada al por mayor para restaurantes, hoteles y colectividades de Madrid: en bastón, dados, panadera o envasada al vacío.',
+    html: `<h1>Patata pelada y cortada para hostelería en Madrid</h1>
+<p>La patata es nuestra especialidad desde el primer día. Además de patata entera para todos los usos, servimos <strong>patata pelada y cortada</strong> lista para la cocina a restaurantes, hoteles, colegios, residencias y empresas de colectividades de Madrid.</p>
+<h2>Formatos de patata pelada</h2>
+<ul><li><strong>En bastón</strong>, para freír.</li><li><strong>En dados</strong>, para guisos, ensaladilla y salteados.</li><li><strong>Panadera</strong>, en rodajas para horno.</li><li><strong>Para ensaladilla</strong> y <strong>patata cocida</strong>.</li><li><strong>Patata pelada entera envasada al vacío</strong>.</li></ul>
+<h2>Por qué patata pelada</h2>
+<p>Ahorra horas de trabajo en cocina, evita mermas y residuos y da un resultado uniforme en cada servicio. Llega en nuestro reparto refrigerado junto con el resto del pedido de fruta y verdura.</p>
+<h2>También patata entera</h2>
+<p>Agria, Monalisa, nueva para freír, roja, violeta, baby, para bravas o para tornear. Consulte el <a href="/productos/patatas-2/">catálogo de patatas</a>.</p>` },
 ];
 // Páginas legales: datos reales de la empresa; sin datos del Registro Mercantil (pendiente de que Fernando los dé).
 const LEGALES = [
   ['/aviso-legal/', 'Aviso legal', `<p>En cumplimiento de la Ley 34/2002, de servicios de la sociedad de la información y de comercio electrónico (LSSI-CE), estos son los datos del titular de esta web:</p>
 <ul><li><strong>Titular</strong>: ${EMPRESA}</li><li><strong>NIF</strong>: ${NIF}</li><li><strong>Domicilio</strong>: ${DIRECCION}</li><li><strong>Teléfono</strong>: ${TEL}</li><li><strong>Correo</strong>: <a href="mailto:${EMAIL}">${EMAIL}</a></li></ul>
-<h2>Uso de la web</h2><p>Esta web informa sobre los productos y servicios de ${EMPRESA}. Los precios no se publican porque dependen del mercado de cada día; cualquier precio que te demos por teléfono o WhatsApp es orientativo hasta que se confirma el pedido.</p>
+<h2>Uso de la web</h2><p>Esta web informa sobre los productos y servicios de ${EMPRESA}. Los precios no se publican porque dependen del mercado de cada día; cualquier precio que le demos por teléfono o WhatsApp es orientativo hasta que se confirma el pedido.</p>
 <h2>Propiedad intelectual</h2><p>Los textos, el logotipo y el diseño de esta web pertenecen a ${EMPRESA} o se usan con permiso. No se pueden copiar con fines comerciales sin autorización.</p>
 <h2>Responsabilidad</h2><p>Procuramos que la información sea correcta y esté al día, pero no respondemos de errores puntuales ni del contenido de webs de terceros enlazadas desde aquí.</p>
 <h2>Legislación</h2><p>Esta web se rige por la legislación española.</p>`],
   ['/politica-de-privacidad/', 'Política de privacidad', `<p><strong>Responsable</strong>: ${EMPRESA}, NIF ${NIF}, ${DIRECCION}. Correo: <a href="mailto:${EMAIL}">${EMAIL}</a>.</p>
-<h2>Qué datos tratamos y para qué</h2><p>Esta web no tiene formularios ni pide datos. Si nos escribes por WhatsApp, nos llamas o nos mandas un correo, usamos tu nombre, tu teléfono o correo y lo que nos cuentes para contestarte, darte precios y, si llegas a ser cliente, gestionar tus pedidos, albaranes y facturas.</p>
-<h2>Base legal</h2><p>Tu consentimiento al escribirnos y, si eres cliente, la relación comercial y las obligaciones legales (facturación y contabilidad).</p>
+<h2>Qué datos tratamos y para qué</h2><p>Esta web no tiene formularios ni pide datos. Si nos escribe por WhatsApp, nos llama o nos envía un correo, usamos su nombre, su teléfono o correo y lo que nos cuente para contestarle, darle precios y, si llega a ser cliente, gestionar sus pedidos, albaranes y facturas.</p>
+<h2>Base legal</h2><p>Su consentimiento al escribirnos y, si es cliente, la relación comercial y las obligaciones legales (facturación y contabilidad).</p>
 <h2>Cuánto tiempo</h2><p>Mientras dure la conversación o la relación comercial y, después, el tiempo que obliguen las leyes fiscales y mercantiles.</p>
 <h2>A quién se comunican</h2><p>A nadie, salvo obligación legal (por ejemplo, a Hacienda) y a quienes nos prestan servicios con las debidas garantías (gestoría, alojamiento de la web). WhatsApp es un servicio de Meta, con su propia política de privacidad.</p>
-<h2>Tus derechos</h2><p>Puedes pedir acceso, rectificación, supresión, oposición, limitación y portabilidad escribiendo a <a href="mailto:${EMAIL}">${EMAIL}</a>. Si no te atendemos bien, puedes reclamar ante la Agencia Española de Protección de Datos (aepd.es).</p>`],
-  ['/politica-de-cookies/', 'Política de cookies', `<p>Esta web <strong>no usa cookies</strong> propias ni de terceros para analizar tu visita ni para publicidad, por eso no te pedimos que las aceptes.</p>
-<p>Si en el futuro añadimos alguna herramienta de medición, lo indicaremos aquí y te pediremos permiso antes de usarla.</p>
-<p>Los enlaces a WhatsApp y a Google Maps te llevan a servicios de terceros, que tienen sus propias políticas de cookies.</p>`],
+<h2>Sus derechos</h2><p>Puede pedir acceso, rectificación, supresión, oposición, limitación y portabilidad escribiendo a <a href="mailto:${EMAIL}">${EMAIL}</a>. Si no le atendemos bien, puede reclamar ante la Agencia Española de Protección de Datos (aepd.es).</p>`],
+  ['/politica-de-cookies/', 'Política de cookies', `<p>Esta web <strong>no usa cookies</strong> propias ni de terceros para analizar su visita ni para publicidad, por eso no le pedimos que las aceptes.</p>
+<p>Si en el futuro añadimos alguna herramienta de medición, lo indicaremos aquí y le pediremos permiso antes de usarla.</p>
+<p>Los enlaces a WhatsApp y a Google Maps le llevan a servicios de terceros, que tienen sus propias políticas de cookies.</p>`],
 ];
 
 // ───────── Construcción ─────────
 // Borra las páginas generadas antes (no las fotos ni las letras) para no dejar páginas viejas.
 for (const n of fs.readdirSync(OUT)) {
-  if (['wp-content', 'fotos', 'fuentes', 'js', 'estilo.css', 'robots.txt'].includes(n)) continue;
+  if (['wp-content', 'fotos', 'fuentes', 'estilo.css', 'robots.txt'].includes(n)) continue;
   fs.rmSync(path.join(OUT, n), { recursive: true, force: true });
 }
 
@@ -627,7 +688,7 @@ sitemap.push(['/novedades/', (ultimasNovedades[0]?.fecha || '').slice(0, 10)]);
 for (const [ruta, titulo, html] of LEGALES) { escribir(ruta, paginaLegal(ruta, titulo, html)); sitemap.push([ruta, '']); }
 
 fs.writeFileSync(path.join(OUT, '404.html'), plantilla({ ruta: '/404', titulo: 'Página no encontrada | Ferjusanz', descripcion: 'Esta página no existe.', cuerpo:
-  `<section class="bloque"><div class="envoltura lectura"><h1>Esta página no existe</h1><p class="entradilla">Puede que la hayamos movido. Mira el catálogo o escríbenos.</p><p><a class="btn btn-borde" href="/productos/"><span>Ver productos</span>${I.flecha}</a></p></div></section>` }));
+  `<section class="bloque"><div class="envoltura lectura"><h1>Esta página no existe</h1><p class="entradilla">Puede que la hayamos movido. Consulte el catálogo o escríbanos.</p><p><a class="btn btn-borde" href="/productos/"><span>Ver productos</span>${I.flecha}</a></p></div></section>` }));
 
 // Mapa del sitio para Google, con la fecha de cada página.
 const hoy = new Date().toISOString().slice(0, 10);
