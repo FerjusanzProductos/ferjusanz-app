@@ -405,3 +405,20 @@ p { margin: 0 0 1em; }
 .recientes time { font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; color: var(--tinta-2); }
 .recientes strong { font: 700 1.2rem/1.15 var(--titular); text-transform: uppercase; }
 @media (min-width: 1000px) { .zonas-in { align-items: start; } }
+/* Carrusel de artículos en portada: ventanas que pasan solas (14/11/2026, Fernando) */
+.carrusel { position: relative; border-top: 1px solid var(--tinta); padding-top: 20px; }
+.carrusel-pista { list-style: none; margin: 0; padding: 0 0 8px; display: grid; grid-auto-flow: column; grid-auto-columns: 82%; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
+.carrusel-pista::-webkit-scrollbar { display: none; }
+.carrusel-pista li { scroll-snap-align: start; }
+.ventana { display: flex; flex-direction: column; height: 100%; background: var(--blanco); border: 1px solid var(--linea); text-decoration: none; color: var(--tinta); }
+.ventana-foto { aspect-ratio: 16 / 10; overflow: hidden; background: var(--papel-2); }
+.ventana-foto img { width: 100%; height: 100%; object-fit: cover; }
+.ventana-info { padding: 14px 16px 18px; display: flex; flex-direction: column; gap: 6px; }
+.ventana-info em { font-style: normal; font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--granate); }
+.ventana-info strong { font: 700 1.3rem/1.08 var(--titular); text-transform: uppercase; }
+.ventana:hover strong { color: var(--granate); }
+.carrusel-flechas { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+.carrusel-flechas button { width: 48px; height: 48px; border: 1px solid var(--tinta); background: transparent; color: var(--tinta); font-size: 1.2rem; cursor: pointer; border-radius: 2px; }
+.carrusel-flechas button:hover { background: var(--tinta); color: var(--papel); }
+@media (min-width: 700px) { .carrusel-pista { grid-auto-columns: calc((100% - 32px) / 3); } .pasos-4 { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .carrusel-pista { grid-auto-columns: calc((100% - 48px) / 4); } .pasos-4 { grid-template-columns: repeat(4, 1fr); } }
