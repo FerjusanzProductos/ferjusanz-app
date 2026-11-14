@@ -72,4 +72,4 @@ for (const c of casos) {
   if (!c.ok) fallos++;
 }
 console.log(fallos ? '\n' + fallos + ' prueba(s) FALLAN' : '\nTodas las pruebas de referencia pasan (' + casos.length + ').');
-process.exit(fallos ? 1 : 0);
+if (fallos) process.exit(1);   // sin exit si pasa: así bateria.mjs puede importar este archivo y seguir

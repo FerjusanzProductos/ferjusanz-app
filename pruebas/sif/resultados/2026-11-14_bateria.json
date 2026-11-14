@@ -1,0 +1,907 @@
+{
+  "T-CAD-01": {
+    "ok": true,
+    "fallos": [],
+    "registros": 60
+  },
+  "T-CAD-03": {
+    "ok": false,
+    "fallos": [
+      "PRUEBA-2026-0011: la factura no coincide con su registro",
+      "PRUEBA-2026-0013: la huella no cuadra (el registro se ha tocado)",
+      "PRUEBA-2026-0013: la factura no coincide con su registro"
+    ],
+    "registros": 60
+  },
+  "T-CAD-04": {
+    "ok": true,
+    "primero": "PRUEBA-2026-0001"
+  },
+  "T-FAC-01": {
+    "ok": true,
+    "facturas": 55
+  },
+  "T-FAC-02": {
+    "ok": true,
+    "sin_cp": "NO_SE_PUEDE_FACTURAR: Al cliente le falta el CÓDIGO POSTAL (5 cifras).",
+    "sin_nif": "NO_SE_PUEDE_FACTURAR: Al cliente le falta el NIF."
+  },
+  "T-FAC-03": {
+    "ok": true,
+    "con_998": "998.40",
+    "con_1000": "EFECTIVO_NO_PERMITIDO: la factura llega a 1.000 € y entre empresas no se puede pagar nada en efectivo (Ley 7/2012, art. 7)"
+  },
+  "T-INA-04": {
+    "ok": true,
+    "total": "-1.30",
+    "codigo": "PRUEBA-R2026-0002",
+    "rectifica": "PRUEBA-2026-0005",
+    "original_intacta": true
+  },
+  "T-INA-05": {
+    "otra_vez": "YA_ANULADA: esta factura ya se dejó a cero con una rectificativa",
+    "registro": {
+      "importe": "-3.26",
+      "tipo_factura": "R1",
+      "tipo_registro": "alta"
+    },
+    "original_sigue": true
+  },
+  "T-NUM-01": {
+    "ok": true,
+    "ultima": "PRUEBA-2026-0054",
+    "primera": "PRUEBA-2026-0005"
+  },
+  "T-NUM-02": {
+    "codigo": "PRUEBA-2027-0001",
+    "fecha_registro": "01-01-2027"
+  },
+  "T-NUM-03": [
+    "PRUEBA-R2026-0001",
+    "PRUEBA-R2026-0002",
+    "PRUEBA-R2026-0003",
+    "PRUEBA-R2026-0004"
+  ],
+  "T-NUM-04": {
+    "ok": true
+  },
+  "T-TRA-01": {
+    "ok": true,
+    "ejemplo": "2026-11-14T07:29:01+01:00",
+    "version": "SIF 0.3.0 (sin declaración)"
+  },
+  "T-TRA-02": {
+    "ok": true
+  },
+  "T-INA-app": [
+    {
+      "delete from public.sif_facturas": "permission denied for table sif_facturas"
+    },
+    {
+      "update public.sif_facturas set total = 1": "permission denied for table sif_facturas"
+    },
+    {
+      "delete from public.sif_registros": "permission denied for table sif_registros"
+    },
+    {
+      "update public.sif_registros set importe_total = '1.00'": "permission denied for table sif_registros"
+    },
+    {
+      "delete from public.sif_factura_lineas": "permission denied for table sif_factura_lineas"
+    }
+  ],
+  "registros": [
+    {
+      "id": 6,
+      "huella": "C50B8E0755BE3B7E62F485CEC227748CFEFDEF5E5C182901A8433269B18AC874",
+      "num_serie": "PRUEBA-2026-0005",
+      "nif_emisor": "B87446670",
+      "cuota_total": "0.08",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "1.96",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "4B11256531C88D8F78A952FDCF3E899E6566A7E6FC0B891844E0A0BBDB536954",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 7,
+      "huella": "3F6862184B1B2405A1D2B6A09F0C0054319B9CB2033D9A466471461AF1E4A689",
+      "num_serie": "PRUEBA-2026-0006",
+      "nif_emisor": "B87446670",
+      "cuota_total": "0.13",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "3.26",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "C50B8E0755BE3B7E62F485CEC227748CFEFDEF5E5C182901A8433269B18AC874",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 8,
+      "huella": "61F7CFE0C510A2D13159DAEB1F337BE32907C513BA5CE67B34AEF5FB736FCCE3",
+      "num_serie": "PRUEBA-2026-0007",
+      "nif_emisor": "B87446670",
+      "cuota_total": "0.96",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "13.21",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "3F6862184B1B2405A1D2B6A09F0C0054319B9CB2033D9A466471461AF1E4A689",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 9,
+      "huella": "94EA1203C82DB6B7B5BAFF3EB68BB9F01239CA677408D0868257D07D638A31C7",
+      "num_serie": "PRUEBA-2026-0008",
+      "nif_emisor": "B87446670",
+      "cuota_total": "0.23",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "5.86",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "61F7CFE0C510A2D13159DAEB1F337BE32907C513BA5CE67B34AEF5FB736FCCE3",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 10,
+      "huella": "0BB9755387067B50DC85C9505769862146F242D142F9E0514D5651E76C2AD12B",
+      "num_serie": "PRUEBA-2026-0009",
+      "nif_emisor": "B87446670",
+      "cuota_total": "0.28",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "7.16",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "94EA1203C82DB6B7B5BAFF3EB68BB9F01239CA677408D0868257D07D638A31C7",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 11,
+      "huella": "E804CF547EDE74E76A12DB3E22225E8B704996C6D169874DD81567D148D5550B",
+      "num_serie": "PRUEBA-2026-0010",
+      "nif_emisor": "B87446670",
+      "cuota_total": "1.14",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "17.89",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "0BB9755387067B50DC85C9505769862146F242D142F9E0514D5651E76C2AD12B",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 12,
+      "huella": "0264800803EDDBD21E49AA0FCFCE25D2C06F964A613D1F38BB8177C028AFC3C2",
+      "num_serie": "PRUEBA-2026-0011",
+      "nif_emisor": "B87446670",
+      "cuota_total": "0.38",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "9.76",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "E804CF547EDE74E76A12DB3E22225E8B704996C6D169874DD81567D148D5550B",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 13,
+      "huella": "DE6A3756C6CBD568E94BA43A732AEF396DCCB1BA61E4CFD75ACB7228DC117A40",
+      "num_serie": "PRUEBA-2026-0012",
+      "nif_emisor": "B87446670",
+      "cuota_total": "0.43",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "11.06",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "0264800803EDDBD21E49AA0FCFCE25D2C06F964A613D1F38BB8177C028AFC3C2",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 14,
+      "huella": "6B773EC400A61D9F18072D3356BAADE233C202C61B523EF4DA3E681C61F9113D",
+      "num_serie": "PRUEBA-2026-0013",
+      "nif_emisor": "B87446670",
+      "cuota_total": "1.32",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "22.57",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "DE6A3756C6CBD568E94BA43A732AEF396DCCB1BA61E4CFD75ACB7228DC117A40",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 15,
+      "huella": "C17C7B866D67F50127DA74F76C717EC34676B9D6C53E6F4AC02C2C4C0AB88B1D",
+      "num_serie": "PRUEBA-2026-0014",
+      "nif_emisor": "B87446670",
+      "cuota_total": "0.53",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "13.66",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "6B773EC400A61D9F18072D3356BAADE233C202C61B523EF4DA3E681C61F9113D",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 16,
+      "huella": "6C85CAC0067DDD8C9748DC5CE6C9A784B0CC9087AFA3EE4A8EE180ABD55CB654",
+      "num_serie": "PRUEBA-2026-0015",
+      "nif_emisor": "B87446670",
+      "cuota_total": "0.58",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "14.96",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "C17C7B866D67F50127DA74F76C717EC34676B9D6C53E6F4AC02C2C4C0AB88B1D",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 17,
+      "huella": "AF1C21FBA27142575171BC5BFAF82BE72AA8D22E37F15631BE19C692CDFDA85B",
+      "num_serie": "PRUEBA-2026-0016",
+      "nif_emisor": "B87446670",
+      "cuota_total": "1.50",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "27.25",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "6C85CAC0067DDD8C9748DC5CE6C9A784B0CC9087AFA3EE4A8EE180ABD55CB654",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 18,
+      "huella": "D11D67733ADA092A1B472643404349CAD6C09D7698F8404CC67ADDE70402D06F",
+      "num_serie": "PRUEBA-2026-0017",
+      "nif_emisor": "B87446670",
+      "cuota_total": "0.68",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "17.56",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "AF1C21FBA27142575171BC5BFAF82BE72AA8D22E37F15631BE19C692CDFDA85B",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 19,
+      "huella": "93B3EB85B4FCFB5530DE21456EAD59D9B710A34F101F62EBA93162A3776B71AE",
+      "num_serie": "PRUEBA-2026-0018",
+      "nif_emisor": "B87446670",
+      "cuota_total": "0.73",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "18.86",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "D11D67733ADA092A1B472643404349CAD6C09D7698F8404CC67ADDE70402D06F",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 20,
+      "huella": "BA9962C1C5D96AF671D89238E6F4E0F5B8F9AFDC11F2D400A0A758810B95C1EB",
+      "num_serie": "PRUEBA-2026-0019",
+      "nif_emisor": "B87446670",
+      "cuota_total": "1.68",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "31.93",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "93B3EB85B4FCFB5530DE21456EAD59D9B710A34F101F62EBA93162A3776B71AE",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 21,
+      "huella": "47CF378036D5A0B6B5EFDC2D8978D87F8422A57C36C891318EA1FD983AB4D221",
+      "num_serie": "PRUEBA-2026-0020",
+      "nif_emisor": "B87446670",
+      "cuota_total": "0.83",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "21.46",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "BA9962C1C5D96AF671D89238E6F4E0F5B8F9AFDC11F2D400A0A758810B95C1EB",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 22,
+      "huella": "8CCE802ACB4B49137D073ED99DCA2BC92703FC7B019AFCE7AE22DEEF0BC9C366",
+      "num_serie": "PRUEBA-2026-0021",
+      "nif_emisor": "B87446670",
+      "cuota_total": "0.88",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "22.76",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "47CF378036D5A0B6B5EFDC2D8978D87F8422A57C36C891318EA1FD983AB4D221",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 23,
+      "huella": "323E37C07A602E6EAFA84448BF243A390EE0A74905F062AC2F939931B778B0CB",
+      "num_serie": "PRUEBA-2026-0022",
+      "nif_emisor": "B87446670",
+      "cuota_total": "1.86",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "36.61",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "8CCE802ACB4B49137D073ED99DCA2BC92703FC7B019AFCE7AE22DEEF0BC9C366",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 24,
+      "huella": "EF9F4C147871F40559AD6387BD9A98ADA616C5C2642FB3515256C5C6823E0EB1",
+      "num_serie": "PRUEBA-2026-0023",
+      "nif_emisor": "B87446670",
+      "cuota_total": "0.98",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "25.36",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "323E37C07A602E6EAFA84448BF243A390EE0A74905F062AC2F939931B778B0CB",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 25,
+      "huella": "D7131354E067398784E879B7FF25D5B1CF93E7029CBEB31351A159AF31776EC0",
+      "num_serie": "PRUEBA-2026-0024",
+      "nif_emisor": "B87446670",
+      "cuota_total": "1.03",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "26.66",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "EF9F4C147871F40559AD6387BD9A98ADA616C5C2642FB3515256C5C6823E0EB1",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 26,
+      "huella": "0CF31D60102235F4B2D9E7F4447C62D079D3BE911DFF54D7DCCC105B690B3AF4",
+      "num_serie": "PRUEBA-2026-0025",
+      "nif_emisor": "B87446670",
+      "cuota_total": "2.04",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "41.29",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "D7131354E067398784E879B7FF25D5B1CF93E7029CBEB31351A159AF31776EC0",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 27,
+      "huella": "C32777C0D3BA202BB04ECE703CDBEB8D4716EAA22547D8EC7A31482B908FDE06",
+      "num_serie": "PRUEBA-2026-0026",
+      "nif_emisor": "B87446670",
+      "cuota_total": "1.13",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "29.26",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "0CF31D60102235F4B2D9E7F4447C62D079D3BE911DFF54D7DCCC105B690B3AF4",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 28,
+      "huella": "FE9E34935918C557D91614591CCC7013FCEB98F0140215CCDC17127BAB508C5A",
+      "num_serie": "PRUEBA-2026-0027",
+      "nif_emisor": "B87446670",
+      "cuota_total": "1.18",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "30.56",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "C32777C0D3BA202BB04ECE703CDBEB8D4716EAA22547D8EC7A31482B908FDE06",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 29,
+      "huella": "8769B7D151B005FAE937CBDD2AAE00B9567AFF3F94D5827A34AC5B4B772C1934",
+      "num_serie": "PRUEBA-2026-0028",
+      "nif_emisor": "B87446670",
+      "cuota_total": "2.22",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "45.97",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "FE9E34935918C557D91614591CCC7013FCEB98F0140215CCDC17127BAB508C5A",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 30,
+      "huella": "43DA2EC42675C21355B3AD1642A1F0D4858895D04FC7FEED11177E65D7358DF0",
+      "num_serie": "PRUEBA-2026-0029",
+      "nif_emisor": "B87446670",
+      "cuota_total": "1.28",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "33.16",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "8769B7D151B005FAE937CBDD2AAE00B9567AFF3F94D5827A34AC5B4B772C1934",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 31,
+      "huella": "01C8E7B1D7DBB023E982982B3D66A47F6DABDF35920F99320EDC17E4B8413FC1",
+      "num_serie": "PRUEBA-2026-0030",
+      "nif_emisor": "B87446670",
+      "cuota_total": "1.33",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "34.46",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "43DA2EC42675C21355B3AD1642A1F0D4858895D04FC7FEED11177E65D7358DF0",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 32,
+      "huella": "92CEF558686C3F44A24AAC5EDC83A1EE963A9EA5A1B9338CC70555374167AF89",
+      "num_serie": "PRUEBA-2026-0031",
+      "nif_emisor": "B87446670",
+      "cuota_total": "2.40",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "50.65",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "01C8E7B1D7DBB023E982982B3D66A47F6DABDF35920F99320EDC17E4B8413FC1",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 33,
+      "huella": "E437190A5B36F7F4F3FA13772B76E03E3E5905402561014987966FFAD17EB900",
+      "num_serie": "PRUEBA-2026-0032",
+      "nif_emisor": "B87446670",
+      "cuota_total": "1.43",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "37.06",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "92CEF558686C3F44A24AAC5EDC83A1EE963A9EA5A1B9338CC70555374167AF89",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 34,
+      "huella": "736A547FA10468D4903156EBB5E25D9F59F1B6F1DC240BEC19C5874BD5780803",
+      "num_serie": "PRUEBA-2026-0033",
+      "nif_emisor": "B87446670",
+      "cuota_total": "1.48",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "38.36",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "E437190A5B36F7F4F3FA13772B76E03E3E5905402561014987966FFAD17EB900",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 35,
+      "huella": "79CCFFBD1AEBEA8FE66EAA62DE4E405E83C114A1CF7B4E8F39B9E5E2CED8B2CC",
+      "num_serie": "PRUEBA-2026-0034",
+      "nif_emisor": "B87446670",
+      "cuota_total": "2.58",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "55.33",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "736A547FA10468D4903156EBB5E25D9F59F1B6F1DC240BEC19C5874BD5780803",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 36,
+      "huella": "AC8D9BB3A373FC401B1CC89C75D219C5F899F399E4B6DD6DCB6A9895C1C7848C",
+      "num_serie": "PRUEBA-2026-0035",
+      "nif_emisor": "B87446670",
+      "cuota_total": "1.58",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "40.96",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "79CCFFBD1AEBEA8FE66EAA62DE4E405E83C114A1CF7B4E8F39B9E5E2CED8B2CC",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 37,
+      "huella": "D6575913453AAA1DAC2E98E742773C048043C05B337A504EFB68FF4C73431795",
+      "num_serie": "PRUEBA-2026-0036",
+      "nif_emisor": "B87446670",
+      "cuota_total": "1.63",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "42.26",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "AC8D9BB3A373FC401B1CC89C75D219C5F899F399E4B6DD6DCB6A9895C1C7848C",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 38,
+      "huella": "024962A08FF58E5065BD89DC05CC9C9308C09C5B7B15871B1DD79194DD3D77D0",
+      "num_serie": "PRUEBA-2026-0037",
+      "nif_emisor": "B87446670",
+      "cuota_total": "2.76",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "60.01",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "D6575913453AAA1DAC2E98E742773C048043C05B337A504EFB68FF4C73431795",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 39,
+      "huella": "2657BB78FCA3A24A370B6E45B6840D6ED8BB6EED36DBF626CA8DA069022A4DC0",
+      "num_serie": "PRUEBA-2026-0038",
+      "nif_emisor": "B87446670",
+      "cuota_total": "1.73",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "44.86",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "024962A08FF58E5065BD89DC05CC9C9308C09C5B7B15871B1DD79194DD3D77D0",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 40,
+      "huella": "7CC7082E8AAFEEA796D4F8C805DDF87071B4A28F0AE6B7B2693491F3C956B3F9",
+      "num_serie": "PRUEBA-2026-0039",
+      "nif_emisor": "B87446670",
+      "cuota_total": "1.78",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "46.16",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "2657BB78FCA3A24A370B6E45B6840D6ED8BB6EED36DBF626CA8DA069022A4DC0",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 41,
+      "huella": "F8399DE5DE1F8F6A5137179CA07AF41E96325871879092323273956E7B2306A8",
+      "num_serie": "PRUEBA-2026-0040",
+      "nif_emisor": "B87446670",
+      "cuota_total": "2.94",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "64.69",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "7CC7082E8AAFEEA796D4F8C805DDF87071B4A28F0AE6B7B2693491F3C956B3F9",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 42,
+      "huella": "F7ED904DDB8DB4736671DA9DD8CE4E36AE88A0054FB38D322F4E96A2EFAB6ECE",
+      "num_serie": "PRUEBA-2026-0041",
+      "nif_emisor": "B87446670",
+      "cuota_total": "1.88",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "48.76",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "F8399DE5DE1F8F6A5137179CA07AF41E96325871879092323273956E7B2306A8",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 43,
+      "huella": "112D6D80063C7FC075FB5645D0DA974C9652D02E280EC1B6826709D7A183F8EC",
+      "num_serie": "PRUEBA-2026-0042",
+      "nif_emisor": "B87446670",
+      "cuota_total": "1.93",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "50.06",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "F7ED904DDB8DB4736671DA9DD8CE4E36AE88A0054FB38D322F4E96A2EFAB6ECE",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 44,
+      "huella": "43452F152C73D5B0CD59EC0AF0C5432AD2C0EEAC447B394A9E3D9B57158C9A64",
+      "num_serie": "PRUEBA-2026-0043",
+      "nif_emisor": "B87446670",
+      "cuota_total": "3.12",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "69.37",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "112D6D80063C7FC075FB5645D0DA974C9652D02E280EC1B6826709D7A183F8EC",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 45,
+      "huella": "AAE7234481DFC4C353216EFBBD764EED62D5AB2C3AE2938CDF4AA00B93A88602",
+      "num_serie": "PRUEBA-2026-0044",
+      "nif_emisor": "B87446670",
+      "cuota_total": "2.03",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "52.66",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "43452F152C73D5B0CD59EC0AF0C5432AD2C0EEAC447B394A9E3D9B57158C9A64",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 46,
+      "huella": "77B88BBF7BC70E3600B91274D70F6A74831887A3E460CB0EFDBCB6D0F3FD7123",
+      "num_serie": "PRUEBA-2026-0045",
+      "nif_emisor": "B87446670",
+      "cuota_total": "2.08",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "53.96",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "AAE7234481DFC4C353216EFBBD764EED62D5AB2C3AE2938CDF4AA00B93A88602",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 47,
+      "huella": "5E39E981077C6742CA58E2ABE1B90F4D9934D08FE9AFA87E074CB2D8105E83AA",
+      "num_serie": "PRUEBA-2026-0046",
+      "nif_emisor": "B87446670",
+      "cuota_total": "3.30",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "74.05",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "77B88BBF7BC70E3600B91274D70F6A74831887A3E460CB0EFDBCB6D0F3FD7123",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 48,
+      "huella": "C19606429D9393BB6C303DB0F96C1C43570CDDD1C0C4DD94A4C4F71BA42E56CD",
+      "num_serie": "PRUEBA-2026-0047",
+      "nif_emisor": "B87446670",
+      "cuota_total": "2.18",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "56.56",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "5E39E981077C6742CA58E2ABE1B90F4D9934D08FE9AFA87E074CB2D8105E83AA",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 49,
+      "huella": "A722EFD66F967D956F89EE6276B552420C90FC3F035873E68F6E03B011CFA0ED",
+      "num_serie": "PRUEBA-2026-0048",
+      "nif_emisor": "B87446670",
+      "cuota_total": "2.23",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "57.86",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "C19606429D9393BB6C303DB0F96C1C43570CDDD1C0C4DD94A4C4F71BA42E56CD",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 50,
+      "huella": "B099FAC198C4A9145D4AF1F35898E89A23B990DB52DAA60D3181C333DCB99752",
+      "num_serie": "PRUEBA-2026-0049",
+      "nif_emisor": "B87446670",
+      "cuota_total": "3.48",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "78.73",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "A722EFD66F967D956F89EE6276B552420C90FC3F035873E68F6E03B011CFA0ED",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 51,
+      "huella": "272EBFD6C073F12488BAFCED9086DCD7901D56E1172F8F59076AEA353A751E2D",
+      "num_serie": "PRUEBA-2026-0050",
+      "nif_emisor": "B87446670",
+      "cuota_total": "2.33",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "60.46",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "B099FAC198C4A9145D4AF1F35898E89A23B990DB52DAA60D3181C333DCB99752",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 52,
+      "huella": "0DD82A51534244BFCC4E43AA550F322FBB7934BF22A87B5D121CE71336B46F83",
+      "num_serie": "PRUEBA-2026-0051",
+      "nif_emisor": "B87446670",
+      "cuota_total": "2.38",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "61.76",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "272EBFD6C073F12488BAFCED9086DCD7901D56E1172F8F59076AEA353A751E2D",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 53,
+      "huella": "44139518CF3B0F4209F3BEA277D1D0925C9457D1FAA27AF370F596EEFCD511F8",
+      "num_serie": "PRUEBA-2026-0052",
+      "nif_emisor": "B87446670",
+      "cuota_total": "3.66",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "83.41",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "0DD82A51534244BFCC4E43AA550F322FBB7934BF22A87B5D121CE71336B46F83",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 54,
+      "huella": "FF588918F2CD41C95E16D2B7551D670254586E70E4E21D2C056EFF891F01F129",
+      "num_serie": "PRUEBA-2026-0053",
+      "nif_emisor": "B87446670",
+      "cuota_total": "2.48",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "64.36",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "44139518CF3B0F4209F3BEA277D1D0925C9457D1FAA27AF370F596EEFCD511F8",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 55,
+      "huella": "E9D5872AF1246593A91C8D8C9478BDA78A2D09889FC1AD9F9AC6669C7B41C90A",
+      "num_serie": "PRUEBA-2026-0054",
+      "nif_emisor": "B87446670",
+      "cuota_total": "2.53",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "65.66",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "FF588918F2CD41C95E16D2B7551D670254586E70E4E21D2C056EFF891F01F129",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 56,
+      "huella": "841619465380948636768A2CA272C99CF9C6134AE88D73EF3D4CB9A169F93675",
+      "num_serie": "PRUEBA-2026-0055",
+      "nif_emisor": "B87446670",
+      "cuota_total": "38.40",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "998.40",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "E9D5872AF1246593A91C8D8C9478BDA78A2D09889FC1AD9F9AC6669C7B41C90A",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 57,
+      "huella": "D7C3489A39950D317A9002B295E576E7965BE0AF61B709176E68957705076BAE",
+      "num_serie": "PRUEBA-2026-0056",
+      "nif_emisor": "B87446670",
+      "cuota_total": "38.48",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "F1",
+      "importe_total": "1000.48",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "841619465380948636768A2CA272C99CF9C6134AE88D73EF3D4CB9A169F93675",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 58,
+      "huella": "486FCBCCBF6DFE8366412C2D6EE26A1990CF2C9230D879698EBAF5984AAC01D3",
+      "num_serie": "PRUEBA-R2026-0002",
+      "nif_emisor": "B87446670",
+      "cuota_total": "-0.05",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "R1",
+      "importe_total": "-1.30",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "D7C3489A39950D317A9002B295E576E7965BE0AF61B709176E68957705076BAE",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 59,
+      "huella": "05955B98449DFF6A456F82F880DCBD584E8C93CD857F5514BEFD2B5B2E5E01F5",
+      "num_serie": "PRUEBA-R2026-0003",
+      "nif_emisor": "B87446670",
+      "cuota_total": "-0.13",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "R1",
+      "importe_total": "-3.26",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "486FCBCCBF6DFE8366412C2D6EE26A1990CF2C9230D879698EBAF5984AAC01D3",
+      "fecha_expedicion": "14-11-2026"
+    },
+    {
+      "id": 60,
+      "huella": "F34A845B723893A226A1F11E91297DD47CB45F805B558FEE2A0C84E621728ADC",
+      "num_serie": "PRUEBA-R2026-0004",
+      "nif_emisor": "B87446670",
+      "cuota_total": "0.03",
+      "version_sif": "SIF 0.3.0 (sin declaración)",
+      "tipo_factura": "R1",
+      "importe_total": "0.58",
+      "tipo_registro": "alta",
+      "fecha_hora_gen": "2026-11-14T07:29:01+01:00",
+      "huella_anterior": "05955B98449DFF6A456F82F880DCBD584E8C93CD857F5514BEFD2B5B2E5E01F5",
+      "fecha_expedicion": "14-11-2026"
+    }
+  ],
+  "T-INA-base": [
+    {
+      "delete from public.sif_facturas": "FACTURA_INALTERABLE: una factura emitida no se cambia ni se borra; se corrige con una rectificativa"
+    },
+    {
+      "update public.sif_facturas set total = 1, fecha = fecha - 1, numero = 9999": "FACTURA_INALTERABLE: una factura emitida no se cambia ni se borra; se corrige con una rectificativa"
+    },
+    {
+      "delete from public.sif_registros": "FACTURA_INALTERABLE: una factura emitida no se cambia ni se borra; se corrige con una rectificativa"
+    },
+    {
+      "update public.sif_registros set importe_total = '1.00'": "FACTURA_INALTERABLE: una factura emitida no se cambia ni se borra; se corrige con una rectificativa"
+    },
+    {
+      "update public.sif_contadores set ultimo = ultimo - 1": "FACTURA_INALTERABLE: una factura emitida no se cambia ni se borra; se corrige con una rectificativa"
+    },
+    {
+      "truncate public.sif_registros cascade": "FACTURA_INALTERABLE: una factura emitida no se cambia ni se borra; se corrige con una rectificativa"
+    }
+  ],
+  "regs_antes": 5,
+  "regs_despues": 60,
+  "T-HASH-07-huso": [
+    "2027-01-15T11:00:00+01:00",
+    "2027-07-15T12:00:00+02:00",
+    "2027-03-28T01:59:59+01:00",
+    "2027-03-28T03:00:00+02:00",
+    "2027-10-31T02:59:59+02:00",
+    "2027-10-31T02:00:00+01:00"
+  ],
+  "T-HASH-06": {
+    "ok": true,
+    "recalculadas": 55,
+    "distintas": []
+  },
+  "T-HASH-07-importes": {
+    "ok": true,
+    "negativos": [
+      "PRUEBA-R2026-0002 -1.30",
+      "PRUEBA-R2026-0003 -3.26"
+    ]
+  }
+}
