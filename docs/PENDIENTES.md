@@ -108,6 +108,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 
 ## Captar clientes nuevos (empezado el 12/11/2026)
 - 🟡 14/11: **Tarjeta virtual** publicada (normal v316, web `/tarjeta/`). Falta: que Fernando la pruebe con un cliente y diga si cambia algo del texto; al tener el dominio, cambiar la redirección de `/tarjeta` en `src/worker.js`. Idea si la pide: imprimir el QR en pegatina o en la furgoneta.
+  - 14/11: a Fernando **no le gusta que salga «fernandosanzalba» en el enlace** (es el subdominio de la cuenta de Cloudflare, sale en las 3 direcciones). Decidió **esperar al dominio propio** (no cambiar el subdominio: rompería la app instalada, sesiones y enlaces enviados). Al tener el dominio: tarjeta en `www…/tarjeta/` y cambiar `URL_TARJETA` en `public/index.html` y la redirección en `src/worker.js`. Si se cambia el subdominio algún día, hacerlo antes del arranque real.
 - ✔️ 12/11: «Sin pedido mínimo · Madrid y Segovia» publicado (v218).
 - ✔️ 12/11: migración `20261112_web_captacion.sql` aplicada con Fernando («listo») y probada (guarda contacto + aviso, no repite teléfono, rechaza teléfono malo y robots). El formulario ya funciona.
 - 🟡 Fernando revisa los textos de la página (pruebas: `/nuevos-clientes`) y graba un **vídeo de 1 minuto** en Mercamadrid.
