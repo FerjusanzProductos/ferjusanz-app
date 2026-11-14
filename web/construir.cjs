@@ -121,6 +121,7 @@ const ZONAS = [
 const PREGUNTAS = [
   ['¿Cómo solicito precio o tarifa?', 'Escríbanos por WhatsApp al 609 100 690 o al 609 567 354, o llame al 91 763 21 86. Los precios de la fruta y la verdura cambian cada día según el mercado, por eso le pasamos el del día y una tarifa ajustada a su volumen de consumo.'],
   ['¿Dónde reparten?', 'En Madrid capital, la zona norte (Alcobendas, San Sebastián de los Reyes, Tres Cantos), el noroeste (Aravaca, Pozuelo, Majadahonda, Las Rozas) y Segovia, con nuestros propios camiones y furgonetas refrigerados. ¿No ve su localidad? Llámenos y le decimos si pasamos cerca.'],
+  ['¿Exportan fuera de España?', 'Hay posibilidad de exportar al extranjero. Llámenos o escríbanos por WhatsApp y lo vemos según el producto y el destino.'],
   ['¿Hay pedido mínimo?', 'No. Pida lo que necesite, aunque sea poco.'],
   ['¿Hasta qué hora puedo pedir?', 'Hasta la tarde anterior al reparto, por WhatsApp o por teléfono. También puede dejar pedidos fijos para ciertos días de la semana.'],
   ['¿Venden a particulares?', 'No. Trabajamos con hostelería, colegios, residencias, escuelas infantiles, catering, fruterías y otros negocios con cocina.'],
