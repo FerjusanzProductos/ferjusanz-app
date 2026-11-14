@@ -112,6 +112,8 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - ✔️ 12/11: publicado (v213). Dirección para anuncios y QR: `https://ferjusanz-productos.fernandosanzalba.workers.dev/nuevos-clientes`.
 - ⚪ Siguiente: anuncio en Facebook/Instagram (cuenta publicitaria de Meta, 5–10 €/día, solo hostelería y colectividades de Madrid norte/noroeste y Segovia) y píxel de Meta en la página.
 - ⚪ Seguimiento automático por correo a los 2, 5 y 10 días (con el Gmail de `albaranes-correo`).
+- ✔️ 14/11: **Prospectos completados y 13 nuevos** (skill `lead-finder`): 56 en la app, 8 con correo (todos colegios + Casa Duque). Los restaurantes casi nunca publican correo: con ellos, llamar o ir en persona.
+- ⚪ Siguiente: correos a los 8 con correo, con el estilo de Fernando (skill `outreach-composer`, solo borradores; los envía Fernando). Para Sanitas y El Urogallo, buscar un solo contacto de compras del grupo.
 - 🟡 13/11: **Coffee, Books and Vibes** (Celia, 699965897): propuesta y WhatsApp preparados; Fernando los envía. Antes, confirmar en la web de Makro que sus precios siguen igual. Volver a llamar el lunes 16/11.
 
 ## Facturación 2027: lo que falta (revisión del texto de ChatGPT, 12/11/2026)
