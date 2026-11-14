@@ -2,6 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 14/11/2026
+- **Artículos 1 y 2 del plan de contenidos** (Fernando: «Sí»): «Calendario de frutas y verduras de temporada mes a mes» y «Huevos para hostelería: tamaños, categorías y qué significa el código», en `web/paginas.json`, publicados en `ferjusanz-web` y anotados en `web/DIARIO.md` para que la tarea automática no los repita. Comprobados en tamaño de móvil. El de huevos no cita la norma de la mayonesa porque no se pudo comprobar en el BOE desde el entorno: dice «sigue tu plan de higiene (APPCC)». Falta una foto propia de los huevos.
 - **Base de pruebas a una organización gratuita aparte** (siguiente punto de la separación): Claude creó por la API la organización **`Ferjusanz-Pruebas`** (`ngreildxpaizvxuohnxf`, plan gratuito, 0 €). El cambio del proyecto `ferjusanz-pruebas` de organización **solo se puede hacer desde el panel de Supabase** (la API no tiene esa opción): lo hace Fernando en Ajustes del proyecto → General → «Transfer project». Según la guía oficial, no cambia la dirección, las claves ni los datos; hace falta ser dueño de la organización de origen y no tener conectado GitHub en el proyecto. Al ser de gratis a gratis, sin corte. Después, Claude comprueba que la API sigue entrando en la base de pruebas.
 
 ## 13/11/2026
