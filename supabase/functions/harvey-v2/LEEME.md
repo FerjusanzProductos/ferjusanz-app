@@ -27,4 +27,4 @@ Igual que Harvey: cada pregunta son 1–3 llamadas a la IA (con Opus 5.5 y cach�
 con `HARVEY_MODEL=claude-sonnet-5-5`, bastante menos). Confirmar añade un mensaje más (≈1 céntimo).
 No hay costes fijos nuevos ni cambios en la base de datos. Investigar una empresa: 1 céntimo por búsqueda (máx. 5) más lo leído, en total unos 5–20 céntimos.
 
-**Ojo (13/11/2026):** la app naranja llama a las funciones del proyecto de pruebas (`pbeuxbwbpmlanbhhnpgy`), que aún no tiene `harvey-v2-pruebas` ni clave de Anthropic. La copia `harvey-v2-pruebas` del proyecto real ya no la usa nadie.
+**Ojo (13/11/2026):** la app naranja llama a las funciones del proyecto de pruebas (`pbeuxbwbpmlanbhhnpgy`), que ya tiene `harvey-v2-pruebas` (subida el 14/11/2026) pero aún no la clave de Anthropic. La copia `harvey-v2-pruebas` del proyecto real ya no la usa nadie.
