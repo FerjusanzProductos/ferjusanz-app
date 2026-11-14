@@ -27,7 +27,15 @@ Solo productos **activos** del catálogo (leer, nunca escribir):
 
 ## 3. Un artículo nuevo para el blog
 - Tema: el siguiente de **`docs/PLAN_CONTENIDOS_WEB.md`** que no esté ya publicado (`grep '"h1"' web/paginas.json` y `web/DIARIO.md`). Cuando se acaben: temporada del mes, ideas para restaurantes, colectividades, fruterías, conservación y mermas, variedades, cuarta gama, huevos. Los temas con ⚠️ (normas, leyes): leer antes la fuente oficial (BOE, Comunidad de Madrid, AESAN) y enlazarla; si no se puede comprobar, saltar al siguiente.
-- Para clientes profesionales de Madrid (hostelería, colectividades, fruterías). Español de España, tuteo, 500–800 palabras, `<h2>` por apartados, listas, nada de relleno.
+- Para clientes profesionales de Madrid (hostelería, colectividades, fruterías). Español de España, tuteo, 600–1.000 palabras, `<h2>` por apartados.
+- **Que Google lo valore y que sirva de verdad** (Fernando, 14/11/2026: «que cuenten cosas que nadie cuente y no se note la IA»). Modelo: los artículos del calendario de temporada y de huevos (14/11/2026).
+  - Antes de escribir, buscar en Google qué cuentan los 5 primeros resultados del tema y **aportar al menos 2 cosas que ellos no digan** y que le sirvan a una cocina (cuánto pedir, cuándo, cómo guardarlo, qué se estropea, qué cambia en el coste). Si no hay nada nuevo que contar, cambiar de tema.
+  - Lo que cuenta Fernando en `web/LO_QUE_CUENTA_FERNANDO.md` va **primero**: es lo que nadie más tiene.
+  - Cada consejo, con su **porqué** y su **para qué** en la cocina («pídelo firme si no lo usas en dos días, porque sigue madurando»).
+  - **Escribir como habla alguien del mercado**, no como un folleto. Prohibido: «En el mundo de…», «descubre», «no cabe duda», «sin lugar a dudas», «es fundamental», «en definitiva», «en este artículo te contamos», «te lo explicamos de forma sencilla», «¡…!» de anuncio, preguntas retóricas en cadena y finales que resumen todo.
+  - Sobre todo párrafos; listas solo cuando de verdad son una lista. Poca negrita (como mucho una por párrafo). Frases de distinto largo.
+  - Que el título diga lo que el lector va a ganar, no solo el tema («…y cuándo pedirla madura»).
+  - Releer el texto entero antes de publicar y quitar todo lo que suene a relleno o a cosa que diría cualquiera.
 - Palabras que busca la gente (p. ej. «proveedor de fruta para restaurantes en Madrid») en el título, la descripción (≤ 160 letras) y un `<h2>`, de forma natural.
 - **Nada inventado**: ni precios, ni cifras, ni clientes, ni premios; de salud, solo lo general y sabido. De Ferjusanz, solo lo de `web/LEEME.md`.
 - Último párrafo: invitar a pedir precio por WhatsApp.
