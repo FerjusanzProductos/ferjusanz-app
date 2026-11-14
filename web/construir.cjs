@@ -210,7 +210,7 @@ const GALERIAS = {
   '/blog/frutas-de-temporada-otono/': ['granada-mollar-de-elche', 'niscalos'],
 };
 const galeria = ruta => GALERIAS[ruta] ? `<section class="bloque bloque-crema"><div class="envoltura">
-  <div class="bloque-cabeza"><div><p class="antetitulo">Fotos reales</p><h2>Hoy en nuestro puesto de Mercamadrid</h2></div><a class="enlace" href="/novedades/">Más fotos ${I.flecha}</a></div>
+  <div class="bloque-cabeza"><div><h2>Hoy en nuestro puesto de Mercamadrid</h2></div><a class="enlace" href="/novedades/">Más fotos ${I.flecha}</a></div>
   <div class="novedades">${GALERIAS[ruta].map(n => `<figure class="novedad"><img src="/fotos/${n}.jpg" alt="${esc(FOTO[n])} en el puesto de Ferjusanz en Mercamadrid" loading="lazy" width="600" height="600"><figcaption><strong>${esc(FOTO[n])}</strong></figcaption></figure>`).join('')}</div>
 </div></section>` : '';
 
@@ -236,11 +236,10 @@ function plantilla({ ruta, titulo, descripcion, imagen, cuerpo, datos = [], tipo
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="${F}2019/10/cropped-logo-144px-32x32.jpg" sizes="32x32">
 <link rel="apple-touch-icon" href="${F}2019/10/cropped-logo-144px-180x180.jpg">
-<meta name="theme-color" content="#5a0d10">
-<link rel="preload" href="/fuentes/fraunces-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fuentes/figtree-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<meta name="theme-color" content="#161210">
+<link rel="preload" href="/fuentes/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fuentes/barlow-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/estilo.css">
-<script>if(!matchMedia('(prefers-reduced-motion: reduce)').matches){var h=document.documentElement;h.classList.add('js-anim');setTimeout(function(){if(!window.gsap)h.classList.remove('js-anim')},3000)}</script>
 ${datos.map(d => `<script type="application/ld+json">${JSON.stringify(d)}</script>`).join('\n')}
 </head>
 <body>
@@ -260,7 +259,7 @@ ${cuerpo}
 <section class="pedir" id="pedir-precio">
   <div class="envoltura pedir-in">
     <div>
-      <p class="antetitulo">Precio del día</p>
+      
       <h2>¿Quieres precios? Escríbenos por WhatsApp.</h2>
       <p>Dinos qué necesitas y para qué negocio. Te pasamos el precio del mercado de hoy, sin compromiso.</p>
     </div>
@@ -299,10 +298,6 @@ ${cuerpo}
   </details>
   <a class="llamar" href="tel:+34917632186">${I.tel}<span>Llamar</span></a>
 </div>
-<script src="/js/gsap.min.js" defer></script>
-<script src="/js/ScrollTrigger.min.js" defer></script>
-<script src="/js/lenis.min.js" defer></script>
-<script src="/js/animaciones.js" defer></script>
 </body>
 </html>
 `;
@@ -334,7 +329,7 @@ function inicio(p) {
   const cuerpo = `
 <section class="heroe" style="--foto:url(/fotos/tomate-la-campechana.jpg)">
   <div class="envoltura heroe-in">
-    <p class="antetitulo">Mayoristas en Mercamadrid · 3.ª generación</p>
+    
     <h1>Tu proveedor de fruta, verdura, patatas y huevos en Madrid</h1>
     <p class="entradilla">Para restaurantes, bares, colegios, residencias y fruterías. Elegido cada mañana por la misma familia desde hace ${ANIOS}.</p>
     <div class="heroe-acciones">
@@ -356,7 +351,7 @@ function inicio(p) {
 
 <section class="bloque">
   <div class="envoltura">
-    <div class="bloque-cabeza centrada"><div><p class="antetitulo">¿Te suena?</p><h2>Comprar género no debería darte dolores de cabeza</h2></div></div>
+    <div class="bloque-cabeza centrada"><div><h2>Comprar género no debería darte dolores de cabeza</h2></div></div>
     <div class="dolores">
       <div class="dolor"><p class="dolor-mal">El género llega flojo y lo pagas como bueno.</p><p class="dolor-bien">${I.hoja}<span><strong>Elegido caja a caja</strong> a primera hora en Mercamadrid, y parte de cosecha propia.</span></p></div>
       <div class="dolor"><p class="dolor-mal">Cinco proveedores, cinco repartos y cinco albaranes.</p><p class="dolor-bien">${I.camion}<span><strong>Todo en un pedido</strong>: fruta, verdura, patata pelada, huevos y setas.</span></p></div>
@@ -367,21 +362,21 @@ function inicio(p) {
 
 <section class="bloque bloque-crema" id="catalogo">
   <div class="envoltura">
-    <div class="bloque-cabeza"><div><p class="antetitulo">Catálogo</p><h2>Lo que te llevamos a la cocina</h2></div><a class="enlace" href="/productos/">Ver catálogo completo ${I.flecha}</a></div>
+    <div class="bloque-cabeza"><div><h2>Lo que te llevamos a la cocina</h2></div><a class="enlace" href="/productos/">Ver catálogo completo ${I.flecha}</a></div>
     <div class="productos">${FAMILIAS.slice(0, 8).map(tarjetaFamilia).join('\n')}</div>
   </div>
 </section>
 
 <section class="bloque">
   <div class="envoltura">
-    <div class="bloque-cabeza"><div><p class="antetitulo">Fotos reales, sin retoques</p><h2>Así está hoy nuestro puesto en Mercamadrid</h2></div><a class="enlace" href="/novedades/">Ver más fotos ${I.flecha}</a></div>
+    <div class="bloque-cabeza"><div><h2>Así está hoy nuestro puesto en Mercamadrid</h2></div><a class="enlace" href="/novedades/">Ver más fotos ${I.flecha}</a></div>
     <div class="mosaico">${mosaico.map((n, i) => `<a href="/novedades/" class="mosaico-${i}"><img src="/fotos/${n}.jpg" alt="${esc(FOTO[n])} en el puesto de Ferjusanz" loading="lazy" width="600" height="600"></a>`).join('')}</div>
   </div>
 </section>
 
 <section class="bloque bloque-crema">
   <div class="envoltura">
-    <div class="bloque-cabeza"><div><p class="antetitulo">Para tu negocio</p><h2>Trabajamos para quien cocina y vende cada día</h2></div></div>
+    <div class="bloque-cabeza"><div><h2>Trabajamos para quien cocina y vende cada día</h2></div></div>
     <div class="sectores">${SECTORES.map(s => `<a class="sector" href="${s.ruta}"><span class="sector-foto"><img src="${s.foto}" alt="" loading="lazy" width="600" height="400"></span><strong>${s.nombre}</strong><span>${s.texto}</span><em>Ver cómo trabajamos ${I.flecha}</em></a>`).join('')}</div>
   </div>
 </section>
@@ -393,7 +388,7 @@ function inicio(p) {
       <img src="/fotos/tomate-de-temporada.jpg" alt="Caja de tomate de temporada en el puesto de Ferjusanz" loading="lazy" width="619" height="1100">
     </div>
     <div>
-      <p class="antetitulo">Nuestra historia</p>
+      
       <h2>Tres generaciones alegrando la mesa de Madrid</h2>
       <p>Empezamos con las patatas y las cebollas hace ${ANIOS}. El abuelo, luego el padre y hoy el hijo: la misma familia, el mismo trato y la misma manera de elegir el género.</p>
       <p>Lo que no cultivamos nosotros lo escogemos a primera hora en Mercamadrid, y sale en nuestros camiones refrigerados hacia tu cocina.</p>
@@ -405,7 +400,7 @@ function inicio(p) {
 
 <section class="bloque bloque-granate">
   <div class="envoltura">
-    <div class="bloque-cabeza centrada"><div><p class="antetitulo">Así de fácil</p><h2>Tu primer pedido, en tres pasos</h2></div></div>
+    <div class="bloque-cabeza centrada"><div><h2>Tu primer pedido, en tres pasos</h2></div></div>
     <ol class="pasos">
       <li><span>1</span><strong>Nos escribes</strong><p>Por WhatsApp: qué necesitas, cuánto y para cuándo.</p></li>
       <li><span>2</span><strong>Te pasamos el precio de hoy</strong><p>El del mercado de esa mañana. Sin compromiso.</p></li>
@@ -417,14 +412,14 @@ function inicio(p) {
 
 <section class="bloque">
   <div class="envoltura preguntas-in">
-    <div><p class="antetitulo">Preguntas frecuentes</p><h2>Lo que nos preguntan antes del primer pedido</h2><p class="entradilla">¿Otra duda? Escríbenos y te contestamos nosotros, no un robot.</p></div>
+    <div><h2>Lo que nos preguntan antes del primer pedido</h2><p class="entradilla">¿Otra duda? Escríbenos y te contestamos nosotros, no un robot.</p></div>
     <div class="preguntas">${PREGUNTAS.map(([q, r]) => `<details><summary>${q}</summary><p>${r}</p></details>`).join('')}</div>
   </div>
 </section>
 
 <section class="bloque bloque-crema">
   <div class="envoltura">
-    <div class="bloque-cabeza"><div><p class="antetitulo">Blog</p><h2>Temporadas, consejos y recetas</h2></div><a class="enlace" href="/blog/">Ver todos ${I.flecha}</a></div>
+    <div class="bloque-cabeza"><div><h2>Temporadas, consejos y recetas</h2></div><a class="enlace" href="/blog/">Ver todos ${I.flecha}</a></div>
     <div class="articulos">${articulos.slice(0, 3).map(tarjetaArticulo).join('')}</div>
   </div>
 </section>`;
@@ -492,7 +487,7 @@ function paginaTexto(p, opciones = {}) {
   <article class="texto">${opciones.antes || ''}${sinFotoRepetida}</article>
   <aside class="lateral">
     <div class="lateral-caja">
-      <p class="antetitulo">Precio del día</p>
+      
       <strong>Pídenos precio por WhatsApp</strong>
       ${botonesWA(`Hola, quería información: ${titulo}.`, 'apiladas')}
       <ul class="garantias"><li>${I.familia} 3.ª generación, ${ANIOS}</li><li>${I.camion} Reparto diario en Madrid</li><li>${I.reloj} ${HORARIO}</li></ul>

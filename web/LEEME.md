@@ -19,7 +19,7 @@ Web de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., sin WordPress, en Cloudflare (
 - `novedades.json`: fotos y avisos del almacén (página `/novedades/` y portada).
 - `construir.cjs`: diseño, catálogo (`FAMILIAS`), preguntas frecuentes, páginas nuevas y legales; genera `public/` y `archivos.generado.js`.
 - `anadir.cjs`: añade una novedad o un artículo (lo usa la tarea automática).
-- `public/estilo.css`: colores y aspecto. `public/fuentes/`: letras (Fraunces y Figtree, servidas desde la propia web).
+- `public/estilo.css`: colores y aspecto. `public/fuentes/`: letras (Barlow Condensed para títulos y Barlow para texto, servidas desde la propia web). Estilo «Sobrio de mercado» (14/11/2026): papel blanco roto, tinta casi negra, solo granate, esquinas rectas, sin sombras, líneas finas, casi sin movimiento.
 - `public/wp-content/`: fotos de la web antigua (mismas rutas). `fotos/`: copia de las fotos nuevas, que se sirven desde el almacén KV de Cloudflare `ferjusanz-web-fotos` en `/fotos/…` (así el Worker no crece).
 - `worker.js`: sirve la web. `PRUEBAS = true` → no la ve Google.
 - `TAREA_AUTOMATICA.md`: lo que hace la tarea programada cada 2 días. `DIARIO.md`: lo que ha publicado.
