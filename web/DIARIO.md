@@ -5,3 +5,4 @@ Una línea por publicación: fecha · novedades · artículo · fotos de Drive n
 - 14/11/2026 (a mano, sesión del plan) · Artículos: /blog/calendario-frutas-verduras-temporada-mes-a-mes/ y /blog/huevos-para-hosteleria-tamanos-categorias-codigo/ (temas 15 y 7 del plan, ya hechos) · Falta foto de huevos.
 - 14/11/2026 (a mano) · Diseño «Sobrio de mercado» · Páginas nuevas: /proveedor-de-frutas-y-verduras-para-hoteles-madrid/, …-colegios-madrid/, …-residencias-madrid/ y /productos/patata-pelada-para-hosteleria/ · Títulos y descripciones revisados.
 - 14/11/2026: artículo «Menú escolar saludable…» (RD 315/2025), pedido por Fernando.
+- 14/11/2026: artículo «Fruta y verdura en residencias de mayores…» (RD 950/2026), pedido por Fernando.
