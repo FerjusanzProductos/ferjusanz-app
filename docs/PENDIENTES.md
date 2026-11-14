@@ -113,7 +113,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
 - ⚪ Siguiente: anuncio en Facebook/Instagram (cuenta publicitaria de Meta, 5–10 €/día, solo hostelería y colectividades de Madrid norte/noroeste y Segovia) y píxel de Meta en la página.
 - ⚪ Seguimiento automático por correo a los 2, 5 y 10 días (con el Gmail de `albaranes-correo`).
 - ✔️ 14/11: **Prospectos completados y 13 nuevos** (skill `lead-finder`): 56 en la app, 8 con correo (todos colegios + Casa Duque). Los restaurantes casi nunca publican correo: con ellos, llamar o ir en persona.
-- ⚪ Siguiente: correos a los 8 con correo, con el estilo de Fernando (skill `outreach-composer`, solo borradores; los envía Fernando). Para Sanitas y El Urogallo, buscar un solo contacto de compras del grupo.
+- 🟡 14/11: **Correos a los 8 con correo preparados** (primer correo + 3 de seguimiento; página https://claude.ai/artifact/Voa8zmukh1GScZ81XYJDaH). Fernando los revisa y los envía él. Falta: 2-3 WhatsApp/correos suyos para afinar su forma de escribir (no hay en el Gmail de facturas). Para Sanitas y El Urogallo, buscar un solo contacto de compras del grupo.
 - 🟡 13/11: **Coffee, Books and Vibes** (Celia, 699965897): propuesta y WhatsApp preparados; Fernando los envía. Antes, confirmar en la web de Makro que sus precios siguen igual. Volver a llamar el lunes 16/11.
 
 ## Facturación 2027: lo que falta (revisión del texto de ChatGPT, 12/11/2026)
