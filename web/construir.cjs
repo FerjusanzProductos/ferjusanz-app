@@ -52,7 +52,7 @@ const FAMILIAS = [
   { id: 'cebollas', nombre: 'Cebollas y ajos', ruta: '/distribucion-y-venta-de-cebollas-madrid/', foto: F + '2019/10/distribucion-de-cebollas-en-madrid.jpg',
     lema: 'Con lo que empezó la familia.',
     lista: ['Cebolla en varios calibres', 'Cebolla dulce', 'Cebolla morada', 'Cebolleta', 'Chalota', 'Calçot', 'Ajo', 'Ajetes', 'Cebolla pelada', 'Ajo pelado'] },
-  { id: 'huevos', nombre: 'Huevos', ruta: '/productos/huevos/', foto: null,
+  { id: 'huevos', nombre: 'Huevos', ruta: '/productos/huevos/', foto: '/fotos/2026/11/huevos-gallina-caja.jpg',
     lema: 'Frescos, en el mismo reparto que la fruta.',
     lista: ['Huevos de gallina', 'Huevos de codorniz'] },
   { id: 'cuarta', nombre: 'Cuarta gama', ruta: '/distribucion-y-venta-de-productos-de-cuarta-gama-madrid/', foto: F + '2021/05/Conservacion_Frutas_Verdruas.jpg',
