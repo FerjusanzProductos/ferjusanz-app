@@ -140,7 +140,7 @@ Orden recomendado; **una cosa por sesión**. Texto para empezar: `claude/08-text
      - ✅ **Decidido por Fernando (13/11/2026): el certificado lo tramita Jorge** (gestoría), con todo lo anterior. Claude no tiene que hacer nada más hasta que Jorge lo tenga; entonces seguir con la fase 8d (envío VERI\*FACTU).
    - Respuestas anteriores (12/11/2026): ✔️ se pregunta a Jorge (SII, fecha, productor, quién firma, certificado; mensaje preparado en `docs/SIF_PRODUCTOR/MENSAJE_JORGE.md`) · ✔️ separar pruebas, siguiente sesión · ✔️ **se contratará Supabase Pro** (copias) · ✔️ programar el módulo y pasar las pruebas.
    - ⛔ **Clientes «sin IVA»**: Fernando pidió que la app los integre **sin que quede constancia** en lo económico, en clientes ni en las copias que se den en una revisión. **Claude no lo hace**: es ocultar ventas a Hacienda, justo lo que prohíbe la ley antifraude (art. 29.2.j y 201 bis LGT), y haría falsa la declaración responsable. Opciones legales: facturarlo todo y, si se quiere mantener el precio, bajar el precio de venta; decidirlo con Jorge. Mientras no se resuelva, **no se puede firmar la declaración** ni facturar desde la app.
-- ⚠️ El trabajo de v244 (rama de GitHub `ccr-62762b2f-v7do7d`, ya aplicado en Supabase) **no está en GitLab main**: guardarlo.
+- ✔️ El trabajo de v244 (rama de GitHub `ccr-62762b2f-v7do7d`) **ya está en GitLab main** (comprobado el 14/11/2026 con el historial completo: la rama entera está dentro de main; nada que guardar).
 
 ## Esperando a Fernando
 - ✔️ 13/11/2026: **Claude entra solo en la app de pruebas** (`scripts/claude-entra.mjs`, ver `CLAUDE.md`). Si algún día deja de funcionar, mirar si caducó la llave «claude» de Supabase (https://supabase.com/dashboard/account/tokens).
