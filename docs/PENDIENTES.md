@@ -98,6 +98,7 @@ _Mantener al día: al terminar una tarea, marcarla ✔️ y pasarla a HISTORIAL.
   - ✔️ 12/11/2026: 609 567 354 quitado de la factura y de los **albaranes** (v254 en PRUEBAS). Publicado (v255) y función `albaranes-correo` subida.
   - 🔴 **Fernando: sacar de Golden la lista de clientes en Excel** (código, nombre, NIF, dirección, CP, localidad) para que Claude cargue los NIF que faltan de una vez (80 de los que faltan tienen facturas en Golden en 2026). ✔️ Comprobación del NIF más flexible publicada (v257).
   - ✔️ 12/11/2026: NIF de 28 empresas buscados en internet y guardados. Quedan **70** (66 sin NIF).
+  - ✔️ 14/11/2026: comprobado que no se borró ningún NIF/dirección/CP (lo dice el historial); 9 NIF más recuperados. Quedan **50 activos sin NIF**. 🟡 Carmen: mirar CAPARRA (E-79314977 de la ficha antigua «Bar Caparra»), BOUZAS, CUENDA y HANDYMAN («🔎 Datos encontrados»).
   - 🟡 **Carmen: completar los clientes que quedan** sin NIF / dirección / CP (Clientes → «🧾 Faltan datos para facturar») antes del 1/1/2027.
   - ✔️ 12/11/2026: dirección (C/ Carare, 2 – 28033 Madrid, también domicilio fiscal), teléfono 91 763 21 86 y sello (cabecera de los albaranes de papel) confirmados por Fernando.
   - 🟡 Fernando (y Jorge): decidir los **clientes sin IVA**. Claude recomienda una sola app con todo facturado (ver punto 6 del plan); no se puede montar una parte de ventas que no llegue a facturación ni al contable.
