@@ -113,7 +113,7 @@ const SERVICIOS = [
 
 const PREGUNTAS = [
   ['¿Cómo solicito precio o tarifa?', 'Escríbanos por WhatsApp al 609 100 690 o al 609 567 354, o llame al 91 763 21 86. Los precios de la fruta y la verdura cambian cada día según el mercado, por eso le pasamos el del día y una tarifa ajustada a su volumen de consumo.'],
-  ['¿Reparten en toda Madrid?', 'Sí. Repartimos en Madrid capital y en la Comunidad de Madrid con nuestros propios camiones y furgonetas refrigerados, a restaurantes, hoteles, colegios, residencias y colectividades.'],
+  ['¿Dónde reparten?', 'En Madrid capital, la Comunidad de Madrid y Segovia, con nuestros propios camiones y furgonetas refrigerados, a restaurantes, hoteles, colegios, residencias y colectividades.'],
   ['¿Venden también huevos?', 'Sí, huevos de gallina y de codorniz, que le llevamos en el mismo reparto que la fruta y la verdura.'],
   ['¿Tienen patata pelada y producto cortado?', 'Sí: patata pelada en bastón, en dados, panadera, para ensaladilla o envasada al vacío, y cebolla y ajo pelados.'],
   ['¿De dónde viene el género?', 'Parte es de cosecha propia y de agricultores que conocemos desde hace años; el resto lo elegimos cada mañana en Mercamadrid.'],
@@ -192,10 +192,10 @@ const miga = (ruta, nombre, padre) => {
 const NEGOCIO = {
   '@context': 'https://schema.org', '@type': 'WholesaleStore', '@id': DOMINIO + '/#empresa',
   name: 'Ferjusanz', legalName: EMPRESA, taxID: NIF, url: DOMINIO + '/',
-  description: `Mayorista de fruta, verdura, patatas y huevos en Madrid para hostelería, colectividades y fruterías. Tercera generación, ${ANIOS} en el sector.`,
+  description: `Mayorista de fruta, verdura, patatas y huevos en Madrid y Segovia para hostelería, colectividades y fruterías. Tercera generación, ${ANIOS} en el sector.`,
   telephone: '+34917632186', email: EMAIL, logo: DOMINIO + F + '2019/10/logotipo.png', image: DOMINIO + F + '2019/10/proveedores-distribucion_crs2.jpg',
   address: { '@type': 'PostalAddress', streetAddress: 'C/ Carare, 2', postalCode: '28033', addressLocality: 'Madrid', addressRegion: 'Madrid', addressCountry: 'ES' },
-  areaServed: [{ '@type': 'City', name: 'Madrid' }, { '@type': 'AdministrativeArea', name: 'Comunidad de Madrid' }],
+  areaServed: [{ '@type': 'City', name: 'Madrid' }, { '@type': 'AdministrativeArea', name: 'Comunidad de Madrid' }, { '@type': 'AdministrativeArea', name: 'Provincia de Segovia' }],
   hasMap: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('Ferjusanz, Calle Carare 2, 28033 Madrid'),
   knowsAbout: ['Fruta al por mayor', 'Verdura al por mayor', 'Patata pelada', 'Huevos', 'Productos de cuarta gama', 'Suministro a hostelería', 'Suministro a colectividades'],
   openingHoursSpecification: [{ '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '08:00', closes: '18:00' }],
@@ -512,7 +512,7 @@ function paginaTexto(p, opciones = {}) {
       <p class="antetitulo">Precio del día</p>
       <strong>Solicite precio por WhatsApp</strong>
       ${botonesWA(`Hola, quería información: ${titulo}.`, 'apiladas')}
-      <ul class="garantias"><li>${I.familia} 3.ª generación, ${ANIOS}</li><li>${I.camion} Reparto diario en Madrid</li><li>${I.reloj} ${HORARIO}</li></ul>
+      <ul class="garantias"><li>${I.familia} 3.ª generación, ${ANIOS}</li><li>${I.camion} Reparto diario en Madrid y Segovia</li><li>${I.reloj} ${HORARIO}</li></ul>
     </div>
   </aside>
 </div></section>
@@ -556,13 +556,13 @@ function contacto(p) {
 <section class="bloque"><div class="envoltura contacto-in">
   <div class="contacto-caja"><h2>WhatsApp</h2>${botonesWA('Hola, quería información de precios para mi negocio.', 'apiladas')}</div>
   <div class="contacto-caja"><h2>Teléfono y correo</h2><p><a class="grande" href="tel:+34917632186">${TEL}</a></p><p><a href="mailto:${EMAIL}">${EMAIL}</a></p></div>
-  <div class="contacto-caja"><h2>Dónde estamos</h2><p>${DIRECCION}</p><p>${HORARIO}</p><p><strong>Zona de reparto</strong>: Madrid capital y Comunidad de Madrid.</p><p><a class="enlace" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Calle Carare 2, 28033 Madrid')}" rel="nofollow">Cómo llegar ${I.flecha}</a></p></div>
+  <div class="contacto-caja"><h2>Dónde estamos</h2><p>${DIRECCION}</p><p>${HORARIO}</p><p><strong>Zona de reparto</strong>: Madrid capital, Comunidad de Madrid y Segovia.</p><p><a class="enlace" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Calle Carare 2, 28033 Madrid')}" rel="nofollow">Cómo llegar ${I.flecha}</a></p></div>
 </div></section>`;
   return plantilla({ ruta: '/contacto/', titulo: p.title, descripcion: p.description, cuerpo, datos: [m.datos, NEGOCIO] });
 }
 
 function empresa(p) {
-  const antes = `<p class="entradilla">Somos ${EMPRESA}: una empresa familiar que va ya por la tercera generación, con ${ANIOS} vendiendo y repartiendo fruta, verdura, patatas y huevos en Madrid.</p>
+  const antes = `<p class="entradilla">Somos ${EMPRESA}: una empresa familiar que va ya por la tercera generación, con ${ANIOS} vendiendo y repartiendo fruta, verdura, patatas y huevos en Madrid y Segovia.</p>
 <h2>De padres a hijos</h2>
 <p>Lo que empezó con patatas y cebollas es hoy un catálogo de más de 200 productos frescos. Ha cambiado el tamaño, pero no la forma de trabajar: elegir el género uno mismo, cumplir con la hora de entrega y coger el teléfono cuando un cliente llama.</p>
 <h2>Cosecha propia</h2>
