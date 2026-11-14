@@ -32,7 +32,7 @@ Para la web nueva (`web/`, Worker `ferjusanz-web`). Los artículos se añaden en
 8. **Cuarta gama: cuándo compensa al restaurante comprar la verdura ya cortada**.
 
 ### B. Para colectividades (colegios, residencias, empresas)
-9. **Fruta en el comedor escolar: qué pide la norma de comedores saludables** (⚠️ comprobar el texto oficial antes de escribir).
+9. ✔️ (publicado 14/11/2026) **Fruta en el comedor escolar: qué pide la norma de comedores saludables** (⚠️ comprobar el texto oficial antes de escribir).
 10. **Menús de residencias: fruta y verdura fácil de comer para mayores** (texturas, temporada).
 11. **Cómo planificar la compra semanal de un comedor** (fruta de temporada, precio estable).
 

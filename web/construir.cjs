@@ -275,7 +275,7 @@ ${datos.map(d => `<script type="application/ld+json">${JSON.stringify(d)}</scrip
 </head>
 <body>
 <a class="saltar" href="#contenido">Saltar al contenido</a>
-<div class="aviso"><span>Género fresco cada día</span><span>Reparto en Madrid y Segovia</span><span class="solo-ancho">${HORARIO}</span><a href="tel:+34917632186">${TEL}</a></div>
+<div class="aviso"><span>Género fresco cada día</span><span>Reparto en Madrid y Segovia</span><span class="solo-ancho">${HORARIO}</span><span class="aviso-contacto"><a href="tel:+34917632186">${TEL}</a>${WHATSAPP.slice().reverse().map(w => `<a href="tel:+${w.num}">${w.ver}</a>`).join('')}<a href="mailto:${EMAIL}">${EMAIL}</a></span></div>
 <header class="cabecera">
   <div class="cabecera-in">
     <a href="/" class="logo" aria-label="Ferjusanz, inicio"><img src="${F}2019/10/logotipo.png" alt="Ferjusanz" width="185" height="32"></a>
