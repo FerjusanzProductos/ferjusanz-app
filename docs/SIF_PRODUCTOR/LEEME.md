@@ -86,7 +86,7 @@ Leyenda: ❌ no existe · ⚠️ existe algo pero no basta · ✅ comprobado
 | **Código QR** y frase «VERI\*FACTU» en cada factura | ❌ | — |
 | **Envío a la AEAT** (modo VERI\*FACTU) y control de respuestas | ❌ | — |
 | **Datos del sistema dentro de cada registro** (nombre, código, versión, nº instalación, productor) | ❌ | Ver punto 2 |
-| **Declaración responsable visible en el programa** | ❌ | Borrador en esta carpeta, sin firmar |
+| **Declaración responsable visible en el programa** | 🟡 pantalla y bloqueo hechos (14/11/2026); falta la firmada | Borrador en esta carpeta, sin firmar |
 | **Separar pruebas de producción** | ❌ | Las dos apps usan la **misma** base de datos (plan en `docs/PLAN_SEPARAR_PRUEBAS.md`, sin hacer) |
 | **No permitir ventas fuera de facturación** (Ley 11/2021) | ⚠️ | Clientes «sin IVA» con «Descuento por productos» igual al IVA: **hay que resolverlo con Jorge antes de facturar desde la app** |
 | Contenido de la factura (RD 1619/2012) | ⚠️ | Plan hecho; datos de empresa ya dados, falta comprobar con nota simple |
@@ -101,7 +101,7 @@ Ver `PRUEBAS_TECNICAS.md`: unas 40 pruebas en 10 bloques (huella, cadena, inalte
 ## 6. Declaración responsable
 Ver `DECLARACION_RESPONSABLE_BORRADOR.md`. Lleva todos los campos del art. 15 de la Orden según Claude (⚠️ cotejar con el BOE). Está marcada **BORRADOR · SIN FIRMAR · SIN VALOR**.
 
-## 7. Cómo guardar las declaraciones de cada versión y enseñarlas en la app (propuesta, nada creado)
+## 7. Cómo guardar las declaraciones de cada versión y enseñarlas en la app (✔️ hecho el 14/11/2026: SQL `20261125a_sif_declaraciones.sql` en las dos bases, pantalla en pruebas v319)
 **Guardar**:
 1. Cada versión firmada, en PDF, en GitLab: `docs/SIF_PRODUCTOR/declaraciones/SIF-1.0.0/declaracion-firmada.pdf` (+ su huella SHA-256 en un `.txt`). Nunca se borra una antigua.
 2. Copia en Supabase Storage (carpeta privada `sif-declaraciones/`) y una tabla de solo lectura. SQL **propuesto, no aplicado** (se enseñará y explicará antes, con Fernando delante):

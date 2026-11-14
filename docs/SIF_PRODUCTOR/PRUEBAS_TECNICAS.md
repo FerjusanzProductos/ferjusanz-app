@@ -79,10 +79,10 @@ _Una prueba solo se marca ✅ con la prueba hecha y su resultado guardado (captu
 ## J. Declaración responsable
 | ID | Qué | Cómo | Esperado | Estado |
 |---|---|---|---|---|
-| T-DEC-01 | Visible en la app | Más → ℹ️ Programa de facturación | Se ve la declaración de la versión en uso | ⬜ |
-| T-DEC-02 | Bloqueo sin declaración | Subir la versión del SIF sin declaración | La app no deja emitir | ⬜ |
+| T-DEC-01 | Visible en la app | Más → ℹ️ Programa de facturación | Se ve la declaración de la versión en uso | 🟡 14/11/2026: pantalla hecha (pruebas v319, la ven todos, también el preparador); dice «todavía no hay declaración firmada». Falta verla con el PDF firmado |
+| T-DEC-02 | Bloqueo sin declaración | Subir la versión del SIF sin declaración | La app no deja emitir | ✅ 14/11/2026: fingiendo la base real encendida: sin declaración «SIN_DECLARACION»; con ella, sí; versión nueva sin la suya, otra vez bloqueado (`pruebas/sif/declaracion.sql`, `resultados/2026-11-14_declaracion.json`) |
 | T-DEC-03 | Coincidencia | Comparar declaración con el XML enviado | Datos idénticos | ⬜ |
-| T-DEC-04 | Histórico | Ver versiones anteriores | Se ven todas, ninguna borrada | ⬜ |
+| T-DEC-04 | Histórico | Ver versiones anteriores | Se ven todas, ninguna borrada | ✅ 14/11/2026: la anterior sale en «Versiones anteriores»; no se pueden borrar ni añadir desde la app |
 
 **Batería automática** (14/11/2026): `NODE_USE_ENV_PROXY=1 node pruebas/sif/bateria.mjs [salida.json]` hace todo en la base de PRUEBAS dentro de una transacción que se deshace (no deja nada). Resultado: `pruebas/sif/resultados/2026-11-14_bateria.json`.
 

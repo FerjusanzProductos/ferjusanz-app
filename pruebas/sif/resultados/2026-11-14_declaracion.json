@@ -1,0 +1,36 @@
+{
+ "borrar": "FACTURA_INALTERABLE: una factura emitida no se cambia ni se borra; se corrige con una rectificativa",
+ "programa": {
+  "modo": "No VERI*FACTU (todavía no se envía a Hacienda)",
+  "codigo": "FJ",
+  "nombre": "FERJUSANZ APP",
+  "entorno": "pruebas",
+  "version": "SIF 0.5.0 (sin declaración)",
+  "productor": {
+   "nif": "B87446670",
+   "direccion": "C/ Carare, 2",
+   "localidad": "Madrid",
+   "razon_social": "FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L.",
+   "codigo_postal": "28033"
+  },
+  "anteriores": [],
+  "declaracion": null,
+  "fecha_inicio": "2027-01-01",
+  "emision_real_activa": false
+ },
+ "anteriores": [
+  {
+   "version": "SIF 0.5.0 (sin declaración)",
+   "firmante": "PRUEBA",
+   "pdf_ruta": "x.pdf",
+   "creado_at": "2026-11-14T10:19:54.989477+00:00",
+   "pdf_sha256": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+   "fecha_firma": "2026-11-14",
+   "lugar_firma": "Madrid"
+  }
+ ],
+ "app_inserta": "permission denied for table sif_declaraciones",
+ "version_nueva": "SIN_DECLARACION: la versión «SIF 9.9.9» del programa de facturación no tiene su declaración responsable firmada; no se puede facturar",
+ "con_declaracion": "F",
+ "sin_declaracion": "SIN_DECLARACION: la versión «SIF 0.5.0 (sin declaración)» del programa de facturación no tiene su declaración responsable firmada; no se puede facturar"
+}
