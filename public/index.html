@@ -2748,10 +2748,13 @@ function hojaTarjeta() {
   const msg = h('textarea', { rows: 6, style: 'width:100%;font-size:15px' });
   msg.value = 'Hola, soy ' + yo + ', de Ferjusanz (fruta, verdura, patatas y huevos en Mercamadrid). Aquí tiene quiénes somos, de dónde sale el género y cómo hacer el pedido:\n' + URL_TARJETA + '\n\nDígame qué productos le interesan y le paso el precio por WhatsApp.';
   const tel = h('input', { type: 'tel', inputmode: 'tel', placeholder: 'Su móvil (opcional): 600 000 000', style: 'width:100%' });
-  const abrirWa = () => {
+  /* pkg: 'com.whatsapp' (normal) o 'com.whatsapp.w4b' (Business). En Android se abre ESA app (wa.me abre la que el móvil tenga por defecto). */
+  const abrirWa = pkg => {
     let t = tel.value.replace(/\D/g, ''); if (t.length === 9) t = '34' + t;
     if (t && !/^\d{11,15}$/.test(t)) { toast('Revisa el móvil (9 cifras) o déjalo en blanco', 'err'); return; }
-    window.open('https://wa.me/' + t + '?text=' + encodeURIComponent(msg.value), '_blank'); // sin número, WhatsApp deja elegir el chat
+    const web = 'https://wa.me/' + t + '?text=' + encodeURIComponent(msg.value); // sin número, WhatsApp deja elegir el chat
+    if (!/Android/i.test(navigator.userAgent)) { window.open(web, '_blank'); return; }
+    location.href = 'intent://send?' + (t ? 'phone=' + t + '&' : '') + 'text=' + encodeURIComponent(msg.value) + '#Intent;scheme=whatsapp;package=' + pkg + ';S.browser_fallback_url=' + encodeURIComponent(web) + ';end';
   };
   const copiar = async () => { try { await navigator.clipboard.writeText(msg.value); toast('Mensaje copiado: pégalo en WhatsApp', 'ok'); } catch (e) { msg.select(); toast('Mantén pulsado el texto para copiarlo', 'err'); } };
   const B = (cls, t, f) => h('button', { class: cls, style: 'width:100%;min-height:50px;margin-top:8px', onclick: f }, t);
@@ -2761,7 +2764,8 @@ function hojaTarjeta() {
       h('div', { class: 'sub' }, 'Que lo escanee con la cámara del móvil (o se lo pase a su jefe).')),
     h('label', { class: 'campo' }, 'Mensaje', msg),
     h('label', { class: 'campo' }, 'Móvil de la persona', tel),
-    B('guardar', '💬 Abrir WhatsApp con el mensaje', abrirWa),
+    B('guardar', '💬 Enviar por WhatsApp', () => abrirWa('com.whatsapp')),
+    B('ghost', '💼 Enviar por WhatsApp Business', () => abrirWa('com.whatsapp.w4b')),
     B('ghost', '📋 Copiar mensaje', copiar),
     B('ghost', '👀 Ver la tarjeta', () => window.open(URL_TARJETA, '_blank'))));
 }
