@@ -15,6 +15,12 @@ Para la web nueva (`web/`, Worker `ferjusanz-web`). Los artículos se añaden en
 
 ## Temas propuestos (por orden de interés)
 
+### Primero: los que salen de lo que cuenta Fernando (14/11/2026, ver `web/LO_QUE_CUENTA_FERNANDO.md`)
+- **Cómo cuadrar el postre del menú del día con la fruta más barata de la semana** (error típico: no preguntar qué está mejor de precio y no adaptar el postre).
+- **Una patata que valga para todo, y cuándo compensa la patata pelada.** (Sustituye al tema 6.)
+- **Fruta para colegios y residencias: por qué en calibres pequeños** (manzana golden, pera conferencia) **y verdura para cremas y purés.** (Junta los temas 10 y 11.)
+- **Cómo elige un mayorista la fruta en Mercamadrid: la calidad manda.** (Va con el tema 12.)
+
 ### A. Para hostelería (lo más rentable)
 1. **Cómo elegir proveedor de fruta y verdura para tu restaurante en Madrid** (qué preguntar: horario de reparto, pedido mínimo, cambio de género que llega mal). → enlaza a Distribución.
 2. **Cuánta merma tiene cada verdura y cómo calcular el coste real del plato** (patata, cebolla, lechuga, alcachofa…). Muy buscado por cocineros.
