@@ -350,7 +350,7 @@ function inicio(p) {
 <section class="heroe" style="--foto:url(/fotos/tomate-la-campechana.jpg)">
   <div class="envoltura heroe-in">
     <p class="antetitulo">Mayorista hortofrutícola · Mercamadrid</p>
-    <h1>Proveedor mayorista de fruta y verdura para hostelería y colectividades en Madrid</h1>
+    <h1><span class="h1-pre">Proveedor mayorista de</span> <span class="h1-main">patatas, fruta y verdura</span> <span class="h1-post">para hostelería y colectividades en Madrid</span></h1>
     <p class="entradilla">Abastecemos a restaurantes, hoteles, colegios, residencias y empresas de restauración colectiva con producto fresco seleccionado cada mañana. Tercera generación y ${ANIOS} de oficio.</p>
     <div class="heroe-acciones">
       <a class="btn btn-wa btn-grande" href="${wa(WHATSAPP[0].num, textoWA)}" rel="nofollow">${I.wa}<span>Pedir precio por WhatsApp</span></a>
