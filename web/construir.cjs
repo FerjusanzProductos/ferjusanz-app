@@ -240,6 +240,7 @@ function plantilla({ ruta, titulo, descripcion, imagen, cuerpo, datos = [], tipo
 <link rel="preload" href="/fuentes/fraunces-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fuentes/figtree-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/estilo.css">
+<script>if(!matchMedia('(prefers-reduced-motion: reduce)').matches){var h=document.documentElement;h.classList.add('js-anim');setTimeout(function(){if(!window.gsap)h.classList.remove('js-anim')},3000)}</script>
 ${datos.map(d => `<script type="application/ld+json">${JSON.stringify(d)}</script>`).join('\n')}
 </head>
 <body>
@@ -298,6 +299,10 @@ ${cuerpo}
   </details>
   <a class="llamar" href="tel:+34917632186">${I.tel}<span>Llamar</span></a>
 </div>
+<script src="/js/gsap.min.js" defer></script>
+<script src="/js/ScrollTrigger.min.js" defer></script>
+<script src="/js/lenis.min.js" defer></script>
+<script src="/js/animaciones.js" defer></script>
 </body>
 </html>
 `;
@@ -604,7 +609,7 @@ const LEGALES = [
 // ───────── Construcción ─────────
 // Borra las páginas generadas antes (no las fotos ni las letras) para no dejar páginas viejas.
 for (const n of fs.readdirSync(OUT)) {
-  if (['wp-content', 'fotos', 'fuentes', 'estilo.css', 'robots.txt'].includes(n)) continue;
+  if (['wp-content', 'fotos', 'fuentes', 'js', 'estilo.css', 'robots.txt'].includes(n)) continue;
   fs.rmSync(path.join(OUT, n), { recursive: true, force: true });
 }
 
@@ -638,7 +643,7 @@ ${sitemap.map(([r, d]) => `<url><loc>${DOMINIO}${r}</loc><lastmod>${r === '/' ? 
 `);
 
 // Lista de archivos que el Worker lleva dentro (Cloudflare no deja subir «assets» por el proxy del entorno).
-const TIPOS = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.txt': 'text/plain; charset=utf-8',
+const TIPOS = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.txt': 'text/plain; charset=utf-8',
   '.xml': 'application/xml; charset=utf-8', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.woff2': 'font/woff2' };
 const archivos = [];
 (function recorrer(d) {
@@ -650,7 +655,8 @@ const archivos = [];
 })(OUT);
 fs.writeFileSync(path.join(DIR, 'archivos.generado.js'),
   '// Generado por construir.cjs: no editar a mano.\n' +
-  archivos.map((a, i) => `import f${i} from "./public/${a}";`).join('\n') +
+  // Los .js van como texto dentro (wrangler los empaquetaría como código, no como archivo).
+  archivos.map((a, i) => a.endsWith('.js') ? `const f${i} = ${JSON.stringify(fs.readFileSync(path.join(OUT, a), 'utf8'))};` : `import f${i} from "./public/${a}";`).join('\n') +
   '\nexport default {\n' +
   archivos.map((a, i) => {
     const ruta = '/' + a.replace(/\\/g, '/').replace(/index\.html$/, '');

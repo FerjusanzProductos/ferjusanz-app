@@ -246,7 +246,18 @@ p { margin: 0 0 1em; }
 .pie { padding-bottom: 110px; }
 
 /* Portada a toda pantalla con foto real del puesto */
-.heroe { position: relative; min-height: min(88vh, 760px); display: flex; align-items: flex-end; color: #fff; background: linear-gradient(180deg, rgba(30, 6, 6, .15) 0%, rgba(30, 6, 6, .55) 45%, rgba(30, 6, 6, .92) 100%), var(--foto) center / cover no-repeat, var(--granate); }
+.heroe { position: relative; min-height: min(88vh, 760px); display: flex; align-items: flex-end; color: #fff; background: var(--granate); isolation: isolate; overflow: hidden; }
+/* Foto y degradado en capas aparte para poder moverlas sin repintar (translate/scale) */
+.heroe::before { content: ""; position: absolute; inset: -12% 0 0; z-index: -2; background: var(--foto) center / cover no-repeat; translate: 0 var(--py, 0); animation: acercar 1.8s var(--ease-out) both; }
+.heroe::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(30, 6, 6, .15) 0%, rgba(30, 6, 6, .55) 45%, rgba(30, 6, 6, .92) 100%); }
+@keyframes acercar { from { scale: 1.08; } }
+.heroe h1 .palabra { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .08em; margin-bottom: -.08em; }
+.heroe h1 .palabra > span { display: inline-block; }
+/* Con movimiento activado (animaciones.js), lo que entra con el scroll empieza oculto */
+.js-anim .heroe-in { animation: none; }
+.js-anim :is(.bloque-cabeza, .dolor, .producto, .sector, .articulo, .novedad, .pasos li, .preguntas details, .historia-in > div, .pedir-in > div, .texto > *, .titular-in > div):not(.visto) { opacity: 0; }
+html.lenis, html.lenis body { height: auto; }
+html.lenis { scroll-behavior: auto; }
 .heroe-in { padding-top: 120px; padding-bottom: 56px; width: 100%; animation: entrar .7s var(--ease-out) both; }
 .heroe h1 { color: #fff; font-size: clamp(2.3rem, 7vw, 4.6rem); max-width: 16ch; margin-bottom: .35em; }
 .heroe .antetitulo { color: #ffb066; }
@@ -317,7 +328,8 @@ p { margin: 0 0 1em; }
   .wa-opciones { left: auto; right: 0; bottom: 68px; transform-origin: bottom right; }
   .pie { padding-bottom: 56px; }
   .heroe-in { padding-bottom: 88px; }
-  .heroe { background: linear-gradient(90deg, rgba(30, 6, 6, .9) 0%, rgba(30, 6, 6, .7) 45%, rgba(30, 6, 6, .2) 100%), var(--foto) center / cover no-repeat, var(--granate); align-items: center; }
+  .heroe { align-items: center; }
+  .heroe::after { background: linear-gradient(90deg, rgba(30, 6, 6, .9) 0%, rgba(30, 6, 6, .7) 45%, rgba(30, 6, 6, .2) 100%); }
   .mosaico { grid-auto-rows: 230px; }
   .menu { display: none; }
   .menu-ancho { display: flex; gap: 4px; margin-left: 12px; }
@@ -339,7 +351,7 @@ p { margin: 0 0 1em; }
 }
 @media (prefers-reduced-motion: reduce) {
   .wa-flotante[open] .wa-opciones { animation: none; }
-  .heroe-in { animation: none; }
+  .heroe-in, .heroe::before { animation: none; }
   *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; }
 }
 
