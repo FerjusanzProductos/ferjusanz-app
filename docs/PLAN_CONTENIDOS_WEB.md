@@ -65,5 +65,5 @@ Para la web nueva (`web/`, Worker `ferjusanz-web`). Los artículos se añaden en
 - No cambiar la dirección (URL) de los artículos viejos: Google ya los conoce.
 
 ## Arreglar lo que hay (una vez)
-- Juntar los artículos repetidos de otoño y de frutas tropicales en uno (y redirigir los otros).
-- Poner al final de los 45 artículos el botón «Pídenos presupuesto».
+- ✔️ 14/11: artículos repetidos de temporada (otoño, invierno, verano) redirigidos al calendario mes a mes, y el de tropicales repetido al otro (`web/redirecciones.json`). Pendiente: los 2 de tipos de patatas, cuando se escriba el tema «patata para todo».
+- ✔️ Botón «Pídenos precio» al final de todos los artículos (ya estaba).

@@ -1,5 +1,6 @@
 // Sirve la web pública de Ferjusanz (archivos de web/public/, listados en archivos.generado.js).
 import ARCHIVOS from "./archivos.generado.js";
+import REDIRECCIONES from "./redirecciones.json";
 
 // Mientras sea la web de PRUEBAS, que Google no la guarde. Poner a false al pasar al dominio.
 const PRUEBAS = true;
@@ -18,6 +19,8 @@ export default {
       const foto = await env.FOTOS.get(ruta.slice(1), { type: "arrayBuffer", cacheTtl: 86400 });
       if (foto) return new Response(foto, { headers: { "content-type": "image/jpeg", "cache-control": "public, max-age=2592000, immutable" } });
     }
+    const nueva = REDIRECCIONES[ruta] || REDIRECCIONES[ruta + "/"];
+    if (nueva) return Response.redirect(url.origin + nueva, 301);
     for (const [patron, destino] of REDIRIGIR) if (patron.test(ruta)) return Response.redirect(url.origin + destino, 301);
     // Las páginas van siempre con barra al final, como en la web antigua.
     if (!ARCHIVOS[ruta] && ARCHIVOS[ruta + "/"]) return Response.redirect(url.origin + ruta + "/" + url.search, 301);

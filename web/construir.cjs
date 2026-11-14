@@ -7,7 +7,10 @@ const path = require('path');
 const DIR = __dirname;
 const OUT = path.join(DIR, 'public');
 const DOMINIO = 'https://www.ferjusanz-frutas-verduras.es';
-const paginas = require('./paginas.json');
+// Artículos repetidos juntados en uno: no se generan y sus enlaces apuntan al nuevo (el Worker redirige con 301).
+const REDIRECCIONES = require('./redirecciones.json');
+const paginas = require('./paginas.json').filter(p => !REDIRECCIONES[p.path])
+  .map(p => p.html ? { ...p, html: p.html.replace(/\/blog\/[^"'#?\s]+\//g, r => REDIRECCIONES[r] || r) } : p);
 const novedades = fs.existsSync(path.join(DIR, 'novedades.json')) ? require('./novedades.json') : [];
 
 // ───────── Datos de la empresa ─────────

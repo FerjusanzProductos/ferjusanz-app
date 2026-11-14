@@ -15,6 +15,7 @@ Web de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., sin WordPress, en Cloudflare (
 
 ## Archivos
 - `paginas.json`: textos de cada página (los de la web antigua y los artículos nuevos). **Aquí se cambian los textos.**
+- `redirecciones.json`: artículos viejos juntados en otro (no se generan; el Worker los manda al nuevo con 301).
 - `novedades.json`: fotos y avisos del almacén (página `/novedades/` y portada).
 - `construir.cjs`: diseño, catálogo (`FAMILIAS`), preguntas frecuentes, páginas nuevas y legales; genera `public/` y `archivos.generado.js`.
 - `anadir.cjs`: añade una novedad o un artículo (lo usa la tarea automática).
