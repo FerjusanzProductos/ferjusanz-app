@@ -1,6 +1,6 @@
 // FERJUSANZ · Prueba de la fase 8c: el XML de los registros cumple el esquema oficial de la AEAT.
 // Ejecutar:  node pruebas/sif/xml.mjs [datos.json]
-//   Sin fichero: usa los dos registros de ejemplo de abajo (factura con recargo + rectificativa).
+//   Sin fichero: usa los tres registros de ejemplo de abajo (factura con recargo + rectificativa + anulación).
 //   Con fichero: {"regs": [...sif_registros en orden...], "facts": {factura_id: {f, iva}}} sacado de la base de PRUEBAS.
 // Necesita xmllint. Esquemas copiados en pruebas/sif/xsd (cotejados 13/11/2026 con la sede de la AEAT: iguales, salvo la ruta local de xmldsig).
 import { readFileSync, writeFileSync, mkdtempSync } from 'node:fs';
@@ -25,8 +25,12 @@ else {
   r1.huella = huellaAlta({ nif: r1.nif_emisor, numSerie: r1.num_serie, fecha: r1.fecha_expedicion, tipo: 'F1', cuota: r1.cuota_total, importe: r1.importe_total, huellaAnterior: '', fechaHora: r1.fecha_hora_gen });
   const r2 = { factura_id: 'b', nif_emisor: '89890001K', num_serie: 'PRUEBA-R2026-0001', fecha_expedicion: '13-11-2026', tipo_factura: 'R1', cuota_total: '-0.11', importe_total: '-1.56', fecha_hora_gen: '2026-11-13T09:00:00+01:00', version_sif: 'SIF 0.3.0' };
   r2.huella = huellaAlta({ nif: r2.nif_emisor, numSerie: r2.num_serie, fecha: r2.fecha_expedicion, tipo: 'R1', cuota: r2.cuota_total, importe: r2.importe_total, huellaAnterior: r1.huella, fechaHora: r2.fecha_hora_gen });
+  // r3: la factura r1 se anula (emitida por error): registro de anulación encadenado a r2
+  const r3 = { factura_id: 'a', tipo_registro: 'anulacion', nif_emisor: '89890001K', num_serie: r1.num_serie, fecha_expedicion: r1.fecha_expedicion, fecha_hora_gen: '2026-11-14T09:00:00+01:00', version_sif: 'SIF 0.4.0' };
+  r3.huella = createHash('sha256').update('IDEmisorFacturaAnulada=' + r3.nif_emisor + '&NumSerieFacturaAnulada=' + r3.num_serie + '&FechaExpedicionFacturaAnulada=' + r3.fecha_expedicion +
+    '&Huella=' + r2.huella + '&FechaHoraHusoGenRegistro=' + r3.fecha_hora_gen, 'utf8').digest('hex').toUpperCase();
   const cli = { nombre: 'Bar <Prueba> & Cía', nif: 'B81401671' };
-  datos = { regs: [r1, r2], facts: {
+  datos = { regs: [r1, r2, r3], facts: {
     a: { f: { emisor, cliente: cli, concepto: 'Venta de fruta y verdura', prueba: true }, iva: [{ tipo_iva: 4, base: 57.20, cuota_iva: 2.29, tipo_re: 0.5, cuota_re: 0.29 }, { tipo_iva: 10, base: 1.50, cuota_iva: 0.15, tipo_re: 1.4, cuota_re: 0.02 }] },
     b: { f: { emisor, cliente: cli, concepto: 'Rectificación de PRUEBA-2026-0001', prueba: true, rectifica_codigo: 'PRUEBA-2026-0001' }, iva: [{ tipo_iva: 4, base: -1.45, cuota_iva: -0.06, tipo_re: 0.5, cuota_re: -0.01 }] } } };
   // (cuotas del ejemplo inventadas; solo importa el formato)
@@ -37,7 +41,7 @@ const dir = mkdtempSync(join(tmpdir(), 'sifxml-'));
 let fallos = 0;
 lotes.forEach((x, i) => {
   const f = join(dir, 'lote' + (i + 1) + '.xml'); writeFileSync(f, x);
-  try { execFileSync('xmllint', ['--noout', '--nonet', '--schema', join(aqui, 'xsd/SuministroLR.xsd'), f], { stdio: 'pipe' }); console.log('✅ lote ' + (i + 1) + ': cumple el esquema de la AEAT (' + (x.match(/<sf:RegistroAlta>/g) || []).length + ' registros) → ' + f); }
+  try { execFileSync('xmllint', ['--noout', '--nonet', '--schema', join(aqui, 'xsd/SuministroLR.xsd'), f], { stdio: 'pipe' }); console.log('✅ lote ' + (i + 1) + ': cumple el esquema de la AEAT (' + (x.match(/<sf:RegistroAlta>/g) || []).length + ' altas y ' + (x.match(/<sf:RegistroAnulacion>/g) || []).length + ' anulaciones) → ' + f); }
   catch (e) { fallos++; console.log('❌ lote ' + (i + 1) + ':\n' + String(e.stderr)); }
 });
 // La cadena del XML: cada registro apunta a la huella del anterior

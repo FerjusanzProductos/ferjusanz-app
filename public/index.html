@@ -4616,6 +4616,7 @@ const ibanBonito = t => ibanLimpio(t).replace(/(.{4})(?=.)/g, '$1 ');
 const sifIbanTxt = (f, e) => f.forma_pago === 'transferencia' && e && e.iban ? 'IBAN para la transferencia: ' + ibanBonito(e.iban) : '';
 const SIF_FORMAS = [['transferencia', '🏦 Transferencia'], ['tarjeta', '💳 Tarjeta'], ['bizum', '📱 Bizum'], ['domiciliacion', '🏧 Domiciliación (recibo)'], ['pagare', '📝 Pagaré o cheque'], ['efectivo', '💶 Efectivo']];
 const SIF_FORMA_TXT = { transferencia: 'Transferencia bancaria', tarjeta: 'Tarjeta', bizum: 'Bizum', domiciliacion: 'Domiciliación bancaria (recibo)', pagare: 'Pagaré o cheque', efectivo: 'Efectivo', compensacion: 'Compensación / abono en la próxima factura' };
+const sifEsAnulada = f => (f.sif_registros || []).some(g => g.tipo_registro === 'anulacion');   // registro de anulación (emitida por error)
 const sifErr = e => String(msgErr(e)).replace(/^[A-Z_]+:\s*/, '');
 const sifVence = f => !f.vencimiento || f.vencimiento === f.fecha ? 'Al contado' : fechaES(f.vencimiento);
 /* 🔗 Registro con huella encadenada (Verifactu, SIF 0.3.0): la base recalcula todas las huellas y dice si alguna factura se ha tocado */
@@ -4658,10 +4659,11 @@ async function sifCargar(id) {
   const [f, l, i, r] = await Promise.all([sb.from('sif_facturas').select('*').eq('id', id).single(), sb.from('sif_factura_lineas').select('*').eq('factura_id', id).order('orden'),
     sb.from('sif_factura_iva').select('*').eq('factura_id', id).order('tipo_iva'), sb.from('sif_facturas').select('id,codigo,fecha,total,motivo,anula').eq('rectifica_id', id).order('numero')]);
   for (const x of [f, l, i, r]) if (x.error) throw x.error;
+  let anul = null; try { const a = await sb.from('sif_registros').select('motivo,fecha_hora_gen').eq('factura_id', id).eq('tipo_registro', 'anulacion').maybeSingle(); if (!a.error) anul = a.data; } catch (e) { }
   /* Trazabilidad: lote y origen de cada línea (los mismos del albarán) */
   const T = {}; const lp = (l.data || []).map(x => x.linea_pedido_id).filter(Boolean);
   if (lp.length) { try { const tr = await sb.from('asignaciones_lote').select('linea_id,cantidad,lotes(codigo_lote,origen)').in('linea_id', lp); if (!tr.error) tr.data.forEach(a => (T[a.linea_id] = T[a.linea_id] || []).push({ cant: a.cantidad, lote: uno(a.lotes) || {} })); } catch (e) { } }
-  return { f: f.data, L: l.data || [], I: i.data || [], R: r.data || [], T, qr: await sifQR(f.data) };
+  return { f: f.data, L: l.data || [], I: i.data || [], R: r.data || [], T, anul, qr: await sifQR(f.data) };
 }
 /* QR tributario (Orden HAC/1177/2024, art. 21; cotejado con la guía QR de la AEAT v0.5.0 el 13/11/2026): 35 mm, corrección M, arriba en la factura.
    Aún no se envían los registros a la AEAT → modo «No VERI*FACTU» (otra dirección y sin la frase). Las facturas PRUEBA van al entorno de pruebas de la AEAT. */
@@ -4692,6 +4694,7 @@ function sifHtml(d) {
     /* AEAT: QR lo primero, arriba y centrado; «QR tributario:» con letra no menor que la del resto; ≥ 2 mm en blanco (6 mm recomendados) */
     '<div style="text-align:center;font-weight:700;padding-bottom:3mm"><div>QR tributario:</div>' + sifQrSvg(d.qr) + (SIF_VERIFACTU ? '<div>VERI*FACTU</div>' : '') + '</div>' +
     (f.prueba ? '<div style="background:#b91c1c;color:#fff;font-weight:900;text-align:center;padding:6px;border-radius:6px;margin-bottom:8px;letter-spacing:1px">PRUEBA · SIN VALOR FISCAL</div>' : '') +
+    (d.anul ? '<div style="border:3px solid #b91c1c;color:#b91c1c;font-weight:900;text-align:center;padding:6px;border-radius:6px;margin-bottom:8px">FACTURA ANULADA (emitida por error)<div style="font-weight:400;color:#111">Motivo: ' + esc(d.anul.motivo) + '</div></div>' : '') +
     '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start"><div style="flex:1;min-width:220px;border:1.5px solid #111;border-radius:6px;padding:4px">' + selloEmpresaSVG(e) + '<div style="font-size:11.5px;margin-top:2px"><b>NIF ' + esc(e.nif) + '</b></div></div>' +
     '<div style="text-align:right;min-width:150px"><div style="font-size:19px;font-weight:900">' + (rect ? 'FACTURA RECTIFICATIVA' : 'FACTURA') + '</div><div style="font-size:16px;font-weight:700">Nº ' + esc(f.codigo) + '</div><div>Fecha: ' + fechaES(f.fecha) + '</div></div></div>' +
     '<div style="border:1px solid #9ca3af;border-radius:6px;padding:6px 8px;margin:10px 0"><div style="font-size:11px;color:#6b7280">CLIENTE</div><b>' + esc(c.nombre) + '</b>' + (c.nombre_comercial && c.nombre_comercial !== c.nombre ? ' (' + esc(c.nombre_comercial) + ')' : '') +
@@ -4715,11 +4718,11 @@ function sifPdf(d) {
   const doc = pdfNuevo(595.28, 841.89), W = 595.28, M = 36; let y = 0;
   const corta = (t, ancho, sz, neg) => { t = String(t || ''); if (pdfAncho(t, sz, neg) <= ancho) return t; while (t.length > 1 && pdfAncho(t + '…', sz, neg) > ancho) t = t.slice(0, -1); return t + '…'; };
   const parte = (t, ancho, sz) => { const ps = String(t || '').split(/\s+/), out = []; let l = ''; ps.forEach(p => { const n = l ? l + ' ' + p : p; if (pdfAncho(n, sz) > ancho && l) { out.push(l); l = p; } else l = n; }); if (l) out.push(l); return out; };
-  const marcaPrueba = () => { if (f.prueba) { doc.rect(0, 0, W, 22, '#b91c1c'); doc.texto('PRUEBA · SIN VALOR FISCAL', W / 2, 15, 12, { neg: true, color: '#ffffff', align: 'center' }); } };
+  const marcaPrueba = () => { const t = [f.prueba ? 'PRUEBA · SIN VALOR FISCAL' : '', d.anul ? 'FACTURA ANULADA (emitida por error)' : ''].filter(Boolean).join(' · '); if (t) { doc.rect(0, 0, W, 22, '#b91c1c'); doc.texto(t, W / 2, 15, 12, { neg: true, color: '#ffffff', align: 'center' }); } };
   const COL = { cant: 330, pre: 385, base: 440, iva: 478, cuota: 515, tot: W - M };
   const cabTabla = () => { doc.texto('Producto', M, y, 8.5, { neg: true }); doc.texto('Cantidad', COL.cant, y, 8.5, { neg: true, align: 'right' }); doc.texto('Precio', COL.pre, y, 8.5, { neg: true, align: 'right' }); doc.texto('Base', COL.base, y, 8.5, { neg: true, align: 'right' }); doc.texto('IVA', COL.iva, y, 8.5, { neg: true, align: 'right' }); doc.texto('Cuota', COL.cuota, y, 8.5, { neg: true, align: 'right' }); doc.texto('Total', COL.tot, y, 8.5, { neg: true, align: 'right' }); y += 5; doc.linea(M, y, W - M, y, '#111827', 0.9); y += 12; };
   const nuevaPag = () => { doc.pagina(); marcaPrueba(); y = 44; doc.texto((rect ? 'Factura rectificativa ' : 'Factura ') + f.codigo + ' (continuación)', M, y, 10, { neg: true }); y += 18; cabTabla(); };
-  marcaPrueba(); y = f.prueba ? 34 : 24;
+  marcaPrueba(); y = f.prueba || d.anul ? 34 : 24;
   /* QR tributario (AEAT): lo primero, arriba y centrado, 35 mm (S = 99,2 pt); letra 10,5 como la mayor de los datos; 6 mm (17 pt) en blanco alrededor */
   const S = 99.2; doc.texto('QR tributario:', W / 2, y + 8, 10.5, { neg: true, align: 'center' }); sifQrPdf(doc, d.qr, (W - S) / 2, y + 25, S);
   if (SIF_VERIFACTU) doc.texto('VERI*FACTU', W / 2, y + S + 39, 10.5, { neg: true, align: 'center' });
@@ -4787,18 +4790,37 @@ function sifBajarPdf(d) {
 async function sifVer(id, alCambiar) {
   let d; try { d = await sifCargar(id); } catch (e) { toast(sifErr(e), 'err'); return; }
   const f = d.f, caja = h('div', {}); caja.innerHTML = sifHtml(d);
-  const anulada = d.R.some(r => r.anula);
+  const anulada = d.R.some(r => r.anula) || !!d.anul;
   let cerrar;
   cerrar = hoja((f.tipo === 'rectificativa' ? 'Rectificativa ' : 'Factura ') + f.codigo, h('div', {},
-    anulada ? h('div', { class: 'aviso-card', style: 'border-left:5px solid #b91c1c' }, '⛔ Esta factura está ANULADA (a cero) por una rectificativa.') : null,
+    d.anul ? h('div', { class: 'aviso-card', style: 'border-left:5px solid #b91c1c' }, '⛔ Esta factura está ANULADA (emitida por error). Motivo: ' + d.anul.motivo)
+      : anulada ? h('div', { class: 'aviso-card', style: 'border-left:5px solid #b91c1c' }, '⛔ Esta factura está ANULADA (a cero) por una rectificativa.') : null,
     d.R.length ? h('div', { class: 'aviso-card' }, h('b', {}, 'Rectificativas de esta factura:'), ...d.R.map(r => h('button', { class: 'ghost small', style: 'display:block;width:100%;text-align:left;margin-top:4px', onclick: () => { cerrar(); sifVer(r.id, alCambiar); } }, r.codigo + ' · ' + fechaES(r.fecha) + ' · ' + eur(r.total) + ' € · ' + r.motivo + ' ›'))) : null,
     f.rectifica_id ? h('button', { class: 'ghost small', style: 'margin-bottom:8px', onclick: () => { cerrar(); sifVer(f.rectifica_id, alCambiar); } }, '← Ver la factura ' + f.rectifica_codigo) : null,
     h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px' },
       h('button', { class: 'guardar', onclick: () => sifBajarPdf(d) }, '📄 Descargar PDF'),
       h('button', { class: 'ghost', onclick: () => imprimir(sifHtml(d)) }, '🖨 Imprimir'),
-      f.tipo === 'ordinaria' && !anulada ? h('button', { class: 'ghost', onclick: () => { cerrar(); sifRectificar(d, alCambiar); } }, '✏️ Rectificar') : null),
+      f.tipo === 'ordinaria' && !anulada ? h('button', { class: 'ghost', onclick: () => { cerrar(); sifRectificar(d, alCambiar); } }, '✏️ Rectificar') : null,
+      f.tipo === 'ordinaria' && !anulada && !d.R.length ? h('button', { class: 'ghost', style: 'color:#b91c1c', onclick: () => { cerrar(); sifAnular(d, alCambiar); } }, '🚫 Anular (emitida por error)') : null),
     h('div', { style: 'overflow-x:auto;border:1px solid #e5e7eb;border-radius:8px' }, caja),
     h('p', { class: 'sub', style: 'margin-top:8px' }, 'Una factura emitida no se puede cambiar ni borrar. Si hay un error, se hace una RECTIFICATIVA (botón «✏️ Rectificar»), que dice a qué factura corrige y por qué.')));
+}
+/* ANULAR una factura emitida por error (registro de anulación de Verifactu). Solo si no se llegó a entregar ni cobrar; si no, rectificativa. */
+function sifAnular(d, alCambiar) {
+  const f = d.f, motivo = h('textarea', { rows: 3, placeholder: 'Ej.: se hizo a otro cliente por error · se emitió dos veces' });
+  const bOk = h('button', { class: 'peligro', style: 'width:100%;margin-top:10px', onclick: async () => {
+    if (motivo.value.trim().length < 5) { toast('Escribe el MOTIVO (es obligatorio).', 'err'); irA(motivo); return; }
+    if (!await confirmar('¿ANULAR la factura ' + f.codigo + '?\n\nMotivo: ' + motivo.value.trim() + '\n\nLa factura se queda guardada, marcada como anulada, y NO se puede deshacer. Sus albaranes vuelven a «Por facturar».')) return;
+    bOk.disabled = true; bOk.textContent = 'Anulando…';
+    const r = await sb.rpc('sif_anular_factura', { p_factura: f.id, p_motivo: motivo.value.trim() });
+    if (r.error) { bOk.disabled = false; bOk.textContent = '🚫 Anular la factura'; toast(sifErr(r.error), 'err'); return; }
+    cerrar(); toast('Factura ' + f.codigo + ' anulada', 'ok'); if (alCambiar) alCambiar(); sifVer(f.id, alCambiar);
+  } }, '🚫 Anular la factura');
+  let cerrar; cerrar = hoja('Anular la factura ' + f.codigo, h('div', {},
+    h('p', { class: 'sub' }, f.cliente.nombre + ' · ' + fechaES(f.fecha) + ' · ' + eur(f.total) + ' €'),
+    h('div', { class: 'aviso-card', style: 'border-left:5px solid #b45309' }, h('b', {}, 'Solo para una factura que NO debió hacerse'), ' (cliente equivocado, hecha dos veces…) y que el cliente no ha recibido ni pagado. ',
+      'Si el cliente ya la tiene o hay que cambiar cantidades o precios, usa «✏️ Rectificar».'),
+    h('label', { class: 'campo' }, '¿Por qué se anula? *', motivo), bOk));
 }
 /* Hacer una RECTIFICATIVA (por diferencias, o dejar la factura a cero) */
 async function sifRectificar(d, alCambiar) {
@@ -4909,10 +4931,10 @@ function vistaFacturasApp() {
         cont.replaceChildren(h('p', { class: 'sub' }, nEnt + ' albarán(es) entregados sin facturar en ' + mes.split('-').reverse().join('/') + '. Una factura junta albaranes del mismo cliente y del mismo mes.'),
           ...(gs.length ? gs.map(tarjeta) : [h('p', { class: 'vacio' }, 'No hay albaranes sin facturar en este mes.')]));
       } else {
-        if (!soloPintar || !emitidas) { const r = await sb.from('sif_facturas').select('id,codigo,tipo,fecha,cliente,total,forma_pago,rectifica_id,rectifica_codigo,anula,prueba').order('emitida_at', { ascending: false }).limit(500); if (r.error) throw r.error; emitidas = r.data || []; }
+        if (!soloPintar || !emitidas) { const r = await sb.from('sif_facturas').select('id,codigo,tipo,fecha,cliente,total,forma_pago,rectifica_id,rectifica_codigo,anula,prueba,sif_registros(tipo_registro)').order('emitida_at', { ascending: false }).limit(500); if (r.error) throw r.error; emitidas = r.data || []; }
         const rects = {}; emitidas.forEach(f => { if (f.rectifica_id) (rects[f.rectifica_id] = rects[f.rectifica_id] || []).push(f); });
         const lista = emitidas.filter(f => !texto || sinTilde(((f.cliente || {}).nombre || '') + ' ' + ((f.cliente || {}).nombre_comercial || '') + ' ' + f.codigo).toLowerCase().includes(texto.toLowerCase()));
-        cont.replaceChildren(h('p', { class: 'sub' }, lista.length + ' factura(s). Las emitidas no se pueden cambiar ni borrar.'), sifBotonCadena(), sifBotonXml(), ...(lista.length ? lista.map(f => { const rs = rects[f.id] || [], anul = rs.some(x => x.anula);
+        cont.replaceChildren(h('p', { class: 'sub' }, lista.length + ' factura(s). Las emitidas no se pueden cambiar ni borrar.'), sifBotonCadena(), sifBotonXml(), ...(lista.length ? lista.map(f => { const rs = rects[f.id] || [], anul = rs.some(x => x.anula) || sifEsAnulada(f);
           return h('div', { class: 'card tap', onclick: () => sifVer(f.id, () => { emitidas = null; cargar(); }) }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, f.codigo + ' · ' + ((f.cliente || {}).nombre_comercial || (f.cliente || {}).nombre || '')), h('div', { class: 'sub' }, fechaES(f.fecha) + ' · ' + (SIF_FORMA_TXT[f.forma_pago] || f.forma_pago)),
             f.tipo === 'rectificativa' ? h('span', { class: 'badge', style: 'background:#fef3c7;color:#92400e' }, 'Rectificativa de ' + f.rectifica_codigo + (f.anula ? ' (anula)' : '')) : null, anul ? h('span', { class: 'badge', style: 'background:#fee2e2;color:#991b1b' }, 'ANULADA') : rs.length ? h('span', { class: 'badge' }, 'Rectificada (' + rs.length + ')') : null),
             h('b', { style: Number(f.total) < 0 ? 'color:#b91c1c' : '' }, eur(f.total) + ' €'))); }) : [h('p', { class: 'vacio' }, 'Todavía no hay facturas emitidas.')]));
@@ -13427,8 +13449,9 @@ async function ljVentas(desde, hasta) {
     if (fs.reduce((a, f) => a + Number(f.total || 0) - Number(f.base || 0), 0) < 1) avisos.push('⚠️ Las facturas de Golden de este periodo no traen IVA: el histórico parece incompleto.'); }
   // 2) Facturas hechas en la app (desde 2027; en la base real la tabla aún no existe y se salta)
   try {
-    const r = await gesTodas(() => sb.from('sif_facturas').select('codigo,fecha,cliente,concepto,prueba,sif_factura_iva(tipo_iva,base,cuota_iva,cuota_re,total)').gte('fecha', desde).lte('fecha', hasta).order('fecha').order('serie').order('numero'));
-    r.forEach(f => { n++; if (f.prueba) prueba++; const c = f.cliente || {};
+    const r = await gesTodas(() => sb.from('sif_facturas').select('codigo,fecha,cliente,concepto,prueba,sif_factura_iva(tipo_iva,base,cuota_iva,cuota_re,total),sif_registros(tipo_registro)').gte('fecha', desde).lte('fecha', hasta).order('fecha').order('serie').order('numero'));
+    const anuladas = r.filter(sifEsAnulada).map(f => f.codigo); if (anuladas.length) avisos.push('ℹ️ No van en el listado ' + anuladas.length + ' factura(s) ANULADAS por emitirse por error: ' + anuladas.join(', ') + '.');
+    r.filter(f => !sifEsAnulada(f)).forEach(f => { n++; if (f.prueba) prueba++; const c = f.cliente || {};
       (f.sif_factura_iva || []).slice().sort((a, b) => a.tipo_iva - b.tipo_iva).forEach(i => filas.push([f.fecha, f.codigo, c.nombre || c.nombre_comercial || '', c.nif || '', c.codigo_postal || '', f.concepto || '', ljR(i.base), Number(i.tipo_iva), ljR(i.cuota_iva), ljR(i.total)])); });
   } catch (e) { if (!/PGRST205|42P01|does not exist|schema cache/i.test((e && (e.code + ' ' + e.message)) || '')) avisos.push('⚠️ No se pudieron leer las facturas de la app: ' + msgErr(e)); }
   filas.sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : String(a[1]).localeCompare(String(b[1]), 'es', { numeric: true }) || a[7] - b[7]);
@@ -13967,7 +13990,7 @@ async function bancoMaestros(desde) {
     tryq(() => gesTodas(() => sb.from('clientes').select('id,codigo,nombre,nombre_comercial,nif,codigo_postal,alias'))),
     tryq(() => gesTodas(() => sb.from('proveedores').select('*'))),
     tryq(() => gesTodas(() => sb.from('golden_facturas').select('id,numero,serie,fecha,cliente_codigo,cliente_nombre,total,borrador').gte('fecha', desde).eq('borrador', false))),
-    tryq(() => gesTodas(() => sb.from('sif_facturas').select('id,codigo,fecha,cliente_id,cliente,total').gte('fecha', desde))),
+    tryq(() => gesTodas(() => sb.from('sif_facturas').select('id,codigo,fecha,cliente_id,cliente,total,sif_registros(tipo_registro)').gte('fecha', desde))),
     tryq(() => gesTodas(() => sb.from('facturas_recibidas').select('id,fecha_factura,numero_factura,proveedor_id,total_factura,nif_proveedor,cp_proveedor').gte('fecha_factura', desde))),]),
     tryq(() => gesTodas(() => sb.from('banco_movimientos').select('id,tipo,concepto,quien_tipo,cliente_id,proveedor_id,persona,facturas').eq('estado', 'confirmado').gte('fecha', comSumaDias(desde, -200)))),
   ]);
@@ -13976,7 +13999,7 @@ async function bancoMaestros(desde) {
   M.proveedores = pr.map(p => ({ tipo: 'proveedor', id: p.id, nombre: p.razon_social || p.nombre || '', nombres: [p.nombre, p.razon_social].filter(Boolean), nif: p.nif || '', cp: p.codigo_postal || '' })).filter(p => p.nombre);
   const porCodigo = {}; M.clientes.forEach(c => { if (c.codigo) porCodigo[String(c.codigo).trim()] = c; });
   gf.forEach(f => { const c = porCodigo[String(f.cliente_codigo || '').trim()]; if (Number(f.total) > 0) M.facturas.push({ tipo: 'golden', id: f.id, numero: (f.serie ? f.serie + ' ' : '') + f.numero, fecha: f.fecha, total: bancoR(f.total), cliente_id: c ? c.id : null, nombre: f.cliente_nombre || (c && c.nombre) || '' }); });
-  sf.forEach(f => { const cj = f.cliente || {}; if (Number(f.total) > 0) M.facturas.push({ tipo: 'emitida', id: f.id, numero: f.codigo, fecha: f.fecha, total: bancoR(f.total), cliente_id: f.cliente_id, nombre: cj.nombre || '' }); });
+  sf.forEach(f => { const cj = f.cliente || {}; if (Number(f.total) > 0 && !sifEsAnulada(f)) M.facturas.push({ tipo: 'emitida', id: f.id, numero: f.codigo, fecha: f.fecha, total: bancoR(f.total), cliente_id: f.cliente_id, nombre: cj.nombre || '' }); });
   fr.forEach(f => { if (Number(f.total_factura) > 0) M.facturas.push({ tipo: 'recibida', id: f.id, numero: f.numero_factura || '(sin nº)', fecha: f.fecha_factura, total: bancoR(f.total_factura), proveedor_id: f.proveedor_id, nombre: '' }); });
   conf.forEach(m => { (m.facturas || []).forEach(f => { if (f && f.id) M.usadas[f.tipo + ':' + f.id] = m.id; }); M.memoria.push({ id: m.id, tipo: m.tipo, pal: new Set(bancoPalabras(m.concepto)), quien_tipo: m.quien_tipo, cliente_id: m.cliente_id, proveedor_id: m.proveedor_id, persona: m.persona }); });
   M.porId = {}; [...M.clientes, ...M.proveedores].forEach(p => { M.porId[p.tipo + ':' + p.id] = p; });

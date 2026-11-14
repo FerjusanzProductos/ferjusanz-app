@@ -91,6 +91,33 @@ begin
   ids := ids || (f->>'id')::uuid;
   res := res || jsonb_build_object('T-NUM-03', (select jsonb_agg(codigo order by numero) from public.sif_facturas where serie = 'PRUEBA-R' and anio = extract(year from public.sif__fecha_hoy())));
 
+  -- ===== T-INA-07: REGISTRO DE ANULACIÓN (factura emitida por error) =====
+  select pedido_id into ped from public.sif_factura_albaranes where factura_id = ids[10] limit 1;
+  f := public.sif_anular_factura(ids[10], 'Prueba: cliente equivocado');
+  x := jsonb_build_object(
+    'registro', (select jsonb_build_object('tipo', tipo_registro, 'engancha', huella_anterior = (select huella from public.sif_registros h where h.id < g.id order by h.id desc limit 1), 'motivo', motivo)
+                 from public.sif_registros g where factura_id = ids[10] and tipo_registro = 'anulacion'),
+    'factura_sigue', exists (select 1 from public.sif_facturas where id = ids[10]),
+    'albaran_libre', not exists (select 1 from public.albaranes_facturados where pedido_id = ped),
+    'sin_cobro_pendiente', not exists (select 1 from public.facturas_clientes q where q.numero = codigos[10]),
+    'refacturada', public.sif_emitir_factura(array[ped], 'transferencia')->>'codigo');
+  begin perform public.sif_anular_factura(ids[10], 'Prueba: otra vez'); msg := 'SE ANULÓ'; exception when others then msg := sqlerrm; end;
+  x := x || jsonb_build_object('otra_vez', msg);
+  begin perform public.sif_anular_factura(ids[1], 'Prueba: tiene rectificativa'); msg := 'SE ANULÓ'; exception when others then msg := sqlerrm; end;
+  x := x || jsonb_build_object('con_rectificativa', msg);
+  begin perform public.sif_anular_factura(ids[array_length(ids, 1)], 'Prueba: es rectificativa'); msg := 'SE ANULÓ'; exception when others then msg := sqlerrm; end;
+  x := x || jsonb_build_object('rectificativa', msg);
+  begin perform public.sif_emitir_rectificativa(ids[10], 'Prueba: rectificar anulada', '[]', true, 'compensacion'); msg := 'SE EMITIÓ'; exception when others then msg := sqlerrm; end;
+  x := x || jsonb_build_object('rectificar_anulada', msg);
+  update public.facturas_clientes set pagada = true where numero = codigos[11];
+  begin perform public.sif_anular_factura(ids[11], 'Prueba: ya cobrada'); msg := 'SE ANULÓ'; exception when others then msg := sqlerrm; end;
+  x := x || jsonb_build_object('cobrada', msg);
+  begin perform public.sif_anular_factura(ids[12], 'mal'); msg := 'SE ANULÓ'; exception when others then msg := sqlerrm; end;
+  x := x || jsonb_build_object('sin_motivo', msg);
+  res := res || jsonb_build_object('T-INA-07', x || jsonb_build_object('ok', (x->'registro'->>'engancha')::boolean and (x->>'factura_sigue')::boolean and (x->>'albaran_libre')::boolean
+    and (x->>'sin_cobro_pendiente')::boolean and x->>'refacturada' like 'PRUEBA-%' and x->>'otra_vez' like 'YA_ANULADA%' and x->>'con_rectificativa' like 'TIENE_RECT%'
+    and x->>'rectificativa' like 'SOLO_ORDINARIAS%' and x->>'rectificar_anulada' like 'YA_ANULADA%' and x->>'cobrada' like 'YA_COBRADA%' and x->>'sin_motivo' like 'FALTA_MOTIVO%'));
+
   -- ===== T-TRA-01 / T-TRA-02 / T-NUM-04 / T-FAC-01 =====
   res := res || jsonb_build_object(
     'T-TRA-01', (select jsonb_build_object('ok', bool_and(q.emitida_por = u_admin and g.fecha_hora_gen ~ '^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\+0[12]:00$' and g.version_sif <> ''),

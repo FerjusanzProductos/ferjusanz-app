@@ -25,7 +25,8 @@ _Una prueba solo se marca ✅ con la prueba hecha y su resultado guardado (captu
 | T-INA-02 | No se puede cambiar una factura emitida | Intentar cambiar importe, fecha, cliente, número | Rechazado | ✅ 14/11/2026 |
 | T-INA-03 | No se pueden borrar ni cambiar registros de facturación | Igual sobre la tabla de registros | Rechazado | ✅ 14/11/2026 (también vaciarla y bajar el contador) |
 | T-INA-04 | Corregir = rectificativa | Hacer una rectificativa de una factura | Nueva factura serie R, que dice qué corrige y por qué; la original intacta | ✅ 14/11/2026 |
-| T-INA-05 | Anulación | Anular una factura emitida por error | Registro de anulación encadenado; la factura sigue guardada | 🟡 14/11/2026: se anula con una **rectificativa que la deja a cero** (registro R1 encadenado, la original sigue, no deja anularla dos veces). La app **no** hace el «registro de anulación» de Verifactu (para facturas que nunca debieron emitirse): ⚠️ preguntar a Jorge si hace falta; si sí, va con el envío (8d) |
+| T-INA-05 | Anulación | Anular una factura emitida por error | Registro de anulación encadenado; la factura sigue guardada | ✅ 14/11/2026 (SIF 0.4.0): **registro de anulación** de Verifactu para facturas emitidas por error (huella de anulación encadenada, la factura sigue guardada y marcada «ANULADA», sus albaranes vuelven a «Por facturar»). Además, la rectificativa a cero para las ya entregadas. Batería: `resultados/2026-11-14_bateria_anulacion.json`; probado también pulsando en la app naranja v317 (PRUEBA-2026-0004) y XML válido con el esquema de la AEAT |
+| T-INA-07 | Límites de la anulación | No deja anular dos veces, ni con rectificativas, ni una rectificativa, ni ya cobrada, ni sin motivo; ni rectificar una anulada | Rechazado | ✅ 14/11/2026 |
 | T-INA-06 | Sin ventas fuera de factura | Revisar que no exista ningún camino para cobrar sin factura | Ninguno | ⬜ |
 
 ## D. Numeración
