@@ -144,4 +144,22 @@ A guessed voice produces exactly the generic copy the owner came here to avoid, 
 
 ## Profiles
 
-*No profile built yet. The first one gets written here.*
+## Voice profile — Fernando Sanz, Ferjusanz
+Built:    14/11/2026  ·  Sources: nota de voz de Fernando (`web/LO_QUE_CUENTA_FERNANDO.md`) y sus correcciones. Sin correos suyos a clientes todavía (pedirle 2-3 WhatsApp o correos).
+Updated:  14/11/2026 — «tercera generación **en el sector**» (no «en el puesto»). Fernando pide decir siempre lo que nos diferencia: «a diferencia de otras empresas, cada semana les contamos cómo va el mercado y qué les recomendamos».
+
+Greeting:      "Buenos días:" (a colegios y empresas, de usted en plural: «les», «ustedes»)
+Sign-off:      "Un saludo,\nFernando Sanz\nFerjusanz · Mercamadrid\n609 567 354" (en los seguimientos, solo «Un saludo, Fernando»)
+Sentences:     Cortas y claras, sin rodeos.
+Exclamations:  No.
+Ask timing:    Al final, una sola pregunta: con quién hablo de las compras de la cocina.
+Calls it:      «género», «fruta, verdura, patata y huevos», «el puesto» (en Mercamadrid)
+
+Characteristic phrases:
+  "Somos la tercera generación en el sector."
+  "A diferencia de otras empresas, cada semana les contamos cómo va el mercado y qué les recomendamos."
+  "La calidad siempre manda."
+  "Sin pedido mínimo."
+
+Never uses:
+  Halagos al cliente al empezar · «espero que se encuentre bien» · «soluciones» · nombres de clientes sin su permiso · precios inventados
