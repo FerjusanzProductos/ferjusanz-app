@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "arial",
+        "createdAt": "2026-11-14T05:07:24.080Z",
+        "reason": "Claude: HTML email body; Arial is the standard email-safe font (custom fonts don't load in Gmail/Outlook), same as informes-jorge"
+      }
+    ]
+  }
+}
