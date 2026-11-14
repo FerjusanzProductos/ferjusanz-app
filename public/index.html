@@ -4990,7 +4990,7 @@ function vistaClientes() {
   const bTod = h('button', { class: 'chip', onclick: () => { soloActivos = false; LS.set('fj_cli_activos', false); marca(); pintar(); } }, 'Todos');
   /* 🧾 Fase 1 de facturación: clientes activos a los que les falta algo para poder facturarles */
   const bFis = esOficina() ? h('button', { class: 'chip', onclick: () => { soloFiscal = !soloFiscal; window.__cliFiscal = soloFiscal; if (soloFiscal) soloActivos = true; tope = 80; marca(); pintar(); } }, '🧾 Faltan datos para facturar') : null;
-  const avFis = h('div', {}); let cargadoFis = false;
+  const avFis = h('div', {}); let cargadoFis = false, nProp = {};
   function marca() { bAct.className = 'chip' + (soloActivos ? ' on' : ''); bTod.className = 'chip' + (!soloActivos ? ' on' : ''); if (bFis) { bFis.className = 'chip' + (soloFiscal ? ' on' : ''); bFis.style.cssText = soloFiscal ? '' : 'color:#b91c1c;border-color:#fca5a5'; } }
   function pintar() {
     marca();
@@ -5015,7 +5015,7 @@ function vistaClientes() {
       const btnF = esOficina() ? h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: e => { e.stopPropagation(); if (desp.style.display === 'none') { desp.style.display = ''; if (!desp.hasChildNodes()) desp.append(panelFacturasCli(c)); btnF.textContent = '▴ Ocultar facturas'; } else { desp.style.display = 'none'; btnF.textContent = '▾ Facturas'; } } }, '▾ Facturas') : null;
       kids.push(h('div', { class: 'card tap', onclick: () => go('cliente', { id: c.id }) },
         h('div', { class: 'fila' },
-          h('div', {}, h('div', { class: 'nombre' }, n), h('div', { class: 'sub' }, [c.codigo, c.localidad, c.telefono].filter(Boolean).join(' · ')), soloFiscal ? h('div', { style: 'color:#b91c1c;font-weight:700;font-size:14px;margin-top:2px' }, '🧾 Falta: ' + faltaFiscal(c).join(', ')) : null),
+          h('div', {}, h('div', { class: 'nombre' }, n), h('div', { class: 'sub' }, [c.codigo, c.localidad, c.telefono].filter(Boolean).join(' · ')), soloFiscal ? h('div', { style: 'color:#b91c1c;font-weight:700;font-size:14px;margin-top:2px' }, '🧾 Falta: ' + faltaFiscal(c).join(', ')) : null, nProp[c.id] ? h('div', { style: 'color:#1d4ed8;font-weight:700;font-size:14px' }, '🔎 ' + nProp[c.id] + (nProp[c.id] === 1 ? ' dato encontrado' : ' datos encontrados') + ' para revisar') : null),
           h('div', { style: 'text-align:right' }, c.activo ? null : h('span', { class: 'badge' }, 'Inactivo'), !lectura && c.forma_pago === 'contado' ? [' ', h('span', { class: 'badge cont' }, 'Contado')] : null)), btnF,
         h('div', { onclick: e => e.stopPropagation() }, desp)));
     }
@@ -5028,6 +5028,7 @@ function vistaClientes() {
       const { data, error } = await sb.from('clientes').select(lectura ? 'id,codigo,nombre,nombre_comercial,telefono,localidad,activo' : 'id,codigo,nombre,nombre_comercial,nif,telefono,email,direccion,codigo_postal,localidad,forma_pago,activo').range(0, 4999);
       if (error) throw error;
       clientesCache = data.sort((a, b) => nombreCli(a).localeCompare(nombreCli(b), 'es')); cargadoFis = true; pintar();
+      if (esOficina()) { const pr = await sb.from('cliente_propuestas').select('cliente_id').eq('estado', 'pendiente').range(0, 4999); if (!pr.error && pr.data && pr.data.length) { nProp = {}; pr.data.forEach(x => nProp[x.cliente_id] = (nProp[x.cliente_id] || 0) + 1); pintar(); } }
     } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver los clientes.' : msgErr(e))); }
   }
   $app.replaceChildren(shell('Clientes', h('div', {},
@@ -5113,6 +5114,7 @@ function vistaCliente() {
       const r = id ? await sb.from('clientes').update(fila).eq('id', id).select().single() : await sb.from('clientes').insert(fila).select().single();
       btn.disabled = false;
       if (r.error) { toast(msgErr(r.error), 'err'); return; }
+      if (usadas.size) await marcaProp([...usadas])('aceptado');
       c = r.data; id = c.id; clientesCache = null; toast('Cliente guardado', 'ok'); state.params = { id, tab: 'datos' }; pintar();
     }
     const btn = h('button', { class: 'guardar', style: 'width:100%', onclick: () => guardar(btn) }, id ? 'Guardar cambios' : 'Crear cliente');
@@ -5128,7 +5130,23 @@ function vistaCliente() {
         : h('div', { class: 'sub', style: 'color:#15803d;margin-bottom:8px' }, '✔ Datos completos para facturar'));
     }
     setTimeout(revisaF, 0);
-    return h('div', { oninput: revisaF }, avisoF,
+    /* 🔎 Auditoría de clientes: datos encontrados (fuente y confianza). «Usar» lo pone en su casilla; queda aceptado al «Guardar cambios» */
+    const propBox = h('div', {}); const usadas = new Set();
+    const ETQ = { nombre: 'Nombre', nif: 'NIF', direccion: 'Dirección', codigo_postal: 'C. postal', localidad: 'Localidad', email: 'Correo', telefono: 'Teléfono' };
+    const marcaProp = ids => estado => sb.from('cliente_propuestas').update({ estado, revisado_por: state.user.id, revisado_at: new Date().toISOString() }).in('id', ids);
+    (async () => {
+      if (!id || !esOficina()) return;
+      const r = await sb.from('cliente_propuestas').select('id,campo,valor,fuente,confianza,nota').eq('cliente_id', id).eq('estado', 'pendiente').order('campo');
+      if (r.error || !r.data || !r.data.length) return;
+      propBox.replaceChildren(h('div', { class: 'card', style: 'border-color:#93c5fd;background:#eff6ff' }, h('b', {}, '🔎 Datos encontrados: compruébalos antes de usarlos'),
+        ...r.data.map(p => { const fila = h('div', { style: 'border-top:1px solid #bfdbfe;padding-top:8px;margin-top:8px' }, h('div', {}, h('b', {}, ETQ[p.campo] + ': '), p.valor),
+          h('div', { class: 'sub' }, 'Confianza ' + p.confianza + ' · fuente: ', /^https?:\/\//.test(p.fuente) ? h('a', { href: p.fuente, target: '_blank', rel: 'noopener' }, p.fuente.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]) : p.fuente, p.nota ? ' · ' + p.nota : ''),
+          h('div', { style: 'display:flex;gap:8px;margin-top:6px' },
+            h('button', { class: 'ghost small', onclick: () => { f[p.campo].value = p.valor; usadas.add(p.id); fila.style.opacity = '.5'; revisaF(); toast('Puesto en «' + ETQ[p.campo] + '». Pulsa «Guardar cambios».', 'ok'); } }, '✔ Usar'),
+            h('button', { class: 'ghost small', onclick: async () => { const x = await marcaProp([p.id])('descartado'); if (x.error) { toast(msgErr(x.error), 'err'); return; } fila.remove(); } }, '✖ Descartar')));
+          return fila; })));
+    })();
+    return h('div', { oninput: revisaF }, avisoF, propBox,
       campo('nombre', 'Nombre o razón social *'), campo('nombre_comercial', 'Nombre comercial (opcional)'),
       campo('nif', 'NIF / CIF', { autocapitalize: 'characters' }), campo('email', 'Correo electrónico', { type: 'email', inputmode: 'email' }),
       campo('telefono', 'Teléfono', { type: 'tel', inputmode: 'tel' }), campo('direccion', 'Dirección'),
