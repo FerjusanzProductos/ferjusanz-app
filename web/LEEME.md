@@ -11,6 +11,7 @@ Web de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., sin WordPress, en Cloudflare (
 - Fruta, verdura, hortaliza, patatas (también peladas y cortadas), cebollas y ajos, setas, legumbres, hierbas y **huevos** (gallina y codorniz). Más de 200 productos activos.
 - Clientes: hostelería, colectividades (colegios, residencias, comedores), fruterías. Género fresco cada día.
 - **NO hay cosecha propia** (Fernando, 15/11/2026): decir «agricultores de confianza» y Mercamadrid. Agricultura ecológica: «colaboramos con productores ecológicos siempre que tienen producto disponible». Reparto con camiones y furgonetas refrigerados (sí, confirmado).
+- Confirmado por Fernando (15/11/2026): más de 200 productos, reparto en Segovia, sin pedido mínimo, pedidos hasta la tarde anterior, exportación posible, pago al contado o con factura.
 - **No** se publican precios: siempre «pide precio por WhatsApp».
 
 ## Archivos
