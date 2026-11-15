@@ -6,3 +6,4 @@ Una línea por publicación: fecha · novedades · artículo · fotos de Drive n
 - 14/11/2026 (a mano) · Diseño «Sobrio de mercado» · Páginas nuevas: /proveedor-de-frutas-y-verduras-para-hoteles-madrid/, …-colegios-madrid/, …-residencias-madrid/ y /productos/patata-pelada-para-hosteleria/ · Títulos y descripciones revisados.
 - 14/11/2026: artículo «Menú escolar saludable…» (RD 315/2025), pedido por Fernando.
 - 14/11/2026: artículo «Fruta y verdura en residencias de mayores…» (RD 950/2026), pedido por Fernando.
+- 15/11/2026 · novedad «Nuestras furgonetas, listas a primera hora» (foto de Fernando por el chat: recortada sin la hora, la persona ni la matrícula, con filtro) · sin artículo
