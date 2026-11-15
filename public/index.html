@@ -9085,14 +9085,27 @@ async function pintaResumenMercado(box, fecha) {
     box.replaceChildren(caja('Del ' + fechaES(String(x.fecha).slice(0, 10)) + ' · toca para abrir', '', x.texto));
   } catch (e) { box.replaceChildren(caja(isNetErr(e) ? 'Necesitas conexión para verlo.' : 'Todavía no está disponible.')); }
 }
+/* 🌐 Visitas a la web nueva: las apunta el Worker ferjusanz-web en web_visitas (sin cookies). Aquí solo se lee el resumen de 30 días (web_visitas_resumen). */
+async function pintaVisitasWeb(box) {
+  const caja = (t, cuerpo) => h('details', { class: 'card', style: 'border-left:6px solid #2563eb' },
+    h('summary', { style: 'cursor:pointer' }, h('div', { class: 'nombre' }, '🌐 Visitas a la web'), h('div', { class: 'sub' }, t)), cuerpo || null);
+  box.replaceChildren(caja('Cargando…'));
+  try {
+    const r = await sb.rpc('web_visitas_resumen'); if (r.error) throw r.error;
+    const v = r.data; if (!v) { box.replaceChildren(caja('Todavía no está disponible.')); return; }
+    const lista = (tit, a, k) => h('div', { style: 'margin-top:8px' }, h('b', {}, tit), ...a.map(x => h('div', { class: 'sub' }, (x[k] === '/' ? 'Portada' : x[k]) + ' · ' + x.n)));
+    box.replaceChildren(caja('Hoy ' + v.hoy + ' · 7 días ' + v.semana + ' · 30 días ' + v.mes + (v.mes ? ' · ' + Math.round(100 * v.movil / v.mes) + ' % móvil' : '') + ' · toca para ver más',
+      v.mes ? h('div', {}, lista('Páginas más vistas (30 días)', v.paginas, 'ruta'), lista('De dónde llegan', v.origenes, 'origen')) : h('div', { class: 'sub', style: 'margin-top:6px' }, 'Aún no hay visitas.')));
+  } catch (e) { box.replaceChildren(caja(isNetErr(e) ? 'Necesitas conexión para verlo.' : 'Todavía no está disponible.')); }
+}
 function vistaResumen() {
   state.view = 'resumen'; if (!esOficina()) { go('inicio'); return; }
   let fecha = hoy(); const cont = h('div', {});
   $app.replaceChildren(shell('Resumen del día y correo', cont, { volver: volverIni })); renderBanner();
   async function cargar() {
     const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); cargar(); } });
-    const caja = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); const correo = h('div', {}), mercado = h('div', {}); cont.replaceChildren(h('div', { class: 'barra' }, inp, h('button', { class: 'ghost', onclick: () => cargar() }, '↻')), correo, mercado, caja);
-    pintaResumenCorreo(correo, fecha); pintaResumenMercado(mercado, fecha);
+    const caja = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); const correo = h('div', {}), mercado = h('div', {}), visitas = h('div', {}); cont.replaceChildren(h('div', { class: 'barra' }, inp, h('button', { class: 'ghost', onclick: () => cargar() }, '↻')), correo, mercado, visitas, caja);
+    pintaResumenCorreo(correo, fecha); pintaResumenMercado(mercado, fecha); pintaVisitasWeb(visitas);
     try {
       try { await cargarGente(); } catch (e) { }
       const d0 = new Date(fecha + 'T00:00:00'), d1 = new Date(d0.getTime() + 86400000);
