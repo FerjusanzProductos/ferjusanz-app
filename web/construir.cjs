@@ -387,9 +387,9 @@ const sitemap = [];
 function inicio(p) {
   const textoWA = 'Hola, quería el precio de hoy para mi negocio.';
   const atajos = `<p class="atajos"><a class="enlace" href="${wa(WHATSAPP[0].num, 'Hola, quería hacer un pedido.')}" rel="nofollow">Hacer un pedido ${I.flecha}</a><a class="enlace" href="#pedir-precio">Pedir presupuesto ${I.flecha}</a></p>`;
-  const mosaico = ['verduras-gourmet-hosteleria', 'niscalos', 'granada-mollar-de-elche', 'tomate-asurcado', 'mango-y-papaya', 'champinon-y-portobello', 'tomate-la-campechana'];
+  const mosaico = ['tomate-rosa', 'niscalos', 'granada-mollar-de-elche', 'tomate-asurcado', 'mango-y-papaya', 'champinon-y-portobello', 'tomate-la-campechana'];
   const cuerpo = `
-<section class="heroe" style="--foto:url(/fotos/tomate-la-campechana.jpg)">
+<section class="heroe" style="--foto:url(/fotos/verduras-gourmet-hosteleria.jpg)">
   <div class="envoltura heroe-in">
     <p class="antetitulo">Mayorista hortofrutícola · Mercamadrid</p>
     <h1><span class="h1-pre">Proveedor mayorista de</span> <span class="h1-main">patatas, fruta y verdura</span> <span class="h1-post">para hostelería y colectividades en Madrid y Segovia</span></h1>
@@ -513,7 +513,7 @@ setInterval(()=>{if(!parado&&!document.hidden)paso(1)},4500)})();</script>
   </div>
 </section>`;
   return plantilla({
-    ruta: '/', precarga: '/fotos/tomate-la-campechana.jpg',
+    ruta: '/', precarga: '/fotos/verduras-gourmet-hosteleria.jpg',
     titulo: 'Mayorista de fruta y verdura en Madrid para hostelería | Ferjusanz',
     descripcion: `Proveedor mayorista de fruta, verdura, patatas y huevos para restaurantes, hoteles, colegios, residencias y colectividades en Madrid. Solicite tarifa.`,
     cuerpo,
@@ -658,7 +658,9 @@ function empresa(p) {
 <h2>De padres a hijos</h2>
 <p>Lo que empezó con patatas y cebollas es hoy un catálogo de más de 200 productos frescos. Ha cambiado el tamaño, pero no la forma de trabajar: elegir el género uno mismo, cumplir con la hora de entrega y coger el teléfono cuando un cliente llama.</p>
 <h2>Del campo a su cocina</h2>
-<p>Trabajamos con agricultores y productores con los que llevamos años, y el resto lo elegimos nosotros mismos en Mercamadrid. Así sabemos de dónde viene cada caja.</p>`;
+<p>Trabajamos con agricultores y productores con los que llevamos años, y el resto lo elegimos nosotros mismos en Mercamadrid. Así sabemos de dónde viene cada caja.</p>
+<h2>Como si nos sentáramos a su mesa</h2>
+<p>Seleccionamos nuestros productos con mucho cuidado, pieza a pieza. Cuando elegimos el género pensamos en que somos nosotros los que nos vamos a sentar a la mesa de su restaurante a disfrutar del menú. Por eso vamos de la mano con nuestros clientes.</p>`;
   return paginaTexto(p, { antes, entradilla: 'Tercera generación de mayoristas. Más de 40 años alegrando la mesa de Madrid.', miga: 'Quiénes somos', foto: F + '2019/10/proveedores-distribucion_crs2.jpg' });
 }
 

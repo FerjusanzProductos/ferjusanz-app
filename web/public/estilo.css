@@ -460,3 +460,14 @@ a:active, button:active, summary:active { opacity: .75; }
 .guia-portada-info em svg { width: 16px; height: 16px; }
 @media (hover: hover) and (pointer: fine) { .guia-portada-in:hover strong { color: var(--granate); } }
 @media (min-width: 700px) { .guia-portada-in { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 36px; align-items: center; padding-top: 40px; padding-bottom: 40px; } }
+
+/* Portada (16/11/2026, Fernando: «una en la que se lea mejor el texto»): la foto se ve limpia y el texto va sobre fondo oscuro liso.
+   Móvil: foto arriba y texto debajo. Ordenador: texto a la izquierda y foto a la derecha. */
+.heroe::before { bottom: auto; height: 300px; }
+.heroe::after { background: linear-gradient(180deg, rgba(22, 18, 16, 0) 0, rgba(22, 18, 16, 0) 200px, var(--tinta) 300px); }
+.heroe-in { padding-top: 290px; }
+@media (min-width: 1000px) {
+  .heroe::before { height: auto; bottom: 0; left: 46%; }
+  .heroe::after { background: linear-gradient(90deg, var(--tinta) 0, var(--tinta) 46%, rgba(22, 18, 16, 0) 56%); }
+  .heroe-in { padding-top: 120px; padding-right: 48%; }
+}
