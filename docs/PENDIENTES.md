@@ -15,7 +15,11 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - 🟡 Una **nota de voz a la semana** de Fernando con algo del mercado para los artículos.
 - ⚪ La tarea automática de la web (`trig_01AXKhyzZyg7sMDufq37Ahuw`, cada 2 días) no ve Drive: las fotos, por el chat.
 - ⚪ **Cuando haya dominio** (Claude; decidido el 15/11/2026: la web nueva usará **el mismo dominio**, www.ferjusanz-frutas-verduras.es, lo mejor para Google; depende de entrar en Webempresa, sin tocar el correo): `PRUEBAS = false` en `web/worker.js`, apuntar el dominio, Search Console, enlazar la ficha de Google, tarjeta en `www…/tarjeta/` (cambiar `URL_TARJETA` en `public/index.html` y la redirección en `src/worker.js`).
-- ⚪ Ideas para subir en Google (cuando Fernando diga): reseñas, publicaciones semanales en la ficha, vídeos, directorios, redes, anuncios de Meta, informe mensual. Lista completa en `docs/LISTA_PARA_ENVIAR.md`.
+- 🔴 **Fernando**: primera tanda de **fotos** (listas A y B del plan: https://claude.ai/artifact/VSPKY1BfUkgc5CVJkm53hi) y luego 5-10 por semana.
+- 🟡 **Fernando**: crear el **Instagram de empresa** y la **página de Facebook** (Claude le guía desde el móvil) y grabar el primer Reel («Esta semana en Mercamadrid»).
+- ⚪ Decidir si se usa **Metricool** para que Claude deje programadas las publicaciones; **anuncios de Meta** más adelante (con 20-30 publicaciones y el dominio).
+- ⚪ **Claude**: al pasar el artículo 45 del plan (11/02/2027), añadir la siguiente tanda en `docs/PLAN_MARKETING.md`.
+- ⚪ Otras ideas para subir en Google: reseñas, publicaciones semanales en la ficha, directorios, informe mensual. Plan: `docs/PLAN_MARKETING.md`; lista completa en `docs/LISTA_PARA_ENVIAR.md`.
 
 ## 📱 LA APP
 ### 👤 Fernando
@@ -43,6 +47,7 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - 🟡 Prueba completa de facturas en la naranja el **15–18/12** con Fernando (`docs/GUION_PRUEBA_DICIEMBRE.md`).
 
 ### 🧮 Jorge (contable)
+_Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/artifact/5qQe3mrM3E9wHwrQACgkmG (`docs/PREGUNTAS_JORGE.md`). Lo que conteste se quita de aquí y de esa hoja._
 - 🔴 **Decisión de Verifactu el 22/12** (no está en el BOE el aplazamiento; si no se cumple todo, Plan B: Golden en enero). Que confirme la fecha por escrito. Ver `docs/FACTURACION_2027.md`.
 - 🔴 Tramitar el **certificado de representante (FNMT)**; con él, Claude hace la fase 8d (envío a Hacienda).
 - 🟡 Decir si le llegaron los adjuntos del correo y si le valen los formatos (ventas/compras, caja y banco en CSV o Excel/PDF; saldo inicial de caja).

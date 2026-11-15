@@ -9155,6 +9155,17 @@ async function pintaResumenMercado(box, fecha) {
     box.replaceChildren(caja('Del ' + fechaES(String(x.fecha).slice(0, 10)) + ' · toca para abrir', '', x.texto));
   } catch (e) { box.replaceChildren(caja(isNetErr(e) ? 'Necesitas conexión para verlo.' : 'Todavía no está disponible.')); }
 }
+/* 📣 Plan de Google y redes: solo lo ve Fernando (la tabla plan_fernando solo deja leer a su correo). Lo escribe y actualiza Claude; aquí solo se lee. */
+async function pintaPlanFernando(box) {
+  box.replaceChildren();
+  try {
+    const r = await sb.from('plan_fernando').select('clave,titulo,texto,enlace,actualizado').order('clave'); if (r.error) throw r.error;
+    box.replaceChildren(...(r.data || []).map(x => h('details', { class: 'card', style: 'border-left:6px solid #9333ea' },
+      h('summary', { style: 'cursor:pointer' }, h('div', { class: 'nombre' }, x.titulo), h('div', { class: 'sub' }, 'Solo lo ves tú · actualizado el ' + fechaES(String(x.actualizado).slice(0, 10)) + ' · toca para abrir')),
+      h('div', { style: 'white-space:pre-wrap;margin-top:8px;line-height:1.45' }, x.texto),
+      x.enlace ? h('a', { href: x.enlace, target: '_blank', rel: 'noopener', style: 'display:inline-block;margin-top:8px;font-weight:700' }, 'Ver la página completa en Claude') : null)));
+  } catch (e) { box.replaceChildren(); }
+}
 /* 🌐 Visitas a la web nueva: las apunta el Worker ferjusanz-web en web_visitas (sin cookies). Aquí solo se lee el resumen de 30 días (web_visitas_resumen). */
 async function pintaVisitasWeb(box) {
   const caja = (t, cuerpo) => h('details', { class: 'card', style: 'border-left:6px solid #2563eb' },
@@ -9174,8 +9185,8 @@ function vistaResumen() {
   $app.replaceChildren(shell('Resumen del día y correo', cont, { volver: volverIni })); renderBanner();
   async function cargar() {
     const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); cargar(); } });
-    const caja = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); const correo = h('div', {}), mercado = h('div', {}), visitas = h('div', {}); cont.replaceChildren(h('div', { class: 'barra' }, inp, h('button', { class: 'ghost', onclick: () => cargar() }, '↻')), correo, mercado, visitas, caja);
-    pintaResumenCorreo(correo, fecha); pintaResumenMercado(mercado, fecha); pintaVisitasWeb(visitas);
+    const caja = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); const correo = h('div', {}), mercado = h('div', {}), visitas = h('div', {}), plan = h('div', {}); cont.replaceChildren(h('div', { class: 'barra' }, inp, h('button', { class: 'ghost', onclick: () => cargar() }, '↻')), plan, correo, mercado, visitas, caja);
+    pintaResumenCorreo(correo, fecha); pintaResumenMercado(mercado, fecha); pintaVisitasWeb(visitas); if (!PRACTICA) pintaPlanFernando(plan);
     try {
       try { await cargarGente(); } catch (e) { }
       const d0 = new Date(fecha + 'T00:00:00'), d1 = new Date(d0.getTime() + 86400000);

@@ -45,16 +45,8 @@ Para la web nueva (`web/`, Worker `ferjusanz-web`). Los artículos se añaden en
 15. **Calendario de fruta y verdura de temporada mes a mes** (una página fija, la más útil; sustituye a los artículos repetidos).
 16. Uno corto **cada mes**: «Qué está bueno en diciembre», «…en enero»… con lo que de verdad entra en el puesto ese mes.
 
-## Calendario (orden de los temas; ahora sale uno cada 2 días)
-| Mes | Artículos |
-|---|---|
-| Diciembre 2026 | 15 Calendario de temporada · 7 Huevos |
-| Enero 2027 | 1 Elegir proveedor · 16 Qué está bueno en enero |
-| Febrero 2027 | 2 Merma y coste del plato · 12 Un día en Mercamadrid |
-| Marzo 2027 | 9 Comedor escolar · 3 Conservar en la cámara |
-| Abril 2027 | 4 Aguacate · 6 Patata para cada plato |
-| Mayo 2027 | 10 Residencias · 5 Limón y lima |
-| Junio 2027 | 8 Cuarta gama · 14 Desperdicio |
+## Calendario
+**Desde el 15/11/2026 el orden es el de `docs/PLAN_MARKETING.md` (punto 3: 45 artículos, uno cada 2 días, para colegios, residencias, restaurantes y colectividades).** Los temas de esta página siguen valiendo como reserva.
 
 ## Reglas para escribirlos
 - Los escribe Claude. **Cambio del 13/11/2026 (Fernando: «un artículo cada 2 o 3 días… ni me preguntes»)**: los publica sola la tarea automática cada 2 días (`web/TAREA_AUTOMATICA.md`), sin esperar al «vale», siguiendo esta lista en orden y luego los de temporada. Los marcados con ⚠️ solo se escriben tras comprobar la fuente oficial (y se enlaza). Fernando puede pedir quitar o cambiar cualquiera.

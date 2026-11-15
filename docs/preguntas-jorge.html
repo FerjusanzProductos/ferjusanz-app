@@ -1,0 +1,31 @@
+<title>Reunión con Jorge</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Una columna de lectura; tarjetas por apartado, tablas con su propio desplazamiento */
+:root{--bg:#f5f6f2;--fg:#1f2a1f;--muted:#5b675a;--line:#dce2d8;--card:#fff;--acc:#2e6b31;--head:#eef2ea;--f:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#131913;--fg:#e5ebe3;--muted:#9eac9c;--line:#2b3529;--card:#1a221a;--acc:#86c788;--head:#202a20;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#131913;--fg:#e5ebe3;--muted:#9eac9c;--line:#2b3529;--card:#1a221a;--acc:#86c788;--head:#202a20;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.55 var(--f);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+main{max-width:760px;margin:0 auto}
+h1{font-size:1.5rem;margin:0;text-wrap:balance}
+.sub{color:var(--muted);font-size:.9rem;margin:.3rem 0}
+.fecha{color:var(--muted);font-size:.8rem;margin:.2rem 0 1rem}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px 16px 14px;margin-bottom:16px;min-width:0}
+h2{font-size:1.15rem;color:var(--acc);margin:14px 0 6px;text-wrap:balance}
+h3{font-size:1rem;margin:16px 0 4px}
+ul,ol{padding-left:1.3rem;margin:6px 0}
+li{padding:4px 0;overflow-wrap:anywhere}
+p{margin:8px 0}
+.tabla{overflow-x:auto;margin:8px 0;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;font-size:.88rem;min-width:560px;width:100%}
+th,td{text-align:left;vertical-align:top;padding:6px 8px;border-top:1px solid var(--line)}
+th{background:var(--head);border-top:0}
+td:first-child{font-variant-numeric:tabular-nums}
+code{font-size:.85em;background:var(--head);padding:0 4px;border-radius:4px;overflow-wrap:anywhere}
+a{color:var(--acc)}
+</style>
+<main>
+<h1>Reunión con Jorge</h1>
+<p class="sub">Preparado por Claude el 15/11/2026 para la reunión del 16/11. Se actualiza cada vez que Jorge contesta algo: lo contestado se quita de aquí y va a <code>docs/HISTORIAL.md</code>.</p><p class="sub">Consejo: que lo importante te lo confirme <strong>por escrito</strong> (WhatsApp o correo vale).</p><p class="fecha">Actualizado el 15/11/2026</p>
+<section><h2>🔴 1. Certificado de representante (FNMT)</h2><p>Sin él no se puede enviar nada a Hacienda desde la app ni firmar la declaración del programa.</p><ul><li>¿La empresa <strong>ya tiene</strong> certificado de representante de la S.L.? ¿Quién lo tiene y hasta cuándo vale?</li><li>Si no lo tiene: <strong>¿lo tramita él?</strong> (quedamos en que sí). Qué necesita de vosotros: DNI del que firma y <strong>certificado del Registro Mercantil</strong> del nombramiento (de menos de 15 días).</li><li>¿Los administradores (Fernando y Julián) son <strong>solidarios o mancomunados</strong>? Así sabemos quién puede firmar solo.</li><li>Cuando esté, que avise: Claude hace el último paso (envío a Hacienda en pruebas).</li></ul></section><section><h2>🔴 2. Verifactu y facturar con la app desde el 1/1/2027</h2><ul><li>El aplazamiento a <strong>octubre de 2028</strong> está <strong>anunciado, pero a 15/11/2026 no aparece en el BOE</strong> (Claude lo mira cada lunes). ¿Él sabe algo más?</li><li>¿Nos da el <strong>visto bueno por escrito</strong> para facturar con la app desde el 1/1/2027 (preparada para Verifactu, con la declaración firmada antes de octubre de 2028)?</li><li>Recordarle la <strong>decisión final el 22/12</strong> (si falta algo, Plan B: enero en Golden).</li></ul></section><section><h2>🔴 3. Clientes «sin IVA» (antes del 30/11)</h2><ul><li>Todo tiene que ir facturado. Propuesta: <strong>bajar el precio</strong> a esos clientes y que la factura salga con su base y su IVA. ¿Le parece bien?</li><li>Repasar con él la lista de esos clientes (y si «Bar Delfín» y «Bar Delfines» son el mismo).</li></ul></section><section><h2>🟡 4. Cosas que faltan por rellenar o decidir</h2><ol><li><strong>Factura por entrega o una al mes</strong> por cliente (la app hace una al mes con todos los albaranes).</li><li>Las facturas de <strong>diciembre</strong> que se hagan en Golden en enero: ¿con fecha <strong>31/12/2026</strong>?</li><li><strong>Series</strong>: 2027-0001 (normales) y R2027-0001 (rectificativas). ¿Bien? Las rectificativas van como <strong>R1</strong>; si alguna es de otro tipo (R4), que lo diga.</li><li><strong>Informes</strong>: ¿le llegaron los adjuntos del correo de prueba y le valen los formatos? (ventas y compras en Excel/PDF; caja y banco en CSV).</li><li><strong>Caja</strong>: ¿qué <strong>saldo inicial</strong> ponemos?</li><li><strong>Golden</strong>: cómo guardar el histórico de facturas al dejarlo (hay que conservarlas 4-6 años).</li><li><strong>Factura FV-B-26-032668</strong> de Ibérica: viene a nombre de <strong>FERJUSANZ C.B.</strong> (ahora somos S.L.). ¿Hay que pedir que la rectifiquen?</li><li>Confirmar que <strong>Anthropic, Cloudflare y Supabase</strong> no tienen que firmar la declaración del programa (son herramientas, no programas de facturación) y que el productor es FERJUSANZ.</li></ol></section><section><h2>🟢 5. Para decirle (no hay que preguntar)</h2><ul><li>Ya tiene <strong>usuario en la app</strong>. Para entrar: pantalla de entrada → «<strong>He olvidado la contraseña</strong>» con su correo (abogadoonetti@hotmail.com) y elige la suya. _(Antes, pruébalo tú una vez con tu correo.)_</li><li>Desde la app le llegan por correo los <strong>informes del mes</strong> (botón «📧 Enviar a Jorge por correo»), del día 1 al 10.</li><li>Ya contestó (no repetir): límite de 1.000 € en efectivo = <strong>cada albarán</strong>; concepto de compras = «Compra de mercaderías»; FERJUSANZ <strong>no está en el SII</strong>.</li></ul></section>
+</main>
