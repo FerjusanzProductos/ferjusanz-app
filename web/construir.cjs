@@ -328,7 +328,7 @@ ${cuerpo}
     </div>
     <div>
       <h2>Ferjusanz</h2>
-      <ul><li><a href="/empresa-de-venta-y-distribucion-de-fruta-y-verdura/">Quiénes somos</a></li><li><a href="/novedades/">Novedades del almacén</a></li><li><a href="/blog/">Guías para profesionales</a></li><li><a href="/contacto/">Contacto</a></li><li><a href="/aviso-legal/">Aviso legal</a></li><li><a href="/politica-de-privacidad/">Privacidad</a></li><li><a href="/politica-de-cookies/">Cookies</a></li></ul>
+      <ul><li><a href="/empresa-de-venta-y-distribucion-de-fruta-y-verdura/">Quiénes somos</a></li><li><a href="/zonas-de-reparto/">Zonas de reparto</a></li><li><a href="/novedades/">Novedades del almacén</a></li><li><a href="/blog/">Guías para profesionales</a></li><li><a href="/contacto/">Contacto</a></li><li><a href="/aviso-legal/">Aviso legal</a></li><li><a href="/politica-de-privacidad/">Privacidad</a></li><li><a href="/politica-de-cookies/">Cookies</a></li></ul>
     </div>
   </div>
   <p class="envoltura pie-legal">© ${new Date().getFullYear()} ${EMPRESA} · NIF ${NIF}</p>
@@ -470,7 +470,7 @@ ${(a => `<section class="guia-portada" aria-label="Última guía">
 
 <section class="bloque bloque-crema" id="zonas">
   <div class="envoltura zonas-in">
-    <div><p class="antetitulo">Zonas de reparto</p><h2>Reparto de fruta y verdura en Madrid y Segovia</h2><p class="entradilla">Rutas diarias propias. ¿No ve su localidad? Llámenos y le decimos si pasamos cerca.</p>${atajos}</div>
+    <div><p class="antetitulo">Zonas de reparto</p><h2>Reparto de fruta y verdura en Madrid y Segovia</h2><p class="entradilla">Rutas diarias propias. ¿No ve su localidad? Llámenos y le decimos si pasamos cerca. <a href="/zonas-de-reparto/">Ver las zonas</a>.</p>${atajos}</div>
     <ul class="zonas">${ZONAS.map(([z, l]) => `<li><strong>${z}</strong><span>${l}</span></li>`).join('')}</ul>
   </div>
 </section>
@@ -768,6 +768,58 @@ const NUEVAS = [
 <h2>También patata entera</h2>
 <p>Agria, Monalisa, nueva para freír, roja, violeta, baby, para bravas o para tornear. Consulte el <a href="/productos/patatas-2/">catálogo de patatas</a>.</p>` },
 ];
+// ───────── Páginas por zona (15/11/2026) ─────────
+// Zonas sacadas de dónde están los clientes reales (localidad y código postal en la base). Sin nombres de clientes.
+// Solo condiciones confirmadas por Fernando (REGLAS_INTERNAS): sin pedido mínimo, reparto en Madrid y Segovia, camiones y furgonetas refrigerados.
+const PAGINAS_ZONA = [
+  { slug: 'hortaleza-sanchinarro-las-tablas-valdebebas', corto: 'Hortaleza, Sanchinarro, Las Tablas y Valdebebas', foto: F + '2023/03/Tipos-de-guarniciones-de-verduras.jpg',
+    sitios: ['Hortaleza', 'Canillas', 'Pinar del Rey', 'Sanchinarro', 'Las Tablas', 'Valdebebas'],
+    intro: 'Es nuestra zona de casa: la oficina está en la calle Carare (28033) y buena parte de nuestros clientes de hostelería están en Hortaleza, Sanchinarro, Las Tablas y Valdebebas.',
+    extra: 'En los barrios nuevos del norte abren cada año restaurantes, cafeterías y escuelas infantiles. Si acaba de abrir, le ayudamos a montar el primer pedido con lo que de verdad va a gastar, sin pedido mínimo.' },
+  { slug: 'chamartin-ciudad-lineal-tetuan-san-blas', corto: 'Chamartín, Ciudad Lineal, Tetuán y San Blas', foto: '/fotos/mango-y-papaya.jpg',
+    sitios: ['Chamartín', 'Prosperidad', 'Ciudad Lineal', 'Ventas', 'Tetuán', 'San Blas'],
+    intro: 'Servimos a restaurantes, bares, cafeterías y comedores de Chamartín, Ciudad Lineal, Tetuán y San Blas, muy cerca de nuestra oficina de la calle Carare.',
+    extra: 'Son barrios de menú del día y de mucho movimiento a mediodía: verdura para guarniciones y cremas, patata para freír, cebolla y ajo pelados, y fruta de postre, todo en un mismo pedido.' },
+  { slug: 'moratalaz-vicalvaro-coslada-san-fernando', corto: 'Moratalaz, Vicálvaro, Coslada y San Fernando de Henares', foto: F + '2020/09/distribuidor-patatas-beneficios.jpg',
+    sitios: ['Moratalaz', 'Vicálvaro', 'Valdebernardo', 'Coslada', 'San Fernando de Henares'],
+    intro: 'Llevamos fruta, verdura, patatas y huevos a hostelería y colectividades de Moratalaz, Vicálvaro, Coslada y los polígonos de San Fernando de Henares.',
+    extra: 'En los polígonos hay comedores de empresa y caterings que necesitan volumen y regularidad. Ajustamos el pedido a sus servicios de la semana.' },
+  { slug: 'pozuelo-boadilla-las-rozas', corto: 'Pozuelo, Boadilla y Las Rozas', foto: F + '2020/09/frutas-verduras-comedor-colegio.jpg',
+    sitios: ['Pozuelo de Alarcón', 'Aravaca', 'Boadilla del Monte', 'Las Rozas'],
+    intro: 'En la zona oeste servimos a restaurantes, colegios y residencias de Pozuelo de Alarcón, Aravaca, Boadilla del Monte y Las Rozas.',
+    extra: 'Aquí trabajamos mucho con colegios y residencias: fruta de postre en calibres constantes, verdura para cremas y purés y patata pelada para ahorrar tiempo de cocina.' },
+  { slug: 'alcobendas-la-moraleja-san-sebastian-de-los-reyes', corto: 'Alcobendas, La Moraleja y San Sebastián de los Reyes', foto: F + '2020/09/verduras-residencias-ancianos.jpg',
+    sitios: ['Alcobendas', 'La Moraleja', 'San Sebastián de los Reyes'],
+    intro: 'Repartimos fruta, verdura, patatas y huevos a hostelería y colectividades de Alcobendas, La Moraleja y San Sebastián de los Reyes.',
+    extra: 'Restaurantes, hoteles de empresa y comedores: le llevamos el género que marque su carta y le avisamos cuando un producto sube o escasea, con una alternativa.' },
+  { slug: 'segovia', corto: 'Segovia', foto: F + '2019/10/proveedores-distribucion_crs2.jpg',
+    sitios: ['Segovia capital', 'La Lastrilla', 'Otero de Herreros', 'la sierra de Guadarrama'],
+    intro: 'Además de Madrid, repartimos en Segovia: a restaurantes, asadores, hoteles y colectividades de Segovia capital y alrededores, como La Lastrilla u Otero de Herreros.',
+    extra: 'La hostelería segoviana vive del producto: verdura de temporada, patata para asados y guarniciones, setas y fruta. Se la llevamos desde Madrid en camiones y furgonetas refrigerados.' },
+];
+const rutaZona = z => `/fruta-y-verdura-al-por-mayor-${z.slug}/`;
+for (const z of PAGINAS_ZONA) NUEVAS.push({
+  path: rutaZona(z), foto: z.foto,
+  title: `Fruta y verdura al por mayor en ${z.corto} | Ferjusanz`,
+  description: `Proveedor de fruta, verdura, patatas y huevos para restaurantes, bares, colegios y residencias de ${z.corto}. Sin pedido mínimo y reparto refrigerado.`,
+  html: `<h1>Fruta y verdura al por mayor en ${z.corto}</h1>
+<p>${z.intro}</p>
+<h2>Dónde repartimos</h2>
+<p>${z.sitios.slice(0, -1).join(', ')} y ${z.sitios.at(-1)}. Si su negocio está cerca y no lo ve en la lista, pregúntenos: <a href="/zonas-de-reparto/">ver todas las zonas</a>.</p>
+<h2>Qué le llevamos</h2>
+<ul><li><a href="/productos/frutas-2/">Fruta</a> de temporada y tropical.</li><li><a href="/productos/verduras-y-hortalizas/">Verdura y hortaliza</a> para guarniciones, ensaladas, cremas y guisos.</li><li><a href="/productos/patatas-2/">Patata</a> y <a href="/productos/patata-pelada-para-hosteleria/">patata pelada</a>, cebolla y ajo.</li><li><a href="/productos/huevos/">Huevos</a> en el mismo reparto.</li></ul>
+<p>${z.extra}</p>
+<h2>Cómo trabajamos</h2>
+<ul><li><strong>Sin pedido mínimo.</strong></li><li><strong>Reparto en camiones y furgonetas refrigerados.</strong></li><li><strong>Precio del día</strong>: cambia con el mercado, por eso no lo publicamos. Díganos qué productos le interesan por WhatsApp o por teléfono y se lo pasamos sin compromiso.</li><li><strong>Trato directo</strong> con la familia: ${ANIOS} en el sector.</li></ul>
+<p>Para su tipo de negocio: <a href="/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/">restaurantes</a>, <a href="/proveedor-de-frutas-y-verduras-para-hoteles-madrid/">hoteles</a>, <a href="/proveedor-de-frutas-y-verduras-para-colegios-madrid/">colegios</a> y <a href="/proveedor-de-frutas-y-verduras-para-residencias-madrid/">residencias</a>.</p>` });
+NUEVAS.push({ path: '/zonas-de-reparto/', foto: F + '2019/10/proveedores-distribucion_crs2.jpg',
+  title: 'Zonas de reparto de fruta y verdura en Madrid y Segovia | Ferjusanz',
+  description: 'Dónde reparte Ferjusanz fruta, verdura, patatas y huevos al por mayor: Madrid capital, zona norte, oeste, corredor del Henares y Segovia.',
+  html: `<h1>Zonas de reparto en Madrid y Segovia</h1>
+<p>Repartimos fruta, verdura, patatas y huevos a hostelería, colectividades y fruterías de <strong>Madrid y Segovia</strong>, en camiones y furgonetas refrigerados y sin pedido mínimo. Estas son las zonas donde más trabajamos:</p>
+<ul>${PAGINAS_ZONA.map(z => `<li><a href="${rutaZona(z)}">${z.corto}</a></li>`).join('')}</ul>
+<p>También servimos en el resto de Madrid capital. Si no ve su zona, <a href="/contacto/">pregúntenos</a>.</p>` });
+
 // Páginas legales: datos reales de la empresa. Registro Mercantil sacado del BORME-A del 22/02/2016 (nº 78947, Madrid).
 const LEGALES = [
   ['/aviso-legal/', 'Aviso legal', `<p>En cumplimiento de la Ley 34/2002, de servicios de la sociedad de la información y de comercio electrónico (LSSI-CE), estos son los datos del titular de esta web:</p>

@@ -14,7 +14,7 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - 🟡 Una **nota de voz a la semana** de Fernando con algo del mercado para los artículos.
 - ⚪ La tarea automática de la web (`trig_01AXKhyzZyg7sMDufq37Ahuw`, cada 2 días) no ve Drive: las fotos, por el chat.
 - ⚪ **Cuando haya dominio** (Claude; decidido el 15/11/2026: la web nueva usará **el mismo dominio**, www.ferjusanz-frutas-verduras.es, lo mejor para Google; depende de entrar en Webempresa, sin tocar el correo): `PRUEBAS = false` en `web/worker.js`, apuntar el dominio, Search Console, enlazar la ficha de Google, tarjeta en `www…/tarjeta/` (cambiar `URL_TARJETA` en `public/index.html` y la redirección en `src/worker.js`).
-- ⚪ Ideas para subir en Google (cuando Fernando diga): reseñas, publicaciones semanales en la ficha, vídeos, páginas por zona, directorios, redes, anuncios de Meta, informe mensual. Lista completa en `docs/LISTA_PARA_ENVIAR.md`.
+- ⚪ Ideas para subir en Google (cuando Fernando diga): reseñas, publicaciones semanales en la ficha, vídeos, directorios, redes, anuncios de Meta, informe mensual. Lista completa en `docs/LISTA_PARA_ENVIAR.md`.
 
 ## 📱 LA APP
 ### 👤 Fernando
