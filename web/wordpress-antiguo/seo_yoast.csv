@@ -1,0 +1,76 @@
+﻿tipo,titulo_pagina,slug,url,titulo_seo,meta_descripcion,frase_clave,canonical,noindex,origen
+page,Privacy Policy,privacy-policy,https://www.ferjusanz-frutas-verduras.es/privacy-policy/,,,,,,postmeta
+page,Política de Cookies y Privacidad,politica-de-cookies-y-privacidad,https://www.ferjusanz-frutas-verduras.es/politica-de-cookies-y-privacidad/,,,,,,postmeta + yoast_indexable
+page,Home,home,https://www.ferjusanz-frutas-verduras.es/,,,,,,postmeta + yoast_indexable
+page,Empresa de Distribución de Frutas y Verduras,empresa-de-venta-y-distribucion-de-fruta-y-verdura,https://www.ferjusanz-frutas-verduras.es/84-2/,,,,,,postmeta + yoast_indexable
+page,Productos,productos,https://www.ferjusanz-frutas-verduras.es/productos/,,,,,,postmeta + yoast_indexable
+page,Mayorista de frutas y verduras Madrid,mayorista-de-frutas-y-verduras-madrid,https://www.ferjusanz-frutas-verduras.es/mayorista-de-frutas-y-verduras-madrid/,,,,,,postmeta + yoast_indexable
+page,Patatas,patatas-2,https://www.ferjusanz-frutas-verduras.es/productos/patatas-2/,,,,,,postmeta + yoast_indexable
+page,Frutas,frutas-2,https://www.ferjusanz-frutas-verduras.es/productos/frutas-2/,,,,,,postmeta + yoast_indexable
+page,Verduras y Hortalizas,verduras-y-hortalizas,https://www.ferjusanz-frutas-verduras.es/productos/verduras-y-hortalizas/,,,,,,postmeta + yoast_indexable
+page,Setas y Champiñones,setas-y-champinones-2,https://www.ferjusanz-frutas-verduras.es/productos/setas-y-champinones-2/,,,,,,postmeta + yoast_indexable
+page,Exportación,exportacion-de-frutas-y-verduras,https://www.ferjusanz-frutas-verduras.es/servicios-de-distribucion-y-exportacion/exportacion-de-frutas-y-verduras/,,,,,,postmeta + yoast_indexable
+page,Servicios de distribución y exportación,servicios-de-distribucion-y-exportacion,https://www.ferjusanz-frutas-verduras.es/servicios-de-distribucion-y-exportacion/,,,,,,postmeta + yoast_indexable
+page,Distribución en Madrid,distribucion-de-frutas-y-verduras-en-madrid-2,https://www.ferjusanz-frutas-verduras.es/servicios-de-distribucion-y-exportacion/distribucion-de-frutas-y-verduras-en-madrid-2/,,,,,,postmeta + yoast_indexable
+page,Contacto,contacto,https://www.ferjusanz-frutas-verduras.es/contacto/,,,,,,postmeta + yoast_indexable
+page,Mayorista de Colectividades,mayorista-de-frutas-y-verduras-para-colectividades-madrid,https://www.ferjusanz-frutas-verduras.es/mayorista-de-frutas-y-verduras-para-colectividades-madrid/,,,,,,postmeta + yoast_indexable
+page,Distribución y venta de Patatas en Madrid,distribucion-y-venta-de-patatas-en-madrid,https://www.ferjusanz-frutas-verduras.es/distribucion-y-venta-de-patatas-en-madrid/,,,,,,postmeta + yoast_indexable
+page,Distribución y venta de cebollas,distribucion-y-venta-de-cebollas-madrid,https://www.ferjusanz-frutas-verduras.es/distribucion-y-venta-de-cebollas-madrid/,,,,,,postmeta + yoast_indexable
+page,Distribución y venta de frutas en madrid,distribucion-y-venta-de-frutas-madrid,https://www.ferjusanz-frutas-verduras.es/distribucion-y-venta-de-frutas-madrid/,,,,,,postmeta + yoast_indexable
+page,Distribución y venta de verduras Madrid,distribucion-y-venta-de-verduras-madrid,https://www.ferjusanz-frutas-verduras.es/distribucion-y-venta-de-verduras-madrid/,,,,,,postmeta + yoast_indexable
+page,Distribución y venta de hortalizas Madrid,distribucion-y-venta-de-hortalizas-madrid,https://www.ferjusanz-frutas-verduras.es/distribucion-y-venta-de-hortalizas-madrid/,,,,,,postmeta + yoast_indexable
+page,REPARTO Y VENTA DE VERDURAS MADRID,reparto-y-venta-de-verduras-madrid,https://www.ferjusanz-frutas-verduras.es/reparto-y-venta-de-verduras-madrid/,,,,,,postmeta + yoast_indexable
+page,DISTRIBUCION Y VENTA DE PRODUCTOS DE CUARTA GAMA MADRID,distribucion-y-venta-de-productos-de-cuarta-gama-madrid,https://www.ferjusanz-frutas-verduras.es/distribucion-y-venta-de-productos-de-cuarta-gama-madrid/,,,,,,postmeta + yoast_indexable
+page,DISTRIBUCIÓN Y VENTA DE LEGUMBRES EN MADRID,distribucion-y-venta-de-legumbres-madrid,https://www.ferjusanz-frutas-verduras.es/distribucion-y-venta-de-legumbres-madrid/,,,,,,postmeta + yoast_indexable
+page,REPARTO Y VENTA DE CEBOLLAS MADRID,reparto-y-venta-de-cebollas-madrid,https://www.ferjusanz-frutas-verduras.es/reparto-y-venta-de-cebollas-madrid/,,,,,,postmeta + yoast_indexable
+page,Reparto y venta de patatas Madrid,reparto-y-venta-de-patatas-madrid,https://www.ferjusanz-frutas-verduras.es/reparto-y-venta-de-patatas-madrid/,,,,,,postmeta + yoast_indexable
+page,REPARTO Y VENTA DE HORTALIZAS MADRID,reparto-y-venta-de-hortalizas-madrid,https://www.ferjusanz-frutas-verduras.es/reparto-y-venta-de-hortalizas-madrid/,,,,,,postmeta + yoast_indexable
+page,Entrega a domicilio por COVID-19,entrega-a-domicilio-frutas-y-verduras-por-covid19__trashed,https://www.ferjusanz-frutas-verduras.es/servicios-de-distribucion-y-exportacion/entrega-a-domicilio-frutas-y-verduras-por-covid19/,,,,,,postmeta + yoast_indexable
+page,Distribución y venta de cebollas-copia,distribucion-y-venta-de-cebollas-madrid__trashed,https://www.ferjusanz-frutas-verduras.es/distribucion-y-venta-de-cebollas-madrid__trashed/,,,,,,postmeta
+post,Tipos de patatas,tipos-de-patatas,https://www.ferjusanz-frutas-verduras.es/tipos-de-patatas/,,,,,,postmeta
+post,"¿Cómo se cultivan, se siembran y se cosechan las cebollas?",cultivar-sembrar-cosechar-cebollas-terreno,https://www.ferjusanz-frutas-verduras.es/cultivar-sembrar-cosechar-cebollas-terreno/,,,,,,postmeta
+post,Ajos y cebollas. Propiedades y beneficios,ajos-cebollas-propiedades-beneficios,https://www.ferjusanz-frutas-verduras.es/ajos-cebollas-propiedades-beneficios/,,,,,,postmeta
+post,Frutas perfectas para la temporada de verano,frutas-temporada-verano-primavera,https://www.ferjusanz-frutas-verduras.es/frutas-temporada-verano-primavera/,,,,,,postmeta
+post,Beneficios de las frutas y verduras en los comedores del colegio,frutas-verduras-comedor-colegio-beneficios,https://www.ferjusanz-frutas-verduras.es/frutas-verduras-comedor-colegio-beneficios/,,,,,,postmeta
+post,Las importancia de las frutas y las verduras en las personas mayores,las-importancia-de-las-frutas-y-las-verduras-en-las-personas-mayores,https://www.ferjusanz-frutas-verduras.es/las-importancia-de-las-frutas-y-las-verduras-en-las-personas-mayores/,,,,,,postmeta
+post,Las mejores frutas de otoño,frutas-de-temporada-otono,https://www.ferjusanz-frutas-verduras.es/frutas-de-temporada-otono/,,,,,,postmeta
+post,Las patatas y las hortalizas,beneficios-patatas-y-hortalizas,https://www.ferjusanz-frutas-verduras.es/beneficios-patatas-y-hortalizas/,,,,,,postmeta
+post,"Las patatas. Cultivo, cosecha y recolección",patatas-cultivo-cosecha-recoleccion-pasos,https://www.ferjusanz-frutas-verduras.es/patatas-cultivo-cosecha-recoleccion-pasos/,,,,,,postmeta
+post,Verduras de temporada de verano,verduras-de-temporada-de-verano,https://www.ferjusanz-frutas-verduras.es/verduras-de-temporada-de-verano/,,,,,,postmeta
+post,Verduras de temporada de invierno,verduras-de-temporada-de-invierno,https://www.ferjusanz-frutas-verduras.es/verduras-de-temporada-de-invierno/,,,,,,postmeta
+post,Riesgos y beneficios de consumir naranjas,riesgos-beneficios-de-consumir-naranjas,https://www.ferjusanz-frutas-verduras.es/riesgos-beneficios-de-consumir-naranjas/,,,,,,postmeta
+post,Setas y champiñones. Beneficios para la salud,setas-y-champinones-beneficios-salud,https://www.ferjusanz-frutas-verduras.es/setas-y-champinones-beneficios-salud/,,,,,,postmeta
+post,La fruta ¿con o sin piel?,la-fruta-con-o-sin-piel,https://www.ferjusanz-frutas-verduras.es/la-fruta-con-o-sin-piel/,,,,,,postmeta
+post,Conservación de frutas y verduras ¿fuera o dentro de la nevera?,conservacion-de-frutas-y-verduras-fuera-o-dentro-de-la-nevera,https://www.ferjusanz-frutas-verduras.es/conservacion-de-frutas-y-verduras-fuera-o-dentro-de-la-nevera/,,,,,,postmeta
+post,Frutas y verduras de temporada en verano,frutas-y-verduras-de-temporada-en-verano,https://www.ferjusanz-frutas-verduras.es/frutas-y-verduras-de-temporada-en-verano/,,,,,,postmeta
+post,Frutas y verduras de temporada en otoño,frutas-y-verduras-de-temporada-en-otono,https://www.ferjusanz-frutas-verduras.es/frutas-y-verduras-de-temporada-en-otono/,,,,,,postmeta
+post,Cremas de verduras calentitas,cremas-de-verduras-calentitas,https://www.ferjusanz-frutas-verduras.es/cremas-de-verduras-calentitas/,,,,,,postmeta
+post,Beneficios de las frutas y verduras para el verano,beneficios-de-las-frutas-y-verduras-para-el-verano,https://www.ferjusanz-frutas-verduras.es/beneficios-de-las-frutas-y-verduras-para-el-verano/,,,,,,postmeta
+post,"Frutas exóticas, cómo conservarlas",frutas-exoticas-como-conservarlas,https://www.ferjusanz-frutas-verduras.es/frutas-exoticas-como-conservarlas/,,,,,,postmeta
+post,Tipos de frutas de invierno y sus beneficios,tipos-de-frutas-de-invierno-y-sus-beneficios,https://www.ferjusanz-frutas-verduras.es/tipos-de-frutas-de-invierno-y-sus-beneficios/,,,,,,postmeta
+page,Gracias,gracias,https://www.ferjusanz-frutas-verduras.es/gracias/,,,,,,postmeta
+post,Todo sobre los frutos rojos,todo-sobre-los-frutos-rojos,https://www.ferjusanz-frutas-verduras.es/todo-sobre-los-frutos-rojos/,,,,,,postmeta
+post,Guiso de calabaza con garbanzos,guiso-de-calabaza-con-garbanzos,https://www.ferjusanz-frutas-verduras.es/guiso-de-calabaza-con-garbanzos/,,,,,,postmeta
+post,Cómo hacer para que los niños coman frutas y verduras,como-hacer-para-que-los-ninos-coman-frutas-y-verduras,https://www.ferjusanz-frutas-verduras.es/como-hacer-para-que-los-ninos-coman-frutas-y-verduras/,,,,,,postmeta
+post,¿Qué es el plato Harvard?,que-es-el-plato-harvard,https://www.ferjusanz-frutas-verduras.es/que-es-el-plato-harvard/,,,,,,postmeta
+post,"El ajo, mucho más que un alimento",el-ajo-mucho-mas-que-un-alimento,https://www.ferjusanz-frutas-verduras.es/el-ajo-mucho-mas-que-un-alimento/,,,,,,postmeta
+post,Cuida tu corazón con estas frutas y verduras,cuida-tu-corazon-con-estas-frutas-y-verduras,https://www.ferjusanz-frutas-verduras.es/cuida-tu-corazon-con-estas-frutas-y-verduras/,,,,,,postmeta
+post,Frutas y verduras en una barbacoa ¿por qué no?,frutas-y-verduras-en-una-barbacoa-por-que-no,https://www.ferjusanz-frutas-verduras.es/frutas-y-verduras-en-una-barbacoa-por-que-no/,,,,,,postmeta
+post,"Gazpacho, aprende la verdadera receta",gazpacho-aprende-la-verdadera-receta,https://www.ferjusanz-frutas-verduras.es/gazpacho-aprende-la-verdadera-receta/,,,,,,postmeta
+post,¿Qué hacer con la piel de algunas frutas y verduras?,que-hacer-con-la-piel-de-algunas-frutas-y-verduras,https://www.ferjusanz-frutas-verduras.es/que-hacer-con-la-piel-de-algunas-frutas-y-verduras/,,,,,,postmeta
+post,Frutas perfectas para el invierno,frutas-perfectas-para-el-invierno,https://www.ferjusanz-frutas-verduras.es/frutas-perfectas-para-el-invierno/,,,,,,postmeta
+post,Frutas y verduras en el embarazo,frutas-y-verduras-en-el-embarazo,https://www.ferjusanz-frutas-verduras.es/frutas-y-verduras-en-el-embarazo/,,,,,,postmeta
+post,Las frutas también son para el invierno,las-frutas-tambien-son-para-el-invierno,https://www.ferjusanz-frutas-verduras.es/las-frutas-tambien-son-para-el-invierno/,,,,,,postmeta
+post,Conoce todos los tipos de pimientos,conoce-todos-los-tipos-de-pimientos,https://www.ferjusanz-frutas-verduras.es/conoce-todos-los-tipos-de-pimientos/,,,,,,postmeta
+post,Tipos de guarniciones de verduras,tipos-de-guarniciones-de-verduras,https://www.ferjusanz-frutas-verduras.es/tipos-de-guarniciones-de-verduras/,,,,,,postmeta
+post,Tipos de tomates,tipos-de-tomates,https://www.ferjusanz-frutas-verduras.es/tipos-de-tomates/,,,,,,postmeta
+post,5 formas de consumir sandía,5-formas-de-consumir-sandia,https://www.ferjusanz-frutas-verduras.es/5-formas-de-consumir-sandia/,,,,,,postmeta
+post,Beneficios de consumir frutas de temporada,beneficios-de-consumir-frutas-de-temporada,https://www.ferjusanz-frutas-verduras.es/beneficios-de-consumir-frutas-de-temporada/,,,,,,postmeta
+post,Verduras esenciales para una dieta equilibrada,verduras-esenciales-para-una-dieta-equilibrada,https://www.ferjusanz-frutas-verduras.es/verduras-esenciales-para-una-dieta-equilibrada/,,,,,,postmeta
+post,Frutas tropicales: un toque exótico y saludable,frutas-tropicales-un-toque-exotico-y-saludable,https://www.ferjusanz-frutas-verduras.es/frutas-tropicales-un-toque-exotico-y-saludable/,,,,,,postmeta
+post,La importancia de las verduras frescas en la dieta,la-importancia-de-las-verduras-frescas-en-la-dieta,https://www.ferjusanz-frutas-verduras.es/la-importancia-de-las-verduras-frescas-en-la-dieta/,,,,,,postmeta
+post,Cómo se garantiza la frescura en la distribución de frutas y verduras,como-se-garantiza-la-frescura-en-la-distribucion-de-frutas-y-verduras,https://www.ferjusanz-frutas-verduras.es/como-se-garantiza-la-frescura-en-la-distribucion-de-frutas-y-verduras/,,,,,,postmeta
+post,Frutas tropicales: propiedades y beneficios para la salud,frutas-tropicales-propiedades-y-beneficios-para-la-salud,https://www.ferjusanz-frutas-verduras.es/frutas-tropicales-propiedades-y-beneficios-para-la-salud/,,,,,,postmeta
+post,La sostenibilidad en la distribución de frutas y hortalizas,la-sostenibilidad-en-la-distribucion-de-frutas-y-hortalizas,https://www.ferjusanz-frutas-verduras.es/la-sostenibilidad-en-la-distribucion-de-frutas-y-hortalizas/,,,,,,postmeta
+post,Patatas: variedades y usos en la cocina,patatas-variedades-y-usos-en-la-cocina,https://www.ferjusanz-frutas-verduras.es/patatas-variedades-y-usos-en-la-cocina/,,,,,,postmeta
+post,Borrador automático,,https://www.ferjusanz-frutas-verduras.es//,,,,,,postmeta

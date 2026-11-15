@@ -1,0 +1,10 @@
+EXTRACCIÓN SQL FERJUSANZ — 15/11/2026
+
+todas_paginas_entradas.csv: 75 registros (71 publish, 1 draft, 1 auto-draft, 2 trash). Incluye páginas y entradas aunque no estén en sitemap. URLs del dump; no verificadas en directo.
+slugs_antiguos.csv: 1 registro _wp_old_slug, perteneciente a popupbuilder (no post/page).
+seo_yoast.csv: 75 páginas/entradas con datos de postmeta y/o yoast_indexable; celdas vacías significan dato ausente, no ausencia de SEO en la web pública.
+alt_fotografias.csv: 74 registros de alt vinculados a adjuntos, incluidos vacíos.
+google_y_ficha_empresa.txt: verificación de Google y campos locales, sin tokens ni datos personales. No existe opción wpseo_local en este dump.
+pistas_anteriores_2019.csv: rutas de uploads/2014 referenciadas en SQL; no se encontraron entradas/páginas con fecha anterior a 2019.
+PENDIENTE DE CREATIVATE: DNS de correo MX, SPF, DKIM (y DMARC si existe); logotipo vectorial/original de alta resolución.
+No contiene wp-config.php, contraseñas, hashes, usuarios, ni correos de clientes.

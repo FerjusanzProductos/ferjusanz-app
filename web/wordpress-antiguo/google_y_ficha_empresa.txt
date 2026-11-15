@@ -1,0 +1,7 @@
+Origen: ferJwp_options. Tokens de verificación omitidos por seguridad.
+
+wpseo: presente; longitud 697 caracteres.
+Campos de ficha/configuración identificados (sin valores): baiduverify, enable_xml_sitemap, googleverify, msverify, yandexverify
+
+wpseo_titles: presente; longitud 4089 caracteres.
+Campos de ficha/configuración identificados (sin valores): %%date%% %%page%% %%sep%% %%sitename%%, %%name%%, autor en %%sitename%% %%page%%, %%pt_plural%% archivo %%page%% %%sep%% %%sitename%%, %%sitename%% %%page%% %%sep%% %%sitedesc%%, %%term_title%% archivos %%page%% %%sep%% %%sitename%%, %%title%% %%page%% %%sep%% %%sitename%%, Has buscado %%searchphrase%% %%page%% %%sep%% %%sitename%%, Página no encontrada %%sep%% %%sitename%%, alternate_website_name, company, company_logo, company_logo_id, company_name, company_or_person, company_or_person_user_id, https://www.ferjusanz-frutas-verduras.es/wp-content/uploads/2019/10/logotipo.png, person_logo, person_logo_id, person_name, website_name
