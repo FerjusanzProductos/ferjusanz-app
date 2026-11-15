@@ -128,7 +128,7 @@ const PREGUNTAS = [
   ['¿Cómo se paga?', 'Al contado en la entrega o con factura, según lo que acordemos. Cada albarán lleva el peso real, el precio y el IVA: paga lo que recibe.'],
   ['¿Venden también huevos?', 'Sí, huevos de gallina y de codorniz, que le llevamos en el mismo reparto que la fruta y la verdura.'],
   ['¿Tienen patata pelada y producto cortado?', 'Sí: patata pelada en bastón, en dados, panadera, para ensaladilla o envasada al vacío, y cebolla y ajo pelados.'],
-  ['¿De dónde viene el género?', 'Parte es de cosecha propia y de agricultores que conocemos desde hace años; el resto lo elegimos cada mañana en Mercamadrid.'],
+  ['¿De dónde viene el género?', 'Trabajamos con agricultores y productores que conocemos desde hace años; el resto lo elegimos cada mañana en Mercamadrid.'],
   ['¿Cuál es su horario?', HORARIO + '.'],
 ];
 
@@ -415,7 +415,7 @@ function inicio(p) {
   <div class="envoltura">
     <div class="bloque-cabeza"><div><p class="antetitulo">Por qué Ferjusanz</p><h2>Un proveedor en el que su cocina puede confiar</h2></div><a class="enlace" href="#pedir-precio">Pedir presupuesto ${I.flecha}</a></div>
     <ul class="ventajas">
-      <li>${I.hoja}<strong>Calidad homogénea, pedido tras pedido</strong><span>Seleccionamos caja a caja a primera hora en Mercamadrid y contamos con cosecha propia y agricultores de confianza.</span></li>
+      <li>${I.hoja}<strong>Calidad homogénea, pedido tras pedido</strong><span>Seleccionamos caja a caja a primera hora en Mercamadrid y trabajamos con agricultores de confianza.</span></li>
       <li>${I.camion}<strong>Reparto puntual con cadena de frío</strong><span>Flota propia de camiones y furgonetas refrigerados. Entregamos a la hora que marca su servicio.</span></li>
       <li>${I.reloj}<strong>Precio de mercado, cada día</strong><span>Tarifa según la lonja del día y el volumen de su consumo, sin intermediarios añadidos.</span></li>
       <li>${I.familia}<strong>Un interlocutor directo</strong><span>Pedidos, cambios e incidencias se resuelven con la familia, por WhatsApp o teléfono.</span></li>
@@ -540,7 +540,7 @@ function paginaFamilia(p, f, textoHtml) {
     <h2 class="pequeno">Lo que solemos tener</h2>
     <ul class="chips">${f.lista.map(x => `<li>${x}</li>`).join('')}</ul>
     ${botonesWA(`Hola, quería precio de ${f.nombre.toLowerCase()} para mi negocio.`, 'apiladas')}
-    <ul class="garantias"><li>${I.camion} Reparto en camión refrigerado</li><li>${I.hoja} Cosecha propia y Mercamadrid</li><li>${I.reloj} ${HORARIO}</li></ul>
+    <ul class="garantias"><li>${I.camion} Reparto en camión refrigerado</li><li>${I.hoja} Agricultores de confianza y Mercamadrid</li><li>${I.reloj} ${HORARIO}</li></ul>
   </div>
 </div></section>
 <section class="bloque"><div class="envoltura"><article class="texto">${resto}</article></div></section>
@@ -635,8 +635,8 @@ function empresa(p) {
   const antes = `<p class="entradilla">Somos ${EMPRESA}: una empresa familiar que va ya por la tercera generación, con ${ANIOS} vendiendo y repartiendo fruta, verdura, patatas y huevos en Madrid y Segovia.</p>
 <h2>De padres a hijos</h2>
 <p>Lo que empezó con patatas y cebollas es hoy un catálogo de más de 200 productos frescos. Ha cambiado el tamaño, pero no la forma de trabajar: elegir el género uno mismo, cumplir con la hora de entrega y coger el teléfono cuando un cliente llama.</p>
-<h2>Cosecha propia</h2>
-<p>Buena parte de lo que vendemos lo cultivamos o lo supervisamos en el campo, con agricultores con los que trabajamos desde hace años. Así lo recogemos en su punto y sabemos de dónde viene cada caja.</p>`;
+<h2>Del campo a su cocina</h2>
+<p>Trabajamos con agricultores y productores con los que llevamos años, y el resto lo elegimos nosotros mismos en Mercamadrid. Así sabemos de dónde viene cada caja.</p>`;
   return paginaTexto(p, { antes, entradilla: 'Tercera generación de mayoristas. Más de 40 años alegrando la mesa de Madrid.', miga: 'Quiénes somos', foto: F + '2019/10/proveedores-distribucion_crs2.jpg' });
 }
 
@@ -668,7 +668,7 @@ function tarjeta() {
   <a class="btn btn-borde" href="data:text/vcard;charset=utf-8,${encodeURIComponent(vcf)}" download="Ferjusanz.vcf"><span>📇 Guardar el contacto en el móvil</span></a></div>
   <div class="texto">
   <h2>¿De dónde sale el género?</h2>
-  <p>Parte es de <strong>cosecha propia</strong> y de agricultores con los que trabajamos desde hace años; el resto lo elegimos nosotros mismos cada mañana en <strong>Mercamadrid</strong>. Preparamos los pedidos de madrugada y los llevamos en camiones y furgonetas refrigerados.</p>
+  <p>Trabajamos con <strong>agricultores de confianza</strong> con los que llevamos años; el resto lo elegimos nosotros mismos cada mañana en <strong>Mercamadrid</strong>. Preparamos los pedidos de madrugada y los llevamos en camiones y furgonetas refrigerados.</p>
   <h2>¿Qué servimos?</h2>
   <p>Más de 200 productos frescos: ${FAMILIAS.map(f => f.ruta ? `<a href="${f.ruta}">${f.nombre.toLowerCase()}</a>` : f.nombre.toLowerCase()).join(', ')}. También patata, cebolla y ajo pelados. Si no ve un producto, se lo buscamos.</p>
   <h2>¿Cuándo y cómo se hace el pedido?</h2>
@@ -698,13 +698,13 @@ const NUEVAS = [
   { path: '/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', foto: F + '2023/03/Tipos-de-guarniciones-de-verduras.jpg', title: 'Proveedor de fruta y verdura para restaurantes en Madrid | Ferjusanz',
     description: 'Proveedor de fruta, verdura, patata pelada y huevos para restaurantes, bares y catering en Madrid. Reparto refrigerado diario y precio de mercado.',
     html: `<h1>Proveedor de frutas y verduras para hostelería en Madrid</h1>
-<p>Un restaurante vive de su género. Por eso llevamos ${ANIOS} sirviendo a <strong>restaurantes, bares, hoteles y empresas de catering</strong> de Madrid con fruta, verdura, patatas y huevos seleccionados cada mañana en Mercamadrid y en nuestra cosecha propia.</p>
+<p>Un restaurante vive de su género. Por eso llevamos ${ANIOS} sirviendo a <strong>restaurantes, bares, hoteles y empresas de catering</strong> de Madrid con fruta, verdura, patatas y huevos seleccionados cada mañana en Mercamadrid y de agricultores de confianza.</p>
 <h2>Todo lo que necesita una cocina, en un solo pedido</h2>
 <ul><li><strong>Verdura y hortaliza</strong> de temporada para guarniciones, ensaladas y menú del día.</li><li><strong>Patata</strong> para freír, cocer o asar, y <a href="/productos/patata-pelada-para-hosteleria/">patata pelada</a> en bastón, dados o panadera, lista para la freidora.</li><li><strong>Cebolla y ajo pelados</strong>, que ahorran horas de cocina.</li><li><strong>Fruta</strong> para postres, zumos y desayunos, también tropical y exótica.</li><li><strong>Gama gourmet</strong>: tomates de variedad, setas de temporada, brotes y hierbas frescas.</li><li><a href="/productos/huevos/">Huevos</a> de gallina y de codorniz.</li></ul>
 <h2>Cómo trabajamos con la hostelería</h2>
 <p>Nos envía el pedido por WhatsApp o por teléfono, le confirmamos el precio del día y se lo llevamos en nuestros camiones y furgonetas refrigerados a la hora que marque su servicio. Si algo no llega como debe, se cambia: hablamos directamente con usted, sin centralitas.</p>
 <h2>Por qué Ferjusanz</h2>
-<p>Somos la tercera generación de una familia de mayoristas, con cosecha propia y puesto en Mercamadrid. Conocemos el producto y conocemos las prisas de una cocina.</p>` },
+<p>Somos la tercera generación de una familia de mayoristas, con puesto en Mercamadrid y agricultores de confianza. Conocemos el producto y conocemos las prisas de una cocina.</p>` },
   { path: '/proveedor-de-frutas-y-verduras-para-hoteles-madrid/', foto: '/fotos/mango-y-papaya.jpg', title: 'Proveedor de frutas y verduras para hoteles en Madrid | Ferjusanz',
     description: 'Fruta y verdura al por mayor para hoteles de Madrid: desayunos, bufé, cocina y eventos. Reparto refrigerado y calidad constante.',
     html: `<h1>Proveedor de frutas y verduras para hoteles en Madrid</h1>

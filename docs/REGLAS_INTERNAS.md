@@ -120,6 +120,11 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - **Aparcado:** envío automático por WhatsApp desde el 609 567 354 (coexistencia de WhatsApp Business con la API de Meta). Retomar cuando Fernando lo diga.
 
 
+## Lo que se puede decir de la empresa (Fernando, 15/11/2026)
+- **No decir «cosecha propia»** (no la hay) en web, presentaciones ni mensajes: «agricultores de confianza» y «elegido en Mercamadrid».
+- Agricultura ecológica: «colaboramos con productores ecológicos siempre que tienen producto disponible».
+- Camiones y furgonetas refrigerados: sí.
+
 ## Condiciones comerciales (confirmadas por Fernando el 12/11/2026)
 - **Sin pedido mínimo.**
 - **Zonas de reparto: Madrid y Segovia.**
