@@ -12,7 +12,7 @@ Web de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., sin WordPress, en Cloudflare (
 - Clientes: hostelería, colectividades (colegios, residencias, comedores), fruterías. Género fresco cada día.
 - **NO hay cosecha propia** (Fernando, 15/11/2026): decir «agricultores de confianza» y Mercamadrid. Agricultura ecológica: «colaboramos con productores ecológicos siempre que tienen producto disponible». Reparto con camiones y furgonetas refrigerados (sí, confirmado).
 - Confirmado por Fernando (15/11/2026): más de 200 productos, reparto en Segovia, sin pedido mínimo, pedidos hasta la tarde anterior, exportación posible, pago al contado o con factura.
-- Frase de Fernando (16/11/2026): «seleccionamos nuestros productos minuciosamente y pensamos en que nos sentamos a la mesa de ese restaurante a disfrutar del menú; vamos de la mano con nuestros clientes».
+- Frase de Fernando (15/11/2026): «seleccionamos nuestros productos minuciosamente y pensamos en que nos sentamos a la mesa de ese restaurante a disfrutar del menú; vamos de la mano con nuestros clientes».
 - **No** se publican precios: siempre «pide precio por WhatsApp».
 
 ## Archivos
