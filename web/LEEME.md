@@ -22,7 +22,7 @@ Web de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., sin WordPress, en Cloudflare (
 - `anadir.cjs`: añade una novedad o un artículo (lo usa la tarea automática).
 - `public/estilo.css`: colores y aspecto. `public/fuentes/`: letras (Barlow Condensed para títulos y Barlow para texto, servidas desde la propia web). Estilo «Sobrio de mercado» (14/11/2026): papel blanco roto, tinta casi negra, solo granate, esquinas rectas, sin sombras, líneas finas, casi sin movimiento.
 - `public/wp-content/`: fotos de la web antigua (mismas rutas). `fotos/`: copia de las fotos nuevas, que se sirven desde el almacén KV de Cloudflare `ferjusanz-web-fotos` en `/fotos/…` (así el Worker no crece).
-- `worker.js`: sirve la web. `PRUEBAS = true` → no la ve Google.
+- `worker.js`: sirve la web; pasa el formulario de `/contacto/` a la función `web-contacto` de Supabase (correo a ferjusanz@hotmail.com) y manda el dominio sin `www` a `www`. `PRUEBAS = true` → no la ve Google.
 - `TAREA_AUTOMATICA.md`: lo que hace la tarea programada cada 2 días. `DIARIO.md`: lo que ha publicado.
 - `copiar-web-antigua.cjs`: cómo se copiaron los textos de la web antigua (no hace falta volver a usarlo).
 

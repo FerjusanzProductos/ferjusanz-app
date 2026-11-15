@@ -627,7 +627,22 @@ function contacto(p) {
   <div class="contacto-caja"><h2>WhatsApp</h2>${botonesWA('Hola, quería información de precios para mi negocio.', 'apiladas')}</div>
   <div class="contacto-caja"><h2>Teléfono y correo</h2><p><a class="grande" href="tel:+34917632186">${TEL}</a></p><p><a href="mailto:${EMAIL}">${EMAIL}</a></p></div>
   <div class="contacto-caja"><h2>Dónde estamos</h2><p>${DIRECCION}</p><p>${HORARIO}</p><p><strong>Zona de reparto</strong>: ${ZONAS.map(([z, l]) => `${z} (${l})`).join('; ')}.</p><p><a class="enlace" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Calle Carare 2, 28033 Madrid')}" rel="nofollow">Cómo llegar ${I.flecha}</a></p></div>
-</div></section>`;
+</div>
+<div class="envoltura"><form id="formulario" class="formulario" method="post" action="/enviar-contacto">
+  <h2>O déjenos un mensaje</h2>
+  <p>Le contestamos en horario de trabajo. Ponga un teléfono o un correo para poder responderle.</p>
+  <p class="aviso-form ok" hidden data-si="enviado">✔ Mensaje enviado. Le contestamos lo antes posible.</p>
+  <p class="aviso-form mal" hidden data-si="error">No se ha podido enviar. Revise los datos (nombre, un teléfono o correo y el mensaje) o escríbanos por WhatsApp.</p>
+  <label>Nombre *<input name="nombre" required maxlength="80" autocomplete="name"></label>
+  <label>Negocio<input name="negocio" maxlength="120" autocomplete="organization"></label>
+  <label>Teléfono<input name="telefono" type="tel" maxlength="20" autocomplete="tel" inputmode="tel"></label>
+  <label>Correo<input name="email" type="email" maxlength="120" autocomplete="email"></label>
+  <label class="trampa" aria-hidden="true">No rellenar<input name="web" tabindex="-1" autocomplete="off"></label>
+  <label>Mensaje *<textarea name="mensaje" required minlength="3" maxlength="2000" rows="5" placeholder="Qué productos necesita, cada cuánto y dónde"></textarea></label>
+  <p class="nota">Usamos estos datos solo para contestarle. Más información en la <a href="/politica-de-privacidad/">política de privacidad</a>.</p>
+  <button class="btn btn-wa" type="submit">Enviar mensaje</button>
+</form>
+<script>(function(){var q=location.search;document.querySelectorAll('[data-si]').forEach(function(e){if(q.indexOf(e.dataset.si+'=')>-1)e.hidden=false})})()</script></div></section>`;
   return plantilla({ ruta: '/contacto/', titulo: p.title, descripcion: p.description, cuerpo, datos: [m.datos, NEGOCIO] });
 }
 
@@ -755,7 +770,7 @@ const LEGALES = [
 <h2>Responsabilidad</h2><p>Procuramos que la información sea correcta y esté al día, pero no respondemos de errores puntuales ni del contenido de webs de terceros enlazadas desde aquí.</p>
 <h2>Legislación</h2><p>Esta web se rige por la legislación española.</p>`],
   ['/politica-de-privacidad/', 'Política de privacidad', `<p><strong>Responsable</strong>: ${EMPRESA}, NIF ${NIF}, ${DIRECCION}. Correo: <a href="mailto:${EMAIL}">${EMAIL}</a>.</p>
-<h2>Qué datos tratamos y para qué</h2><p>Esta web no tiene formularios ni pide datos. Si nos escribe por WhatsApp, nos llama o nos envía un correo, usamos su nombre, su teléfono o correo y lo que nos cuente para contestarle, darle precios y, si llega a ser cliente, gestionar sus pedidos, albaranes y facturas.</p>
+<h2>Qué datos tratamos y para qué</h2><p>Si nos escribe por WhatsApp, nos llama, nos envía un correo o nos deja un mensaje en el formulario de contacto, usamos su nombre, su teléfono o correo y lo que nos cuente para contestarle, darle precios y, si llega a ser cliente, gestionar sus pedidos, albaranes y facturas.</p>
 <h2>Base legal</h2><p>Su consentimiento al escribirnos y, si es cliente, la relación comercial y las obligaciones legales (facturación y contabilidad).</p>
 <h2>Cuánto tiempo</h2><p>Mientras dure la conversación o la relación comercial y, después, el tiempo que obliguen las leyes fiscales y mercantiles.</p>
 <h2>A quién se comunican</h2><p>A nadie, salvo obligación legal (por ejemplo, a Hacienda) y a quienes nos prestan servicios con las debidas garantías (gestoría, alojamiento de la web). WhatsApp es un servicio de Meta, con su propia política de privacidad.</p>

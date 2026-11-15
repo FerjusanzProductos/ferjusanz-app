@@ -5,6 +5,7 @@ _Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda · ⏸ en espera._
 ## 🌐 LA WEB (nueva, de prueba: https://ferjusanz-web.fernandosanzalba.workers.dev)
 Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lista para mandar por WhatsApp).
 - 🔴 **Fernando**: revisarla en el móvil y decir qué cambiar.
+- 🟡 **Fernando**: probar el **formulario** de Contacto (abajo del todo) con un mensaje y decir si llega a ferjusanz@hotmail.com (mirar también «Correo no deseado»).
 - 🔴 **Fernando**: mandar las preguntas a **Creativate** (titular del dominio, código de traslado, accesos de WordPress y alojamiento, copia, buzones de correo, Analytics/Tag Manager/Search Console, licencia de las fotos, permanencia). Que **no borren nada**.
 - 🟡 **Fotos reales** (carpeta de Drive «Fotos web Ferjusanz» o por el chat): furgoneta con logo, almacén, familia/equipo (con permiso), campo, patatas y patata pelada, cebollas y ajos, legumbres, cuarta gama, hierbas y picantes, pedidos preparados, Fernando o Julián en el puesto y el logo en buena calidad. No usar Getty ni bancos de pago.
 - 🟡 **Ficha de Google**: esperar respuesta a «Solicitar acceso». Cuando sea nuestra: S.L. en vez de C.B., dirección, horario, fotos, descripción, productos y mensaje para pedir reseñas.
@@ -12,8 +13,7 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - 🟡 **Portada «Scroll World»** (vuelo al bajar con el dedo, ordenador + móvil). Cuenta de Higgsfield ya conectada a Claude (gratis, 10 créditos). Coste calculado (15/11/2026): versión buena **≈ 1.475 créditos** (Ultra) o versión 720p **≈ 845** (cabe en Plus mensual, 39 €). Falta: **Fernando** elige plan y lo compra desde el móvil; luego Claude hace un borrador barato y después la buena.
 - 🟡 Datos del **Registro Mercantil** (tomo, folio, hoja) para el aviso legal.
 - 🔴 **Fernando → Creativate**: que **borren ya la tarifa de precios** de la web antigua (`/wp-content/uploads/2026/09/septiembre.jpg`, «Tarifa profesional septiembre 2026», a nombre de «C.B.»). No está enlazada, pero se abre con la dirección. Claude no tiene acceso a ese WordPress. Pedirles también los registros del correo del dominio (MX, SPF, DKIM y DMARC si lo hay) y el logo en buena calidad.
-- 🟡 **Claude** (esperando el «sí» de Fernando): en la web nueva, recuperar `slider02.jpg` (furgoneta); formulario normal además de WhatsApp; con y sin `www` el día del traslado.
-- ⚪ Idea (sin hacer): formulario «pedir tarifa» que guarde el contacto en `contactos_portal` para que Harvey lo clasifique.
+- ⚪ Idea (sin hacer): que el formulario de Contacto guarde también el contacto en la base para que Harvey lo clasifique.
 - 🟡 ¿Clientes en la portada (Hotel Cándido, Mesón de Cándido, La Figal de Pablo, Colegio Reggio, Residencia El Pardo de Aravaca)? Solo con su «sí» y el permiso de cada uno.
 - 🟡 Decidir si se miden las visitas (Google Analytics / Tag Manager `GTM-5QRBQNJ`); si sí, aviso de cookies.
 - 🟡 Una **nota de voz a la semana** de Fernando con algo del mercado para los artículos.
