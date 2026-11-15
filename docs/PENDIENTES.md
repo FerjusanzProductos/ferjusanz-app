@@ -13,7 +13,6 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - 🟡 Datos del **Registro Mercantil** (tomo, folio, hoja) para el aviso legal.
 - ⚪ Idea (sin hacer): que el formulario de Contacto guarde también el contacto en la base para que Harvey lo clasifique.
 - 🟡 ¿Clientes en la portada (Hotel Cándido, Mesón de Cándido, La Figal de Pablo, Colegio Reggio, Residencia El Pardo de Aravaca)? Solo con su «sí» y el permiso de cada uno.
-- 🟡 **Fernando**: decidir si se miden las visitas de la web nueva. Recomendado: **Cloudflare Web Analytics** (gratis, sin cookies, sin aviso de cookies; lo pone Claude). El Tag Manager viejo (`GTM-5QRBQNJ`, Fernando ya es administrador) solo tiene Universal Analytics, que Google apagó en 2023: no mide nada.
 - 🟡 Una **nota de voz a la semana** de Fernando con algo del mercado para los artículos.
 - ⚪ La tarea automática de la web (`trig_01AXKhyzZyg7sMDufq37Ahuw`, cada 2 días) no ve Drive: las fotos, por el chat.
 - ⚪ **Cuando haya dominio** (Claude): `PRUEBAS = false` en `web/worker.js`, apuntar el dominio, Search Console, enlazar la ficha de Google, tarjeta en `www…/tarjeta/` (cambiar `URL_TARJETA` en `public/index.html` y la redirección en `src/worker.js`).
