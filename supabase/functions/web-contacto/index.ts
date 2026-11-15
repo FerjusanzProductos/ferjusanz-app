@@ -28,9 +28,13 @@ async function apuntarContacto(nombre: string, negocio: string, telefono: string
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
   const hoy = new Date().toLocaleDateString("es-ES", { timeZone: "Europe/Madrid" });
   const nota = `🌐 Formulario de la web ${hoy}${negocio ? ` (${nombre})` : ""}: ${mensaje}`;
-  const tel = telefono.replace(/\D/g, "").slice(-9);
-  const filtros = [email && `email.eq.${email}`, tel.length === 9 && `telefono.ilike.%${tel}`].filter(Boolean).join(",");
-  const { data: ya } = filtros ? await sb.from("prospectos").select("id,notas").or(filtros).limit(1) : { data: [] };
+  // Mismo contacto si coincide el correo o los últimos 9 números del teléfono (sin espacios, puntos ni +34).
+  const nums = (t: unknown) => String(t ?? "").replace(/\D/g, "").slice(-9);
+  const tel = nums(telefono);
+  // shortcut: lee todos los contactos (hoy < 100); si pasan de 1.000, buscar con una función SQL.
+  const { data: todos, error: e0 } = await sb.from("prospectos").select("id,notas,email,telefono").limit(1000);
+  if (e0) throw e0;
+  const ya = (todos || []).filter((p) => (email && (p.email || "").toLowerCase() === email) || (tel.length === 9 && nums(p.telefono) === tel));
   if (ya?.length) {
     const { error } = await sb.from("prospectos").update({ notas: [ya[0].notas, nota].filter(Boolean).join("\n").slice(-4000) }).eq("id", ya[0].id);
     if (error) throw error;
@@ -55,8 +59,7 @@ Deno.serve(async (req) => {
     if (!mailOk && telefono.replace(/\D/g, "").length < 9) return json({ error: "contacto" }, 400);
     if (email && !mailOk) return json({ error: "email" }, 400);
     if (mensaje.length < 3) return json({ error: "mensaje" }, 400);
-    // El email solo si es válido: en filtros de PostgREST no puede llevar comas ni paréntesis.
-    await apuntarContacto(nombre, negocio, telefono, mailOk && !/[,()]/.test(email) ? email : "", mensaje).catch((e) => console.error("prospecto", e));
+    await apuntarContacto(nombre, negocio, telefono, mailOk ? email : "", mensaje).catch((e) => console.error("prospecto", e));
     if (PRUEBAS) return json({ ok: true, prueba: true });
     const pass = Deno.env.get("GMAIL_APP_PASSWORD"), user = Deno.env.get("GMAIL_USER");
     if (!pass || !user) return json({ error: "correo" }, 500);
