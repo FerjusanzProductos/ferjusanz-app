@@ -437,3 +437,12 @@ a:active, button:active, summary:active { opacity: .75; }
 .aviso-form { padding: 12px 16px; border: 1px solid; margin: 0; }
 .aviso-form.ok { border-color: #1d6b34; color: #1d6b34; }
 .aviso-form.mal { border-color: var(--granate); color: var(--granate); }
+
+/* Repaso de diseño (15/11/2026): zonas de toque de 44 px sin mover nada, flechas dibujadas y títulos menos estrechos en ordenador */
+.aviso a, .enlace, .miga a { position: relative; }
+.aviso a::after, .enlace::after, .miga a::after { content: ""; position: absolute; inset: -12px -4px; }
+.carrusel-flechas button { display: grid; place-content: center; }
+.carrusel-flechas svg { width: 20px; height: 20px; }
+.carrusel-flechas .atras svg { transform: scaleX(-1); }
+@media (max-width: 999px) { .recientes { display: none; } }
+@media (min-width: 1000px) { .bloque-cabeza h2 { max-width: 24ch; } }

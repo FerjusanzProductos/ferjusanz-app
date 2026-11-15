@@ -454,7 +454,7 @@ function inicio(p) {
       <p class="antetitulo">Nuestra historia</p>
       <h2>Tres generaciones alegrando la mesa de Madrid</h2>
       <p>Empezamos con las patatas y las cebollas hace ${ANIOS}. El abuelo, luego el padre y hoy el hijo: la misma familia, el mismo trato y la misma manera de elegir el género.</p>
-      <p>Lo que no cultivamos nosotros lo escogemos a primera hora en Mercamadrid, y sale en nuestros camiones refrigerados hacia su cocina.</p>
+      <p>Trabajamos con agricultores de confianza y escogemos el género a primera hora en Mercamadrid; de ahí sale en nuestros camiones refrigerados hacia su cocina.</p>
       <blockquote class="firma">«Si no lo pondríamos en nuestra mesa, no lo llevamos a la tuya.»</blockquote>
       <a class="enlace" href="/empresa-de-venta-y-distribucion-de-fruta-y-verdura/">Quiénes somos ${I.flecha}</a>
     </div>
@@ -486,7 +486,7 @@ function inicio(p) {
     <div class="bloque-cabeza"><div><p class="antetitulo">Blog</p><h2>Guías para cocinas profesionales</h2></div><a class="enlace" href="/blog/">Ver todos ${I.flecha}</a></div>
     <div class="carrusel" aria-roledescription="carrusel" aria-label="Últimos artículos">
       <ul class="carrusel-pista">${articulos.slice(0, 8).map(a => `<li><a class="ventana" href="${a.path}"><span class="ventana-foto">${a.ogImage ? `<img src="${a.ogImage}" alt="" loading="lazy" width="600" height="375">` : ''}</span><span class="ventana-info"><em>${esc(temaDe(a).nombre)}</em><strong>${esc(tituloCorto(a.h1 || a.title))}</strong></span></a></li>`).join('')}</ul>
-      <div class="carrusel-flechas"><button type="button" data-dir="-1" aria-label="Artículo anterior">←</button><button type="button" data-dir="1" aria-label="Artículo siguiente">→</button></div>
+      <div class="carrusel-flechas"><button type="button" data-dir="-1" aria-label="Artículo anterior" class="atras">${I.flecha}</button><button type="button" data-dir="1" aria-label="Artículo siguiente">${I.flecha}</button></div>
     </div>
     <ul class="temas">${TEMAS.map(t => `<li><a href="/blog/#${t.id}">${t.nombre}</a></li>`).join('')}</ul>
   </div>
