@@ -34,6 +34,7 @@ const MENU = [
   ['/mayorista-de-frutas-y-verduras-para-colectividades-madrid/', 'Colectividades'],
   ['/empresa-de-venta-y-distribucion-de-fruta-y-verdura/', 'Quiénes somos'],
   ['/blog/', 'Guías'],
+  ['/novedades/', 'Novedades'],
   ['/contacto/', 'Contacto'],
 ];
 

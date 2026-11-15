@@ -317,8 +317,8 @@ a:active, button:active, summary:active { opacity: .75; }
   .heroe { align-items: center; }
   .mosaico { grid-auto-rows: 240px; }
   .menu { display: none; }
-  .menu-ancho { display: flex; gap: 4px; margin-left: 16px; }
-  .menu-ancho a { color: var(--sobre-tinta-2); text-decoration: none; font-weight: 500; padding: 10px 12px; transition: color .2s var(--ease-out); }
+  .menu-ancho { display: flex; gap: 4px; margin-left: 8px; }
+  .menu-ancho a { color: var(--sobre-tinta-2); text-decoration: none; font-weight: 500; padding: 10px 10px; white-space: nowrap; transition: color .2s var(--ease-out); }
   @media (hover: hover) and (pointer: fine) { .menu-ancho a:hover { color: #fff; } }
   .productos { grid-template-columns: repeat(4, 1fr); }
   .titular-in.con-foto, .titular .titular-in:has(.titular-foto) { grid-template-columns: 1.2fr 1fr; }
