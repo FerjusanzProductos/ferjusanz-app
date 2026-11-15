@@ -768,10 +768,10 @@ const NUEVAS = [
 <h2>También patata entera</h2>
 <p>Agria, Monalisa, nueva para freír, roja, violeta, baby, para bravas o para tornear. Consulte el <a href="/productos/patatas-2/">catálogo de patatas</a>.</p>` },
 ];
-// Páginas legales: datos reales de la empresa; sin datos del Registro Mercantil (pendiente de que Fernando los dé).
+// Páginas legales: datos reales de la empresa. Registro Mercantil sacado del BORME-A del 22/02/2016 (nº 78947, Madrid).
 const LEGALES = [
   ['/aviso-legal/', 'Aviso legal', `<p>En cumplimiento de la Ley 34/2002, de servicios de la sociedad de la información y de comercio electrónico (LSSI-CE), estos son los datos del titular de esta web:</p>
-<ul><li><strong>Titular</strong>: ${EMPRESA}</li><li><strong>NIF</strong>: ${NIF}</li><li><strong>Domicilio</strong>: ${DIRECCION}</li><li><strong>Teléfono</strong>: ${TEL}</li><li><strong>Correo</strong>: <a href="mailto:${EMAIL}">${EMAIL}</a></li></ul>
+<ul><li><strong>Titular</strong>: ${EMPRESA}</li><li><strong>NIF</strong>: ${NIF}</li><li><strong>Registro Mercantil</strong>: inscrita en el Registro Mercantil de Madrid, tomo 34358, folio 101, sección 8ª, hoja M-618046, inscripción 1ª</li><li><strong>Domicilio</strong>: ${DIRECCION}</li><li><strong>Teléfono</strong>: ${TEL}</li><li><strong>Correo</strong>: <a href="mailto:${EMAIL}">${EMAIL}</a></li></ul>
 <h2>Uso de la web</h2><p>Esta web informa sobre los productos y servicios de ${EMPRESA}. Los precios no se publican porque dependen del mercado de cada día; cualquier precio que le demos por teléfono o WhatsApp es orientativo hasta que se confirma el pedido.</p>
 <h2>Propiedad intelectual</h2><p>Los textos, el logotipo y el diseño de esta web pertenecen a ${EMPRESA} o se usan con permiso. No se pueden copiar con fines comerciales sin autorización.</p>
 <h2>Responsabilidad</h2><p>Procuramos que la información sea correcta y esté al día, pero no respondemos de errores puntuales ni del contenido de webs de terceros enlazadas desde aquí.</p>

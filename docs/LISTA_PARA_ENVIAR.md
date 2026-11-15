@@ -27,11 +27,10 @@ https://ferjusanz-web.fernandosanzalba.workers.dev
 1. Fernando: revisar la web nueva en el móvil y decir qué cambiar.
 2. Fernando: mandar las preguntas a *Creativate*: a nombre de quién está el dominio, el código para trasladarlo, accesos, copia de la web, quién tiene Analytics/Tag Manager/Search Console, si las fotos tienen licencia y si hay permanencia. Que *no borren nada*.
 3. *Ficha de Google*: esperar la respuesta a «Solicitar acceso». Cuando sea nuestra: poner S.L. (ahora pone C.B.), la dirección buena, el horario, fotos, descripción y productos.
-4. Datos del *Registro Mercantil* (tomo, folio, hoja) para el aviso legal.
-5. Confirmar: «cosecha propia», «puesto en Mercamadrid» y que el WhatsApp que se pone es el 609 100 690.
-6. ¿Poner en la portada a clientes como Hotel Cándido, Mesón de Cándido, La Figal de Pablo, Colegio Reggio o Residencia El Pardo de Aravaca? Solo con el permiso de cada uno.
-7. Cuando tengamos el dominio (lo hace Claude): abrir la web a Google, apuntar el dominio, darla de alta en Search Console y enlazarla a la ficha de Google.
-8. Decidir si medimos las visitas (Google Analytics). Si se mide, hay que poner aviso de cookies.
+4. Confirmar: «cosecha propia», «puesto en Mercamadrid» y que el WhatsApp que se pone es el 609 100 690.
+5. ¿Poner en la portada a clientes como Hotel Cándido, Mesón de Cándido, La Figal de Pablo, Colegio Reggio o Residencia El Pardo de Aravaca? Solo con el permiso de cada uno.
+6. Cuando tengamos el dominio (lo hace Claude): abrir la web a Google, apuntar el dominio, darla de alta en Search Console y enlazarla a la ficha de Google.
+7. Decidir si medimos las visitas (Google Analytics). Si se mide, hay que poner aviso de cookies.
 
 *🚀 IDEAS PARA SUBIR EN GOOGLE Y CONSEGUIR CLIENTES*
 1. *Reseñas en Google* (es lo que más pesa): pedírselas por WhatsApp a 20-30 clientes de confianza con el enlace directo, y contestarlas todas. Claude prepara el mensaje.
