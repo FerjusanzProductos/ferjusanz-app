@@ -411,6 +411,13 @@ function inicio(p) {
   </div>
 </section>
 
+${(a => `<section class="guia-portada" aria-label="Última guía">
+  <a class="envoltura guia-portada-in" href="${a.path}">
+    <span class="guia-portada-foto">${a.ogImage ? `<img src="${a.ogImage}" alt="" width="600" height="375" fetchpriority="low">` : ''}</span>
+    <span class="guia-portada-info"><span class="meta">Guía nueva · <time datetime="${a.date}">${fecha(a.date)}</time></span><strong>${esc(tituloCorto(a.h1 || a.title))}</strong>${a.description ? `<span>${esc(a.description)}</span>` : ''}<em>Leer la guía ${I.flecha}</em></span>
+  </a>
+</section>`)(articulos[0])}
+
 <section class="bloque">
   <div class="envoltura">
     <div class="bloque-cabeza"><div><p class="antetitulo">Por qué Ferjusanz</p><h2>Un proveedor en el que su cocina puede confiar</h2></div><a class="enlace" href="#pedir-precio">Pedir presupuesto ${I.flecha}</a></div>
@@ -485,7 +492,7 @@ function inicio(p) {
   <div class="envoltura">
     <div class="bloque-cabeza"><div><h2>Guías para cocinas profesionales</h2></div><a class="enlace" href="/blog/">Ver todas las guías ${I.flecha}</a></div>
     <div class="carrusel" aria-roledescription="carrusel" aria-label="Últimos artículos">
-      <ul class="carrusel-pista">${articulos.slice(0, 8).map(a => `<li><a class="ventana" href="${a.path}"><span class="ventana-foto">${a.ogImage ? `<img src="${a.ogImage}" alt="" loading="lazy" width="600" height="375">` : ''}</span><span class="ventana-info"><em>${esc(temaDe(a).nombre)}</em><strong>${esc(tituloCorto(a.h1 || a.title))}</strong></span></a></li>`).join('')}</ul>
+      <ul class="carrusel-pista">${articulos.slice(1, 9).map(a => `<li><a class="ventana" href="${a.path}"><span class="ventana-foto">${a.ogImage ? `<img src="${a.ogImage}" alt="" loading="lazy" width="600" height="375">` : ''}</span><span class="ventana-info"><em>${esc(temaDe(a).nombre)}</em><strong>${esc(tituloCorto(a.h1 || a.title))}</strong></span></a></li>`).join('')}</ul>
       <div class="carrusel-flechas"><button type="button" data-dir="-1" aria-label="Artículo anterior" class="atras">${I.flecha}</button><button type="button" data-dir="1" aria-label="Artículo siguiente">${I.flecha}</button></div>
     </div>
     <ul class="temas">${TEMAS.map(t => `<li><a href="/blog/#${t.id}">${t.nombre}</a></li>`).join('')}</ul>

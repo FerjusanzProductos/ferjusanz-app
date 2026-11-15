@@ -446,3 +446,17 @@ a:active, button:active, summary:active { opacity: .75; }
 .carrusel-flechas .atras svg { transform: scaleX(-1); }
 @media (max-width: 999px) { .recientes { display: none; } }
 @media (min-width: 1000px) { .bloque-cabeza h2 { max-width: 24ch; } }
+
+/* Última guía, arriba en la portada (15/11/2026, Fernando: «Lo quiero más arriba uno de ellos») */
+.guia-portada { border-bottom: 1px solid var(--linea); }
+.guia-portada-in { display: grid; gap: 16px; padding-top: 28px; padding-bottom: 28px; text-decoration: none; color: var(--tinta); }
+.guia-portada-foto { display: block; aspect-ratio: 16 / 9; overflow: hidden; background: var(--papel-2); }
+.guia-portada-foto img { width: 100%; height: 100%; object-fit: cover; }
+.guia-portada-info { display: flex; flex-direction: column; gap: 8px; }
+.guia-portada-info .meta { color: var(--granate); }
+.guia-portada-info strong { font: 700 clamp(1.6rem, 3.4vw, 2.4rem)/1.02 var(--titular); text-transform: uppercase; text-wrap: balance; }
+.guia-portada-info > span:not(.meta) { color: var(--tinta-2); max-width: 60ch; }
+.guia-portada-info em { font-style: normal; font-weight: 600; color: var(--granate); display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; }
+.guia-portada-info em svg { width: 16px; height: 16px; }
+@media (hover: hover) and (pointer: fine) { .guia-portada-in:hover strong { color: var(--granate); } }
+@media (min-width: 700px) { .guia-portada-in { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 36px; align-items: center; padding-top: 40px; padding-bottom: 40px; } }
