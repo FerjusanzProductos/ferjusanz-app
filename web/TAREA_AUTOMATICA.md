@@ -1,6 +1,6 @@
 # Tarea automática: web viva (cada 2 días)
 
-Tarea programada `trig_01AXKhyzZyg7sMDufq37Ahuw` (cada 2 días a las 11:43, hora de Madrid; primera el 15/11/2026). ⚠️ Se creó **sin el conector de Google Drive** (la organización no deja guardarlo en la tarea): si Drive no está, se salta el paso 1. Para que lea la carpeta, Fernando tendría que crearla desde claude.ai → Rutinas con Google Drive; mientras, sus fotos se publican cuando las manda en una conversación con Claude.
+Tarea programada `trig_01AXKhyzZyg7sMDufq37Ahuw` (cada 2 días a las 11:43, hora de Madrid, los días impares del mes; vuelto a cada 2 días el 15/11/2026 por Fernando: «Cada 2 dias un artículo»). ⚠️ Se creó **sin el conector de Google Drive** (la organización no deja guardarlo en la tarea): si Drive no está, se salta el paso 1. Para que lea la carpeta, Fernando tendría que crearla desde claude.ai → Rutinas con Google Drive; mientras, sus fotos se publican cuando las manda en una conversación con Claude.
 
 Pedido por Fernando el 13/11/2026: «que esté activa, que le pongas fotos cada 2 o 3 días, un artículo también».
 Una tarea programada abre una sesión nueva cada 2 días y sigue estos pasos **sin preguntar** (autorización de Fernando).
@@ -25,7 +25,9 @@ Una novedad de temporada con una foto que ya esté en la web (`web/public/wp-con
 Solo productos **activos** del catálogo (leer, nunca escribir):
 `SELECT nombre FROM productos WHERE activo` en la base real `hvydnjaswdexttogsyen` por la API de Supabase (ver `CLAUDE.md`).
 
-## 3. Un artículo nuevo para el blog
+## 3. Un artículo nuevo para «Guías»
+La sección se llama **«Guías»** (Fernando, 15/11/2026: que no se llame «blog» y que no salga en la portada). La dirección sigue siendo `/blog/…` para no perder lo que Google ya tiene: no cambiarla.
+**Posicionamiento (lo primero)**: cada artículo apunta a **una búsqueda concreta** de un cliente de negocio con lugar («proveedor de patata pelada para restaurantes en Madrid», «fruta para comedor escolar Madrid»…), que no tenga ya otro artículo nuestro. Esa búsqueda va en el título (al principio), en la dirección (`slug`, corta), en la descripción, en el primer párrafo y en un `<h2>`. Dentro del texto, **2 o 3 enlaces** a nuestras páginas de producto o de sector que pegan (`/productos/…`, `/proveedor-de-frutas-y-verduras-para-…`) y 1 a otra guía. Apuntar la búsqueda elegida en `web/DIARIO.md` para no repetirla.
 - Tema: el siguiente de **`docs/PLAN_CONTENIDOS_WEB.md`** que no esté ya publicado (`grep '"h1"' web/paginas.json` y `web/DIARIO.md`). Cuando se acaben: temporada del mes, ideas para restaurantes, colectividades, fruterías, conservación y mermas, variedades, cuarta gama, huevos. Los temas con ⚠️ (normas, leyes): leer antes la fuente oficial (BOE, Comunidad de Madrid, AESAN) y enlazarla; si no se puede comprobar, saltar al siguiente.
 - Para clientes profesionales de Madrid (hostelería, colectividades, fruterías). Español de España, tuteo, 600–1.000 palabras, `<h2>` por apartados.
 - **Que Google lo valore y que sirva de verdad** (Fernando, 14/11/2026: «que cuenten cosas que nadie cuente y no se note la IA»). Modelo: los artículos del calendario de temporada y de huevos (14/11/2026).
