@@ -783,7 +783,8 @@ const LEGALES = [
 <h2>A quién se comunican</h2><p>A nadie, salvo obligación legal (por ejemplo, a Hacienda) y a quienes nos prestan servicios con las debidas garantías (gestoría, alojamiento de la web). WhatsApp es un servicio de Meta, con su propia política de privacidad.</p>
 <h2>Sus derechos</h2><p>Puede pedir acceso, rectificación, supresión, oposición, limitación y portabilidad escribiendo a <a href="mailto:${EMAIL}">${EMAIL}</a>. Si no le atendemos bien, puede reclamar ante la Agencia Española de Protección de Datos (aepd.es).</p>`],
   ['/politica-de-cookies/', 'Política de cookies', `<p>Esta web <strong>no usa cookies</strong> propias ni de terceros para analizar su visita ni para publicidad, por eso no le pedimos que las aceptes.</p>
-<p>Si en el futuro añadimos alguna herramienta de medición, lo indicaremos aquí y le pediremos permiso antes de usarla.</p>
+<p>Para saber qué páginas interesan, <strong>contamos las visitas de forma anónima y sin cookies</strong>: solo apuntamos la página vista, la web desde la que llega (por ejemplo, Google), el país y si es un móvil. No guardamos su dirección IP ni nada en su dispositivo, y no se puede saber quién es.</p>
+<p>Si en el futuro añadimos alguna herramienta de medición con cookies, lo indicaremos aquí y le pediremos permiso antes de usarla.</p>
 <p>Los enlaces a WhatsApp y a Google Maps le llevan a servicios de terceros, que tienen sus propias políticas de cookies.</p>`],
 ];
 

@@ -9,13 +9,27 @@ const PRUEBAS = true;
 const FUNCION_CONTACTO = "https://hvydnjaswdexttogsyen.supabase.co/functions/v1/web-contacto";
 const DOMINIO_SIN_WWW = "ferjusanz-frutas-verduras.es";
 
+// Contador de visitas propio (sin cookies): cada página vista va a web_visitas de la base real. Clave pública: solo puede añadir.
+const VISITAS = "https://hvydnjaswdexttogsyen.supabase.co/rest/v1/rpc/registrar_visita";
+const CLAVE_PUBLICA = "sb_publishable_B6ZWPBp54OT62yXU3khygQ_eIm6UnVq";
+const ROBOT = /bot|crawl|spider|slurp|preview|headless|lighthouse|monitor|curl|wget|python|node|go-http|facebookexternalhit|whatsapp/i;
+
+function apuntarVisita(request, ruta) {
+  if (request.method !== "GET" || ROBOT.test(request.headers.get("user-agent") || "") || request.headers.get("purpose") === "prefetch" || request.headers.get("sec-purpose")) return;
+  let origen = null;
+  try { const r = new URL(request.headers.get("referer")); if (!/ferjusanz/.test(r.hostname)) origen = r.hostname.replace(/^www\./, ""); } catch {}
+  return fetch(VISITAS, { method: "POST", headers: { apikey: CLAVE_PUBLICA, "content-type": "application/json" },
+    body: JSON.stringify({ p_ruta: ruta, p_origen: origen, p_pais: request.cf?.country || null, p_movil: /Mobi|Android/i.test(request.headers.get("user-agent") || "") }) })
+    .catch(e => console.log("visita fallo", String(e)));
+}
+
 const REDIRIGIR = [
   [/^\/(blog\/page|author|category)\//, "/blog/"],
   [/^\/servicios-de-distribucion-y-exportacion\/entrega-a-domicilio-frutas-y-verduras-por-covid19\/?$/, "/"],
 ];
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     // Siempre con www (el día del traslado, el dominio sin www también apunta aquí).
     if (url.hostname === DOMINIO_SIN_WWW) return Response.redirect("https://www." + DOMINIO_SIN_WWW + url.pathname + url.search, 301);
@@ -37,6 +51,7 @@ export default {
     if (PRUEBAS) headers["x-robots-tag"] = "noindex, nofollow";
     // Cabeceras básicas de seguridad.
     Object.assign(headers, { "x-content-type-options": "nosniff", "referrer-policy": "strict-origin-when-cross-origin", "x-frame-options": "SAMEORIGIN", "strict-transport-security": "max-age=31536000", "permissions-policy": "camera=(), microphone=(), geolocation=()" });
+    if (ARCHIVOS[ruta] && archivo[1].startsWith("text/html")) { const v = apuntarVisita(request, ruta); if (v) ctx.waitUntil(v); }
     return new Response(archivo[0], { status: ARCHIVOS[ruta] ? 200 : 404, headers });
   },
 };
