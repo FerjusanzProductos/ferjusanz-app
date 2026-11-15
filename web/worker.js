@@ -28,6 +28,8 @@ export default {
     const archivo = ARCHIVOS[ruta] || ARCHIVOS["/404.html"];
     const headers = { "content-type": archivo[1], "cache-control": ruta.startsWith("/wp-content/") || ruta.startsWith("/fuentes/") ? "public, max-age=2592000" : archivo[1].startsWith("text/html") ? "no-cache" : "public, max-age=300" };
     if (PRUEBAS) headers["x-robots-tag"] = "noindex, nofollow";
+    // Cabeceras básicas de seguridad (la web no tiene formularios ni datos de nadie).
+    Object.assign(headers, { "x-content-type-options": "nosniff", "referrer-policy": "strict-origin-when-cross-origin", "x-frame-options": "SAMEORIGIN", "strict-transport-security": "max-age=31536000", "permissions-policy": "camera=(), microphone=(), geolocation=()" });
     return new Response(archivo[0], { status: ARCHIVOS[ruta] ? 200 : 404, headers });
   },
 };

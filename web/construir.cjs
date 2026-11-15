@@ -136,6 +136,8 @@ const PREGUNTAS = [
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fecha = iso => iso ? new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
 const tituloCorto = t => String(t).replace(/\s*-\s*Ferjusanz\s*$/i, '');
+// Google corta los títulos de más de ~65 letras: si no cabe, se quita la marca del final.
+const tituloSeo = t => t.length > 65 ? t.replace(/\s*[-|]\s*Ferjusanz\s*$/i, '') : t;
 const anios = s => String(s ?? '').replace(/(m[aá]s de |hace )50 años/gi, (m, a) => (/hace/i.test(a) ? 'hace más de 40 años' : 'más de 40 años'));
 const wa = (num, texto) => `https://wa.me/${num}?text=${encodeURIComponent(texto)}`;
 
@@ -254,12 +256,12 @@ function plantilla({ ruta, titulo, descripcion, imagen, cuerpo, datos = [], tipo
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>${esc(anios(titulo))}</title>
+<title>${esc(tituloSeo(anios(titulo)))}</title>
 <meta name="description" content="${esc(anios(descripcion))}">
 <link rel="canonical" href="${DOMINIO}${ruta}">
 <meta property="og:type" content="${tipo}">
 <meta property="og:site_name" content="Ferjusanz">
-<meta property="og:title" content="${esc(anios(titulo))}">
+<meta property="og:title" content="${esc(tituloSeo(anios(titulo)))}">
 <meta property="og:description" content="${esc(anios(descripcion))}">
 <meta property="og:url" content="${DOMINIO}${ruta}">
 <meta property="og:locale" content="es_ES">

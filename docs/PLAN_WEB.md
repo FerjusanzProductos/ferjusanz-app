@@ -59,3 +59,12 @@ Ahorro: lo que se paga hoy a Creativate (Fernando lo mira en las facturas).
 - Botón de WhatsApp y formulario de contacto que llega a la app (como prospecto).
 - Instagram y Facebook enlazados, y publicaciones de la web compartidas en redes.
 - Sección de productos de temporada alimentada desde la app.
+
+## Cambio de dominio sin perder correo ni Google (15/11/2026)
+1. Confirmar con Creativate: titular del dominio (debe ser FERJUSANZ), registrador, caducidad, código de traslado (AuthCode) y qué buzones de correo hay.
+2. **Antes de mover nada**: copiar todos los registros DNS actuales, sobre todo los del correo (MX, SPF/TXT, DKIM).
+3. Dar de alta el dominio en Cloudflare (plan gratis) con esos mismos registros y cambiar los servidores DNS en el registrador. El correo sigue igual.
+4. Apuntar `www` y el dominio sin `www` al Worker `ferjusanz-web`; `PRUEBAS = false` en `web/worker.js` y publicar.
+5. Comprobar redirecciones (las del mapa de ChatGPT incluidas), Search Console con `sitemap.xml` y ficha de Google con la web nueva.
+6. Dejar el alojamiento de Creativate 2-3 semanas sin tocar; solo entonces darlo de baja (y pedir que no borren nada).
+Coste fijo: dominio .es 10-15 €/año; Cloudflare 0 €; correo 0 € si es reenvío (Cloudflare Email Routing) o 1-7 €/persona/mes con buzón (Zoho/Google). Total < 10 €/mes.
