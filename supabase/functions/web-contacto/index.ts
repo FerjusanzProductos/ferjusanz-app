@@ -1,10 +1,13 @@
 // Formulario de contacto de la web (Worker «ferjusanz-web» → aquí): manda un correo a la empresa con lo que escribe el visitante.
 // - Sale del Gmail de la empresa (GMAIL_USER / GMAIL_APP_PASSWORD) y llega SIEMPRE a ferjusanz@hotmail.com (fijo: nadie puede elegir a quién se envía).
-// - Se llama sin haber entrado (verify_jwt = false). No guarda nada en la base.
+// - Se llama sin haber entrado (verify_jwt = false).
+// - Además lo apunta en Contactos (tabla prospectos, fuente «Formulario de la web») para que la oficina y Harvey lo vean y lo clasifiquen.
+//   Si ya hay un contacto con ese correo o teléfono, solo le añade la nota. Si falla, el correo se manda igual.
 // - Campo trampa «web»: si viene relleno es un robot; se contesta «ok» y no se manda nada.
 // - Base de PRUEBAS: no manda correo, solo contesta (para probarlo sin llenar el buzón).
 // shortcut: sin límite de envíos por persona (solo la trampa); si llega spam, guardar la IP en la base y limitar.
 import nodemailer from "npm:nodemailer@6.9.16";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const DESTINO = "ferjusanz@hotmail.com";
 const EMPRESA = "FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L.";
@@ -12,6 +15,33 @@ const PRUEBAS = /pbeuxbwbpmlanbhhnpgy/.test(Deno.env.get("SUPABASE_URL") || "");
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { "Content-Type": "application/json" } });
 const limpio = (v: unknown, max: number) => String(v ?? "").replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, "").trim().slice(0, max);
 const html = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
+
+// Tipo de negocio adivinado por palabras; si no encaja, «otro» y lo clasifica Harvey u oficina.
+const TIPOS: [string, RegExp][] = [
+  ["escuela_infantil", /escuela infantil|guarder|infantil/], ["colegio", /colegio|cole\b|escuela|instituto|comedor escolar/],
+  ["residencia", /residencia|geri[aá]tric|mayores|hospital|cl[ií]nica/], ["catering", /catering|colectividad/],
+  ["bar", /\bbar\b|cafeter|caf[eé]\b|taberna|cervecer/], ["restaurante", /restaurante|asador|meson|mes[oó]n|hotel|cocina|marisquer|pizzer/],
+];
+export const tipoDe = (t: string) => (TIPOS.find(([, r]) => r.test(t.toLowerCase())) || ["otro"])[0];
+
+async function apuntarContacto(nombre: string, negocio: string, telefono: string, email: string, mensaje: string) {
+  const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+  const hoy = new Date().toLocaleDateString("es-ES", { timeZone: "Europe/Madrid" });
+  const nota = `🌐 Formulario de la web ${hoy}${negocio ? ` (${nombre})` : ""}: ${mensaje}`;
+  const tel = telefono.replace(/\D/g, "").slice(-9);
+  const filtros = [email && `email.eq.${email}`, tel.length === 9 && `telefono.ilike.%${tel}`].filter(Boolean).join(",");
+  const { data: ya } = filtros ? await sb.from("prospectos").select("id,notas").or(filtros).limit(1) : { data: [] };
+  if (ya?.length) {
+    const { error } = await sb.from("prospectos").update({ notas: [ya[0].notas, nota].filter(Boolean).join("\n").slice(-4000) }).eq("id", ya[0].id);
+    if (error) throw error;
+    return;
+  }
+  const { error } = await sb.from("prospectos").insert({
+    nombre: negocio || nombre, tipo: tipoDe(`${negocio} ${mensaje}`), telefono: telefono || null, email: email || null,
+    fuente: "Formulario de la web", estado: "nuevo", notas: nota,
+  });
+  if (error) throw error;
+}
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Solo POST" }, 405);
@@ -25,6 +55,8 @@ Deno.serve(async (req) => {
     if (!mailOk && telefono.replace(/\D/g, "").length < 9) return json({ error: "contacto" }, 400);
     if (email && !mailOk) return json({ error: "email" }, 400);
     if (mensaje.length < 3) return json({ error: "mensaje" }, 400);
+    // El email solo si es válido: en filtros de PostgREST no puede llevar comas ni paréntesis.
+    await apuntarContacto(nombre, negocio, telefono, mailOk && !/[,()]/.test(email) ? email : "", mensaje).catch((e) => console.error("prospecto", e));
     if (PRUEBAS) return json({ ok: true, prueba: true });
     const pass = Deno.env.get("GMAIL_APP_PASSWORD"), user = Deno.env.get("GMAIL_USER");
     if (!pass || !user) return json({ error: "correo" }, 500);

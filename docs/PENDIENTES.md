@@ -10,7 +10,6 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - 🟡 **Fotos reales** (carpeta de Drive «Fotos web Ferjusanz» o por el chat): furgoneta con logo, almacén, familia/equipo (con permiso), campo, patatas y patata pelada, cebollas y ajos, legumbres, cuarta gama, hierbas y picantes, pedidos preparados, Fernando o Julián en el puesto y el logo en buena calidad. No usar Getty ni bancos de pago.
 - 🟡 **Ficha de Google**: esperar respuesta a «Solicitar acceso». Cuando sea nuestra: S.L. en vez de C.B., dirección, horario, fotos, descripción, productos y mensaje para pedir reseñas.
 - 🟡 **Portada «Scroll World»** (vuelo al bajar con el dedo, ordenador + móvil). Cuenta de Higgsfield ya conectada a Claude (gratis, 10 créditos). Coste calculado (15/11/2026): versión buena **≈ 1.475 créditos** (Ultra) o versión 720p **≈ 845** (cabe en Plus mensual, 39 €). Falta: **Fernando** elige plan y lo compra desde el móvil; luego Claude hace un borrador barato y después la buena.
-- ⚪ Idea (sin hacer): que el formulario de Contacto guarde también el contacto en la base para que Harvey lo clasifique.
 - 🟡 ¿Clientes en la portada (Hotel Cándido, Mesón de Cándido, La Figal de Pablo, Colegio Reggio, Residencia El Pardo de Aravaca)? Solo con su «sí» y el permiso de cada uno.
 - 🟡 Una **nota de voz a la semana** de Fernando con algo del mercado para los artículos.
 - ⚪ La tarea automática de la web (`trig_01AXKhyzZyg7sMDufq37Ahuw`, cada 2 días) no ve Drive: las fotos, por el chat.
