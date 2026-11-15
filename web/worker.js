@@ -44,14 +44,19 @@ export default {
 // Recibe el formulario de /contacto/, lo manda a la función que envía el correo y vuelve a /contacto/ con el resultado.
 async function enviarContacto(request, url, env) {
   const volver = (q) => Response.redirect(url.origin + "/contacto/?" + q + "#formulario", 303);
+  console.log("contacto", request.method, request.headers.get("origin"));
   if (request.method !== "POST") return volver("");
-  if (request.headers.get("origin") !== url.origin) return new Response("Origen no permitido", { status: 403 });
+  // Solo desde la propia web (si el navegador no manda el origen, se deja pasar: la función valida igual).
+  const origen = request.headers.get("origin");
+  if (origen && origen !== "null" && origen !== url.origin) return new Response("Origen no permitido", { status: 403 });
   try {
     const datos = Object.fromEntries(await request.formData());
     const r = await fetch(env.FUNCION_CONTACTO || FUNCION_CONTACTO, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(datos) });
     const j = await r.json().catch(() => ({}));
+    console.log("contacto respuesta", r.status, JSON.stringify(j));
     return volver(j.ok ? "enviado=1" : "error=" + encodeURIComponent(j.error || "envio"));
-  } catch {
+  } catch (e) {
+    console.log("contacto fallo", String(e));
     return volver("error=envio");
   }
 }
