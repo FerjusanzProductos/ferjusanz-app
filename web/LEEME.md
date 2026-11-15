@@ -15,7 +15,7 @@ Web de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., sin WordPress, en Cloudflare (
 - **No** se publican precios: siempre «pide precio por WhatsApp».
 
 ## Archivos
-- La sección de artículos se llama **«Guías»** (15/11/2026) aunque la dirección siga siendo `/blog/`; no sale en la portada.
+- La sección de artículos se llama **«Guías»** (15/11/2026) aunque la dirección siga siendo `/blog/`; las últimas salen en la portada.
 - `paginas.json`: textos de cada página (los de la web antigua y los artículos nuevos). **Aquí se cambian los textos.**
 - `redirecciones.json`: artículos viejos juntados en otro (no se generan; el Worker los manda al nuevo con 301).
 - `novedades.json`: fotos y avisos del almacén (página `/novedades/` y portada).

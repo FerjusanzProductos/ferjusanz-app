@@ -481,6 +481,22 @@ function inicio(p) {
   </div>
 </section>
 
+<section class="bloque bloque-crema" id="guias">
+  <div class="envoltura">
+    <div class="bloque-cabeza"><div><h2>Guías para cocinas profesionales</h2></div><a class="enlace" href="/blog/">Ver todas las guías ${I.flecha}</a></div>
+    <div class="carrusel" aria-roledescription="carrusel" aria-label="Últimos artículos">
+      <ul class="carrusel-pista">${articulos.slice(0, 8).map(a => `<li><a class="ventana" href="${a.path}"><span class="ventana-foto">${a.ogImage ? `<img src="${a.ogImage}" alt="" loading="lazy" width="600" height="375">` : ''}</span><span class="ventana-info"><em>${esc(temaDe(a).nombre)}</em><strong>${esc(tituloCorto(a.h1 || a.title))}</strong></span></a></li>`).join('')}</ul>
+      <div class="carrusel-flechas"><button type="button" data-dir="-1" aria-label="Artículo anterior" class="atras">${I.flecha}</button><button type="button" data-dir="1" aria-label="Artículo siguiente">${I.flecha}</button></div>
+    </div>
+    <ul class="temas">${TEMAS.map(t => `<li><a href="/blog/#${t.id}">${t.nombre}</a></li>`).join('')}</ul>
+  </div>
+</section>
+<script>(()=>{const c=document.querySelector('.carrusel'),p=c.querySelector('.carrusel-pista');let parado=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const paso=d=>{const w=p.firstElementChild.offsetWidth+16,fin=p.scrollLeft+p.clientWidth>=p.scrollWidth-4;p.scrollTo({left:d>0&&fin?0:p.scrollLeft+d*w,behavior:'smooth'})};
+c.querySelectorAll('button').forEach(b=>b.onclick=()=>{parado=true;paso(+b.dataset.dir)});
+['pointerdown','focusin','mouseenter'].forEach(e=>c.addEventListener(e,()=>parado=true));
+setInterval(()=>{if(!parado&&!document.hidden)paso(1)},4500)})();</script>
+
 <section class="bloque">
   <div class="envoltura preguntas-in">
     <div><p class="antetitulo">Preguntas frecuentes</p><h2>Lo que nos preguntan antes del primer pedido</h2><p class="entradilla">¿Tiene otra duda? Escríbanos y le contestamos personalmente.</p>
