@@ -5,7 +5,6 @@ _Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda · ⏸ en espera._
 ## 🌐 LA WEB (nueva, de prueba: https://ferjusanz-web.fernandosanzalba.workers.dev)
 Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lista para mandar por WhatsApp).
 - 🔴 **Fernando**: revisarla en el móvil y decir qué cambiar.
-- 🟡 **Fernando**: probar el **formulario** de Contacto (abajo del todo) con un mensaje y decir si llega a ferjusanz@hotmail.com (mirar también «Correo no deseado»).
 - 🔴 **Fernando**: mandar las preguntas a **Creativate** (titular del dominio, código de traslado, accesos de WordPress y alojamiento, copia, buzones de correo, Analytics/Tag Manager/Search Console, licencia de las fotos, permanencia). Que **no borren nada**.
 - 🟡 **Fotos reales** (carpeta de Drive «Fotos web Ferjusanz» o por el chat): furgoneta con logo, almacén, familia/equipo (con permiso), campo, patatas y patata pelada, cebollas y ajos, legumbres, cuarta gama, hierbas y picantes, pedidos preparados, Fernando o Julián en el puesto y el logo en buena calidad. No usar Getty ni bancos de pago.
 - 🟡 **Ficha de Google**: esperar respuesta a «Solicitar acceso». Cuando sea nuestra: S.L. en vez de C.B., dirección, horario, fotos, descripción, productos y mensaje para pedir reseñas.
