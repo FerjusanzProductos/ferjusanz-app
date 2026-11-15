@@ -2,6 +2,7 @@
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
 ## 15/11/2026
+- **Vídeo de @danielbrown.ia** («webs de miles de dólares con Claude Code en 3 pasos»): visto por sus subtítulos (TikTok no deja bajar el vídeo desde la nube). Propone Emil Kowalski + impeccable, taste, y los MCP de Figma y Playwright. Todo ya instalado salvo Figma, que no hace falta. Fernando: «Sí y añade a lo fijado» → apuntado en el kit y, en pendientes (Web), pulir la web con esas skills y probarla con Playwright.
 - **Skill «Scroll World» instalada** (Fernando, captura de un reel de TikTok: «Skill Scroll word en la web»). Repo original `oso95/scroll-world` (MIT, v0.8.0) copiado en `.claude/skills/scroll-world` con su LICENSE; revisada: sin hooks ni programas que se ejecuten solos. Hace portadas de web en las que, al bajar con el dedo, una cámara «vuela» de una escena a otra (vídeo generado por IA). **Para usarla hacen falta cuentas de pago** en Higgsfield (y Monid), ≈ 27 $ una portada de 6 escenas; no se ha creado ninguna cuenta ni gastado nada. Apuntada en el kit (`kit-ferjusanz`). Sin cambios en la app, la web ni SQL.
 
 ## 14/11/2026
