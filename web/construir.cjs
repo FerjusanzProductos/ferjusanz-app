@@ -253,7 +253,7 @@ function plantilla({ ruta, titulo, descripcion, imagen, cuerpo, datos = [], tipo
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${esc(anios(titulo))}</title>
 <meta name="description" content="${esc(anios(descripcion))}">
 <link rel="canonical" href="${DOMINIO}${ruta}">
