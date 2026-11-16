@@ -41,6 +41,17 @@ export default {
     // Fotos nuevas (novedades y artículos): en el almacén KV, no dentro del Worker.
     if (ruta.startsWith("/fotos/")) {
       const foto = await env.FOTOS.get(ruta.slice(1), { type: "arrayBuffer", cacheTtl: 86400 });
+      if (foto && ruta.endsWith(".mp4")) {
+        // El iPhone solo reproduce vídeo si el servidor contesta por trozos (Range → 206).
+        const h = { "content-type": "video/mp4", "accept-ranges": "bytes", "cache-control": "public, max-age=2592000, immutable" };
+        const m = /^bytes=(\d*)-(\d*)$/.exec(request.headers.get("range") || "");
+        if (!m || (!m[1] && !m[2])) return new Response(foto, { headers: h });
+        const total = foto.byteLength;
+        const ini = m[1] ? +m[1] : Math.max(0, total - +m[2]);
+        const fin = m[1] && m[2] ? Math.min(+m[2], total - 1) : total - 1;
+        if (ini > fin || ini >= total) return new Response(null, { status: 416, headers: { "content-range": `bytes */${total}` } });
+        return new Response(foto.slice(ini, fin + 1), { status: 206, headers: { ...h, "content-range": `bytes ${ini}-${fin}/${total}` } });
+      }
       if (foto) return new Response(foto, { headers: { "content-type": "image/jpeg", "cache-control": "public, max-age=2592000, immutable" } });
     }
     const nueva = REDIRECCIONES[ruta] || REDIRECCIONES[ruta + "/"];

@@ -192,7 +192,7 @@ const tarjetaArticulo = a => `<a class="articulo" href="${a.path}">
 </a>`;
 
 const tarjetaNovedad = n => `<figure class="novedad">
-  <img src="${n.foto}" alt="${esc(n.alt || n.titulo)}" loading="lazy" width="600" height="600">
+  ${n.video ? `<video src="${n.video}" poster="${n.foto}" controls playsinline preload="none" width="720" height="1280" aria-label="${esc(n.alt || n.titulo)}"></video>` : `<img src="${n.foto}" alt="${esc(n.alt || n.titulo)}" loading="lazy" width="600" height="600">`}
   <figcaption><time datetime="${n.fecha}">${fecha(n.fecha)}</time><strong>${esc(n.titulo)}</strong>${n.texto ? `<span>${esc(n.texto)}</span>` : ''}</figcaption>
 </figure>`;
 

@@ -136,6 +136,7 @@ a:active, button:active, summary:active { opacity: .75; }
 .novedades { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px 10px; }
 .novedad { margin: 0; }
 .novedad img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+.novedad video { display: block; width: 100%; height: auto; aspect-ratio: 9 / 16; background: var(--tinta); }
 .novedad figcaption { padding: 10px 0 0; display: flex; flex-direction: column; gap: 2px; font-size: .92rem; color: var(--tinta-2); }
 .novedad time, .articulo time, .meta { font-size: .78rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--tinta-2); font-variant-numeric: tabular-nums; }
 .novedad strong { color: var(--tinta); font-size: 1rem; line-height: 1.3; font-weight: 600; }

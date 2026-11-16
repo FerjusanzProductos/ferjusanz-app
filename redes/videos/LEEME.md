@@ -12,7 +12,8 @@ Vídeos cortos verticales (Reels, TikTok, Shorts y la web), hechos con HyperFram
    `npx -y hyperframes@0.9.58 render -o grande.mp4`
    - Redes (con voz): `ffmpeg -i grande.mp4 -vf scale=720:-2 -c:v libx264 -crf 28 -preset slow -pix_fmt yuv420p -c:a aac -b:a 96k -movflags +faststart redes.mp4`
    - Web (sin sonido): lo mismo con `-an` en vez de `-c:a aac -b:a 96k`.
-5. Mandárselo a Fernando. Los MP4 no se suben al repo.
+5. Mandárselo a Fernando. Los MP4 no se suben al repo (salvo la copia de la web en `web/fotos/`).
+6. Para la web: ver «Vídeos en Novedades» en `web/LEEME.md`.
 
 ## Reglas
 - La primera vez: `npx -y hyperframes@0.9.58 telemetry disable`.

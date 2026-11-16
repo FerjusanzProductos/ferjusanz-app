@@ -21,6 +21,7 @@ Web de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., sin WordPress, en Cloudflare (
 - `redirecciones.json`: artículos viejos juntados en otro (no se generan; el Worker los manda al nuevo con 301).
 - `novedades.json`: fotos y avisos del almacén (página `/novedades/` y portada).
 - `construir.cjs`: diseño, catálogo (`FAMILIAS`), preguntas frecuentes, páginas nuevas y legales; genera `public/` y `archivos.generado.js`.
+- **Vídeos en Novedades** (16/11/2026): en `novedades.json`, `"video": "/fotos/AAAA/MM/x.mp4"` y `"foto"` con su portada (.jpg). Los dos se suben al KV como las fotos (copia en `fotos/`). MP4 ligero (720 px, ver `redes/videos/LEEME.md`).
 - `anadir.cjs`: añade una novedad o un artículo (lo usa la tarea automática).
 - `public/estilo.css`: colores y aspecto. `public/fuentes/`: letras (Barlow Condensed para títulos y Barlow para texto, servidas desde la propia web). Estilo «Sobrio de mercado» (14/11/2026): papel blanco roto, tinta casi negra, solo granate, esquinas rectas, sin sombras, líneas finas, casi sin movimiento.
 - `public/wp-content/`: fotos de la web antigua (mismas rutas). `fotos/`: copia de las fotos nuevas, que se sirven desde el almacén KV de Cloudflare `ferjusanz-web-fotos` en `/fotos/…` (así el Worker no crece).
