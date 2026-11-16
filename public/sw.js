@@ -1,8 +1,8 @@
 // Service worker de Ferjusanz: permite abrir la app sin conexión.
 // Guarda la propia app y la librería de Supabase. Los datos NUNCA se guardan aquí
 // (las llamadas a supabase.co siempre van a la red).
-const CACHE = 'ferjusanz-v416';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'pres/logo.png', 'pres/logo.jpg', 'pres/etiqueta.jpg'];
+const CACHE = 'ferjusanz-v420';
+const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png?v=sol', 'icon-512.png?v=sol', 'pres/logo.png', 'pres/logo.jpg', 'pres/etiqueta.jpg'];
 // Librería de Supabase (la misma dirección que usa index.html): se guarda en la instalación
 // para que la app arranque aunque no haya conexión.
 const LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0';
@@ -44,7 +44,7 @@ self.addEventListener('fetch', e => {
 self.addEventListener('push', e => {
   let d = {}; try { d = e.data ? e.data.json() : {}; } catch (x) { d = { titulo: 'Ferjusanz', cuerpo: e.data ? e.data.text() : '' }; }
   e.waitUntil(self.registration.showNotification(d.titulo || 'Ferjusanz', {
-    body: d.cuerpo || '', icon: 'icon-192.png', badge: 'icon-192.png', tag: d.tag || 'ferjusanz', renotify: true, data: { ir: d.ir || '' }
+    body: d.cuerpo || '', icon: 'icon-192.png?v=sol', badge: 'icon-192.png?v=sol', tag: d.tag || 'ferjusanz', renotify: true, data: { ir: d.ir || '' }
   }));
 });
 self.addEventListener('notificationclick', e => {
