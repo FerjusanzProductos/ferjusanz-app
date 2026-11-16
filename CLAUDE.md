@@ -17,7 +17,8 @@ Fernando trabaja **solo desde su Samsung** (Android, Chrome). Su ordenador tiene
 5. **No pedirle usar un ordenador** sin haber comprobado antes las alternativas desde Android.
 6. Si no hay forma desde Chrome, decirlo claro y proponer otra alternativa que funcione en el Samsung.
 7. **No inventar enlaces** ni decir que algo se aprueba desde Chrome sin haberlo comprobado (si no se ha podido comprobar, decirlo).
-8. Siguen las medidas de seguridad: nada destructivo sin su autorización expresa. Publicar y el SQL, ver «Autorización permanente».
+8. **Permisos bloqueados en el móvil** (Fernando, 16/11/2026): antes de pedir un permiso o una clave, comprobar si se puede hacer solo (p. ej. Gemini ya tiene la clave puesta: `generativelanguage.googleapis.com` con `x-goog-api-key: proxy-injected`; vale para resumir vídeos de YouTube). Si aun así hay que pedirlo y en el móvil sale «Esta solicitud no se puede aprobar desde tu teléfono», poner siempre el enlace https://claude.ai/code para abrir la sesión en Chrome y aprobarlo desde ahí.
+9. Siguen las medidas de seguridad: nada destructivo sin su autorización expresa. Publicar y el SQL, ver «Autorización permanente».
 
 ## Antes de tocar nada (en este orden)
 1. `docs/ESTADO_ACTUAL.md`: versión publicada, ramas y cómo se publica.
