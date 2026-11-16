@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Barlow Condensed"; font-weight: 700; src: url(img/barlow-condensed-latin-700-normal.woff2) format("woff2"); }
+      @font-face { font-family: "Barlow"; font-weight: 500; src: url(img/barlow-latin-500-normal.woff2) format("woff2"); }
+      :root {
+        --papel: #f5f2ec;
+        --granate: #6b1216;
+        --tinta: #161210;
+        --blanco: #fbfaf7;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--papel); }
+      #root { position: relative; width: 100%; height: 100%; font-family: "Barlow", sans-serif; color: var(--tinta); }
+      .clip { position: absolute; inset: 0; overflow: hidden; }
+      .centro { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 70px; text-align: center; padding: 0 90px; }
+      .titulo { font-family: "Barlow Condensed", sans-serif; font-weight: 700; text-transform: uppercase; line-height: 0.95; }
+      #portada { background: var(--papel); }
+      #portada img { width: 860px; }
+      #portada .titulo { font-size: 128px; color: var(--granate); }
+      #portada p { font-size: 50px; color: var(--tinta); }
+      .foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      .etiqueta { position: absolute; left: 70px; right: 70px; bottom: 260px; background: var(--granate); color: var(--blanco); padding: 44px 56px; }
+      .etiqueta .titulo { font-size: 104px; }
+      .etiqueta p { font-size: 44px; margin-top: 14px; }
+      .naranja { font-size: 190px !important; color: #e8590c !important; }
+      #portada b { color: var(--granate); }
+      #razones { background: var(--papel); align-items: stretch; text-align: left; }
+      #razones .titulo { font-size: 130px; color: var(--granate); }
+      #razones ul { list-style: none; display: flex; flex-direction: column; gap: 56px; }
+      #razones li { font-size: 58px; line-height: 1.2; border-left: 14px solid #e8590c; padding-left: 36px; }
+      #razones b { color: var(--granate); }
+      #cierre { background: var(--granate); color: var(--blanco); }
+      #cierre .titulo { font-size: 150px; }
+      #cierre p { font-size: 56px; }
+      #cierre .tel { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 120px; background: var(--blanco); color: var(--granate); padding: 20px 50px; }
+      #cierre img { width: 640px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="22" data-width="1080" data-height="1920">
+      <section id="portada" class="clip centro" data-start="0" data-duration="4" data-track-index="0">
+        <img id="logo1" src="img/logo.png" alt="Ferjusanz" />
+        <h1 class="titulo naranja" id="t1">Naranja<br />de zumo</h1>
+        <p id="p1">Esta semana, <b>más barata</b></p>
+      </section>
+
+      <section id="f1" class="clip foto" data-start="4" data-duration="4" data-track-index="0">
+        <img src="img/naranjo.jpg" alt="" />
+        <div class="etiqueta"><h2 class="titulo">Naranja valenciana</h2><p>Ya es temporada en España</p></div>
+      </section>
+
+      <section id="razones" class="clip centro" data-start="8" data-duration="7" data-track-index="0">
+        <h2 class="titulo" id="r0">¿Por qué ahora?</h2>
+        <ul>
+          <li id="r1"><b>Más dulce:</b> la naranja madura en el árbol</li>
+          <li id="r2"><b>Mejor precio:</b> hay más cosecha</li>
+          <li id="r3"><b>Producto nacional:</b> adiós a la de Sudáfrica, más cara</li>
+        </ul>
+      </section>
+
+      <audio id="voz" src="voz.m4a" data-start="0" data-duration="22" data-track-index="1"></audio>
+      <section id="cierre" class="clip centro" data-start="15" data-duration="7" data-track-index="0">
+        <h2 class="titulo" id="t5">Pide tu tarifa</h2>
+        <p>Por WhatsApp</p>
+        <div class="tel" id="tel">609 567 354</div>
+        <img src="img/logo-oscuro.png" alt="Ferjusanz" />
+      </section>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.from("#logo1", { opacity: 0, y: -40, duration: 0.6, ease: "power3.out" }, 0.1)
+        .from("#t1", { opacity: 0, y: 60, duration: 0.6, ease: "power3.out" }, 0.4)
+        .from("#p1", { opacity: 0, duration: 0.5 }, 0.9);
+      tl.fromTo("#f1 img", { scale: 1.15 }, { scale: 1, duration: 4, ease: "none" }, 4)
+        .from("#f1 .etiqueta", { yPercent: 120, opacity: 0, duration: 0.5, ease: "power3.out" }, 4.3)
+        .from("#r0", { opacity: 0, y: 50, duration: 0.5, ease: "power3.out" }, 8.1);
+      ["#r1", "#r2", "#r3"].forEach((id, i) => tl.from(id, { opacity: 0, x: -60, duration: 0.5, ease: "power3.out" }, 8.5 + i * 1.6));
+      tl.from("#t5", { opacity: 0, y: 60, duration: 0.5, ease: "power3.out" }, 15.1)
+        .from("#tel", { scale: 0.8, opacity: 0, duration: 0.5, ease: "back.out(1.7)" }, 15.4);
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
