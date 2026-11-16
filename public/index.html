@@ -11065,7 +11065,8 @@ async function leerFacturasRecientes(dias, progreso, forzar) {
   window.__leyendoRec = true; const out = { leidas: 0, fallos: 0, total: 0, sinP54: false };
   try {
     const desde = hoy(new Date(Date.now() - dias * 86400000));
-    let fr = await sb.from('facturas_recibidas').select('id,recibido_en,fecha_factura,ruta,nombre,proveedor_id').order('recibido_en', { ascending: false }).limit(200);
+    let fr = await sb.from('facturas_recibidas').select('id,recibido_en,fecha_factura,ruta,nombre,proveedor_id,fiscal_origen').order('recibido_en', { ascending: false }).limit(200);
+    if (fr.error) fr = await sb.from('facturas_recibidas').select('id,recibido_en,fecha_factura,ruta,nombre,proveedor_id').order('recibido_en', { ascending: false }).limit(200);
     if (fr.error) fr = await sb.from('facturas_recibidas').select('id,recibido_en,ruta,nombre,proveedor_id').order('recibido_en', { ascending: false }).limit(200);
     if (fr.error) throw fr.error;
     const facs = (fr.data || []).filter(f => f.ruta && String(f.fecha_factura || f.recibido_en || '').slice(0, 10) >= desde);
@@ -11073,6 +11074,7 @@ async function leerFacturasRecientes(dias, progreso, forzar) {
     if (ya.error) { out.sinP54 = true; return out; }
     const hechas = new Set((ya.data || []).map(x => x.factura_id)); const vacias = LS.get('fj_fact_vacias', {});
     const pend = forzar ? facs.slice() : facs.filter(f => !hechas.has(f.id) && !vacias[f.id]); out.total = pend.length;
+    if (forzar) pend.sort((a, b) => (a.fiscal_origen ? 1 : 0) - (b.fiscal_origen ? 1 : 0));   // primero las que aún no tienen IVA, nº ni total: si se corta a medias, ya están hechas
     if (!pend.length) return out;
     const prods = await waProductos(); const indice = waIndice(prods);
     for (const f of pend) {
@@ -14668,7 +14670,10 @@ async function vistaSinReconocer() {
       h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;margin:8px 0' },
         vis.length ? h('button', { class: 'guardar', style: 'flex:1;min-height:50px', onclick: () => copiar(textoGolden()) }, '📋 Copiar el listado para Golden Soft') : null,
         h('button', { class: 'ghost', style: 'flex:1;min-height:50px', onclick: async () => { toast('Leyendo facturas…'); try { const r = await leerFacturasRecientes(15, () => { }); toast(r && r.ocupado ? 'Ya se están leyendo' : 'Facturas leídas: ' + ((r && r.leidas) || 0), 'ok'); } catch (e) { toast(msgErr(e), 'err'); } cargar(); } }, '🔄 Leer facturas que aún no se han leído'),
-        h('button', { class: 'ghost', style: 'flex:1 1 100%;min-height:46px', onclick: async () => { if (!await confirmar('Se vuelven a leer TODAS las facturas de los últimos 30 días para que los nombres salgan completos (ej.: «P.C. SACO 25 KG AGRIA 50 mm + BANDA AZUL»). No se borra ninguna factura ni compra. Puede tardar unos minutos. ¿Seguir?')) return; toast('Releyendo facturas… no cierres la app'); try { const r = await leerFacturasRecientes(30, () => { }, true); toast(r && r.ocupado ? 'Ya se están leyendo' : 'Facturas releídas: ' + ((r && r.leidas) || 0) + ((r && r.fallos) ? ' · fallaron ' + r.fallos : ''), 'ok'); } catch (e) { toast(msgErr(e), 'err'); } cargar(); } }, '♻️ Releer las facturas de 30 días (nombres completos)')),
+        h('button', { class: 'ghost', style: 'flex:1 1 100%;min-height:46px', onclick: async ev => { if (!await confirmar('Se vuelven a leer TODAS las facturas de los últimos 30 días para completar el IVA, el total y el nº, y para que los nombres salgan completos (ej.: «P.C. SACO 25 KG AGRIA 50 mm + BANDA AZUL»). No se borra ninguna factura ni compra. Puede tardar unos minutos. ¿Seguir?')) return; const bR = ev.currentTarget, txtR = bR.textContent; bR.disabled = true; toast('Releyendo facturas… no cierres la app ni salgas de esta pantalla');
+          try { const r = await leerFacturasRecientes(30, (i, t) => { bR.textContent = '🔄 Leyendo factura ' + i + ' de ' + t + '… no salgas de aquí'; }, true);
+            const msg = r && r.ocupado ? 'Ya se están leyendo' : r && r.error ? 'No se pudo: ' + r.error : '✅ Terminado: ' + ((r && r.leidas) || 0) + ' de ' + ((r && r.total) || 0) + ' facturas releídas' + ((r && r.fallos) ? ' · fallaron ' + r.fallos : '');
+            toast(msg, r && !r.error ? 'ok' : 'err'); alert(msg + '.\n\nSe han completado el IVA, el total y el nº de las facturas que los tenían vacíos.'); } catch (e) { toast(msgErr(e), 'err'); } bR.disabled = false; bR.textContent = txtR; cargar(); } }, '♻️ Releer las facturas de 30 días (IVA, total, nº y nombres)')),
       ...vis.map(g => h('div', { class: 'card', style: 'border-left:6px solid #dc2626' }, h('div', { class: 'nombre', style: 'word-break:break-word' }, g.texto), h('div', { class: 'sub' }, (g.prov || 'Proveedor sin asignar') + ' · ' + g.n + (g.n === 1 ? ' vez' : ' veces') + ' · última ' + fechaES(g.fecha) + (g.precio != null ? ' · ' + eur(g.precio) + '\u00a0€/' + (g.unidad || 'kg') : '')),
         g.registrada ? h('div', { class: 'sub', style: 'color:#b45309;font-weight:700' }, '⚠ registrada: la factura ya se registró como compra y este producto no se reconoció') : null, env[g.clave] ? h('div', { class: 'sub' }, '📤 Pedido a Golden Soft el ' + fechaES(env[g.clave])) : null,
         h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' }, h('button', { class: 'small', onclick: () => verFacturaDeLinea(g) }, '📄 Ver factura'), h('button', { class: 'small', onclick: () => crear(g) }, '➕ Crear en la app'), h('button', { class: 'ghost small', onclick: () => vincular(g) }, '🔗 Ya existe'), h('button', { class: 'ghost small', onclick: () => { const I = IGN(); I[g.clave] = true; LS.set('fj_sin_ign', I); pinta(); } }, '🚫 No es un producto')))),
