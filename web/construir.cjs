@@ -423,7 +423,7 @@ ${(a => `<section class="guia-portada" aria-label="Última guía">
   <div class="envoltura">
     <div class="bloque-cabeza"><div><p class="antetitulo">Por qué Ferjusanz</p><h2>Un proveedor en el que su cocina puede confiar</h2></div><a class="enlace" href="#pedir-precio">Pedir presupuesto ${I.flecha}</a></div>
     <ul class="ventajas">
-      <li>${I.hoja}<strong>Calidad homogénea, pedido tras pedido</strong><span>Seleccionamos caja a caja a primera hora en Mercamadrid y trabajamos con agricultores de confianza.</span></li>
+      <li>${I.hoja}<strong>Calidad homogénea, pedido tras pedido</strong><span>Trabajamos con agricultores de confianza y seleccionamos caja a caja a primera hora en Mercamadrid.</span></li>
       <li>${I.camion}<strong>Reparto puntual con cadena de frío</strong><span>Flota propia de camiones y furgonetas refrigerados. Entregamos a la hora que marca su servicio.</span></li>
       <li>${I.reloj}<strong>Precio de mercado, cada día</strong><span>Tarifa según la lonja del día y el volumen de su consumo, sin intermediarios añadidos.</span></li>
       <li>${I.familia}<strong>Un interlocutor directo</strong><span>Pedidos, cambios e incidencias se resuelven con la familia, por WhatsApp o teléfono.</span></li>
@@ -690,8 +690,9 @@ function tarjeta() {
   <p class="entradilla">${EMPRESA}: empresa familiar, tercera generación, ${ANIOS} sirviendo a restaurantes, bares, hoteles, colegios, residencias y fruterías de Madrid y Segovia.</p>
   <form id="primer-pedido" class="formulario primer-pedido" method="post" action="/enviar-primer-pedido" enctype="multipart/form-data">
   <h2>Imagine su primer pedido y le calculamos su tarifa</h2>
-  <p>Marque en un minuto qué productos usa y, si quiere, cuánto a la semana: con eso le preparamos precios a su medida y se los mandamos por WhatsApp o por correo. Sin compromiso y <strong>sin pedido mínimo</strong>. Si quiere, quedamos para conocernos y que pruebe el género.</p>
-  <p class="aviso-form ok" hidden data-si="enviado">✔ Recibido. Le preparamos su tarifa y le escribimos muy pronto. ¡Gracias!</p>
+  <p><strong>Esto nos sirve para calcular los precios que le haríamos.</strong> Destacamos por la <strong>relación calidad-precio</strong>.</p>
+  <p>Marque en un minuto qué productos usa y, si quiere, cuánto a la semana. Cuando lo envíe, queda pendiente de mandarle <strong>su tarifa según lo que gasta</strong>, por WhatsApp o por correo. Sin compromiso y <strong>sin pedido mínimo</strong>. Si quiere, quedamos para conocernos y que pruebe el género.</p>
+  <p class="aviso-form ok" hidden data-si="enviado">✔ Recibido, ¡gracias! Queda pendiente de enviarle su tarifa con lo que gasta: se la mandamos muy pronto por WhatsApp o por correo.</p>
   <p class="aviso-form mal" hidden data-si="error">No se ha podido enviar. Revise el nombre del negocio y el móvil, o escríbanos por WhatsApp.</p>
   <input type="hidden" name="p" value="__PP_CONTACTO__">
   <label>Nombre del negocio *<input name="negocio" required maxlength="100" autocomplete="organization"></label>
@@ -757,13 +758,13 @@ const NUEVAS = [
   { path: '/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', foto: F + '2023/03/Tipos-de-guarniciones-de-verduras.jpg', title: 'Proveedor de fruta y verdura para restaurantes en Madrid | Ferjusanz',
     description: 'Proveedor de fruta, verdura, patata pelada y huevos para restaurantes, bares y catering en Madrid. Reparto refrigerado diario y precio de mercado.',
     html: `<h1>Proveedor de frutas y verduras para hostelería en Madrid</h1>
-<p>Un restaurante vive de su género. Por eso llevamos ${ANIOS} sirviendo a <strong>restaurantes, bares, hoteles y empresas de catering</strong> de Madrid con fruta, verdura, patatas y huevos seleccionados cada mañana en Mercamadrid y de agricultores de confianza.</p>
+<p>Un restaurante vive de su género. Por eso llevamos ${ANIOS} sirviendo a <strong>restaurantes, bares, hoteles y empresas de catering</strong> de Madrid con fruta, verdura, patatas y huevos de agricultores de confianza y seleccionados cada mañana en Mercamadrid.</p>
 <h2>Todo lo que necesita una cocina, en un solo pedido</h2>
 <ul><li><strong>Verdura y hortaliza</strong> de temporada para guarniciones, ensaladas y menú del día.</li><li><strong>Patata</strong> para freír, cocer o asar, y <a href="/productos/patata-pelada-para-hosteleria/">patata pelada</a> en bastón, dados o panadera, lista para la freidora.</li><li><strong>Cebolla y ajo pelados</strong>, que ahorran horas de cocina.</li><li><strong>Fruta</strong> para postres, zumos y desayunos, también tropical y exótica.</li><li><strong>Gama gourmet</strong>: tomates de variedad, setas de temporada, brotes y hierbas frescas.</li><li><a href="/productos/huevos/">Huevos</a> de gallina y de codorniz.</li></ul>
 <h2>Cómo trabajamos con la hostelería</h2>
 <p>Nos envía el pedido por WhatsApp o por teléfono, le confirmamos el precio del día y se lo llevamos en nuestros camiones y furgonetas refrigerados a la hora que marque su servicio. Si algo no llega como debe, se cambia: hablamos directamente con usted, sin centralitas.</p>
 <h2>Por qué Ferjusanz</h2>
-<p>Somos la tercera generación de una familia de mayoristas, con puesto en Mercamadrid y agricultores de confianza. Conocemos el producto y conocemos las prisas de una cocina.</p>` },
+<p>Somos la tercera generación de una familia de mayoristas, con agricultores de confianza y puesto en Mercamadrid. Conocemos el producto y conocemos las prisas de una cocina.</p>` },
   { path: '/proveedor-de-frutas-y-verduras-para-hoteles-madrid/', foto: '/fotos/mango-y-papaya.jpg', title: 'Proveedor de frutas y verduras para hoteles en Madrid | Ferjusanz',
     description: 'Fruta y verdura al por mayor para hoteles de Madrid: desayunos, bufé, cocina y eventos. Reparto refrigerado y calidad constante.',
     html: `<h1>Proveedor de frutas y verduras para hoteles en Madrid</h1>
