@@ -98,7 +98,7 @@ const ARCHIVOS = {
 /* App de PRUEBAS (dirección con «pruebas»): otro nombre, color e icono para no confundirla con la de trabajar. */
 const PRUEBAS = {
   "/manifest.webmanifest": [(() => { const m = JSON.parse(manifest); m.name = "Ferjusanz PRUEBAS"; m.short_name = "PRUEBAS"; m.theme_color = "#ea580c";
-    m.icons = [{ src: "icon-pruebas-192.png", sizes: "192x192", type: "image/png", purpose: "any" }, { src: "icon-pruebas-512.png", sizes: "512x512", type: "image/png", purpose: "any" }]; return JSON.stringify(m, null, 2); })(), "application/manifest+json; charset=utf-8"],
+    m.icons = [{ src: "icon-pruebas-192.png?v=sol", sizes: "192x192", type: "image/png", purpose: "any" }, { src: "icon-pruebas-512.png?v=sol", sizes: "512x512", type: "image/png", purpose: "any" }]; return JSON.stringify(m, null, 2); })(), "application/manifest+json; charset=utf-8"],
   "/icon-192.png": [iconP192, "image/png"],
   "/icon-512.png": [iconP512, "image/png"],
   "/icon-pruebas-192.png": [iconP192, "image/png"],
