@@ -281,7 +281,7 @@ ${datos.map(d => `<script type="application/ld+json">${JSON.stringify(d)}</scrip
 </head>
 <body>
 <a class="saltar" href="#contenido">Saltar al contenido</a>
-<div class="aviso"><span>Género fresco cada día</span><span>Reparto en Madrid y Segovia</span><span class="solo-ancho">${HORARIO}</span><span class="aviso-contacto"><a href="tel:+34917632186">${TEL}</a>${WHATSAPP.map(w => `<a href="tel:+${w.num}">${w.ver}</a>`).join('')}<a href="mailto:${EMAIL}">${EMAIL}</a></span></div>
+<div class="aviso"><span>Género fresco cada día</span><span>Reparto en Madrid y Segovia</span><span class="solo-ancho">${HORARIO}</span><span class="aviso-contacto"><a href="tel:+34917632186">${TEL}</a>${WHATSAPP.map(w => `<a href="tel:+${w.num}">${w.ver}</a>`).join('')}<a href="tel:+34609100690">609 100 690</a><a href="mailto:${EMAIL}">${EMAIL}</a></span></div>
 <header class="cabecera">
   <div class="cabecera-in">
     <a href="/" class="logo" aria-label="Ferjusanz, inicio"><img src="/marca/logo-oscuro.png" alt="Ferjusanz · fruta, verdura, patata y huevos" width="670" height="130"></a>
