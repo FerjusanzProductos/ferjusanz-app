@@ -32,7 +32,7 @@ _Actualizado el 16/11/2026. Para leer de un vistazo y para contárselo a Jorge. 
 
 ## 4. Lo que quiero hacer
 1. Empezar a usar la app de verdad y, si el 22/12 sale bien, facturar con ella desde el 1/1/2027.
-2. Poner la web nueva en el dominio de siempre (falta entrar en Webempresa) y crecer en Google y redes.
+2. Poner la web nueva en el dominio de siempre (falta pasar el dominio a una cuenta de FERJUSANZ) y crecer en Google y redes.
 3. Más adelante: WhatsApp automático, tienda «Haz tu pedido» y agentes (ofertas, cobros, clientes nuevos).
 
 ## 5. Pendientes
