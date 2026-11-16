@@ -2811,7 +2811,7 @@ function abrirWhatsApp(telefono, texto, pkg) {
 function hojaTarjeta() {
   const yo = state.perfil ? state.perfil.nombre.split(' ')[0] : '';
   const msg = h('textarea', { rows: 6, style: 'width:100%;font-size:15px' });
-  msg.value = 'Hola, soy ' + yo + ', de Ferjusanz (fruta, verdura, patatas y huevos en Mercamadrid). Destacamos por la relación calidad-precio. Para calcular los precios que le haríamos, imagine su primer pedido: marque en un minuto lo que usa y cuánto a la semana, y le enviamos su tarifa según lo que gasta. Sin compromiso y sin pedido mínimo. Abajo tiene quiénes somos y de dónde sale el género:\n' + URL_TARJETA + '\n\nSi lo prefiere, contésteme por aquí con lo que suele pedir y lo apunto yo.';
+  msg.value = 'Hola, soy ' + yo + ', de Ferjusanz (patatas, frutas, verduras y huevos). Destacamos por la relación calidad-precio. Para calcular los precios que le haríamos, imagine su primer pedido: marque en un minuto lo que usa y cuánto a la semana, y le enviamos su tarifa según lo que gasta. Sin compromiso y sin pedido mínimo. Abajo tiene quiénes somos y de dónde sale el género:\n' + URL_TARJETA + '\n\nSi lo prefiere, contésteme por aquí con lo que suele pedir y lo apunto yo.';
   const tel = h('input', { type: 'tel', inputmode: 'tel', placeholder: 'Su móvil (opcional): 600 000 000', style: 'width:100%' });
   const abrirWa = pkg => abrirWhatsApp(tel.value, msg.value, pkg);
   const copiar = async () => { try { await navigator.clipboard.writeText(msg.value); toast('Mensaje copiado: pégalo en WhatsApp', 'ok'); } catch (e) { msg.select(); toast('Mantén pulsado el texto para copiarlo', 'err'); } };
@@ -11691,7 +11691,7 @@ function pdfListaPrecios(d) {
 /* ---------- COMERCIAL: listas de precios, recomendaciones, avisos, calculadora, guiones y web ---------- */
 const COM_WEB = 'https://www.ferjusanz-frutas-verduras.es/';
 const COM_UNIDADES = ['kg', 'unidad', 'pieza', 'caja', 'saco', 'bandeja', 'bolsa', 'paquete', 'manojo', 'docena', 'malla', 'bote'];
-const COM_INTRO = 'Somos Ferjusanz, mayoristas de frutas y verduras: trabajamos con agricultores de confianza y tenemos puesto en Mercamadrid. Empresa familiar, ya en la tercera generación: distribuimos directamente a nuestros clientes con un servicio cercano y de confianza, y adaptamos formatos y calidades a las necesidades de cada negocio.';
+const COM_INTRO = 'Somos Ferjusanz, mayoristas de patatas, frutas, verduras y huevos: trabajamos con agricultores de confianza y tenemos puesto en Mercamadrid. Empresa familiar, ya en la tercera generación: distribuimos directamente a nuestros clientes con un servicio cercano y de confianza, y adaptamos formatos y calidades a las necesidades de cada negocio.';
 /* Productos de partida de las dos listas (de las tarifas anteriores). SIN precio de venta: lo pone la oficina. El precio de compra se rellena solo con el último que haya. */
 const COM_PRECARGA = [
   { nombre: 'Colegios, residencias y escuelas infantiles', tipo: 'colectivos', titulo: 'Tarifa para colegios, residencias y escuelas infantiles', subtitulo: 'Frutas y verduras frescas · Suministro desde Mercamadrid',
@@ -12042,9 +12042,9 @@ const ppEnlace = p => URL_TARJETA + (p && p.id ? '?p=' + p.id : '') + '#primer-p
 const URL_WEB = URL_TARJETA.replace(/tarjeta$/, 'web');
 function hojaPrimerPedido(p) {
   p = p || {}; const yo = state.perfil ? state.perfil.nombre.split(' ')[0] : '', url = ppEnlace(p);
-  const texto = 'Hola' + (p.nombre ? ', ' + p.nombre : '') + '. Soy ' + yo + ', de Ferjusanz: fruta, verdura, patatas y huevos, tres generaciones en el sector. Destacamos por la relación calidad-precio.\n\n' +
+  const texto = 'Hola' + (p.nombre ? ', ' + p.nombre : '') + '. Soy ' + yo + ', de Ferjusanz: patatas, frutas, verduras y huevos, tres generaciones en el sector. Destacamos por la relación calidad-precio.\n\n' +
     'Nos gustaría conocerles y que prueben nuestro género. Para calcular los precios que le haríamos, imagine su primer pedido: marque aquí en un minuto qué productos usa y, si quiere, cuánto a la semana. Después le enviamos su tarifa según lo que gasta (sin compromiso y sin pedido mínimo):\n' + url + '\n\n' +
-    '• Más de 200 productos: fruta, verdura, patatas (también peladas y cortadas), cebollas y ajos, huevos, setas, legumbres y hierbas.\n' +
+    '• Más de 200 productos: patatas (también peladas y cortadas), frutas, verduras, huevos, cebollas y ajos, setas, legumbres y hierbas.\n' +
     '• De agricultores de confianza y elegido cada mañana en Mercamadrid.\n' +
     '• Reparto de lunes a sábado en Madrid y Segovia, con camiones refrigerados. Pedido por WhatsApp o teléfono hasta la tarde anterior.\n' +
     '• Nuestra web: ' + URL_WEB + '\n\n¿Quedamos un día? Un saludo.';
@@ -12052,7 +12052,7 @@ function hojaPrimerPedido(p) {
   const tel = comInput('tel', p.telefono || ''), mail = comInput('email', p.email || '');
   const chk = () => h('input', { type: 'checkbox', style: 'width:24px;height:24px;flex:none;margin:0' });
   const conLista = chk(), conPdf = chk(), conVideo = chk(), video = h('input', { type: 'file', accept: 'video/*', style: 'width:100%' }); conPdf.checked = true;
-  const asunto = 'Ferjusanz · Su tarifa de fruta y verdura a medida';
+  const asunto = 'Ferjusanz · Su tarifa de patatas, frutas, verduras y huevos a medida';
   const firma = () => '\n\n' + (state.perfil ? state.perfil.nombre : '') + '\nFERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. · Mercamadrid\n91 763 21 86 · WhatsApp 609 567 354';
   const B = (cls, t, f) => h('button', { class: cls, style: 'width:100%;min-height:50px;margin-top:8px', onclick: f }, t);
   const tipo = h2EsColectivo({ tipo: p.tipo, nombre: p.nombre }) ? 'colectivos' : 'hosteleria';
@@ -12070,9 +12070,7 @@ function hojaPrimerPedido(p) {
     h('label', { style: 'display:flex;gap:8px;align-items:center;min-height:44px' }, conLista, '💶 Añadir la lista de precios ' + (tipo === 'colectivos' ? '(colectividades)' : '(hostelería)') + ' al final'),
     comCampo('🎥 Otro vídeo (opcional, de la galería)', video));
   const archivos = async () => {
-    const lam = presPlantilla(tipo), ic = lam.findIndex(x => x.t === 'contacto');
-    lam.splice(ic < 0 ? lam.length : ic, 0, { t: 'lista', titulo: 'Imagine su primer pedido y le calculamos su tarifa', puntos: ['Sirve para calcular los precios que le haríamos', 'Marque en un minuto qué productos usa y, si quiere, cuánto a la semana', 'Le enviamos su tarifa según lo que gasta: destacamos por la calidad-precio', 'Sin compromiso y sin pedido mínimo · Madrid y Segovia'], enlace: { texto: 'Pulse aquí para rellenarlo', url } });
-    lam.forEach(x => { if (x.t === 'precios') x.lista_id = H2_LISTA_GENERAL[tipo]; });
+    const lam = ppLaminas(await ppPresentacion(tipo), url, tipo);
     const files = conPdf.checked ? [new File([pdfPresentacion(await presExpandir(lam, conLista.checked), 'Ferjusanz')], 'Ferjusanz-presentacion' + (conLista.checked ? '-con-precios' : '') + '.pdf', { type: 'application/pdf' })] : [];
     if (conVideo.checked) { const v = await pvArchivo(tipo); if (v) files.push(v); }
     if (video.files[0]) files.push(video.files[0]);
@@ -12105,6 +12103,9 @@ function hojaPrimerPedido(p) {
   hoja('🧮 Primer pedido y tarifa' + (p.nombre ? ' · ' + p.nombre : ''), h('div', {},
     h('p', { class: 'sub' }, 'Sirve para calcular los precios que le haríamos. Lo que rellene te llega a Comercial › Avisos › «Primeros pedidos», con su tarifa calculada para que Fernando la apruebe; luego se la envías.'),
     comCampo('Mensaje (puedes cambiarlo)', msg),
+    h('div', { style: 'display:flex;gap:6px;margin-top:8px' },
+      h('button', { class: 'ghost', style: 'flex:1;min-height:48px', onclick: async () => { try { presPresentar({ diapositivas: ppLaminas(await ppPresentacion(tipo), url, tipo) }); } catch (e) { toast(msgErr(e), 'err'); } } }, '👁 Ver cómo queda la presentación'),
+      h('button', { class: 'ghost', style: 'flex:1;min-height:48px', onclick: async () => { try { const pr = await ppPresentacion(tipo); document.querySelectorAll('.overlay').forEach(o => o.remove()); state.sheetAbierta = false; go('presentaciones', { editar: pr.id }); } catch (e) { toast(msgErr(e), 'err'); } } }, '✏️ Editar la presentación')),
     h('div', { class: 'sub', style: 'font-weight:600;margin-top:8px' }, '¿Qué quieres enviar?'), chips, opPres,
     comCampo('Móvil', tel),
     B('guardar', '💬 Enviar por WhatsApp', e => porWhatsApp('com.whatsapp', e.currentTarget)),
@@ -12119,9 +12120,19 @@ function hojaPrimerPedido(p) {
    Las hojas salen a pantalla completa, él habla y pasa con «Siguiente»; se graban las hojas + su voz (MediaRecorder)
    y se guarda en la carpeta privada «presentacion-video» como hosteleria.* / colectivos.*. Se graba una vez y se envía siempre. */
 const PV_BUCKET = 'presentacion-video';
-const pvLaminas = tipo => { const lam = presPlantilla(tipo), ic = lam.findIndex(x => x.t === 'contacto');
-  lam.splice(ic < 0 ? lam.length : ic, 0, { t: 'lista', titulo: 'Imagine su primer pedido y le calculamos su tarifa', puntos: ['Sirve para calcular los precios que le haríamos', 'Marque en un minuto qué productos usa y, si quiere, cuánto a la semana', 'Le enviamos su tarifa según lo que gasta: destacamos por la calidad-precio', 'Sin compromiso y sin pedido mínimo · Madrid y Segovia'], enlace: { texto: 'Rellénelo con el enlace del mensaje', url: URL_TARJETA } });
-  return lam; };
+/* La presentación que se envía a posibles clientes es una presentación GUARDADA (se ve y se edita en Comercial › Presentaciones).
+   Si no existe, se crea de la plantilla + la hoja «Imagine su primer pedido» (su botón lleva el enlace personal al enviarla). */
+const PP_PRES = { hosteleria: 'Presentación para posibles clientes · Hostelería', colectivos: 'Presentación para posibles clientes · Colegios y residencias' };
+async function ppPresentacion(tipo) {
+  const r = await sb.from('presentaciones').select('*').eq('titulo', PP_PRES[tipo]).order('created_at').limit(1); if (r.error) throw r.error;
+  if (r.data && r.data[0]) return r.data[0];
+  const lam = presPlantilla(tipo), ic = lam.findIndex(x => x.t === 'contacto');
+  lam.splice(ic < 0 ? lam.length : ic, 0, { t: 'lista', titulo: 'Imagine su primer pedido y le calculamos su tarifa', puntos: ['Sirve para calcular los precios que le haríamos', 'Marque en un minuto qué productos usa y, si quiere, cuánto a la semana', 'Le enviamos su tarifa según lo que gasta: destacamos por la calidad-precio', 'Sin compromiso y sin pedido mínimo · Madrid y Segovia'], enlace: { texto: '', url: '' } });
+  const ins = await sb.from('presentaciones').insert({ titulo: PP_PRES[tipo], diapositivas: lam }).select('*').single(); if (ins.error) throw ins.error; return ins.data;
+}
+/* Copia de sus hojas lista para enviar: el botón con el enlace personal (o, en el vídeo, «con el enlace del mensaje») y la lista de precios general. */
+const ppLaminas = (pres, url, tipo) => JSON.parse(JSON.stringify(pres.diapositivas || [])).map(d => { if (d.enlace) d.enlace = url ? { texto: 'Pulse aquí para rellenarlo', url } : { texto: 'Rellénelo con el enlace del mensaje', url: URL_TARJETA }; if (d.t === 'precios' && !d.lista_id) d.lista_id = H2_LISTA_GENERAL[tipo]; return d; });
+const pvLaminas = async tipo => ppLaminas(await ppPresentacion(tipo), '', tipo);
 async function pvBuscar(tipo) { const r = await sb.storage.from(PV_BUCKET).list('', { search: tipo }); return ((r.data || []).find(f => f.name.startsWith(tipo + '.')) || null); }
 async function pvArchivo(tipo) { const f = await pvBuscar(tipo); if (!f) return null; const d = await sb.storage.from(PV_BUCKET).download(f.name); if (d.error) throw d.error;
   return new File([d.data], 'Ferjusanz-presentacion.' + f.name.split('.').pop(), { type: d.data.type || (f.name.endsWith('.mp4') ? 'video/mp4' : 'video/webm') }); }
@@ -12140,7 +12151,7 @@ async function grabarVideoPres(tipo, alGuardar) {
     await waCargarScript(WA_PDFJS);
     if (!window.__waPdfW) { const t = await (await fetch(WA_PDFW)).text(); window.__waPdfW = URL.createObjectURL(new Blob([t], { type: 'text/javascript' })); }
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.__waPdfW;
-    const pdf = await window.pdfjsLib.getDocument({ data: pdfPresentacion(await presExpandir(pvLaminas(tipo), false), 'Ferjusanz'), isEvalSupported: false }).promise;
+    const pdf = await window.pdfjsLib.getDocument({ data: pdfPresentacion(await presExpandir(await pvLaminas(tipo), false), 'Ferjusanz'), isEvalSupported: false }).promise;
     for (let i = 1; i <= pdf.numPages; i++) { const pg = await pdf.getPage(i), vp = pg.getViewport({ scale: cv.width / pg.getViewport({ scale: 1 }).width }), c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height; await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise; hojas.push(c); }
   } catch (e) { fuera(); toast('No se pudieron preparar las hojas: ' + msgErr(e), 'err'); return; }
   pinta();
@@ -12223,9 +12234,9 @@ function ppTarjeta(r, recargar) {
 
 /* ----- Guiones de venta ----- */
 const COM_GUIONES = [
-  { t: '📞 Primera llamada (restaurante, bar)', x: ['Buenos días, ¿hablo con el responsable de compras o de cocina? Soy ___ de Ferjusanz, mayoristas de fruta y verdura en Mercamadrid, somos una empresa familiar con tres generaciones en el sector.', 'No le quito más de un minuto: servimos a restaurantes de la zona con producto fresco a diario, reparto en su local y atención directa por WhatsApp. ¿Quién le suministra ahora la fruta y la verdura?', '(Escucha. No critiques a su proveedor.) Entiendo. Nosotros no pretendemos que cambie todo de golpe: ¿le parece que le prepare una tarifa y un pedido de prueba, solo de lo que usted elija, para que compare calidad y precio?', 'Cierre: ¿Me deja su WhatsApp y le mando la tarifa hoy? ¿A qué hora le va mejor que le llame para confirmar que le ha llegado?'] },
-  { t: '🏫 Primera llamada (colegio, residencia, escuela infantil)', x: ['Buenos días, soy ___ de Ferjusanz, mayoristas de fruta, verdura, patatas y huevos en Mercamadrid. Trabajamos con colectividades: colegios, residencias y escuelas infantiles. ¿Podría hablar con la persona que se ocupa de las compras de cocina?', 'Servimos con albarán y trazabilidad por lote en cada entrega, y podemos ofrecer patata pelada envasada al vacío para ahorrar tiempo en cocina. ¿Cocinan ustedes en el propio centro o lo contratan fuera?', 'Si le encaja, le envío nuestra tarifa para colectividades por correo o WhatsApp, sin compromiso. ¿A qué correo se la mando y a nombre de quién?', 'Cierre: Quedamos así: se la envío hoy y le llamo el ___ para resolver dudas. Muchas gracias por su tiempo.'] },
-  { t: '💬 Mensaje de WhatsApp para prospecto', x: ['Hola, buenos días. Soy ___ de Ferjusanz, mayoristas de fruta y verdura de Mercamadrid (3 generaciones en el sector). Le escribo tras hablar con usted. Le adjunto nuestra tarifa. Cualquier producto que no vea, dígamelo y se lo cotizo. Quedo a su disposición.'] },
+  { t: '📞 Primera llamada (restaurante, bar)', x: ['Buenos días, ¿hablo con el responsable de compras o de cocina? Soy ___ de Ferjusanz, mayoristas de patatas, frutas, verduras y huevos en Mercamadrid, somos una empresa familiar con tres generaciones en el sector.', 'No le quito más de un minuto: servimos a restaurantes de la zona con producto fresco a diario, reparto en su local y atención directa por WhatsApp. ¿Quién le suministra ahora la fruta y la verdura?', '(Escucha. No critiques a su proveedor.) Entiendo. Nosotros no pretendemos que cambie todo de golpe: ¿le parece que le prepare una tarifa y un pedido de prueba, solo de lo que usted elija, para que compare calidad y precio?', 'Cierre: ¿Me deja su WhatsApp y le mando la tarifa hoy? ¿A qué hora le va mejor que le llame para confirmar que le ha llegado?'] },
+  { t: '🏫 Primera llamada (colegio, residencia, escuela infantil)', x: ['Buenos días, soy ___ de Ferjusanz, mayoristas de patatas, frutas, verduras y huevos en Mercamadrid. Trabajamos con colectividades: colegios, residencias y escuelas infantiles. ¿Podría hablar con la persona que se ocupa de las compras de cocina?', 'Servimos con albarán y trazabilidad por lote en cada entrega, y podemos ofrecer patata pelada envasada al vacío para ahorrar tiempo en cocina. ¿Cocinan ustedes en el propio centro o lo contratan fuera?', 'Si le encaja, le envío nuestra tarifa para colectividades por correo o WhatsApp, sin compromiso. ¿A qué correo se la mando y a nombre de quién?', 'Cierre: Quedamos así: se la envío hoy y le llamo el ___ para resolver dudas. Muchas gracias por su tiempo.'] },
+  { t: '💬 Mensaje de WhatsApp para prospecto', x: ['Hola, buenos días. Soy ___ de Ferjusanz, mayoristas de patatas, frutas, verduras y huevos de Mercamadrid (3 generaciones en el sector). Le escribo tras hablar con usted. Le adjunto nuestra tarifa. Cualquier producto que no vea, dígamelo y se lo cotizo. Quedo a su disposición.'] },
   { t: '🙋 Objeción: «Ya tengo proveedor»', x: ['Perfecto, es lo normal y no quiero que cambie nada que le funcione. Lo que le propongo es ser su segunda opción: cuando a su proveedor le falte algo o suba un precio, usted me llama a mí.', '¿Qué producto le da más guerra ahora mismo (calidad, precio o que no llegue a tiempo)? Empezamos solo por ese.'] },
   { t: '💶 Objeción: «Es caro / me lo hacen más barato»', x: ['Entiendo, el precio importa. ¿Con qué producto y a qué precio lo compara? (Anótalo.) A veces el precio por kilo engaña: conviene comparar calibre, punto de maduración y merma.', 'Le propongo una prueba pequeña: su producto más habitual, de ambos, y lo compara en cocina. Si no le sale a cuenta, no pasa nada.', 'No bajes el precio a la primera. Ofrece antes valor: reparto puntual, atención directa, albarán claro, reposición el mismo día.'] },
   { t: '⭐ Objeción: «No sé si la calidad será buena»', x: ['Es una duda lógica. Compramos a diario en Mercamadrid y seleccionamos lo que servimos. Si alguna pieza no llega como debe, nos lo dice en el momento y lo reponemos o lo abonamos.', 'Haga una primera entrega pequeña y juzgue usted mismo.'] },
@@ -12284,9 +12295,9 @@ const PRES_CIFRAS = [['3ª', 'generación familiar'], ['Mercamadrid', 'nuestro p
 const presPlantilla = (tipo) => {
   const hos = tipo !== 'colectivos';
   return hos ? [
-    { t: 'portada', titulo: 'Frutas y verduras para tu hostelería', sub: 'De agricultores de confianza y directos desde Mercamadrid', pie: 'Empresa familiar · Tercera generación' },
+    { t: 'portada', titulo: 'Patatas, frutas, verduras y huevos para tu hostelería', sub: 'De agricultores de confianza y directos desde Mercamadrid', pie: 'Empresa familiar · Tercera generación' },
     { t: 'texto', titulo: 'Quiénes somos', texto: COM_INTRO, cifras: PRES_CIFRAS },
-    { t: 'lista', titulo: 'Por qué elegirnos', puntos: ['Tres generaciones dedicadas a la fruta y la verdura', 'Mercancía fresca elegida cada mañana en Mercamadrid', 'Agricultores de confianza con los que llevamos años: continuidad y calidad', 'Reparto puntual en tu local, con nuestros repartidores', 'Un comercial de contacto directo, siempre localizable'] },
+    { t: 'lista', titulo: 'Por qué elegirnos', puntos: ['Tres generaciones dedicadas a las patatas, las frutas, las verduras y los huevos', 'Mercancía fresca elegida cada mañana en Mercamadrid', 'Agricultores de confianza con los que llevamos años: continuidad y calidad', 'Reparto puntual en tu local, con nuestros repartidores', 'Un comercial de contacto directo, siempre localizable'] },
     { t: 'lista', titulo: 'Cómo trabajamos', puntos: ['Pides por WhatsApp o por teléfono, cuando te venga bien', 'Preparamos tu pedido con el producto del día', 'Te lo llevamos nosotros a tu local', 'Albarán con los pesos reales de cada entrega', 'Ajustamos calidades y formatos a tu cocina'] },
     { t: 'productos', titulo: 'Así trabajamos cada día', items: ['Agricultores de confianza', 'Mercamadrid', 'Reparto a tu puerta', 'Lista de precios'], fotos: {} },
     { t: 'productos', titulo: 'Nuestros productos: más de 200', items: ['Patatas', 'Patata pelada y cortada', 'Cebollas, ajos y puerros', 'Huevos (gallina y codorniz)', 'Tomates', 'Pimientos y picantes', 'Verduras y hortalizas', 'Lechugas, brotes y ensaladas', 'Fruta de temporada', 'Naranjas, limones y limas', 'Fruta tropical', 'Setas y champiñón', 'Legumbres', 'Hierbas aromáticas', 'Y mucho más: pregúntenos'], fotos: {} },
@@ -12294,9 +12305,9 @@ const presPlantilla = (tipo) => {
     { t: 'contacto', titulo: 'Tu comercial directo', lineas: PRES_CONTACTO },
     { t: 'precios', titulo: 'Lista de precios · Hostelería', lista_id: '', soloEnvio: true, nota: 'Precios sujetos a variaciones de mercado y disponibilidad. Precios sin IVA salvo que se indique.', _tipo: 'hosteleria' }
   ] : [
-    { t: 'portada', titulo: 'Suministro de fruta y verdura para tu centro', sub: 'Colegios, residencias y escuelas infantiles', pie: 'Empresa familiar · Tercera generación · Mercamadrid' },
+    { t: 'portada', titulo: 'Patatas, frutas, verduras y huevos para tu centro', sub: 'Colegios, residencias y escuelas infantiles', pie: 'Empresa familiar · Tercera generación · Mercamadrid' },
     { t: 'texto', titulo: 'Quiénes somos', texto: COM_INTRO, cifras: PRES_CIFRAS },
-    { t: 'lista', titulo: 'Por qué elegirnos', puntos: ['Tres generaciones de experiencia en fruta y verdura', 'Volumen y continuidad para centros grandes, con agricultores de confianza', 'Producto fresco de temporada desde Mercamadrid', 'Reparto regular y puntual en tu centro', 'Una persona de contacto directo para todo el centro'] },
+    { t: 'lista', titulo: 'Por qué elegirnos', puntos: ['Tres generaciones de experiencia en patatas, frutas, verduras y huevos', 'Volumen y continuidad para centros grandes, con agricultores de confianza', 'Producto fresco de temporada desde Mercamadrid', 'Reparto regular y puntual en tu centro', 'Una persona de contacto directo para todo el centro'] },
     { t: 'lista', titulo: 'Cómo trabajamos', puntos: ['Acordamos contigo días y horarios de entrega', 'Formatos y calidades adaptados al centro (patata pelada en varios cortes)', 'Albarán con los pesos reales de cada entrega', 'Revisión de la tarifa cada 7-10 días', 'Atención directa ante cualquier incidencia'] },
     { t: 'productos', titulo: 'Así trabajamos cada día', items: ['Agricultores de confianza', 'Mercamadrid', 'Reparto a tu puerta', 'Lista de precios'], fotos: {} },
     { t: 'productos', titulo: 'Nuestros productos: más de 200', items: ['Patatas', 'Patata pelada y cortada', 'Cebollas, ajos y puerros', 'Huevos (gallina y codorniz)', 'Tomates', 'Pimientos y picantes', 'Verduras y hortalizas', 'Lechugas, brotes y ensaladas', 'Fruta de temporada', 'Naranjas, limones y limas', 'Fruta tropical', 'Setas y champiñón', 'Legumbres', 'Hierbas aromáticas', 'Y mucho más: pregúntenos'], fotos: {} },
@@ -12355,7 +12366,7 @@ function presLamina(d) {
   let c;
   if (d.t === 'portada') c = h('div', { class: 'pd-in', style: 'text-align:center' }, h('div', { class: 'pd-logo' }, 'FERJUSANZ'), h('h1', {}, d.titulo), h('div', { class: 'pd-raya' }), h('p', { class: 'pd-sub' }, d.sub), d.pie ? h('p', { class: 'pd-pie' }, d.pie) : null);
   else if (d.t === 'texto') c = h('div', { class: 'pd-in' }, tit(d.titulo), h('p', { class: 'pd-p' }, d.texto), (d.cifras || []).length ? h('div', { class: 'pd-cifras' }, d.cifras.filter(x => x && (x[0] || x[1])).map(x => h('div', { class: 'pd-cifra' }, h('b', {}, x[0]), h('span', {}, x[1])))) : null);
-  else if (d.t === 'lista') c = h('div', { class: 'pd-in' }, tit(d.titulo), h('ol', { class: 'pd-ol' }, (d.puntos || []).filter(Boolean).map((p, i) => h('li', {}, h('i', {}, String(i + 1)), h('span', {}, p)))));
+  else if (d.t === 'lista') c = h('div', { class: 'pd-in' }, tit(d.titulo), h('ol', { class: 'pd-ol' }, (d.puntos || []).filter(Boolean).map((p, i) => h('li', {}, h('i', {}, String(i + 1)), h('span', {}, p)))), d.enlace && d.enlace.url ? h('a', { href: d.enlace.url, target: '_blank', rel: 'noopener', style: 'display:block;margin-top:14px;padding:14px;background:#166534;color:#fff;text-align:center;font-weight:700;border-radius:6px;text-decoration:none' }, d.enlace.texto) : null);
   else if (d.t === 'productos') c = h('div', { class: 'pd-in' }, tit(d.titulo), h('div', { class: 'pd-grid' }, (d.items || []).filter(Boolean).map(x => d.conFoto ? h('div', { class: 'pd-foto' }, (d.fotos || {})[x] ? h('img', { src: d.fotos[x].u, alt: x }) : h('div', { class: 'pd-sinfoto' }, x.charAt(0).toUpperCase()), h('span', {}, x)) : h('div', { class: 'pd-chip' }, x))));
   else if (d.t === 'ofertas') c = h('div', { class: 'pd-in' }, tit(d.titulo), (d.items || []).length ? h('div', { class: 'pd-ofs' }, d.items.map(x => h('div', { class: 'pd-of' }, h('b', {}, '🏷️ ' + x.n), x.t ? h('span', {}, x.t) : null))) : h('p', { class: 'pd-p' }, d.texto || ''));
   else if (d.t === 'precios') c = h('div', { class: 'pd-in' }, tit((d.titulo || 'Lista de precios') + (d.partes > 1 ? ' (' + d.parte + '/' + d.partes + ')' : '')), d.aviso ? h('p', { class: 'pd-p', style: 'color:#b45309' }, d.aviso) : h('div', { class: 'pd-tabla' }, d.items.map(x => h('div', { class: 'pd-fila' }, h('span', {}, x.nombre), h('b', {}, presPrecio(x.precio, x.unidad))))), d.nota ? h('p', { class: 'pd-nota' }, d.nota) : null);
@@ -12417,7 +12428,7 @@ async function vistaPresentaciones() {
       const r = await sb.from('presentaciones').select('*').order('updated_at', { ascending: false }); if (r.error) throw r.error;
       cont.replaceChildren(
         h('div', { class: 'aviso-card' }, 'Presentaciones para enseñar a clientes: quiénes somos, cómo trabajamos, productos y listas de precios. Se pasan con el dedo a pantalla completa y se envían en PDF. Los precios de compra NUNCA salen.'),
-        ...(r.data || []).map(p => h('div', { class: 'card' }, h('div', { class: 'nombre', style: 'font-size:18px' }, p.titulo), h('div', { class: 'sub' }, (p.diapositivas || []).length + ' láminas · cambiada ' + fechaES(String(p.updated_at || '').slice(0, 10))),
+        ...(r.data || []).map(p => h('div', { class: 'card' }, h('div', { class: 'nombre', style: 'font-size:18px' }, p.titulo), h('div', { class: 'sub' }, (p.diapositivas || []).length + ' láminas · cambiada ' + fechaES(String(p.updated_at || '').slice(0, 10))), Object.values(PP_PRES).includes(p.titulo) ? h('div', { class: 'sub', style: 'color:#166534;font-weight:700' }, '📨 Es la que se envía a posibles clientes (y la del vídeo)') : null,
           h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' }, h('button', { class: 'small', onclick: () => presPresentar(p) }, '▶ Presentar'), h('button', { class: 'small ghost', onclick: () => editar(p) }, '✏️ Editar'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'bajar') }, '📄 PDF'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'enviar') }, '📲 Enviar'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'enviar', true) }, '💶 Enviar con lista de precios'),
             h('button', { class: 'small ghost', onclick: () => duplicar(p) }, '⧉ Copiar')))),
         h('button', { class: 'guardar', style: 'width:100%;min-height:54px;margin-top:10px', onclick: () => editar(null, 'hosteleria') }, '➕ Nueva: ' + PRES_MODELOS.hosteleria), h('button', { class: 'guardar', style: 'width:100%;min-height:54px;margin-top:8px', onclick: () => editar(null, 'colectivos') }, '➕ Nueva: ' + PRES_MODELOS.colectivos));
@@ -12453,7 +12464,7 @@ async function vistaPresentaciones() {
     else if (d.t === 'contacto') lineas('Líneas', 'lineas', 'la primera sale destacada');
     let c2; c2 = hoja('✏️ ' + (PRES_TIPOS[d.t] || [])[1], h('div', {}, ...cam, h('button', { class: 'guardar', style: 'width:100%;min-height:50px;margin-top:8px', onclick: () => { c2(); alCambiar(); } }, '✔ Listo')));
   }
-  cargar();
+  cargar().then(() => { const id = state.params && state.params.editar; if (id) sb.from('presentaciones').select('*').eq('id', id).single().then(r => { if (r.data) editar(r.data); }); });
 }
 function vistaComercial() {
   state.view = 'comercial';
