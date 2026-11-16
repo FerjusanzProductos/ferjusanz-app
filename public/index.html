@@ -24,7 +24,7 @@ input,select,textarea{width:100%;min-height:52px;border:1px solid var(--borde);b
 input.big{font-size:36px;text-align:center;min-height:76px;font-weight:700}
 .shell{min-height:100vh;display:flex;flex-direction:column;padding-bottom:78px}
 header{position:sticky;top:0;z-index:5;background:var(--verde);color:#fff;display:flex;align-items:center;gap:10px;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top))}
-header .logo{font-weight:800;letter-spacing:.3px}
+header .logo{font-weight:800;letter-spacing:.3px;display:inline-flex;align-items:center;gap:8px}header .logo img{width:30px;height:30px;border-radius:7px;display:block}
 header .tit{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;opacity:.95;text-align:center}
 header>*{flex-shrink:0}
 header>.tit,header>.who,header>.quien{flex-shrink:1;min-width:0}
@@ -70,7 +70,7 @@ nav.tabs button.on{background:var(--verde-cl);color:var(--verde-osc);border-colo
 .err{color:var(--rojo)}
 .aviso-card{background:var(--ambar-cl);border:1px solid #f0d28a;color:#6a4200;border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:15px}
 .login{max-width:380px;margin:12vh auto 0;padding:0 18px;display:flex;flex-direction:column;gap:12px}
-.login h1{margin:0;color:var(--verde);font-size:34px}
+.login h1{margin:0;color:var(--verde);font-size:34px}.logo-login{display:block;width:100%;max-width:300px;height:auto;margin:0 0 6px}html[data-tema=oscuro] .logo-login{content:url(pres/logo-oscuro.png)}
 .login .sub{margin:0 0 6px}
 .visordoc{position:fixed;inset:0;z-index:80;background:#1f2937;display:flex;flex-direction:column}.visordoc .vcab{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#111827;color:#fff}.visordoc .vcab b{flex:1;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.visordoc .vcab button{min-height:48px;min-width:48px;font-size:18px;margin:0}.visordoc .vcuerpo{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:6px;text-align:center}.visordoc canvas,.visordoc img{max-width:none;background:#fff;margin:0 auto 8px;display:block}
 .falta-rojo{display:block;width:100%;text-align:left;min-height:50px;margin:6px 0;font-size:16px;font-weight:800;background:#dc2626!important;color:#fff!important;border:0;border-radius:12px;padding:10px 12px}.falta-rojo.small{display:inline-block;width:auto;min-height:40px;font-size:14px;margin:6px 0 0;padding:6px 10px}.card.rojo-falta{border-left:7px solid #dc2626!important;background:#fef2f2}
@@ -1320,7 +1320,7 @@ function shell(titulo, contenido, opts) {
   if (VISTAS_HUB.includes(state.view)) contenido = h('div', {}, chipsHub(), contenido);
   return h('div', { class: 'shell' },
     h('header', {},
-      (opts.volver || state.view !== 'inicio') ? h('button', { class: 'back', onclick: opts.volver || (() => atras()) }, '← Volver') : h('span', { class: 'logo' }, 'Ferjusanz'),
+      (opts.volver || state.view !== 'inicio') ? h('button', { class: 'back', onclick: opts.volver || (() => atras()) }, '← Volver') : h('span', { class: 'logo' }, h('img', { src: 'icon-192.png', alt: '' }), 'Ferjusanz'),
       state.view !== 'inicio' ? h('button', { class: 'back', title: 'Menú principal', onclick: () => go('inicio') }, '🏠') : null,
       state.view !== 'inicio' && titulo ? h('span', { class: 'tit' }, titulo) : null,
       h('button', { class: 'chatbtn portalbtn' + (window.__PORTAL_PEND > 0 ? ' nuevo' : ''), title: window.__PORTAL_PEND > 0 ? 'Portal de clientes: hay albaranes nuevos por publicar' : 'Portal de clientes', onclick: () => go('paginasclientes') }, '🌐'),
@@ -1379,7 +1379,7 @@ function vistaLogin() {
       }
       await cargarPerfil(data.user); state.view = 'inicio'; aplicarCompartido(); render();
     }
-  }, h('h1', {}, 'Ferjusanz'), h('p', { class: 'sub' }, 'Entra con tu usuario'), email, pass, ver, btn, err,
+  }, h('h1', {}, h('img', { class: 'logo-login', src: 'pres/logo.png', alt: 'Ferjusanz' })), h('p', { class: 'sub' }, 'Entra con tu usuario'), email, pass, ver, btn, err,
     h('button', { type: 'button', class: 'ghost', style: 'margin-top:10px', onclick: () => vistaOlvido(email.value.trim()) }, 'He olvidado la contraseña'));
   $app.replaceChildren(form);
 }
@@ -1399,7 +1399,7 @@ function vistaOlvido(correo) {
       msg.className = 'sub'; msg.textContent = '✅ ' + d.mensaje;
     } catch (e) { msg.className = 'err'; msg.textContent = isNetErr(e) ? 'Cobertura muy débil. Prueba otra vez.' : e.message; }
     finally { btn.disabled = false; }
-  } }, h('h1', {}, 'Ferjusanz'), h('p', { class: 'sub' }, 'Escribe tu correo y te mandamos un enlace para poner una contraseña nueva.'), email, btn, msg,
+  } }, h('h1', {}, h('img', { class: 'logo-login', src: 'pres/logo.png', alt: 'Ferjusanz' })), h('p', { class: 'sub' }, 'Escribe tu correo y te mandamos un enlace para poner una contraseña nueva.'), email, btn, msg,
     h('button', { type: 'button', class: 'ghost', style: 'margin-top:10px', onclick: vistaLogin }, 'Volver')));
 }
 function vistaClaveNueva(token) {
@@ -1430,11 +1430,11 @@ function vistaClaveNueva(token) {
       msg.textContent = isNetErr(e) ? 'Cobertura muy débil. Prueba otra vez.' : /weak|pwned|characters/i.test(m) ? 'Esa contraseña es muy fácil. Pon otra más larga o con números.' : /same/i.test(m) ? 'Es la misma que tenías. Ya puedes entrar con ella.' : m || 'No se pudo guardar.';
       btn.disabled = false;
     }
-  } }, h('h1', {}, 'Ferjusanz'), h('p', { class: 'sub' }, 'Pon tu contraseña nueva dos veces.'), nueva, otra, ver, btn, msg,
+  } }, h('h1', {}, h('img', { class: 'logo-login', src: 'pres/logo.png', alt: 'Ferjusanz' })), h('p', { class: 'sub' }, 'Pon tu contraseña nueva dos veces.'), nueva, otra, ver, btn, msg,
     h('button', { type: 'button', class: 'ghost', style: 'margin-top:10px', onclick: () => { quitar(); vistaLogin(); } }, 'Cancelar')));
 }
 function vistaSinPerfil() {
-  $app.replaceChildren(h('div', { class: 'login' }, h('h1', {}, 'Ferjusanz'),
+  $app.replaceChildren(h('div', { class: 'login' }, h('h1', {}, h('img', { class: 'logo-login', src: 'pres/logo.png', alt: 'Ferjusanz' })),
     h('p', {}, 'Tu usuario todavía no tiene permisos en la aplicación. Pide a administración que lo active.'),
     h('button', { onclick: salir }, 'Salir')));
 }
@@ -15676,7 +15676,7 @@ async function guardarCatalogoReal() {
 }
 async function init() {
   if (!sb) {
-    $app.replaceChildren(h('div', { class: 'login' }, h('h1', {}, 'Ferjusanz'),
+    $app.replaceChildren(h('div', { class: 'login' }, h('h1', {}, h('img', { class: 'logo-login', src: 'pres/logo.png', alt: 'Ferjusanz' })),
       h('p', {}, 'No se ha podido cargar la aplicación. Conéctate a internet y vuelve a intentarlo.'),
       h('button', { onclick: () => location.reload() }, 'Reintentar')));
     return;
