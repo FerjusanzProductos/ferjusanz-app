@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Barlow Condensed"; font-weight: 700; src: url(img/barlow-condensed-latin-700-normal.woff2) format("woff2"); }
+      @font-face { font-family: "Barlow"; font-weight: 500; src: url(img/barlow-latin-500-normal.woff2) format("woff2"); }
+      :root {
+        --papel: #f5f2ec;
+        --granate: #6b1216;
+        --tinta: #161210;
+        --blanco: #fbfaf7;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--papel); }
+      #root { position: relative; width: 100%; height: 100%; font-family: "Barlow", sans-serif; color: var(--tinta); }
+      .clip { position: absolute; inset: 0; overflow: hidden; }
+      .centro { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 70px; text-align: center; padding: 0 90px; }
+      .titulo { font-family: "Barlow Condensed", sans-serif; font-weight: 700; text-transform: uppercase; line-height: 0.95; }
+      #portada { background: var(--papel); }
+      #portada img { width: 860px; }
+      #portada .titulo { font-size: 128px; color: var(--granate); }
+      #portada p { font-size: 50px; color: var(--tinta); }
+      .foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      .etiqueta { position: absolute; left: 70px; right: 70px; bottom: 260px; background: var(--granate); color: var(--blanco); padding: 44px 56px; }
+      .etiqueta .titulo { font-size: 104px; }
+      .etiqueta p { font-size: 44px; margin-top: 14px; }
+      #cierre { background: var(--granate); color: var(--blanco); }
+      #cierre .titulo { font-size: 150px; }
+      #cierre p { font-size: 56px; }
+      #cierre .tel { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 120px; background: var(--blanco); color: var(--granate); padding: 20px 50px; }
+      #cierre img { width: 640px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="38" data-width="1080" data-height="1920">
+      <section id="portada" class="clip centro" data-start="0" data-duration="5" data-track-index="0">
+        <img id="logo1" src="img/logo.png" alt="Ferjusanz" />
+        <h1 class="titulo" id="t1">Esta semana<br />en Mercamadrid</h1>
+        <p id="p1">Género fresco cada día para tu negocio</p>
+      </section>
+
+      <section id="f1" class="clip foto" data-start="5" data-duration="8" data-track-index="0">
+        <img src="img/tomate-de-temporada.jpg" alt="" />
+        <div class="etiqueta"><h2 class="titulo">Tomate de temporada</h2><p>Si te gusta el tomate, ve a por uno bueno</p></div>
+      </section>
+      <section id="f2" class="clip foto" data-start="13" data-duration="5" data-track-index="0">
+        <img src="img/granada-mollar-de-elche.jpg" alt="" />
+        <div class="etiqueta"><h2 class="titulo">Granada mollar de Elche</h2><p>Una bendición absoluta</p></div>
+      </section>
+      <section id="f3" class="clip foto" data-start="18" data-duration="10" data-track-index="0">
+        <img src="img/setas-de-ostra.jpg" alt="" />
+        <div class="etiqueta"><h2 class="titulo">Setas de ostra</h2><p>Para disfrutar con los tuyos</p></div>
+      </section>
+
+      <audio id="voz" src="voz.m4a" data-start="0" data-duration="38" data-track-index="1"></audio>
+      <section id="cierre" class="clip centro" data-start="28" data-duration="10" data-track-index="0">
+        <h2 class="titulo" id="t5">Pide tu oferta</h2>
+        <p>y atrévete con un pedido</p>
+        <div class="tel" id="tel">609 567 354</div>
+        <p>WhatsApp</p>
+        <img src="img/logo-oscuro.png" alt="Ferjusanz" />
+      </section>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.from("#logo1", { opacity: 0, y: -40, duration: 0.6, ease: "power3.out" }, 0.1)
+        .from("#t1", { opacity: 0, y: 60, duration: 0.6, ease: "power3.out" }, 0.4)
+        .from("#p1", { opacity: 0, duration: 0.5 }, 0.9);
+      [["#f1", 5, 8], ["#f2", 13, 5], ["#f3", 18, 10]].forEach(([id, s, d]) => {
+        tl.fromTo(id + " img", { scale: 1.12 }, { scale: 1, duration: d, ease: "none" }, s)
+          .from(id + " .etiqueta", { yPercent: 120, opacity: 0, duration: 0.5, ease: "power3.out" }, s + 0.2);
+      });
+      tl.from("#t5", { opacity: 0, y: 60, duration: 0.5, ease: "power3.out" }, 28.1)
+        .from("#tel", { scale: 0.8, opacity: 0, duration: 0.5, ease: "back.out(1.7)" }, 28.6);
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
