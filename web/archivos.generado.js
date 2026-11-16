@@ -7,26 +7,26 @@ import f4 from "./public/blog/beneficios-de-consumir-frutas-de-temporada/index.h
 import f5 from "./public/blog/beneficios-de-las-frutas-y-verduras-para-el-verano/index.html";
 import f6 from "./public/blog/beneficios-patatas-y-hortalizas/index.html";
 import f7 from "./public/blog/calendario-frutas-verduras-temporada-mes-a-mes/index.html";
-import f8 from "./public/blog/como-hacer-para-que-los-ninos-coman-frutas-y-verduras/index.html";
-import f9 from "./public/blog/como-se-garantiza-la-frescura-en-la-distribucion-de-frutas-y-verduras/index.html";
-import f10 from "./public/blog/conoce-todos-los-tipos-de-pimientos/index.html";
-import f11 from "./public/blog/conservacion-de-frutas-y-verduras-fuera-o-dentro-de-la-nevera/index.html";
-import f12 from "./public/blog/cremas-de-verduras-calentitas/index.html";
-import f13 from "./public/blog/cuida-tu-corazon-con-estas-frutas-y-verduras/index.html";
-import f14 from "./public/blog/cultivar-sembrar-cosechar-cebollas-terreno/index.html";
-import f15 from "./public/blog/el-ajo-mucho-mas-que-un-alimento/index.html";
-import f16 from "./public/blog/fruta-verdura-residencias-mayores-real-decreto-menus/index.html";
-import f17 from "./public/blog/frutas-exoticas-como-conservarlas/index.html";
-import f18 from "./public/blog/frutas-tropicales-propiedades-y-beneficios-para-la-salud/index.html";
-import f19 from "./public/blog/frutas-verduras-comedor-colegio-beneficios/index.html";
-import f20 from "./public/blog/frutas-y-verduras-de-temporada-en-noviembre-para-restaurantes/index.html";
-import f21 from "./public/blog/frutas-y-verduras-en-el-embarazo/index.html";
-import f22 from "./public/blog/frutas-y-verduras-en-una-barbacoa-por-que-no/index.html";
-import f23 from "./public/blog/gazpacho-aprende-la-verdadera-receta/index.html";
-import f24 from "./public/blog/guiso-de-calabaza-con-garbanzos/index.html";
-import f25 from "./public/blog/huevos-para-hosteleria-tamanos-categorias-codigo/index.html";
-import f26 from "./public/blog/index.html";
-import f27 from "./public/blog/kakis-de-temporada-faciles-de-pelar/index.html";
+import f8 from "./public/blog/caquis-de-temporada-faciles-de-pelar/index.html";
+import f9 from "./public/blog/como-hacer-para-que-los-ninos-coman-frutas-y-verduras/index.html";
+import f10 from "./public/blog/como-se-garantiza-la-frescura-en-la-distribucion-de-frutas-y-verduras/index.html";
+import f11 from "./public/blog/conoce-todos-los-tipos-de-pimientos/index.html";
+import f12 from "./public/blog/conservacion-de-frutas-y-verduras-fuera-o-dentro-de-la-nevera/index.html";
+import f13 from "./public/blog/cremas-de-verduras-calentitas/index.html";
+import f14 from "./public/blog/cuida-tu-corazon-con-estas-frutas-y-verduras/index.html";
+import f15 from "./public/blog/cultivar-sembrar-cosechar-cebollas-terreno/index.html";
+import f16 from "./public/blog/el-ajo-mucho-mas-que-un-alimento/index.html";
+import f17 from "./public/blog/fruta-verdura-residencias-mayores-real-decreto-menus/index.html";
+import f18 from "./public/blog/frutas-exoticas-como-conservarlas/index.html";
+import f19 from "./public/blog/frutas-tropicales-propiedades-y-beneficios-para-la-salud/index.html";
+import f20 from "./public/blog/frutas-verduras-comedor-colegio-beneficios/index.html";
+import f21 from "./public/blog/frutas-y-verduras-de-temporada-en-noviembre-para-restaurantes/index.html";
+import f22 from "./public/blog/frutas-y-verduras-en-el-embarazo/index.html";
+import f23 from "./public/blog/frutas-y-verduras-en-una-barbacoa-por-que-no/index.html";
+import f24 from "./public/blog/gazpacho-aprende-la-verdadera-receta/index.html";
+import f25 from "./public/blog/guiso-de-calabaza-con-garbanzos/index.html";
+import f26 from "./public/blog/huevos-para-hosteleria-tamanos-categorias-codigo/index.html";
+import f27 from "./public/blog/index.html";
 import f28 from "./public/blog/la-fruta-con-o-sin-piel/index.html";
 import f29 from "./public/blog/la-importancia-de-las-verduras-frescas-en-la-dieta/index.html";
 import f30 from "./public/blog/la-sostenibilidad-en-la-distribucion-de-frutas-y-hortalizas/index.html";
@@ -193,26 +193,26 @@ export default {
   "/blog/beneficios-de-las-frutas-y-verduras-para-el-verano/": [f5, "text/html; charset=utf-8"],
   "/blog/beneficios-patatas-y-hortalizas/": [f6, "text/html; charset=utf-8"],
   "/blog/calendario-frutas-verduras-temporada-mes-a-mes/": [f7, "text/html; charset=utf-8"],
-  "/blog/como-hacer-para-que-los-ninos-coman-frutas-y-verduras/": [f8, "text/html; charset=utf-8"],
-  "/blog/como-se-garantiza-la-frescura-en-la-distribucion-de-frutas-y-verduras/": [f9, "text/html; charset=utf-8"],
-  "/blog/conoce-todos-los-tipos-de-pimientos/": [f10, "text/html; charset=utf-8"],
-  "/blog/conservacion-de-frutas-y-verduras-fuera-o-dentro-de-la-nevera/": [f11, "text/html; charset=utf-8"],
-  "/blog/cremas-de-verduras-calentitas/": [f12, "text/html; charset=utf-8"],
-  "/blog/cuida-tu-corazon-con-estas-frutas-y-verduras/": [f13, "text/html; charset=utf-8"],
-  "/blog/cultivar-sembrar-cosechar-cebollas-terreno/": [f14, "text/html; charset=utf-8"],
-  "/blog/el-ajo-mucho-mas-que-un-alimento/": [f15, "text/html; charset=utf-8"],
-  "/blog/fruta-verdura-residencias-mayores-real-decreto-menus/": [f16, "text/html; charset=utf-8"],
-  "/blog/frutas-exoticas-como-conservarlas/": [f17, "text/html; charset=utf-8"],
-  "/blog/frutas-tropicales-propiedades-y-beneficios-para-la-salud/": [f18, "text/html; charset=utf-8"],
-  "/blog/frutas-verduras-comedor-colegio-beneficios/": [f19, "text/html; charset=utf-8"],
-  "/blog/frutas-y-verduras-de-temporada-en-noviembre-para-restaurantes/": [f20, "text/html; charset=utf-8"],
-  "/blog/frutas-y-verduras-en-el-embarazo/": [f21, "text/html; charset=utf-8"],
-  "/blog/frutas-y-verduras-en-una-barbacoa-por-que-no/": [f22, "text/html; charset=utf-8"],
-  "/blog/gazpacho-aprende-la-verdadera-receta/": [f23, "text/html; charset=utf-8"],
-  "/blog/guiso-de-calabaza-con-garbanzos/": [f24, "text/html; charset=utf-8"],
-  "/blog/huevos-para-hosteleria-tamanos-categorias-codigo/": [f25, "text/html; charset=utf-8"],
-  "/blog/": [f26, "text/html; charset=utf-8"],
-  "/blog/kakis-de-temporada-faciles-de-pelar/": [f27, "text/html; charset=utf-8"],
+  "/blog/caquis-de-temporada-faciles-de-pelar/": [f8, "text/html; charset=utf-8"],
+  "/blog/como-hacer-para-que-los-ninos-coman-frutas-y-verduras/": [f9, "text/html; charset=utf-8"],
+  "/blog/como-se-garantiza-la-frescura-en-la-distribucion-de-frutas-y-verduras/": [f10, "text/html; charset=utf-8"],
+  "/blog/conoce-todos-los-tipos-de-pimientos/": [f11, "text/html; charset=utf-8"],
+  "/blog/conservacion-de-frutas-y-verduras-fuera-o-dentro-de-la-nevera/": [f12, "text/html; charset=utf-8"],
+  "/blog/cremas-de-verduras-calentitas/": [f13, "text/html; charset=utf-8"],
+  "/blog/cuida-tu-corazon-con-estas-frutas-y-verduras/": [f14, "text/html; charset=utf-8"],
+  "/blog/cultivar-sembrar-cosechar-cebollas-terreno/": [f15, "text/html; charset=utf-8"],
+  "/blog/el-ajo-mucho-mas-que-un-alimento/": [f16, "text/html; charset=utf-8"],
+  "/blog/fruta-verdura-residencias-mayores-real-decreto-menus/": [f17, "text/html; charset=utf-8"],
+  "/blog/frutas-exoticas-como-conservarlas/": [f18, "text/html; charset=utf-8"],
+  "/blog/frutas-tropicales-propiedades-y-beneficios-para-la-salud/": [f19, "text/html; charset=utf-8"],
+  "/blog/frutas-verduras-comedor-colegio-beneficios/": [f20, "text/html; charset=utf-8"],
+  "/blog/frutas-y-verduras-de-temporada-en-noviembre-para-restaurantes/": [f21, "text/html; charset=utf-8"],
+  "/blog/frutas-y-verduras-en-el-embarazo/": [f22, "text/html; charset=utf-8"],
+  "/blog/frutas-y-verduras-en-una-barbacoa-por-que-no/": [f23, "text/html; charset=utf-8"],
+  "/blog/gazpacho-aprende-la-verdadera-receta/": [f24, "text/html; charset=utf-8"],
+  "/blog/guiso-de-calabaza-con-garbanzos/": [f25, "text/html; charset=utf-8"],
+  "/blog/huevos-para-hosteleria-tamanos-categorias-codigo/": [f26, "text/html; charset=utf-8"],
+  "/blog/": [f27, "text/html; charset=utf-8"],
   "/blog/la-fruta-con-o-sin-piel/": [f28, "text/html; charset=utf-8"],
   "/blog/la-importancia-de-las-verduras-frescas-en-la-dieta/": [f29, "text/html; charset=utf-8"],
   "/blog/la-sostenibilidad-en-la-distribucion-de-frutas-y-hortalizas/": [f30, "text/html; charset=utf-8"],
