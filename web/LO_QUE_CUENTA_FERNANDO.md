@@ -37,3 +37,7 @@ Cada vez que Fernando cuente algo útil en una conversación con Claude (un truc
 - Fruta para colegios y residencias: por qué calibres pequeños y cómo pedirla.
 - Cómo elige un mayorista la fruta en Mercamadrid (la calidad manda).
 - Verdura para cremas y purés de comedor.
+
+### 16/11/2026 (conversación con Claude)
+- Fernando **compite en boxeo**: estuvo en el **Campeonato de Madrid 2026** (fotos en su Instagram). Se puede contar en los artículos de deporte y vida sana.
+- Las fotos del ring son de **Adrumor**, amigo suyo, **pagadas**: se pueden usar (poner «Fotos del ring: Adrumor»).
