@@ -490,3 +490,13 @@ a:active, button:active, summary:active { opacity: .75; }
 .primer-pedido .pp-usa { display: flex; align-items: center; gap: 10px; font-weight: 400; min-height: 44px; }
 .pp-fila input::placeholder { font-size: .8rem; }
 .primer-pedido .pp-usa input[type=checkbox] { flex: none; }
+/* Familias desplegables en «¿Qué productos usa?» (16/11/2026) */
+.pp-lista { max-height: none; overflow: visible; }
+.pp-familia { border-bottom: 1px solid var(--linea); }
+.pp-familia summary { min-height: 48px; display: flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; padding: 4px 0; }
+.pp-familia summary small { font-weight: 400; }
+.pp-familia[open] summary { border-bottom: 1px solid var(--linea); }
+.pp-familia summary { list-style: none; }
+.pp-familia summary::-webkit-details-marker { display: none; }
+.pp-familia summary::before { content: "▸"; width: 1em; }
+.pp-familia[open] summary::before { content: "▾"; }
