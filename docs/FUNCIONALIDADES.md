@@ -35,6 +35,7 @@ _Sacadas del historial de GitLab y de los documentos (📝). Versión normal v18
 - Función `recibir-factura` y «Leer con IA».
 - **Coste del día**: la ganancia compara cada venta con la compra del mismo día y se corrige sola al llegar la factura.
 - **⚠️ Raros** (Precios de compra, desde v202): precios de las facturas de proveedor que se apartan de la mediana de los 60 días anteriores (misma unidad); marca en morado los que parecen unidad o producto mal apuntado. Función `panelPreciosRaros` / `precioRaroCalc`. Solo lee.
+- **🔀 Mal apuntados** (Precios de compra, desde v333/v334): líneas ya guardadas de las facturas de proveedor cuyo producto contradice las reglas internas (`fcRegla*`): «apuntado como X · según las reglas es Y». Funciones `malApuntadosCalc` / `panelMalApuntados`. Solo lee.
 - **📈 Suben** (Precios de compra, desde v204): productos cuya última compra supera la media de los 14 días anteriores y cuánto margen se pierde frente al precio de venta de Golden. Funciones `subidasCalc`, `ventaGolden`, `panelSuben`. Solo lee.
 - **Avisos en Facturas de proveedores** (desde v207): cada factura de la bandeja dice cuántos precios son raros, suben o bajan, aunque no esté registrada (lee sola las que falten).
 - **📄 Ver factura / 💶 Precios de venta** en cada producto de Raros y Suben (desde v207): `botonesCompraVenta`, `verFacturaLeida`, `hojaPreciosVenta`.
