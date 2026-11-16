@@ -70,7 +70,7 @@ nav.tabs button.on{background:var(--verde-cl);color:var(--verde-osc);border-colo
 .err{color:var(--rojo)}
 .aviso-card{background:var(--ambar-cl);border:1px solid #f0d28a;color:#6a4200;border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:15px}
 .login{max-width:380px;margin:12vh auto 0;padding:0 18px;display:flex;flex-direction:column;gap:12px}
-.login h1{margin:0;color:var(--verde);font-size:34px}.logo-login{display:block;width:100%;max-width:300px;height:auto;margin:0 0 6px}html[data-tema=oscuro] .logo-login{content:url(pres/logo-oscuro.png)}
+.login h1{margin:0;color:var(--verde);font-size:34px}.logo-login{display:block;width:100%;max-width:300px;height:auto;margin:0 0 6px}html[data-tema=oscuro] .logo-login,html[data-tema=oscuro] .logo-tarjeta{content:url(pres/logo-oscuro.png)}
 .login .sub{margin:0 0 6px}
 .visordoc{position:fixed;inset:0;z-index:80;background:#1f2937;display:flex;flex-direction:column}.visordoc .vcab{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#111827;color:#fff}.visordoc .vcab b{flex:1;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.visordoc .vcab button{min-height:48px;min-width:48px;font-size:18px;margin:0}.visordoc .vcuerpo{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:6px;text-align:center}.visordoc canvas,.visordoc img{max-width:none;background:#fff;margin:0 auto 8px;display:block}
 .falta-rojo{display:block;width:100%;text-align:left;min-height:50px;margin:6px 0;font-size:16px;font-weight:800;background:#dc2626!important;color:#fff!important;border:0;border-radius:12px;padding:10px 12px}.falta-rojo.small{display:inline-block;width:auto;min-height:40px;font-size:14px;margin:6px 0 0;padding:6px 10px}.card.rojo-falta{border-left:7px solid #dc2626!important;background:#fef2f2}
@@ -2821,7 +2821,8 @@ function hojaTarjeta() {
   hoja('📇 Tarjeta para clientes', h('div', {},
     h('div', { style: 'display:flex;gap:12px;align-items:center' },
       h('img', { src: qrDataUrl(URL_TARJETA, 6), alt: 'QR de la tarjeta', style: 'width:150px;height:150px;flex:none;border-radius:10px;image-rendering:pixelated' }),
-      h('div', { class: 'sub', style: 'flex:1;min-width:0' }, 'Que lo escanee con la cámara del móvil. Verá «Imagine su primer pedido» (sin precios) y lo que apunte te llega a Comercial › Avisos.')),
+      h('div', { style: 'flex:1;min-width:0' }, h('img', { class: 'logo-tarjeta', src: 'pres/logo.png', alt: 'Ferjusanz', style: 'display:block;width:100%;max-width:170px;height:auto;margin-bottom:6px' }),
+        h('div', { class: 'sub' }, 'Que lo escanee con la cámara del móvil. Verá «Imagine su primer pedido» (sin precios) y lo que apunte te llega a Comercial › Avisos.'))),
     h('label', { class: 'campo' }, 'Mensaje', msg),
     h('label', { class: 'campo' }, 'Móvil de la persona', tel),
     B('guardar', '💬 Enviar por WhatsApp', () => abrirWa('com.whatsapp')),
