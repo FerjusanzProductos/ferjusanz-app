@@ -61,7 +61,8 @@ _Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/arti
 ### 🤖 Claude (sin esperar a nadie)
 - 🟡 Antes de enero: **guías cortas con fotos** para Carmen (facturar, caja, banco, proveedores, informes para Jorge, pedidos por teléfono) y **guion de llamadas** comerciales.
 - 🟡 Revisar cada lunes si sale en el BOE el aplazamiento de Verifactu: **lo hace sola** la tarea automática «Verifactu en el BOE (lunes)» (`trig_01Q2osxJtGHJMTo3oksNiXG7`, lunes 9:47 hora de Madrid, avisa al móvil). Se quita cuando salga o pase el 22/12.
-- ⚪ Auditoría de seguridad (skill `security-audit`) y hacer más pequeño `public/index.html`.
+- 🟡 **Arreglos de la auditoría de seguridad** (16/11/2026, detalle en `docs/AUDITORIA_SEGURIDAD.md`): (1) albarán por correo solo al correo que la oficina ha aceptado (falta el «sí» de Fernando: hoy se manda también al que deja el cliente con el QR sin revisar); (2) visor de PDF de facturas seguro (`isEvalSupported: false` y pdf.js nuevo); (3) `albaranes-correo`: la prueba de Gmail solo para admin; (4) formulario de la web: que no borre notas antiguas de un contacto y límite de envíos; (5) subir al repositorio el código de `recibir-factura`, `copia-archivo` y `whatsapp`.
+- ⚪ Hacer más pequeño `public/index.html`.
 
 ### 🚀 El día del arranque
 - Contar y, con el «sí» de Fernando, borrar lo de prueba de la base real (hoy no hay nada; los pedidos fijos y facturas de proveedores **no** se borran).
