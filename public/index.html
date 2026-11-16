@@ -488,6 +488,14 @@ button:not(.ghost):not(.peligro):not(.chip):not(.back):not(.chatbtn):not(.quien)
 .bandeja-fac.portal .tt{font-size:19px}
 nav.tabs{background:linear-gradient(180deg,#fff,#f1f5f2)}
 #fjflot button{width:38px;height:38px;min-height:38px;font-size:18px;opacity:.78}
+/* Al bajar por la pantalla solo queda SOS (A+ y luna vuelven al subir) y hay hueco al final para que SOS no tape lo último */
+#fjflot.recogido button:not(.ayuda),#fjflot.recogido .dev{display:none}
+main{padding-bottom:76px}
+/* Botones grandes de Inicio: que no se salgan de la pantalla en móviles estrechos */
+.rej.grande{grid-template-columns:repeat(2,minmax(0,1fr))}
+.rej.grande .circ{min-width:0}
+.rej.grande .circ .l{min-width:0;overflow-wrap:break-word;hyphens:auto}
+@media (max-width:380px){.rej.grande .circ{gap:8px;padding:8px}.rej.grande .circ .c{width:42px;height:42px;font-size:21px}.rej.grande .circ .l{font-size:15px}}
 /* modo oscuro: se invierte la pantalla entera (los colores se mantienen) y las fotos se vuelven a invertir para verse normales */
 html[data-tema=oscuro]{filter:invert(1) hue-rotate(180deg);background:#fff}
 html[data-tema=oscuro] img,html[data-tema=oscuro] video,html[data-tema=oscuro] canvas,html[data-tema=oscuro] iframe,html[data-tema=oscuro] .avatar,html[data-tema=oscuro] #fjflot .dev{filter:invert(1) hue-rotate(180deg)}
@@ -865,6 +873,8 @@ const state = { user: null, perfil: null, view: 'inicio', params: {}, fecha: hoy
 
 /* =====================  UTILIDADES  ===================== */
 function hoy(d) { d = d || new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
+/* El navegador escribe «null»/«false» si replaceChildren/append reciben null o false (el código usa mucho «cond ? h(…) : null»): se quitan aquí para toda la app */
+for (const m of ['replaceChildren', 'append', 'prepend']) { const o = Element.prototype[m]; Element.prototype[m] = function (...k) { return o.apply(this, k.filter(x => x != null && x !== false)); }; }
 function h(tag, attrs, ...kids) {
   const e = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs || {})) {
@@ -14893,6 +14903,7 @@ const fjZoom = () => { try { const z = parseFloat(localStorage.getItem('fj_zoom'
 function aplicaZoom() { const z = fjZoom() * (window.__FJ_BASEZ || 1); document.documentElement.style.zoom = z !== 1 ? String(z) : ''; }
 function cambiaZoom() { const z = fjZoom(); const n = ZOOMS[(ZOOMS.indexOf(z) + 1) % ZOOMS.length]; try { localStorage.setItem('fj_zoom', String(n)); } catch (e) { }
   aplicaZoom(); pintaFlot(); toast(n === 1 ? 'Letra normal' : 'Letra ' + (n === 1.15 ? 'grande' : n === 1.3 ? 'muy grande' : 'enorme') + ' (' + Math.round(n * 100) + '%). Toca otra vez para más.', 'ok'); }
+{ let y0 = 0; addEventListener('scroll', () => { const y = scrollY, f = document.getElementById('fjflot'); if (f && Math.abs(y - y0) > 8) { f.classList.toggle('recogido', y > y0 && y > 80); y0 = y; } }, { passive: true }); }
 function pintaFlot() {
   let f = document.getElementById('fjflot'); if (!f) { f = document.createElement('div'); f.id = 'fjflot'; document.body.appendChild(f); }
   if (!state.user || !state.perfil) { f.style.display = 'none'; return; } f.style.display = '';
