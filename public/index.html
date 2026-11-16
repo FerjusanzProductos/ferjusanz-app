@@ -8413,9 +8413,9 @@ function vistaPrecios() {
   state.view = 'precios'; if (!puedeCompras()) { go('inicio'); return; }
   let modo = LS.get('fj_precios_modo', 'dia'), fecha = hoy();
   const cont = h('div', {}), chips = h('div', { class: 'chips' });
-  const pintarChips = () => chips.replaceChildren(...[['hoy', 'Del día'], ['dia', 'Por día'], ['producto', 'Por producto'], ['raros', '⚠️ Raros'], ['suben', '📈 Suben']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { LS.set('fj_precios_modo', m); vistaPrecios(); } }, n)));
+  const pintarChips = () => chips.replaceChildren(...[['hoy', 'Del día'], ['dia', 'Por día'], ['producto', 'Por producto'], ['raros', '⚠️ Raros'], ['suben', '📈 Suben'], ['malap', '🔀 Mal apuntados']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { LS.set('fj_precios_modo', m); vistaPrecios(); } }, n)));
   $app.replaceChildren(shell('Precios de compra del día', h('div', {}, chips, h('button', { class: 'ghost small', style: 'width:100%;margin:6px 0', onclick: () => rellenarPreciosCompra(() => vistaPrecios()) }, '💶 Rellenar con las facturas los precios que faltan'), cont), { volver: volverIni })); renderBanner(); pintarChips();
-  const pintar = () => modo === 'hoy' ? pHoy() : modo === 'dia' ? pDia() : modo === 'raros' ? panelPreciosRaros(cont) : modo === 'suben' ? panelSuben(cont) : pProducto();
+  const pintar = () => modo === 'hoy' ? pHoy() : modo === 'dia' ? pDia() : modo === 'raros' ? panelPreciosRaros(cont) : modo === 'suben' ? panelSuben(cont) : modo === 'malap' ? panelMalApuntados(cont) : pProducto();
   async function editarPrecio(l) {
     if (!puedeCompras()) return;
     const v = prompt('Precio de compra por ' + l.unidad + ' (€)', l.precio_compra != null ? String(l.precio_compra).replace('.', ',') : ''); if (v === null) return;
@@ -8684,6 +8684,46 @@ async function cargarPreciosRaros(dias, umbral) {
   const raros = precioRaroCalc(lineas, hist, desde, umbral);
   raros.forEach(r => { const p = prods[r.pid] || {}; r.producto = p.nombre || 'Producto'; r.codigo = p.codigo || ''; r.prov = provs[r.proveedor_id] || 'Proveedor sin identificar'; });
   return raros;
+}
+/* ---------- Agente de compras (3): MAL APUNTADOS ----------
+   Pasa las reglas internas del lector (fcRegla*: patata, tomate, cebolla y familias, docs/REGLAS_INTERNAS.md) por las líneas YA guardadas
+   de las facturas de proveedor y avisa de las que están en otro producto del que dice la regla. Agrupa por texto y producto. Solo lee. */
+function malApuntadosCalc(lineas, prods) {
+  const porId = {}; prods.forEach(p => { porId[p.id] = p; });
+  const g = {};
+  lineas.forEach(l => {
+    const r = fcReglaPatata(l.texto, prods) || fcReglaTomate(l.texto, prods) || fcReglaCebolla(l.texto, prods) || fcReglaFamilias(l.texto, prods);
+    if (!r || r.estado !== 'ok' || r.producto.id === l.producto_id) return;
+    const k = fcClave(l.texto) + '|' + l.producto_id;
+    const x = g[k] = g[k] || { texto: l.texto, ahora: porId[l.producto_id] || { nombre: 'Producto borrado', codigo: '' }, regla: r.producto, n: 0, cant: 0, fecha: '', facs: new Set(), provs: new Set() };
+    x.n++; x.cant += Number(l.cantidad) || 0; if (String(l.fecha) > x.fecha) x.fecha = String(l.fecha).slice(0, 10);
+    if (l.factura_id) x.facs.add(l.factura_id); if (l.proveedor_id) x.provs.add(l.proveedor_id);
+  });
+  return Object.values(g).sort((a, b) => b.fecha.localeCompare(a.fecha) || b.n - a.n);
+}
+function panelMalApuntados(cont) {
+  let dias = LS.get('fj_malap_dias', 30);
+  const ctr = h('div', {}), lista = h('div', {});
+  cont.replaceChildren(h('div', { class: 'aviso-card' }, '🔀 Compras de las facturas de proveedor que están apuntadas en un producto distinto del que dicen las reglas internas (patata, tomate, cebolla, pimiento, naranja…). Solo avisa: no cambia nada. Para corregirlas, díselo a Claude.'), ctr, lista);
+  async function cargar() {
+    ctr.replaceChildren(h('div', { class: 'sub', style: 'margin-top:6px' }, 'Facturas de los últimos:'), h('div', { class: 'chips' }, ...[30, 90, 365].map(d => h('button', { class: 'chip' + (dias === d ? ' on' : ''), onclick: () => { dias = d; LS.set('fj_malap_dias', d); cargar(); } }, d + ' días'))));
+    lista.replaceChildren(h('p', { class: 'vacio' }, 'Revisando facturas…'));
+    try {
+      const desde = hoy(new Date(Date.now() - dias * 86400000)), prods = await waProductos();
+      const lf = []; for (let i = 0; i < 50000; i += 1000) { const r = await sb.from('lineas_factura_leida').select('factura_id,proveedor_id,fecha,texto,cantidad,producto_id').not('producto_id', 'is', null).gte('fecha', desde).order('fecha', { ascending: false }).range(i, i + 999); if (r.error) throw r.error; lf.push(...(r.data || [])); if ((r.data || []).length < 1000) break; }
+      const mal = malApuntadosCalc(lf, prods);
+      const nom = p => p.nombre + (p.codigo ? ' · ' + p.codigo : '');
+      lista.replaceChildren(h('div', { class: 'card fila' }, h('div', { class: 'sub' }, mal.length ? '🔀 Textos de factura mal apuntados' : 'Todo bien apuntado'), h('b', { style: 'font-size:20px' }, String(mal.length))),
+        ...mal.map(x => h('div', { class: 'card', style: 'border-left:5px solid #7c3aed' },
+          h('div', { class: 'nombre' }, '«' + x.texto + '»'),
+          h('div', { style: 'margin-top:2px' }, 'Apuntado como ', h('b', { style: 'color:#b91c1c' }, nom(x.ahora))),
+          h('div', {}, 'Según las reglas es ', h('b', { style: 'color:#166534' }, nom(x.regla))),
+          h('div', { class: 'sub' }, x.n + ' línea(s) · ' + num(x.cant) + ' en total · la última el ' + fechaES(x.fecha)),
+          h('div', { style: 'display:flex;gap:6px;margin-top:8px' }, h('button', { class: 'ghost small', style: 'flex:1;min-height:44px', onclick: () => verFacturaLeida([...x.facs], [...x.provs], x.fecha, x.texto) }, '📄 Ver factura')))),
+        ...(mal.length ? [] : [h('p', { class: 'vacio' }, 'Ninguna compra de los últimos ' + dias + ' días contradice las reglas internas.')]));
+    } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+  }
+  cargar();
 }
 /* Botones de las tarjetas de «⚠️ Raros» y «📈 Suben»: ver la factura del proveedor y cambiar los precios de venta del producto. */
 function botonesCompraVenta(pid, facs, provs, fecha, nombre, info) {
