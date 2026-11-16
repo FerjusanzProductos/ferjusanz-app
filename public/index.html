@@ -70,7 +70,7 @@ nav.tabs button.on{background:var(--verde-cl);color:var(--verde-osc);border-colo
 .err{color:var(--rojo)}
 .aviso-card{background:var(--ambar-cl);border:1px solid #f0d28a;color:#6a4200;border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:15px}
 .login{max-width:380px;margin:12vh auto 0;padding:0 18px;display:flex;flex-direction:column;gap:12px}
-.login h1{margin:0;color:var(--verde);font-size:34px}.logo-login{display:block;width:100%;max-width:300px;height:auto;margin:0 0 6px}html[data-tema=oscuro] .logo-login{content:url(pres/logo-oscuro.png)}
+.login h1{margin:0;color:var(--verde);font-size:34px}.logo-login{display:block;width:100%;max-width:300px;height:auto;margin:0 0 6px}html[data-tema=oscuro] .logo-login,html[data-tema=oscuro] .logo-tarjeta{content:url(pres/logo-oscuro.png)}
 .login .sub{margin:0 0 6px}
 .visordoc{position:fixed;inset:0;z-index:80;background:#1f2937;display:flex;flex-direction:column}.visordoc .vcab{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#111827;color:#fff}.visordoc .vcab b{flex:1;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.visordoc .vcab button{min-height:48px;min-width:48px;font-size:18px;margin:0}.visordoc .vcuerpo{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:6px;text-align:center}.visordoc canvas,.visordoc img{max-width:none;background:#fff;margin:0 auto 8px;display:block}
 .falta-rojo{display:block;width:100%;text-align:left;min-height:50px;margin:6px 0;font-size:16px;font-weight:800;background:#dc2626!important;color:#fff!important;border:0;border-radius:12px;padding:10px 12px}.falta-rojo.small{display:inline-block;width:auto;min-height:40px;font-size:14px;margin:6px 0 0;padding:6px 10px}.card.rojo-falta{border-left:7px solid #dc2626!important;background:#fef2f2}
@@ -2810,23 +2810,26 @@ function abrirWhatsApp(telefono, texto, pkg) {
   location.href = 'intent://send?' + (t ? 'phone=' + t + '&' : '') + 'text=' + encodeURIComponent(texto) + '#Intent;scheme=whatsapp;package=' + (pkg || 'com.whatsapp') + ';S.browser_fallback_url=' + encodeURIComponent(web) + ';end';
 }
 function hojaTarjeta() {
-  const yo = state.perfil ? state.perfil.nombre.split(' ')[0] : '';
-  const msg = h('textarea', { rows: 6, style: 'width:100%;font-size:15px' });
+  const yo = String((state.perfil && state.perfil.nombre) || '').split(' ')[0];
+  const msg = h('textarea', { rows: 4, style: 'width:100%;font-size:15px' });
   msg.value = 'Hola, soy ' + yo + ', de Ferjusanz (patatas, frutas, verduras y huevos). Destacamos por la relación calidad-precio. Para calcular los precios que le haríamos, imagine su primer pedido: marque en un minuto lo que usa y cuánto a la semana, y le enviamos su tarifa según lo que gasta. Sin compromiso y sin pedido mínimo. Abajo tiene quiénes somos y de dónde sale el género:\n' + URL_TARJETA + '\n\nSi lo prefiere, contésteme por aquí con lo que suele pedir y lo apunto yo.';
   const tel = h('input', { type: 'tel', inputmode: 'tel', placeholder: 'Su móvil (opcional): 600 000 000', style: 'width:100%' });
   const abrirWa = pkg => abrirWhatsApp(tel.value, msg.value, pkg);
   const copiar = async () => { try { await navigator.clipboard.writeText(msg.value); toast('Mensaje copiado: pégalo en WhatsApp', 'ok'); } catch (e) { msg.select(); toast('Mantén pulsado el texto para copiarlo', 'err'); } };
-  const B = (cls, t, f) => h('button', { class: cls, style: 'width:100%;min-height:50px;margin-top:8px', onclick: f }, t);
+  // position:static: el botón verde «pegajoso» de las hojas tapaba la casilla del móvil
+  const B = (cls, t, f, st) => h('button', { class: cls, style: 'width:100%;min-height:50px;margin-top:8px;position:static;' + (st || ''), onclick: f }, t);
   hoja('📇 Tarjeta para clientes', h('div', {},
-    h('p', { class: 'sub' }, 'Arriba, «Imagine su primer pedido y le calculamos su tarifa»: el cliente apunta lo que pide a la semana y te llega a Comercial › Avisos › «Primeros pedidos». Debajo, quiénes somos y de dónde sale el género. La página NO enseña precios.'),
-    h('div', { style: 'text-align:center' }, h('img', { src: qrDataUrl(URL_TARJETA, 8), alt: 'QR de la tarjeta', style: 'width:100%;max-width:260px;image-rendering:pixelated' }),
-      h('div', { class: 'sub' }, 'Que lo escanee con la cámara del móvil (o se lo pase a su jefe).')),
+    h('div', { style: 'display:flex;gap:12px;align-items:center' },
+      h('img', { src: qrDataUrl(URL_TARJETA, 6), alt: 'QR de la tarjeta', style: 'width:150px;height:150px;flex:none;border-radius:10px;image-rendering:pixelated' }),
+      h('div', { style: 'flex:1;min-width:0' }, h('img', { class: 'logo-tarjeta', src: 'pres/logo.png', alt: 'Ferjusanz', style: 'display:block;width:100%;max-width:170px;height:auto;margin-bottom:6px' }),
+        h('div', { class: 'sub' }, 'Que lo escanee con la cámara del móvil. Verá «Imagine su primer pedido» (sin precios) y lo que apunte te llega a Comercial › Avisos.'))),
     h('label', { class: 'campo' }, 'Mensaje', msg),
     h('label', { class: 'campo' }, 'Móvil de la persona', tel),
     B('guardar', '💬 Enviar por WhatsApp', () => abrirWa('com.whatsapp')),
     B('ghost', '💼 Enviar por WhatsApp Business', () => abrirWa('com.whatsapp.w4b')),
-    B('ghost', '📋 Copiar mensaje', copiar),
-    B('ghost', '👀 Ver la tarjeta', () => window.open(URL_TARJETA, '_blank'))));
+    h('div', { style: 'display:flex;gap:8px' },
+      B('ghost', '📋 Copiar', copiar, 'flex:1'),
+      B('ghost', '👀 Ver tarjeta', () => window.open(URL_TARJETA, '_blank'), 'flex:1'))));
 }
 function hojaQrEnlace(titulo, url, nota, wa) {
   const copiar = async () => { try { await navigator.clipboard.writeText(url); toast('Enlace copiado', 'ok'); } catch (e) { toast('Mantén pulsado el enlace de arriba para copiarlo', 'err'); } };
@@ -2988,7 +2991,7 @@ function pubAlbaranNodos(x, cargaFirma) {
     h('button', { class: 'guardar', style: 'width:100%;min-height:54px;margin-top:14px', onclick: ver }, '👁️ Ver albarán'),
     h('button', { class: 'ghost', style: 'width:100%;min-height:54px;margin-top:8px', onclick: pdf }, '📄 Descargar PDF')].filter(Boolean);
 }
-const pubCabecera = () => h('div', { class: 'pub-cab' }, h('div', { class: 'pub-emp' }, EMPRESA.nombre), h('div', { class: 'sub', style: 'color:#dcfce7' }, EMPRESA.telsAlb));
+const pubCabecera = () => h('div', { class: 'pub-cab' }, h('img', { src: 'pres/logo-oscuro.png', alt: 'Ferjusanz', style: 'display:block;height:44px;width:auto;max-width:80%;margin-bottom:8px;position:relative;z-index:1' }), h('div', { class: 'pub-emp', style: 'font-size:15px' }, EMPRESA.nombre), h('div', { class: 'sub', style: 'color:#dcfce7' }, EMPRESA.telsAlb));
 const pubPie = () => h('div', {}, h('button', { class: 'ghost', style: 'width:100%;min-height:50px;margin-top:14px', onclick: async () => { const u = location.href, t = document.title; try { if (navigator.share) await navigator.share({ title: t, text: 'Enlace de ' + EMPRESA.nombre + ' (solo para quien lo necesite):', url: u }); else { await navigator.clipboard.writeText(u); toast('Enlace copiado: pégalo en WhatsApp o en un correo', 'ok'); } } catch (e) { if (!e || e.name !== 'AbortError') { try { await navigator.clipboard.writeText(u); toast('Enlace copiado', 'ok'); } catch (er) { prompt('Copia este enlace:', u); } } } } }, '📲 Mandar este enlace a otra persona (jefe, gestoría…)'),
   h('p', { class: 'sub', style: 'margin-top:8px' }, 'Quien reciba el enlace lo abre en su móvil u ordenador, sin clave. Mándalo solo a personas de confianza.'),
   h('p', { class: 'sub', style: 'margin-top:8px' }, EMPRESA.dir + ' · ' + EMPRESA.email));
