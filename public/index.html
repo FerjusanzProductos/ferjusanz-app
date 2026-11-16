@@ -3619,9 +3619,9 @@ function vistaAyuda() {
         h('button', { class: 'small', onclick: () => util.replaceChildren(h('b', {}, '¡Me alegro! 👍')) }, 'Sí'),
         h('button', { class: 'ghost small', onclick: () => { const l = LS.get('fj_asis_sin', []); l.push({ q, f: new Date().toISOString() }); LS.set('fj_asis_sin', l.slice(-50)); util.replaceChildren(h('div', { class: 'sub' }, 'Vaya, perdona. Pregúntalo a la oficina; así lo apunto para ampliarme.'), h('button', { class: 'small', style: 'margin-top:6px', onclick: () => guiaWhatsApp('Hola, no encuentro en la app cómo hacer esto: «' + q + '»') }, '📲 Preguntar a la oficina por WhatsApp')); } }, 'No')));
       const siguiente = () => {
-      if (!ops.length) { salida.replaceChildren(h('p', { class: 'vacio' }, 'No he entendido bien «' + q + '». Prueba con otras palabras (pedido, albarán, sobrante, factura…) o pulsa una de estas:'), h('div', { style: 'display:flex;flex-direction:column;gap:6px' }, GUIA.filter(guiaVisible).slice(2, 9).map(g => h('button', { class: 'ghost', style: 'text-align:left', onclick: () => preguntar(g.titulo) }, g.icono + ' ' + g.titulo))), h('button', { class: 'ghost', style: 'width:100%;margin-top:8px', onclick: () => guiaWhatsApp('Hola, no encuentro en la app cómo hacer esto: «' + q + '»') }, '📲 Preguntar a la oficina por WhatsApp')); subir(); return; }
+      if (!ops.length) { salida.replaceChildren(pantallasNodo(q) || '', h('p', { class: 'vacio' }, 'No he entendido bien «' + q + '». Prueba con otras palabras (pedido, albarán, sobrante, factura…) o pulsa una de estas:'), h('div', { style: 'display:flex;flex-direction:column;gap:6px' }, GUIA.filter(guiaVisible).slice(2, 9).map(g => h('button', { class: 'ghost', style: 'text-align:left', onclick: () => preguntar(g.titulo) }, g.icono + ' ' + g.titulo))), h('button', { class: 'ghost', style: 'width:100%;margin-top:8px', onclick: () => guiaWhatsApp('Hola, no encuentro en la app cómo hacer esto: «' + q + '»') }, '📲 Preguntar a la oficina por WhatsApp')); subir(); return; }
       const lista = h('div', {}); const abrirUno = k => { [...lista.children].forEach((c, n) => { const cu = c.querySelector(':scope > div:last-child'); if (cu && c._cuerpo) c._cuerpo.style.display = n === k ? 'block' : 'none'; }); };
-      salida.replaceChildren(h('p', { class: 'sub' }, ops.length > 1 ? 'He entendido «' + q + '». Elige lo que necesitas (toca para ver los pasos, o «Ir ›» para ir directo):' : 'He entendido «' + q + '»:'),
+      salida.replaceChildren(h('p', { class: 'sub' }, ops.length > 1 ? 'He entendido «' + q + '». Elige lo que necesitas (toca para ver los pasos, o «Ir ›» para ir directo):' : 'He entendido «' + q + '»:'), pantallasNodo(q) || '',
         ...ops.map((o, n) => o.tipo === 'prob' ? tarjetaProblema(o.it) : tarjetaGuia(o.it, n === 0)), util);
       subir();
       if (leerAuto.checked) { const o = ops[0]; leerVoz(o.tipo === 'prob' ? textoLeerProb(o.it) : textoLeer(o.it)); }
@@ -3647,7 +3647,7 @@ function vistaAyuda() {
             const dist = (altsOtras || []).filter((x, i, a) => x && sinTilde(x) !== sinTilde(q) && a.findIndex(y => sinTilde(y) === sinTilde(x)) === i).slice(0, 3);
             if (dist.length) extra.push(h('div', { class: 'sub', style: 'margin:10px 2px 4px' }, '¿Querías decir otra cosa? Toca para probar:'), h('div', { style: 'display:flex;flex-wrap:wrap;gap:6px' }, dist.map(x => h('button', { class: 'chip', style: 'white-space:normal;text-align:left', onclick: () => preguntar(x) }, x))));
             if (rs.ir) { salida.replaceChildren(h('p', { class: 'sub' }, 'He entendido «' + q + '»:'), ...rs.nodos, ...extra); if (leerAuto.checked && rs.voz) leerVoz(rs.voz); setTimeout(rs.ir, 450); return; }
-            salida.replaceChildren(h('p', { class: 'sub' }, 'He entendido «' + q + '»:'), ...rs.nodos, ...extra, rs.cands ? null : util); subir();
+            salida.replaceChildren(h('p', { class: 'sub' }, 'He entendido «' + q + '»:'), ...rs.nodos, ...extra, (d2.tipo !== 'nav' && pantallasNodo(q)) || '', rs.cands ? null : util); subir();
             if (leerAuto.checked && rs.voz) leerVoz(rs.voz);
           }).catch(e => { salida.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Esto está tardando demasiado: parece que hay poca cobertura. Vuelve a intentarlo en un momento.' : msgErr(e))); });
         };
@@ -3713,7 +3713,9 @@ const NAV_DESTINOS = [
 function detectaConsulta(q) {
   let t = normalizaIntent(sinTilde(limpiaBusqueda(q)).toLowerCase()).replace(/\btanto\s+(\w+)\s+como\b/g, '$1 y');   // «tanto comprada como vendida» no es una pregunta de ayuda
   /* Abrir una pantalla: «ábreme albaranes», «llévame a deudas» */
-  if (/\b(abre|abreme|abrir|llevame|lleva|ir a|ir al|ve a|ve al|vete a|quiero ir|muestrame la pantalla|ensename la pantalla|pantalla de)\b/.test(t)) {
+  { const ex = pantallaExacta(t); if (ex) return { tipo: 'nav', pant: ex, q }; }   /* solo el nombre de una pantalla: se abre */
+  if (/\b(abre|abreme|abrir|llevame|lleva|ir a|ir al|ve a|ve al|vete a|quiero ir|muestrame la pantalla|ensename la pantalla|pantalla de|accede|entra en|entrar en)\b/.test(t)) {
+    const bp = buscaPantallas(t); if (bp.length) return { tipo: 'nav', pant: bp[0], q };
     const d = NAV_DESTINOS.find(x => x[0].test(t));
     if (d) return { tipo: 'nav', destino: d, q };
   }
@@ -3786,6 +3788,7 @@ function buscarProdAsis(prods, texto) {
 async function consultarDatos(d, elegir) {
   const nodos = [], voz = [];
   const sinPermiso = txt => ({ nodos: [h('div', { class: 'aviso-card' }, txt)], voz: txt });
+  if (d.tipo === 'nav' && d.pant) return { nodos: [h('p', { class: 'sub' }, 'Abriendo ' + d.pant[0] + ' ' + d.pant[1] + '…')], voz: 'Abriendo ' + d.pant[1], ir: d.pant[3] };
   if (d.tipo === 'nav') {
     const [, vista, nombreV, rol] = d.destino;
     if (rol === 'o' && !esOficina()) return sinPermiso('«' + nombreV + '» lo ve la oficina.');
@@ -5896,9 +5899,9 @@ function vistaMas() {
        debajo, todo lo demás en grupos que se abren con un toque (se recuerda cuáles dejas abiertos). Nada se quita: los botones se MUEVEN. */
     const pool = {}; lista.forEach(([, it]) => it.forEach(n => { pool[lab(n)] = n; }));
     pool['Calendario'] = c('📅', 'Calendario', () => go('calendario'), '#ea580c');
-    const PRINC = modoV === 'reparto' ? ['Preparar', 'Hoja de carga', 'Reparto', 'Entregas', 'Poner precios', 'Cobros', 'Camino de los pedidos', 'Albaranes', 'Calendario']
-      : modoV === 'compra' ? ['Hoja de compra para hoy', 'A quién compramos hoy', 'Precios de compra del día', 'Facturas de proveedores', 'Compras', 'Calendario']
-      : ['Apuntar pedido', 'Preparar', 'Hoja de carga', 'Reparto', 'Hoja de compra para hoy', 'Poner precios', 'Cobros', 'Calendario'];
+    const PRINC = modoV === 'reparto' ? ['Preparar', 'Hoja de carga', 'Reparto', 'Ruta', 'Entregas', 'Sobrante', 'Poner precios', 'Cobros', 'Camino de los pedidos', 'Albaranes', 'Calendario']
+      : modoV === 'compra' ? ['Hoja de compra para hoy', 'Precios de compra del día', 'A quién compramos hoy', 'Sobrante', 'Facturas de proveedores', 'Compras', 'Calendario']
+      : ['Apuntar pedido', 'Preparar', 'Hoja de carga', 'Reparto', 'Ruta', 'Hoja de compra para hoy', 'Precios de compra del día', 'Sobrante', 'Poner precios', 'Cobros', 'Calendario'];
     const GRANDE_TXT = { 'Hoja de compra para hoy': 'Compra de hoy', 'Precios de compra del día': 'Precios de compra', 'Camino de los pedidos': 'Camino pedidos', 'Facturas de proveedores': 'Facturas proveedor', 'A quién compramos hoy': 'A quién compramos' };
     const grandes = PRINC.filter(x => pool[x]).map(x => pool[x]);
     grandes.forEach(n => { const l = n.querySelector('.l'); const t = lab(n); if (l && GRANDE_TXT[t]) { n.title = t; l.textContent = GRANDE_TXT[t]; } });
@@ -10917,8 +10920,9 @@ function fcCabecera(filas) {
   const f2 = /fecha(?:\s+de)?(?:\s+factura)?\s*[:.]?\s*(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2})(?!\d)/i.exec(txt);
   r.fecha = (f2 ? iso(+f2[1], +f2[2], 2000 + +f2[3]) : '') || (mt ? iso(+mt[1], FC_MESES[mt[2].toLowerCase()], +mt[3]) : '');
   r.fecha = r.fecha || buscaFecha(/fecha(?:\s+de)?(?:\s+factura)?\s*[:.]?\s*(\d{1,2})[\/.-](\d{1,2})[\/.-](20\d{2})/i) || buscaFecha(/(\d{1,2})[\/.-](\d{1,2})[\/.-](20\d{2})/);
-  const n = /(?:n[º°o]\.?|num(?:ero)?\.?|n\.º)\s*(?:de\s+)?(?:factura|albar[aá]n|documento)\s*:?\s*([A-Za-z0-9][A-Za-z0-9\/.\-]{3,})/i.exec(txt) || /factura\s*(?:n[º°o9]\.?|num(?:ero)?\.?)\s*:?\s*([A-Za-z0-9][A-Za-z0-9\/.\-]{3,})/i.exec(txt) || /factura\s*:\s*([A-Za-z0-9][A-Za-z0-9\/.\-]{3,})/i.exec(txt) || /\bfactura\s+([0-9]{5,})\b/i.exec(txt);
+  const n = /(?:n[º°o]\.?|num(?:ero)?\.?|n\.º)\s*(?:de\s+)?(?:factura|albar[aá]n|documento)\s*:?\s*([A-Za-z0-9][A-Za-z0-9\/.\-]{3,})/i.exec(txt) || /factura\s*(?:n[º°o9][.%º°]?|num(?:ero)?\.?)\s*:?\s*([A-Za-z0-9][A-Za-z0-9\/.\-]{3,})/i.exec(txt) || /factura\s*:\s*([A-Za-z0-9][A-Za-z0-9\/.\-]{3,})/i.exec(txt) || /\bfactura\s+([0-9]{5,})\b/i.exec(txt);
   r.numero = n ? n[1].replace(/[.\-\/]+$/, '') : '';
+  if (!/\d/.test(r.numero)) r.numero = '';   // «Nº Documento: Descripción…» no es un número
   return r;
 }
 /* Total sin IVA (base imponible) y total de la factura, para comprobar que la suma de líneas leídas cuadra */
@@ -10926,8 +10930,8 @@ function fcTotales(filas) {
   const numsDe = t => String(t || '').split(/\s+/).map(w => w.replace(/[€:]/g, '')).filter(w => fcEsNum(w)).map(fcNum).filter(v => v !== null && v > 0);
   const base = [], total = [], baseExplicita = [];
   filas.forEach((f, i) => {
-    { const mb = /base\s+imponible\s*[.…:]*\s*([0-9][0-9.,]*)/i.exec(String(f).replace(/\u00a0/g, ' ')); const sv = mb ? mb[1].replace(/[.,]+$/, '') : ''; if (sv && fcEsNum(sv) && fcNum(sv) > 0) { baseExplicita.push(fcNum(sv)); return; } }
-    const t = fcNorm(f); let ns = numsDe(f);
+    { const mb = /(?:base\s+|\bb\.\s*)imponible\s*[.…:]*\s*([0-9][0-9.,]*)/i.exec(String(f).replace(/\u00a0/g, ' ')); const sv = mb ? mb[1].replace(/[.,]+$/, '') : ''; if (sv && fcEsNum(sv) && fcNum(sv) > 0) { baseExplicita.push(fcNum(sv)); return; } }
+    const t = fcNorm(f).replace(/\bi v a\b/g, 'iva').replace(/\bb imponible\b/g, 'base imponible'); let ns = numsDe(f);
     if (/\bbase\b/.test(t) && /\bcuota\b/.test(t)) {   // cuadro «Base Imp. · % IVA · Cuota IVA»: la base es el número cuyo % de IVA da la cuota
       for (let k = 1; k <= 3 && filas[i + k]; k++) { const v = numsDe(filas[i + k]); let hallada = null; v.forEach(n => v.forEach(pc => v.forEach(cu => { if (!hallada && n > 0 && pc >= 1 && pc <= 25 && cu > 0 && cu < n && Math.abs(n * pc / 100 - cu) <= 0.02) hallada = n; }))); if (hallada) { base.push(hallada); return; } }
     }
@@ -10936,8 +10940,10 @@ function fcTotales(filas) {
     if (/\b(base imponible|total base|importe bruto|subtotal|total bruto|base)\b/.test(t) && !/total factura|a pagar/.test(t)) base.push(Math.max.apply(null, ns));
     if (/\b(total factura|total a pagar|total eur|importe total|total documento|total albaran|total)\b/.test(t) && !/base|iva|cuota|bruto/.test(t)) total.push(Math.max.apply(null, ns));
   });
-  const bs = baseExplicita.length ? baseExplicita : base;
-  return { base: bs.length ? Math.max.apply(null, bs) : null, total: total.length ? Math.max.apply(null, total) : null };
+  const bs = baseExplicita.length ? baseExplicita : base; const b = bs.length ? Math.max.apply(null, bs) : null;
+  /* Con la base leída, el total tiene que estar entre la base y la base + 30 % (antes se colaba el nº de factura: «Total 153.533 €») */
+  const tv = b != null ? total.filter(v => v >= b - 0.01 && v <= b * 1.3 + 0.01) : total;
+  return { base: b, total: tv.length ? Math.max.apply(null, tv) : null };
 }
 /* ---------- Datos fiscales de una factura de proveedor (fase 3): NIF y CP del proveedor, desglose de IVA y total ---------- */
 const FC_NIF_PROPIOS = { B87446670: 'FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L.', E80746670: 'FERJUSANZ C.B.' };
@@ -10977,9 +10983,24 @@ function fcFiscal(filas, tot) {
   if (!r.desglose.length) filas.forEach(f => { if (r.desglose.length || (lim(f).match(/[A-Za-zÁÉÍÓÚÑáéíóúñ]{3,}/g) || []).length > 1) return; const d = triple(numsFila(f)); if (!d) return; const s = Math.round((d.base + d.cuota + d.cuota_recargo) * 100) / 100; if (filas.some(g => g !== f && numsFila(g).some(v => Math.abs(v - s) <= 0.02))) meter(d); });
   /* Nº de factura en formatos que no entiende fcCabecera («Numero Factura: RI 1108», «Factura: 1/ 451896») */
   { const txt = filas.map(lim).join('\n'); const m = /n[uú]mero\s+(?:de\s+)?factura\s*:?\s*([A-Z]{0,3}\s?\d[\d\/\-]*(?:\s\d{3,})?)/i.exec(txt) || /\bfactura\s*:\s*(\d{1,3}\s*\/\s*\d{3,})/i.exec(txt); if (m) r.numero = m[1].replace(/\s*\/\s*/g, '/').trim(); }
+  if (!r.desglose.length) { const dd = fcDesgloseDeTotales(tot, filas.map(lim)); if (dd) r.desglose = dd; }
   const suma = Math.round(r.desglose.reduce((a, d) => a + d.base + d.cuota + d.cuota_recargo, 0) * 100) / 100;
   r.total = !r.desglose.length ? null : totalJunto(suma) ? suma : (tot && tot.total != null ? tot.total : null);   // sin desglose no se da el total por bueno (en resúmenes y recibos sale cualquier cosa)
   return r;
+}
+/* Sin cuadro de IVA legible (escaneadas): con la base y el total de la factura se busca el tipo de IVA (y el recargo) que cuadra AL CÉNTIMO.
+   Si son dos tipos (4 % y 10 %), una de las dos bases tiene que estar escrita en la factura. Si no cuadra exacto, no se pone nada. */
+const FC_RE_DE = { 21: 5.2, 10: 1.4, 5: 0.62, 4: 0.5, 2: 0.26, 7.5: 1 };
+function fcDesgloseDeTotales(tot, filas) {
+  const B = tot && tot.base, T = tot && tot.total; if (!(B > 0) || !(T > B)) return null;
+  const c = (b, p) => Math.round(b * p) / 100, igual = (a, b) => Math.abs(a - b) <= 0.011;
+  const sol = []; FC_TIPOS_IVA.forEach(p => { if (igual(B + c(B, p), T)) sol.push([{ tipo_iva: p, base: B, cuota: c(B, p), recargo_pct: 0, cuota_recargo: 0 }]); const re = FC_RE_DE[p]; if (re && igual(B + c(B, p) + c(B, re), T)) sol.push([{ tipo_iva: p, base: B, cuota: c(B, p), recargo_pct: re, cuota_recargo: c(B, re) }]); });
+  if (sol.length === 1) return sol[0]; if (sol.length) return null;   // dos tipos distintos cuadran: no se adivina
+  const nums = new Set(); filas.forEach(f => String(f).replace(/[€%]/g, ' ').split(/\s+/).forEach(w => { const v = fcNum(w.replace(/^(\d+)\.(\d{2})$/, '$1,$2')); if (v > 0 && v < B) nums.add(Math.round(v * 100) / 100); }));
+  const dos = [];
+  nums.forEach(b1 => { const b2 = Math.round((B - b1) * 100) / 100; if (!(b2 > 0)) return;
+    FC_TIPOS_IVA.forEach(p1 => FC_TIPOS_IVA.forEach(p2 => { if (p1 >= p2) return; [[b1, b2], [b2, b1]].forEach(([x, y]) => { if (igual(B + c(x, p1) + c(y, p2), T) && !dos.some(d => d[0].base === x && d[0].tipo_iva === p1)) dos.push([{ tipo_iva: p1, base: x, cuota: c(x, p1), recargo_pct: 0, cuota_recargo: 0 }, { tipo_iva: p2, base: y, cuota: c(y, p2), recargo_pct: 0, cuota_recargo: 0 }]); }); })); });
+  return dos.length === 1 ? dos[0] : null;
 }
 const FC_MESES = { enero: 1, febrero: 2, marzo: 3, abril: 4, mayo: 5, junio: 6, julio: 7, agosto: 8, septiembre: 9, setiembre: 9, octubre: 10, noviembre: 11, diciembre: 12 };
 /* Clave para recordar un artículo de factura: texto sin acentos ni signos */
@@ -11019,6 +11040,8 @@ async function fcLeerFactura(file, progreso) {
   if (filas.join('').length < 40) { const o = await waLeerArchivo(file, progreso, true); filas = String(o.texto || '').split(/\n+/); lineas = fcTextoALineas(fcRecorteTabla(filas)); noLeidas = lineas.noLeidas || []; }
   const cab = fcCabecera(filas), tot = fcTotales(filas), fis = fcFiscal(filas, tot);
   if (!cab.numero && fis.numero) cab.numero = fis.numero;
+  /* Sin «Base imponible» escrita (Madremia, Perichán): la base y el total salen del cuadro de IVA, para poder decir si cuadra */
+  if (tot.base == null && fis.desglose.length && fis.total != null) { tot.base = Math.round(fis.desglose.reduce((a, d) => a + d.base, 0) * 100) / 100; if (tot.total == null) tot.total = fis.total; }
   return { filas, lineas, noLeidas, cab, tot, fis };
 }
 /* ---------- Precios de las facturas leídas: se guardan TODAS las líneas (también las que no se emparejan con un producto) ---------- */
@@ -14677,8 +14700,12 @@ function fechaDeTexto(t) {
 }
 /* 🔍 Índice de TODOS los apartados de la app, con las palabras con que la gente los busca. o = solo oficina, c = quien compra. */
 const BUSCA_PANTALLAS = [
+  ['🏠', 'Inicio', 'inicio menu principal portada empezar', () => go('inicio')],
   ['✍️', 'Apuntar pedido', 'apuntar anotar pedido nuevo encargo meter pedido rapido whatsapp pegar', () => go('rapido')],
-  ['📅', 'Calendario', 'calendario dia dias fecha semana mes previstos fijos', () => go('calendario')],
+  ['📅', 'Calendario', 'calendario dia dias fecha semana mes previstos fijos pedidos fijos', () => go('calendario')],
+  ['🎤', 'Dictar pedido', 'dictar voz hablar decir pedido', () => go('importar', { modo: 'voz' })],
+  ['📷', 'Escanear pedido', 'escanear foto fotografia papel camara pedido', () => go('importar', { modo: 'escanear' })],
+  ['🚚', 'Modo reparto', 'modo reparto repartidor furgoneta salir a repartir entregar', () => mrReparte().then(v => v ? mrEntrar() : toast('Hoy no tienes reparto asignado', 'err')).catch(() => toast('No se pudo comprobar el reparto', 'err'))],
   ['🗓️', 'Semana', 'semana semanal pedidos de la semana', () => go('semana')],
   ['📋', 'Preparar', 'preparar preparacion lista del dia montar pedidos', () => go('lista')],
   ['🚚', 'Hoja de carga', 'hoja carga cargar camion furgoneta imprimir carga', () => go('carga')],
@@ -14687,15 +14714,22 @@ const BUSCA_PANTALLAS = [
   ['✅', 'Entregas', 'entregas entregado entregar firma firmar', () => go('entregas')],
   ['🧾', 'Albaranes', 'albaran albaranes nota entrega cuadre caja liquidacion datafono efectivo', () => go('albaranes')],
   ['📑', 'Lista de pedidos', 'lista pedidos todos los pedidos historial pedidos', () => go('pedidos')],
-  ['💶', 'Poner precios a los pedidos', 'poner precios precio pedidos sin precio', () => go('preciosp')],
-  ['🧺', 'Hoja de compra para hoy', 'hoja compra comprar que comprar mercamadrid', () => go('hojacompra')],
+  ['💶', 'Poner precios a los pedidos', 'poner precios precio pedidos sin precio venta', () => go('preciosp')],
+  ['⚡', 'Precios por producto', 'precios por producto todos los pedidos de una vez venta', () => go('preciosdia')],
+  ['🧺', 'Hoja de compra para hoy', 'hoja compra comprar hay que comprar mercamadrid lista', () => go('hojacompra')],
   ['📥', 'Facturas de proveedores', 'facturas proveedores proveedor factura compra recibidas llegadas correo', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, 'c'],
   ['🛒', 'Compras', 'compras compra lotes lote proveedor', () => go('compras'), 'c'],
   ['🔎', 'A quién compramos hoy', 'quien compramos proveedor proveedores a quien', () => go('quien')],
-  ['💲', 'Precios de compra del día', 'precios compra coste costes precio compra del dia raros suben por producto', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, 'c'],
+  ['💲', 'Precios de compra del día', 'precios compra coste costes precio compra del dia hoy proveedor', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, 'c'],
+  ['📈', 'Subidas de precio de compra', 'subidas suben sube subido precio compra caro encarecido', () => { LS.set('fj_precios_modo', 'suben'); go('precios'); }, 'c'],
+  ['⚠️', 'Precios de compra raros', 'raros raro extrano precios compra', () => { LS.set('fj_precios_modo', 'raros'); go('precios'); }, 'c'],
+  ['🔀', 'Precios de compra mal apuntados', 'mal apuntados apuntado equivocados error errores precios compra', () => { LS.set('fj_precios_modo', 'malap'); go('precios'); }, 'c'],
+  ['🧾', 'NIF e IVA de las facturas de proveedores', 'nif iva cif fiscal facturas proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, 'c'],
   ['🔎', 'Trazabilidad', 'trazabilidad lotes lote asignar lotes fifo', () => go('traza'), 'c'],
   ['♻️', 'Sobrante', 'sobrante sobra existencias stock almacen sobras', () => go('sobrante')],
-  ['💰', 'Cobros', 'cobros cobrar cobrado pagos pago dinero efectivo tarjeta bizum transferencia', () => go('cobros')],
+  ['💰', 'Cobros', 'cobros cobrar cobrado pagos pago dinero efectivo bizum transferencia pendientes', () => { LS.set('fj_cobros_modo', 'pend'); go('cobros'); }],
+  ['👛', 'Mi caja', 'mi caja lo que he cobrado cobrado yo repartidor entregar dinero', () => { LS.set('fj_cobros_modo', 'mia'); go('cobros'); }],
+  ['🧮', 'Caja del día', 'caja del dia cuadre cobrado hoy repartidores liquidacion', () => { LS.set('fj_cobros_modo', 'caja'); go('cobros'); }, 'o'],
   ['🧮', 'Deudas', 'deudas deuda debe deben dinero pendiente cobro morosos impagados', () => go('deudas')],
   ['👥', 'Clientes', 'clientes cliente ficha alta cliente telefono direccion', () => { window.__cliFiscal = false; go('clientes'); }],
   ['🥬', 'Productos', 'productos producto catalogo articulos codigos', () => go('catalogo')],
@@ -14703,6 +14737,7 @@ const BUSCA_PANTALLAS = [
   ['🔎', 'Productos sin reconocer', 'productos sin reconocer enlazar nombres facturas', () => go('sinreconocer'), 'o'],
   ['📐', 'Formatos', 'formatos formato caja kilos peso cliente unidades bote bandeja compra venta se vende se compra', () => go('formatos'), 'o'],
   ['🌐', 'Portal de clientes', 'portal pagina clientes web qr enlace publicar albaranes', () => go('paginasclientes')],
+  ['📇', 'Tarjeta para clientes', 'tarjeta virtual qr whatsapp business clientes nuevos dar contacto', () => hojaTarjeta()],
   ['📲', 'Móviles y correos de clientes', 'moviles correos telefonos contactos clientes dejan qr whatsapp email', () => go('contactosportal'), 'o'],
   ...(CAJA_APP ? [['💵', 'Caja (efectivo)', 'caja efectivo entradas salidas gasolina justificante ticket debe haber dinero metalico', () => go('caja'), 'o']] : []),
   ...(BANCO_APP ? [['🏦', 'Banco', 'banco norma 43 n43 cuaderno 43 extracto movimientos transferencias cobros pagos conciliar conciliacion excel', () => go('banco'), 'o']] : []),
@@ -14713,11 +14748,12 @@ const BUSCA_PANTALLAS = [
   ['📤', 'Facturas para Golden', 'facturas golden pasar facturar prefacturas', () => go('prefacturas'), 'o'],
   ['📄', 'Facturas de clientes', 'facturas clientes imprimir enviar factura cliente', () => go('facturascli'), 'o'],
   ...(FACTURAR_APP ? [['🧾', 'Facturas desde la app (pruebas)', 'facturas emitir factura rectificativa sif serie prueba numeracion albaranes facturar', () => go('facturasapp'), 'o']] : []),
-  ['🏢', 'Datos de la empresa', 'empresa datos fiscales nif cif sello registro mercantil direccion emisor factura ferjusanz', () => go('empresa'), 'o'],
+  ['🏢', 'Datos de la empresa', 'empresa datos fiscales nif cif sello registro mercantil direccion emisor factura ferjusanz iban cuenta bancaria', () => go('empresa'), 'o'],
   ...(FACTURAR_APP ? [['ℹ️', 'Programa de facturación', 'programa facturacion verifactu declaracion responsable version productor sif', () => go('programasif')]] : []),
   ['🧾', 'Clientes sin datos para facturar', 'clientes faltan datos nif cif codigo postal direccion facturar fiscales', () => { window.__cliFiscal = true; go('clientes'); }, 'o'],
   ['🗂️', 'Histórico de Golden', 'historico golden ventas antiguas', () => go('golden'), 'o'],
-  ['📊', 'Resumen del día y correo', 'resumen ventas totales numeros informe correo email gmail mañana', () => go('resumen'), 'o'],
+  ['📊', 'Resumen del día y correo', 'resumen ventas totales numeros informe correo email gmail manana visitas web', () => go('resumen'), 'o'],
+  ['📈', 'Mercado (precios de los Mercas y noticias)', 'mercado mercas mercamadrid noticias semanal precios mercado', () => go('resumen'), 'o'],
   ['📈', 'Rentabilidad', 'rentabilidad ganancia beneficio margen ganamos perdemos', () => go('rentabilidad'), 'o'],
   ['🤝', 'Comercial', 'comercial listas precios recomendaciones guiones web seo', () => go('comercial'), 'o'],
   ['🤵', 'Harvey · a quién escribir hoy', 'harvey whatsapp escribir clientes mensajes leads comercial', () => { LS.set('fj_h2_sub', 'hoy'); go('comercial', { tab: 'harvey' }); }, 'o'],
@@ -14733,17 +14769,34 @@ const BUSCA_PANTALLAS = [
   ['🗄️', 'Archivo', 'archivo archivados borrados', () => go('archivo'), 'o'],
   ['📝', 'Registro de cambios', 'registro cambios historial quien cambio', () => go('registro'), 'o'],
   ['💾', 'Copia de seguridad', 'copia seguridad backup', () => go('copia'), 'o'],
+  ['📦', 'Guardar facturas del año', 'guardar descargar facturas ano trimestre zip conservar seis anos historico', () => go('copia'), 'o'],
   ['📥', 'Importar pedido', 'importar pegar texto pedido', () => go('importar'), 'o']
 ];
 function buscaPantallas(t) {
   const ok = x => !x[4] || (x[4] === 'o' ? esOficina() : puedeCompras());
-  const NO = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'y', 'a', 'en', 'con', 'para', 'mi', 'mis', 'un', 'una', 'que', 'por', 'al', 'lo', 'ver', 'donde', 'esta', 'como', 'quiero']);
-  const ws = t.split(/\s+/).filter(w => w.length > 1 && !NO.has(w)); if (!ws.length) return [];
-  const pal = x => sinTilde((x[1] + ' ' + x[2]).toLowerCase()).split(/\s+/);
+  const ws = palabrasPantalla(t); if (!ws.length) return [];
+  const pal = s => sinTilde(s.toLowerCase()).split(/[\s()·]+/).filter(Boolean);
   const raiz = w => w.replace(/(es|s)$/, '');
   const casa = (w, k) => k.some(y => y === w || (w.length > 2 && y.startsWith(w)) || raiz(y) === raiz(w) || (w.length > 4 && y.length > 4 && waSimTok(w, y) >= 0.85));
-  return BUSCA_PANTALLAS.filter(ok).map(x => { const k = pal(x); const n = ws.filter(w => casa(w, k)).length; return { x, n }; })
-    .filter(r => r.n && (ws.length <= 2 ? r.n === ws.length : r.n >= Math.ceil(ws.length * 0.6))).sort((a, b) => b.n - a.n).slice(0, 6).map(r => r.x);
+  /* Primero las que tienen más palabras; a igualdad, las que las tienen en el NOMBRE de la pantalla («caja» → Caja (efectivo) antes que Albaranes) */
+  return BUSCA_PANTALLAS.filter(ok).map((x, i) => { const k = pal(x[1] + ' ' + x[2]), kt = pal(x[1]); return { x, i, n: ws.filter(w => casa(w, k)).length, nt: ws.filter(w => casa(w, kt)).length, ne: ws.filter(w => kt.includes(w)).length }; })
+    .filter(r => r.n && (ws.length <= 2 ? r.n === ws.length : r.n >= Math.ceil(ws.length * 0.6))).sort((a, b) => b.n - a.n || b.nt - a.nt || b.ne - a.ne || a.i - b.i).slice(0, 6).map(r => r.x);
+}
+/* Palabras que cuentan para buscar una pantalla: sin relleno ni «abre», «llévame a», «quiero ir»… */
+const NO_PANT = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'y', 'a', 'en', 'con', 'para', 'mi', 'mis', 'un', 'una', 'que', 'por', 'al', 'lo', 'ver', 'donde', 'esta', 'como', 'quiero', 'abre', 'abreme', 'abrir', 'abra', 'llevame', 'lleva', 'llevar', 'ir', 've', 'vete', 'vamos', 'ensename', 'muestrame', 'ensenar', 'mostrar', 'pantalla', 'apartado', 'seccion', 'menu', 'pon', 'ponme', 'busca', 'buscame', 'entra', 'entrar', 'accede', 'acceder', 'acceso', 'dame', 'me', 'te', 'se', 'por', 'favor', 'quiero', 'necesito', 'puedes']);
+function palabrasPantalla(t, conMi) { const ws = sinTilde(String(t || '').toLowerCase()).replace(/\bdonde (esta|estan|va|van|anda)\b/g, 'camino').split(/[\s,.;:¿?¡!]+/).filter(w => w.length > 1 && (!NO_PANT.has(w) || (conMi && /^mis?$/.test(w)))); return ws.length ? ws : (/\bmenu\b/.test(sinTilde(String(t).toLowerCase())) ? ['inicio'] : []); }
+/* El texto es justo el nombre de una pantalla («precios de compra del día», «sobrante», «ruta»): se abre esa pantalla */
+function pantallaExacta(t) {
+  /* También vale casi el nombre entero («poner precios», «compra de hoy»): todas las palabras están en el nombre y falta como mucho una */
+  const ws = palabrasPantalla(t, true); if (!ws.length) return null; const raiz = w => w.replace(/(es|s)$/, '');
+  const cand = BUSCA_PANTALLAS.filter(x => !x[4] || (x[4] === 'o' ? esOficina() : puedeCompras())).map(x => [x, palabrasPantalla(x[1].replace(/\(.*\)/, ''), true)]).filter(([, kt]) => ws.every(w => kt.some(k => raiz(w) === raiz(k))));
+  return (cand.find(([, kt]) => kt.length === ws.length) || cand.find(([, kt]) => ws.length >= 2 && kt.length === ws.length + 1) || [null])[0];
+}
+/* Botones para abrir las pantallas que se parecen a lo escrito (asistente ❓) */
+function pantallasNodo(q) {
+  const l = buscaPantallas(sinTilde(limpiaBusqueda(q)).toLowerCase()).slice(0, 4); if (!l.length) return null;
+  return h('div', { class: 'card', style: 'padding:10px' }, h('div', { class: 'sub', style: 'font-weight:700;margin-bottom:6px' }, '📱 Pantallas de la app que se parecen:'),
+    h('div', { style: 'display:flex;flex-direction:column;gap:6px' }, l.map(x => h('button', { style: 'width:100%;min-height:50px;font-size:16px;text-align:left', onclick: x[3] }, x[0] + ' ' + x[1] + ' ›'))));
 }
 function vistaBuscar() {
   state.view = 'buscar'; const oficina = esOficina(), compras = puedeCompras();
@@ -14775,7 +14828,7 @@ function vistaBuscar() {
       return out.filter(Boolean); })();
     if (locales.length) res.replaceChildren(...locales);
     { const dc = compras ? detectaConsulta(texto) : null;   // «último precio de compra del pimiento rojo»
-      if (dc && (dc.tipo === 'ultimoprecio' || dc.tipo === 'preciocompra')) { info.textContent = 'Buscando…'; try { const rs = await consultarDatos(dc); if (mi !== seq) return; info.textContent = ''; res.replaceChildren(...rs.nodos); } catch (e) { if (mi === seq) { info.textContent = ''; res.replaceChildren(h('p', { class: 'err' }, msgErr(e))); } } return; } }
+      if (dc && (dc.tipo === 'ultimoprecio' || dc.tipo === 'preciocompra')) { info.textContent = 'Buscando…'; try { const rs = await consultarDatos(dc); if (mi !== seq) return; info.textContent = ''; res.replaceChildren(...locales, ...rs.nodos); } catch (e) { if (mi === seq) { info.textContent = ''; res.replaceChildren(...locales, h('p', { class: 'err' }, msgErr(e))); } } return; } }
     info.textContent = 'Buscando…';
     try {
       const base = await bgCargarBase(); if (mi !== seq) return;
