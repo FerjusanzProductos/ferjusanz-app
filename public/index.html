@@ -2800,23 +2800,24 @@ function qrDataUrl(texto, escala) { const R = qrMatriz(texto), q = 4, e = escala
 /* 📇 Tarjeta virtual para posibles clientes: QR y mensaje con el enlace a quiénes somos (sin precios; el precio va después por WhatsApp).
    Siempre la dirección de la app normal (también desde la naranja), para que el QR impreso no caduque. */
 const URL_TARJETA = 'https://ferjusanz-productos.fernandosanzalba.workers.dev/tarjeta';
+/* pkg: 'com.whatsapp' (normal) o 'com.whatsapp.w4b' (Business). En Android se abre ESA app (wa.me abre la que el móvil tenga por defecto). */
+function abrirWhatsApp(telefono, texto, pkg) {
+  let t = String(telefono || '').replace(/\D/g, ''); if (t.length === 9) t = '34' + t;
+  if (t && !/^\d{11,15}$/.test(t)) { toast('Revisa el móvil (9 cifras) o déjalo en blanco', 'err'); return; }
+  const web = 'https://wa.me/' + t + '?text=' + encodeURIComponent(texto); // sin número, WhatsApp deja elegir el chat
+  if (!/Android/i.test(navigator.userAgent)) { window.open(web, '_blank'); return; }
+  location.href = 'intent://send?' + (t ? 'phone=' + t + '&' : '') + 'text=' + encodeURIComponent(texto) + '#Intent;scheme=whatsapp;package=' + (pkg || 'com.whatsapp') + ';S.browser_fallback_url=' + encodeURIComponent(web) + ';end';
+}
 function hojaTarjeta() {
   const yo = state.perfil ? state.perfil.nombre.split(' ')[0] : '';
   const msg = h('textarea', { rows: 6, style: 'width:100%;font-size:15px' });
-  msg.value = 'Hola, soy ' + yo + ', de Ferjusanz (fruta, verdura, patatas y huevos en Mercamadrid). Aquí tiene quiénes somos, de dónde sale el género y cómo hacer el pedido:\n' + URL_TARJETA + '\n\nDígame qué productos le interesan y le paso el precio por WhatsApp.';
+  msg.value = 'Hola, soy ' + yo + ', de Ferjusanz (fruta, verdura, patatas y huevos en Mercamadrid). Imagine su primer pedido y le calculamos su tarifa: apunte en un minuto lo que suele pedir a la semana, sin compromiso y sin pedido mínimo. Abajo tiene quiénes somos y de dónde sale el género:\n' + URL_TARJETA + '\n\nSi lo prefiere, contésteme por aquí con lo que suele pedir y lo apunto yo.';
   const tel = h('input', { type: 'tel', inputmode: 'tel', placeholder: 'Su móvil (opcional): 600 000 000', style: 'width:100%' });
-  /* pkg: 'com.whatsapp' (normal) o 'com.whatsapp.w4b' (Business). En Android se abre ESA app (wa.me abre la que el móvil tenga por defecto). */
-  const abrirWa = pkg => {
-    let t = tel.value.replace(/\D/g, ''); if (t.length === 9) t = '34' + t;
-    if (t && !/^\d{11,15}$/.test(t)) { toast('Revisa el móvil (9 cifras) o déjalo en blanco', 'err'); return; }
-    const web = 'https://wa.me/' + t + '?text=' + encodeURIComponent(msg.value); // sin número, WhatsApp deja elegir el chat
-    if (!/Android/i.test(navigator.userAgent)) { window.open(web, '_blank'); return; }
-    location.href = 'intent://send?' + (t ? 'phone=' + t + '&' : '') + 'text=' + encodeURIComponent(msg.value) + '#Intent;scheme=whatsapp;package=' + pkg + ';S.browser_fallback_url=' + encodeURIComponent(web) + ';end';
-  };
+  const abrirWa = pkg => abrirWhatsApp(tel.value, msg.value, pkg);
   const copiar = async () => { try { await navigator.clipboard.writeText(msg.value); toast('Mensaje copiado: pégalo en WhatsApp', 'ok'); } catch (e) { msg.select(); toast('Mantén pulsado el texto para copiarlo', 'err'); } };
   const B = (cls, t, f) => h('button', { class: cls, style: 'width:100%;min-height:50px;margin-top:8px', onclick: f }, t);
   hoja('📇 Tarjeta para clientes', h('div', {},
-    h('p', { class: 'sub' }, 'Para quien pregunta quiénes somos o de dónde sale el género. La página NO enseña precios: el precio se lo pasas tú después por WhatsApp.'),
+    h('p', { class: 'sub' }, 'Arriba, «Imagine su primer pedido y le calculamos su tarifa»: el cliente apunta lo que pide a la semana y te llega a Comercial › Avisos › «Primeros pedidos». Debajo, quiénes somos y de dónde sale el género. La página NO enseña precios.'),
     h('div', { style: 'text-align:center' }, h('img', { src: qrDataUrl(URL_TARJETA, 8), alt: 'QR de la tarjeta', style: 'width:100%;max-width:260px;image-rendering:pixelated' }),
       h('div', { class: 'sub' }, 'Que lo escanee con la cámara del móvil (o se lo pase a su jefe).')),
     h('label', { class: 'campo' }, 'Mensaje', msg),
@@ -12020,11 +12021,84 @@ async function abrirProspecto(id, alGuardar) {
       const r = id ? await sb.from('prospectos').update(fila).eq('id', id) : await sb.from('prospectos').insert(fila);
       if (r.error) { toast(isNetErr(r.error) ? 'Necesitas conexión.' : msgErr(r.error), 'err'); return; } toast('Guardado', 'ok'); cerrar(); alGuardar();
     } }, 'Guardar'),
+    id ? h('button', { class: 'ghost', style: 'min-height:48px;width:100%;margin-top:8px', onclick: () => hojaPrimerPedido(p0) }, '🧮 Pedirle su primer pedido y calcular tarifa') : null,
     id ? h('button', { class: 'peligro', onclick: async () => { if (!await confirmar('¿Borrar este contacto?')) return; const r = await sb.from('prospectos').delete().eq('id', id); if (r.error) { toast(msgErr(r.error), 'err'); return; } cerrar(); alGuardar(); } }, 'Borrar') : null));
 }
 const comMapas = q => 'https://www.google.com/maps/search/' + encodeURIComponent(q);
 const comWeb = u => /^https?:\/\//i.test(u) ? u : 'https://' + u;
 const comEnlace = (txt, url, cls) => h('a', { href: url, target: '_blank', rel: 'noopener', style: 'text-decoration:none;display:inline-block;margin:3px 4px 3px 0;padding:8px 12px;border:1px solid #166534;border-radius:10px;color:#166534;font-weight:600;font-size:14px;background:#fff' }, txt);
+
+/* ----- 🧮 Primer pedido: «Imagine su primer pedido y le calculamos su tarifa» (Fernando, 16/11/2026) -----
+   El posible cliente rellena en la tarjeta (web /tarjeta/) lo que pide a la semana, los días y si quiere reunión.
+   Llega a la tabla primer_pedido; aquí se calcula con la tarifa general y los precios no salen hasta que Fernando los aprueba. */
+const ppEnlace = p => URL_TARJETA + (p && p.id ? '?p=' + p.id : '') + '#primer-pedido';
+function hojaPrimerPedido(p) {
+  p = p || {}; const yo = state.perfil ? state.perfil.nombre.split(' ')[0] : '', url = ppEnlace(p), saludo = 'Hola' + (p.nombre ? ', ' + p.nombre : '') + '. ';
+  const texto = saludo + 'Soy ' + yo + ', de Ferjusanz: fruta, verdura, patatas y huevos desde Mercamadrid, empresa familiar con tres generaciones en el sector.\n\n' +
+    'Nos gustaría conocerles y, si le parece bien, quedar un día para que pruebe nuestro género.\n\n' +
+    'Para pasarle precios a su medida necesito saber un poco qué suele pedir a la semana. Aquí lo puede apuntar en un minuto y le calculamos su tarifa, sin compromiso:\n' + url + '\n\n' +
+    'Trabajamos sin pedido mínimo y repartimos en Madrid y Segovia. Si lo prefiere, contésteme con lo que suele pedir y lo apunto yo.\n\nUn saludo.';
+  const msg = h('textarea', { rows: 10, style: 'width:100%;font-size:15px' }); msg.value = texto;
+  const tel = comInput('tel', p.telefono || ''), mail = comInput('email', p.email || '');
+  const asunto = 'Ferjusanz · Su tarifa de fruta y verdura a medida';
+  const firma = () => '\n\n' + (state.perfil ? state.perfil.nombre : '') + '\nFERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. · Mercamadrid\n91 763 21 86 · WhatsApp 609 567 354';
+  const B = (cls, t, f) => h('button', { class: cls, style: 'width:100%;min-height:50px;margin-top:8px', onclick: f }, t);
+  hoja('🧮 Primer pedido y tarifa' + (p.nombre ? ' · ' + p.nombre : ''), h('div', {},
+    h('p', { class: 'sub' }, 'Le pides lo que suele pedir a la semana con el enlace' + (p.id ? ' personal (lo que rellene queda unido a este contacto)' : '') + '. Te llega a Comercial › Avisos › «Primeros pedidos», con la tarifa calculada para que Fernando la apruebe.'),
+    comCampo('Mensaje (puedes cambiarlo)', msg), comCampo('Móvil', tel),
+    B('guardar', '💬 Enviar por WhatsApp', () => abrirWhatsApp(tel.value, msg.value, 'com.whatsapp')),
+    B('ghost', '💼 Enviar por WhatsApp Business', () => abrirWhatsApp(tel.value, msg.value, 'com.whatsapp.w4b')),
+    comCampo('Correo', mail),
+    B('ghost', '✉️ Enviar por correo', () => { location.href = 'mailto:' + encodeURIComponent(mail.value.trim()) + '?subject=' + encodeURIComponent(asunto) + '&body=' + encodeURIComponent(msg.value.replace(/\n\nUn saludo\.$/, '\n\nUn saludo,') + firma()); }),
+    B('ghost', '📋 Copiar mensaje', async () => { try { await navigator.clipboard.writeText(msg.value); toast('Mensaje copiado', 'ok'); } catch (e) { msg.select(); toast('Mantén pulsado el texto para copiarlo', 'err'); } }),
+    B('ghost', '📝 Me ha contestado: rellenarlo yo', () => window.open(url, '_blank')),
+    h('p', { class: 'sub' }, 'Si te contesta por WhatsApp, correo o teléfono, pulsa «Rellenarlo yo» y apunta tú lo que te diga en su formulario.')));
+}
+/* Calcula la tarifa: colegios, residencias, escuelas y catering con la de colectividades (por producto); el resto, la de hostelería (por línea). */
+async function ppCalcular(r) {
+  const col = h2EsColectivo({ tipo: r.tipo, nombre: r.negocio }), lista = H2_LISTA_GENERAL[col ? 'colectivos' : 'hosteleria'];
+  const q = await sb.from('listas_precios_items').select('id,producto_id,precio,coste,unidad').eq('lista_id', lista); if (q.error) throw q.error;
+  const lineas = (r.productos || []).map(x => { const t = (q.data || []).find(i => col ? i.producto_id && i.producto_id === x.producto_id : i.id === x.item_id); const precio = t && t.precio != null ? Number(t.precio) : null;
+    return Object.assign({}, x, { precio, coste: t && t.coste != null ? Number(t.coste) : null, importe: precio == null ? null : Math.round(precio * Number(x.cantidad) * 100) / 100 }); });
+  return { col, lineas, total: lineas.reduce((a, l) => a + (l.importe || 0), 0), sinPrecio: lineas.filter(l => l.precio == null) };
+}
+function ppTarjeta(r, recargar) {
+  const caja = h('div', {}, h('p', { class: 'sub' }, 'Calculando…'));
+  const cab = h('div', {}, h('div', { class: 'fila' }, h('div', { class: 'nombre' }, r.negocio), h('span', { class: 'sub' }, fechaES(String(r.created_at).slice(0, 10)))),
+    h('div', { class: 'sub' }, [comNombreDe(PRO_TIPOS, r.tipo), r.persona, r.localidad, r.telefono].filter(Boolean).join(' · ')),
+    r.dias ? h('div', { class: 'sub' }, '🚚 Reparto: ' + r.dias) : null, r.reunion ? h('div', { class: 'sub' }, '🤝 Reunión: ' + r.reunion) : null,
+    r.otros ? h('div', { class: 'sub' }, '📝 Otros: ' + r.otros) : null);
+  ppCalcular(r).then(c => {
+    const lin = l => l.nombre + ': ' + eur(l.cantidad).replace(/,00$/, '') + ' ' + l.unidad + '/semana';
+    const filas = c.lineas.map(l => h('div', { class: 'fila' }, h('span', {}, lin(l)), h('b', {}, l.precio == null ? 'sin precio' : r.aprobado_at ? eur(l.precio) + ' €/' + l.unidad : '▬▬▬')));
+    const aviso = c.sinPrecio.length ? h('div', { class: 'sub', style: 'color:#b36b00;font-weight:600' }, '⚠️ Sin precio en la tarifa ' + (c.col ? 'de colectividades' : 'de hostelería') + ': ' + c.sinPrecio.map(l => l.nombre).join(', ') + '. Ponlo a mano en el mensaje o rellénalo en la tarifa.') : null;
+    const total = h('div', { class: 'fila', style: 'margin-top:4px' }, h('b', {}, 'Total aprox. por semana (sin IVA)'), h('b', {}, r.aprobado_at ? eur(c.total) + ' €' : '▬▬▬'));
+    const tarifa = 'Tarifa ' + (c.col ? 'de colectividades' : 'de hostelería') + '.';
+    if (!c.lineas.length) { caja.replaceChildren(h('p', { class: 'sub' }, 'No ha puesto cantidades de la lista: mira «Otros» y llámale.'), aviso); return; }
+    if (!r.aprobado_at) {
+      const peticion = '🧮 Tarifa para ' + r.negocio + ' (' + comNombreDe(PRO_TIPOS, r.tipo) + (r.localidad ? ', ' + r.localidad : '') + '). ' + tarifa + '\n\n' +
+        c.lineas.map(l => '• ' + lin(l) + ' → ' + (l.precio == null ? 'SIN PRECIO' : eur(l.precio) + ' €/' + l.unidad) + (l.coste != null ? ' (coste ' + eur(l.coste) + ')' : '')).join('\n') +
+        '\n\nTotal aprox. por semana: ' + eur(c.total) + ' € sin IVA.' + (r.otros ? '\nOtros: ' + r.otros : '') + '\n\n¿Lo apruebas? Contesta SÍ o dime otros precios.';
+      caja.replaceChildren(...filas, total, aviso, h('div', { class: 'sub', style: 'color:#b36b00;font-weight:600;margin-top:6px' }, '🔒 Precios tapados hasta que Fernando los apruebe. ' + tarifa),
+        h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' },
+          ...H2_APRUEBAN.map(([quien, tel]) => h('button', { class: 'small', onclick: () => window.open(h2Wa(tel, peticion), '_blank') }, '📲 Pedir aprobación a ' + quien)),
+          h('button', { class: 'ghost small', onclick: async () => { if (!await confirmar('¿Fernando ha aprobado estos precios? Se destaparán para enviárselos al cliente.')) return;
+            const u = await sb.from('primer_pedido').update({ aprobado_at: new Date().toISOString(), aprobado_por: state.user.id }).eq('id', r.id); if (u.error) { toast(msgErr(u.error), 'err'); return; } toast('Precios destapados. Revisa el mensaje antes de enviarlo.', 'ok'); recargar(); } }, '✅ Ya está aprobado')));
+      return;
+    }
+    const ta = h('textarea', { rows: 10, style: 'width:100%;font-size:15px' });
+    ta.value = 'Hola' + (r.persona ? ' ' + r.persona : '') + ', gracias por contarnos lo que suele pedir. Esta es su tarifa para ' + r.negocio + ' (precios de esta semana, sin IVA; cambian con el mercado):\n\n' +
+      c.lineas.filter(l => l.precio != null).map(l => '• ' + l.nombre + ': ' + eur(l.precio) + ' €/' + l.unidad).join('\n') +
+      '\n\nCon lo que nos ha dicho, saldría por unos ' + eur(c.total) + ' € a la semana. Sin pedido mínimo.' + (r.reunion && !/^Ahora no/.test(r.reunion) ? '\n\n¿Le viene bien que quedemos ' + (/local/.test(r.reunion) ? 'en su local' : /teléfono/.test(r.reunion) ? 'por teléfono' : 'en Mercamadrid') + ' para que pruebe el género?' : '') + '\n\nUn saludo,\n' + (state.perfil ? state.perfil.nombre : '') + ' · Ferjusanz';
+    caja.replaceChildren(...filas, total, aviso, h('div', { class: 'sub', style: 'color:#166534;font-weight:600;margin-top:6px' }, '✅ Aprobado el ' + fechaES(String(r.aprobado_at).slice(0, 10)) + '. Revisa el mensaje y envíaselo.'), ta,
+      h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' },
+        h('button', { class: 'small', onclick: () => abrirWhatsApp(r.telefono, ta.value, 'com.whatsapp') }, '💬 WhatsApp'),
+        r.email ? h('button', { class: 'ghost small', onclick: () => { location.href = 'mailto:' + encodeURIComponent(r.email) + '?subject=' + encodeURIComponent('Ferjusanz · Su tarifa') + '&body=' + encodeURIComponent(ta.value); } }, '✉️ Correo') : null,
+        h('button', { class: 'ghost small', onclick: async () => { try { await navigator.clipboard.writeText(ta.value); toast('Copiado', 'ok'); } catch (e) { toast('No se pudo copiar', 'err'); } } }, '📋 Copiar')));
+  }).catch(e => caja.replaceChildren(h('p', { class: 'err' }, msgErr(e))));
+  return h('div', { class: 'card', style: 'border-left:4px solid #166534' }, cab, caja,
+    r.prospecto_id ? h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: () => abrirProspecto(r.prospecto_id, recargar) }, 'Abrir contacto') : null);
+}
 
 /* ----- Guiones de venta ----- */
 const COM_GUIONES = [
@@ -12301,10 +12375,11 @@ async function tabRecs(el) {
 }
 async function tabAvisos(el) {
   const dia = hoy(); const hace30 = comSumaDias(dia, -30);
-  let inc = [], nuevos = [], pros = [], errP = '';
+  let inc = [], nuevos = [], pros = [], pp = [], errP = '';
   try {
     const a = await sb.from('incidencias').select('id,tipo,nota,resuelta,created_at,cliente_id,clientes(nombre,nombre_comercial,telefono)').neq('archivado', true).eq('resuelta', false).order('created_at', { ascending: false }).limit(200); if (!a.error) inc = (a.data || []).filter(x => x.cliente_id);
     const b = await sb.from('clientes').select('id,codigo,nombre,nombre_comercial,telefono,created_at,activo').gte('created_at', hace30).order('created_at', { ascending: false }).limit(50); if (!b.error) nuevos = (b.data || []).filter(x => x.activo !== false);
+    const d = await sb.from('primer_pedido').select('*').order('created_at', { ascending: false }).limit(50); if (!d.error) pp = d.data || [];
     const c = await sb.from('prospectos').select('*').order('created_at', { ascending: false }).limit(500); if (c.error) errP = /does not exist|schema cache|relation/i.test(c.error.message || '') ? 'Falta ejecutar en Supabase el archivo «Parte 43» (Comercial).' : msgErr(c.error); else pros = c.data || [];
   } catch (e) { el.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); return; }
   const porCli = {}; inc.forEach(i => { const c = uno(i.clientes) || {}; const k = i.cliente_id; (porCli[k] = porCli[k] || { nombre: nombreCli(c), tel: c.telefono, n: 0, ult: i }).n++; });
@@ -12318,6 +12393,9 @@ async function tabAvisos(el) {
   const selE = comSelect([['abiertos', 'Pendientes'], ['todos', 'Todos']].concat(PRO_ESTADOS), 'abiertos'); selE.addEventListener('change', () => { filtro.estado = selE.value; pintaP(); });
   const busq = (txt, q) => comEnlace(txt, comMapas(q));
   el.replaceChildren(
+    h('h3', {}, '🧮 Primeros pedidos y su tarifa (' + pp.length + ')'),
+    ...(pp.length ? pp.map(r => ppTarjeta(r, () => tabAvisos(el))) : [h('p', { class: 'vacio' }, 'Todavía nadie ha rellenado su primer pedido.')]),
+    h('button', { class: 'ghost small', onclick: () => hojaPrimerPedido(null) }, '🧮 Mandar el enlace a alguien nuevo'),
     h('h3', {}, '⚠️ Clientes con quejas o fallos sin resolver (' + Object.keys(porCli).length + ')'),
     ...(Object.keys(porCli).length ? Object.values(porCli).map(c => h('div', { class: 'card', style: 'border-left:4px solid #b91c1c' }, h('div', { class: 'fila' }, h('div', { class: 'nombre' }, c.nombre), h('b', {}, c.n + ' abierta(s)')), h('div', { class: 'sub' }, (c.ult.tipo || '') + ': ' + (c.ult.nota || '')), c.tel ? comEnlace('📞 Llamar', 'tel:' + String(c.tel).replace(/\s/g, '')) : null, h('button', { class: 'ghost small', onclick: () => go('incidencias') }, 'Abrir incidencias'))) : [h('p', { class: 'vacio' }, '✔ Ningún cliente con incidencias abiertas.')]),
     h('p', { class: 'sub' }, 'Sale de «Incidencias»: apunta allí cada queja con su cliente y aparecerá aquí hasta que la marques como resuelta. Mira «Guiones» para saber qué decir.'),
@@ -12448,7 +12526,8 @@ async function h2Hoy(el) {
         h('button', { class: 'small', onclick: () => h2Preparar(caja, it, fecha) }, '✍️ Preparar mensaje'),
         it.cliente_id ? h('button', { class: 'ghost small', onclick: () => h2Prefs(it.cliente_id, () => h2Hoy(el)) }, '⚙️ Preferencias') : null,
         it.prospecto_id || it.motivo === 'sin_pedir' ? h('button', { class: 'ghost small', onclick: e => h2Presentacion(it, e.currentTarget) }, '🎬 Presentación') : null,
-        it.prospecto_id || it.motivo === 'sin_pedir' ? h('button', { class: 'ghost small', onclick: e => h2ListaPara(it, e.currentTarget) }, '📄 Lista de precios') : null),
+        it.prospecto_id || it.motivo === 'sin_pedir' ? h('button', { class: 'ghost small', onclick: e => h2ListaPara(it, e.currentTarget) }, '📄 Lista de precios') : null,
+        it.prospecto_id ? h('button', { class: 'ghost small', onclick: () => hojaPrimerPedido({ id: it.prospecto_id, nombre: it.nombre, telefono: it.whatsapp || it.telefono }) }, '🧮 Primer pedido y tarifa') : null),
       caja); };
   const porHora = a => a.slice().sort((x, y) => (x.hora || '99') < (y.hora || '99') ? -1 : (x.hora || '99') > (y.hora || '99') ? 1 : 0);
   const grupo = (titulo, items, ayuda) => items.length ? [h('h3', {}, titulo + ' (' + items.length + ')'), ayuda ? h('p', { class: 'sub', style: 'margin-top:-6px' }, ayuda) : null, ...porHora(items).map(tarjeta)].filter(Boolean) : [];
