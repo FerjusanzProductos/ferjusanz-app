@@ -4,7 +4,7 @@ Hecha por Claude con la skill `security-audit`, en modo «rápido» (una pasada,
 
 ## Resumen
 La base está bien hecha: cada tabla tiene sus permisos por rol, nadie puede darse de alta solo, los enlaces de clientes son imposibles de adivinar, la app no deja ejecutar textos de clientes o proveedores, y WhatsApp, facturas por correo y copias van con clave o firma.
-Había **4 cosas que arreglar**. **Arregladas el 16/11/2026** con el «sí» de Fernando (app normal v350 y funciones `albaranes-correo` y `web-contacto` en las dos bases):
+Había **4 cosas que arreglar**. **Arregladas el 16/11/2026** con el «sí» de Fernando (app normal v352 y funciones `albaranes-correo` y `web-contacto` en las dos bases):
 
 | Prioridad | Qué pasa | Arreglo |
 |---|---|---|
