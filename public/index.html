@@ -12051,7 +12051,7 @@ function hojaPrimerPedido(p) {
   const msg = h('textarea', { rows: 12, style: 'width:100%;font-size:15px' }); msg.value = texto;
   const tel = comInput('tel', p.telefono || ''), mail = comInput('email', p.email || '');
   const chk = () => h('input', { type: 'checkbox', style: 'width:24px;height:24px;flex:none;margin:0' });
-  const conLista = chk(), video = h('input', { type: 'file', accept: 'video/*', style: 'width:100%' });
+  const conLista = chk(), conPdf = chk(), conVideo = chk(), video = h('input', { type: 'file', accept: 'video/*', style: 'width:100%' }); conPdf.checked = true;
   const asunto = 'Ferjusanz · Su tarifa de fruta y verdura a medida';
   const firma = () => '\n\n' + (state.perfil ? state.perfil.nombre : '') + '\nFERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. · Mercamadrid\n91 763 21 86 · WhatsApp 609 567 354';
   const B = (cls, t, f) => h('button', { class: cls, style: 'width:100%;min-height:50px;margin-top:8px', onclick: f }, t);
@@ -12062,20 +12062,27 @@ function hojaPrimerPedido(p) {
   const chips = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:6px 0' }), opPres = h('div', {}), paso2 = h('div', {});
   const pintar = () => { chips.replaceChildren(...MODOS.map(([k, t]) => h('button', { class: 'chip' + (modo === k ? ' on' : ''), style: 'min-height:44px', onclick: () => { modo = k; paso2.replaceChildren(); pintar(); preparar(); } }, t)));
     opPres.hidden = modo === 'msg'; };
-  opPres.append(h('label', { style: 'display:flex;gap:8px;align-items:center;min-height:44px' }, conLista, '💶 Añadir la lista de precios ' + (tipo === 'colectivos' ? '(colectividades)' : '(hostelería)') + ' al final'),
-    comCampo('🎥 Añadir un vídeo (opcional, de la galería)', video));
+  const estVideo = h('span', { class: 'sub' }, ''), lblVideo = h('label', { style: 'display:flex;gap:8px;align-items:center;min-height:44px' }, conVideo, '🎬 Vídeo de la presentación (con tu voz) ', estVideo);
+  const verVideo = () => pvBuscar(tipo).then(f => { conVideo.disabled = !f; if (!f) conVideo.checked = false; estVideo.textContent = f ? '' : '(todavía no está grabado)'; }).catch(() => { });
+  verVideo();
+  opPres.append(h('label', { style: 'display:flex;gap:8px;align-items:center;min-height:44px' }, conPdf, '📄 Presentación en PDF'), lblVideo,
+    h('button', { class: 'ghost small', style: 'margin:2px 0 6px', onclick: () => grabarVideoPres(tipo, () => { verVideo(); preparar(); }) }, '🎙️ Grabar / repetir el vídeo con tu voz'),
+    h('label', { style: 'display:flex;gap:8px;align-items:center;min-height:44px' }, conLista, '💶 Añadir la lista de precios ' + (tipo === 'colectivos' ? '(colectividades)' : '(hostelería)') + ' al final'),
+    comCampo('🎥 Otro vídeo (opcional, de la galería)', video));
   const archivos = async () => {
     const lam = presPlantilla(tipo), ic = lam.findIndex(x => x.t === 'contacto');
     lam.splice(ic < 0 ? lam.length : ic, 0, { t: 'lista', titulo: 'Imagine su primer pedido y le calculamos su tarifa', puntos: ['Sirve para calcular los precios que le haríamos', 'Marque en un minuto qué productos usa y, si quiere, cuánto a la semana', 'Le enviamos su tarifa según lo que gasta: destacamos por la calidad-precio', 'Sin compromiso y sin pedido mínimo · Madrid y Segovia'], enlace: { texto: 'Pulse aquí para rellenarlo', url } });
     lam.forEach(x => { if (x.t === 'precios') x.lista_id = H2_LISTA_GENERAL[tipo]; });
-    const files = [new File([pdfPresentacion(await presExpandir(lam, conLista.checked), 'Ferjusanz')], 'Ferjusanz-presentacion' + (conLista.checked ? '-con-precios' : '') + '.pdf', { type: 'application/pdf' })];
+    const files = conPdf.checked ? [new File([pdfPresentacion(await presExpandir(lam, conLista.checked), 'Ferjusanz')], 'Ferjusanz-presentacion' + (conLista.checked ? '-con-precios' : '') + '.pdf', { type: 'application/pdf' })] : [];
+    if (conVideo.checked) { const v = await pvArchivo(tipo); if (v) files.push(v); }
     if (video.files[0]) files.push(video.files[0]);
+    if (!files.length) throw new Error('marca el PDF o el vídeo');
     return files;
   };
   /* El PDF se prepara ANTES de pulsar: el móvil solo deja abrir «Compartir» justo al pulsar, y prepararlo tarda (más con la lista). */
   let listos = null, preparando = null;
   const preparar = () => { listos = null; if (modo === 'msg') return; const pr = preparando = archivos().then(f => { if (preparando === pr) listos = f; }).catch(e => { if (preparando === pr) toast('No se pudo preparar la presentación: ' + msgErr(e), 'err'); }); };
-  conLista.addEventListener('change', preparar); video.addEventListener('change', preparar);
+  [conLista, conPdf, conVideo, video].forEach(x => x.addEventListener('change', preparar));
   const compartir = (btn, texto) => {
     if (!listos) { toast('Preparando la presentación… vuelve a pulsar en un momento.', 'ok'); if (!preparando) preparar(); return; }
     const files = listos, datos = Object.assign({ files }, texto ? { title: asunto, text: texto } : {});
@@ -12107,6 +12114,64 @@ function hojaPrimerPedido(p) {
     B('ghost', '✉️ Enviar por correo', e => porCorreo(e.currentTarget)),
     B('ghost', '📋 Copiar mensaje', async () => { try { await navigator.clipboard.writeText(msg.value); toast('Mensaje copiado', 'ok'); } catch (e) { msg.select(); toast('Mantén pulsado el texto para copiarlo', 'err'); } }),
     B('ghost', '📝 Me ha contestado: rellenarlo yo', () => window.open(url, '_blank'))));
+}
+/* ----- 🎬 Vídeo de la presentación con la voz de Fernando (16/11/2026) -----
+   Las hojas salen a pantalla completa, él habla y pasa con «Siguiente»; se graban las hojas + su voz (MediaRecorder)
+   y se guarda en la carpeta privada «presentacion-video» como hosteleria.* / colectivos.*. Se graba una vez y se envía siempre. */
+const PV_BUCKET = 'presentacion-video';
+const pvLaminas = tipo => { const lam = presPlantilla(tipo), ic = lam.findIndex(x => x.t === 'contacto');
+  lam.splice(ic < 0 ? lam.length : ic, 0, { t: 'lista', titulo: 'Imagine su primer pedido y le calculamos su tarifa', puntos: ['Sirve para calcular los precios que le haríamos', 'Marque en un minuto qué productos usa y, si quiere, cuánto a la semana', 'Le enviamos su tarifa según lo que gasta: destacamos por la calidad-precio', 'Sin compromiso y sin pedido mínimo · Madrid y Segovia'], enlace: { texto: 'Rellénelo con el enlace del mensaje', url: URL_TARJETA } });
+  return lam; };
+async function pvBuscar(tipo) { const r = await sb.storage.from(PV_BUCKET).list('', { search: tipo }); return ((r.data || []).find(f => f.name.startsWith(tipo + '.')) || null); }
+async function pvArchivo(tipo) { const f = await pvBuscar(tipo); if (!f) return null; const d = await sb.storage.from(PV_BUCKET).download(f.name); if (d.error) throw d.error;
+  return new File([d.data], 'Ferjusanz-presentacion.' + f.name.split('.').pop(), { type: d.data.type || (f.name.endsWith('.mp4') ? 'video/mp4' : 'video/webm') }); }
+async function grabarVideoPres(tipo, alGuardar) {
+  if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) { toast('Este móvil no deja grabar vídeo desde la app.', 'err'); return; }
+  const cv = document.createElement('canvas'); cv.width = 1280; cv.height = 906; const cx = cv.getContext('2d');
+  const tapa = h('div', { style: 'position:fixed;inset:0;z-index:9999;background:#0b1f12;color:#fff;display:flex;flex-direction:column;padding:10px;gap:8px' });
+  const info = h('div', { style: 'font-weight:600;font-size:16px' }, 'Preparando las hojas…'), botones = h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' });
+  cv.style.cssText = 'width:100%;height:auto;max-height:70vh;object-fit:contain;background:#fff;border-radius:6px';
+  tapa.append(info, cv, botones); document.body.append(tapa);
+  const fuera = () => { try { stream && stream.getTracks().forEach(t => t.stop()); mic && mic.getTracks().forEach(t => t.stop()); } catch (e) { } clearInterval(tic); tapa.remove(); };
+  let hojas = [], n = 0, rec = null, stream = null, mic = null, tic = null, trozos = [];
+  const BT = (t, f, cls) => h('button', { class: cls || 'ghost', style: 'flex:1;min-height:56px;font-size:17px', onclick: f }, t);
+  const pinta = () => { cx.fillStyle = '#ffffff'; cx.fillRect(0, 0, cv.width, cv.height); const im = hojas[n]; if (im) cx.drawImage(im, 0, 0, cv.width, cv.height); };
+  try {
+    await waCargarScript(WA_PDFJS);
+    if (!window.__waPdfW) { const t = await (await fetch(WA_PDFW)).text(); window.__waPdfW = URL.createObjectURL(new Blob([t], { type: 'text/javascript' })); }
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.__waPdfW;
+    const pdf = await window.pdfjsLib.getDocument({ data: pdfPresentacion(await presExpandir(pvLaminas(tipo), false), 'Ferjusanz'), isEvalSupported: false }).promise;
+    for (let i = 1; i <= pdf.numPages; i++) { const pg = await pdf.getPage(i), vp = pg.getViewport({ scale: cv.width / pg.getViewport({ scale: 1 }).width }), c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height; await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise; hojas.push(c); }
+  } catch (e) { fuera(); toast('No se pudieron preparar las hojas: ' + msgErr(e), 'err'); return; }
+  pinta();
+  const tipoVideo = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp8,opus', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t)) || '';
+  const listo = () => { info.textContent = 'Vídeo de la presentación (' + (tipo === 'colectivos' ? 'colegios y residencias' : 'hostelería') + '): ' + hojas.length + ' hojas. Pulsa «Empezar», habla y pasa las hojas con «Siguiente».';
+    botones.replaceChildren(BT('⏺ Empezar a grabar', empezar, 'guardar'), BT('Cancelar', fuera)); };
+  const empezar = async () => {
+    try { mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { toast('Hace falta permiso para el micrófono.', 'err'); return; }
+    n = 0; pinta(); stream = cv.captureStream(15); mic.getAudioTracks().forEach(t => stream.addTrack(t)); trozos = [];
+    tic = setInterval(pinta, 250); // repinta para que el vídeo tenga imágenes aunque la hoja no cambie
+    rec = new MediaRecorder(stream, Object.assign({ videoBitsPerSecond: 1000000, audioBitsPerSecond: 64000 }, tipoVideo ? { mimeType: tipoVideo } : {}));
+    rec.ondataavailable = e => { if (e.data && e.data.size) trozos.push(e.data); };
+    rec.onstop = terminado; rec.start(1000);
+    const paso = () => { info.textContent = '🔴 Grabando · hoja ' + (n + 1) + ' de ' + hojas.length + '. Habla y pulsa «Siguiente».';
+      botones.replaceChildren(n > 0 ? BT('◀ Atrás', () => { n--; pinta(); paso(); }) : null, n < hojas.length - 1 ? BT('Siguiente ▶', () => { n++; pinta(); paso(); }, 'guardar') : BT('⏹ Terminar', () => rec.stop(), 'guardar')); };
+    paso();
+  };
+  const terminado = () => {
+    clearInterval(tic); stream.getTracks().forEach(t => t.stop());
+    const ty = (rec.mimeType || tipoVideo || 'video/webm').split(';')[0], blob = new Blob(trozos, { type: ty }), ext = ty.includes('mp4') ? 'mp4' : 'webm';
+    const ver = h('video', { src: URL.createObjectURL(blob), controls: true, playsinline: true, style: 'width:100%;max-height:60vh;background:#000' });
+    cv.replaceWith(ver); info.textContent = 'Revisa el vídeo (' + Math.round(blob.size / 1048576 * 10) / 10 + ' MB). Si te gusta, guárdalo.';
+    botones.replaceChildren(BT('💾 Guardar este vídeo', async e => {
+      const b = e.currentTarget; b.disabled = true; b.textContent = '⏳ Subiendo…';
+      try { const viejo = await pvBuscar(tipo); if (viejo && viejo.name !== tipo + '.' + ext) await sb.storage.from(PV_BUCKET).remove([viejo.name]);
+        const r = await sb.storage.from(PV_BUCKET).upload(tipo + '.' + ext, blob, { upsert: true, contentType: ty }); if (r.error) throw r.error;
+        toast('Vídeo guardado. Ya puedes enviarlo con «🎬 Vídeo de la presentación».', 'ok'); fuera(); if (alGuardar) alGuardar(); }
+      catch (er) { b.disabled = false; b.textContent = '💾 Guardar este vídeo'; toast(isNetErr(er) ? 'Necesitas conexión.' : msgErr(er), 'err'); } }, 'guardar'),
+      BT('🔁 Repetir', () => { ver.replaceWith(cv); listo(); }), BT('Cancelar', fuera));
+  };
+  listo();
 }
 /* Calcula la tarifa: colegios, residencias, escuelas y catering con la de colectividades (por producto); el resto, la de hostelería (por línea). */
 async function ppCalcular(r) {
