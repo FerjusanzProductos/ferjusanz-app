@@ -93,8 +93,12 @@ async function tarjetaConProductos(html, url, env) {
   try {
     const r = await rpc(env, "primer_pedido_productos");
     const lista = r.ok ? await r.json() : [];
+    // Por familias (desplegables) para que no sea una lista eterna; el buscador abre las que coinciden.
+    const fila = (x) => `<div class="pp-fila"><label class="pp-usa"><input type="checkbox" name="u_${esc(x.id)}" value="1"><span>${esc(x.nombre)}</span></label><input name="c_${esc(x.id)}" type="text" inputmode="decimal" maxlength="8" pattern="[0-9]{1,5}([.,][0-9]{1,2})?" title="Solo números, por ejemplo 2 o 2,5" placeholder="¿cuánto?" aria-label="${esc(x.nombre)}: cantidad por semana (opcional)"><small>${esc(x.unidad || "")}</small></div>`;
+    const familias = [];
+    for (const x of lista) { const f = familias.find((g) => g[0] === x.familia); if (f) f[1].push(x); else familias.push([x.familia, [x]]); }
     if (lista.length) filas = `<input id="pp-buscar" type="search" placeholder="Buscar producto…" aria-label="Buscar producto"><div class="pp-lista">` +
-      lista.map((x) => `<div class="pp-fila"><label class="pp-usa"><input type="checkbox" name="u_${esc(x.id)}" value="1"><span>${esc(x.nombre)}</span></label><input name="c_${esc(x.id)}" type="text" inputmode="decimal" maxlength="8" pattern="[0-9]{1,5}([.,][0-9]{1,2})?" title="Solo números, por ejemplo 2 o 2,5" placeholder="¿cuánto?" aria-label="${esc(x.nombre)}: cantidad por semana (opcional)"><small>${esc(x.unidad || "")}</small></div>`).join("") + `</div>`;
+      familias.map(([f, xs]) => `<details class="pp-familia"><summary>${esc(f)} <small>(${xs.length})</small></summary>${xs.map(fila).join("")}</details>`).join("") + `</div>`;
   } catch (e) { console.log("productos fallo", String(e)); }
   const p = url.searchParams.get("p") || "";
   return html.replace("__PP_PRODUCTOS__", filas).replace("__PP_CONTACTO__", UUID.test(p) ? p : "");

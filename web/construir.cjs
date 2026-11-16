@@ -701,7 +701,7 @@ function tarjeta() {
   <label>Móvil *<input name="telefono" type="tel" required maxlength="20" autocomplete="tel" inputmode="tel" placeholder="600 000 000"></label>
   <label>Correo<input name="email" type="email" maxlength="120" autocomplete="email"></label>
   <fieldset class="pp-productos"><legend>¿Qué productos usa?</legend>
-  <p class="nota">Marque lo que usa. Si quiere, ponga cuánto gasta a la semana (en la unidad de la derecha): así le afinamos más el precio. Es orientativo.</p>
+  <p class="nota">Pulse una familia para verla y marque lo que usa. Si quiere, ponga cuánto gasta a la semana (en la unidad de la derecha): así le afinamos más el precio. Es orientativo.</p>
   __PP_PRODUCTOS__
   </fieldset>
   <label>Otros productos o cantidades<textarea name="otros" maxlength="800" rows="3" placeholder="Por ejemplo: 2 cajas de limones, patata pelada para freír…"></textarea></label>
@@ -713,7 +713,7 @@ function tarjeta() {
   <p class="nota">Usamos estos datos solo para prepararle la tarifa y contactarle. Más información en la <a href="/politica-de-privacidad/">política de privacidad</a>.</p>
   <button class="btn btn-wa" type="submit">Calcular mi tarifa</button>
   </form>
-  <script>(function(){var q=location.search;document.querySelectorAll('[data-si]').forEach(function(e){if(q.indexOf(e.dataset.si+'=')>-1)e.hidden=false});var b=document.getElementById('pp-buscar');if(b)b.addEventListener('input',function(){var t=b.value.toLowerCase();document.querySelectorAll('.pp-fila').forEach(function(f){f.hidden=t&&f.textContent.toLowerCase().indexOf(t)<0})});document.querySelectorAll('.pp-fila input[type=text]').forEach(function(c){c.addEventListener('input',function(){if(c.value.trim())c.parentNode.querySelector('input[type=checkbox]').checked=true})})})()</script>
+  <script>(function(){var q=location.search;document.querySelectorAll('[data-si]').forEach(function(e){if(q.indexOf(e.dataset.si+'=')>-1)e.hidden=false});var b=document.getElementById('pp-buscar');if(b)b.addEventListener('input',function(){var t=b.value.toLowerCase();document.querySelectorAll('.pp-fila').forEach(function(f){f.hidden=t&&f.textContent.toLowerCase().indexOf(t)<0});document.querySelectorAll('.pp-familia').forEach(function(d){d.open=!!t&&!!d.querySelector('.pp-fila:not([hidden])')})});document.querySelectorAll('.pp-fila input[type=text]').forEach(function(c){c.addEventListener('input',function(){if(c.value.trim())c.parentNode.querySelector('input[type=checkbox]').checked=true})})})()</script>
   <h2 class="pp-separa">Quiénes somos y cómo trabajamos</h2>
   <div class="acciones apiladas"><a class="btn btn-wa" href="${wa(fer.num, 'Hola Fernando, he visto la tarjeta de Ferjusanz y quería información de: ')}" rel="nofollow">${I.wa}<span>Escribir a Fernando por WhatsApp <small>(${fer.ver})</small></span></a>
   <a class="btn btn-borde" href="tel:+34917632186">${I.tel}<span>Llamar a la oficina: ${TEL}</span></a>
