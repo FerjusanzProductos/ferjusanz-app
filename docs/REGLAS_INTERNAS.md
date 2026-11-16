@@ -123,6 +123,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 
 ## Lo que se puede decir de la empresa (Fernando, 15/11/2026)
 - **No decir «cosecha propia»** (no la hay) en web, presentaciones ni mensajes: «agricultores de confianza» y «elegido en Mercamadrid».
+- **Qué somos** (Fernando, 16/11/2026): «Ferjusanz: **patatas, frutas, verduras y huevos**» (en ese orden), nunca solo «frutas y verduras».
 - **Orden** (Fernando, 16/11/2026): primero «agricultores de confianza» y después «Mercamadrid». Con posibles clientes: «destacamos por la relación calidad-precio» y la tarifa se calcula con lo que gastan.
 - Agricultura ecológica: «colaboramos con productores ecológicos siempre que tienen producto disponible».
 - Camiones y furgonetas refrigerados: sí.
