@@ -23,8 +23,8 @@ const EMAIL = 'ferjusanz@hotmail.com';
 const DIRECCION = 'C/ Carare, 2 · 28033 Madrid';
 const HORARIO = 'Lunes a viernes, de 8:00 a 18:00';
 const WHATSAPP = [ // los dos móviles de la familia
+  { num: '34609567354', ver: '609 567 354', nombre: 'Fernando' }, // el principal (Fernando 16/11/2026)
   { num: '34609100690', ver: '609 100 690' },
-  { num: '34609567354', ver: '609 567 354', nombre: 'Fernando' },
 ];
 const ANIOS = 'más de seis décadas'; // Fernando 16/11/2026: «más de 60 años» e «impacta más decir décadas»
 
@@ -121,7 +121,7 @@ const ZONAS = [
 ];
 
 const PREGUNTAS = [
-  ['¿Cómo solicito precio o tarifa?', 'Escríbanos por WhatsApp al 609 100 690 o al 609 567 354, o llame al 91 763 21 86. Los precios de la fruta y la verdura cambian cada día según el mercado, por eso le pasamos el del día y una tarifa ajustada a su volumen de consumo.'],
+  ['¿Cómo solicito precio o tarifa?', 'Escríbanos por WhatsApp al 609 567 354 o al 609 100 690, o llame al 91 763 21 86. Los precios de la fruta y la verdura cambian cada día según el mercado, por eso le pasamos el del día y una tarifa ajustada a su volumen de consumo.'],
   ['¿Dónde reparten?', 'En Madrid capital, la zona norte (Alcobendas, San Sebastián de los Reyes, Tres Cantos), el noroeste (Aravaca, Pozuelo, Majadahonda, Las Rozas) y Segovia, con nuestros propios camiones y furgonetas refrigerados. ¿No ve su localidad? Llámenos y le decimos si pasamos cerca.'],
   ['¿Exportan fuera de España?', 'Hay posibilidad de exportar al extranjero. Llámenos o escríbanos por WhatsApp y lo vemos según el producto y el destino.'],
   ['¿Hay pedido mínimo?', 'No. Pida lo que necesite, aunque sea poco.'],
@@ -280,7 +280,7 @@ ${datos.map(d => `<script type="application/ld+json">${JSON.stringify(d)}</scrip
 </head>
 <body>
 <a class="saltar" href="#contenido">Saltar al contenido</a>
-<div class="aviso"><span>Género fresco cada día</span><span>Reparto en Madrid y Segovia</span><span class="solo-ancho">${HORARIO}</span><span class="aviso-contacto"><a href="tel:+34917632186">${TEL}</a>${WHATSAPP.slice().reverse().map(w => `<a href="tel:+${w.num}">${w.ver}</a>`).join('')}<a href="mailto:${EMAIL}">${EMAIL}</a></span></div>
+<div class="aviso"><span>Género fresco cada día</span><span>Reparto en Madrid y Segovia</span><span class="solo-ancho">${HORARIO}</span><span class="aviso-contacto"><a href="tel:+34917632186">${TEL}</a>${WHATSAPP.map(w => `<a href="tel:+${w.num}">${w.ver}</a>`).join('')}<a href="mailto:${EMAIL}">${EMAIL}</a></span></div>
 <header class="cabecera">
   <div class="cabecera-in">
     <a href="/" class="logo" aria-label="Ferjusanz, inicio"><img src="/marca/logo-oscuro.png" alt="Ferjusanz · fruta, verdura, patata y huevos" width="670" height="130"></a>
