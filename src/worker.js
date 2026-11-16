@@ -21,7 +21,6 @@ import pres_lado1 from "../public/pres/lado1.jpg";
 import pres_lado2 from "../public/pres/lado2.jpg";
 import pres_lado3 from "../public/pres/lado3.jpg";
 import pres_lado4 from "../public/pres/lado4.jpg";
-import pres_lado5 from "../public/pres/lado5.jpg";
 import paso2 from "../public/guia-img/paso2.jpg";
 import paso3 from "../public/guia-img/paso3.jpg";
 import paso4 from "../public/guia-img/paso4.jpg";
@@ -67,7 +66,6 @@ const ARCHIVOS = {
   "/pres/lado2.jpg": [pres_lado2, "image/jpeg"],
   "/pres/lado3.jpg": [pres_lado3, "image/jpeg"],
   "/pres/lado4.jpg": [pres_lado4, "image/jpeg"],
-  "/pres/lado5.jpg": [pres_lado5, "image/jpeg"],
   "/guia-img/paso2.jpg": [paso2, "image/jpeg"],
   "/guia-img/paso3.jpg": [paso3, "image/jpeg"],
   "/guia-img/paso4.jpg": [paso4, "image/jpeg"],
