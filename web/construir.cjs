@@ -310,7 +310,7 @@ ${cuerpo}
         <button class="btn btn-wa" type="submit">${I.wa}<span>Quiero mi tarifa</span></button>
         <small>Se abre WhatsApp con estos datos para que nos los envíe. La web no guarda nada.</small>
       </form>
-      <a class="btn btn-borde" href="tel:+34917632186">${I.tel}<span>Llamar al ${TEL}</span></a>
+      <a class="btn btn-borde" href="tel:+34609100690">${I.tel}<span>Llamar al 609 100 690</span></a>
     </div>
   </div>
 </section>
@@ -342,7 +342,7 @@ ${cuerpo}
     <summary>${I.wa}<span>WhatsApp</span></summary>
     <div class="wa-opciones"><p>¿Con quién desea hablar?</p>${WHATSAPP.map(w => `<a href="${wa(w.num, 'Hola, quería información.')}" rel="nofollow">${I.wa}<span>${w.ver}${w.nombre ? ` · ${w.nombre}` : ''}</span></a>`).join('')}</div>
   </details>`}
-  <a class="llamar" href="tel:+34917632186">${I.tel}<span>Llamar</span></a>
+  <a class="llamar" href="tel:+34609100690">${I.tel}<span>Llamar</span></a>
 </div>
 </body>
 </html>
