@@ -21,6 +21,10 @@ import pres_lado1 from "../public/pres/lado1.jpg";
 import pres_lado2 from "../public/pres/lado2.jpg";
 import pres_lado3 from "../public/pres/lado3.jpg";
 import pres_lado4 from "../public/pres/lado4.jpg";
+import pres_logo from "../public/pres/logo.png";
+import pres_logo_jpg from "../public/pres/logo.jpg";
+import pres_logo_oscuro from "../public/pres/logo-oscuro.png";
+import pres_etiqueta from "../public/pres/etiqueta.jpg";
 import paso2 from "../public/guia-img/paso2.jpg";
 import paso3 from "../public/guia-img/paso3.jpg";
 import paso4 from "../public/guia-img/paso4.jpg";
@@ -66,6 +70,10 @@ const ARCHIVOS = {
   "/pres/lado2.jpg": [pres_lado2, "image/jpeg"],
   "/pres/lado3.jpg": [pres_lado3, "image/jpeg"],
   "/pres/lado4.jpg": [pres_lado4, "image/jpeg"],
+  "/pres/logo.png": [pres_logo, "image/png"],
+  "/pres/logo.jpg": [pres_logo_jpg, "image/jpeg"],
+  "/pres/logo-oscuro.png": [pres_logo_oscuro, "image/png"],
+  "/pres/etiqueta.jpg": [pres_etiqueta, "image/jpeg"],
   "/guia-img/paso2.jpg": [paso2, "image/jpeg"],
   "/guia-img/paso3.jpg": [paso3, "image/jpeg"],
   "/guia-img/paso4.jpg": [paso4, "image/jpeg"],
