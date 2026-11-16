@@ -12108,7 +12108,7 @@ function hojaPrimerPedido(p) {
     '• Nuestra web: ' + URL_WEB + '\n\n¿Quedamos un día? Un saludo.';
   const msg = h('textarea', { rows: 12, style: 'width:100%;font-size:15px' }); msg.value = texto;
   const tel = comInput('tel', p.telefono || ''), mail = comInput('email', p.email || '');
-  const conPdf = h('input', { type: 'checkbox', checked: false, style: 'width:24px;height:24px;flex:none;margin:0' }), video = h('input', { type: 'file', accept: 'video/*', style: 'width:100%' });
+  const conPdf = h('input', { type: 'checkbox', checked: true, style: 'width:24px;height:24px;flex:none;margin:0' }), video = h('input', { type: 'file', accept: 'video/*', style: 'width:100%' });
   const asunto = 'Ferjusanz · Su tarifa de fruta y verdura a medida';
   const firma = () => '\n\n' + (state.perfil ? state.perfil.nombre : '') + '\nFERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. · Mercamadrid\n91 763 21 86 · WhatsApp 609 567 354';
   const B = (cls, t, f) => h('button', { class: cls, style: 'width:100%;min-height:50px;margin-top:8px', onclick: f }, t);
@@ -12130,9 +12130,9 @@ function hojaPrimerPedido(p) {
   hoja('🧮 Primer pedido y tarifa' + (p.nombre ? ' · ' + p.nombre : ''), h('div', {},
     h('p', { class: 'sub' }, 'Te llega a Comercial › Avisos › «Primeros pedidos», con la tarifa calculada para que Fernando la apruebe.'),
     comCampo('Mensaje (puedes cambiarlo)', msg),
-    h('label', { style: 'display:flex;gap:8px;align-items:center;min-height:44px' }, conPdf, '📎 Adjuntar también la presentación (PDF)'),
+    h('label', { style: 'display:flex;gap:8px;align-items:center;min-height:44px' }, conPdf, '📎 Después del mensaje, la presentación (PDF)'),
     comCampo('🎥 Adjuntar un vídeo (opcional, de la galería)', video),
-    h('button', { class: 'guardar', style: 'width:100%;min-height:50px;margin-top:8px', onclick: e => conAdjuntos(e.currentTarget) }, '📲 Enviar con adjuntos (WhatsApp o correo)'),
+    h('button', { class: 'guardar', style: 'width:100%;min-height:50px;margin-top:8px', onclick: e => conAdjuntos(e.currentTarget) }, '📲 Enviar mensaje + PDF (WhatsApp o correo)'),
     h('p', { class: 'sub' }, 'Se abre «Compartir»: elige WhatsApp y el chat, o Gmail. Sin adjuntos, usa los botones de abajo.'),
     comCampo('Móvil', tel),
     B('ghost', '💬 Solo texto por WhatsApp', () => abrirWhatsApp(tel.value, msg.value, 'com.whatsapp')),
@@ -12156,7 +12156,8 @@ function ppTarjeta(r, recargar) {
   const cab = h('div', {}, h('div', { class: 'fila' }, h('div', { class: 'nombre' }, r.negocio), h('span', { class: 'sub' }, fechaES(String(r.created_at).slice(0, 10)))),
     h('div', { class: 'sub' }, [comNombreDe(PRO_TIPOS, r.tipo), r.persona, r.localidad, r.telefono].filter(Boolean).join(' · ')),
     r.dias ? h('div', { class: 'sub' }, '🚚 Reparto: ' + r.dias) : null, r.reunion ? h('div', { class: 'sub' }, '🤝 Reunión: ' + r.reunion) : null,
-    r.otros ? h('div', { class: 'sub' }, '📝 Otros: ' + r.otros) : null);
+    r.otros ? h('div', { class: 'sub' }, '📝 Otros: ' + r.otros) : null,
+    r.audio ? h('button', { class: 'ghost small', style: 'margin-top:4px', onclick: async e => { const b = e.currentTarget; const u = await sb.storage.from('primer-pedido-audios').createSignedUrl(r.audio, 3600); if (u.error) { toast(msgErr(u.error), 'err'); return; } const a = h('audio', { controls: true, src: u.data.signedUrl, style: 'width:100%' }); b.replaceWith(a); a.play().catch(() => { }); } }, '🎧 Escuchar su audio') : null);
   ppCalcular(r).then(c => {
     const lin = l => l.nombre + ': ' + (l.cantidad == null ? 'lo usa (sin cantidad)' : eur(l.cantidad).replace(/,00$/, '') + ' ' + l.unidad + '/semana');
     const filas = c.lineas.map(l => h('div', { class: 'fila' }, h('span', {}, lin(l)), h('b', {}, l.precio == null ? 'sin precio' : r.aprobado_at ? eur(l.precio) + ' €/' + l.unidad : '▬▬▬')));

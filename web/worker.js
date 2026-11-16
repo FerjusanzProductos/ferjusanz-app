@@ -55,7 +55,7 @@ export default {
     // Cabeceras básicas de seguridad.
     Object.assign(headers, { "x-content-type-options": "nosniff", "referrer-policy": "strict-origin-when-cross-origin", "x-frame-options": "SAMEORIGIN", "strict-transport-security": "max-age=31536000", "permissions-policy": "camera=(), microphone=(), geolocation=()" });
     if (ARCHIVOS[ruta] && archivo[1].startsWith("text/html")) { const v = apuntarVisita(request, ruta); if (v) ctx.waitUntil(v); }
-    if (ruta === "/tarjeta/") return new Response(await tarjetaConProductos(archivo[0], url, env), { status: 200, headers });
+    if (ruta === "/tarjeta/") { headers["permissions-policy"] = "camera=(), microphone=(self), geolocation=()"; return new Response(await tarjetaConProductos(archivo[0], url, env), { status: 200, headers }); }
     return new Response(archivo[0], { status: ARCHIVOS[ruta] ? 200 : 404, headers });
   },
 };
@@ -95,10 +95,14 @@ async function tarjetaConProductos(html, url, env) {
     const lista = r.ok ? await r.json() : [];
     // Por familias (desplegables) para que no sea una lista eterna; el buscador abre las que coinciden.
     const fila = (x) => `<div class="pp-fila"><label class="pp-usa"><input type="checkbox" name="u_${esc(x.id)}" value="1"><span>${esc(x.nombre)}</span></label><input name="c_${esc(x.id)}" type="text" inputmode="decimal" maxlength="8" pattern="[0-9]{1,5}([.,][0-9]{1,2})?" title="Solo números, por ejemplo 2 o 2,5" placeholder="¿cuánto?" aria-label="${esc(x.nombre)}: cantidad por semana (opcional)"><small>${esc(x.unidad || "")}</small></div>`;
+    // Arriba, los típicos de hostelería (dest); el resto, plegado por familias y con el buscador, para no saturar.
+    const dest = lista.filter((x) => x.dest != null).sort((a, b) => a.dest - b.dest), resto = lista.filter((x) => x.dest == null);
     const familias = [];
-    for (const x of lista) { const f = familias.find((g) => g[0] === x.familia); if (f) f[1].push(x); else familias.push([x.familia, [x]]); }
-    if (lista.length) filas = `<input id="pp-buscar" type="search" placeholder="Buscar producto…" aria-label="Buscar producto"><div class="pp-lista">` +
-      familias.map(([f, xs]) => `<details class="pp-familia"><summary>${esc(f)} <small>(${xs.length})</small></summary>${xs.map(fila).join("")}</details>`).join("") + `</div>`;
+    for (const x of resto) { const f = familias.find((g) => g[0] === x.familia); if (f) f[1].push(x); else familias.push([x.familia, [x]]); }
+    if (lista.length) filas = `<div class="pp-lista">${dest.map(fila).join("")}</div>` +
+      `<input id="pp-buscar" type="search" placeholder="¿Usa algo más? Búsquelo aquí…" aria-label="Buscar otro producto">` +
+      `<details id="pp-todos"><summary>Ver todos los productos (${lista.length})</summary><div class="pp-lista">` +
+      familias.map(([f, xs]) => `<details class="pp-familia"><summary>${esc(f)} <small>(${xs.length})</small></summary>${xs.map(fila).join("")}</details>`).join("") + `</div></details>`;
   } catch (e) { console.log("productos fallo", String(e)); }
   const p = url.searchParams.get("p") || "";
   return html.replace("__PP_PRODUCTOS__", filas).replace("__PP_CONTACTO__", UUID.test(p) ? p : "");
@@ -122,10 +126,11 @@ async function enviarPrimerPedido(request, url, env) {
   }
   for (const [id, cantidad] of marcados) productos.push({ id, cantidad });
   const t = (k) => String(f.get(k) || "");
+  const audio = await subirAudio(f.get("audio"), env);
   try {
     const r = await rpc(env, "web_primer_pedido", { p_negocio: t("negocio"), p_persona: t("persona"), p_tipo: t("tipo"), p_localidad: t("localidad"),
       p_telefono: t("telefono"), p_email: t("email"), p_productos: productos.slice(0, 100), p_otros: t("otros"), p_dias: f.getAll("dia").join(", "),
-      p_reunion: [t("reunion"), t("cuando")].filter(Boolean).join(" · "), p_notas: "", p_prospecto: p || null, p_trampa: t("web") });
+      p_reunion: [t("reunion"), t("cuando")].filter(Boolean).join(" · "), p_notas: "", p_prospecto: p || null, p_trampa: t("web"), p_audio: audio });
     const j = await r.json().catch(() => ({}));
     console.log("primer pedido", r.status, JSON.stringify(j));
     return volver(j.ok ? "enviado=1" : "error=" + encodeURIComponent(j.error || "envio"));
@@ -133,4 +138,20 @@ async function enviarPrimerPedido(request, url, env) {
     console.log("primer pedido fallo", String(e));
     return volver("error=envio");
   }
+}
+
+// Audio del posible cliente («cuéntenoslo en un audio»): a la carpeta privada primer-pedido-audios (la clave pública solo puede añadir).
+const EXT = { "audio/webm": "webm", "video/webm": "webm", "audio/ogg": "ogg", "audio/mp4": "m4a", "video/mp4": "m4a", "audio/x-m4a": "m4a", "audio/aac": "aac",
+  "audio/mpeg": "mp3", "audio/mp3": "mp3", "audio/wav": "wav", "audio/x-wav": "wav", "audio/3gpp": "3gp", "audio/amr": "amr" };
+async function subirAudio(a, env) {
+  if (!a || typeof a === "string" || !a.size || a.size > 10485760) return null;
+  const tipo = (a.type || "").split(";")[0].toLowerCase(), ext = EXT[tipo];
+  if (!ext) return null;
+  const nombre = crypto.randomUUID() + "." + ext;
+  try {
+    const r = await fetch((env.SUPABASE_URL || BASE_REAL) + "/storage/v1/object/primer-pedido-audios/" + nombre, { method: "POST",
+      headers: { apikey: env.SUPABASE_CLAVE || CLAVE_PUBLICA, "content-type": tipo }, body: a.stream() });
+    if (!r.ok) { console.log("audio fallo", r.status, await r.text()); return null; }
+    return nombre;
+  } catch (e) { console.log("audio fallo", String(e)); return null; }
 }

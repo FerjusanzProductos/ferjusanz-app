@@ -500,3 +500,9 @@ a:active, button:active, summary:active { opacity: .75; }
 .pp-familia summary::-webkit-details-marker { display: none; }
 .pp-familia summary::before { content: "▸"; width: 1em; }
 .pp-familia[open] summary::before { content: "▾"; }
+/* Típicos arriba, «Ver todos» plegado y audio (16/11/2026) */
+#pp-todos > summary { min-height: 48px; display: flex; align-items: center; font-weight: 600; cursor: pointer; text-decoration: underline; }
+.pp-audio .btn { width: 100%; justify-content: center; }
+.pp-audio audio { width: 100%; }
+.primer-pedido .pp-subir { font-weight: 400; font-size: .9rem; }
+.primer-pedido .pp-subir input { min-height: 0; border: 0; padding: 4px 0; background: none; }
