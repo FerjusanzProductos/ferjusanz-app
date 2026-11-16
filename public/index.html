@@ -12038,7 +12038,7 @@ const ppEnlace = p => URL_TARJETA + (p && p.id ? '?p=' + p.id : '') + '#primer-p
 function hojaPrimerPedido(p) {
   p = p || {}; const yo = state.perfil ? state.perfil.nombre.split(' ')[0] : '', url = ppEnlace(p);
   const texto = 'Hola' + (p.nombre ? ', ' + p.nombre : '') + '. Soy ' + yo + ', de Ferjusanz: fruta, verdura, patatas y huevos desde Mercamadrid, tres generaciones en el sector.\n\n' +
-    'Nos gustaría conocerles y que prueben nuestro género. Para darle precio a su medida, apunte aquí en un minuto lo que suele pedir a la semana (sin compromiso y sin pedido mínimo):\n' + url + '\n\n¿Quedamos un día? Un saludo.';
+    'Nos gustaría conocerles y que prueben nuestro género. Imagine su primer pedido y le calculamos su tarifa: marque aquí en un minuto qué productos usa y, si quiere, cuánto a la semana (sin compromiso y sin pedido mínimo):\n' + url + '\n\n¿Quedamos un día? Un saludo.';
   const msg = h('textarea', { rows: 8, style: 'width:100%;font-size:15px' }); msg.value = texto;
   const tel = comInput('tel', p.telefono || ''), mail = comInput('email', p.email || '');
   const conPdf = h('input', { type: 'checkbox', checked: true, style: 'width:24px;height:24px;flex:none;margin:0' }), video = h('input', { type: 'file', accept: 'video/*', style: 'width:100%' });
@@ -12050,7 +12050,9 @@ function hojaPrimerPedido(p) {
     const files = []; btn.disabled = true; const t0 = btn.textContent; btn.textContent = '⏳ Preparando…';
     try {
       if (conPdf.checked) { const tipo = h2EsColectivo({ tipo: p.tipo, nombre: p.nombre }) ? 'colectivos' : 'hosteleria';
-        files.push(new File([pdfPresentacion(await presExpandir(presPlantilla(tipo), false), 'Ferjusanz')], 'Ferjusanz-presentacion.pdf', { type: 'application/pdf' })); }
+        const lam = presPlantilla(tipo), ic = lam.findIndex(x => x.t === 'contacto');
+        lam.splice(ic < 0 ? lam.length : ic, 0, { t: 'lista', titulo: 'Imagine su primer pedido y le calculamos su tarifa', puntos: ['Marque en un minuto qué productos usa', 'Si quiere, ponga cuánto a la semana', 'Le mandamos su tarifa a medida, sin compromiso', 'Sin pedido mínimo · Madrid y Segovia', 'Rellénelo con el enlace del mensaje o en ' + URL_TARJETA.replace(/^https:\/\//, '')] });
+        files.push(new File([pdfPresentacion(await presExpandir(lam, false), 'Ferjusanz')], 'Ferjusanz-presentacion.pdf', { type: 'application/pdf' })); }
       if (video.files[0]) files.push(video.files[0]);
       if (!files.length) { toast('Marca la presentación o elige un vídeo.', 'err'); return; }
       if (!(navigator.canShare && navigator.canShare({ files }))) { toast('Este móvil no deja enviar archivos desde aquí. Envía el texto y adjunta la presentación desde Comercial › Presentaciones.', 'err'); return; }
@@ -12078,7 +12080,7 @@ async function ppCalcular(r) {
   const col = h2EsColectivo({ tipo: r.tipo, nombre: r.negocio }), lista = H2_LISTA_GENERAL[col ? 'colectivos' : 'hosteleria'];
   const q = await sb.from('listas_precios_items').select('id,producto_id,precio,coste,unidad').eq('lista_id', lista); if (q.error) throw q.error;
   const lineas = (r.productos || []).map(x => { const t = (q.data || []).find(i => col ? i.producto_id && i.producto_id === x.producto_id : i.id === x.item_id); const precio = t && t.precio != null ? Number(t.precio) : null;
-    return Object.assign({}, x, { precio, coste: t && t.coste != null ? Number(t.coste) : null, importe: precio == null ? null : Math.round(precio * Number(x.cantidad) * 100) / 100 }); });
+    return Object.assign({}, x, { precio, coste: t && t.coste != null ? Number(t.coste) : null, importe: precio == null || x.cantidad == null ? null : Math.round(precio * Number(x.cantidad) * 100) / 100 }); });
   return { col, lineas, total: lineas.reduce((a, l) => a + (l.importe || 0), 0), sinPrecio: lineas.filter(l => l.precio == null) };
 }
 function ppTarjeta(r, recargar) {
@@ -12088,10 +12090,10 @@ function ppTarjeta(r, recargar) {
     r.dias ? h('div', { class: 'sub' }, '🚚 Reparto: ' + r.dias) : null, r.reunion ? h('div', { class: 'sub' }, '🤝 Reunión: ' + r.reunion) : null,
     r.otros ? h('div', { class: 'sub' }, '📝 Otros: ' + r.otros) : null);
   ppCalcular(r).then(c => {
-    const lin = l => l.nombre + ': ' + eur(l.cantidad).replace(/,00$/, '') + ' ' + l.unidad + '/semana';
+    const lin = l => l.nombre + ': ' + (l.cantidad == null ? 'lo usa (sin cantidad)' : eur(l.cantidad).replace(/,00$/, '') + ' ' + l.unidad + '/semana');
     const filas = c.lineas.map(l => h('div', { class: 'fila' }, h('span', {}, lin(l)), h('b', {}, l.precio == null ? 'sin precio' : r.aprobado_at ? eur(l.precio) + ' €/' + l.unidad : '▬▬▬')));
     const aviso = c.sinPrecio.length ? h('div', { class: 'sub', style: 'color:#b36b00;font-weight:600' }, '⚠️ Sin precio en la tarifa ' + (c.col ? 'de colectividades' : 'de hostelería') + ': ' + c.sinPrecio.map(l => l.nombre).join(', ') + '. Ponlo a mano en el mensaje o rellénalo en la tarifa.') : null;
-    const total = h('div', { class: 'fila', style: 'margin-top:4px' }, h('b', {}, 'Total aprox. por semana (sin IVA)'), h('b', {}, r.aprobado_at ? eur(c.total) + ' €' : '▬▬▬'));
+    const total = h('div', { class: 'fila', style: 'margin-top:4px' }, h('b', {}, 'Total aprox. por semana (sin IVA)' + (c.lineas.some(l => l.cantidad == null) ? ', solo lo que lleva cantidad' : '')), h('b', {}, r.aprobado_at ? eur(c.total) + ' €' : '▬▬▬'));
     const tarifa = 'Tarifa ' + (c.col ? 'de colectividades' : 'de hostelería') + '.';
     if (!c.lineas.length) { caja.replaceChildren(h('p', { class: 'sub' }, 'No ha puesto cantidades de la lista: mira «Otros» y llámale.'), aviso); return; }
     if (!r.aprobado_at) {
@@ -12108,7 +12110,7 @@ function ppTarjeta(r, recargar) {
     const ta = h('textarea', { rows: 10, style: 'width:100%;font-size:15px' });
     ta.value = 'Hola' + (r.persona ? ' ' + r.persona : '') + ', gracias por contarnos lo que suele pedir. Esta es su tarifa para ' + r.negocio + ' (precios de esta semana, sin IVA; cambian con el mercado):\n\n' +
       c.lineas.filter(l => l.precio != null).map(l => '• ' + l.nombre + ': ' + eur(l.precio) + ' €/' + l.unidad).join('\n') +
-      '\n\nCon lo que nos ha dicho, saldría por unos ' + eur(c.total) + ' € a la semana. Sin pedido mínimo.' + (r.reunion && !/^Ahora no/.test(r.reunion) ? '\n\n¿Le viene bien que quedemos ' + (/local/.test(r.reunion) ? 'en su local' : /teléfono/.test(r.reunion) ? 'por teléfono' : 'en Mercamadrid') + ' para que pruebe el género?' : '') + '\n\nUn saludo,\n' + (state.perfil ? state.perfil.nombre : '') + ' · Ferjusanz';
+      (c.total > 0 ? '\n\nCon las cantidades que nos ha dicho, saldría por unos ' + eur(c.total) + ' € a la semana.' : '') + '\n\nSin pedido mínimo.' + (r.reunion && !/^Ahora no/.test(r.reunion) ? '\n\n¿Le viene bien que quedemos ' + (/local/.test(r.reunion) ? 'en su local' : /teléfono/.test(r.reunion) ? 'por teléfono' : 'en Mercamadrid') + ' para que pruebe el género?' : '') + '\n\nUn saludo,\n' + (state.perfil ? state.perfil.nombre : '') + ' · Ferjusanz';
     caja.replaceChildren(...filas, total, aviso, h('div', { class: 'sub', style: 'color:#166534;font-weight:600;margin-top:6px' }, '✅ Aprobado el ' + fechaES(String(r.aprobado_at).slice(0, 10)) + '. Revisa el mensaje y envíaselo.'), ta,
       h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' },
         h('button', { class: 'small', onclick: () => abrirWhatsApp(r.telefono, ta.value, 'com.whatsapp') }, '💬 WhatsApp'),
