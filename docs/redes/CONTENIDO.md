@@ -5,7 +5,7 @@ _Estados: 💡 idea · 🎥 grabado · ✂️ editado · 📅 programado · ✅ 
 | Fecha | Red | Tema | Estado | Enlace |
 |---|---|---|---|---|
 | — | Instagram, Facebook, TikTok, Shorts | Reel «Esta semana en Mercamadrid» (el primero) | 💡 idea (falta crear Instagram y Facebook y grabarlo) | — |
-| — | LinkedIn | Fruta por piezas: calibre 24-26 para colegios y residencias (`docs/redes/linkedin/borrador-01.txt`) | ✂️ editado (falta la página de empresa o el «sí» de Fernando) | — |
+| — | LinkedIn | Fruta por piezas: calibre 24-26 para colegios y residencias (`docs/redes/linkedin/borrador-01.txt`) | ✂️ editado (falta crear la página de empresa (aún no hay)) | — |
 
 ## Hecho
 _(nada todavía)_
