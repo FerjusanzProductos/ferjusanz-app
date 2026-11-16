@@ -14,8 +14,8 @@ Había **4 cosas que arreglar**. **Arregladas el 16/11/2026** con el «sí» de 
 | ⚪ Baja | Desde el formulario de la web, alguien que sepa el teléfono de un contacto puede borrar sus notas antiguas mandando dos mensajes largos. | ✅ Ya no se borra nada; como mucho 3 mensajes por contacto al día y 30 contactos nuevos al día. |
 
 ## Otras mejoras (no son fallos)
-- Inicio de sesión: activar la comprobación de contraseñas filtradas y pedir más de 6 caracteres; cambiar la «Site URL» de Supabase (sigue en `localhost`).
-- Cuatro funciones publicadas en Supabase no tienen su código en el repositorio (`recibir-factura`, `copia-archivo`, `whatsapp`, `harvey-v2-pruebas`).
+- ✅ Inicio de sesión (16/11/2026): mínimo **8 caracteres** también en el servidor y «Site URL» con la dirección de cada app (las dos bases). La comprobación de contraseñas filtradas solo existe en **Supabase Pro**: se activa al contratarlo (apuntado en pendientes, «El día del arranque»).
+- ✅ El código de `recibir-factura`, `copia-archivo` y `whatsapp` ya está en `supabase/functions/` (sacado de lo publicado el 16/11/2026). `harvey-v2-pruebas` es la copia de pruebas de `harvey-v2`.
 - La copia de seguridad depende solo de que su clave sea larga y secreta.
 - Cualquier rol (también preparador) puede cambiar tarifas, clientes y productos. Parece querido; si no, se restringe.
 - Los importes cobrados/pendientes por pedido los ven todos los roles en una vista, aunque la tabla de cobros es solo de oficina.

@@ -62,12 +62,11 @@ _Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/arti
 ### 🤖 Claude (sin esperar a nadie)
 - 🟡 Antes de enero: **guías cortas con fotos** para Carmen (facturar, caja, banco, proveedores, informes para Jorge, pedidos por teléfono) y **guion de llamadas** comerciales.
 - 🟡 Revisar cada lunes si sale en el BOE el aplazamiento de Verifactu: **lo hace sola** la tarea automática «Verifactu en el BOE (lunes)» (`trig_01Q2osxJtGHJMTo3oksNiXG7`, lunes 9:47 hora de Madrid, avisa al móvil). Se quita cuando salga o pase el 22/12.
-- ⚪ Seguridad (de la auditoría del 16/11/2026, `docs/AUDITORIA_SEGURIDAD.md`): subir al repositorio el código de `recibir-factura`, `copia-archivo` y `whatsapp`; y mejoras del inicio de sesión (contraseñas filtradas, mínimo de caracteres, «Site URL»).
 - ⚪ Hacer más pequeño `public/index.html`.
 
 ### 🚀 El día del arranque
 - Contar y, con el «sí» de Fernando, borrar lo de prueba de la base real (hoy no hay nada; los pedidos fijos y facturas de proveedores **no** se borran).
-- Contratar **Supabase Pro** (≈ 23 €/mes).
+- Contratar **Supabase Pro** (≈ 23 €/mes). Al contratarlo, activar la **comprobación de contraseñas filtradas** (Authentication › Policies; solo existe en Pro).
 - Tabla «último nº / siguiente nº» de cada serie de albaranes.
 - Actualizar la regla 5 de `CLAUDE.md` y `docs/ESTADO_ACTUAL.md`.
 - Activar el **seguimiento comercial** (rama `seguimiento-app`, SQL `20261111c_seguimiento_diario.sql`) y quitar la tarea `trig_016V26ajMMcPLQ3Zvg1C2dw2`.
