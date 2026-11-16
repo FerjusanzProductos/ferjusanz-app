@@ -37,6 +37,7 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - 🟡 Preguntar al **banco** qué fichero dan (Norma 43 o Excel) y si hay más de una cuenta; subir el primero real en Más → «🏦 Banco».
 - 🟡 Captar clientes: revisar y enviar los **correos a los 8 prospectos** (https://claude.ai/artifact/Voa8zmukh1GScZ81XYJDaH); **Coffee, Books and Vibes**: llamar el lunes 16/11; probar la **tarjeta virtual** con un cliente; revisar `/nuevos-clientes` y grabar el **vídeo de 1 minuto**.
 - 🔴 **Tarifas para el «primer pedido»**: la de **colectividades** solo tiene **3 de 62 precios** (colegios y residencias salen «sin precio») y conviene repasar la de **hostelería** (65 de 75). Comercial › 🤵 Harvey › 💶 Tarifas nuevas → margen → «✅ Aplicar»; lo que no se calcule solo (cajas, manojos, docenas), a mano en Comercial › 📄 Listas.
+- 🟡 Quitar «cosechas propias» de la presentación guardada **«Presentación Hostelería (copia)»** (Comercial › 🎬 Presentaciones › ✏️ Editar) o borrarla si ya no se usa.
 - 🟡 Probar la tarjeta nueva (**«Imagine su primer pedido…»**) mandándosela a un posible cliente de verdad (desde su ficha: «🧮 Pedirle su primer pedido y calcular tarifa»).
 - 🟡 Decidir: ¿juntar en el menú Cobros y Deudas (y las de caja)?; ¿se queda o se quita **becario-mods**?
 - 🟡 Activar en GitLab la copia automática a GitHub (Settings → Repository → Mirroring). Mientras, la hace Claude.
