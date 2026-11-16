@@ -16,7 +16,7 @@ Sin él no se puede enviar nada a Hacienda desde la app ni firmar la declaració
 
 ## 🔴 3. Clientes «sin IVA» (antes del 30/11)
 - Todo tiene que ir facturado. Propuesta: **bajar el precio** a esos clientes y que la factura salga con su base y su IVA. ¿Le parece bien?
-- Repasar con él la lista de esos clientes (y si «Bar Delfín» y «Bar Delfines» son el mismo).
+- Repasar con él la lista de esos clientes («Bar Delfín» y «Bar Delfines» son clientes distintos).
 
 ## 🟡 4. Cosas que faltan por rellenar o decidir
 1. **Factura por entrega o una al mes** por cliente (la app hace una al mes con todos los albaranes).

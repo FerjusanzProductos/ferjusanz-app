@@ -45,7 +45,7 @@ _Actualizado el 11/11/2026. Para leer de un vistazo y para contárselo a Jorge. 
 ## 5. Pendientes
 ### App
 - 🟡 Confirmar formatos: Mango, Bote Garbanzos, Nabo, Cogollos de Tudela, Fresón 1ª.
-- 🟡 Lista completa de clientes sin IVA y si «Bar Delfín» = «Bar Delfines».
+- 🟡 Lista completa de clientes sin IVA.
 - 🟡 Último número de albarán de Golden (serie F) al empezar de verdad.
 - ⏸ Seguimiento comercial dentro de la app (hecho en pruebas, espera a usar la app de verdad).
 - 🔴 Copia de seguridad de fotos, PDF y audios.

@@ -24,7 +24,7 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 ## 📱 LA APP
 ### 👤 Fernando
 - 🔴 Avisar **2-3 días antes** del día en que se empieza a usar la app de verdad.
-- 🔴 Antes del 30/11: decidir con Jorge los **clientes «sin IVA»** (todo tiene que ir facturado; si se quiere, se baja el precio). Sin esto no se puede firmar la declaración ni facturar desde la app. Y confirmar la lista y si «Bar Delfín» = «Bar Delfines».
+- 🔴 Antes del 30/11: decidir con Jorge los **clientes «sin IVA»** (todo tiene que ir facturado; si se quiere, se baja el precio). Sin esto no se puede firmar la declaración ni facturar desde la app. Y confirmar la lista.
 - 🔴 Sacar de Golden la **lista de clientes en Excel** (código, nombre, NIF, dirección, CP, localidad) para cargar los NIF que faltan.
 - 🟡 Decir el **último nº de albarán de Golden** (serie F, y si hay más series).
 - 🟡 Probar «**He olvidado la contraseña**» con su correo y avisar a Jorge Ruiz Onetti de que ya tiene usuario.
