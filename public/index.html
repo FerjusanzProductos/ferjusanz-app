@@ -12060,7 +12060,7 @@ function hojaPrimerPedido(p) {
   let modo = 'msg';
   const MODOS = [['msg', '💬 Solo mensaje'], ['ambos', '💬📎 Mensaje + presentación'], ['pres', '📎 Solo presentación']];
   const chips = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:6px 0' }), opPres = h('div', {}), paso2 = h('div', {});
-  const pintar = () => { chips.replaceChildren(...MODOS.map(([k, t]) => h('button', { class: 'chip' + (modo === k ? ' on' : ''), style: 'min-height:44px', onclick: () => { modo = k; paso2.replaceChildren(); pintar(); } }, t)));
+  const pintar = () => { chips.replaceChildren(...MODOS.map(([k, t]) => h('button', { class: 'chip' + (modo === k ? ' on' : ''), style: 'min-height:44px', onclick: () => { modo = k; paso2.replaceChildren(); pintar(); preparar(); } }, t)));
     opPres.hidden = modo === 'msg'; };
   opPres.append(h('label', { style: 'display:flex;gap:8px;align-items:center;min-height:44px' }, conLista, '💶 Añadir la lista de precios ' + (tipo === 'colectivos' ? '(colectividades)' : '(hostelería)') + ' al final'),
     comCampo('🎥 Añadir un vídeo (opcional, de la galería)', video));
@@ -12072,14 +12072,16 @@ function hojaPrimerPedido(p) {
     if (video.files[0]) files.push(video.files[0]);
     return files;
   };
-  const compartir = async (btn, texto) => {
-    btn.disabled = true; const t0 = btn.textContent; btn.textContent = '⏳ Preparando…';
-    try {
-      const files = await archivos();
-      if (!(navigator.canShare && navigator.canShare({ files }))) { toast('Este móvil no deja enviar archivos desde aquí. Descárgala en Comercial › Presentaciones.', 'err'); return; }
-      await navigator.share(Object.assign({ files, title: asunto }, texto ? { text: texto } : {}));
-    } catch (e) { if (!e || e.name !== 'AbortError') toast(msgErr(e), 'err'); }
-    finally { btn.disabled = false; btn.textContent = t0; }
+  /* El PDF se prepara ANTES de pulsar: el móvil solo deja abrir «Compartir» justo al pulsar, y prepararlo tarda (más con la lista). */
+  let listos = null, preparando = null;
+  const preparar = () => { listos = null; if (modo === 'msg') return; const pr = preparando = archivos().then(f => { if (preparando === pr) listos = f; }).catch(e => { if (preparando === pr) toast('No se pudo preparar la presentación: ' + msgErr(e), 'err'); }); };
+  conLista.addEventListener('change', preparar); video.addEventListener('change', preparar);
+  const compartir = (btn, texto) => {
+    if (!listos) { toast('Preparando la presentación… vuelve a pulsar en un momento.', 'ok'); if (!preparando) preparar(); return; }
+    const files = listos, datos = Object.assign({ files }, texto ? { title: asunto, text: texto } : {});
+    const bajar = () => { files.forEach(f => comDescargar(f, f.name)); toast('Se ha descargado la presentación: adjúntala en WhatsApp o en el correo desde Descargas (📎).', 'ok'); };
+    if (!(navigator.canShare && navigator.canShare({ files }))) { bajar(); return; }
+    navigator.share(datos).catch(e => { if (!e || e.name !== 'AbortError') bajar(); });
   };
   const porWhatsApp = (pkg, btn) => {
     if (modo === 'pres') { compartir(btn); return; }
