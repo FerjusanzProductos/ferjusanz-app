@@ -12270,13 +12270,13 @@ async function presVerPdf(laminas) {
   catch (e) { caja.replaceChildren(h('p', { style: 'color:#fff' }, 'No se pudo preparar: ' + msgErr(e))); }
 }
 /* Guion para el vídeo (Fernando: «que influya psicológicamente… que los primeros segundos se queden en el vídeo y no se vayan»;
-   «no contradigas lo que he editado»). Gancho con pregunta en los 3 primeros segundos, prueba (40 años, 3.ª generación),
+   «no contradigas lo que he editado»). Gancho con pregunta en los 3 primeros segundos, prueba (60 años, 3.ª generación),
    facilidad (un minuto), sin riesgo (sin compromiso, sin pedido mínimo) y petición clara al final. Usa sus frases. */
 function pvGuion(d, clave) {
   const ex = clave.startsWith('ex-'), col = ppBase(clave) === 'colectivos', t = (d.titulo || '').toLowerCase();
   if (d.t === 'portada') return ex ? 'Hace tiempo que no trabajamos juntos… y queremos volver a ganarnos su confianza. Soy Fernando, de Ferjusanz Productos.' : '¿Y si sus patatas, fruta o verduras le costaran menos sin bajar la calidad? Quizás no esté disponiendo de un buen servicio… o quizás no nos conozca. ¡Somos Ferjusanz! Soy Fernando, y en un minuto se lo cuento.'; // gancho de Fernando (16/11/2026), en usted como el resto
   if (d.t === 'contacto') return ex ? 'Y debe saber que no tenemos pedido mínimo. Cualquier consulta, estamos a su disposición. Nos encantará volver a servirle.' : 'Y debe saber que no tenemos pedido mínimo. No pierde nada por comparar: estamos a su disposición.';
-  if (d.t === 'texto' || /qui[eé]nes somos/.test(t)) return ex ? 'Seguimos siendo la misma empresa familiar que usted ya conoce: tercera generación y más de cuarenta años en el sector.' : col ? 'Somos una empresa familiar, tercera generación y más de cuarenta años sirviendo a colegios y residencias.' : 'Somos una empresa familiar, tercera generación y más de cuarenta años sirviendo a cocinas como la suya.';
+  if (d.t === 'texto' || /qui[eé]nes somos/.test(t)) return ex ? 'Seguimos siendo la misma empresa familiar que usted ya conoce: tercera generación y más de sesenta años en el sector.' : col ? 'Somos una empresa familiar, tercera generación y más de sesenta años sirviendo a colegios y residencias.' : 'Somos una empresa familiar, tercera generación y más de sesenta años sirviendo a cocinas como la suya.';
   if (d.enlace) return ex ? 'Como ya hemos trabajado juntos, nos hacemos una idea de lo que necesita: no hace falta que rellene nada.' : 'Ahora, lo más fácil: imagine cómo sería su primer pedido, márquelo en un minuto y le enviamos su tarifa. Si le interesa, tan solo tiene que decírnoslo.';
   if (/vuelva a confiar/.test(t)) return 'Seguimos trabajando con las mismas ganas: calidad homogénea, pedido tras pedido, y la mejor relación calidad-precio para que salga beneficiado.';
   if (/por qu[eé]/.test(t)) return 'Trabajamos con agricultores de confianza y elegimos el género cada mañana en Mercamadrid. Por eso destacamos por la relación calidad-precio.';
@@ -12442,7 +12442,7 @@ async function comVer(lista, soloRecs) {
 const PRES_TIPOS = { portada: ['🎬', 'Portada'], texto: ['📝', 'Quiénes somos / texto'], lista: ['✅', 'Puntos (cómo trabajamos)'], productos: ['🥬', 'Productos (con fotos)'], ofertas: ['🏷️', 'Ofertas de la semana'], precios: ['💶', 'Lista de precios'], contacto: ['📞', 'Contacto'] };
 const PRES_MODELOS = { hosteleria: 'Hostelería (bares y restaurantes)', colectivos: 'Colectividades (colegios, residencias, escuelas infantiles)' };
 const PRES_CONTACTO = ['Debe saber que no tenemos pedido mínimo.', 'Habla directamente con tu comercial: sin intermediarios, sin centralitas.', EMPRESA.tels, EMPRESA.dir, EMPRESA.email];
-const PRES_CIFRAS = [['3ª', 'generación familiar'], ['Mercamadrid', 'nuestro puesto'], ['+40', 'años en el sector'], ['+200', 'productos frescos']];
+const PRES_CIFRAS = [['3ª', 'generación familiar'], ['Mercamadrid', 'nuestro puesto'], ['+60', 'años en el sector'], ['+200', 'productos frescos']];
 const presPlantilla = (tipo) => {
   const hos = tipo !== 'colectivos';
   return hos ? [
