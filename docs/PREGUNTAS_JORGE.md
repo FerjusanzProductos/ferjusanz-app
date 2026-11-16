@@ -28,4 +28,4 @@ Sin él no se puede enviar nada a Hacienda desde la app ni firmar la declaració
 - Ya tiene **usuario en la app**. Para entrar: pantalla de entrada → «**He olvidado la contraseña**» con su correo (abogadoonetti@hotmail.com) y elige la suya. _(Antes, pruébalo tú una vez con tu correo.)_
 - Desde la app le llegan por correo los **informes del mes** (botón «📧 Enviar a Jorge por correo»), del día 1 al 10.
 - Ya contestó (no repetir): límite de 1.000 € en efectivo = **cada albarán**; concepto de compras = «Compra de mercaderías»; FERJUSANZ **no está en el SII**.
-- Contestó el 16/11: facturas de **diciembre en Golden con fecha 31/12/2026** ✅ y se sigue facturando en Golden hasta que se empiece con la app; las facturas se guardan **6 años**; le llegó y **pudo leer el correo del trimestre**; lo de **Verifactu** está bien como se le contó.
+- Contestó el 16/11: facturas de **diciembre en Golden con fecha 31/12/2026** ✅ y se sigue facturando en Golden hasta que se empiece con la app; las facturas se guardan **6 años**; le llegó y **pudo leer el correo del trimestre**; lo de **Verifactu** está bien como se le contó (de palabra; Fernando: vale como si fuera por escrito).

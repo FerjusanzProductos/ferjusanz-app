@@ -13655,7 +13655,7 @@ const LJ_CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256;
 function ljZip(files) {
   const enc = new TextEncoder(); const partes = [], central = []; let off = 0;
   files.forEach(([nombre, txt]) => {
-    const nm = enc.encode(nombre), d = enc.encode(txt); let crc = 0xFFFFFFFF; for (let i = 0; i < d.length; i++) crc = LJ_CRC[(crc ^ d[i]) & 255] ^ (crc >>> 8); crc = (crc ^ 0xFFFFFFFF) >>> 0;
+    const nm = enc.encode(nombre), d = typeof txt === 'string' ? enc.encode(txt) : txt; let crc = 0xFFFFFFFF; for (let i = 0; i < d.length; i++) crc = LJ_CRC[(crc ^ d[i]) & 255] ^ (crc >>> 8); crc = (crc ^ 0xFFFFFFFF) >>> 0;
     const lh = new DataView(new ArrayBuffer(30)); [[0, 0x04034b50, 4], [4, 20, 2], [6, 0x0800, 2], [8, 0, 2], [10, 0, 2], [12, 33, 2], [14, crc, 4], [18, d.length, 4], [22, d.length, 4], [26, nm.length, 2], [28, 0, 2]].forEach(([o, v, b]) => b === 4 ? lh.setUint32(o, v, true) : lh.setUint16(o, v, true));
     const ch = new DataView(new ArrayBuffer(46)); [[0, 0x02014b50, 4], [4, 20, 2], [6, 20, 2], [8, 0x0800, 2], [10, 0, 2], [12, 0, 2], [14, 33, 2], [16, crc, 4], [20, d.length, 4], [24, d.length, 4], [28, nm.length, 2], [30, 0, 2], [32, 0, 2], [34, 0, 2], [36, 0, 2], [38, 0, 4], [42, off, 4]].forEach(([o, v, b]) => b === 4 ? ch.setUint32(o, v, true) : ch.setUint16(o, v, true));
     partes.push(new Uint8Array(lh.buffer), nm, d); central.push(new Uint8Array(ch.buffer), nm); off += 30 + nm.length + d.length;
@@ -14453,7 +14453,7 @@ function vistaCopia() {
   };
   $app.replaceChildren(shell('Copia de seguridad', h('div', {},
     h('p', {}, 'Descarga un archivo con todos los datos de Ferjusanz (clientes, productos, pedidos, cobros, compras, etc.). Si algún día algo se borra o se rompe, con este archivo se pueden recuperar.'),
-    info, btn, estado,
+    info, btn, estado, copiaFacturasCard(),
     // Solo app de PRUEBAS: la función solo existe en la base de pruebas (20261122a_contadores_pruebas.sql)
     ES_PRUEBAS && !PRACTICA ? h('div', { class: 'card', style: 'margin-top:12px;border-color:#ea580c' }, h('b', {}, '🔄 Poner contadores de prueba a cero'),
       h('div', { class: 'sub' }, 'Guarda una copia de lo ensayado y borra los pedidos, albaranes, cobros y cargas de prueba que no estén en una factura. El próximo albarán vuelve a ser PRUEBA-F 0000001. Las facturas de prueba no se borran (no se puede). Los previstos de los pedidos fijos se quedan.'),
@@ -14464,6 +14464,75 @@ function vistaCopia() {
         const d = r.data; toast('Hecho: ' + d.pedidos + ' pedidos y ' + d.albaranes + ' albaranes quitados. Próximo albarán ' + d.siguiente_albaran + '.', 'ok');
       } }, 'Poner contadores a cero')) : null,
     h('div', { class: 'card', style: 'margin-top:12px' }, h('b', {}, 'Cómo guardarla bien'), h('div', { class: 'sub' }, '1) Hazla una vez por semana (la app te avisa con un «!» si pasan más de 7 días).  2) Se guarda en Descargas del móvil: súbela también a Google Drive o envíatela por correo.  3) No la compartas: contiene datos de clientes.  4) Las fotos de perfil y los archivos de facturas y pedidos escaneados no van dentro de este archivo.'))), { volver: volverIni })); renderBanner();
+}
+/* ===== Guardar las facturas de un año o trimestre (hay que conservarlas 6 años: Jorge, 16/11/2026) =====
+   «Facturas de la app»: ZIP con el PDF de cada factura emitida, el archivo de cada factura de proveedor y los listados de ventas y compras de Jorge.
+   «Histórico de Golden»: ZIP con las facturas y líneas de Golden importadas en la app (CSV que abre Excel). Solo lee: no cambia nada. */
+function copiaFacturasCard() {
+  let pest = 'app'; const anoAct = new Date().getFullYear();
+  const ano = h('select', {}, Array.from({ length: 7 }, (_, i) => anoAct - i).map(a => h('option', { value: a }, String(a))));
+  const per = h('select', {}, [['', 'Todo el año'], ['1', '1er trimestre'], ['2', '2º trimestre'], ['3', '3er trimestre'], ['4', '4º trimestre']].map(([v, t]) => h('option', { value: v }, t)));
+  const tabs = h('div', { style: 'display:flex;gap:6px;margin:8px 0' }), expl = h('div', { class: 'sub' }), estado = h('div', {});
+  const btn = h('button', { class: 'guardar', style: 'width:100%;margin-top:8px' }, '📦 Descargar');
+  const pinta = () => {
+    tabs.replaceChildren(...[['app', '🧾 Facturas de la app'], ['golden', '📚 Histórico de Golden']].map(([k, t]) => h('button', { class: k === pest ? 'small' : 'ghost small', style: 'flex:1', onclick: () => { pest = k; pinta(); } }, t)));
+    expl.textContent = pest === 'app' ? 'Descarga un archivo ZIP con el PDF de cada factura emitida, la factura de cada proveedor tal como llegó y los listados de ventas y compras (los de Jorge).'
+      : 'Descarga un archivo ZIP con las facturas de Golden Soft que hay en la app (cabeceras y líneas, en CSV: se abre con Excel).';
+    estado.replaceChildren();
+  };
+  const csv = filas => '﻿' + filas.map(f => f.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(';')).join('\r\n');
+  const limpio = s => String(s == null ? '' : s).replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 60);
+  const sinTabla = e => /PGRST205|42P01|does not exist|schema cache/i.test((e && (e.code + ' ' + e.message)) || '');
+  btn.onclick = async () => {
+    if (!navigator.onLine) { toast('Sin conexión: hace falta internet', 'err'); return; }
+    const a = Number(ano.value), t = Number(per.value), dos = n => String(n).padStart(2, '0');
+    const desde = a + '-' + dos(t ? t * 3 - 2 : 1) + '-01', fin = a + '-' + dos(t ? t * 3 : 12) + '-' + dos(new Date(a, t ? t * 3 : 12, 0).getDate());
+    const nomPer = a + (t ? '-T' + t : ''), paso = s => estado.replaceChildren(h('div', { class: 'sub' }, '⏳ ' + s));
+    const files = [], avisos = []; let resumen = '';
+    btn.disabled = true;
+    try {
+      if (pest === 'golden') {
+        paso('Leyendo las facturas de Golden…');
+        const fs = await gesTodas(() => sb.from('golden_facturas').select('*').gte('fecha', desde).lte('fecha', fin).order('fecha').order('numero'));
+        if (!fs.length) throw new Error('No hay facturas de Golden en la app para ' + nomPer + '.');
+        const nums = [...new Set(fs.map(f => f.numero))], ls = [];
+        for (let i = 0; i < nums.length; i += 150) { paso('Leyendo las líneas… ' + Math.min(i + 150, nums.length) + ' de ' + nums.length); ls.push(...await gesTodas(() => sb.from('golden_lineas').select('*').in('factura_numero', nums.slice(i, i + 150)).order('factura_numero').order('orden'))); }
+        const C = ['numero', 'serie', 'fecha', 'tipo', 'cliente_codigo', 'cliente_nombre', 'bruto', 'descuentos', 'gastos', 'base', 'total', 'borrador', 'n_lineas'];
+        const L = ['factura_numero', 'orden', 'albaran', 'producto_codigo', 'descripcion', 'cantidad', 'precio', 'iva', 'importe'];
+        const val = (k, v) => k === 'fecha' ? fechaES(v) : typeof v === 'number' ? String(v).replace('.', ',') : typeof v === 'boolean' ? (v ? 'Sí' : 'No') : v;
+        files.push(['golden-facturas-' + nomPer + '.csv', csv([C, ...fs.map(f => C.map(k => val(k, f[k])))])], ['golden-lineas-' + nomPer + '.csv', csv([L, ...ls.map(l => L.map(k => val(k, l[k])))])]);
+        resumen = fs.length + ' facturas de Golden y ' + ls.length + ' líneas';
+      } else {
+        paso('Preparando los listados de ventas y compras…');
+        for (const [fn, nom] of [[ljVentas, 'ventas'], [ljCompras, 'compras']]) { try { files.push(['listado-' + nom + '-' + nomPer + '.csv', csv(ljFilasCSV(await fn(desde, fin)))]); } catch (e) { avisos.push('Listado de ' + nom + ': ' + msgErr(e)); } }
+        let em = []; try { em = await gesTodas(() => sb.from('sif_facturas').select('id,codigo').gte('fecha', desde).lte('fecha', fin).order('fecha').order('numero')); } catch (e) { if (!sinTabla(e)) avisos.push('Facturas emitidas: ' + msgErr(e)); }
+        for (let i = 0; i < em.length; i++) { paso('Factura emitida ' + (i + 1) + ' de ' + em.length + '…'); try { const d = await sifCargar(em[i].id); files.push(['emitidas/' + limpio(d.f.codigo) + '.pdf', sifPdf(d)]); } catch (e) { avisos.push(em[i].codigo + ': ' + msgErr(e)); } }
+        paso('Buscando las facturas de proveedores…');
+        const rec = await gesTodas(() => sb.from('facturas_recibidas').select('id,fecha_factura,recibido_en,numero_factura,ruta,nombre,proveedores(nombre)').not('ruta', 'is', null)
+          .or('and(fecha_factura.gte.' + desde + ',fecha_factura.lte.' + fin + '),and(fecha_factura.is.null,recibido_en.gte.' + desde + ',recibido_en.lte.' + fin + 'T23:59:59)').order('fecha_factura'));
+        let nRec = 0;
+        for (let i = 0; i < rec.length; i++) {
+          const f = rec[i]; paso('Factura de proveedor ' + (i + 1) + ' de ' + rec.length + '…');
+          try {
+            const r = await sb.storage.from('facturas').download(f.ruta); if (r.error) throw r.error;
+            const ext = (/\.[a-z0-9]{2,5}$/i.exec(f.ruta) || [''])[0].toLowerCase();
+            files.push(['recibidas/' + String(f.fecha_factura || f.recibido_en || '').slice(0, 10) + '_' + limpio((uno(f.proveedores) || {}).nombre || 'proveedor') + '_' + limpio(f.numero_factura || f.id) + '_' + (i + 1) + ext, new Uint8Array(await r.data.arrayBuffer())]); nRec++;
+          } catch (e) { avisos.push('Factura de proveedor ' + (f.numero_factura || f.nombre || f.id) + ': ' + msgErr(e)); }
+        }
+        resumen = em.length + ' facturas emitidas y ' + nRec + ' de proveedores';
+      }
+      files.push(['LEEME.txt', 'FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. · NIF B87446670\r\nFacturas de ' + nomPer + ' (' + (pest === 'golden' ? 'histórico de Golden Soft' : 'emitidas en la app y de proveedores') + '), descargadas el ' + fechaES(hoy()) + ' por ' + state.perfil.nombre + '.\r\n' + resumen + '.\r\nHay que conservarlas 6 años: guárdalo en Google Drive y en otro sitio más.' + (avisos.length ? '\r\n\r\nNo se pudieron incluir:\r\n' + avisos.join('\r\n') : '') + '\r\n']);
+      const nombre = 'ferjusanz-facturas-' + (pest === 'golden' ? 'golden-' : '') + nomPer + '.zip', zip = ljZip(files);
+      const lk = h('a', { href: URL.createObjectURL(new Blob([zip], { type: 'application/zip' })), download: nombre }); document.body.append(lk); lk.click(); lk.remove();
+      estado.replaceChildren(h('div', { class: 'card', style: 'background:#dcfce7;border-color:#22c55e' }, '✔ Descargado: ' + nombre + ' · ' + resumen + ' (' + Math.round(zip.length / 1048576 * 10) / 10 + ' MB). Súbelo a Google Drive.'),
+        avisos.length ? h('div', { class: 'card', style: 'background:#fef9c3;border-color:#eab308' }, 'No incluido: ' + avisos.join('; ')) : null);
+    } catch (e) { estado.replaceChildren(h('div', { class: 'card', style: 'background:#fee2e2;border-color:#ef4444' }, 'No se ha podido: ' + msgErr(e))); }
+    btn.disabled = false;
+  };
+  pinta();
+  return h('div', { class: 'card', style: 'margin-top:12px' }, h('b', {}, '📦 Guardar facturas del año'),
+    h('div', { class: 'sub' }, 'Las facturas hay que guardarlas 6 años. Hazlo cada trimestre (o una vez al año) y sube el archivo a Google Drive. Si el año entero tarda mucho, hazlo por trimestres.'),
+    tabs, expl, h('div', { style: 'display:flex;gap:8px;margin-top:8px' }, ano, per), btn, estado);
 }
 /* ===== Productos que llegan en las facturas y no están dados de alta: lista para pasar a Golden Soft y botón para crearlos aquí ===== */
 async function vistaSinReconocer() {
