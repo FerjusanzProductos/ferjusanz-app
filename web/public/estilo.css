@@ -506,3 +506,13 @@ a:active, button:active, summary:active { opacity: .75; }
 .pp-audio audio { width: 100%; }
 .primer-pedido .pp-subir { font-weight: 400; font-size: .9rem; }
 .primer-pedido .pp-subir input { min-height: 0; border: 0; padding: 4px 0; background: none; }
+/* Nota «mejor calidad-precio» en cada línea, a la derecha de la unidad (16/11/2026) */
+.primer-pedido .pp-fila small { display: flex; flex-direction: column; line-height: 1.15; }
+.pp-cp { font-style: normal; font-size: .68rem; color: #1d6b34; font-weight: 600; margin-top: 2px; }
+.pp-cp-nota { margin: 0; padding: 10px 12px; border-left: 4px solid #1d6b34; background: #eef6ef; color: #1d6b34; font-weight: 600; }
+.primer-pedido .pp-fila { grid-template-columns: 1fr 74px 86px; gap: 6px; }
+.pp-cp { white-space: nowrap; font-size: .66rem; }
+.primer-pedido fieldset { grid-template-columns: minmax(0, 1fr); }
+.primer-pedido .pp-fila { grid-template-columns: minmax(0, 1fr) 66px 80px; }
+.primer-pedido .pp-usa span { overflow-wrap: anywhere; }
+.primer-pedido .pp-fila input[type=text] { padding: 6px; text-align: center; }

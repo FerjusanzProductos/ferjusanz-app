@@ -94,12 +94,12 @@ async function tarjetaConProductos(html, url, env) {
     const r = await rpc(env, "primer_pedido_productos");
     const lista = r.ok ? await r.json() : [];
     // Por familias (desplegables) para que no sea una lista eterna; el buscador abre las que coinciden.
-    const fila = (x) => `<div class="pp-fila"><label class="pp-usa"><input type="checkbox" name="u_${esc(x.id)}" value="1"><span>${esc(x.nombre)}</span></label><input name="c_${esc(x.id)}" type="text" inputmode="decimal" maxlength="8" pattern="[0-9]{1,5}([.,][0-9]{1,2})?" title="Solo números, por ejemplo 2 o 2,5" placeholder="¿cuánto?" aria-label="${esc(x.nombre)}: cantidad por semana (opcional)"><small>${esc(x.unidad || "")}</small></div>`;
+    const fila = (x) => `<div class="pp-fila"><label class="pp-usa"><input type="checkbox" name="u_${esc(x.id)}" value="1"><span>${esc(x.nombre)}</span></label><input name="c_${esc(x.id)}" type="text" inputmode="decimal" maxlength="8" pattern="[0-9]{1,5}([.,][0-9]{1,2})?" title="Solo números, por ejemplo 2 o 2,5" placeholder="¿cuánto?" aria-label="${esc(x.nombre)}: cantidad por semana (opcional)"><small>${esc(x.unidad || "")}<em class="pp-cp">mejor<br>calidad-precio</em></small></div>`;
     // Arriba, los típicos de hostelería (dest); el resto, plegado por familias y con el buscador, para no saturar.
     const dest = lista.filter((x) => x.dest != null).sort((a, b) => a.dest - b.dest), resto = lista.filter((x) => x.dest == null);
     const familias = [];
     for (const x of resto) { const f = familias.find((g) => g[0] === x.familia); if (f) f[1].push(x); else familias.push([x.familia, [x]]); }
-    if (lista.length) filas = `<div class="pp-lista">${dest.map(fila).join("")}</div>` +
+    if (lista.length) filas = `<p class="pp-cp-nota">✔ Por nuestra experiencia, siempre le ofrecemos la mejor relación calidad-precio para que salga beneficiado.</p><div class="pp-lista">${dest.map(fila).join("")}</div>` +
       `<input id="pp-buscar" type="search" placeholder="¿Usa algo más? Búsquelo aquí…" aria-label="Buscar otro producto">` +
       `<details id="pp-todos"><summary>Ver todos los productos (${lista.length})</summary><div class="pp-lista">` +
       familias.map(([f, xs]) => `<details class="pp-familia"><summary>${esc(f)} <small>(${xs.length})</small></summary>${xs.map(fila).join("")}</details>`).join("") + `</div></details>`;
