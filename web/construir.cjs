@@ -607,7 +607,7 @@ ${TEMAS.map(t => { const l = articulos.filter(a => temaDe(a) === t); return l.le
   <div class="bloque-cabeza"><div><h2>${t.nombre}</h2></div></div>
   <div class="articulos">${l.map(tarjetaArticulo).join('\n')}</div>
 </div></section>` : ''; }).join('\n')}`;
-  return plantilla({ ruta: '/blog/', titulo: 'Guías de fruta y verdura para hostelería, colegios y residencias en Madrid | Ferjusanz', descripcion: 'Guías para cocinas profesionales de Madrid: menús escolares y de residencias, temporada, cuánto pedir y cómo conservar la fruta y la verdura.', cuerpo, datos: [m.datos] });
+  return plantilla({ ruta: '/blog/', titulo: 'Guías de fruta y verdura para cocinas profesionales | Ferjusanz', descripcion: 'Guías para cocinas profesionales de Madrid: menús escolares y de residencias, temporada, cuánto pedir y cómo conservar la fruta y la verdura.', cuerpo, datos: [m.datos] });
 }
 
 function articulo(p) {
@@ -812,23 +812,23 @@ const NUEVAS = [
 // Zonas sacadas de dónde están los clientes reales (localidad y código postal en la base). Sin nombres de clientes.
 // Solo condiciones confirmadas por Fernando (REGLAS_INTERNAS): sin pedido mínimo, reparto en Madrid y Segovia, camiones y furgonetas refrigerados.
 const PAGINAS_ZONA = [
-  { slug: 'hortaleza-sanchinarro-las-tablas-valdebebas', corto: 'Hortaleza, Sanchinarro, Las Tablas y Valdebebas', foto: F + '2023/03/Tipos-de-guarniciones-de-verduras.jpg',
+  { slug: 'hortaleza-sanchinarro-las-tablas-valdebebas', tit: 'Hortaleza y Las Tablas', corto: 'Hortaleza, Sanchinarro, Las Tablas y Valdebebas', foto: F + '2023/03/Tipos-de-guarniciones-de-verduras.jpg',
     sitios: ['Hortaleza', 'Canillas', 'Pinar del Rey', 'Sanchinarro', 'Las Tablas', 'Valdebebas'],
     intro: 'Es nuestra zona de casa: la oficina está en la calle Carare (28033) y buena parte de nuestros clientes de hostelería están en Hortaleza, Sanchinarro, Las Tablas y Valdebebas.',
     extra: 'En los barrios nuevos del norte abren cada año restaurantes, cafeterías y escuelas infantiles. Si acaba de abrir, le ayudamos a montar el primer pedido con lo que de verdad va a gastar, sin pedido mínimo.' },
-  { slug: 'chamartin-ciudad-lineal-tetuan-san-blas', corto: 'Chamartín, Ciudad Lineal, Tetuán y San Blas', foto: '/fotos/mango-y-papaya.jpg',
+  { slug: 'chamartin-ciudad-lineal-tetuan-san-blas', tit: 'Chamartín y Ciudad Lineal', corto: 'Chamartín, Ciudad Lineal, Tetuán y San Blas', foto: '/fotos/mango-y-papaya.jpg',
     sitios: ['Chamartín', 'Prosperidad', 'Ciudad Lineal', 'Ventas', 'Tetuán', 'San Blas'],
     intro: 'Servimos a restaurantes, bares, cafeterías y comedores de Chamartín, Ciudad Lineal, Tetuán y San Blas, muy cerca de nuestra oficina de la calle Carare.',
     extra: 'Son barrios de menú del día y de mucho movimiento a mediodía: verdura para guarniciones y cremas, patata para freír, cebolla y ajo pelados, y fruta de postre, todo en un mismo pedido.' },
-  { slug: 'moratalaz-vicalvaro-coslada-san-fernando', corto: 'Moratalaz, Vicálvaro, Coslada y San Fernando de Henares', foto: F + '2020/09/distribuidor-patatas-beneficios.jpg',
+  { slug: 'moratalaz-vicalvaro-coslada-san-fernando', tit: 'Moratalaz y Coslada', corto: 'Moratalaz, Vicálvaro, Coslada y San Fernando de Henares', foto: F + '2020/09/distribuidor-patatas-beneficios.jpg',
     sitios: ['Moratalaz', 'Vicálvaro', 'Valdebernardo', 'Coslada', 'San Fernando de Henares'],
     intro: 'Llevamos patatas, frutas, verduras y huevos a hostelería y colectividades de Moratalaz, Vicálvaro, Coslada y los polígonos de San Fernando de Henares.',
     extra: 'En los polígonos hay comedores de empresa y caterings que necesitan volumen y regularidad. Ajustamos el pedido a sus servicios de la semana.' },
-  { slug: 'pozuelo-boadilla-las-rozas', corto: 'Pozuelo, Boadilla y Las Rozas', foto: F + '2020/09/frutas-verduras-comedor-colegio.jpg',
+  { slug: 'pozuelo-boadilla-las-rozas', tit: 'Pozuelo y Las Rozas', corto: 'Pozuelo, Boadilla y Las Rozas', foto: F + '2020/09/frutas-verduras-comedor-colegio.jpg',
     sitios: ['Pozuelo de Alarcón', 'Aravaca', 'Boadilla del Monte', 'Las Rozas'],
     intro: 'En la zona oeste servimos a restaurantes, colegios y residencias de Pozuelo de Alarcón, Aravaca, Boadilla del Monte y Las Rozas.',
     extra: 'Aquí trabajamos mucho con colegios y residencias: fruta de postre en calibres constantes, verdura para cremas y purés y patata pelada para ahorrar tiempo de cocina.' },
-  { slug: 'alcobendas-la-moraleja-san-sebastian-de-los-reyes', corto: 'Alcobendas, La Moraleja y San Sebastián de los Reyes', foto: F + '2020/09/verduras-residencias-ancianos.jpg',
+  { slug: 'alcobendas-la-moraleja-san-sebastian-de-los-reyes', tit: 'Alcobendas y La Moraleja', corto: 'Alcobendas, La Moraleja y San Sebastián de los Reyes', foto: F + '2020/09/verduras-residencias-ancianos.jpg',
     sitios: ['Alcobendas', 'La Moraleja', 'San Sebastián de los Reyes'],
     intro: 'Repartimos patatas, frutas, verduras y huevos a hostelería y colectividades de Alcobendas, La Moraleja y San Sebastián de los Reyes.',
     extra: 'Restaurantes, hoteles de empresa y comedores: le llevamos el género que marque su carta y le avisamos cuando un producto sube o escasea, con una alternativa.' },
@@ -840,8 +840,8 @@ const PAGINAS_ZONA = [
 const rutaZona = z => `/fruta-y-verdura-al-por-mayor-${z.slug}/`;
 for (const z of PAGINAS_ZONA) NUEVAS.push({
   path: rutaZona(z), foto: z.foto,
-  title: `Fruta y verdura al por mayor en ${z.corto} | Ferjusanz`,
-  description: `Proveedor de patatas, frutas, verduras y huevos para restaurantes, bares, colegios y residencias de ${z.corto}. Sin pedido mínimo y reparto refrigerado.`,
+  title: `Fruta y verdura al por mayor en ${z.tit || z.corto} | Ferjusanz`, // tit: corto para que Google no lo corte (~60 letras)
+  description: `Patatas, fruta, verdura y huevos para hostelería y colectividades de ${z.corto}. Sin pedido mínimo, reparto refrigerado.`,
   html: `<h1>Fruta y verdura al por mayor en ${z.corto}</h1>
 <p>${z.intro}</p>
 <h2>Dónde repartimos</h2>
