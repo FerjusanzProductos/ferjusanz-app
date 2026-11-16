@@ -12094,7 +12094,7 @@ function hojaPrimerPedido(p, ex) {
   const pintar = () => { chips.replaceChildren(...MODOS.map(([k, t]) => h('button', { class: 'chip' + (modo === k ? ' on' : ''), style: 'min-height:44px', onclick: () => { modo = k; paso2.replaceChildren(); pintar(); preparar(); } }, t)));
     opPres.hidden = modo === 'msg'; };
   const estVideo = h('span', { class: 'sub' }, ''), lblVideo = h('label', { style: 'display:flex;gap:8px;align-items:center;min-height:44px' }, conVideo, '🎬 Vídeo de la presentación (con tu voz) ', estVideo);
-  const verVideo = () => pvBuscar(clave).then(f => { conVideo.disabled = !f; if (!f) conVideo.checked = false; estVideo.textContent = f ? '' : '(todavía no está grabado)'; }).catch(() => { });
+  const verVideo = () => pvBuscar(clave).then(f => { conVideo.disabled = !f; conVideo.checked = !!f; if (f) preparar(); estVideo.textContent = f ? '' : '(todavía no está grabado)'; }).catch(() => { });
   verVideo();
   opPres.append(h('label', { style: 'display:flex;gap:8px;align-items:center;min-height:44px' }, conPdf, '📄 Presentación en PDF'), lblVideo,
     h('button', { class: 'ghost small', style: 'margin:2px 0 6px', onclick: () => grabarVideoPres(clave, () => { verVideo(); preparar(); }) }, '🎙️ Grabar / repetir el vídeo con tu voz'),
@@ -12124,6 +12124,15 @@ function hojaPrimerPedido(p, ex) {
   };
   const porWhatsApp = (pkg, btn) => {
     if (modo === 'pres') { compartir(btn); return; }
+    /* Con vídeo: UN solo envío, el vídeo con el mensaje de pie (WhatsApp sí respeta el texto con un vídeo); luego, si quiere, el PDF. */
+    const vids = (listos || []).filter(f => /^video\//.test(f.type)), docs = (listos || []).filter(f => !/^video\//.test(f.type));
+    if (modo === 'ambos' && conVideo.checked && !listos) { toast('Preparando el vídeo… vuelve a pulsar en un momento.', 'ok'); if (!preparando) preparar(); return; }
+    if (modo === 'ambos' && vids.length && navigator.canShare && navigator.canShare({ files: vids })) {
+      navigator.share({ files: vids, text: msg.value }).then(() => { paso2.replaceChildren(h('div', { class: 'aviso-card', style: 'margin-top:8px' }, '✔ Enviado el vídeo con tu mensaje.' + (docs.length ? ' Si quieres, ahora el PDF:' : '')),
+        docs.length ? h('button', { class: 'guardar', style: 'width:100%;min-height:56px;margin-top:6px;font-size:17px', onclick: () => navigator.share({ files: docs }).catch(e => { if (!e || e.name !== 'AbortError') { docs.forEach(f => comDescargar(f, f.name)); toast('Se ha descargado el PDF: adjúntalo desde Descargas (📎).', 'ok'); } }) }, '📄 Enviar también el PDF (mismo chat)') : null); })
+        .catch(e => { if (!e || e.name !== 'AbortError') toast('No se pudo compartir el vídeo: ' + msgErr(e), 'err'); });
+      return;
+    }
     abrirWhatsApp(tel.value, msg.value, pkg);
     if (modo === 'ambos') paso2.replaceChildren(h('div', { class: 'aviso-card', style: 'margin-top:8px' }, '✔ Paso 1 hecho: el mensaje. Ahora el paso 2:'),
       h('button', { class: 'guardar', style: 'width:100%;min-height:56px;margin-top:6px;font-size:17px', onclick: e => compartir(e.currentTarget) }, '2️⃣ Enviar la presentación (elige WhatsApp y el mismo chat)'));
