@@ -12208,6 +12208,20 @@ async function presVerPdf(laminas) {
    facilidad (un minuto), sin riesgo (sin compromiso, sin pedido mínimo) y petición clara al final. Usa sus frases. */
 function pvGuion(d, clave) {
   const ex = clave.startsWith('ex-'), col = ppBase(clave) === 'colectivos', t = (d.titulo || '').toLowerCase();
+  /* Exclientes (Fernando, 16/11/2026): en primera persona y de tú; Fernando Sanz hijo, equipo nuevo y él al mando; termina proponiendo visitarle. */
+  if (ex) {
+    if (d.t === 'portada') return 'Hace un tiempo que no trabajamos juntos, y quiero volver a ganarme tu confianza. Soy Fernando Sanz, hijo, de Ferjusanz Productos.';
+    if (d.t === 'texto' || /qui[eé]nes somos/.test(t)) return 'Es la empresa que ya conocías, pero ahora con un equipo nuevo y conmigo al mando. Quiero que quedes plenamente satisfecho con la calidad, el precio y el servicio.';
+    if (d.enlace) return 'Como ya hemos trabajado juntos, me hago una idea de lo que necesitas: no hace falta que rellenes nada.';
+    if (d.t === 'contacto') return 'Si te parece bien, me gustaría visitarte, contarte en persona los cambios que hemos hecho y enseñarte mis ganas de trabajar contigo. Quiero que nos vaya bien a los dos, de la mano. Y recuerda: no tenemos pedido mínimo.';
+    if (/vuelva a confiar|por qu[eé]/.test(t)) return 'Me comprometo a que el género te llegue siempre igual de bien, pedido tras pedido, y con la mejor relación calidad-precio para que salgas beneficiado.';
+    if (/c[oó]mo trabajamos/.test(t)) return 'Pides por WhatsApp o por teléfono, hasta la tarde anterior, y te lo llevamos nosotros, de lunes a sábado.';
+    if (/as[ií] trabajamos/.test(t)) return 'Con camiones refrigerados, en Madrid y Segovia, y el albarán con los pesos reales: pagas lo que recibes.';
+    if (d.t === 'productos') return 'Y todo en un solo proveedor: más de doscientos productos, también patata pelada y cortada, legumbres, setas y hierbas.';
+    if (d.t === 'ofertas') return 'Y cada semana, ofertas. Pregúntame.';
+    if (d.t === 'precios') return 'Aquí tienes nuestra lista de precios.';
+    return d.titulo || '';
+  }
   if (d.t === 'portada') return ex ? 'Hace tiempo que no trabajamos juntos… y queremos volver a ganarnos su confianza. Soy Fernando, de Ferjusanz Productos.' : '¿Y si sus patatas, fruta o verduras le costaran menos sin bajar la calidad? Quizás no esté disponiendo de un buen servicio… o quizás no nos conozca. ¡Somos Ferjusanz! Soy Fernando, y en un minuto se lo cuento.'; // gancho de Fernando (16/11/2026), en usted como el resto
   if (d.t === 'contacto') return ex ? 'Y debe saber que no tenemos pedido mínimo. Cualquier consulta, estamos a su disposición. Nos encantará volver a servirle.' : 'Y debe saber que no tenemos pedido mínimo. No pierde nada por comparar: estamos a su disposición.';
   if (d.t === 'texto' || /qui[eé]nes somos/.test(t)) return ex ? 'Seguimos siendo la misma empresa familiar que usted ya conoce: tercera generación y más de seis décadas en el sector.' : col ? 'Somos una empresa familiar, tercera generación y más de seis décadas sirviendo a colegios y residencias.' : 'Somos una empresa familiar, tercera generación y más de seis décadas sirviendo a cocinas como la suya.';
