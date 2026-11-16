@@ -10,7 +10,11 @@ import iconP192 from "../public/icon-pruebas-192.png";
 import iconP512 from "../public/icon-pruebas-512.png";
 import paso1 from "../public/guia-img/paso1.jpg";
 import presFurgonetas from "../public/pres/furgonetas.jpg";
-import presHuevos from "../public/pres/huevos.jpg";
+import presLado1 from "../public/pres/lado1.jpg";
+import presLado2 from "../public/pres/lado2.jpg";
+import presLado3 from "../public/pres/lado3.jpg";
+import presLado4 from "../public/pres/lado4.jpg";
+import presLado5 from "../public/pres/lado5.jpg";
 import presPortada from "../public/pres/portada.jpg";
 import presAncha from "../public/pres/ancha.jpg";
 import presCollage from "../public/pres/collage.jpg";
@@ -48,7 +52,11 @@ const ARCHIVOS = {
   "/icon-512.png": [icon512, "image/png"],
   "/guia-img/paso1.jpg": [paso1, "image/jpeg"],
   "/pres/furgonetas.jpg": [presFurgonetas, "image/jpeg"],
-  "/pres/huevos.jpg": [presHuevos, "image/jpeg"],
+  "/pres/lado1.jpg": [presLado1, "image/jpeg"],
+  "/pres/lado2.jpg": [presLado2, "image/jpeg"],
+  "/pres/lado3.jpg": [presLado3, "image/jpeg"],
+  "/pres/lado4.jpg": [presLado4, "image/jpeg"],
+  "/pres/lado5.jpg": [presLado5, "image/jpeg"],
   "/pres/portada.jpg": [presPortada, "image/jpeg"],
   "/pres/ancha.jpg": [presAncha, "image/jpeg"],
   "/pres/collage.jpg": [presCollage, "image/jpeg"],
