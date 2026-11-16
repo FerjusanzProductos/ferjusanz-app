@@ -12269,19 +12269,21 @@ async function presVerPdf(laminas) {
   try { const hojas = (await presArchivoPdf(await presExpandir(laminas, false))).hojas; hojas.forEach(c => { c.style.cssText = 'width:100%;height:auto;border-radius:6px;background:#fff'; }); caja.replaceChildren(...hojas); }
   catch (e) { caja.replaceChildren(h('p', { style: 'color:#fff' }, 'No se pudo preparar: ' + msgErr(e))); }
 }
-/* Guion para el vídeo (Fernando: «necesito 1:20, no me da tiempo a hablar… o hazme un speech»): una frase por hoja, ~65 s leído con calma. */
+/* Guion para el vídeo (Fernando: «que influya psicológicamente… que los primeros segundos se queden en el vídeo y no se vayan»;
+   «no contradigas lo que he editado»). Gancho con pregunta en los 3 primeros segundos, prueba (40 años, 3.ª generación),
+   facilidad (un minuto), sin riesgo (sin compromiso, sin pedido mínimo) y petición clara al final. Usa sus frases. */
 function pvGuion(d, clave) {
   const ex = clave.startsWith('ex-'), col = ppBase(clave) === 'colectivos', t = (d.titulo || '').toLowerCase();
-  if (d.t === 'portada') return ex ? 'Hola, soy Fernando, de Ferjusanz. Hace tiempo que no trabajamos juntos y quería decirle que seguimos aquí, a su disposición.' : col ? 'Hola, soy Fernando, de Ferjusanz. Llevamos patatas, frutas, verduras y huevos a colegios y residencias.' : 'Hola, soy Fernando, de Ferjusanz. Le traemos patatas, frutas, verduras y huevos para su negocio.';
-  if (d.t === 'contacto') return ex ? 'Y recuerde: no tenemos pedido mínimo. Cualquier consulta, estamos a su disposición. Gracias.' : 'Y recuerde: no tenemos pedido mínimo. Estamos a su disposición. ¡Gracias!';
-  if (d.t === 'texto' || /qui[eé]nes somos/.test(t)) return 'Somos una empresa familiar, ya en la tercera generación, con más de cuarenta años en el sector.';
-  if (d.enlace) return ex ? 'Como ya hemos trabajado juntos, nos hacemos una idea de lo que necesita: no hace falta que rellene nada.' : 'Para darle precio, marque en un minuto qué productos usa y cuánto. Le enviamos su tarifa, sin compromiso.';
-  if (/vuelva a confiar/.test(t)) return 'Seguimos trabajando con las mismas ganas: calidad homogénea y la mejor relación calidad-precio, para que salga beneficiado.';
-  if (/por qu[eé]/.test(t)) return 'Trabajamos con agricultores de confianza y elegimos el género cada mañana en Mercamadrid. Destacamos por la relación calidad-precio.';
+  if (d.t === 'portada') return ex ? 'Hace tiempo que no trabajamos juntos… y queremos volver a ganarnos su confianza. Soy Fernando, de Ferjusanz Productos.' : col ? '¿Y si el menú de su centro le costara menos, sin bajar la calidad? Soy Fernando, de Ferjusanz Productos. En un minuto se lo cuento.' : '¿Y si su fruta y verdura le costara menos, sin bajar la calidad? Soy Fernando, de Ferjusanz Productos. En un minuto se lo cuento.';
+  if (d.t === 'contacto') return ex ? 'Y debe saber que no tenemos pedido mínimo. Cualquier consulta, estamos a su disposición. Nos encantará volver a servirle.' : 'Y debe saber que no tenemos pedido mínimo. No pierde nada por comparar: estamos a su disposición.';
+  if (d.t === 'texto' || /qui[eé]nes somos/.test(t)) return col ? 'Somos una empresa familiar, tercera generación y más de cuarenta años sirviendo a colegios y residencias.' : 'Somos una empresa familiar, tercera generación y más de cuarenta años sirviendo a cocinas como la suya.';
+  if (d.enlace) return ex ? 'Como ya hemos trabajado juntos, nos hacemos una idea de lo que necesita: no hace falta que rellene nada.' : 'Ahora, lo más fácil: imagine cómo sería su primer pedido, márquelo en un minuto y le enviamos su tarifa. Si le interesa, tan solo tiene que decírnoslo.';
+  if (/vuelva a confiar/.test(t)) return 'Seguimos trabajando con las mismas ganas: calidad homogénea, pedido tras pedido, y la mejor relación calidad-precio para que salga beneficiado.';
+  if (/por qu[eé]/.test(t)) return 'Trabajamos con agricultores de confianza y elegimos el género cada mañana en Mercamadrid. Por eso destacamos por la relación calidad-precio.';
   if (/c[oó]mo trabajamos/.test(t)) return col ? 'Acordamos con su centro los días y horarios de entrega, con formatos adaptados, como la patata pelada en varios cortes.' : 'Usted pide por WhatsApp o por teléfono, hasta la tarde anterior, y se lo llevamos nosotros, de lunes a sábado.';
-  if (/as[ií] trabajamos/.test(t)) return 'Repartimos en Madrid y Segovia con camiones refrigerados, y el albarán lleva los pesos reales.';
-  if (d.t === 'productos') return 'Tenemos más de doscientos productos: también patata pelada y cortada, legumbres, setas y hierbas.';
-  if (d.t === 'ofertas') return 'Cada semana tenemos ofertas. Pregúntenos.';
+  if (/as[ií] trabajamos/.test(t)) return 'Con camiones refrigerados, en Madrid y Segovia, y el albarán con los pesos reales: paga lo que recibe.';
+  if (d.t === 'productos') return 'Más de doscientos productos: también patata pelada y cortada, legumbres, setas y hierbas. Todo en un solo proveedor.';
+  if (d.t === 'ofertas') return 'Y cada semana, ofertas. Pregúntenos.';
   if (d.t === 'precios') return 'Aquí tiene nuestra lista de precios.';
   return d.titulo || '';
 }
@@ -12307,7 +12309,9 @@ async function grabarVideoPres(tipo, alGuardar) {
     botones.replaceChildren(BT('⏺ Empezar a grabar', empezar, 'guardar'), BT('Cancelar', fuera)); };
   const empezar = async () => {
     try { mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { toast('Hace falta permiso para el micrófono.', 'err'); return; }
-    n = 0; pinta(); stream = cv.captureStream(10); const t0 = Date.now(); mic.getAudioTracks().forEach(t => stream.addTrack(t)); trozos = [];
+    n = 0; pinta(); botones.replaceChildren();
+    for (const k of [3, 2, 1]) { info.textContent = 'Prepárate: empieza a hablar en cuanto desaparezca… ' + k; await new Promise(r => setTimeout(r, 1000)); } // sin silencio al principio: los primeros segundos son los que retienen
+    stream = cv.captureStream(10); const t0 = Date.now(); mic.getAudioTracks().forEach(t => stream.addTrack(t)); trozos = [];
     tic = setInterval(() => { pinta(); const q = MAXS - Math.floor((Date.now() - t0) / 1000); if (rec && rec.state === 'recording') { info.textContent = info.textContent.replace(/ · quedan \d+ s$/, '') + ' · quedan ' + Math.max(q, 0) + ' s'; if (q <= 0) rec.stop(); } }, 250); // repinta (el vídeo necesita imágenes) y corta al minuto
     rec = new MediaRecorder(stream, Object.assign({ videoBitsPerSecond: 300000, audioBitsPerSecond: 32000 }, tipoVideo ? { mimeType: tipoVideo } : {}));
     rec.ondataavailable = e => { if (e.data && e.data.size) trozos.push(e.data); };
@@ -12530,7 +12534,7 @@ async function presRecursos() {
   if (PRES_REC) return PRES_REC;
   try { for (const [fam, f, w] of [['FJ Titular', 'barlow-condensed-latin-700-normal.woff2', '700'], ['FJ Texto', 'barlow-latin-400-normal.woff2', '400'], ['FJ Texto', 'barlow-latin-600-normal.woff2', '600']]) { const ff = new FontFace(fam, 'url(pres/' + f + ')', { weight: w }); await ff.load(); document.fonts.add(ff); } } catch (e) { }
   const img = n => new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = 'pres/' + n; });
-  const [portada, contacto, quienes, ancha, collage, ...lados] = await Promise.all(['f-portada.jpg', 'f-contacto.jpg', 'f-quienes.jpg', 'f-ancha.jpg', 'collage.jpg', 'lado1.jpg', 'lado2.jpg', 'lado3.jpg', 'lado4.jpg', 'lado5.jpg'].map(img));
+  const [portada, contacto, quienes, ancha, collage, ...lados] = await Promise.all(['f-portada.jpg', 'f-contacto.jpg', 'f-quienes.jpg', 'f-ancha.jpg', 'collage.jpg', 'lado1.jpg', 'lado2.jpg', 'lado3.jpg', 'lado4.jpg'].map(img));
   return (PRES_REC = { portada, contacto, quienes, ancha, collage, lados: lados.filter(Boolean) });
 }
 const presImgDe = src => new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; });
