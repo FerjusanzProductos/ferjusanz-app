@@ -114,6 +114,7 @@ Después del 45: Claude añade la siguiente tanda aquí (temporada del mes y lo 
 **Cuenta**: Instagram **profesional (empresa)**, categoría «Mayorista» o «Distribuidor de alimentos», con el enlace a la web y el WhatsApp. Unida a una **página de Facebook** de la empresa (la necesita para programar y para anuncios).
 **Ritmo**: **3 publicaciones a la semana**: 2 Reels (vídeo vertical de 15 a 40 s) y 1 foto o carrusel. Historias cuando haya algo del día.
 **Cómo**: Fernando graba en bruto con el móvil (vertical, sin música, hablando normal) y lo manda por el chat. Claude corta, pone subtítulos y escribe el texto (skill `shorts`). Fernando solo lo sube o lo programa.
+**Herramientas de Claude** (16/11/2026): 5 skills, una por trabajo: `redes-ideas` (qué grabar), `redes-textos` (textos y etiquetas), `redes-distribuir` (una pieza → todas las redes, lista para programar), `redes-contenido` (qué toca esta semana y registro en `docs/redes/CONTENIDO.md`) y `redes-diseno` (carruseles y portadas con fotos reales). Basta con escribirle a Claude «ideas para redes», «escríbeme el texto», «repártelo», «cómo vamos en redes» o «hazme un carrusel».
 
 ### 20 ideas de Reels para este público
 1. **«Esta semana en Mercamadrid»** (cada lunes, siempre igual): 3 productos que están bien de precio y calidad para el menú.
