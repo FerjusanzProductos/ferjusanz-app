@@ -23,7 +23,6 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 
 ## 📱 LA APP
 ### 👤 Fernando
-- 🟡 **Clave de Gemini para resumir vídeos de YouTube** (TikTok ya funciona). 1) En Chrome: https://aistudio.google.com/apikey → «Create API key» → copiarla. 2) En la app de Claude, menú del entorno «ferjusanz-app» (arriba, en el título de la sesión) → Editar → «Network secrets»: servidor `generativelanguage.googleapis.com`, cabecera `x-goog-api-key`, pegar la clave ahí (nunca en el chat). Vale en la siguiente sesión.
 - 🔴 Avisar **2-3 días antes** del día en que se empieza a usar la app de verdad.
 - 🔴 Antes del 30/11: decidir con Jorge los **clientes «sin IVA»** (todo tiene que ir facturado; si se quiere, se baja el precio). Sin esto no se puede firmar la declaración ni facturar desde la app. Y confirmar la lista.
 - 🔴 Sacar de Golden la **lista de clientes en Excel** (código, nombre, NIF, dirección, CP, localidad) para cargar los NIF que faltan.
