@@ -12100,22 +12100,30 @@ const comEnlace = (txt, url, cls) => h('a', { href: url, target: '_blank', rel: 
 const ppEnlace = p => URL_TARJETA + (p && p.id ? '?p=' + p.id : '') + '#primer-pedido';
 /* La web, por la app (como la tarjeta): al pasar al dominio solo cambia la redirección de src/worker.js. */
 const URL_WEB = URL_TARJETA.replace(/tarjeta$/, 'web');
-function hojaPrimerPedido(p) {
+function hojaPrimerPedido(p, ex) {
   p = p || {}; const yo = state.perfil ? state.perfil.nombre.split(' ')[0] : '', url = ppEnlace(p);
-  const texto = 'Hola' + (p.nombre ? ', ' + p.nombre : '') + '. Soy ' + yo + ', de Ferjusanz: patatas, frutas, verduras y huevos, tres generaciones en el sector. Destacamos por la relación calidad-precio.\n\n' +
+  const textoNuevo = 'Hola' + (p.nombre ? ', ' + p.nombre : '') + '. Soy ' + yo + ', de Ferjusanz: patatas, frutas, verduras y huevos, tres generaciones en el sector. Destacamos por la relación calidad-precio.\n\n' +
     'Nos gustaría conocerles y que prueben nuestro género. Para calcular los precios que le haríamos, imagine su primer pedido: marque aquí en un minuto qué productos usa y, si quiere, cuánto a la semana. Después le enviamos su tarifa según lo que gasta (sin compromiso y sin pedido mínimo):\n' + url + '\n\n' +
     '• Más de 200 productos: patatas (también peladas y cortadas), frutas, verduras, huevos, cebollas y ajos, setas, legumbres y hierbas.\n' +
     '• De agricultores de confianza y elegido cada mañana en Mercamadrid.\n' +
     '• Reparto de lunes a sábado en Madrid y Segovia, con camiones refrigerados. Pedido por WhatsApp o teléfono hasta la tarde anterior.\n' +
     '• Nuestra web: ' + URL_WEB + '\n\n¿Quedamos un día? Un saludo.';
+  const textoEx = 'Hola' + (p.nombre ? ', ' + p.nombre : '') + '. Soy ' + yo + ', de Ferjusanz: patatas, frutas, verduras y huevos.\n\n' +
+    'Hace tiempo que no trabajamos juntos y queríamos decirle que seguimos aquí, trabajando con las mismas ganas y dispuestos a servirle con la mayor disposición, como siempre.\n\n' +
+    '• Destacamos por la relación calidad-precio, para que salga beneficiado.\n' +
+    '• De agricultores de confianza y elegido cada mañana en Mercamadrid.\n' +
+    '• Sin pedido mínimo. Reparto de lunes a sábado en Madrid y Segovia.\n\n' +
+    'Como ya hemos trabajado juntos, nos hacemos una idea de lo que necesita, así que no hace falta que rellene nada. Si quiere afinar el precio, puede indicarnos aquí lo que gasta ahora:\n' + url + '\n\n' +
+    'Cualquier consulta, estamos a su disposición. Un saludo.';
+  const texto = ex ? textoEx : textoNuevo;
   const msg = h('textarea', { rows: 12, style: 'width:100%;font-size:15px' }); msg.value = texto;
   const tel = comInput('tel', p.telefono || ''), mail = comInput('email', p.email || '');
   const chk = () => h('input', { type: 'checkbox', style: 'width:24px;height:24px;flex:none;margin:0' });
   const conLista = chk(), conPdf = chk(), conVideo = chk(), video = h('input', { type: 'file', accept: 'video/*', style: 'width:100%' }); conPdf.checked = true;
-  const asunto = 'Ferjusanz · Su tarifa de patatas, frutas, verduras y huevos a medida';
+  const asunto = ex ? 'Ferjusanz · Seguimos a su disposición' : 'Ferjusanz · Su tarifa de patatas, frutas, verduras y huevos a medida';
   const firma = () => '\n\n' + (state.perfil ? state.perfil.nombre : '') + '\nFERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. · Mercamadrid\n91 763 21 86 · WhatsApp 609 567 354';
   const B = (cls, t, f) => h('button', { class: cls, style: 'width:100%;min-height:50px;margin-top:8px', onclick: f }, t);
-  const tipo = h2EsColectivo({ tipo: p.tipo, nombre: p.nombre }) ? 'colectivos' : 'hosteleria';
+  const tipo = h2EsColectivo({ tipo: p.tipo, nombre: p.nombre }) ? 'colectivos' : 'hosteleria', clave = (ex ? 'ex-' : '') + tipo;
   /* Qué se envía: solo el mensaje, mensaje + presentación (en 2 pasos: WhatsApp tira el texto si va con un archivo) o solo la presentación. */
   let modo = 'msg';
   const MODOS = [['msg', '💬 Solo mensaje'], ['ambos', '💬📎 Mensaje + presentación'], ['pres', '📎 Solo presentación']];
@@ -12123,16 +12131,16 @@ function hojaPrimerPedido(p) {
   const pintar = () => { chips.replaceChildren(...MODOS.map(([k, t]) => h('button', { class: 'chip' + (modo === k ? ' on' : ''), style: 'min-height:44px', onclick: () => { modo = k; paso2.replaceChildren(); pintar(); preparar(); } }, t)));
     opPres.hidden = modo === 'msg'; };
   const estVideo = h('span', { class: 'sub' }, ''), lblVideo = h('label', { style: 'display:flex;gap:8px;align-items:center;min-height:44px' }, conVideo, '🎬 Vídeo de la presentación (con tu voz) ', estVideo);
-  const verVideo = () => pvBuscar(tipo).then(f => { conVideo.disabled = !f; if (!f) conVideo.checked = false; estVideo.textContent = f ? '' : '(todavía no está grabado)'; }).catch(() => { });
+  const verVideo = () => pvBuscar(clave).then(f => { conVideo.disabled = !f; if (!f) conVideo.checked = false; estVideo.textContent = f ? '' : '(todavía no está grabado)'; }).catch(() => { });
   verVideo();
   opPres.append(h('label', { style: 'display:flex;gap:8px;align-items:center;min-height:44px' }, conPdf, '📄 Presentación en PDF'), lblVideo,
-    h('button', { class: 'ghost small', style: 'margin:2px 0 6px', onclick: () => grabarVideoPres(tipo, () => { verVideo(); preparar(); }) }, '🎙️ Grabar / repetir el vídeo con tu voz'),
+    h('button', { class: 'ghost small', style: 'margin:2px 0 6px', onclick: () => grabarVideoPres(clave, () => { verVideo(); preparar(); }) }, '🎙️ Grabar / repetir el vídeo con tu voz'),
     h('label', { style: 'display:flex;gap:8px;align-items:center;min-height:44px' }, conLista, '💶 Añadir la lista de precios ' + (tipo === 'colectivos' ? '(colectividades)' : '(hostelería)') + ' al final'),
     comCampo('🎥 Otro vídeo (opcional, de la galería)', video));
   const archivos = async () => {
-    const lam = ppLaminas(await ppPresentacion(tipo), url, tipo);
+    const lam = ppLaminas(await ppPresentacion(clave), url, clave);
     const files = conPdf.checked ? [new File([pdfPresentacion(await presExpandir(lam, conLista.checked), 'Ferjusanz')], 'Ferjusanz-presentacion' + (conLista.checked ? '-con-precios' : '') + '.pdf', { type: 'application/pdf' })] : [];
-    if (conVideo.checked) { const v = await pvArchivo(tipo); if (v) files.push(v); }
+    if (conVideo.checked) { const v = await pvArchivo(clave); if (v) files.push(v); }
     if (video.files[0]) files.push(video.files[0]);
     if (!files.length) throw new Error('marca el PDF o el vídeo');
     return files;
@@ -12160,12 +12168,12 @@ function hojaPrimerPedido(p) {
     compartir(btn, modo === 'ambos' ? msg.value + firma() : '');
   };
   pintar();
-  hoja('🧮 Primer pedido y tarifa' + (p.nombre ? ' · ' + p.nombre : ''), h('div', {},
-    h('p', { class: 'sub' }, 'Sirve para calcular los precios que le haríamos. Lo que rellene te llega a Comercial › Avisos › «Primeros pedidos», con su tarifa calculada para que Fernando la apruebe; luego se la envías.'),
+  hoja((ex ? '🔁 Excliente' : '🧮 Primer pedido y tarifa') + (p.nombre ? ' · ' + p.nombre : ''), h('div', {},
+    ex ? h('p', { class: 'sub' }, 'Para clientes que ya no nos compran: que sepan que seguimos y estamos a su disposición. Con su presentación y su vídeo de exclientes. El formulario va al final, como «no es necesario».') : h('p', { class: 'sub' }, 'Sirve para calcular los precios que le haríamos. Lo que rellene te llega a Comercial › Avisos › «Primeros pedidos», con su tarifa calculada para que Fernando la apruebe; luego se la envías.'),
     comCampo('Mensaje (puedes cambiarlo)', msg),
     h('div', { style: 'display:flex;gap:6px;margin-top:8px' },
-      h('button', { class: 'ghost', style: 'flex:1;min-height:48px', onclick: async () => { try { presPresentar({ diapositivas: ppLaminas(await ppPresentacion(tipo), url, tipo) }); } catch (e) { toast(msgErr(e), 'err'); } } }, '👁 Ver cómo queda la presentación'),
-      h('button', { class: 'ghost', style: 'flex:1;min-height:48px', onclick: async () => { try { const pr = await ppPresentacion(tipo); document.querySelectorAll('.overlay').forEach(o => o.remove()); state.sheetAbierta = false; go('presentaciones', { editar: pr.id }); } catch (e) { toast(msgErr(e), 'err'); } } }, '✏️ Editar la presentación')),
+      h('button', { class: 'ghost', style: 'flex:1;min-height:48px', onclick: async () => { try { presPresentar({ diapositivas: ppLaminas(await ppPresentacion(clave), url, clave) }); } catch (e) { toast(msgErr(e), 'err'); } } }, '👁 Ver cómo queda la presentación'),
+      h('button', { class: 'ghost', style: 'flex:1;min-height:48px', onclick: async () => { try { const pr = await ppPresentacion(clave); document.querySelectorAll('.overlay').forEach(o => o.remove()); state.sheetAbierta = false; go('presentaciones', { editar: pr.id }); } catch (e) { toast(msgErr(e), 'err'); } } }, '✏️ Editar la presentación')),
     h('div', { class: 'sub', style: 'font-weight:600;margin-top:8px' }, '¿Qué quieres enviar?'), chips, opPres,
     comCampo('Móvil', tel),
     B('guardar', '💬 Enviar por WhatsApp', e => porWhatsApp('com.whatsapp', e.currentTarget)),
@@ -12182,16 +12190,27 @@ function hojaPrimerPedido(p) {
 const PV_BUCKET = 'presentacion-video';
 /* La presentación que se envía a posibles clientes es una presentación GUARDADA (se ve y se edita en Comercial › Presentaciones).
    Si no existe, se crea de la plantilla + la hoja «Imagine su primer pedido» (su botón lleva el enlace personal al enviarla). */
-const PP_PRES = { hosteleria: 'Presentación para posibles clientes · Hostelería', colectivos: 'Presentación para posibles clientes · Colegios y residencias' };
-async function ppPresentacion(tipo) {
-  const r = await sb.from('presentaciones').select('*').eq('titulo', PP_PRES[tipo]).order('created_at').limit(1); if (r.error) throw r.error;
+/* «clave» = 'hosteleria' | 'colectivos' (posibles clientes) o 'ex-hosteleria' | 'ex-colectivos' (exclientes: ya no nos compran). */
+const PP_PRES = { hosteleria: 'Presentación para posibles clientes · Hostelería', colectivos: 'Presentación para posibles clientes · Colegios y residencias',
+  'ex-hosteleria': 'Presentación para exclientes · Hostelería', 'ex-colectivos': 'Presentación para exclientes · Colegios y residencias' };
+const ppBase = clave => clave.replace(/^ex-/, '');
+/* Exclientes (Fernando, 16/11/2026): seguimos trabajando y con la mayor disposición; frases para que vuelvan a confiar; el formulario al final, pero no hace falta. */
+function ppPlantilla(clave) {
+  const lam = presPlantilla(ppBase(clave)), ex = clave.startsWith('ex-'), ic = () => { const i = lam.findIndex(x => x.t === 'contacto'); return i < 0 ? lam.length : i; };
+  if (!ex) { lam.splice(ic(), 0, { t: 'lista', titulo: 'Imagine su primer pedido y le calculamos su tarifa', puntos: ['Sirve para calcular los precios que le haríamos', 'Marque en un minuto qué productos usa y, si quiere, cuánto a la semana', 'Le enviamos su tarifa según lo que gasta: destacamos por la calidad-precio', 'Sin compromiso y sin pedido mínimo · Madrid y Segovia'], enlace: { texto: '', url: '' } }); return lam; }
+  lam[0] = Object.assign({}, lam[0], { titulo: 'Seguimos aquí, a su disposición', sub: 'Patatas, frutas, verduras y huevos · De agricultores de confianza y Mercamadrid', pie: 'Empresa familiar · Tercera generación' });
+  const ip = lam.findIndex(x => x.t === 'lista'); if (ip >= 0) lam[ip] = { t: 'lista', titulo: 'Vuelva a confiar en nosotros', puntos: ['Seguimos trabajando, con las mismas ganas del primer día', 'Le serviremos con la mayor disposición, como siempre', 'Calidad homogénea, pedido tras pedido', 'La mejor relación calidad-precio para que salga beneficiado', 'Trato directo: nos llama y le atendemos, sin centralitas', 'Queremos saber qué podemos hacer mejor por usted'] };
+  lam.splice(ic(), 0, { t: 'lista', titulo: 'Díganos qué gasta ahora (no es necesario)', puntos: ['Como ya hemos trabajado juntos, nos hacemos una idea de lo que necesita', 'No hace falta que rellene nada', 'Si quiere afinar el precio, marque en un minuto lo que usa ahora', 'Sin compromiso y sin pedido mínimo'], enlace: { texto: '', url: '' } });
+  const c = lam[ic()]; if (c) lam[ic()] = Object.assign({}, c, { lineas: ['Cualquier consulta, estamos a su disposición.'].concat(c.lineas || []) });
+  return lam;
+}
+async function ppPresentacion(clave) {
+  const r = await sb.from('presentaciones').select('*').eq('titulo', PP_PRES[clave]).order('created_at').limit(1); if (r.error) throw r.error;
   if (r.data && r.data[0]) return r.data[0];
-  const lam = presPlantilla(tipo), ic = lam.findIndex(x => x.t === 'contacto');
-  lam.splice(ic < 0 ? lam.length : ic, 0, { t: 'lista', titulo: 'Imagine su primer pedido y le calculamos su tarifa', puntos: ['Sirve para calcular los precios que le haríamos', 'Marque en un minuto qué productos usa y, si quiere, cuánto a la semana', 'Le enviamos su tarifa según lo que gasta: destacamos por la calidad-precio', 'Sin compromiso y sin pedido mínimo · Madrid y Segovia'], enlace: { texto: '', url: '' } });
-  const ins = await sb.from('presentaciones').insert({ titulo: PP_PRES[tipo], diapositivas: lam }).select('*').single(); if (ins.error) throw ins.error; return ins.data;
+  const ins = await sb.from('presentaciones').insert({ titulo: PP_PRES[clave], diapositivas: ppPlantilla(clave) }).select('*').single(); if (ins.error) throw ins.error; return ins.data;
 }
 /* Copia de sus hojas lista para enviar: el botón con el enlace personal (o, en el vídeo, «con el enlace del mensaje») y la lista de precios general. */
-const ppLaminas = (pres, url, tipo) => JSON.parse(JSON.stringify(pres.diapositivas || [])).map(d => { if (d.enlace) d.enlace = url ? { texto: 'Pulse aquí para rellenarlo', url } : { texto: 'Rellénelo con el enlace del mensaje', url: URL_TARJETA }; if (d.t === 'precios' && !d.lista_id) d.lista_id = H2_LISTA_GENERAL[tipo]; return d; });
+const ppLaminas = (pres, url, tipo) => JSON.parse(JSON.stringify(pres.diapositivas || [])).map(d => { if (d.enlace) d.enlace = url ? { texto: 'Pulse aquí para rellenarlo', url } : { texto: 'Rellénelo con el enlace del mensaje', url: URL_TARJETA }; if (d.t === 'precios' && !d.lista_id) d.lista_id = H2_LISTA_GENERAL[ppBase(tipo)]; return d; });
 const pvLaminas = async tipo => ppLaminas(await ppPresentacion(tipo), '', tipo);
 async function pvBuscar(tipo) { const r = await sb.storage.from(PV_BUCKET).list('', { search: tipo }); return ((r.data || []).find(f => f.name.startsWith(tipo + '.')) || null); }
 async function pvArchivo(tipo) { const f = await pvBuscar(tipo); if (!f) return null; const d = await sb.storage.from(PV_BUCKET).download(f.name); if (d.error) throw d.error;
@@ -12216,7 +12235,7 @@ async function grabarVideoPres(tipo, alGuardar) {
   } catch (e) { fuera(); toast('No se pudieron preparar las hojas: ' + msgErr(e), 'err'); return; }
   pinta();
   const tipoVideo = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp8,opus', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t)) || '';
-  const listo = () => { info.textContent = 'Vídeo de la presentación (' + (tipo === 'colectivos' ? 'colegios y residencias' : 'hostelería') + '): ' + hojas.length + ' hojas. Pulsa «Empezar», habla y pasa las hojas con «Siguiente».';
+  const listo = () => { info.textContent = 'Vídeo de la presentación (' + (tipo.startsWith('ex-') ? 'exclientes, ' : '') + (ppBase(tipo) === 'colectivos' ? 'colegios y residencias' : 'hostelería') + '): ' + hojas.length + ' hojas. Pulsa «Empezar», habla y pasa las hojas con «Siguiente».';
     botones.replaceChildren(BT('⏺ Empezar a grabar', empezar, 'guardar'), BT('Cancelar', fuera)); };
   const empezar = async () => {
     try { mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { toast('Hace falta permiso para el micrófono.', 'err'); return; }
@@ -12488,7 +12507,7 @@ async function vistaPresentaciones() {
       const r = await sb.from('presentaciones').select('*').order('updated_at', { ascending: false }); if (r.error) throw r.error;
       cont.replaceChildren(
         h('div', { class: 'aviso-card' }, 'Presentaciones para enseñar a clientes: quiénes somos, cómo trabajamos, productos y listas de precios. Se pasan con el dedo a pantalla completa y se envían en PDF. Los precios de compra NUNCA salen.'),
-        ...(r.data || []).map(p => h('div', { class: 'card' }, h('div', { class: 'nombre', style: 'font-size:18px' }, p.titulo), h('div', { class: 'sub' }, (p.diapositivas || []).length + ' láminas · cambiada ' + fechaES(String(p.updated_at || '').slice(0, 10))), Object.values(PP_PRES).includes(p.titulo) ? h('div', { class: 'sub', style: 'color:#166534;font-weight:700' }, '📨 Es la que se envía a posibles clientes (y la del vídeo)') : null,
+        ...(r.data || []).map(p => h('div', { class: 'card' }, h('div', { class: 'nombre', style: 'font-size:18px' }, p.titulo), h('div', { class: 'sub' }, (p.diapositivas || []).length + ' láminas · cambiada ' + fechaES(String(p.updated_at || '').slice(0, 10))), Object.values(PP_PRES).includes(p.titulo) ? h('div', { class: 'sub', style: 'color:#166534;font-weight:700' }, '📨 Es la que se envía a ' + (p.titulo.includes('exclientes') ? 'exclientes' : 'posibles clientes') + ' (y la del vídeo)') : null,
           h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' }, h('button', { class: 'small', onclick: () => presPresentar(p) }, '▶ Presentar'), h('button', { class: 'small ghost', onclick: () => editar(p) }, '✏️ Editar'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'bajar') }, '📄 PDF'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'enviar') }, '📲 Enviar'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'enviar', true) }, '💶 Enviar con lista de precios'),
             h('button', { class: 'small ghost', onclick: () => duplicar(p) }, '⧉ Copiar')))),
         h('button', { class: 'guardar', style: 'width:100%;min-height:54px;margin-top:10px', onclick: () => editar(null, 'hosteleria') }, '➕ Nueva: ' + PRES_MODELOS.hosteleria), h('button', { class: 'guardar', style: 'width:100%;min-height:54px;margin-top:8px', onclick: () => editar(null, 'colectivos') }, '➕ Nueva: ' + PRES_MODELOS.colectivos));
@@ -12588,6 +12607,7 @@ async function tabAvisos(el) {
     h('h3', {}, '🧮 Primeros pedidos y su tarifa (' + pp.length + ')'),
     ...(pp.length ? pp.map(r => ppTarjeta(r, () => tabAvisos(el))) : [h('p', { class: 'vacio' }, 'Todavía nadie ha rellenado su primer pedido.')]),
     h('button', { class: 'ghost small', onclick: () => hojaPrimerPedido(null) }, '🧮 Mandar el enlace a alguien nuevo'),
+    h('button', { class: 'ghost small', onclick: () => hojaPrimerPedido(null, true) }, '🔁 Mandar a un excliente (ya no nos compra)'),
     h('h3', {}, '⚠️ Clientes con quejas o fallos sin resolver (' + Object.keys(porCli).length + ')'),
     ...(Object.keys(porCli).length ? Object.values(porCli).map(c => h('div', { class: 'card', style: 'border-left:4px solid #b91c1c' }, h('div', { class: 'fila' }, h('div', { class: 'nombre' }, c.nombre), h('b', {}, c.n + ' abierta(s)')), h('div', { class: 'sub' }, (c.ult.tipo || '') + ': ' + (c.ult.nota || '')), c.tel ? comEnlace('📞 Llamar', 'tel:' + String(c.tel).replace(/\s/g, '')) : null, h('button', { class: 'ghost small', onclick: () => go('incidencias') }, 'Abrir incidencias'))) : [h('p', { class: 'vacio' }, '✔ Ningún cliente con incidencias abiertas.')]),
     h('p', { class: 'sub' }, 'Sale de «Incidencias»: apunta allí cada queja con su cliente y aparecerá aquí hasta que la marques como resuelta. Mira «Guiones» para saber qué decir.'),
@@ -12719,7 +12739,8 @@ async function h2Hoy(el) {
         it.cliente_id ? h('button', { class: 'ghost small', onclick: () => h2Prefs(it.cliente_id, () => h2Hoy(el)) }, '⚙️ Preferencias') : null,
         it.prospecto_id || it.motivo === 'sin_pedir' ? h('button', { class: 'ghost small', onclick: e => h2Presentacion(it, e.currentTarget) }, '🎬 Presentación') : null,
         it.prospecto_id || it.motivo === 'sin_pedir' ? h('button', { class: 'ghost small', onclick: e => h2ListaPara(it, e.currentTarget) }, '📄 Lista de precios') : null,
-        it.prospecto_id ? h('button', { class: 'ghost small', onclick: () => hojaPrimerPedido({ id: it.prospecto_id, nombre: it.nombre, telefono: it.whatsapp || it.telefono }) }, '🧮 Primer pedido y tarifa') : null),
+        it.prospecto_id ? h('button', { class: 'ghost small', onclick: () => hojaPrimerPedido({ id: it.prospecto_id, nombre: it.nombre, telefono: it.whatsapp || it.telefono }) }, '🧮 Primer pedido y tarifa') : null,
+        !it.prospecto_id && it.motivo === 'sin_pedir' ? h('button', { class: 'ghost small', onclick: () => hojaPrimerPedido({ nombre: it.nombre, telefono: it.whatsapp || it.telefono, tipo: it.tipo }, true) }, '🔁 Mensaje de excliente') : null),
       caja); };
   const porHora = a => a.slice().sort((x, y) => (x.hora || '99') < (y.hora || '99') ? -1 : (x.hora || '99') > (y.hora || '99') ? 1 : 0);
   const grupo = (titulo, items, ayuda) => items.length ? [h('h3', {}, titulo + ' (' + items.length + ')'), ayuda ? h('p', { class: 'sub', style: 'margin-top:-6px' }, ayuda) : null, ...porHora(items).map(tarjeta)].filter(Boolean) : [];
