@@ -41,6 +41,7 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - 🟡 Claves de conectores que faltan (Perplexity, PostHog), con el formulario seguro cuando las tenga. Para `shorts` con YouTube: añadir `*.googlevideo.com` en la red del entorno.
 
 ### 👩‍💼 Carmen (oficina)
+- 🟡 **Fernando** o **Carmen**: en la lupa 🔍 escribir «productos sin reconocer» → botón **«♻️ Releer las facturas de 30 días»** (así se rellenan solos el IVA, el total y el nº de las que ya estaban leídas; solo rellena lo vacío).
 - 🔴 Completar los **clientes sin NIF / dirección / CP** antes del 1/1/2027 (Clientes → «🧾 Faltan datos para facturar» → «🔎»): revisar las propuestas (las de confianza media, confirmarlas con el cliente), CAPARRA, BOUZAS, CUENDA, HANDYMAN y pedir datos a autónomos y a las sociedades que no salen en internet.
 - 🟡 Compras → «🧾 NIF e IVA»: leer los que faltan y poner a mano el NIF de Pataleta, Perichán…
 - 🟡 Empezar a apuntar la **caja** en la app (Más → «💵 Caja (efectivo)»).
