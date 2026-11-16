@@ -26,7 +26,7 @@ const WHATSAPP = [ // los dos móviles de la familia
   { num: '34609100690', ver: '609 100 690' },
   { num: '34609567354', ver: '609 567 354', nombre: 'Fernando' },
 ];
-const ANIOS = 'más de 60 años'; // Fernando 16/11/2026: «más de 60 años»
+const ANIOS = 'más de seis décadas'; // Fernando 16/11/2026: «más de 60 años» e «impacta más decir décadas»
 
 const MENU = [
   ['/productos/', 'Productos'],
@@ -140,7 +140,7 @@ const fecha = iso => iso ? new Date(iso).toLocaleDateString('es-ES', { day: 'num
 const tituloCorto = t => String(t).replace(/\s*-\s*Ferjusanz\s*$/i, '');
 // Google corta los títulos de más de ~65 letras: si no cabe, se quita la marca del final.
 const tituloSeo = t => t.length > 65 ? t.replace(/\s*[-|]\s*Ferjusanz\s*$/i, '') : t;
-const anios = s => String(s ?? '').replace(/(m[aá]s de |hace )50 años/gi, (m, a) => (/hace/i.test(a) ? 'hace más de 60 años' : 'más de 60 años'));
+const anios = s => String(s ?? '').replace(/(m[aá]s de |hace )50 años/gi, (m, a) => (/hace/i.test(a) ? 'hace más de seis décadas' : 'más de seis décadas'));
 const wa = (num, texto) => `https://wa.me/${num}?text=${encodeURIComponent(texto)}`;
 
 // Arreglos al texto antiguo: textos sueltos en <p>, nombre de la empresa y años.
@@ -663,7 +663,7 @@ function empresa(p) {
 <p>Trabajamos con agricultores y productores con los que llevamos años, y el resto lo elegimos nosotros mismos en Mercamadrid. Así sabemos de dónde viene cada caja.</p>
 <h2>Como si nos sentáramos a su mesa</h2>
 <p>Seleccionamos nuestros productos con mucho cuidado, pieza a pieza. Cuando elegimos el género pensamos en que somos nosotros los que nos vamos a sentar a la mesa de su restaurante a disfrutar del menú. Por eso vamos de la mano con nuestros clientes.</p>`;
-  return paginaTexto(p, { antes, entradilla: 'Tercera generación de mayoristas. Más de 60 años alegrando la mesa de Madrid.', miga: 'Quiénes somos', foto: F + '2019/10/proveedores-distribucion_crs2.jpg' });
+  return paginaTexto(p, { antes, entradilla: 'Tercera generación de mayoristas. Más de seis décadas alegrando la mesa de Madrid.', miga: 'Quiénes somos', foto: F + '2019/10/proveedores-distribucion_crs2.jpg' });
 }
 
 function paginaNovedades() {
