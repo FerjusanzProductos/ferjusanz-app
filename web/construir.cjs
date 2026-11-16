@@ -688,6 +688,33 @@ function tarjeta() {
   const cuerpo = `<section class="bloque"><div class="envoltura lectura">${m.html}
   <h1>Ferjusanz: fruta, verdura, patatas y huevos para su negocio</h1>
   <p class="entradilla">${EMPRESA}: empresa familiar, tercera generación, ${ANIOS} sirviendo a restaurantes, bares, hoteles, colegios, residencias y fruterías de Madrid y Segovia.</p>
+  <form id="primer-pedido" class="formulario primer-pedido" method="post" action="/enviar-primer-pedido">
+  <h2>Imagine su primer pedido y le calculamos su tarifa</h2>
+  <p>Díganos qué suele pedir a la semana: con eso le preparamos precios a su medida y se los mandamos por WhatsApp o por correo. Sin compromiso y <strong>sin pedido mínimo</strong>. Si quiere, quedamos para conocernos y que pruebe el género.</p>
+  <p class="aviso-form ok" hidden data-si="enviado">✔ Recibido. Le preparamos su tarifa y le escribimos muy pronto. ¡Gracias!</p>
+  <p class="aviso-form mal" hidden data-si="error">No se ha podido enviar. Revise el nombre del negocio y el móvil, o escríbanos por WhatsApp.</p>
+  <input type="hidden" name="p" value="__PP_CONTACTO__">
+  <label>Nombre del negocio *<input name="negocio" required maxlength="100" autocomplete="organization"></label>
+  <label>Su nombre<input name="persona" maxlength="80" autocomplete="name"></label>
+  <label>Tipo de negocio<select name="tipo"><option value="restaurante">Restaurante u hotel</option><option value="bar">Bar o cafetería</option><option value="colegio">Colegio</option><option value="residencia">Residencia</option><option value="escuela_infantil">Escuela infantil</option><option value="catering">Catering</option><option value="otro">Otro (frutería, tienda…)</option></select></label>
+  <label>Localidad<input name="localidad" maxlength="80" autocomplete="address-level2"></label>
+  <label>Móvil *<input name="telefono" type="tel" required maxlength="20" autocomplete="tel" inputmode="tel" placeholder="600 000 000"></label>
+  <label>Correo<input name="email" type="email" maxlength="120" autocomplete="email"></label>
+  <fieldset class="pp-productos"><legend>¿Qué suele pedir a la semana?</legend>
+  <p class="nota">Ponga la cantidad solo en lo que use. Es orientativo: luego lo ajustamos juntos.</p>
+  __PP_PRODUCTOS__
+  </fieldset>
+  <label>Otros productos o cantidades<textarea name="otros" maxlength="800" rows="3" placeholder="Por ejemplo: 2 cajas de limones, patata pelada para freír…"></textarea></label>
+  <fieldset class="pp-dias"><legend>¿Qué días le viene bien recibirlo?</legend>${['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'].map(d => `<label><input type="checkbox" name="dia" value="${d}"> ${d}</label>`).join('')}</fieldset>
+  <label>¿Quedamos para conocernos?<select name="reunion"><option value="Sí, en su local">Sí, que vengan a mi local</option><option value="Sí, por teléfono">Sí, mejor por teléfono</option><option value="Sí, en Mercamadrid">Sí, voy yo a Mercamadrid</option><option value="Ahora no, solo la tarifa">Ahora no, solo quiero la tarifa</option></select></label>
+  <label>Mejor día y hora para hablar<input name="cuando" maxlength="100" placeholder="Por ejemplo: martes por la mañana"></label>
+  <label class="trampa" aria-hidden="true">No rellenar<input name="web" tabindex="-1" autocomplete="off"></label>
+  <label class="pp-acepto"><input type="checkbox" name="acepto" value="1" required> Quiero recibir mi tarifa por WhatsApp o correo *</label>
+  <p class="nota">Usamos estos datos solo para prepararle la tarifa y contactarle. Más información en la <a href="/politica-de-privacidad/">política de privacidad</a>.</p>
+  <button class="btn btn-wa" type="submit">Calcular mi tarifa</button>
+  </form>
+  <script>(function(){var q=location.search;document.querySelectorAll('[data-si]').forEach(function(e){if(q.indexOf(e.dataset.si+'=')>-1)e.hidden=false});var b=document.getElementById('pp-buscar');if(b)b.addEventListener('input',function(){var t=b.value.toLowerCase();document.querySelectorAll('.pp-fila').forEach(function(f){f.hidden=t&&f.textContent.toLowerCase().indexOf(t)<0})})})()</script>
+  <h2 class="pp-separa">Quiénes somos y cómo trabajamos</h2>
   <div class="acciones apiladas"><a class="btn btn-wa" href="${wa(fer.num, 'Hola Fernando, he visto la tarjeta de Ferjusanz y quería información de: ')}" rel="nofollow">${I.wa}<span>Escribir a Fernando por WhatsApp <small>(${fer.ver})</small></span></a>
   <a class="btn btn-borde" href="tel:+34917632186">${I.tel}<span>Llamar a la oficina: ${TEL}</span></a>
   <a class="btn btn-borde" href="data:text/vcard;charset=utf-8,${encodeURIComponent(vcf)}" download="Ferjusanz.vcf"><span>📇 Guardar el contacto en el móvil</span></a></div>
@@ -701,7 +728,7 @@ function tarjeta() {
   <h2>¿Dónde repartimos?</h2>
   <ul>${ZONAS.map(([z, l]) => `<li><strong>${z}</strong>: ${l}.</li>`).join('')}</ul>
   <h2>¿Y el precio?</h2>
-  <p>Cambia con el mercado de cada día, por eso no lo publicamos. <strong>Díganos por WhatsApp qué productos le interesan</strong> y le pasamos el precio de ese día, sin compromiso.</p>
+  <p>Cambia con el mercado de cada día, por eso no lo publicamos. <a href="#primer-pedido"><strong>Rellene arriba lo que suele pedir</strong></a> y le calculamos su tarifa, o díganos por WhatsApp qué productos le interesan. Sin compromiso.</p>
   <h2>Nuestros datos</h2>
   <p>${EMPRESA} · NIF ${NIF}<br>${DIRECCION}<br>Oficina: <a href="tel:+34917632186">${TEL}</a> · <a href="mailto:${EMAIL}">${EMAIL}</a><br>WhatsApp: ${WHATSAPP.map(w => `<a href="${wa(w.num, 'Hola')}" rel="nofollow">${w.ver}${w.nombre ? ` (${w.nombre})` : ''}</a>`).join(' · ')}</p>
   </div>

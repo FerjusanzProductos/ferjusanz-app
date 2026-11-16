@@ -471,3 +471,17 @@ a:active, button:active, summary:active { opacity: .75; }
   .heroe::after { background: linear-gradient(90deg, var(--tinta) 0, var(--tinta) 46%, rgba(22, 18, 16, 0) 56%); }
   .heroe-in { padding-top: 120px; padding-right: 48%; }
 }
+/* Tarjeta: «Imagine su primer pedido y le calculamos su tarifa» (16/11/2026). Las filas de productos las pone worker.js. */
+.formulario select { font: 400 16px/1.4 var(--texto); color: var(--tinta); background: #fff; border: 1px solid var(--linea); border-radius: 2px; padding: 12px; min-height: 48px; width: 100%; }
+.primer-pedido { border-bottom: 1px solid var(--linea); padding-bottom: 32px; margin-bottom: 8px; }
+.primer-pedido fieldset { border: 1px solid var(--linea); padding: 12px; margin: 0; display: grid; gap: 8px; min-width: 0; }
+.primer-pedido legend { font-weight: 600; padding: 0 4px; }
+.pp-lista { max-height: 380px; overflow-y: auto; display: grid; gap: 2px; }
+.primer-pedido .pp-fila { display: grid; grid-template-columns: 1fr 76px 78px; align-items: center; gap: 8px; font-weight: 400; border-bottom: 1px solid var(--linea); padding: 4px 0; }
+.primer-pedido .pp-fila input { min-height: 44px; padding: 8px; text-align: right; }
+.pp-fila small { font-size: .85rem; }
+.pp-dias { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+.primer-pedido .pp-dias label, .primer-pedido .pp-acepto { display: flex; align-items: center; gap: 8px; font-weight: 400; min-height: 44px; }
+.primer-pedido input[type=checkbox] { width: 22px; height: 22px; min-height: 0; padding: 0; }
+.pp-separa { margin-top: 32px; }
+.primer-pedido .pp-fila[hidden] { display: none; }

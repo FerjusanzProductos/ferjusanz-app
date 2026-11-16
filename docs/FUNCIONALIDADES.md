@@ -47,6 +47,7 @@ _Sacadas del historial de GitLab y de los documentos (📝). Versión normal v18
 - Aprobación de precios por WhatsApp (Harvey 2).
 
 ## Comercial: Harvey
+- **🧮 Primer pedido y tarifa** (16/11/2026): la tarjeta del QR (`/tarjeta/`) pide arriba lo que el negocio suele pedir a la semana, días de reparto y si quiere reunión. Se manda con enlace personal desde la ficha del contacto o desde Harvey (WhatsApp, correo o copiar). Llega a Comercial › Avisos › «Primeros pedidos» con la tarifa general calculada y el total por semana; precios tapados hasta que Fernando los aprueba.
 - **Harvey 1**: escribe mensajes, guiones, ofertas y respuestas a quejas. Consulta clientes, deudas, pedidos, ventas, prospectos y quejas (solo lectura). Alta de cliente provisional con confirmación. No envía nada solo.
 - **Harvey 2**: «Hoy, a quién escribir», pedido pegado convertido en borrador, borradores diarios de tarifas para clientes nuevos, ofertas para recuperar clientes (compra + 0,25 €), productos dejados, hora de contacto, pestaña Actividad, venta con visita, confirmar pedidos, presentaciones y listas.
 - Mensajes cortos y naturales («mañana», «hoy»): ⚠️ solo en pruebas.

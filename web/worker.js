@@ -12,6 +12,8 @@ const DOMINIO_SIN_WWW = "ferjusanz-frutas-verduras.es";
 // Contador de visitas propio (sin cookies): cada página vista va a web_visitas de la base real. Clave pública: solo puede añadir.
 const VISITAS = "https://hvydnjaswdexttogsyen.supabase.co/rest/v1/rpc/registrar_visita";
 const CLAVE_PUBLICA = "sb_publishable_B6ZWPBp54OT62yXU3khygQ_eIm6UnVq";
+// Base para el formulario «primer pedido» de la tarjeta: la real; para probar en local, SUPABASE_URL y SUPABASE_CLAVE de la de pruebas.
+const BASE_REAL = "https://hvydnjaswdexttogsyen.supabase.co";
 const ROBOT = /bot|crawl|spider|slurp|preview|headless|lighthouse|monitor|curl|wget|python|node|go-http|facebookexternalhit|whatsapp/i;
 
 function apuntarVisita(request, ruta) {
@@ -35,6 +37,7 @@ export default {
     if (url.hostname === DOMINIO_SIN_WWW) return Response.redirect("https://www." + DOMINIO_SIN_WWW + url.pathname + url.search, 301);
     let ruta = decodeURI(url.pathname);
     if (ruta === "/enviar-contacto") return enviarContacto(request, url, env);
+    if (ruta === "/enviar-primer-pedido") return enviarPrimerPedido(request, url, env);
     // Fotos nuevas (novedades y artículos): en el almacén KV, no dentro del Worker.
     if (ruta.startsWith("/fotos/")) {
       const foto = await env.FOTOS.get(ruta.slice(1), { type: "arrayBuffer", cacheTtl: 86400 });
@@ -52,6 +55,7 @@ export default {
     // Cabeceras básicas de seguridad.
     Object.assign(headers, { "x-content-type-options": "nosniff", "referrer-policy": "strict-origin-when-cross-origin", "x-frame-options": "SAMEORIGIN", "strict-transport-security": "max-age=31536000", "permissions-policy": "camera=(), microphone=(), geolocation=()" });
     if (ARCHIVOS[ruta] && archivo[1].startsWith("text/html")) { const v = apuntarVisita(request, ruta); if (v) ctx.waitUntil(v); }
+    if (ruta === "/tarjeta/") return new Response(await tarjetaConProductos(archivo[0], url, env), { status: 200, headers });
     return new Response(archivo[0], { status: ARCHIVOS[ruta] ? 200 : 404, headers });
   },
 };
@@ -72,6 +76,49 @@ async function enviarContacto(request, url, env) {
     return volver(j.ok ? "enviado=1" : "error=" + encodeURIComponent(j.error || "envio"));
   } catch (e) {
     console.log("contacto fallo", String(e));
+    return volver("error=envio");
+  }
+}
+
+// ───────── Tarjeta: «Imagine su primer pedido y le calculamos su tarifa» (16/11/2026) ─────────
+const rpc = (env, fn, body) => fetch((env.SUPABASE_URL || BASE_REAL) + "/rest/v1/rpc/" + fn, { method: "POST",
+  headers: { apikey: env.SUPABASE_CLAVE || CLAVE_PUBLICA, "content-type": "application/json" }, body: JSON.stringify(body || {}) });
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// Pone en la tarjeta los productos de la tarifa (sin precios) y el contacto del enlace personal (?p=).
+// shortcut: pide la lista a la base en cada visita (pocas visitas); si crecen, guardarla 10 min con caches.default.
+async function tarjetaConProductos(html, url, env) {
+  let filas = "";
+  try {
+    const r = await rpc(env, "primer_pedido_productos");
+    const lista = r.ok ? await r.json() : [];
+    if (lista.length) filas = `<input id="pp-buscar" type="search" placeholder="Buscar producto…" aria-label="Buscar producto"><div class="pp-lista">` +
+      lista.map((x) => `<label class="pp-fila"><span>${esc(x.nombre)}</span><input name="c_${esc(x.id)}" type="text" inputmode="decimal" maxlength="8" pattern="[0-9]{1,5}([.,][0-9]{1,2})?" title="Solo números, por ejemplo 2 o 2,5" aria-label="${esc(x.nombre)} por semana"><small>${esc(x.unidad || "")}/sem.</small></label>`).join("") + `</div>`;
+  } catch (e) { console.log("productos fallo", String(e)); }
+  const p = url.searchParams.get("p") || "";
+  return html.replace("__PP_PRODUCTOS__", filas).replace("__PP_CONTACTO__", UUID.test(p) ? p : "");
+}
+
+async function enviarPrimerPedido(request, url, env) {
+  const f = request.method === "POST" ? await request.formData().catch(() => null) : null;
+  const p = f && UUID.test(f.get("p") || "") ? f.get("p") : "";
+  const volver = (q) => Response.redirect(url.origin + "/tarjeta/?" + q + (p ? "&p=" + p : "") + "#primer-pedido", 303);
+  if (!f) return volver("");
+  const origen = request.headers.get("origin");
+  if (origen && origen !== "null" && origen !== url.origin) return new Response("Origen no permitido", { status: 403 });
+  const productos = [];
+  for (const [k, v] of f) if (k.startsWith("c_") && UUID.test(k.slice(2)) && String(v).trim()) productos.push({ id: k.slice(2), cantidad: String(v).trim() });
+  const t = (k) => String(f.get(k) || "");
+  try {
+    const r = await rpc(env, "web_primer_pedido", { p_negocio: t("negocio"), p_persona: t("persona"), p_tipo: t("tipo"), p_localidad: t("localidad"),
+      p_telefono: t("telefono"), p_email: t("email"), p_productos: productos.slice(0, 100), p_otros: t("otros"), p_dias: f.getAll("dia").join(", "),
+      p_reunion: [t("reunion"), t("cuando")].filter(Boolean).join(" · "), p_notas: "", p_prospecto: p || null, p_trampa: t("web") });
+    const j = await r.json().catch(() => ({}));
+    console.log("primer pedido", r.status, JSON.stringify(j));
+    return volver(j.ok ? "enviado=1" : "error=" + encodeURIComponent(j.error || "envio"));
+  } catch (e) {
+    console.log("primer pedido fallo", String(e));
     return volver("error=envio");
   }
 }
