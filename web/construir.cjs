@@ -65,7 +65,7 @@ const FAMILIAS = [
   { id: 'legumbres', nombre: 'Legumbres', ruta: '/distribucion-y-venta-de-legumbres-madrid/', foto: F + '2019/10/venta-de-legumbres-en-madrid.jpg',
     lema: 'Para los guisos de toda la semana.',
     lista: ['Garbanzos', 'Lentejas', 'Judión', 'Arroz', 'Nueces'] },
-  { id: 'hierbas', nombre: 'Hierbas y picantes', ruta: null, foto: F + '2020/09/verduras-residencias-ancianos.jpg',
+  { id: 'hierbas', nombre: 'Hierbas y picantes', ruta: null, foto: '/fotos/2026/11/pimientos-picantes.jpg',
     lema: 'El toque final del plato.',
     lista: ['Perejil', 'Cilantro', 'Albahaca', 'Hierbabuena y menta', 'Eneldo', 'Romero y tomillo', 'Laurel', 'Cebollino', 'Jengibre', 'Guindilla y habanero', 'Ñora', 'Piparras'] },
 ];
