@@ -502,6 +502,8 @@ html[data-tema=oscuro] img,html[data-tema=oscuro] video,html[data-tema=oscuro] c
 html[data-tema=oscuro]{--gris:#ecf1f6;--borde:#bbcadb;--txt:#0d131a;--txt2:#435466;--verde:#24a25a;--verde-osc:#00783e;--verde-cl:#bfddd7;--ambar-cl:#e3d2b2;--ambar:#793d00;--rojo:#db5454}
 html[data-tema=oscuro] body{background:linear-gradient(180deg,#ecf1f6,#dde7f3) fixed}
 html[data-tema=oscuro] header{background:linear-gradient(135deg,#c7e2da,#a9d3c2);color:#000}
+/* «← Volver» y 🏠 con la misma letra que el título (en blanco no se leía en modo oscuro) */
+html[data-tema=oscuro] header .back{color:#000;background:rgba(0,0,0,.08);border-color:rgba(0,0,0,.2)}
 html[data-tema=oscuro] button:not(.ghost):not(.peligro):not(.chip):not(.back):not(.chatbtn):not(.quien):not(.small.ghost):not(.circ):not(.calbtn):not(.fichar-btn):not(.bandeja-fac):not(.portalbtn):not(nav button){background:linear-gradient(135deg,#1b9d55,#4bb673);color:#000}
 html[data-tema=oscuro] button.ghost,html[data-tema=oscuro] .chip,html[data-tema=oscuro] .res button{background:linear-gradient(145deg,#cfdbe9,#c5d4e5);color:var(--txt);border-color:var(--borde)}
 html[data-tema=oscuro] .chip.on,html[data-tema=oscuro] nav.tabs button.on{background:linear-gradient(135deg,#1b9d55,#4bb673);color:#000;border-color:transparent}
