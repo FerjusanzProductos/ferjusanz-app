@@ -168,7 +168,7 @@ Después del 45: Claude añade la siguiente tanda aquí (temporada del mes y lo 
 ## 7. Lo que falta para arrancar
 - 🔴 **Fernando**: primera tanda de fotos (listas A y B).
 - 🔴 **Fernando**: recuperar la entrada a Webempresa (dominio) y la ficha de Google (ya pedida).
-  - ✅ Textos de la ficha **listos para pegar** (nombre, categoría, descripción, servicios y mensaje para pedir reseñas): `docs/FICHA_GOOGLE.md` (16/11/2026). Falta decidir si se enseña la dirección de Carare o solo la zona de reparto.
+  - ✅ Textos de la ficha **listos para pegar** (nombre, categoría, descripción, servicios y mensaje para pedir reseñas): `docs/FICHA_GOOGLE.md` (16/11/2026). Dirección oculta y solo zona de reparto (los clientes no van a la oficina, Fernando 16/11/2026).
 - 🟡 **Fernando**: crear el Instagram de empresa y la página de Facebook (Claude le guía paso a paso desde el móvil cuando quiera).
 - 🟡 **Fernando**: grabar el primer Reel («Esta semana en Mercamadrid») y mandarlo.
 - 🟡 **Fernando**: una nota de voz a la semana.

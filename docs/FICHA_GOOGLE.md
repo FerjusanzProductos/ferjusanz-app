@@ -10,9 +10,9 @@ Se usa **cuando Fernando recupere la ficha** (ver `docs/PLAN_MARKETING.md`, punt
 - Principal: **Mayorista de frutas y verduras**.
 - Secundarias (solo si salen al escribirlas): **Proveedor de huevos**, **Distribuidor de alimentos**.
 
-## Dirección y zona
-- ⚪ A decidir con Fernando: si los clientes **no** van a la calle Carare, ocultar la dirección y poner solo **zona de servicio**: Madrid, Alcobendas, San Sebastián de los Reyes, Tres Cantos, Pozuelo de Alarcón, Las Rozas, Boadilla del Monte, Majadahonda, Coslada, San Fernando de Henares y Segovia.
-- Si sí van, dirección visible: C/ Carare, 2, 28033 Madrid.
+## Dirección y zona (decidido por Fernando, 16/11/2026: los clientes no van a la oficina)
+- **Ocultar la dirección** (C/ Carare, 2 queda solo para Google, sin mostrarse).
+- **Zona de servicio**: Madrid, Alcobendas, San Sebastián de los Reyes, Tres Cantos, Pozuelo de Alarcón, Las Rozas, Boadilla del Monte, Majadahonda, Coslada, San Fernando de Henares y Segovia.
 
 ## Contacto y horario
 - Teléfono: 609 100 690 (el de los botones «Llamar» de la web). Web: la nueva cuando tenga el dominio.
