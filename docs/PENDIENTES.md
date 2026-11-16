@@ -51,7 +51,7 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 
 ### 👩‍💼 Carmen (oficina)
 - 🟡 **Fernando** o **Carmen**: en la lupa 🔍 escribir «productos sin reconocer» → botón **«♻️ Releer las facturas de 30 días»** (así se rellenan solos el IVA, el total y el nº de las que ya estaban leídas; solo rellena lo vacío).
-- 🔴 Completar los **clientes sin NIF / dirección / CP** antes del 1/1/2027 (Clientes → «🧾 Faltan datos para facturar» → «🔎»): revisar las propuestas (las de confianza media, confirmarlas con el cliente; nuevas del 16/11: **El Chato de Boadilla, Gallo Descorchado, Sidrería Don Carlos y d'Coysa**), CAPARRA, BOUZAS, CUENDA, HANDYMAN; sin encontrar: Cervecería Los Picos, Purakai, Restaurante Hawaii (Lasga) y Restaurante los Ángeles (Tapeador): pedírselo al cliente y pedir datos a autónomos y a las sociedades que no salen en internet.
+- 🔴 Completar los **clientes sin NIF / dirección / CP** antes del 1/1/2027 (Clientes → «🧾 Faltan datos para facturar» → «🔎»): revisar las propuestas (botón **«🔎 NIF por confirmar»** en Clientes) (las de confianza media, confirmarlas con el cliente; nuevas del 16/11: **El Chato de Boadilla, Gallo Descorchado, Sidrería Don Carlos y d'Coysa**), CAPARRA, BOUZAS, CUENDA, HANDYMAN; sin encontrar: Cervecería Los Picos, Purakai, Restaurante Hawaii (Lasga) y Restaurante los Ángeles (Tapeador): pedírselo al cliente y pedir datos a autónomos y a las sociedades que no salen en internet.
 - 🟡 Compras → «🧾 NIF e IVA»: leer los que faltan y poner a mano el NIF de Pataleta, Perichán…
 - 🟡 Empezar a apuntar la **caja** en la app (Más → «💵 Caja (efectivo)»).
 - 🟡 Prueba completa de facturas en la naranja el **15–18/12** con Fernando (`docs/GUION_PRUEBA_DICIEMBRE.md`).
