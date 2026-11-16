@@ -11474,12 +11474,13 @@ function pdfColor(hex, trazo) {
 /* Documento A4. Origen arriba-izquierda (y hacia abajo) para pensar como en una hoja. */
 function pdfNuevo(W0, H0) {
   const W = W0 || 595.28, H = H0 || 841.89; const paginas = [[]];
-  const P = () => paginas[paginas.length - 1]; const imgs = [];
+  const P = () => paginas[paginas.length - 1]; const imgs = []; const enlaces = []; // [página, x, y, w, h, url]
   const f = n => (Math.round(n * 100) / 100).toString();
   const api = {
     imagen(bytes, pw, ph, x, y, w, h) { let k = imgs.findIndex(i => i.bytes === bytes); if (k < 0) { imgs.push({ bytes, w: pw, h: ph }); k = imgs.length - 1; } P().push('q ' + f(w) + ' 0 0 ' + f(h) + ' ' + f(x) + ' ' + f(H - y - h) + ' cm /Im' + k + ' Do Q'); },
     W, H,
     pagina() { paginas.push([]); },
+    enlace(x, y, w, h, url) { enlaces.push([paginas.length - 1, x, y, w, h, url]); },
     numPaginas() { return paginas.length; },
     paginaActual() { return paginas.length - 1; },
     enPagina(i, fn) { const g = paginas.length; const a = paginas; /* dibujar sobre una página ya hecha */ const guardada = paginas.slice(); paginas.push(paginas[i]); fn(); paginas.pop(); },
@@ -11499,10 +11500,11 @@ function pdfNuevo(W0, H0) {
       const imRef = imgs.map(im => { let bin = ''; for (let i = 0; i < im.bytes.length; i += 8192) bin += String.fromCharCode.apply(null, im.bytes.subarray(i, i + 8192)); return add('<< /Type /XObject /Subtype /Image /Width ' + im.w + ' /Height ' + im.h + ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + im.bytes.length + ' >>\nstream\n' + bin + '\nendstream'); });
       const xo = imRef.length ? ' /XObject << ' + imRef.map((r, i) => '/Im' + i + ' ' + r + ' 0 R').join(' ') + ' >>' : '';
       const kids = [];
-      paginas.forEach(p => {
+      paginas.forEach((p, ip) => {
         const cont = p.join('\n');
+        const an = enlaces.filter(e => e[0] === ip).map(e => add('<< /Type /Annot /Subtype /Link /Rect [' + f(e[1]) + ' ' + f(H - e[2] - e[4]) + ' ' + f(e[1] + e[3]) + ' ' + f(H - e[2]) + '] /Border [0 0 0] /A << /S /URI /URI (' + String(e[5]).replace(/[^\x21-\x7e]/g, '').replace(/[()\\]/g, '\\$&') + ') >> >>'));
         const c = add('<< /Length ' + cont.length + ' >>\nstream\n' + cont + '\nendstream');
-        const pg = add('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + f(W) + ' ' + f(H) + '] /Resources << /Font << /F1 ' + f1 + ' 0 R /F2 ' + f2 + ' 0 R >>' + xo + ' >> /Contents ' + c + ' 0 R >>');
+        const pg = add('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + f(W) + ' ' + f(H) + '] /Resources << /Font << /F1 ' + f1 + ' 0 R /F2 ' + f2 + ' 0 R >>' + xo + ' >> /Contents ' + c + ' 0 R' + (an.length ? ' /Annots [' + an.map(r => r + ' 0 R').join(' ') + ']' : '') + ' >>');
         kids.push(pg + ' 0 R');
       });
       objs[1] = '<< /Type /Pages /Kids [' + kids.join(' ') + '] /Count ' + kids.length + ' >>';
@@ -12058,7 +12060,7 @@ function hojaPrimerPedido(p) {
     try {
       if (conPdf.checked) { const tipo = h2EsColectivo({ tipo: p.tipo, nombre: p.nombre }) ? 'colectivos' : 'hosteleria';
         const lam = presPlantilla(tipo), ic = lam.findIndex(x => x.t === 'contacto');
-        lam.splice(ic < 0 ? lam.length : ic, 0, { t: 'lista', titulo: 'Imagine su primer pedido y le calculamos su tarifa', puntos: ['Sirve para calcular los precios que le haríamos', 'Marque en un minuto qué productos usa y, si quiere, cuánto a la semana', 'Le enviamos su tarifa según lo que gasta: destacamos por la calidad-precio', 'Sin compromiso y sin pedido mínimo · Madrid y Segovia', 'Rellénelo con el enlace del mensaje o en ' + URL_TARJETA.replace(/^https:\/\//, '')] });
+        lam.splice(ic < 0 ? lam.length : ic, 0, { t: 'lista', titulo: 'Imagine su primer pedido y le calculamos su tarifa', puntos: ['Sirve para calcular los precios que le haríamos', 'Marque en un minuto qué productos usa y, si quiere, cuánto a la semana', 'Le enviamos su tarifa según lo que gasta: destacamos por la calidad-precio', 'Sin compromiso y sin pedido mínimo · Madrid y Segovia'], enlace: { texto: 'Pulse aquí para rellenarlo', url } });
         files.push(new File([pdfPresentacion(await presExpandir(lam, false), 'Ferjusanz')], 'Ferjusanz-presentacion.pdf', { type: 'application/pdf' })); }
       if (video.files[0]) files.push(video.files[0]);
       if (!files.length) { toast('Marca la presentación o elige un vídeo.', 'err'); return; }
@@ -12287,7 +12289,8 @@ function pdfPresentacion(laminas, titulo) {
     banda(d.t === 'precios' ? (d.titulo || 'Lista de precios') + (d.partes > 1 ? '  (' + d.parte + '/' + d.partes + ')' : '') : d.titulo);
     if (d.t === 'texto') { let y = 160; pdfLineas(d.texto || '', 19, false, W - 2 * M).slice(0, 8).forEach(l => { doc.texto(l, M, y, 19, { color: '#111827' }); y += 28; });
       const cf = (d.cifras || []).filter(x => x && (x[0] || x[1])).slice(0, 4); const cw = (W - 2 * M - (cf.length - 1) * 16) / Math.max(cf.length, 1); cf.forEach((x, k) => { const xx = M + k * (cw + 16); doc.caja(xx, 400, cw, 100, '#f0fdf4', '#86efac'); doc.texto(x[0] || '', xx + cw / 2, 444, 26, { neg: true, color: V, align: 'center' }); pdfLineas(x[1] || '', 12, false, cw - 16).slice(0, 2).forEach((l, q) => doc.texto(l, xx + cw / 2, 470 + q * 15, 12, { color: '#374151', align: 'center' })); }); }
-    else if (d.t === 'lista') { let y = 150; (d.puntos || []).filter(Boolean).slice(0, 7).forEach((p, k) => { doc.rect(M, y - 20, 34, 34, V); doc.texto(String(k + 1), M + 17, y + 4, 18, { neg: true, color: '#ffffff', align: 'center' }); const L = pdfLineas(p, 20, false, W - 2 * M - 60).slice(0, 2); L.forEach((l, q) => doc.texto(l, M + 52, y + 2 + q * 24, 20, { color: '#111827' })); y += Math.max(58, L.length * 24 + 26); }); }
+    else if (d.t === 'lista') { let y = 150; (d.puntos || []).filter(Boolean).slice(0, 7).forEach((p, k) => { doc.rect(M, y - 20, 34, 34, V); doc.texto(String(k + 1), M + 17, y + 4, 18, { neg: true, color: '#ffffff', align: 'center' }); const L = pdfLineas(p, 20, false, W - 2 * M - 60).slice(0, 2); L.forEach((l, q) => doc.texto(l, M + 52, y + 2 + q * 24, 20, { color: '#111827' })); y += Math.max(58, L.length * 24 + 26); });
+      if (d.enlace) { const bw = W - 2 * M, by = Math.min(y, H - 130); doc.rect(M, by, bw, 64, V); doc.texto(d.enlace.texto, M + bw / 2, by + 40, 24, { neg: true, color: '#ffffff', align: 'center' }); doc.enlace(M, by, bw, 64, d.enlace.url); } }
     else if (d.t === 'ofertas') { if (!(d.items || []).length) pdfLineas(d.texto || '', 22, false, W - 2 * M).slice(0, 5).forEach((l, k) => doc.texto(l, M, 170 + k * 32, 22, { color: '#111827' })); else { let y = 128; d.items.slice(0, 5).forEach(x => { doc.caja(M, y, W - 2 * M, 62, '#fefce8', '#facc15'); doc.rect(M, y, 6, 62, AM); doc.texto('OFERTA · ' + pdfLineas(x.n || '', 20, true, W - 2 * M - 120).slice(0, 1)[0], M + 20, y + 27, 20, { neg: true, color: '#111827' }); pdfLineas(x.t || '', 13, false, W - 2 * M - 40).slice(0, 1).forEach(l => doc.texto(l, M + 20, y + 49, 13, { color: '#374151' })); y += 74; }); } }
     else if (d.t === 'productos' && d.conFoto) { const it = (d.items || []).filter(Boolean).slice(0, 6), cw = (W - 2 * M - 2 * 16) / 3, ch = 205; it.forEach((x, k) => { const xx = M + (k % 3) * (cw + 16), yy = 122 + Math.floor(k / 3) * (ch + 14); doc.caja(xx, yy, cw, ch, '#ffffff', '#86efac'); const ft = (d.fotos || {})[x], by = presFotoBytes(ft); const ih = (cw - 12) * 0.75; if (by) doc.imagen(by, ft.w, ft.h, xx + 6, yy + 6, cw - 12, ih); else { doc.rect(xx + 6, yy + 6, cw - 12, ih, '#dcfce7'); doc.texto(x.charAt(0).toUpperCase(), xx + cw / 2, yy + 6 + ih / 2 + 22, 60, { neg: true, color: '#86efac', align: 'center' }); } doc.texto(pdfLineas(x, 17, true, cw - 16).slice(0, 1)[0] || '', xx + cw / 2, yy + ch - 14, 17, { neg: true, color: '#111827', align: 'center' }); }); }
     else if (d.t === 'productos') { const it = (d.items || []).filter(Boolean).slice(0, 18); const cols = 3, cw = (W - 2 * M - 2 * 16) / 3; it.forEach((x, k) => { const xx = M + (k % cols) * (cw + 16), yy = 135 + Math.floor(k / cols) * 72; doc.caja(xx, yy, cw, 58, '#f0fdf4', '#86efac'); doc.rect(xx, yy, 5, 58, V); pdfLineas(x, 17, true, cw - 30).slice(0, 2).forEach((l, q) => doc.texto(l, xx + 18, yy + 26 + q * 19 - (pdfLineas(x, 17, true, cw - 30).length > 1 ? 7 : 0), 17, { neg: true, color: '#111827' })); }); }
