@@ -209,7 +209,7 @@ const NEGOCIO = {
   '@context': 'https://schema.org', '@type': 'WholesaleStore', '@id': DOMINIO + '/#empresa',
   name: 'Ferjusanz', legalName: EMPRESA, taxID: NIF, url: DOMINIO + '/',
   description: `Mayorista de patatas, frutas, verduras y huevos en Madrid y Segovia para hostelería, colectividades y fruterías. Tercera generación, ${ANIOS} en el sector.`,
-  telephone: '+34917632186', email: EMAIL, logo: DOMINIO + F + '2019/10/logotipo.png', image: DOMINIO + F + '2019/10/proveedores-distribucion_crs2.jpg',
+  telephone: '+34917632186', email: EMAIL, logo: DOMINIO + '/marca/logo.png', image: DOMINIO + F + '2019/10/proveedores-distribucion_crs2.jpg',
   address: { '@type': 'PostalAddress', streetAddress: 'C/ Carare, 2', postalCode: '28033', addressLocality: 'Madrid', addressRegion: 'Madrid', addressCountry: 'ES' },
   areaServed: [{ '@type': 'City', name: 'Madrid' }, { '@type': 'AdministrativeArea', name: 'Comunidad de Madrid' }, { '@type': 'AdministrativeArea', name: 'Provincia de Segovia' }],
   hasMap: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('Ferjusanz, Calle Carare 2, 28033 Madrid'),
@@ -269,8 +269,8 @@ function plantilla({ ruta, titulo, descripcion, imagen, cuerpo, datos = [], tipo
 <meta property="og:locale" content="es_ES">
 <meta property="og:image" content="${DOMINIO}${og}">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="${F}2019/10/cropped-logo-144px-32x32.jpg" sizes="32x32">
-<link rel="apple-touch-icon" href="${F}2019/10/cropped-logo-144px-180x180.jpg">
+<link rel="icon" href="/marca/icono-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/marca/icono-180.png">
 <meta name="theme-color" content="#161210">
 <link rel="preload" href="/fuentes/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fuentes/barlow-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -283,7 +283,7 @@ ${datos.map(d => `<script type="application/ld+json">${JSON.stringify(d)}</scrip
 <div class="aviso"><span>Género fresco cada día</span><span>Reparto en Madrid y Segovia</span><span class="solo-ancho">${HORARIO}</span><span class="aviso-contacto"><a href="tel:+34917632186">${TEL}</a>${WHATSAPP.slice().reverse().map(w => `<a href="tel:+${w.num}">${w.ver}</a>`).join('')}<a href="mailto:${EMAIL}">${EMAIL}</a></span></div>
 <header class="cabecera">
   <div class="cabecera-in">
-    <a href="/" class="logo" aria-label="Ferjusanz, inicio"><img src="${F}2019/10/logotipo.png" alt="Ferjusanz" width="185" height="32"></a>
+    <a href="/" class="logo" aria-label="Ferjusanz, inicio"><img src="/marca/logo-oscuro.png" alt="Ferjusanz · fruta, verdura, patata y huevos" width="670" height="130"></a>
     <nav class="menu-ancho" aria-label="Principal">${nav}</nav>
     <a class="btn btn-wa btn-cab" href="#pedir-precio">${I.wa}<span>Pedir precio</span></a>
     <details class="menu"><summary aria-label="Abrir menú"><span></span><span></span><span></span></summary><nav aria-label="Menú">${nav}<a href="#pedir-precio" class="btn btn-wa">${I.wa}<span>Pedir precio por WhatsApp</span></a></nav></details>
@@ -316,7 +316,7 @@ ${cuerpo}
 <footer class="pie">
   <div class="envoltura pie-col">
     <div>
-      <img src="${F}2019/10/logotipo.png" alt="Ferjusanz" width="185" height="32" loading="lazy">
+      <img class="etiqueta" src="/marca/etiqueta.png" alt="Ferjusanz, mayorista en Madrid" width="760" height="240" loading="lazy">
       <p>Tercera generación de mayoristas de patatas, frutas, verduras y huevos. ${ANIOS[0].toUpperCase() + ANIOS.slice(1)} alegrando la mesa de Madrid.</p>
       <p><a href="tel:+34917632186">${TEL}</a> · <a href="mailto:${EMAIL}">${EMAIL}</a><br>WhatsApp ${WHATSAPP.map(w => `<a href="${wa(w.num, 'Hola')}" rel="nofollow">${w.ver}</a>`).join(' · ')}<br>${DIRECCION}<br>${HORARIO}</p>
     </div>
@@ -882,7 +882,7 @@ const LEGALES = [
 // ───────── Construcción ─────────
 // Borra las páginas generadas antes (no las fotos ni las letras) para no dejar páginas viejas.
 for (const n of fs.readdirSync(OUT)) {
-  if (['wp-content', 'fotos', 'fuentes', 'estilo.css', 'robots.txt'].includes(n)) continue;
+  if (['wp-content', 'fotos', 'fuentes', 'marca', 'estilo.css', 'robots.txt'].includes(n)) continue;
   fs.rmSync(path.join(OUT, n), { recursive: true, force: true });
 }
 

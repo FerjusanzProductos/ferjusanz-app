@@ -90,7 +90,7 @@ div[style*="display:grid"]:has(>button:nth-child(3)){grid-template-columns:1fr 1
 .pd{min-width:100vw;width:100vw;height:100%;scroll-snap-align:start;box-sizing:border-box;padding:70px 22px 40px;display:flex;align-items:center;justify-content:center;color:#fff;background:linear-gradient(160deg,#14532d,#166534 60%,#15803d);overflow-y:auto}
 .pd-texto,.pd-lista,.pd-productos,.pd-precios,.pd-ofertas{background:#f0fdf4;color:#0f172a}.pd-in{width:100%;max-width:760px}
 .pd h1{font-size:clamp(38px,11vw,72px);margin:6px 0 10px;line-height:1.02;color:#fff}.pd h2{font-size:clamp(26px,7vw,44px);margin:0 0 14px;color:#166534;border-bottom:5px solid #facc15;display:inline-block;padding-bottom:4px}
-.pd-contacto h2{color:#fff}.pd-logo{font-weight:900;letter-spacing:.2em;color:#facc15;font-size:clamp(14px,4vw,20px);margin-bottom:8px}.pd-raya{width:90px;height:6px;background:#facc15;margin:14px auto;border-radius:4px}
+.pd-contacto h2{color:#fff}.pd-logo{margin-bottom:10px}.pd-logo img{height:clamp(30px,8vw,52px);width:auto}.pd-raya{width:90px;height:6px;background:#facc15;margin:14px auto;border-radius:4px}
 .pd-sub{font-size:clamp(16px,4.6vw,24px);color:#dcfce7;margin:6px 0}.pd-pie{font-size:clamp(13px,3.6vw,18px);color:#facc15;font-weight:700;margin-top:14px}.pd-p{font-size:clamp(16px,4.4vw,24px);line-height:1.45;margin:6px 0}
 .pd-cifras{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.pd-cifra{flex:1;min-width:28%;background:#fff;border:2px solid #86efac;border-radius:14px;padding:12px;text-align:center}.pd-cifra b{display:block;font-size:clamp(20px,6vw,32px);color:#166534}.pd-cifra span{font-size:clamp(11px,3vw,14px);color:#374151}
 .pd-ol{list-style:none;padding:0;margin:0}.pd-ol li{display:flex;gap:12px;align-items:center;margin:12px 0;font-size:clamp(16px,4.4vw,24px)}.pd-ol i{flex-shrink:0;width:38px;height:38px;border-radius:50%;background:#166534;color:#fff;font-style:normal;font-weight:800;display:flex;align-items:center;justify-content:center}
@@ -118,6 +118,7 @@ label.campo{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(
 .copia{background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;font-size:13px;padding:4px 2px;margin-bottom:14px}
 .copia .cab{display:flex;justify-content:space-between;gap:10px;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:6px}
 .copia .emp b{font-size:17px}
+.logo-doc{display:block;height:38px;width:auto;margin-bottom:4px}
 .copia .emp div{font-size:11px;line-height:1.35}
 .copia .num{text-align:right;font-size:12px}
 .copia .num b{font-size:18px;display:block}
@@ -3170,7 +3171,7 @@ function htmlAlbaran(d, formato, opt) {
     else if (tipo === 'AMARILLA') pie = firmaOk || firmaVacia;
     else pie = firmaOk;
     return '<div class="copia ' + formato + ' ' + c.cls + '">' +
-      '<div class="cab"><div class="emp"><b>' + esc(EMPRESA.nombre) + (PRACTICA ? ' — SIMULACRO, SIN VALOR' : ES_PRUEBAS ? ' — PRUEBA · SIN VALOR FISCAL' : '') + '</b><div>' + esc(EMPRESA.lema) + '</div><div>' + esc(EMPRESA.telsAlb) + '</div><div>' + esc(EMPRESA.dir) + ' · ' + esc(EMPRESA.email) + '</div></div>' +
+      '<div class="cab"><div class="emp"><img class="logo-doc" src="pres/logo.png" alt="Ferjusanz"><b>' + esc(EMPRESA.nombre) + (PRACTICA ? ' — SIMULACRO, SIN VALOR' : ES_PRUEBAS ? ' — PRUEBA · SIN VALOR FISCAL' : '') + '</b><div>' + esc(EMPRESA.lema) + '</div><div>' + esc(EMPRESA.telsAlb) + '</div><div>' + esc(EMPRESA.dir) + ' · ' + esc(EMPRESA.email) + '</div></div>' +
       '<div class="num">ALBARÁN<b>' + esc(num7) + '</b>Fecha: ' + esc(fechaES(a.fecha || p.fecha_entrega)) + '<br><span class="tipo">COPIA ' + tipo + ' · ' + c.dest + '</span><div class="tz">' + esc(c.nota) + '</div></div></div>' +
       '<div class="cli"><b>' + esc(nombreCli(cli)) + '</b>' + (cli.nombre_comercial && cli.nombre ? '<br>' + esc(cli.nombre) : '') +
       '<br>' + esc([cli.direccion, cli.localidad].filter(Boolean).join(' · ')) + (cli.nif ? '<br>NIF: ' + esc(cli.nif) : '') + '</div>' +
@@ -3180,12 +3181,16 @@ function htmlAlbaran(d, formato, opt) {
   };
   return copia('BLANCA') + copia('AMARILLA') + copia('ROSA');
 }
+/* Logo y etiqueta en JPEG para los PDF (facturas, tarifa). Si no han cargado (sin conexión), el PDF sale con el nombre en texto. */
+const LOGO_PDF = {};
+setTimeout(() => [['logo', 'pres/logo.jpg'], ['etiqueta', 'pres/etiqueta.jpg']].forEach(([k, u]) => fetch(u).then(r => r.ok ? r.arrayBuffer() : null).then(ab => { if (!ab) return; const b = new Uint8Array(ab); const i = new Image(); i.onload = () => { LOGO_PDF[k] = { b, w: i.naturalWidth, h: i.naturalHeight }; }; i.src = u; }).catch(() => { })), 2500);
 function imprimir(html) {
   const pa = document.getElementById('printArea'); pa.innerHTML = html;
   document.body.classList.add('imprimiendo');
   const fin = () => { document.body.classList.remove('imprimiendo'); pa.innerHTML = ''; window.removeEventListener('afterprint', fin); };
   window.addEventListener('afterprint', fin);
-  setTimeout(() => window.print(), 80);
+  const imgs = [...pa.querySelectorAll('img')].filter(i => !i.complete).map(i => new Promise(ok => { i.onload = i.onerror = ok; }));
+  Promise.race([Promise.all(imgs), new Promise(ok => setTimeout(ok, 3000))]).then(() => setTimeout(() => window.print(), 80));
 }
 
 /* =====================  HOJA DE CARGA Y SOBRANTE  ===================== */
@@ -4782,7 +4787,7 @@ function sifHtml(d) {
     const lt = sifLote(d, l); return cab + '<tr><td style="' + td + '">' + esc(sifDesc(l)) + (lt ? '<div style="font-size:10.5px;color:#6b7280">' + esc(lt) + '</div>' : '') + '</td><td style="' + R + '">' + (l.producto_id ? esc(num(l.cantidad) + ' ' + (l.unidad || '')) : '') + '</td><td style="' + R + '">' + (l.producto_id ? esc(eur(l.precio)) : '') + '</td><td style="' + R + '">' + eur(l.base) + '</td><td style="' + R + '">' + num(l.tipo_iva) + ' %</td><td style="' + R + '">' + eur(l.cuota_iva) + '</td><td style="' + R + '">' + eur(l.total) + '</td></tr>'; }).join('');
   return '<div style="font-family:Arial,Helvetica,sans-serif;font-size:12.5px;color:#111;background:#fff;padding:6px">' +
     /* AEAT: QR lo primero, arriba y centrado; «QR tributario:» con letra no menor que la del resto; ≥ 2 mm en blanco (6 mm recomendados) */
-    '<div style="text-align:center;font-weight:700;padding-bottom:3mm"><div>QR tributario:</div>' + sifQrSvg(d.qr) + (SIF_VERIFACTU ? '<div>VERI*FACTU</div>' : '') + '</div>' +
+    '<img src="pres/logo.png" alt="Ferjusanz" style="float:left;width:30%;max-width:190px;margin-top:4px">' + '<div style="text-align:center;font-weight:700;padding-bottom:3mm"><div>QR tributario:</div>' + sifQrSvg(d.qr) + (SIF_VERIFACTU ? '<div>VERI*FACTU</div>' : '') + '</div>' +
     (f.prueba ? '<div style="background:#b91c1c;color:#fff;font-weight:900;text-align:center;padding:6px;border-radius:6px;margin-bottom:8px;letter-spacing:1px">PRUEBA · SIN VALOR FISCAL</div>' : '') +
     (d.anul ? '<div style="border:3px solid #b91c1c;color:#b91c1c;font-weight:900;text-align:center;padding:6px;border-radius:6px;margin-bottom:8px">FACTURA ANULADA (emitida por error)<div style="font-weight:400;color:#111">Motivo: ' + esc(d.anul.motivo) + '</div></div>' : '') +
     '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start"><div style="flex:1;min-width:220px;border:1.5px solid #111;border-radius:6px;padding:4px">' + selloEmpresaSVG(e) + '<div style="font-size:11.5px;margin-top:2px"><b>NIF ' + esc(e.nif) + '</b></div></div>' +
@@ -4814,6 +4819,7 @@ function sifPdf(d) {
   const nuevaPag = () => { doc.pagina(); marcaPrueba(); y = 44; doc.texto((rect ? 'Factura rectificativa ' : 'Factura ') + f.codigo + ' (continuación)', M, y, 10, { neg: true }); y += 18; cabTabla(); };
   marcaPrueba(); y = f.prueba || d.anul ? 34 : 24;
   /* QR tributario (AEAT): lo primero, arriba y centrado, 35 mm (S = 99,2 pt); letra 10,5 como la mayor de los datos; 6 mm (17 pt) en blanco alrededor */
+  if (LOGO_PDF.logo) doc.imagen(LOGO_PDF.logo.b, LOGO_PDF.logo.w, LOGO_PDF.logo.h, M, y + 14, 190, 190 * LOGO_PDF.logo.h / LOGO_PDF.logo.w);
   const S = 99.2; doc.texto('QR tributario:', W / 2, y + 8, 10.5, { neg: true, align: 'center' }); sifQrPdf(doc, d.qr, (W - S) / 2, y + 25, S);
   if (SIF_VERIFACTU) doc.texto('VERI*FACTU', W / 2, y + S + 39, 10.5, { neg: true, align: 'center' });
   y += S + (SIF_VERIFACTU ? 50 : 42);
@@ -11670,19 +11676,18 @@ function pdfListaPrecios(d) {
   let y = 0;
   const cabecera = grande => {
     if (grande) {
-      degr(0, 0, W, 128, '#0b4a2c', '#25a35d', 40, true);
-      for (let r = 0; r < 4; r++) for (let c = 0; c < 7; c++) doc.rect(W - 170 + c * 19 + (r % 2) * 9, 18 + r * 19, 6, 6, (r + c) % 3 ? '#3fbf75' : '#facc15');   // adorno de puntos
-      degr(0, 128, W, 6, '#facc15', '#f59e0b', 20, true); doc.rect(0, 134, W, 1.5, '#fde68a');
-      doc.texto('FERJUSANZ', M, 52, 30, { neg: true, color: '#ffffff' });
-      doc.texto('Frutas y verduras al por mayor · Mercamadrid', M, 70, 10.5, { color: '#dcfce7' });
+      degr(0, 0, W, 128, '#8f1d22', '#3f080b', 40, true);
+      degr(0, 128, W, 6, '#f6dd9a', '#a8701c', 20, true); doc.rect(0, 134, W, 1.5, '#f6dd9a');
+      if (LOGO_PDF.etiqueta) doc.imagen(LOGO_PDF.etiqueta.b, LOGO_PDF.etiqueta.w, LOGO_PDF.etiqueta.h, M, 12, 190, 60);
+      else doc.texto('FERJUSANZ', M, 52, 30, { neg: true, color: '#ffffff' });
       pdfLineas(d.titulo || 'Lista de precios', 22, true, W - 2 * M).slice(0, 2).forEach((l, i) => doc.texto(l, M, 102 + i * 24, 22, { neg: true, color: '#ffffff' }));
       y = 152;
       if (d.subtitulo) { pdfLineas(d.subtitulo, 11.5, false, W - 2 * M).slice(0, 2).forEach(l => { doc.texto(l, M, y, 11.5, { color: GRIS }); y += 15; }); y += 2; }
       if (d.validez) { doc.texto(d.validez, M, y, 10, { neg: true, color: VERDE }); y += 16; }
       y += 6;
     } else {
-      degr(0, 0, W, 34, '#0b4a2c', '#25a35d', 24, true); degr(0, 34, W, 3, '#facc15', '#f59e0b', 8, true); doc.texto('FERJUSANZ', M, 22, 13, { neg: true, color: '#ffffff' });
-      doc.texto(d.titulo || '', W - M, 22, 10.5, { color: '#dcfce7', align: 'right' }); y = 56;
+      degr(0, 0, W, 34, '#8f1d22', '#3f080b', 24, true); degr(0, 34, W, 3, '#f6dd9a', '#a8701c', 8, true); doc.texto('FERJUSANZ', M, 22, 13, { neg: true, color: '#f6dd9a' });
+      doc.texto(d.titulo || '', W - M, 22, 10.5, { color: '#f3e3c4', align: 'right' }); y = 56;
     }
   };
   const hayRecs = (d.recs || []).length > 0;
@@ -12572,13 +12577,13 @@ function presLamina(d) {
   const s = h('section', { class: 'pd pd-' + d.t });
   const tit = t => h('h2', {}, t || '');
   let c;
-  if (d.t === 'portada') c = h('div', { class: 'pd-in', style: 'text-align:center' }, h('div', { class: 'pd-logo' }, 'FERJUSANZ'), h('h1', {}, d.titulo), h('div', { class: 'pd-raya' }), h('p', { class: 'pd-sub' }, d.sub), d.pie ? h('p', { class: 'pd-pie' }, d.pie) : null);
+  if (d.t === 'portada') c = h('div', { class: 'pd-in', style: 'text-align:center' }, h('div', { class: 'pd-logo' }, h('img', { src: 'pres/logo-oscuro.png', alt: 'Ferjusanz' })), h('h1', {}, d.titulo), h('div', { class: 'pd-raya' }), h('p', { class: 'pd-sub' }, d.sub), d.pie ? h('p', { class: 'pd-pie' }, d.pie) : null);
   else if (d.t === 'texto') c = h('div', { class: 'pd-in' }, tit(d.titulo), h('p', { class: 'pd-p' }, d.texto), (d.cifras || []).length ? h('div', { class: 'pd-cifras' }, d.cifras.filter(x => x && (x[0] || x[1])).map(x => h('div', { class: 'pd-cifra' }, h('b', {}, x[0]), h('span', {}, x[1])))) : null);
   else if (d.t === 'lista') c = h('div', { class: 'pd-in' }, tit(d.titulo), h('ol', { class: 'pd-ol' }, (d.puntos || []).filter(Boolean).map((p, i) => h('li', {}, h('i', {}, String(i + 1)), h('span', {}, p)))), d.enlace && d.enlace.url ? h('a', { href: d.enlace.url, target: '_blank', rel: 'noopener', style: 'display:block;margin-top:14px;padding:14px;background:#166534;color:#fff;text-align:center;font-weight:700;border-radius:6px;text-decoration:none' }, d.enlace.texto) : null);
   else if (d.t === 'productos') c = h('div', { class: 'pd-in' }, tit(d.titulo), h('div', { class: 'pd-grid' }, (d.items || []).filter(Boolean).map(x => d.conFoto ? h('div', { class: 'pd-foto' }, (d.fotos || {})[x] ? h('img', { src: d.fotos[x].u, alt: x }) : h('div', { class: 'pd-sinfoto' }, x.charAt(0).toUpperCase()), h('span', {}, x)) : h('div', { class: 'pd-chip' }, x))));
   else if (d.t === 'ofertas') c = h('div', { class: 'pd-in' }, tit(d.titulo), (d.items || []).length ? h('div', { class: 'pd-ofs' }, d.items.map(x => h('div', { class: 'pd-of' }, h('b', {}, '🏷️ ' + x.n), x.t ? h('span', {}, x.t) : null))) : h('p', { class: 'pd-p' }, d.texto || ''));
   else if (d.t === 'precios') c = h('div', { class: 'pd-in' }, tit((d.titulo || 'Lista de precios') + (d.partes > 1 ? ' (' + d.parte + '/' + d.partes + ')' : '')), d.aviso ? h('p', { class: 'pd-p', style: 'color:#b45309' }, d.aviso) : h('div', { class: 'pd-tabla' }, d.items.map(x => h('div', { class: 'pd-fila' }, h('span', {}, x.nombre), h('b', {}, presPrecio(x.precio, x.unidad))))), d.nota ? h('p', { class: 'pd-nota' }, d.nota) : null);
-  else c = h('div', { class: 'pd-in', style: 'text-align:center' }, h('div', { class: 'pd-logo' }, 'FERJUSANZ'), tit(d.titulo), ...(d.lineas || []).filter(Boolean).map((l, i) => h('p', { class: i === 0 ? 'pd-p' : 'pd-sub', style: 'margin:6px 0' }, l)));
+  else c = h('div', { class: 'pd-in', style: 'text-align:center' }, h('div', { class: 'pd-logo' }, h('img', { src: 'pres/logo-oscuro.png', alt: 'Ferjusanz' })), tit(d.titulo), ...(d.lineas || []).filter(Boolean).map((l, i) => h('p', { class: i === 0 ? 'pd-p' : 'pd-sub', style: 'margin:6px 0' }, l)));
   s.append(c); return s;
 }
 /* ===== Presentación dibujada como imágenes (16/11/2026, Fernando: «parece un PowerPoint de primaria; hazlo muchísimo mejor») =====
@@ -12591,8 +12596,8 @@ async function presRecursos() {
   if (PRES_REC) return PRES_REC;
   try { for (const [fam, f, w] of [['FJ Titular', 'barlow-condensed-latin-700-normal.woff2', '700'], ['FJ Texto', 'barlow-latin-400-normal.woff2', '400'], ['FJ Texto', 'barlow-latin-600-normal.woff2', '600']]) { const ff = new FontFace(fam, 'url(pres/' + f + ')', { weight: w }); await ff.load(); document.fonts.add(ff); } } catch (e) { }
   const img = n => new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = 'pres/' + n; });
-  const [portada, contacto, quienes, ancha, collage, ...lados] = await Promise.all(['f-portada.jpg', 'f-contacto.jpg', 'f-quienes.jpg', 'f-ancha.jpg', 'collage.jpg', 'lado1.jpg', 'lado2.jpg', 'lado3.jpg', 'lado4.jpg'].map(img));
-  return (PRES_REC = { portada, contacto, quienes, ancha, collage, lados: lados.filter(Boolean) });
+  const [logo, portada, contacto, quienes, ancha, collage, ...lados] = await Promise.all(['logo-oscuro.png', 'f-portada.jpg', 'f-contacto.jpg', 'f-quienes.jpg', 'f-ancha.jpg', 'collage.jpg', 'lado1.jpg', 'lado2.jpg', 'lado3.jpg', 'lado4.jpg'].map(img));
+  return (PRES_REC = { logo, portada, contacto, quienes, ancha, collage, lados: lados.filter(Boolean) });
 }
 const presImgDe = src => new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; });
 async function presLienzos(laminas) {
@@ -12616,7 +12621,7 @@ async function presLienzos(laminas) {
       const fondo = d.t === 'portada' ? R.portada : R.contacto;
       c.fillStyle = VO; c.fillRect(0, 0, W, H); foto(fondo, 0, 0, W, H, 0);
       const g = c.createLinearGradient(0, 0, W, 0); g.addColorStop(0, 'rgba(9,38,22,.96)'); g.addColorStop(0.48, 'rgba(9,38,22,.86)'); g.addColorStop(1, 'rgba(9,38,22,.12)'); c.fillStyle = g; c.fillRect(0, 0, W, H);
-      kicker(d.t === 'portada' ? 'FERJUSANZ · MERCAMADRID' : 'FERJUSANZ', M + 14, 190, AM);
+      if (R.logo) c.drawImage(R.logo, M + 14, 100, 440, 440 * R.logo.height / R.logo.width); else kicker('FERJUSANZ', M + 14, 190, AM);
       if (d.t === 'portada') {
         let y = titulo(d.titulo, M + 14, 330, 820, '#ffffff', 118, 4);
         c.fillStyle = AM; c.fillRect(M + 14, y + 8, 140, 8); y += 80;

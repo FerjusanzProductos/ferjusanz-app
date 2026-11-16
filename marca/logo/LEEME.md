@@ -24,3 +24,8 @@ Cada logo viene en tres formatos:
 
 ## Rehacerlos
 `codigo/hacer.mjs` dibuja todas las propuestas y `codigo/final.mjs` saca estos archivos. Necesitan un `fuentes.css` con las letras de `web/public/fuentes/` en base64 (ver HISTORIAL, 16/11/2026).
+
+## Dónde está puesto (16/11/2026)
+- **App**: icono, albaranes, facturas, tarifa (etiqueta), presentación. Archivos en `public/pres/` (`logo.png`, `logo.jpg`, `logo-oscuro.png`, `etiqueta.jpg`) e iconos `public/icon*.png`.
+- **Web**: cabecera (fondo oscuro), pie (etiqueta), iconos. Archivos en `web/public/marca/`.
+- Se rehacen con `node marca/logo/codigo/usos.mjs` (desde la raíz).
