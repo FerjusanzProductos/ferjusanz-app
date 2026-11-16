@@ -12104,19 +12104,13 @@ const ppEnlace = p => URL_TARJETA + (p && p.id ? '?p=' + p.id : '') + '#primer-p
 const URL_WEB = URL_TARJETA.replace(/tarjeta$/, 'web');
 function hojaPrimerPedido(p, ex) {
   p = p || {}; const yo = state.perfil ? state.perfil.nombre.split(' ')[0] : '', url = ppEnlace(p);
-  const textoNuevo = 'Hola' + (p.nombre ? ', ' + p.nombre : '') + '. Soy ' + yo + ', de Ferjusanz: patatas, frutas, verduras y huevos, tres generaciones en el sector. Destacamos por la relación calidad-precio.\n\n' +
-    'Nos gustaría conocerles y que prueben nuestro género. Para calcular los precios que le haríamos, imagine su primer pedido: marque aquí en un minuto qué productos usa y, si quiere, cuánto a la semana. Después le enviamos su tarifa según lo que gasta (sin compromiso y sin pedido mínimo):\n' + url + '\n\n' +
-    '• Más de 200 productos: patatas (también peladas y cortadas), frutas, verduras, huevos, cebollas y ajos, setas, legumbres y hierbas.\n' +
-    '• De agricultores de confianza y elegido cada mañana en Mercamadrid.\n' +
-    '• Reparto de lunes a sábado en Madrid y Segovia, con camiones refrigerados. Pedido por WhatsApp o teléfono hasta la tarde anterior.\n' +
-    '• Nuestra web: ' + URL_WEB + '\n\n¿Quedamos un día? Un saludo.';
-  const textoEx = 'Hola' + (p.nombre ? ', ' + p.nombre : '') + '. Soy ' + yo + ', de Ferjusanz: patatas, frutas, verduras y huevos.\n\n' +
-    'Hace tiempo que no trabajamos juntos y queríamos decirle que seguimos aquí, trabajando con las mismas ganas y dispuestos a servirle con la mayor disposición, como siempre.\n\n' +
-    '• Destacamos por la relación calidad-precio, para que salga beneficiado.\n' +
-    '• De agricultores de confianza y elegido cada mañana en Mercamadrid.\n' +
-    '• Sin pedido mínimo. Reparto de lunes a sábado en Madrid y Segovia.\n\n' +
-    'Como ya hemos trabajado juntos, nos hacemos una idea de lo que necesita, así que no hace falta que rellene nada. Si quiere afinar el precio, puede indicarnos aquí lo que gasta ahora:\n' + url + '\n\n' +
-    'Cualquier consulta, estamos a su disposición. Un saludo.';
+  /* Corto para que en WhatsApp se lea entero, sin «Leer más» (Fernando, 16/11/2026: «simplifica para que se vea entero»). */
+  const textoNuevo = '¡Hola' + (p.nombre ? ', ' + p.nombre : '') + '! Soy ' + yo + ', de Ferjusanz Productos SL: patatas, frutas, verduras y huevos, tres generaciones en el sector. Destacamos por la relación calidad-precio.\n\n' +
+    'Imagine cómo sería su primer pedido: márquelo aquí en un minuto y le enviamos su tarifa según lo que gasta 👇\n' + url + '\n\n' +
+    'Si le interesa, tan solo tiene que decírnoslo. Debe saber que no tenemos pedido mínimo 🤝';
+  const textoEx = '¡Hola' + (p.nombre ? ', ' + p.nombre : '') + '! Soy ' + yo + ', de Ferjusanz Productos SL. Hace tiempo que no trabajamos juntos y queríamos decirle que seguimos aquí, con la mayor disposición para servirle como siempre.\n\n' +
+    'Destacamos por la relación calidad-precio y no tenemos pedido mínimo. Si quiere afinar el precio, díganos aquí lo que gasta ahora (no es necesario) 👇\n' + url + '\n\n' +
+    'Cualquier consulta, estamos a su disposición 🤝';
   const texto = ex ? textoEx : textoNuevo;
   /* Texto guardado (tabla textos_comerciales): {nombre}, {yo} y {enlace} se rellenan aquí; si no hay guardado, el de siempre. */
   const claveTexto = ex ? 'mensaje_ex' : 'mensaje_nuevo';
