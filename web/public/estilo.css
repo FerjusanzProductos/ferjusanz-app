@@ -485,3 +485,8 @@ a:active, button:active, summary:active { opacity: .75; }
 .primer-pedido input[type=checkbox] { width: 22px; height: 22px; min-height: 0; padding: 0; }
 .pp-separa { margin-top: 32px; }
 .primer-pedido .pp-fila[hidden] { display: none; }
+/* Casilla «lo uso» en cada producto; la cantidad es opcional (16/11/2026). */
+.primer-pedido .pp-fila { grid-template-columns: 1fr 84px 72px; }
+.primer-pedido .pp-usa { display: flex; align-items: center; gap: 10px; font-weight: 400; min-height: 44px; }
+.pp-fila input::placeholder { font-size: .8rem; }
+.primer-pedido .pp-usa input[type=checkbox] { flex: none; }
