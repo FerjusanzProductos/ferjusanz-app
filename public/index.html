@@ -12172,12 +12172,15 @@ function hojaPrimerPedido(p, ex) {
   let listos = null, preparando = null;
   const preparar = () => { listos = null; if (modo === 'msg') return; const pr = preparando = archivos().then(f => { if (preparando === pr) listos = f; }).catch(e => { if (preparando === pr) toast('No se pudo preparar la presentación: ' + msgErr(e), 'err'); }); };
   [conLista, conPdf, conVideo, video].forEach(x => x.addEventListener('change', preparar));
-  const compartir = (btn, texto) => {
+  const compartir = (btn, texto, juntos) => {
     if (!listos) { toast('Preparando la presentación… vuelve a pulsar en un momento.', 'ok'); if (!preparando) preparar(); return; }
-    const files = listos, datos = Object.assign({ files }, texto ? { title: asunto, text: texto } : {});
-    const bajar = () => { files.forEach(f => comDescargar(f, f.name)); toast('Se ha descargado la presentación: adjúntala en WhatsApp o en el correo desde Descargas (📎).', 'ok'); };
-    if (!(navigator.canShare && navigator.canShare({ files }))) { bajar(); return; }
-    navigator.share(datos).catch(e => { if (!e || e.name !== 'AbortError') bajar(); });
+    /* Por WhatsApp, el vídeo va APARTE del PDF (mezclados, WhatsApp a veces solo manda uno): primero el PDF y luego sale «Enviar ahora el vídeo». Por correo, todo junto. */
+    const vids = listos.filter(f => /^video\//.test(f.type)), docs = listos.filter(f => !/^video\//.test(f.type));
+    const files = juntos || !docs.length || !vids.length ? listos : docs, datos = Object.assign({ files }, texto ? { title: asunto, text: texto } : {});
+    const bajar = fs => { fs.forEach(f => comDescargar(f, f.name)); toast('Se ha descargado: adjúntalo en WhatsApp o en el correo desde Descargas (📎).', 'ok'); };
+    const otro = (fs, t) => h('button', { class: 'guardar', style: 'width:100%;min-height:56px;margin-top:6px;font-size:17px', onclick: () => { if (!(navigator.canShare && navigator.canShare({ files: fs }))) { bajar(fs); return; } navigator.share({ files: fs }).catch(e => { if (!e || e.name !== 'AbortError') bajar(fs); }); } }, t);
+    if (!(navigator.canShare && navigator.canShare({ files }))) { bajar(files); return; }
+    navigator.share(datos).then(() => { if (files === docs) paso2.append(h('div', { class: 'aviso-card', style: 'margin-top:8px' }, '✔ PDF enviado. Ahora el vídeo:'), otro(vids, '🎬 Enviar ahora el vídeo (elige el mismo chat)')); }).catch(e => { if (!e || e.name !== 'AbortError') bajar(files); });
   };
   const porWhatsApp = (pkg, btn) => {
     if (modo === 'pres') { compartir(btn); return; }
@@ -12188,7 +12191,7 @@ function hojaPrimerPedido(p, ex) {
   const porCorreo = btn => {
     if (modo === 'msg') { location.href = 'mailto:' + encodeURIComponent(mail.value.trim()) + '?subject=' + encodeURIComponent(asunto) + '&body=' + encodeURIComponent(msg.value + firma()); return; }
     if (modo === 'ambos') { try { navigator.clipboard.writeText(msg.value + firma()); } catch (e) { } toast('Elige Gmail. Si el texto no sale en el correo, pégalo: ya está copiado.', 'ok'); }
-    compartir(btn, modo === 'ambos' ? msg.value + firma() : '');
+    compartir(btn, modo === 'ambos' ? msg.value + firma() : '', true);
   };
   pintar(); pintaTipo();
   hoja((ex ? '🔁 Excliente' : '🧮 Primer pedido y tarifa') + (p.nombre ? ' · ' + p.nombre : ''), h('div', {},
