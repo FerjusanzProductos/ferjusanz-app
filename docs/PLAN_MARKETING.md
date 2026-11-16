@@ -24,7 +24,7 @@ Qué tienen en común: **compran todas las semanas, compran mucho y lo que más 
 5. **Madrugada en el mercado**: luces, carretillas, llegada del género.
 6. **Fernando o Julián** en el puesto, trabajando (no posando).
 7. **El equipo** (tercera generación), una foto de grupo con permiso.
-8. **El logo** en buena calidad (archivo, no foto).
+8. ✅ **El logo**: hecho nuevo el 16/11/2026, archivos en `marca/logo/` (ya no hace falta foto ni archivo del antiguo).
 
 ### B. Producto pensado para cocinas (no bodegón de frutería)
 9. **Cajas de manzana golden y pera conferencia calibre 24-26** (que se vea la etiqueta del calibre): para colegios y residencias.
