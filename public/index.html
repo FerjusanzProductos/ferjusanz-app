@@ -12281,6 +12281,54 @@ function pvGuion(d, clave) {
   if (d.t === 'precios') return 'Aquí tiene nuestra lista de precios.';
   return d.titulo || '';
 }
+/* MP4 «por trozos» (el que graba el móvil con MediaRecorder: moov + moof/mdat) → MP4 normal (moov con todas las muestras + un mdat).
+   WhatsApp y Gmail aceptan mejor el normal (Fernando: «el vídeo no se ha enviado»). No recomprime: solo reordena. */
+function mp4Normal(u8) {
+  const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), U = (o) => dv.getUint32(o), tipo = o => String.fromCharCode(u8[o + 4], u8[o + 5], u8[o + 6], u8[o + 7]);
+  const cajas = (ini, fin) => { const out = []; let o = ini; while (o + 8 <= fin) { let n = U(o), h = 8; if (n === 1) { n = Number(dv.getBigUint64(o + 8)); h = 16; } else if (n === 0) n = fin - o; if (n < 8) break; out.push({ t: tipo(o), o, n, c: o + h }); o += n; } return out; };
+  const hija = (b, t) => cajas(b.c, b.o + b.n).find(x => x.t === t), hijas = (b, t) => cajas(b.c, b.o + b.n).filter(x => x.t === t);
+  const top = cajas(0, u8.length), moov = top.find(b => b.t === 'moov'); if (!moov || !top.some(b => b.t === 'moof')) return u8; // ya es normal
+  const traks = hijas(moov, 'trak'), mvex = hija(moov, 'mvex'), trex = {}; if (mvex) hijas(mvex, 'trex').forEach(b => { trex[U(b.c + 4)] = { dur: U(b.c + 12), size: U(b.c + 16), flags: U(b.c + 20) }; });
+  const pistas = {}; traks.forEach(t => { const id = (u8[hija(t, 'tkhd').c] === 1) ? U(hija(t, 'tkhd').c + 20) : U(hija(t, 'tkhd').c + 12); pistas[id] = { trak: t, m: [] }; });
+  top.filter(b => b.t === 'moof').forEach(moof => hijas(moof, 'traf').forEach(traf => {
+    const th = hija(traf, 'tfhd'), fl = U(th.c) & 0xffffff, id = U(th.c + 4), d = trex[id] || {}; let p = th.c + 8, base = moof.o;
+    if (fl & 1) { base = Number(dv.getBigUint64(p)); p += 8; } if (fl & 2) p += 4;
+    const dDur = fl & 8 ? U((p += 4) - 4) : d.dur, dSize = fl & 0x10 ? U((p += 4) - 4) : d.size, dFlags = fl & 0x20 ? U((p += 4) - 4) : d.flags;
+    let off = base; hijas(traf, 'trun').forEach(tr => {
+      const tf = U(tr.c) & 0xffffff, ver = u8[tr.c], n = U(tr.c + 4); let q = tr.c + 8, data = base; if (tf & 1) { data = base + dv.getInt32(q); q += 4; } else data = off; let first = null; if (tf & 4) { first = U(q); q += 4; }
+      for (let i = 0; i < n; i++) { const dur = tf & 0x100 ? U((q += 4) - 4) : dDur, size = tf & 0x200 ? U((q += 4) - 4) : dSize, flg = tf & 0x400 ? U((q += 4) - 4) : (i === 0 && first != null ? first : dFlags), cto = tf & 0x800 ? (ver ? dv.getInt32((q += 4) - 4) : U((q += 4) - 4)) : 0;
+        pistas[id].m.push({ dur, size, sync: !(flg & 0x10000), cto, at: data }); data += size; }
+      off = data; });
+  }));
+  // escritura
+  const partes = [], caja = (t, ...cs) => { const len = 8 + cs.reduce((a, c) => a + c.length, 0), b = new Uint8Array(len), v = new DataView(b.buffer); v.setUint32(0, len); for (let i = 0; i < 4; i++) b[4 + i] = t.charCodeAt(i); let o = 8; cs.forEach(c => { b.set(c, o); o += c.length; }); return b; };
+  const u32 = (...xs) => { const b = new Uint8Array(4 * xs.length), v = new DataView(b.buffer); xs.forEach((x, i) => v.setUint32(4 * i, x >>> 0)); return b; }, i32 = x => { const b = new Uint8Array(4); new DataView(b.buffer).setInt32(0, x); return b; };
+  const copia = b => u8.slice(b.o, b.o + b.n), conDur = (b, off32, off64, dur) => { const c = copia(b), v = new DataView(c.buffer), h = b.c - b.o; if (c[h] === 1) v.setBigUint64(h + off64, BigInt(dur)); else v.setUint32(h + off32, dur); return c; };
+  const mvhd = hija(moov, 'mvhd'), mvTs = u8[mvhd.c] === 1 ? U(mvhd.c + 20) : U(mvhd.c + 12); let total = 0, mvDur = 0;
+  const ids = Object.keys(pistas).filter(id => pistas[id].m.length);
+  ids.forEach(id => pistas[id].m.forEach(s => { total += s.size; }));
+  const hacerMoov = (pos0) => { let pos = pos0; const trs = ids.map(id => {
+      const P = pistas[id], t = P.trak, tk = hija(t, 'tkhd'), md = hija(t, 'mdia'), mdhd = hija(md, 'mdhd'), minf = hija(md, 'minf'), stbl = hija(minf, 'stbl'), mTs = u8[mdhd.c] === 1 ? U(mdhd.c + 20) : U(mdhd.c + 12);
+      const dur = P.m.reduce((a, s) => a + s.dur, 0), tdur = Math.round(dur * mvTs / mTs); mvDur = Math.max(mvDur, tdur);
+      const stts = []; P.m.forEach(s => { const l = stts[stts.length - 1]; if (l && l[1] === s.dur) l[0]++; else stts.push([1, s.dur]); });
+      const nuevas = [copia(hija(stbl, 'stsd')), caja('stts', u32(0, stts.length), ...stts.map(x => u32(x[0], x[1])))];
+      if (P.m.some(s => s.cto)) { const ct = []; P.m.forEach(s => { const l = ct[ct.length - 1]; if (l && l[1] === s.cto) l[0]++; else ct.push([1, s.cto]); }); nuevas.push(caja('ctts', u32(0x01000000, ct.length), ...ct.map(x => new Uint8Array([...u32(x[0]), ...i32(x[1])])))); }
+      if (P.m.some(s => !s.sync)) { const ss = []; P.m.forEach((s, i) => { if (s.sync) ss.push(i + 1); }); nuevas.push(caja('stss', u32(0, ss.length), u32(...ss))); }
+      nuevas.push(caja('stsc', u32(0, 1, 1, 1, 1)), caja('stsz', u32(0, 0, P.m.length), u32(...P.m.map(s => s.size))));
+      const co = P.m.map(s => { const x = pos; pos += s.size; return x; }); nuevas.push(caja('stco', u32(0, co.length), u32(...co)));
+      const minfN = caja('minf', ...cajas(minf.c, minf.o + minf.n).filter(b => b.t !== 'stbl').map(copia), caja('stbl', ...nuevas));
+      const mdiaN = caja('mdia', ...cajas(md.c, md.o + md.n).map(b => b.t === 'mdhd' ? conDur(b, 16, 24, dur) : b.t === 'minf' ? minfN : copia(b)));
+      return caja('trak', ...cajas(t.c, t.o + t.n).map(b => b.t === 'tkhd' ? conDur(b, 20, 28, tdur) : b.t === 'mdia' ? mdiaN : copia(b)));
+    });
+    return caja('moov', conDur(mvhd, 16, 24, mvDur), ...cajas(moov.c, moov.o + moov.n).filter(b => !['mvhd', 'trak', 'mvex', 'udta'].includes(b.t)).map(copia), ...trs);
+  };
+  const ftyp = caja('ftyp', new TextEncoder().encode('isom'), u32(512), new TextEncoder().encode('isomiso2avc1mp41'));
+  const tam = hacerMoov(0).length, inicio = ftyp.length + tam + 8, moovN = hacerMoov(inicio);
+  const out = new Uint8Array(ftyp.length + moovN.length + 8 + total), vo = new DataView(out.buffer); out.set(ftyp, 0); out.set(moovN, ftyp.length);
+  let o = ftyp.length + moovN.length; vo.setUint32(o, 8 + total); out.set([109, 100, 97, 116], o + 4); o += 8;
+  ids.forEach(id => pistas[id].m.forEach(s => { out.set(u8.subarray(s.at, s.at + s.size), o); o += s.size; }));
+  return out;
+}
 async function grabarVideoPres(tipo, alGuardar) {
   if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) { toast('Este móvil no deja grabar vídeo desde la app.', 'err'); return; }
   // Pequeño para poder mandarlo por correo (Fernando: «que ocupe lo mínimo»; «necesito 1:20»): 960×680, 0,3 Mbit/s → ~1,3 MB en 1:20.
@@ -12322,7 +12370,8 @@ async function grabarVideoPres(tipo, alGuardar) {
     botones.replaceChildren(BT('💾 Guardar este vídeo', async e => {
       const b = e.currentTarget; b.disabled = true; b.textContent = '⏳ Subiendo…';
       try { const viejo = await pvBuscar(tipo); if (viejo && viejo.name !== tipo + '.' + ext) await sb.storage.from(PV_BUCKET).remove([viejo.name]);
-        const r = await sb.storage.from(PV_BUCKET).upload(tipo + '.' + ext, blob, { upsert: true, contentType: ty }); if (r.error) throw r.error;
+        let sube = blob; if (ext === 'mp4') { try { sube = new Blob([mp4Normal(new Uint8Array(await blob.arrayBuffer()))], { type: ty }); } catch (er) { console.warn('mp4Normal', er); } } // MP4 normal: WhatsApp y Gmail lo aceptan
+        const r = await sb.storage.from(PV_BUCKET).upload(tipo + '.' + ext, sube, { upsert: true, contentType: ty }); if (r.error) throw r.error;
         toast('Vídeo guardado. Ya puedes enviarlo con «🎬 Vídeo de la presentación».', 'ok'); fuera(); if (alGuardar) alGuardar(); }
       catch (er) { b.disabled = false; b.textContent = '💾 Guardar este vídeo'; toast(isNetErr(er) ? 'Necesitas conexión.' : msgErr(er), 'err'); } }, 'guardar'),
       BT('🔁 Repetir', () => { ver.replaceWith(cv); listo(); }), BT('Cancelar', fuera));
