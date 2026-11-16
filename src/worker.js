@@ -9,15 +9,19 @@ import icon512 from "../public/icon-512.png";
 import iconP192 from "../public/icon-pruebas-192.png";
 import iconP512 from "../public/icon-pruebas-512.png";
 import paso1 from "../public/guia-img/paso1.jpg";
-import presFurgonetas from "../public/pres/furgonetas.jpg";
-import presLado1 from "../public/pres/lado1.jpg";
-import presLado2 from "../public/pres/lado2.jpg";
-import presLado3 from "../public/pres/lado3.jpg";
-import presLado4 from "../public/pres/lado4.jpg";
-import presLado5 from "../public/pres/lado5.jpg";
-import presPortada from "../public/pres/portada.jpg";
-import presAncha from "../public/pres/ancha.jpg";
-import presCollage from "../public/pres/collage.jpg";
+import pres_barlow_condensed_latin_700_normal from "../public/pres/barlow-condensed-latin-700-normal.woff2";
+import pres_barlow_latin_400_normal from "../public/pres/barlow-latin-400-normal.woff2";
+import pres_barlow_latin_600_normal from "../public/pres/barlow-latin-600-normal.woff2";
+import pres_collage from "../public/pres/collage.jpg";
+import pres_f_ancha from "../public/pres/f-ancha.jpg";
+import pres_f_contacto from "../public/pres/f-contacto.jpg";
+import pres_f_portada from "../public/pres/f-portada.jpg";
+import pres_f_quienes from "../public/pres/f-quienes.jpg";
+import pres_lado1 from "../public/pres/lado1.jpg";
+import pres_lado2 from "../public/pres/lado2.jpg";
+import pres_lado3 from "../public/pres/lado3.jpg";
+import pres_lado4 from "../public/pres/lado4.jpg";
+import pres_lado5 from "../public/pres/lado5.jpg";
 import paso2 from "../public/guia-img/paso2.jpg";
 import paso3 from "../public/guia-img/paso3.jpg";
 import paso4 from "../public/guia-img/paso4.jpg";
@@ -51,15 +55,19 @@ const ARCHIVOS = {
   "/icon-192.png": [icon192, "image/png"],
   "/icon-512.png": [icon512, "image/png"],
   "/guia-img/paso1.jpg": [paso1, "image/jpeg"],
-  "/pres/furgonetas.jpg": [presFurgonetas, "image/jpeg"],
-  "/pres/lado1.jpg": [presLado1, "image/jpeg"],
-  "/pres/lado2.jpg": [presLado2, "image/jpeg"],
-  "/pres/lado3.jpg": [presLado3, "image/jpeg"],
-  "/pres/lado4.jpg": [presLado4, "image/jpeg"],
-  "/pres/lado5.jpg": [presLado5, "image/jpeg"],
-  "/pres/portada.jpg": [presPortada, "image/jpeg"],
-  "/pres/ancha.jpg": [presAncha, "image/jpeg"],
-  "/pres/collage.jpg": [presCollage, "image/jpeg"],
+  "/pres/barlow-condensed-latin-700-normal.woff2": [pres_barlow_condensed_latin_700_normal, "font/woff2"],
+  "/pres/barlow-latin-400-normal.woff2": [pres_barlow_latin_400_normal, "font/woff2"],
+  "/pres/barlow-latin-600-normal.woff2": [pres_barlow_latin_600_normal, "font/woff2"],
+  "/pres/collage.jpg": [pres_collage, "image/jpeg"],
+  "/pres/f-ancha.jpg": [pres_f_ancha, "image/jpeg"],
+  "/pres/f-contacto.jpg": [pres_f_contacto, "image/jpeg"],
+  "/pres/f-portada.jpg": [pres_f_portada, "image/jpeg"],
+  "/pres/f-quienes.jpg": [pres_f_quienes, "image/jpeg"],
+  "/pres/lado1.jpg": [pres_lado1, "image/jpeg"],
+  "/pres/lado2.jpg": [pres_lado2, "image/jpeg"],
+  "/pres/lado3.jpg": [pres_lado3, "image/jpeg"],
+  "/pres/lado4.jpg": [pres_lado4, "image/jpeg"],
+  "/pres/lado5.jpg": [pres_lado5, "image/jpeg"],
   "/guia-img/paso2.jpg": [paso2, "image/jpeg"],
   "/guia-img/paso3.jpg": [paso3, "image/jpeg"],
   "/guia-img/paso4.jpg": [paso4, "image/jpeg"],
