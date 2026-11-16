@@ -115,6 +115,7 @@ const SERVICIOS = [
 const ZONAS = [
   ['Madrid capital', 'Centro, Chamartín, Hortaleza, Fuencarral, Moncloa y más distritos'],
   ['Zona norte', 'Alcobendas, San Sebastián de los Reyes, Tres Cantos'],
+  ['Zona sur', 'municipios del sur de Madrid (pregúntenos por su zona)'], // Fernando 16/11/2026: «pon zona norte y zona sur»; pueblos por confirmar
   ['Noroeste', 'Aravaca, Pozuelo, Majadahonda, Las Rozas'],
   ['Segovia', 'Segovia capital y alrededores'],
 ];

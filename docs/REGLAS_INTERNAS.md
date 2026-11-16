@@ -130,7 +130,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 
 ## Condiciones comerciales (confirmadas por Fernando el 12/11/2026)
 - **Sin pedido mínimo.**
-- **Zonas de reparto: Madrid y Segovia.**
+- **Zonas de reparto: Madrid y Segovia.** Dentro de Madrid: capital, zona norte, noroeste y **zona sur** (Fernando, 16/11/2026; falta que diga qué pueblos del sur).
 - Usar solo estas condiciones en la web, anuncios y mensajes; no prometer otras sin confirmarlo con Fernando.
 
 ## Facturas de proveedores (Fernando, 12/11/2026)

@@ -12118,6 +12118,23 @@ function hojaPrimerPedido(p, ex) {
     'Como ya hemos trabajado juntos, nos hacemos una idea de lo que necesita, así que no hace falta que rellene nada. Si quiere afinar el precio, puede indicarnos aquí lo que gasta ahora:\n' + url + '\n\n' +
     'Cualquier consulta, estamos a su disposición. Un saludo.';
   const texto = ex ? textoEx : textoNuevo;
+  /* Texto guardado (tabla textos_comerciales): {nombre}, {yo} y {enlace} se rellenan aquí; si no hay guardado, el de siempre. */
+  const claveTexto = ex ? 'mensaje_ex' : 'mensaje_nuevo';
+  const rellenar = t => t.replace(/, \{nombre\}/g, p.nombre ? ', ' + p.nombre : '').replace(/\{nombre\}/g, p.nombre || '').replace(/\{yo\}/g, yo).replace(/\{enlace\}/g, url);
+  const plantilla = t => { let r = t.split(url).join('{enlace}'); if (p.nombre) r = r.split(p.nombre).join('{nombre}'); if (yo) r = r.replace(new RegExp('\\b' + yo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'g'), '{yo}'); return r; };
+  const estTexto = h('div', { class: 'sub' }, '');
+  sb.from('textos_comerciales').select('texto,updated_at').eq('clave', claveTexto).maybeSingle().then(r => { if (r.data && r.data.texto && msg.value === texto) { msg.value = rellenar(r.data.texto); estTexto.textContent = '✔ Es tu texto guardado (' + fechaES(String(r.data.updated_at).slice(0, 10)) + ').'; } }).catch(() => { });
+  const guardarTexto = async () => {
+    const t = plantilla(msg.value.trim()); if (!t) { toast('El texto está vacío.', 'err'); return; }
+    if (!t.includes('{enlace}') && !await confirmar('El texto no lleva el enlace del formulario. ¿Lo guardo así?')) return;
+    const r = await sb.from('textos_comerciales').upsert({ clave: claveTexto, texto: t, updated_at: new Date().toISOString() }); if (r.error) { toast(isNetErr(r.error) ? 'Necesitas conexión.' : msgErr(r.error), 'err'); return; }
+    estTexto.textContent = '✔ Guardado: la próxima vez saldrá así (con el nombre y el enlace de cada cliente).'; toast('Texto guardado', 'ok');
+  };
+  const textoOriginal = async () => {
+    if (!await confirmar('¿Volver al texto original? Se borra el que guardaste.')) return;
+    const r = await sb.from('textos_comerciales').delete().eq('clave', claveTexto); if (r.error) { toast(msgErr(r.error), 'err'); return; }
+    msg.value = texto; estTexto.textContent = 'Texto original.'; toast('Vuelto al texto original', 'ok');
+  };
   const msg = h('textarea', { rows: 12, style: 'width:100%;font-size:15px' }); msg.value = texto;
   const tel = comInput('tel', p.telefono || ''), mail = comInput('email', p.email || '');
   const chk = () => h('input', { type: 'checkbox', style: 'width:24px;height:24px;flex:none;margin:0' });
@@ -12172,7 +12189,8 @@ function hojaPrimerPedido(p, ex) {
   pintar();
   hoja((ex ? '🔁 Excliente' : '🧮 Primer pedido y tarifa') + (p.nombre ? ' · ' + p.nombre : ''), h('div', {},
     ex ? h('p', { class: 'sub' }, 'Para clientes que ya no nos compran: que sepan que seguimos y estamos a su disposición. Con su presentación y su vídeo de exclientes. El formulario va al final, como «no es necesario».') : h('p', { class: 'sub' }, 'Sirve para calcular los precios que le haríamos. Lo que rellene te llega a Comercial › Avisos › «Primeros pedidos», con su tarifa calculada para que Fernando la apruebe; luego se la envías.'),
-    comCampo('Mensaje (puedes cambiarlo)', msg),
+    comCampo('Mensaje (puedes cambiarlo)', msg), estTexto,
+    h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:4px' }, h('button', { class: 'small', onclick: guardarTexto }, '💾 Guardar este texto para la próxima vez'), h('button', { class: 'ghost small', onclick: textoOriginal }, '↩️ Volver al texto original')),
     h('div', { style: 'display:flex;gap:6px;margin-top:8px' },
       h('button', { class: 'ghost', style: 'flex:1;min-height:48px', onclick: async () => { try { presVerPdf(ppLaminas(await ppPresentacion(clave), url, clave)); } catch (e) { toast(msgErr(e), 'err'); } } }, '👁 Ver cómo queda la presentación'),
       h('button', { class: 'ghost', style: 'flex:1;min-height:48px', onclick: async () => { try { const pr = await ppPresentacion(clave); document.querySelectorAll('.overlay').forEach(o => o.remove()); state.sheetAbierta = false; go('presentaciones', { editar: pr.id }); } catch (e) { toast(msgErr(e), 'err'); } } }, '✏️ Editar la presentación')),
@@ -12236,7 +12254,8 @@ async function presVerPdf(laminas) {
 }
 async function grabarVideoPres(tipo, alGuardar) {
   if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) { toast('Este móvil no deja grabar vídeo desde la app.', 'err'); return; }
-  const cv = document.createElement('canvas'); cv.width = 1280; cv.height = 906; const cx = cv.getContext('2d');
+  // Pequeño para poder mandarlo por correo (Fernando: «no durará más de un minuto y que ocupe lo mínimo»): 960×680, ~0,3 Mbit/s → ~2,5 MB el minuto.
+  const MAXS = 60, cv = document.createElement('canvas'); cv.width = 960; cv.height = 680; const cx = cv.getContext('2d');
   const tapa = h('div', { style: 'position:fixed;inset:0;z-index:9999;background:#0b1f12;color:#fff;display:flex;flex-direction:column;padding:10px;gap:8px' });
   const info = h('div', { style: 'font-weight:600;font-size:16px' }, 'Preparando las hojas…'), botones = h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' });
   cv.style.cssText = 'width:100%;height:auto;max-height:70vh;object-fit:contain;background:#fff;border-radius:6px';
@@ -12250,13 +12269,13 @@ async function grabarVideoPres(tipo, alGuardar) {
   } catch (e) { fuera(); toast('No se pudieron preparar las hojas: ' + msgErr(e), 'err'); return; }
   pinta();
   const tipoVideo = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp8,opus', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t)) || '';
-  const listo = () => { info.textContent = 'Vídeo de la presentación (' + (tipo.startsWith('ex-') ? 'exclientes, ' : '') + (ppBase(tipo) === 'colectivos' ? 'colegios y residencias' : 'hostelería') + '): ' + hojas.length + ' hojas. Pulsa «Empezar», habla y pasa las hojas con «Siguiente».';
+  const listo = () => { info.textContent = 'Vídeo de la presentación (' + (tipo.startsWith('ex-') ? 'exclientes, ' : '') + (ppBase(tipo) === 'colectivos' ? 'colegios y residencias' : 'hostelería') + '): ' + hojas.length + ' hojas. Como mucho 1 minuto (unos 6 segundos por hoja). Pulsa «Empezar», habla y pasa las hojas con «Siguiente».';
     botones.replaceChildren(BT('⏺ Empezar a grabar', empezar, 'guardar'), BT('Cancelar', fuera)); };
   const empezar = async () => {
     try { mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { toast('Hace falta permiso para el micrófono.', 'err'); return; }
-    n = 0; pinta(); stream = cv.captureStream(15); mic.getAudioTracks().forEach(t => stream.addTrack(t)); trozos = [];
-    tic = setInterval(pinta, 250); // repinta para que el vídeo tenga imágenes aunque la hoja no cambie
-    rec = new MediaRecorder(stream, Object.assign({ videoBitsPerSecond: 1000000, audioBitsPerSecond: 64000 }, tipoVideo ? { mimeType: tipoVideo } : {}));
+    n = 0; pinta(); stream = cv.captureStream(10); const t0 = Date.now(); mic.getAudioTracks().forEach(t => stream.addTrack(t)); trozos = [];
+    tic = setInterval(() => { pinta(); const q = MAXS - Math.floor((Date.now() - t0) / 1000); if (rec && rec.state === 'recording') { info.textContent = info.textContent.replace(/ · quedan \d+ s$/, '') + ' · quedan ' + Math.max(q, 0) + ' s'; if (q <= 0) rec.stop(); } }, 250); // repinta (el vídeo necesita imágenes) y corta al minuto
+    rec = new MediaRecorder(stream, Object.assign({ videoBitsPerSecond: 300000, audioBitsPerSecond: 32000 }, tipoVideo ? { mimeType: tipoVideo } : {}));
     rec.ondataavailable = e => { if (e.data && e.data.size) trozos.push(e.data); };
     rec.onstop = terminado; rec.start(1000);
     const paso = () => { info.textContent = '🔴 Grabando · hoja ' + (n + 1) + ' de ' + hojas.length + '. Habla y pulsa «Siguiente».';
@@ -12468,13 +12487,13 @@ function presLamina(d) {
   else c = h('div', { class: 'pd-in', style: 'text-align:center' }, h('div', { class: 'pd-logo' }, 'FERJUSANZ'), tit(d.titulo), ...(d.lineas || []).filter(Boolean).map((l, i) => h('p', { class: i === 0 ? 'pd-p' : 'pd-sub', style: 'margin:6px 0' }, l)));
   s.append(c); return s;
 }
-/* Fotos propias de Ferjusanz para la presentación (16/11/2026): furgonetas (portada y contacto) y huevos (productos). Se cargan una vez. */
+/* Fotos propias de Ferjusanz para la presentación (16/11/2026, las del puesto que mandó Fernando): portada (escaparate), furgonetas (cierre), collage de productos y banda ancha. Se cargan una vez. */
 let PRES_FOTOS = null;
 async function presCargarFotos() {
   if (PRES_FOTOS) return PRES_FOTOS;
   const una = async (f, w, h) => { try { const r = await fetch('pres/' + f); if (!r.ok) return null; return { bytes: new Uint8Array(await r.arrayBuffer()), w, h }; } catch (e) { return null; } };
-  const [furgonetas, huevos] = await Promise.all([una('furgonetas.jpg', 480, 800), una('huevos.jpg', 360, 600)]);
-  return (PRES_FOTOS = { furgonetas, huevos });
+  const [furgonetas, huevos, portada, ancha, collage] = await Promise.all([una('furgonetas.jpg', 480, 800), una('huevos.jpg', 360, 600), una('portada.jpg', 480, 800), una('ancha.jpg', 730, 230), una('collage.jpg', 420, 702)]);
+  return (PRES_FOTOS = { furgonetas, huevos, portada, ancha, collage });
 }
 /* Diseño de la presentación (16/11/2026, «más bonita, mejor diseño»): portada y cierre en verde con foto real a la derecha,
    hojas en blanco con título verde, números en círculo, productos en etiquetas con foto y botón redondeado. */
@@ -12489,7 +12508,7 @@ function pdfPresentacion(laminas, titulo) {
   laminas.forEach((d, i) => {
     if (i) doc.pagina();
     if (d.t === 'portada') {
-      const xp = F.furgonetas ? 500 : W, tw = (F.furgonetas ? xp : W) - 2 * M; panel(F.furgonetas, xp);
+      const fp = F.portada || F.furgonetas, xp = fp ? 500 : W, tw = xp - 2 * M; panel(fp, xp);
       doc.texto('FERJUSANZ', M, 96, 16, { neg: true, color: AM });
       let y = 190; pdfLineas(d.titulo || '', 42, true, tw).slice(0, 4).forEach(l => { doc.texto(l, M, y, 42, { neg: true, color: '#ffffff' }); y += 48; });
       doc.rect(M, y - 18, 70, 5, AM); y += 22;
@@ -12521,8 +12540,9 @@ function pdfPresentacion(laminas, titulo) {
     else if (d.t === 'ofertas') { if (!(d.items || []).length) pdfLineas(d.texto || '', 21, false, W - 2 * M).slice(0, 5).forEach((l, k) => doc.texto(l, M, 170 + k * 32, 21, { color: TX })); else { let y = 136; d.items.slice(0, 5).forEach(x => { doc.cajaR(M, y, W - 2 * M, 62, 10, '#fefce8'); doc.rect(M, y + 10, 6, 42, AM); doc.texto('OFERTA · ' + pdfLineas(x.n || '', 19, true, W - 2 * M - 120).slice(0, 1)[0], M + 22, y + 27, 19, { neg: true, color: TX }); pdfLineas(x.t || '', 13, false, W - 2 * M - 40).slice(0, 1).forEach(l => doc.texto(l, M + 22, y + 48, 13, { color: '#374151' })); y += 74; }); } }
     else if (d.t === 'productos' && d.conFoto) { const it = (d.items || []).filter(Boolean).slice(0, 6), cw = (W - 2 * M - 2 * 16) / 3, ch = 200; it.forEach((x, k) => { const xx = M + (k % 3) * (cw + 16), yy = 128 + Math.floor(k / 3) * (ch + 14); doc.cajaR(xx, yy, cw, ch, 10, CL); const ft = (d.fotos || {})[x], by = presFotoBytes(ft); const ih = (cw - 12) * 0.72; if (by) doc.imagen(by, ft.w, ft.h, xx + 6, yy + 6, cw - 12, ih); else { doc.rect(xx + 6, yy + 6, cw - 12, ih, '#dcfce7'); doc.texto(x.charAt(0).toUpperCase(), xx + cw / 2, yy + 6 + ih / 2 + 22, 60, { neg: true, color: '#86efac', align: 'center' }); } doc.texto(pdfLineas(x, 16, true, cw - 16).slice(0, 1)[0] || '', xx + cw / 2, yy + ch - 16, 16, { neg: true, color: TX, align: 'center' }); }); }
     else if (d.t === 'productos') {
-      const foto = F.huevos && (d.items || []).length > 6, fw = foto ? 210 : 0, area = W - 2 * M - (foto ? fw + 24 : 0), cols = 2, cw = (area - 14) / cols;
-      if (foto) { doc.imagen(F.huevos.bytes, F.huevos.w, F.huevos.h, W - M - fw, 132, fw, fw / 0.6); doc.rect(W - M - fw, 132 + fw / 0.6, fw, 5, AM); }
+      const n = (d.items || []).filter(Boolean).length, col = F.collage || F.huevos, foto = col && n > 6, fw = foto ? 210 : 0, area = W - 2 * M - (foto ? fw + 24 : 0), cols = 2, cw = (area - 14) / cols;
+      if (foto) { const fh = fw * col.h / col.w; doc.imagen(col.bytes, col.w, col.h, W - M - fw, 132, fw, fh); doc.rect(W - M - fw, 132 + fh, fw, 5, AM); }
+      else if (F.ancha && n <= 6) { const by = 132 + Math.ceil(n / 2) * 44 + 24, bw = W - 2 * M, bh = bw * F.ancha.h / F.ancha.w; doc.imagen(F.ancha.bytes, F.ancha.w, F.ancha.h, M, by, bw, bh); doc.rect(M, by + bh, bw, 5, AM); }
       (d.items || []).filter(Boolean).slice(0, 18).forEach((x, k) => { const xx = M + (k % cols) * (cw + 14), yy = 132 + Math.floor(k / cols) * 44; doc.cajaR(xx, yy, cw, 36, 18, CL); doc.circulo(xx + 18, yy + 18, 5, V); const z = cabe(x, 15, true, cw - 40, 11); doc.texto(pdfLineas(x, z, true, cw - 40).slice(0, 1)[0] || '', xx + 32, yy + 18 + z / 3, z, { neg: true, color: TX }); });
     }
     else if (d.t === 'precios') { if (d.aviso) doc.texto(d.aviso, M, 160, 16, { color: '#b45309' }); else { let y = 148; d.items.forEach((x, k) => { if (k % 2 === 0) doc.rect(M - 8, y - 22, W - 2 * M + 16, 38, CL); pdfLineas(x.nombre || '', 17, false, W - 2 * M - 230).slice(0, 1).forEach(l => doc.texto(l, M, y, 17, { color: TX })); doc.texto(presPrecio(x.precio, x.unidad), W - M, y, 17, { neg: true, color: V, align: 'right' }); y += 40; }); if (d.nota) doc.texto(d.nota, M, H - 50, 11, { color: GR }); } }
