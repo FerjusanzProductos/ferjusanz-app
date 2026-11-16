@@ -9,6 +9,8 @@ import icon512 from "../public/icon-512.png";
 import iconP192 from "../public/icon-pruebas-192.png";
 import iconP512 from "../public/icon-pruebas-512.png";
 import paso1 from "../public/guia-img/paso1.jpg";
+import presFurgonetas from "../public/pres/furgonetas.jpg";
+import presHuevos from "../public/pres/huevos.jpg";
 import paso2 from "../public/guia-img/paso2.jpg";
 import paso3 from "../public/guia-img/paso3.jpg";
 import paso4 from "../public/guia-img/paso4.jpg";
@@ -42,6 +44,8 @@ const ARCHIVOS = {
   "/icon-192.png": [icon192, "image/png"],
   "/icon-512.png": [icon512, "image/png"],
   "/guia-img/paso1.jpg": [paso1, "image/jpeg"],
+  "/pres/furgonetas.jpg": [presFurgonetas, "image/jpeg"],
+  "/pres/huevos.jpg": [presHuevos, "image/jpeg"],
   "/guia-img/paso2.jpg": [paso2, "image/jpeg"],
   "/guia-img/paso3.jpg": [paso3, "image/jpeg"],
   "/guia-img/paso4.jpg": [paso4, "image/jpeg"],

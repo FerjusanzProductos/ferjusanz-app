@@ -11545,6 +11545,8 @@ function pdfNuevo(W0, H0) {
     paginaActual() { return paginas.length - 1; },
     enPagina(i, fn) { const g = paginas.length; const a = paginas; /* dibujar sobre una página ya hecha */ const guardada = paginas.slice(); paginas.push(paginas[i]); fn(); paginas.pop(); },
     rect(x, y, w, h, color, trazo) { P().push(pdfColor(color, false) + ' ' + f(x) + ' ' + f(H - y - h) + ' ' + f(w) + ' ' + f(h) + ' re f'); },
+    circulo(cx, cy, r, color) { const k = 0.5523 * r, X = cx, Y = H - cy; P().push(pdfColor(color, false) + ' ' + f(X + r) + ' ' + f(Y) + ' m ' + [[X + r, Y + k, X + k, Y + r, X, Y + r], [X - k, Y + r, X - r, Y + k, X - r, Y], [X - r, Y - k, X - k, Y - r, X, Y - r], [X + k, Y - r, X + r, Y - k, X + r, Y]].map(c => c.map(f).join(' ') + ' c').join(' ') + ' f'); },
+    cajaR(x, y, w, h, r, color) { r = Math.min(r, w / 2, h / 2); const k = 0.5523 * r, x0 = x, x1 = x + w, y0 = H - y - h, y1 = H - y; P().push(pdfColor(color, false) + ' ' + f(x0 + r) + ' ' + f(y0) + ' m ' + f(x1 - r) + ' ' + f(y0) + ' l ' + [x1 - r + k, y0, x1, y0 + r - k, x1, y0 + r].map(f).join(' ') + ' c ' + f(x1) + ' ' + f(y1 - r) + ' l ' + [x1, y1 - r + k, x1 - r + k, y1, x1 - r, y1].map(f).join(' ') + ' c ' + f(x0 + r) + ' ' + f(y1) + ' l ' + [x0 + r - k, y1, x0, y1 - r + k, x0, y1 - r].map(f).join(' ') + ' c ' + f(x0) + ' ' + f(y0 + r) + ' l ' + [x0, y0 + r - k, x0 + r - k, y0, x0 + r, y0].map(f).join(' ') + ' c f'); },
     caja(x, y, w, h, relleno, borde) { P().push((relleno ? pdfColor(relleno, false) + ' ' : '') + pdfColor(borde || '#d1d5db', true) + ' 0.6 w ' + f(x) + ' ' + f(H - y - h) + ' ' + f(w) + ' ' + f(h) + ' re ' + (relleno ? 'B' : 'S')); },
     linea(x1, y1, x2, y2, color, grosor) { P().push(pdfColor(color, true) + ' ' + f(grosor || 0.6) + ' w ' + f(x1) + ' ' + f(H - y1) + ' m ' + f(x2) + ' ' + f(H - y2) + ' l S'); },
     texto(t, x, y, size, o) {
@@ -12172,7 +12174,7 @@ function hojaPrimerPedido(p, ex) {
     ex ? h('p', { class: 'sub' }, 'Para clientes que ya no nos compran: que sepan que seguimos y estamos a su disposición. Con su presentación y su vídeo de exclientes. El formulario va al final, como «no es necesario».') : h('p', { class: 'sub' }, 'Sirve para calcular los precios que le haríamos. Lo que rellene te llega a Comercial › Avisos › «Primeros pedidos», con su tarifa calculada para que Fernando la apruebe; luego se la envías.'),
     comCampo('Mensaje (puedes cambiarlo)', msg),
     h('div', { style: 'display:flex;gap:6px;margin-top:8px' },
-      h('button', { class: 'ghost', style: 'flex:1;min-height:48px', onclick: async () => { try { presPresentar({ diapositivas: ppLaminas(await ppPresentacion(clave), url, clave) }); } catch (e) { toast(msgErr(e), 'err'); } } }, '👁 Ver cómo queda la presentación'),
+      h('button', { class: 'ghost', style: 'flex:1;min-height:48px', onclick: async () => { try { presVerPdf(ppLaminas(await ppPresentacion(clave), url, clave)); } catch (e) { toast(msgErr(e), 'err'); } } }, '👁 Ver cómo queda la presentación'),
       h('button', { class: 'ghost', style: 'flex:1;min-height:48px', onclick: async () => { try { const pr = await ppPresentacion(clave); document.querySelectorAll('.overlay').forEach(o => o.remove()); state.sheetAbierta = false; go('presentaciones', { editar: pr.id }); } catch (e) { toast(msgErr(e), 'err'); } } }, '✏️ Editar la presentación')),
     h('div', { class: 'sub', style: 'font-weight:600;margin-top:8px' }, '¿Qué quieres enviar?'), chips, opPres,
     comCampo('Móvil', tel),
@@ -12215,6 +12217,23 @@ const pvLaminas = async tipo => ppLaminas(await ppPresentacion(tipo), '', tipo);
 async function pvBuscar(tipo) { const r = await sb.storage.from(PV_BUCKET).list('', { search: tipo }); return ((r.data || []).find(f => f.name.startsWith(tipo + '.')) || null); }
 async function pvArchivo(tipo) { const f = await pvBuscar(tipo); if (!f) return null; const d = await sb.storage.from(PV_BUCKET).download(f.name); if (d.error) throw d.error;
   return new File([d.data], 'Ferjusanz-presentacion.' + f.name.split('.').pop(), { type: d.data.type || (f.name.endsWith('.mp4') ? 'video/mp4' : 'video/webm') }); }
+/* Hojas del PDF pintadas en canvas con pdf.js: lo que se ve en «Ver cómo queda» y en el vídeo es exactamente el PDF que se envía. */
+async function presPdfHojas(bytes, ancho) {
+  await waCargarScript(WA_PDFJS);
+  if (!window.__waPdfW) { const t = await (await fetch(WA_PDFW)).text(); window.__waPdfW = URL.createObjectURL(new Blob([t], { type: 'text/javascript' })); }
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.__waPdfW;
+  const pdf = await window.pdfjsLib.getDocument({ data: bytes, isEvalSupported: false }).promise, hojas = [];
+  for (let i = 1; i <= pdf.numPages; i++) { const pg = await pdf.getPage(i), vp = pg.getViewport({ scale: ancho / pg.getViewport({ scale: 1 }).width }), c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height; await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise; hojas.push(c); }
+  return hojas;
+}
+async function presVerPdf(laminas) {
+  const caja = h('div', { style: 'flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px' }, h('p', { style: 'color:#fff' }, 'Preparando…'));
+  const ov = h('div', { style: 'position:fixed;inset:0;z-index:9999;background:#0b1f12;display:flex;flex-direction:column;padding:10px;gap:8px' },
+    h('div', { style: 'display:flex;gap:8px;align-items:center;color:#fff;font-weight:700' }, h('span', { style: 'flex:1' }, '👁 Así le llega la presentación'), h('button', { class: 'guardar', style: 'min-height:48px;padding:0 18px', onclick: () => ov.remove() }, '✕ Cerrar')), caja);
+  document.body.append(ov);
+  try { const hojas = await presPdfHojas(pdfPresentacion(await presExpandir(laminas, false), 'Ferjusanz'), 1200); hojas.forEach(c => { c.style.cssText = 'width:100%;height:auto;border-radius:6px;background:#fff'; }); caja.replaceChildren(...hojas); }
+  catch (e) { caja.replaceChildren(h('p', { style: 'color:#fff' }, 'No se pudo preparar: ' + msgErr(e))); }
+}
 async function grabarVideoPres(tipo, alGuardar) {
   if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) { toast('Este móvil no deja grabar vídeo desde la app.', 'err'); return; }
   const cv = document.createElement('canvas'); cv.width = 1280; cv.height = 906; const cx = cv.getContext('2d');
@@ -12227,11 +12246,7 @@ async function grabarVideoPres(tipo, alGuardar) {
   const BT = (t, f, cls) => h('button', { class: cls || 'ghost', style: 'flex:1;min-height:56px;font-size:17px', onclick: f }, t);
   const pinta = () => { cx.fillStyle = '#ffffff'; cx.fillRect(0, 0, cv.width, cv.height); const im = hojas[n]; if (im) cx.drawImage(im, 0, 0, cv.width, cv.height); };
   try {
-    await waCargarScript(WA_PDFJS);
-    if (!window.__waPdfW) { const t = await (await fetch(WA_PDFW)).text(); window.__waPdfW = URL.createObjectURL(new Blob([t], { type: 'text/javascript' })); }
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.__waPdfW;
-    const pdf = await window.pdfjsLib.getDocument({ data: pdfPresentacion(await presExpandir(await pvLaminas(tipo), false), 'Ferjusanz'), isEvalSupported: false }).promise;
-    for (let i = 1; i <= pdf.numPages; i++) { const pg = await pdf.getPage(i), vp = pg.getViewport({ scale: cv.width / pg.getViewport({ scale: 1 }).width }), c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height; await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise; hojas.push(c); }
+    hojas = await presPdfHojas(pdfPresentacion(await presExpandir(await pvLaminas(tipo), false), 'Ferjusanz'), cv.width);
   } catch (e) { fuera(); toast('No se pudieron preparar las hojas: ' + msgErr(e), 'err'); return; }
   pinta();
   const tipoVideo = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp8,opus', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t)) || '';
@@ -12416,6 +12431,7 @@ function presDibujos(d, todos) { d.fotos = d.fotos || {}; (d.items || []).filter
 const presFotoBytes = (() => { const memo = new Map(); return f => { if (!f || !f.u) return null; if (memo.has(f.u)) return memo.get(f.u); const b = atob(f.u.split(',')[1] || ''), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); memo.set(f.u, u); return u; }; })();
 /* Pasa las diapositivas del editor a «láminas» listas para dibujar (la lista de precios se parte en varias) */
 async function presExpandir(slides, conLista) {
+  await presCargarFotos();
   const out = []; let recs = null;
   for (const d of slides) {
     if (d.t === 'precios' && !conLista && d.soloEnvio) continue;
@@ -12452,28 +12468,64 @@ function presLamina(d) {
   else c = h('div', { class: 'pd-in', style: 'text-align:center' }, h('div', { class: 'pd-logo' }, 'FERJUSANZ'), tit(d.titulo), ...(d.lineas || []).filter(Boolean).map((l, i) => h('p', { class: i === 0 ? 'pd-p' : 'pd-sub', style: 'margin:6px 0' }, l)));
   s.append(c); return s;
 }
+/* Fotos propias de Ferjusanz para la presentación (16/11/2026): furgonetas (portada y contacto) y huevos (productos). Se cargan una vez. */
+let PRES_FOTOS = null;
+async function presCargarFotos() {
+  if (PRES_FOTOS) return PRES_FOTOS;
+  const una = async (f, w, h) => { try { const r = await fetch('pres/' + f); if (!r.ok) return null; return { bytes: new Uint8Array(await r.arrayBuffer()), w, h }; } catch (e) { return null; } };
+  const [furgonetas, huevos] = await Promise.all([una('furgonetas.jpg', 480, 800), una('huevos.jpg', 360, 600)]);
+  return (PRES_FOTOS = { furgonetas, huevos });
+}
+/* Diseño de la presentación (16/11/2026, «más bonita, mejor diseño»): portada y cierre en verde con foto real a la derecha,
+   hojas en blanco con título verde, números en círculo, productos en etiquetas con foto y botón redondeado. */
 function pdfPresentacion(laminas, titulo) {
-  const doc = pdfNuevo(841.89, 595.28), W = 841.89, H = 595.28, V = '#166534', VO = '#14532d', AM = '#facc15', M = 56;
-  const pie = i => { doc.texto('FERJUSANZ · ' + EMPRESA.email, M, H - 22, 9, { color: '#6b7280' }); doc.texto(String(i + 1) + ' / ' + laminas.length, W - M, H - 22, 9, { color: '#6b7280', align: 'right' }); };
-  const banda = t => { doc.rect(0, 0, W, 96, V); doc.rect(0, 96, W, 5, AM); pdfLineas(t || '', 30, true, W - 2 * M).slice(0, 1).forEach(l => doc.texto(l, M, 62, 30, { neg: true, color: '#ffffff' })); };
+  const doc = pdfNuevo(841.89, 595.28), W = 841.89, H = 595.28, V = '#166534', VO = '#14532d', AM = '#facc15', CL = '#f0fdf4', BO = '#bbf7d0', TX = '#111827', GR = '#6b7280', M = 56;
+  const F = PRES_FOTOS || {};
+  const pie = i => { doc.linea(M, H - 40, W - M, H - 40, '#e5e7eb', 0.6); doc.texto('FERJUSANZ · patatas, frutas, verduras y huevos', M, H - 22, 9, { color: GR }); doc.texto(String(i + 1) + ' / ' + laminas.length, W - M, H - 22, 9, { neg: true, color: V, align: 'right' }); };
+  // Tamaño que cabe en una línea (baja de 1 en 1 hasta «min»): títulos y etiquetas largos no se cortan.
+  const cabe = (t, size, neg, ancho, min) => { let z = size; while (z > min && pdfLineas(t || '', z, neg, ancho).length > 1) z--; return z; };
+  const cabeza = t => { doc.rect(M, 46, 44, 6, AM); doc.texto('FERJUSANZ', W - M, 54, 11, { neg: true, color: V, align: 'right' }); const z = cabe(t, 30, true, W - 2 * M - 110, 18); pdfLineas(t || '', z, true, W - 2 * M - 110).slice(0, 1).forEach(l => doc.texto(l, M, 94, z, { neg: true, color: VO })); doc.linea(M, 114, W - M, 114, '#e5e7eb', 0.8); };
+  const panel = (foto, xp) => { doc.rect(0, 0, W, H, VO); if (foto) { doc.imagen(foto.bytes, foto.w, foto.h, xp, 0, W - xp, H); doc.rect(xp - 6, 0, 6, H, AM); } };
   laminas.forEach((d, i) => {
     if (i) doc.pagina();
-    if (d.t === 'portada' || d.t === 'contacto') {
-      doc.rect(0, 0, W, H, VO); if (d.t === 'portada') doc.rect(0, 318, W, 6, AM);
-      doc.texto('FERJUSANZ', W / 2, d.t === 'portada' ? 150 : 90, 20, { neg: true, color: AM, align: 'center' });
-      if (d.t === 'portada') { pdfLineas(d.titulo || '', 58, true, W - 2 * M).slice(0, 2).forEach((l, k) => doc.texto(l, W / 2, 245 + k * 62, 58, { neg: true, color: '#ffffff', align: 'center' })); pdfLineas(d.sub || '', 20, false, W - 2 * M).slice(0, 2).forEach((l, k) => doc.texto(l, W / 2, 365 + k * 26, 20, { color: '#dcfce7', align: 'center' })); if (d.pie) doc.texto(d.pie, W / 2, 470, 14, { color: AM, align: 'center' }); }
-      else { doc.texto(d.titulo || '', W / 2, 160, 38, { neg: true, color: '#ffffff', align: 'center' }); let y = 230; (d.lineas || []).filter(Boolean).forEach((l, k) => { pdfLineas(l, k === 0 ? 20 : 17, k === 0, W - 2 * M).slice(0, 2).forEach(t => { doc.texto(t, W / 2, y, k === 0 ? 20 : 17, { neg: k === 0, color: k === 0 ? AM : '#dcfce7', align: 'center' }); y += 28; }); y += 8; }); }
+    if (d.t === 'portada') {
+      const xp = F.furgonetas ? 500 : W, tw = (F.furgonetas ? xp : W) - 2 * M; panel(F.furgonetas, xp);
+      doc.texto('FERJUSANZ', M, 96, 16, { neg: true, color: AM });
+      let y = 190; pdfLineas(d.titulo || '', 42, true, tw).slice(0, 4).forEach(l => { doc.texto(l, M, y, 42, { neg: true, color: '#ffffff' }); y += 48; });
+      doc.rect(M, y - 18, 70, 5, AM); y += 22;
+      pdfLineas(d.sub || '', 17, false, tw).slice(0, 3).forEach(l => { doc.texto(l, M, y, 17, { color: '#dcfce7' }); y += 24; });
+      if (d.pie) doc.texto(d.pie, M, H - 56, 13, { neg: true, color: AM });
       return;
     }
-    banda(d.t === 'precios' ? (d.titulo || 'Lista de precios') + (d.partes > 1 ? '  (' + d.parte + '/' + d.partes + ')' : '') : d.titulo);
-    if (d.t === 'texto') { let y = 160; pdfLineas(d.texto || '', 19, false, W - 2 * M).slice(0, 8).forEach(l => { doc.texto(l, M, y, 19, { color: '#111827' }); y += 28; });
-      const cf = (d.cifras || []).filter(x => x && (x[0] || x[1])).slice(0, 4); const cw = (W - 2 * M - (cf.length - 1) * 16) / Math.max(cf.length, 1); cf.forEach((x, k) => { const xx = M + k * (cw + 16); doc.caja(xx, 400, cw, 100, '#f0fdf4', '#86efac'); doc.texto(x[0] || '', xx + cw / 2, 444, 26, { neg: true, color: V, align: 'center' }); pdfLineas(x[1] || '', 12, false, cw - 16).slice(0, 2).forEach((l, q) => doc.texto(l, xx + cw / 2, 470 + q * 15, 12, { color: '#374151', align: 'center' })); }); }
-    else if (d.t === 'lista') { let y = 150; (d.puntos || []).filter(Boolean).slice(0, 7).forEach((p, k) => { doc.rect(M, y - 20, 34, 34, V); doc.texto(String(k + 1), M + 17, y + 4, 18, { neg: true, color: '#ffffff', align: 'center' }); const L = pdfLineas(p, 20, false, W - 2 * M - 60).slice(0, 2); L.forEach((l, q) => doc.texto(l, M + 52, y + 2 + q * 24, 20, { color: '#111827' })); y += Math.max(58, L.length * 24 + 26); });
-      if (d.enlace) { const bw = W - 2 * M, by = Math.min(y, H - 130); doc.rect(M, by, bw, 64, V); doc.texto(d.enlace.texto, M + bw / 2, by + 40, 24, { neg: true, color: '#ffffff', align: 'center' }); doc.enlace(M, by, bw, 64, d.enlace.url); } }
-    else if (d.t === 'ofertas') { if (!(d.items || []).length) pdfLineas(d.texto || '', 22, false, W - 2 * M).slice(0, 5).forEach((l, k) => doc.texto(l, M, 170 + k * 32, 22, { color: '#111827' })); else { let y = 128; d.items.slice(0, 5).forEach(x => { doc.caja(M, y, W - 2 * M, 62, '#fefce8', '#facc15'); doc.rect(M, y, 6, 62, AM); doc.texto('OFERTA · ' + pdfLineas(x.n || '', 20, true, W - 2 * M - 120).slice(0, 1)[0], M + 20, y + 27, 20, { neg: true, color: '#111827' }); pdfLineas(x.t || '', 13, false, W - 2 * M - 40).slice(0, 1).forEach(l => doc.texto(l, M + 20, y + 49, 13, { color: '#374151' })); y += 74; }); } }
-    else if (d.t === 'productos' && d.conFoto) { const it = (d.items || []).filter(Boolean).slice(0, 6), cw = (W - 2 * M - 2 * 16) / 3, ch = 205; it.forEach((x, k) => { const xx = M + (k % 3) * (cw + 16), yy = 122 + Math.floor(k / 3) * (ch + 14); doc.caja(xx, yy, cw, ch, '#ffffff', '#86efac'); const ft = (d.fotos || {})[x], by = presFotoBytes(ft); const ih = (cw - 12) * 0.75; if (by) doc.imagen(by, ft.w, ft.h, xx + 6, yy + 6, cw - 12, ih); else { doc.rect(xx + 6, yy + 6, cw - 12, ih, '#dcfce7'); doc.texto(x.charAt(0).toUpperCase(), xx + cw / 2, yy + 6 + ih / 2 + 22, 60, { neg: true, color: '#86efac', align: 'center' }); } doc.texto(pdfLineas(x, 17, true, cw - 16).slice(0, 1)[0] || '', xx + cw / 2, yy + ch - 14, 17, { neg: true, color: '#111827', align: 'center' }); }); }
-    else if (d.t === 'productos') { const it = (d.items || []).filter(Boolean).slice(0, 18); const cols = 3, cw = (W - 2 * M - 2 * 16) / 3; it.forEach((x, k) => { const xx = M + (k % cols) * (cw + 16), yy = 135 + Math.floor(k / cols) * 72; doc.caja(xx, yy, cw, 58, '#f0fdf4', '#86efac'); doc.rect(xx, yy, 5, 58, V); pdfLineas(x, 17, true, cw - 30).slice(0, 2).forEach((l, q) => doc.texto(l, xx + 18, yy + 26 + q * 19 - (pdfLineas(x, 17, true, cw - 30).length > 1 ? 7 : 0), 17, { neg: true, color: '#111827' })); }); }
-    else if (d.t === 'precios') { if (d.aviso) doc.texto(d.aviso, M, 160, 16, { color: '#b45309' }); else { let y = 140; d.items.forEach((x, k) => { if (k % 2 === 0) doc.rect(M - 8, y - 22, W - 2 * M + 16, 38, '#f0fdf4'); pdfLineas(x.nombre || '', 17, false, W - 2 * M - 230).slice(0, 1).forEach(l => doc.texto(l, M, y, 17, { color: '#111827' })); doc.texto(presPrecio(x.precio, x.unidad), W - M, y, 17, { neg: true, color: V, align: 'right' }); y += 40; }); if (d.nota) doc.texto(d.nota, M, H - 50, 11, { color: '#6b7280' }); } }
+    if (d.t === 'contacto') {
+      const xp = F.furgonetas ? 500 : W, tw = (F.furgonetas ? xp : W) - 2 * M; panel(F.furgonetas, xp);
+      doc.texto('FERJUSANZ', M, 80, 14, { neg: true, color: AM });
+      let y = 140; pdfLineas(d.titulo || '', 34, true, tw).slice(0, 2).forEach(l => { doc.texto(l, M, y, 34, { neg: true, color: '#ffffff' }); y += 40; }); y += 14;
+      (d.lineas || []).filter(Boolean).forEach((l, k) => {
+        const dest = k === 0 || /pedido m[ií]nimo|disposici[oó]n/i.test(l), L = pdfLineas(l, dest ? 16 : 14, dest, tw - (dest ? 28 : 0)).slice(0, 3);
+        if (dest) { const bh = L.length * 21 + 18; doc.cajaR(M, y - 4, tw, bh, 8, AM); L.forEach((t, q) => doc.texto(t, M + 14, y + 17 + q * 21, 16, { neg: true, color: VO })); y += bh + 12; }
+        else { L.forEach(t => { doc.texto(t, M, y + 14, 14, { color: '#dcfce7' }); y += 21; }); y += 8; }
+      });
+      return;
+    }
+    cabeza(d.t === 'precios' ? (d.titulo || 'Lista de precios') + (d.partes > 1 ? '  (' + d.parte + '/' + d.partes + ')' : '') : d.titulo);
+    if (d.t === 'texto') {
+      let y = 160; pdfLineas(d.texto || '', 18, false, W - 2 * M).slice(0, 7).forEach(l => { doc.texto(l, M, y, 18, { color: TX }); y += 28; });
+      const cf = (d.cifras || []).filter(x => x && (x[0] || x[1])).slice(0, 4); const cw = (W - 2 * M - (cf.length - 1) * 16) / Math.max(cf.length, 1);
+      cf.forEach((x, k) => { const xx = M + k * (cw + 16); doc.cajaR(xx, 392, cw, 112, 10, CL); doc.rect(xx + cw / 2 - 18, 404, 36, 4, AM); doc.texto(x[0] || '', xx + cw / 2, 448, 28, { neg: true, color: V, align: 'center' }); pdfLineas(x[1] || '', 12, false, cw - 16).slice(0, 2).forEach((l, q) => doc.texto(l, xx + cw / 2, 474 + q * 15, 12, { color: '#374151', align: 'center' })); });
+    }
+    else if (d.t === 'lista') {
+      let y = 160; (d.puntos || []).filter(Boolean).slice(0, 7).forEach((p, k) => { doc.circulo(M + 17, y - 6, 17, V); doc.texto(String(k + 1), M + 17, y, 16, { neg: true, color: '#ffffff', align: 'center' }); const L = pdfLineas(p, 19, false, W - 2 * M - 60).slice(0, 2); L.forEach((l, q) => doc.texto(l, M + 50, y + q * 23, 19, { color: TX })); y += Math.max(52, L.length * 23 + 29); });
+      if (d.enlace) { const bw = W - 2 * M, by = Math.min(y + 4, H - 120); doc.cajaR(M, by, bw, 62, 31, AM); doc.texto(d.enlace.texto + '  »', M + bw / 2, by + 39, 22, { neg: true, color: VO, align: 'center' }); doc.enlace(M, by, bw, 62, d.enlace.url); }
+    }
+    else if (d.t === 'ofertas') { if (!(d.items || []).length) pdfLineas(d.texto || '', 21, false, W - 2 * M).slice(0, 5).forEach((l, k) => doc.texto(l, M, 170 + k * 32, 21, { color: TX })); else { let y = 136; d.items.slice(0, 5).forEach(x => { doc.cajaR(M, y, W - 2 * M, 62, 10, '#fefce8'); doc.rect(M, y + 10, 6, 42, AM); doc.texto('OFERTA · ' + pdfLineas(x.n || '', 19, true, W - 2 * M - 120).slice(0, 1)[0], M + 22, y + 27, 19, { neg: true, color: TX }); pdfLineas(x.t || '', 13, false, W - 2 * M - 40).slice(0, 1).forEach(l => doc.texto(l, M + 22, y + 48, 13, { color: '#374151' })); y += 74; }); } }
+    else if (d.t === 'productos' && d.conFoto) { const it = (d.items || []).filter(Boolean).slice(0, 6), cw = (W - 2 * M - 2 * 16) / 3, ch = 200; it.forEach((x, k) => { const xx = M + (k % 3) * (cw + 16), yy = 128 + Math.floor(k / 3) * (ch + 14); doc.cajaR(xx, yy, cw, ch, 10, CL); const ft = (d.fotos || {})[x], by = presFotoBytes(ft); const ih = (cw - 12) * 0.72; if (by) doc.imagen(by, ft.w, ft.h, xx + 6, yy + 6, cw - 12, ih); else { doc.rect(xx + 6, yy + 6, cw - 12, ih, '#dcfce7'); doc.texto(x.charAt(0).toUpperCase(), xx + cw / 2, yy + 6 + ih / 2 + 22, 60, { neg: true, color: '#86efac', align: 'center' }); } doc.texto(pdfLineas(x, 16, true, cw - 16).slice(0, 1)[0] || '', xx + cw / 2, yy + ch - 16, 16, { neg: true, color: TX, align: 'center' }); }); }
+    else if (d.t === 'productos') {
+      const foto = F.huevos && (d.items || []).length > 6, fw = foto ? 210 : 0, area = W - 2 * M - (foto ? fw + 24 : 0), cols = 2, cw = (area - 14) / cols;
+      if (foto) { doc.imagen(F.huevos.bytes, F.huevos.w, F.huevos.h, W - M - fw, 132, fw, fw / 0.6); doc.rect(W - M - fw, 132 + fw / 0.6, fw, 5, AM); }
+      (d.items || []).filter(Boolean).slice(0, 18).forEach((x, k) => { const xx = M + (k % cols) * (cw + 14), yy = 132 + Math.floor(k / cols) * 44; doc.cajaR(xx, yy, cw, 36, 18, CL); doc.circulo(xx + 18, yy + 18, 5, V); const z = cabe(x, 15, true, cw - 40, 11); doc.texto(pdfLineas(x, z, true, cw - 40).slice(0, 1)[0] || '', xx + 32, yy + 18 + z / 3, z, { neg: true, color: TX }); });
+    }
+    else if (d.t === 'precios') { if (d.aviso) doc.texto(d.aviso, M, 160, 16, { color: '#b45309' }); else { let y = 148; d.items.forEach((x, k) => { if (k % 2 === 0) doc.rect(M - 8, y - 22, W - 2 * M + 16, 38, CL); pdfLineas(x.nombre || '', 17, false, W - 2 * M - 230).slice(0, 1).forEach(l => doc.texto(l, M, y, 17, { color: TX })); doc.texto(presPrecio(x.precio, x.unidad), W - M, y, 17, { neg: true, color: V, align: 'right' }); y += 40; }); if (d.nota) doc.texto(d.nota, M, H - 50, 11, { color: GR }); } }
     pie(i);
   });
   return doc.bytes();
