@@ -1,6 +1,6 @@
 // Envío AUTOMÁTICO del albarán por correo cuando se marca la entrega.
 // - Sale del Gmail de Fernando (contraseña de aplicación en el secreto GMAIL_APP_PASSWORD; sin ella no envía nada).
-// - A clientes con correo en su ficha o que lo dejaron al escanear el QR, y solo entregas de las últimas 24 horas. Cada albarán se manda UNA vez (tabla envios_correo).
+// - A clientes con correo en su ficha o el que dejaron con el QR y la oficina aceptó, y solo entregas de las últimas 24 horas. Cada albarán se manda UNA vez (tabla envios_correo).
 // - La llama la app después de guardar una entrega (cualquier móvil del equipo). No modifica pedidos ni albaranes.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import postgres from "npm:postgres@3.4.5";
@@ -19,8 +19,8 @@ const num = (n: unknown) => n == null ? "" : String(Math.round(Number(n) * 100) 
 async function usuario(req: Request) {
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: req.headers.get("Authorization") || "" } } });
   const { data } = await sb.auth.getUser(); if (!data?.user) return null;
-  const [p] = await sql`select activo from public.perfiles where id = ${data.user.id}`;
-  return p && p.activo !== false ? data.user.id : null;
+  const [p] = await sql`select activo, rol from public.perfiles where id = ${data.user.id}`;
+  return p && p.activo !== false ? { id: data.user.id, rol: p.rol as string } : null;
 }
 
 async function token(tabla: "albaran" | "cliente", id: string) {
@@ -57,9 +57,9 @@ async function pendientes() {
   const lista = await sql`
     select * from (
       select e.pedido_id, e.entregado_at, e.nota, c.id as cliente_id, coalesce(c.nombre_comercial, c.nombre) as cliente, c.albaran_por_correo,
-        -- el de la ficha; si no hay, el que dejó el propio cliente al escanear el QR (y aceptó recibirlos)
+        -- el de la ficha; si no hay, el que dejó el cliente con el QR SOLO si la oficina lo aceptó (estado «guardado»): así nadie con un enlace suelto se apunta solo (auditoría 16/11/2026)
         coalesce(case when c.email ~* '^[^@\\s,;]+@[^@\\s,;]+\\.[a-z]{2,}$' then lower(trim(c.email)) end,
-          (select k.email from public.contactos_portal k where k.cliente_id = c.id and k.email is not null and k.estado <> 'descartado' order by k.created_at desc limit 1)) as email
+          (select k.email from public.contactos_portal k where k.cliente_id = c.id and k.email is not null and k.estado = 'guardado' order by k.created_at desc limit 1)) as email
       from public.entregas e join public.pedidos p on p.id = e.pedido_id join public.clientes c on c.id = p.cliente_id
       join public.albaranes a on a.pedido_id = p.id and a.numero is not null
       where e.entregado_at > now() - interval '24 hours') z
@@ -96,15 +96,16 @@ async function pendientes() {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   try {
-    const b0 = await req.clone().json().catch(() => ({}));
-    if (b0.accion === "comprobar") {   // solo comprueba que la contraseña de Gmail vale; NO envía nada
+    const yo = await usuario(req);
+    if (!yo) return json({ error: "Inicia sesión" }, 401);
+    const b = await req.json().catch(() => ({}));
+    if (b.accion === "comprobar") {   // solo comprueba que la contraseña de Gmail vale; NO envía nada. Solo admin.
+      if (yo.rol !== "admin") return json({ error: "Solo administración" }, 403);
       const pass = Deno.env.get("GMAIL_APP_PASSWORD"), user = Deno.env.get("GMAIL_USER");
       if (!pass || !user) return json({ ok: false, motivo: !pass && !user ? "faltan los dos secretos" : !pass ? "falta GMAIL_APP_PASSWORD" : "falta GMAIL_USER" });
       try { await nodemailer.createTransport({ host: "smtp.gmail.com", port: 465, secure: true, auth: { user: user.trim(), pass: pass.replace(/\s+/g, "") } }).verify(); return json({ ok: true, usuario: user.trim().replace(/^(.{3}).*(@.*)$/, "$1…$2") }); }
       catch (e) { return json({ ok: false, motivo: String((e as Error)?.message || e).slice(0, 200) }); }
     }
-    if (!await usuario(req)) return json({ error: "Inicia sesión" }, 401);
-    const b = await req.json().catch(() => ({}));
     if (b.accion === "reintentar" && b.pedido_id) await sql`delete from public.envios_correo where pedido_id = ${String(b.pedido_id)} and estado = 'error'`;
     return json(await pendientes());
   } catch (e) { console.error(e); return json({ error: String((e as Error)?.message || e) }, 500); }

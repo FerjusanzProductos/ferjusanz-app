@@ -9232,7 +9232,7 @@ async function visorDoc(url, esPdf, titulo) {
     if (!window.__waPdfW) { const t = await (await fetch(WA_PDFW)).text(); window.__waPdfW = URL.createObjectURL(new Blob([t], { type: 'text/javascript' })); }
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.__waPdfW;
     const buf = await (await fetch(url)).arrayBuffer();
-    const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+    const pdf = await window.pdfjsLib.getDocument({ data: buf, isEvalSupported: false }).promise;
     cuerpo.replaceChildren();
     for (let n = 1; n <= Math.min(pdf.numPages, 10); n++) {
       const pg = await pdf.getPage(n); const vp = pg.getViewport({ scale: 2 }); const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height; cv.style.width = zoom + '%';
@@ -10523,6 +10523,8 @@ function vistaFormatos() {
 
 /* ---------- Lectura de imágenes y PDF (gratis, dentro del móvil) ---------- */
 const WA_TESS = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+/* isEvalSupported: false en cada getDocument: evita el fallo CVE-2024-4367 de esta versión (un PDF preparado no puede ejecutar código).
+   shortcut: se queda pdf.js 3.11.174 (la 4.x solo viene como módulo); pasar a 4.x si hay que tocar el visor. */
 const WA_PDFJS = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js';
 const WA_PDFW = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
 function waCargarScript(url) {
@@ -10579,7 +10581,7 @@ async function waLeerPdf(file, progreso, porFilas) {
   await waCargarScript(WA_PDFJS);
   if (!window.__waPdfW) { const t = await (await fetch(WA_PDFW)).text(); window.__waPdfW = URL.createObjectURL(new Blob([t], { type: 'text/javascript' })); }
   window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.__waPdfW;
-  const pdf = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise; const partes = []; let confs = [];
+  const pdf = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer(), isEvalSupported: false }).promise; const partes = []; let confs = [];
   for (let n = 1; n <= Math.min(pdf.numPages, 15); n++) {
     progreso && progreso('Página ' + n + ' de ' + pdf.numPages + '…'); const pg = await pdf.getPage(n); const tc = await pg.getTextContent(); let y = null, linea = '', filas = [];
     tc.items.forEach(it => { const yy = Math.round(it.transform[5]); if (y !== null && Math.abs(yy - y) > 3) { filas.push(linea); linea = ''; } y = yy; linea += (linea ? ' ' : '') + it.str; }); if (linea) filas.push(linea);
@@ -11030,7 +11032,7 @@ async function fcLeerFactura(file, progreso) {
     await waCargarScript(WA_PDFJS);
     if (!window.__waPdfW) { const t = await (await fetch(WA_PDFW)).text(); window.__waPdfW = URL.createObjectURL(new Blob([t], { type: 'text/javascript' })); }
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.__waPdfW;
-    const pdf = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+    const pdf = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer(), isEvalSupported: false }).promise;
     for (let n = 1; n <= Math.min(pdf.numPages, 8); n++) {
       progreso && progreso('Leyendo página ' + n + ' de ' + pdf.numPages + '…');
       const pg = await pdf.getPage(n); const tc = await pg.getTextContent(); const fp = fcFilasDePagina(tc.items); const lp = fcTextoALineas(fcRecorteTabla(fp));
