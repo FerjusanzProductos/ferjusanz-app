@@ -94,7 +94,7 @@ async function tarjetaConProductos(html, url, env) {
     const r = await rpc(env, "primer_pedido_productos");
     const lista = r.ok ? await r.json() : [];
     if (lista.length) filas = `<input id="pp-buscar" type="search" placeholder="Buscar producto…" aria-label="Buscar producto"><div class="pp-lista">` +
-      lista.map((x) => `<label class="pp-fila"><span>${esc(x.nombre)}</span><input name="c_${esc(x.id)}" type="text" inputmode="decimal" maxlength="8" pattern="[0-9]{1,5}([.,][0-9]{1,2})?" title="Solo números, por ejemplo 2 o 2,5" aria-label="${esc(x.nombre)} por semana"><small>${esc(x.unidad || "")}/sem.</small></label>`).join("") + `</div>`;
+      lista.map((x) => `<div class="pp-fila"><label class="pp-usa"><input type="checkbox" name="u_${esc(x.id)}" value="1"><span>${esc(x.nombre)}</span></label><input name="c_${esc(x.id)}" type="text" inputmode="decimal" maxlength="8" pattern="[0-9]{1,5}([.,][0-9]{1,2})?" title="Solo números, por ejemplo 2 o 2,5" placeholder="¿cuánto?" aria-label="${esc(x.nombre)}: cantidad por semana (opcional)"><small>${esc(x.unidad || "")}</small></div>`).join("") + `</div>`;
   } catch (e) { console.log("productos fallo", String(e)); }
   const p = url.searchParams.get("p") || "";
   return html.replace("__PP_PRODUCTOS__", filas).replace("__PP_CONTACTO__", UUID.test(p) ? p : "");
@@ -108,7 +108,15 @@ async function enviarPrimerPedido(request, url, env) {
   const origen = request.headers.get("origin");
   if (origen && origen !== "null" && origen !== url.origin) return new Response("Origen no permitido", { status: 403 });
   const productos = [];
-  for (const [k, v] of f) if (k.startsWith("c_") && UUID.test(k.slice(2)) && String(v).trim()) productos.push({ id: k.slice(2), cantidad: String(v).trim() });
+  // Marcado («lo uso») o con cantidad: los dos cuentan; la cantidad es opcional.
+  const marcados = new Map();
+  for (const [k, v] of f) {
+    const id = k.slice(2);
+    if (!UUID.test(id)) continue;
+    if (k.startsWith("u_")) marcados.set(id, marcados.get(id) || "");
+    if (k.startsWith("c_") && String(v).trim()) marcados.set(id, String(v).trim());
+  }
+  for (const [id, cantidad] of marcados) productos.push({ id, cantidad });
   const t = (k) => String(f.get(k) || "");
   try {
     const r = await rpc(env, "web_primer_pedido", { p_negocio: t("negocio"), p_persona: t("persona"), p_tipo: t("tipo"), p_localidad: t("localidad"),

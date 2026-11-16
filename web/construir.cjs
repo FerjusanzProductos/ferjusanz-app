@@ -690,7 +690,7 @@ function tarjeta() {
   <p class="entradilla">${EMPRESA}: empresa familiar, tercera generación, ${ANIOS} sirviendo a restaurantes, bares, hoteles, colegios, residencias y fruterías de Madrid y Segovia.</p>
   <form id="primer-pedido" class="formulario primer-pedido" method="post" action="/enviar-primer-pedido">
   <h2>Imagine su primer pedido y le calculamos su tarifa</h2>
-  <p>Díganos qué suele pedir a la semana: con eso le preparamos precios a su medida y se los mandamos por WhatsApp o por correo. Sin compromiso y <strong>sin pedido mínimo</strong>. Si quiere, quedamos para conocernos y que pruebe el género.</p>
+  <p>Marque en un minuto qué productos usa y, si quiere, cuánto a la semana: con eso le preparamos precios a su medida y se los mandamos por WhatsApp o por correo. Sin compromiso y <strong>sin pedido mínimo</strong>. Si quiere, quedamos para conocernos y que pruebe el género.</p>
   <p class="aviso-form ok" hidden data-si="enviado">✔ Recibido. Le preparamos su tarifa y le escribimos muy pronto. ¡Gracias!</p>
   <p class="aviso-form mal" hidden data-si="error">No se ha podido enviar. Revise el nombre del negocio y el móvil, o escríbanos por WhatsApp.</p>
   <input type="hidden" name="p" value="__PP_CONTACTO__">
@@ -700,8 +700,8 @@ function tarjeta() {
   <label>Localidad<input name="localidad" maxlength="80" autocomplete="address-level2"></label>
   <label>Móvil *<input name="telefono" type="tel" required maxlength="20" autocomplete="tel" inputmode="tel" placeholder="600 000 000"></label>
   <label>Correo<input name="email" type="email" maxlength="120" autocomplete="email"></label>
-  <fieldset class="pp-productos"><legend>¿Qué suele pedir a la semana?</legend>
-  <p class="nota">Ponga la cantidad solo en lo que use. Es orientativo: luego lo ajustamos juntos.</p>
+  <fieldset class="pp-productos"><legend>¿Qué productos usa?</legend>
+  <p class="nota">Marque lo que usa. Si quiere, ponga cuánto gasta a la semana (en la unidad de la derecha): así le afinamos más el precio. Es orientativo.</p>
   __PP_PRODUCTOS__
   </fieldset>
   <label>Otros productos o cantidades<textarea name="otros" maxlength="800" rows="3" placeholder="Por ejemplo: 2 cajas de limones, patata pelada para freír…"></textarea></label>
@@ -713,7 +713,7 @@ function tarjeta() {
   <p class="nota">Usamos estos datos solo para prepararle la tarifa y contactarle. Más información en la <a href="/politica-de-privacidad/">política de privacidad</a>.</p>
   <button class="btn btn-wa" type="submit">Calcular mi tarifa</button>
   </form>
-  <script>(function(){var q=location.search;document.querySelectorAll('[data-si]').forEach(function(e){if(q.indexOf(e.dataset.si+'=')>-1)e.hidden=false});var b=document.getElementById('pp-buscar');if(b)b.addEventListener('input',function(){var t=b.value.toLowerCase();document.querySelectorAll('.pp-fila').forEach(function(f){f.hidden=t&&f.textContent.toLowerCase().indexOf(t)<0})})})()</script>
+  <script>(function(){var q=location.search;document.querySelectorAll('[data-si]').forEach(function(e){if(q.indexOf(e.dataset.si+'=')>-1)e.hidden=false});var b=document.getElementById('pp-buscar');if(b)b.addEventListener('input',function(){var t=b.value.toLowerCase();document.querySelectorAll('.pp-fila').forEach(function(f){f.hidden=t&&f.textContent.toLowerCase().indexOf(t)<0})});document.querySelectorAll('.pp-fila input[type=text]').forEach(function(c){c.addEventListener('input',function(){if(c.value.trim())c.parentNode.querySelector('input[type=checkbox]').checked=true})})})()</script>
   <h2 class="pp-separa">Quiénes somos y cómo trabajamos</h2>
   <div class="acciones apiladas"><a class="btn btn-wa" href="${wa(fer.num, 'Hola Fernando, he visto la tarjeta de Ferjusanz y quería información de: ')}" rel="nofollow">${I.wa}<span>Escribir a Fernando por WhatsApp <small>(${fer.ver})</small></span></a>
   <a class="btn btn-borde" href="tel:+34917632186">${I.tel}<span>Llamar a la oficina: ${TEL}</span></a>
