@@ -77,6 +77,8 @@ _Solo preparado. **No se ha cambiado nada**: ni DNS, ni alojamiento, ni configur
 | Web nueva | Cloudflare Workers (`ferjusanz-web`). El dominio **aún no está** en Cloudflare | comprobado por la API |
 | «Acceso externo» de DonDominio | Es el **panel de marca blanca para revendedores**: da acceso a un dominio sin dar la cuenta | ayuda de DonDominio |
 
+**Capturas de Alberto (16/11/2026, 2.ª tanda)**: el panel de DonDominio es el de **Creativate** (marcan `ns1-3.controldeservidor.com` como «nuestros servidores»: la web y el correo van en su alojamiento). El **titular** es un contacto `CMA-76448` que **no es la empresa**, y Alberto está intentando cambiarlo. Los contactos **administrativo, facturación y técnico** son **Fernando Sanz (`FS-240106`)**: en un .es, el cambio de titular lo aprueba el contacto administrativo, así que **le llegará a Fernando un correo** de DonDominio / Dominios.es para autorizarlo (con DNI o certificado). Titular correcto: FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., CIF B87446670.
+
 **Ojo, dato que no cuadra**: el 15/11 Soporte de DonDominio dijo que el dominio no estaba con ellos sino «en WebEmpresa». Lo más probable es que **los dos tengan razón**: el dominio está registrado a través de DonDominio, pero **dentro de la cuenta de otro** (un revendedor: Creativate o Webempresa), no en la cuenta de Fernando (`FerNanSz`). Por eso existe el «acceso externo». Hay que confirmarlo con Alberto (pregunta 1).
 
 ### Preguntas para Alberto (antes de nada)
