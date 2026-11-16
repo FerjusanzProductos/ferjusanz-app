@@ -10,7 +10,7 @@ Textos que se pegan como **primer mensaje** en un chat nuevo de Claude para que 
 | `PROMPTS.md` | Fernando | Encargar uno de los 8 agentes o mejoras pedidas (bloque «Contexto» + la tarea) |
 
 > Nota: en Claude Code ya no hace falta pegar el contexto: Claude lee `CLAUDE.md` y `docs/` solo.
-> `PROMPT_FERNANDO_NUEVO_CHAT.md` tiene datos antiguos (p. ej. ramas y «GitHub suspendido»); manda lo de `docs/ESTADO_ACTUAL.md`.
+> `PROMPT_FERNANDO_NUEVO_CHAT.md` (al día el 16/11/2026) es corto a propósito: manda a leer `CLAUDE.md` y `docs/`, que siempre están al día.
 
 ## Tareas que hace Claude aquí
 - Mantener estos textos al día cuando cambian reglas, precios o pantallas de la app.

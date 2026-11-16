@@ -1,78 +1,39 @@
 # 00 · Resumen general de FERJUSANZ
-_Actualizado el 11/11/2026. Para leer de un vistazo y para contárselo a Jorge. Versión bonita para el móvil: `resumen.html` (en esta misma carpeta) y la página de Claude que enlaza `claude/LEEME.md`._
+_Actualizado el 16/11/2026. Para leer de un vistazo y para contárselo a Jorge. Versión para el móvil: `resumen.html` (en esta carpeta), publicada en https://claude.ai/artifact/Wdbkv5YALTkXdADqbX2rPb. Lo que falta no se copia aquí: está en la página de pendientes (abajo)._
 
 ## 1. Dónde está todo
-- **GitLab (lo principal)**: https://gitlab.com/ferjusanz-productos/ferjusanz-app → carpeta `claude/` (este índice) y `docs/` (los documentos completos).
-  - Es **privado**: primero hay que **iniciar sesión** en https://gitlab.com/users/sign_in con la cuenta de Fernando. Si no, GitLab manda a su página de publicidad (about.gitlab.com).
-  - En el móvil, mejor en **Chrome** que en una aplicación.
-- **GitHub (copia de seguridad)**: `FerjusanzProductos/ferjusanz-app`, mismo contenido.
-- **App normal**: https://ferjusanz-productos.fernandosanzalba.workers.dev (v210) · **App de pruebas** (naranja): https://ferjusanz-pruebas.fernandosanzalba.workers.dev (v209).
+- **App normal** (v334): https://ferjusanz-productos.fernandosanzalba.workers.dev · **App de pruebas** (naranja, v333, con su propia base de datos): https://ferjusanz-pruebas.fernandosanzalba.workers.dev
+- **Web nueva** (de prueba, oculta a Google): https://ferjusanz-web.fernandosanzalba.workers.dev
+- **Pendientes** (siempre al día): https://claude.ai/artifact/5nRfWBHbCCBR6EBRJRxwND
+- **Reunión con Jorge**: https://claude.ai/artifact/5qQe3mrM3E9wHwrQACgkmG · **Plan Google y redes**: https://claude.ai/artifact/VSPKY1BfUkgc5CVJkm53hi
+- **Código**: GitLab (manda) https://gitlab.com/ferjusanz-productos/ferjusanz-app, carpetas `claude/` (índice) y `docs/` (documentos). Es privado: iniciar sesión antes en https://gitlab.com/users/sign_in, en Chrome. GitHub `FerjusanzProductos/ferjusanz-app` es solo copia.
 
 ## 2. Lo que ya hemos hecho
-**La app (7–11/11/2026)**
-- Pedidos, pedidos fijos y previstos, calendario, pantalla Semana, «📆 Pasar a otro día».
-- Albaranes enviados por correo al entregar (no impresos), copia con código de Golden, portal privado del cliente.
-- Clientes sin IVA en azul; tarifas y listas de precios por WhatsApp y PDF.
-- Lector de facturas de proveedor con IA, pantalla Precios / facturas, «⚠️ Raros» (precios raros) y «📈 Suben» (subidas frente a la media de 14 días).
-- Unidades y formatos de compra y venta de todos los productos (caja, bandeja, bolsa, pieza, manojo, docena, bote) con detección de los mal puestos.
-- «Lo de siempre» de cada cliente aprendido del historial de Golden.
-- Trazabilidad por lote más antiguo.
-- Harvey (asistente comercial con IA) y ayuda 🆘 con IA y «Hazlo conmigo».
-- «📤 Informes para Jorge» dentro de la app.
-- Modo prácticas (morado) y app de pruebas (naranja) separada.
+**Pedidos y reparto**: pedidos fijos y previstos, calendario y Semana, «Lo de siempre» aprendido de Golden, albaranes enviados (no impresos) al portal del cliente, **Modo reparto** (orden, venta en ruta, cobro y firma), efectivo bloqueado desde 1.000 €, albarán y factura con la misma unidad, trazabilidad por lote.
 
-**Organización y seguridad**
-- Memoria permanente de Claude (`docs/`) y mapa por áreas (`claude/`).
-- GitLab maestro + GitHub copia; copia nocturna de la base de datos (90 días).
+**Compras y precios**: lector de facturas de proveedor con IA, «🧾 NIF e IVA», precios de compra con flechas y «📈 Subidas», «⚠️ Raros», «🔀 Mal apuntados» (compras que contradicen las reglas internas), tarifas y listas por WhatsApp y PDF.
 
-**Planes preparados**
-- Llevarnos la web de Creativate (`docs/PLAN_WEB.md`).
-- Tienda online y ser proveedores de otras tiendas (`docs/PLAN_TIENDA.md`).
+**Facturación 2027 (Verifactu)**: preparada en la app y probada en la naranja: facturas y rectificativas, anulación, cadena de huellas («🔗 Comprobar que ninguna factura se ha tocado»), QR tributario, fichero para Hacienda (sin enviar). En la normal está **apagada** hasta la decisión del 22/12.
+
+**Para Jorge**: «📤 Informes para Jorge» (ventas, compras, caja y banco; Excel, PDF y CSV, envío por correo), 💵 Caja y 🏦 Banco (Norma 43 / Excel, la factura queda cobrada al confirmar la transferencia).
+
+**Clientes y ventas**: Harvey (asistente comercial), «🔎 Datos encontrados» para completar NIF y direcciones, «📇 Tarjeta para clientes» con QR, «📊 Resumen y correo» (correo, 📈 mercado, 🌐 visitas a la web y tarjetas solo para Fernando).
+
+**Web y redes**: web nueva con guías, páginas por zona y formulario que apunta al visitante en Contactos; plan de Google y redes; 5 skills de redes (ideas, textos, distribuir, contenido, diseño).
+
+**Orden y seguridad**: memoria de Claude (`CLAUDE.md` y `docs/`), app de pruebas con base aparte, copia nocturna de la base con prueba de recuperación, «He olvidado la contraseña» y «🔑 Cambiar mi contraseña», tarea automática que mira el BOE cada lunes.
 
 ## 3. Lo que hay que saber
-- La app **todavía no se usa de verdad**: se sigue trabajando y **facturando en Golden Soft**. Los pedidos y cobros de la app son de prueba.
-- **Verifactu** lo cumple Golden Soft (quien factura), antes del 1/1/2027. La app no factura.
-- Datos reales en la app: historial de Golden, clientes, productos, contactos y facturas de proveedores.
-- Reglas fijas: nada se publica sin «Autorizo publicar»; no se borran datos ni se tocan precios, facturas, cobros o permisos sin confirmación; las claves nunca por el chat.
-- Coste: la app y su alojamiento (Cloudflare) son gratis; se paga la IA (Anthropic) según uso y Supabase.
+- La app **todavía no se usa de verdad**: se trabaja y se factura en **Golden Soft**. Pedidos, previstos y cobros de la app son de prueba.
+- **22/12/2026**: Fernando y Jorge deciden si se factura con la app desde el 1/1/2027. Si falta algo, **Plan B**: enero en Golden. Ver `docs/FACTURACION_2027.md`.
+- **Autorización permanente** (13/11/2026): Claude publica y lanza el SQL sin preguntar, siempre probándolo antes en la naranja. Siguen necesitando el «sí» de Fernando: borrar datos reales, precios, facturas y cobros hechos, permisos, Hacienda y mensajes a clientes.
+- Claves y contraseñas, **nunca por el chat**.
+- Coste: alojamiento gratis (Cloudflare); se paga la IA según uso y la base de datos (Supabase; Pro, ≈ 23 €/mes, el día del arranque).
 
-## 4. Lo que quiero hacer (planes)
-1. Empezar a usar la app de verdad (dejar Golden solo para facturar).
-2. Web nueva propia, más rápida y mejor en Google, sin Creativate.
-3. «Haz tu pedido» online para hostelería y colectividades; catálogo de WhatsApp Business y Google; más adelante Shopify.
-4. Agentes de Claude: seguimiento diario, cobros, ofertas semanales, buscador de clientes nuevos, compras y facturas.
+## 4. Lo que quiero hacer
+1. Empezar a usar la app de verdad y, si el 22/12 sale bien, facturar con ella desde el 1/1/2027.
+2. Poner la web nueva en el dominio de siempre (falta entrar en Webempresa) y crecer en Google y redes.
+3. Más adelante: WhatsApp automático, tienda «Haz tu pedido» y agentes (ofertas, cobros, clientes nuevos).
 
 ## 5. Pendientes
-### App
-- 🟡 Confirmar formatos: Mango, Bote Garbanzos, Nabo, Cogollos de Tudela, Fresón 1ª.
-- 🟡 Lista completa de clientes sin IVA.
-- 🟡 Último número de albarán de Golden (serie F) al empezar de verdad.
-- ⏸ Seguimiento comercial dentro de la app (hecho en pruebas, espera a usar la app de verdad).
-- 🔴 Copia de seguridad de fotos, PDF y audios.
-- ⚪ Revisión de diseño en el móvil; app más ligera; auditoría de seguridad.
-
-### Web
-- 🟡 Quitar la página de COVID («Entrega a domicilio»): pedírselo a Creativate.
-- 🟡 Mirar contrato/facturas de Creativate y enviarles las preguntas del plan.
-- ⚪ Hacer la web nueva y trasladar el dominio (cuando tengamos los accesos).
-
-### Redes, Google y WhatsApp
-- 🟡 Ficha de Google (Google Business Profile): conseguir la propiedad, fotos y reseñas.
-- 🟡 Catálogo de WhatsApp Business y productos en Google.
-- ⚪ Enlazar Instagram y Facebook con la web nueva.
-- ⚪ WhatsApp automático desde el 609 567 354: aparcado.
-
-### Proyectos y agentes
-- 🔴 Agente de compras: falta el comprobador Golden ↔ albaranes (esperando archivo de ejemplo de Golden).
-- 🟡 Agente de cobros · Harvey v2 · tienda «Haz tu pedido».
-- ⚪ Buscador de clientes nuevos · ofertas semanales.
-
-### Técnico
-- 🟡 Activar en GitLab la copia automática a GitHub · comprobar la copia nocturna.
-- 🟡 Poner las claves de los conectores (Gemini, Firecrawl, Perplexity, PostHog).
-- ⚪ Borrar ramas viejas y el Worker antiguo `ferjusanz`.
-
-## 6. Para la reunión con Jorge (contable)
-- Enseñarle «📤 Informes para Jorge» en la app y el documento: https://claude.ai/artifact/8Da6PSY7rvVAzn8aTpStTC
-- Explicar que la facturación sigue en Golden Soft (Verifactu cubierto por Golden).
-- Preguntarle: qué informes quiere cada mes y en qué formato; clientes sin IVA (azul) y cómo se reflejan; facturas de proveedores leídas por la app (¿le sirven?); costes de la app (IA y Supabase) y cómo se contabilizan; dominio y web (quién es el titular, gasto con Creativate).
+Están solo en https://claude.ai/artifact/5nRfWBHbCCBR6EBRJRxwND (`docs/PENDIENTES.md`), para no tener dos listas distintas.

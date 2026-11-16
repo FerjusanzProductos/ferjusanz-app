@@ -59,7 +59,6 @@ _Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/arti
 - ⚪ Juntar `memoria-permanente` con main y borrar las ramas viejas de GitLab (lista en `docs/ESTADO_ACTUAL.md`); borrar el Worker antiguo `ferjusanz` y la función `harvey` antigua.
 - ⚪ Revisión de diseño y usabilidad de la app en el móvil (lista, sin cambiar nada hasta elegir).
 - ⚪ Auditoría de seguridad (skill `security-audit`) y hacer más pequeño `public/index.html`.
-- ⚪ Poner al día `claude/00-resumen-general/` y `claude/08-textos-para-empezar-chats/PROMPT_FERNANDO_NUEVO_CHAT.md`.
 
 ### 🚀 El día del arranque
 - Contar y, con el «sí» de Fernando, borrar lo de prueba de la base real (hoy no hay nada; los pedidos fijos y facturas de proveedores **no** se borran).
