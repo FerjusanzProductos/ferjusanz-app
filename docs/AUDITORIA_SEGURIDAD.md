@@ -4,14 +4,14 @@ Hecha por Claude con la skill `security-audit`, en modo «rápido» (una pasada,
 
 ## Resumen
 La base está bien hecha: cada tabla tiene sus permisos por rol, nadie puede darse de alta solo, los enlaces de clientes son imposibles de adivinar, la app no deja ejecutar textos de clientes o proveedores, y WhatsApp, facturas por correo y copias van con clave o firma.
-Hay **4 cosas que arreglar**, ninguna urgente mientras la app no se use de verdad:
+Había **4 cosas que arreglar**. **Arregladas el 16/11/2026** con el «sí» de Fernando (app normal v352 y funciones `albaranes-correo` y `web-contacto` en las dos bases):
 
 | Prioridad | Qué pasa | Arreglo |
 |---|---|---|
-| 🟡 Media | Quien tenga **un** enlace o QR de un albarán puede dejar su correo y recibir, sin que nadie lo revise, todos los albaranes siguientes de ese cliente y el enlace a su página con todos sus albaranes (hoy 170 de 173 clientes no tienen correo en la ficha). | Mandar solo al correo que la oficina ha aceptado (**decide Fernando**: hoy la regla dice que se manda también al que deja el cliente con el QR). |
-| 🟡 Media | El visor de PDF de facturas usa una versión antigua (pdf.js 3.11.174) con un fallo conocido (CVE-2024-4367): un PDF preparado por un proveedor malintencionado podría ejecutar órdenes con la sesión de quien lo abre. | Una línea: `isEvalSupported: false` en el visor, y después actualizar pdf.js. |
-| ⚪ Baja | La función del correo de albaranes deja a cualquiera probar el acceso al Gmail sin entrar en la app. | Pedir sesión de admin antes de esa prueba. |
-| ⚪ Baja | Desde el formulario de la web, alguien que sepa el teléfono de un contacto puede borrar sus notas antiguas mandando dos mensajes largos. | No recortar las notas que ya había y poner un límite de envíos. |
+| 🟡 Media | Quien tenga **un** enlace o QR de un albarán puede dejar su correo y recibir, sin que nadie lo revise, todos los albaranes siguientes de ese cliente y el enlace a su página con todos sus albaranes (hoy 170 de 173 clientes no tienen correo en la ficha). | ✅ Ahora solo se manda al correo de la ficha o al que la oficina ha aceptado. |
+| 🟡 Media | El visor de PDF de facturas usa una versión antigua (pdf.js 3.11.174) con un fallo conocido (CVE-2024-4367): un PDF preparado por un proveedor malintencionado podría ejecutar órdenes con la sesión de quien lo abre. | ✅ `isEvalSupported: false` en el visor (pdf.js sigue en 3.11.174; actualizarlo cuando se toque el visor). |
+| ⚪ Baja | La función del correo de albaranes deja a cualquiera probar el acceso al Gmail sin entrar en la app. | ✅ Ahora pide sesión, y la prueba de Gmail solo la puede hacer un admin. |
+| ⚪ Baja | Desde el formulario de la web, alguien que sepa el teléfono de un contacto puede borrar sus notas antiguas mandando dos mensajes largos. | ✅ Ya no se borra nada; como mucho 3 mensajes por contacto al día y 30 contactos nuevos al día. |
 
 ## Otras mejoras (no son fallos)
 - Inicio de sesión: activar la comprobación de contraseñas filtradas y pedir más de 6 caracteres; cambiar la «Site URL» de Supabase (sigue en `localhost`).
