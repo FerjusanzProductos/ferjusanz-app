@@ -56,7 +56,7 @@ _Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/arti
 
 ### 🤖 Claude (sin esperar a nadie)
 - 🟡 Revisar cada lunes si sale en el BOE el aplazamiento de Verifactu: **lo hace sola** la tarea automática «Verifactu en el BOE (lunes)» (`trig_01Q2osxJtGHJMTo3oksNiXG7`, lunes 9:47 hora de Madrid, avisa al móvil). Se quita cuando salga o pase el 22/12.
-- ⚪ Revisión de diseño y usabilidad de la app en el móvil (lista, sin cambiar nada hasta elegir).
+- ⚪ Diseño en el móvil, lo que queda de la lista del 16/11/2026 (Fernando eligió y ya están hechos el 1, 2 y 3): 4) títulos de pantalla cortados arriba («Pedi…», «Apun…»); 5) Inicio muy largo (unos 45 iconos); 6) en Cobros los importes se parten en dos líneas; 7) la barra de abajo marca otra pestaña (en «Apuntar pedido» sale «Preparar»); 8) casilla enorme en Precios; 9) los filtros «Lo de arriba» ocupan dos líneas. Recomendado: el 4.
 - ⚪ Auditoría de seguridad (skill `security-audit`) y hacer más pequeño `public/index.html`.
 
 ### 🚀 El día del arranque
