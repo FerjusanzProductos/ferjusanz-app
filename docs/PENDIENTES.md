@@ -55,8 +55,6 @@ _Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/arti
 - 🟡 Avisarle (e Ibérica) de la factura FV-B-26-032668 a nombre de FERJUSANZ C.B.
 
 ### 🤖 Claude (sin esperar a nadie)
-- 🟡 Publicar en la normal «**factura cobrada al confirmar en el Banco**» (probada por Fernando) + SQL `20261117a` en la real.
-- 🟡 Crear la tabla `resumen_mercado` (y `resumen_correo`) en la base de PRUEBAS.
 - 🟡 Revisar cada lunes si sale en el BOE el aplazamiento de Verifactu.
 - ⚪ Juntar `memoria-permanente` con main y borrar las ramas viejas de GitLab (lista en `docs/ESTADO_ACTUAL.md`); borrar el Worker antiguo `ferjusanz` y la función `harvey` antigua.
 - ⚪ Factura: unidad igual que el albarán (singular si es 1, piezas como «ud»).
