@@ -8,6 +8,15 @@
         "value": "arial",
         "createdAt": "2026-11-14T05:07:24.080Z",
         "reason": "Claude: HTML email body; Arial is the standard email-safe font (custom fonts don't load in Gmail/Outlook), same as informes-jorge"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "docs/carmen-2027.html"
+        ],
+        "createdAt": "2026-11-16T10:25:45.691Z",
+        "reason": "Claude: falso positivo; mezcla los colores del modo oscuro con el fondo blanco del modo claro (cada modo tiene su fondo propio en :root)"
       }
     ]
   }
