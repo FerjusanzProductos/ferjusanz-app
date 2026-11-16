@@ -23,8 +23,9 @@ const EMAIL = 'ferjusanz@hotmail.com';
 const DIRECCION = 'C/ Carare, 2 · 28033 Madrid';
 const HORARIO = 'Lunes a viernes, de 8:00 a 18:00';
 const WHATSAPP = [ // los dos móviles de la familia
-  { num: '34609567354', ver: '609 567 354', nombre: 'Fernando' }, // el principal (Fernando 16/11/2026)
-  { num: '34609100690', ver: '609 100 690' },
+  // Fernando 16/11/2026: solo su número en la web; el otro móvil lo abre como «dispositivo vinculado».
+  // Si se vuelve a añadir otro número, el botón flotante enseña otra vez «¿Con quién desea hablar?».
+  { num: '34609567354', ver: '609 567 354', nombre: 'Fernando' },
 ];
 const ANIOS = 'más de seis décadas'; // Fernando 16/11/2026: «más de 60 años» e «impacta más decir décadas»
 
@@ -121,7 +122,7 @@ const ZONAS = [
 ];
 
 const PREGUNTAS = [
-  ['¿Cómo solicito precio o tarifa?', 'Escríbanos por WhatsApp al 609 567 354 o al 609 100 690, o llame al 91 763 21 86. Los precios de la fruta y la verdura cambian cada día según el mercado, por eso le pasamos el del día y una tarifa ajustada a su volumen de consumo.'],
+  ['¿Cómo solicito precio o tarifa?', 'Escríbanos por WhatsApp al 609 567 354, o llame al 91 763 21 86. Los precios de la fruta y la verdura cambian cada día según el mercado, por eso le pasamos el del día y una tarifa ajustada a su volumen de consumo.'],
   ['¿Dónde reparten?', 'En Madrid capital, la zona norte (Alcobendas, San Sebastián de los Reyes, Tres Cantos), el noroeste (Aravaca, Pozuelo, Majadahonda, Las Rozas) y Segovia, con nuestros propios camiones y furgonetas refrigerados. ¿No ve su localidad? Llámenos y le decimos si pasamos cerca.'],
   ['¿Exportan fuera de España?', 'Hay posibilidad de exportar al extranjero. Llámenos o escríbanos por WhatsApp y lo vemos según el producto y el destino.'],
   ['¿Hay pedido mínimo?', 'No. Pida lo que necesite, aunque sea poco.'],
@@ -337,10 +338,10 @@ ${cuerpo}
 </footer>
 <script>document.querySelector('.tarifa').addEventListener('submit',e=>{const f=e.target;f.text.value='Hola, quería vuestra tarifa.\\nNegocio: '+f.negocio.value+' ('+f.tipo.value+')\\nTeléfono: '+f.telefono.value+'\\nLocalidad: '+f.localidad.value;for(const n of['negocio','tipo','telefono','localidad'])f[n].disabled=true;setTimeout(()=>{for(const n of['negocio','tipo','telefono','localidad'])f[n].disabled=false},0)});</script>
 <div class="barra-movil">
-  <details class="wa-flotante">
+  ${WHATSAPP.length === 1 ? `<a class="wa-directo" href="${wa(WHATSAPP[0].num, 'Hola, quería información.')}" rel="nofollow">${I.wa}<span>WhatsApp</span></a>` : `<details class="wa-flotante">
     <summary>${I.wa}<span>WhatsApp</span></summary>
     <div class="wa-opciones"><p>¿Con quién desea hablar?</p>${WHATSAPP.map(w => `<a href="${wa(w.num, 'Hola, quería información.')}" rel="nofollow">${I.wa}<span>${w.ver}${w.nombre ? ` · ${w.nombre}` : ''}</span></a>`).join('')}</div>
-  </details>
+  </details>`}
   <a class="llamar" href="tel:+34917632186">${I.tel}<span>Llamar</span></a>
 </div>
 </body>

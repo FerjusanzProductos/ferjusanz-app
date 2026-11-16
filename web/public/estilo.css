@@ -225,9 +225,9 @@ a:active, button:active, summary:active { opacity: .75; }
 
 /* Barra fija: en el móvil, abajo a lo ancho (WhatsApp + Llamar); en ordenador, un botón */
 .barra-movil { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: grid; grid-template-columns: 1.4fr 1fr; gap: 1px; padding: 0 0 env(safe-area-inset-bottom); background: var(--tinta); border-top: 1px solid #2c2522; }
-.barra-movil summary, .barra-movil .llamar { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 56px; font-weight: 600; text-decoration: none; cursor: pointer; list-style: none; }
+.barra-movil summary, .barra-movil .wa-directo, .barra-movil .llamar { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 56px; font-weight: 600; text-decoration: none; cursor: pointer; list-style: none; }
 .barra-movil summary::-webkit-details-marker { display: none; }
-.barra-movil summary { background: var(--granate); color: #fff; }
+.barra-movil summary, .barra-movil .wa-directo { background: var(--granate); color: #fff; }
 .barra-movil .llamar { background: var(--tinta); color: var(--sobre-tinta); }
 .barra-movil svg { width: 20px; height: 20px; }
 .wa-flotante[open] .wa-opciones { animation: aparecer .2s var(--ease-out); }
@@ -311,7 +311,7 @@ a:active, button:active, summary:active { opacity: .75; }
 @media (min-width: 1000px) {
   .barra-movil { left: auto; right: 24px; bottom: 24px; grid-template-columns: auto; padding: 0; background: none; border: 0; }
   .barra-movil .llamar { display: none; }
-  .barra-movil summary { padding: 0 24px; box-shadow: 0 10px 28px rgba(22, 18, 16, .28); }
+  .barra-movil summary, .barra-movil .wa-directo { padding: 0 24px; box-shadow: 0 10px 28px rgba(22, 18, 16, .28); }
   .wa-opciones { left: auto; right: 0; bottom: 64px; }
   .pie { padding-bottom: 56px; }
   .heroe-in { padding-bottom: 80px; }
