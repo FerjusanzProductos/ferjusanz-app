@@ -1,0 +1,108 @@
+<title>Carmen desde enero</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+<style>
+/* Hoja de trabajo en una columna, para leer en el móvil */
+:root{--bg:#f7f8f4;--fg:#1d2419;--sub:#5b6655;--line:#dfe3d8;--card:#ffffff;--acc:#2f7a3a;--warn:#b5651d;
+--f-tit:'Space Grotesk',system-ui,sans-serif;--f-txt:'Inter',system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141812;--fg:#e8ece3;--sub:#a3ad9b;--line:#2c3328;--card:#1b2018;--acc:#7cc488;--warn:#e5a160;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141812;--fg:#e8ece3;--sub:#a3ad9b;--line:#2c3328;--card:#1b2018;--acc:#7cc488;--warn:#e5a160;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.55 var(--f-txt)}
+main{max-width:720px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:28px}
+h1,h2{font-family:var(--f-tit);text-wrap:balance;margin:0}
+h1{font-size:1.9rem;line-height:1.15}
+h2{font-size:1.25rem;margin-bottom:8px;color:var(--acc)}
+p{margin:0 0 8px}
+.sub{color:var(--sub);font-size:.92rem}
+ul,ol{margin:0;padding-left:1.2em;display:grid;gap:6px}
+.horario{display:grid;gap:10px}
+.franja{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.franja b{font-variant-numeric:tabular-nums;font-family:var(--f-tit)}
+.franja .sub{margin-top:2px}
+.ruta{font-weight:600}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+td,th{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:top}
+th{font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;color:var(--sub)}
+.tabla{overflow-x:auto}
+.ojo{border-left:4px solid var(--warn);padding:8px 12px;background:var(--card);border-radius:0 8px 8px 0}
+.hueco{display:inline-block;min-width:3em;border-bottom:1px dashed var(--sub)}
+</style>
+<main>
+<header>
+<p class="sub">FERJUSANZ · Oficina · a partir de enero de 2027</p>
+<h1>Carmen: oficina y clientes</h1>
+<p>Desde enero las facturas se hacen en la app y llevan mucho menos tiempo. Por eso Carmen pasa a llevar, además de la oficina, el <b>trato con los clientes desde la oficina</b>: atenderlos, cuidarlos y conseguir más. Nadie conoce a nuestros clientes como ella.</p>
+<p class="sub">Horario: de lunes a viernes, de 8:00 a 14:00. Mismo sueldo y, además, premio por objetivos.</p>
+</header>
+
+<section>
+<h2>Un día normal</h2>
+<div class="horario">
+<div class="franja"><b>8:00 – 9:00 · Oficina en la app</b><div class="sub">Revisar lo de ayer, facturas, caja, banco y proveedores.</div></div>
+<div class="franja"><b>9:00 – 11:00 · Atención y pedidos</b><div class="sub">Teléfono y WhatsApp de clientes, apuntar pedidos, incidencias y deudas.</div></div>
+<div class="franja"><b>11:00 – 14:00 · Clientes (comercial)</b><div class="sub">Recuperar clientes, llamar a locales nuevos, ofrecer más productos, reseñas.</div></div>
+</div>
+</section>
+
+<section>
+<h2>1. Oficina en la app (1 hora al día)</h2>
+<ol>
+<li><b>Revisar lo de ayer.</b> Que los albaranes entregados tengan bien los kilos, los precios, lo «No servido» y el cobro que apuntó el repartidor. Si un precio está mal, avisar a Fernando: ella no cambia precios.</li>
+<li><b>Facturas.</b> <span class="ruta">Más → «🧾 Facturas» → «📥 Por facturar»</span>: elegir los albaranes, mirar la vista previa (cliente, NIF, IVA, total), elegir la forma de pago y pulsar Emitir. Si la app no deja (falta el NIF, efectivo de 1.000 € o más, albarán ya facturado), <b>no forzarlo</b>: leer el aviso y arreglar lo que dice.</li>
+<li><b>Caja.</b> <span class="ruta">Más → «💵 Caja (efectivo)»</span>: los cobros en efectivo de los albaranes salen solos. Apuntar las salidas (gasolina, pagos en mano) y subir la foto del justificante. Nada se borra: si hay un error, «Corregir» o «Anular» con el motivo.</li>
+<li><b>Banco.</b> <span class="ruta">Más → «🏦 Banco»</span>: subir el fichero del banco y confirmar lo que propone la app. Las facturas pagadas por transferencia quedan como cobradas.</li>
+<li><b>Proveedores.</b> <span class="ruta">Compras → «🧾 NIF e IVA»</span>: revisar las facturas que han llegado y poner a mano los NIF que falten.</li>
+<li><b>Primeros días de cada mes.</b> <span class="ruta">Más → «📤 Informes para Jorge»</span>: sacar ventas, compras, caja y banco del mes anterior y enviárselos a Jorge (antes del día 10).</li>
+</ol>
+</section>
+
+<section>
+<h2>2. Atención y pedidos</h2>
+<ul>
+<li><b>Coger el teléfono y los WhatsApp de los clientes</b> y apuntar los pedidos en <span class="ruta">«⚡ Apuntar pedido»</span>. Así Fernando padre puede repartir sin estar pendiente del móvil.</li>
+<li><b>Quejas e incidencias</b>: apuntarlas, dar la cara al cliente y decirle cuándo se arregla.</li>
+<li><b>Deudas</b>: en <span class="ruta">«Cobros y deudas»</span>, llamar con educación a quien tiene facturas vencidas. Primero las más antiguas.</li>
+<li><b>Datos de los clientes</b>: que todos tengan NIF, dirección, código postal y un móvil para WhatsApp. Sin ellos no se puede facturar.</li>
+</ul>
+</section>
+
+<section>
+<h2>3. Clientes: recuperar y conseguir más</h2>
+<p>Lo hace desde la pantalla de Harvey <span class="ruta">«📅 Hoy: a quién escribir»</span>, que cada día dice a quién llamar, a qué hora y qué compraba. Con <b>«✍️ Preparar mensaje»</b> Harvey le escribe el WhatsApp; ella lo revisa y lo envía.</p>
+<ul>
+<li><b>💤 Clientes perdidos</b>, los que llevan tiempo sin pedir: llamarlos, preguntar qué pasó y ofrecerles volver.</li>
+<li><b>🔻 Clientes que han dejado de pedir un producto</b>: preguntarles por qué y ofrecérselo otra vez.</li>
+<li><b>🎯 Locales nuevos</b>, que están en Contactos: llamarlos con el guion, mandarles la lista de precios o la presentación y apuntar «volver a llamar el…».</li>
+<li><b>Vender más a los de siempre</b>: las ofertas de la semana y los productos que no nos compran. Por ejemplo, al que solo compra fruta, ofrecerle patata y huevos.</li>
+<li><b>Reseñas de Google</b>: pedírselas a los clientes contentos.</li>
+</ul>
+</section>
+
+<section>
+<h2>Objetivos y premio</h2>
+<p class="sub">Las cifras son una propuesta. Las cierran Fernando y Jorge antes de empezar.</p>
+<div class="tabla"><table>
+<tr><th>Objetivo</th><th>Cada mes</th><th>Cómo se ve</th></tr>
+<tr><td>Clientes perdidos que vuelven a pedir</td><td>3</td><td>Vuelven a tener albaranes en la app</td></tr>
+<tr><td>Clientes nuevos (con 4 pedidos o más)</td><td>2</td><td>Clientes dados de alta en el mes</td></tr>
+<tr><td>Deudas de más de 60 días</td><td>Que bajen</td><td>«Cobros y deudas»</td></tr>
+<tr><td>Reseñas nuevas en Google</td><td>10</td><td>Ficha de Google</td></tr>
+</table></div>
+<p style="margin-top:10px">Premio si los cumple: <span class="hueco">&nbsp;</span> € al <span class="hueco">&nbsp;</span> (mes o trimestre).</p>
+</section>
+
+<section>
+<h2>Lo que hace siempre Fernando</h2>
+<div class="ojo">Cambiar precios, anular o rectificar una factura, borrar datos y cambiar los permisos de los usuarios. Si hace falta algo de esto, se le avisa a Fernando.</div>
+</section>
+
+<section>
+<h2>Cómo empezamos</h2>
+<ul>
+<li><b>Del 15 al 18 de diciembre</b>: prueba completa de facturación en la app de pruebas, con Fernando.</li>
+<li><b>Enero</b>: solo la parte de oficina, hasta que salga sola. Cada tarea tendrá su <b>guía corta con fotos</b>.</li>
+<li><b>Febrero</b>: se empieza con lo de clientes, una hora al día, y se sube poco a poco.</li>
+<li><b>Final de cada mes</b>: 10 minutos con Fernando para ver los números y qué ayuda hace falta.</li>
+</ul>
+</section>
+</main>

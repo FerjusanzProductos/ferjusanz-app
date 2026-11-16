@@ -23,6 +23,7 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 
 ## 📱 LA APP
 ### 👤 Fernando
+- 🟡 Hablar con **Carmen** y con **Jorge** (o la gestoría) de sus funciones desde enero: oficina + clientes, objetivos y premio por escrito (https://claude.ai/artifact/R8Zor6BHenQdEi3FMbJJSn).
 - 🔴 Avisar **2-3 días antes** del día en que se empieza a usar la app de verdad.
 - 🔴 Antes del 30/11: decidir con Jorge los **clientes «sin IVA»** (todo tiene que ir facturado; si se quiere, se baja el precio). Sin esto no se puede firmar la declaración ni facturar desde la app. Y confirmar la lista.
 - 🔴 Sacar de Golden la **lista de clientes en Excel** (código, nombre, NIF, dirección, CP, localidad) para cargar los NIF que faltan.
@@ -56,6 +57,7 @@ _Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/arti
 - 🟡 Avisarle (e Ibérica) de la factura FV-B-26-032668 a nombre de FERJUSANZ C.B.
 
 ### 🤖 Claude (sin esperar a nadie)
+- 🟡 Antes de enero: **guías cortas con fotos** para Carmen (facturar, caja, banco, proveedores, informes para Jorge, pedidos por teléfono) y **guion de llamadas** comerciales.
 - 🟡 Revisar cada lunes si sale en el BOE el aplazamiento de Verifactu: **lo hace sola** la tarea automática «Verifactu en el BOE (lunes)» (`trig_01Q2osxJtGHJMTo3oksNiXG7`, lunes 9:47 hora de Madrid, avisa al móvil). Se quita cuando salga o pase el 22/12.
 - ⚪ Auditoría de seguridad (skill `security-audit`) y hacer más pequeño `public/index.html`.
 
