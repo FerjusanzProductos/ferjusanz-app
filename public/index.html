@@ -2810,23 +2810,25 @@ function abrirWhatsApp(telefono, texto, pkg) {
   location.href = 'intent://send?' + (t ? 'phone=' + t + '&' : '') + 'text=' + encodeURIComponent(texto) + '#Intent;scheme=whatsapp;package=' + (pkg || 'com.whatsapp') + ';S.browser_fallback_url=' + encodeURIComponent(web) + ';end';
 }
 function hojaTarjeta() {
-  const yo = state.perfil ? state.perfil.nombre.split(' ')[0] : '';
-  const msg = h('textarea', { rows: 6, style: 'width:100%;font-size:15px' });
+  const yo = String((state.perfil && state.perfil.nombre) || '').split(' ')[0];
+  const msg = h('textarea', { rows: 4, style: 'width:100%;font-size:15px' });
   msg.value = 'Hola, soy ' + yo + ', de Ferjusanz (patatas, frutas, verduras y huevos). Destacamos por la relación calidad-precio. Para calcular los precios que le haríamos, imagine su primer pedido: marque en un minuto lo que usa y cuánto a la semana, y le enviamos su tarifa según lo que gasta. Sin compromiso y sin pedido mínimo. Abajo tiene quiénes somos y de dónde sale el género:\n' + URL_TARJETA + '\n\nSi lo prefiere, contésteme por aquí con lo que suele pedir y lo apunto yo.';
   const tel = h('input', { type: 'tel', inputmode: 'tel', placeholder: 'Su móvil (opcional): 600 000 000', style: 'width:100%' });
   const abrirWa = pkg => abrirWhatsApp(tel.value, msg.value, pkg);
   const copiar = async () => { try { await navigator.clipboard.writeText(msg.value); toast('Mensaje copiado: pégalo en WhatsApp', 'ok'); } catch (e) { msg.select(); toast('Mantén pulsado el texto para copiarlo', 'err'); } };
-  const B = (cls, t, f) => h('button', { class: cls, style: 'width:100%;min-height:50px;margin-top:8px', onclick: f }, t);
+  // position:static: el botón verde «pegajoso» de las hojas tapaba la casilla del móvil
+  const B = (cls, t, f, st) => h('button', { class: cls, style: 'width:100%;min-height:50px;margin-top:8px;position:static;' + (st || ''), onclick: f }, t);
   hoja('📇 Tarjeta para clientes', h('div', {},
-    h('p', { class: 'sub' }, 'Arriba, «Imagine su primer pedido y le calculamos su tarifa»: el cliente apunta lo que pide a la semana y te llega a Comercial › Avisos › «Primeros pedidos». Debajo, quiénes somos y de dónde sale el género. La página NO enseña precios.'),
-    h('div', { style: 'text-align:center' }, h('img', { src: qrDataUrl(URL_TARJETA, 8), alt: 'QR de la tarjeta', style: 'width:100%;max-width:260px;image-rendering:pixelated' }),
-      h('div', { class: 'sub' }, 'Que lo escanee con la cámara del móvil (o se lo pase a su jefe).')),
+    h('div', { style: 'display:flex;gap:12px;align-items:center' },
+      h('img', { src: qrDataUrl(URL_TARJETA, 6), alt: 'QR de la tarjeta', style: 'width:150px;height:150px;flex:none;border-radius:10px;image-rendering:pixelated' }),
+      h('div', { class: 'sub', style: 'flex:1;min-width:0' }, 'Que lo escanee con la cámara del móvil. Verá «Imagine su primer pedido» (sin precios) y lo que apunte te llega a Comercial › Avisos.')),
     h('label', { class: 'campo' }, 'Mensaje', msg),
     h('label', { class: 'campo' }, 'Móvil de la persona', tel),
     B('guardar', '💬 Enviar por WhatsApp', () => abrirWa('com.whatsapp')),
     B('ghost', '💼 Enviar por WhatsApp Business', () => abrirWa('com.whatsapp.w4b')),
-    B('ghost', '📋 Copiar mensaje', copiar),
-    B('ghost', '👀 Ver la tarjeta', () => window.open(URL_TARJETA, '_blank'))));
+    h('div', { style: 'display:flex;gap:8px' },
+      B('ghost', '📋 Copiar', copiar, 'flex:1'),
+      B('ghost', '👀 Ver tarjeta', () => window.open(URL_TARJETA, '_blank'), 'flex:1'))));
 }
 function hojaQrEnlace(titulo, url, nota, wa) {
   const copiar = async () => { try { await navigator.clipboard.writeText(url); toast('Enlace copiado', 'ok'); } catch (e) { toast('Mantén pulsado el enlace de arriba para copiarlo', 'err'); } };
