@@ -12217,32 +12217,32 @@ async function presVerPdf(laminas) {
   catch (e) { caja.replaceChildren(h('p', { style: 'color:#fff' }, 'No se pudo preparar: ' + msgErr(e))); }
 }
 /* Guion para el vídeo (Fernando: «que influya psicológicamente… que los primeros segundos se queden en el vídeo y no se vayan»;
-   «no contradigas lo que he editado»; 17/11/2026: «más corto pero que no falte la información esencial»).
-   Unos 45 s: gancho suyo, quiénes somos, cómo trabajamos, sin riesgo y petición. Los detalles van en el mensaje y el PDF. */
+   17/11/2026: «más corto pero que no falte la información esencial» → «más reducido»).
+   Unos 30 s: gancho, quiénes somos, cómo trabajamos, sin riesgo y petición. Los detalles van en el mensaje y el PDF. */
 function pvGuion(d, clave) {
   const ex = clave.startsWith('ex-'), col = ppBase(clave) === 'colectivos', t = (d.titulo || '').toLowerCase();
   /* Exclientes (Fernando, 16/11/2026): en primera persona y de tú; Fernando Sanz hijo, equipo nuevo y él al mando; termina proponiendo visitarle. */
   if (ex) {
-    if (d.t === 'portada') return 'Hace un tiempo que no trabajamos juntos, y quiero volver a ganarme tu confianza. Soy Fernando Sanz, hijo, de Ferjusanz Productos.';
-    if (d.t === 'texto' || /qui[eé]nes somos/.test(t)) return 'La misma empresa, ahora con un equipo nuevo y conmigo al mando.';
-    if (d.enlace) return 'No hace falta que rellenes nada: ya sé lo que necesitas.';
-    if (d.t === 'contacto') return 'Me gustaría visitarte y contártelo en persona. Y recuerda: no hay pedido mínimo.';
-    if (/vuelva a confiar|por qu[eé]/.test(t)) return 'Me comprometo a que el género te llegue siempre igual de bien y a buen precio.';
-    if (/c[oó]mo trabajamos/.test(t)) return 'Pides por WhatsApp hasta la tarde anterior y te lo llevamos, de lunes a sábado.';
-    if (/as[ií] trabajamos/.test(t)) return 'En camión refrigerado, con el peso real en el albarán.';
-    if (d.t === 'productos') return 'Más de doscientos productos, en un solo proveedor.';
+    if (d.t === 'portada') return 'Hace tiempo que no trabajamos juntos y quiero recuperar tu confianza. Soy Fernando Sanz, hijo, de Ferjusanz.';
+    if (d.t === 'texto' || /qui[eé]nes somos/.test(t)) return 'Misma empresa, equipo nuevo y yo al mando.';
+    if (d.enlace) return 'No hace falta que rellenes nada.';
+    if (d.t === 'contacto') return 'Me gustaría visitarte. Y sin pedido mínimo.';
+    if (/vuelva a confiar|por qu[eé]/.test(t)) return 'Género siempre igual de bueno y a buen precio.';
+    if (/c[oó]mo trabajamos/.test(t)) return 'Pides por WhatsApp hasta la tarde anterior y te lo llevamos.';
+    if (/as[ií] trabajamos/.test(t)) return 'En camión refrigerado y al peso real.';
+    if (d.t === 'productos') return 'Más de doscientos productos.';
     if (d.t === 'ofertas') return 'Y ofertas cada semana.';
     if (d.t === 'precios') return 'Aquí tienes nuestra lista de precios.';
     return d.titulo || '';
   }
-  if (d.t === 'portada') return '¿Y si sus patatas, fruta o verduras le costaran menos sin bajar la calidad? Quizás no esté disponiendo de un buen servicio… o quizás no nos conozca. ¡Somos Ferjusanz! Soy Fernando, y en un minuto se lo cuento.'; // gancho de Fernando (16/11/2026), sin tocar
-  if (d.t === 'contacto') return 'Sin compromiso y sin pedido mínimo. No pierde nada por comparar.';
-  if (d.t === 'texto' || /qui[eé]nes somos/.test(t)) return 'Empresa familiar: tercera generación y más de seis décadas en Mercamadrid, sirviendo a ' + (col ? 'colegios y residencias.' : 'cocinas como la suya.');
-  if (d.enlace) return 'Pulse el enlace del mensaje, marque su primer pedido en un minuto y le mandamos su tarifa.';
-  if (/por qu[eé]/.test(t)) return 'Elegimos el género cada mañana, de agricultores de confianza.';
-  if (/c[oó]mo trabajamos/.test(t)) return col ? 'Acordamos con su centro los días y horarios de entrega.' : 'Pide por WhatsApp hasta la tarde anterior y se lo llevamos, de lunes a sábado.';
-  if (/as[ií] trabajamos/.test(t)) return 'En camión refrigerado, y paga el peso real del albarán.';
-  if (d.t === 'productos') return 'Más de doscientos productos, también patata pelada: un solo proveedor.';
+  if (d.t === 'portada') return '¿Y si sus patatas, fruta o verduras le costaran menos sin bajar la calidad? ¡Somos Ferjusanz! Soy Fernando, y en medio minuto se lo cuento.'; // gancho de Fernando (16/11/2026), recortado al pedirlo más reducido
+  if (d.t === 'contacto') return 'Sin compromiso ni pedido mínimo.';
+  if (d.t === 'texto' || /qui[eé]nes somos/.test(t)) return 'Empresa familiar: tercera generación y más de seis décadas en Mercamadrid.';
+  if (d.enlace) return 'Marque su primer pedido en el enlace y le mandamos su tarifa.';
+  if (/por qu[eé]/.test(t)) return 'Género elegido cada mañana.';
+  if (/c[oó]mo trabajamos/.test(t)) return col ? 'Entregamos los días y a la hora que acuerde su centro.' : 'Pide por WhatsApp hasta la tarde anterior y se lo llevamos.';
+  if (/as[ií] trabajamos/.test(t)) return 'En camión refrigerado y al peso real.';
+  if (d.t === 'productos') return 'Más de doscientos productos.';
   if (d.t === 'ofertas') return 'Y ofertas cada semana.';
   if (d.t === 'precios') return 'Aquí tiene nuestra lista de precios.';
   return d.titulo || '';
@@ -12313,7 +12313,7 @@ async function grabarVideoPres(tipo, alGuardar) {
   } catch (e) { fuera(); toast('No se pudieron preparar las hojas: ' + msgErr(e), 'err'); return; }
   pinta();
   const tipoVideo = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp8,opus', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t)) || '';
-  const listo = () => { info.textContent = 'Vídeo de la presentación (' + (tipo.startsWith('ex-') ? 'exclientes, ' : '') + (ppBase(tipo) === 'colectivos' ? 'colegios y residencias' : 'hostelería') + '): ' + hojas.length + ' hojas. Lo ideal, unos 45 segundos: frases cortas y pasa rápido las hojas (como mucho 1:20). Debajo de cada hoja sale en amarillo lo que puedes decir. Pulsa «Empezar», habla y pasa las hojas con «Siguiente».';
+  const listo = () => { info.textContent = 'Vídeo de la presentación (' + (tipo.startsWith('ex-') ? 'exclientes, ' : '') + (ppBase(tipo) === 'colectivos' ? 'colegios y residencias' : 'hostelería') + '): ' + hojas.length + ' hojas. Lo ideal, unos 30 segundos: frases cortas y pasa rápido las hojas (como mucho 1:20). Debajo de cada hoja sale en amarillo lo que puedes decir. Pulsa «Empezar», habla y pasa las hojas con «Siguiente».';
     botones.replaceChildren(BT('⏺ Empezar a grabar', empezar, 'guardar'), BT('Cancelar', fuera)); };
   const empezar = async () => {
     try { mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { toast('Hace falta permiso para el micrófono.', 'err'); return; }
