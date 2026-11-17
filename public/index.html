@@ -9288,6 +9288,9 @@ async function pintaResumenMercado(box, fecha, tabla = 'resumen_mercado', titulo
   } catch (e) { box.replaceChildren(caja(isNetErr(e) ? 'Necesitas conexión para verlo.' : 'Todavía no está disponible.')); }
 }
 const pintaLeads = (box, fecha) => pintaResumenMercado(box, fecha, 'resumen_leads', '🎯 Posibles clientes y clientes que se enfrían', '#ea580c', ['Todavía no hay', 'Lo prepara Claude solo los lunes, miércoles y viernes por la mañana.']);
+/* 📞 Comercial del día (L-S) y 🗓️ Plan de la semana (domingo): las escriben las tareas automáticas con las skills de ventas. */
+const pintaComercial = (box, fecha) => pintaResumenMercado(box, fecha, 'resumen_comercial', '📞 Comercial del día: a quién llamar y qué decir', '#7c3aed', ['Todavía no hay', 'Lo prepara Claude de lunes a sábado a las 8:27.']);
+const pintaSemana = (box, fecha) => pintaResumenMercado(box, fecha, 'resumen_semana', '🗓️ Plan comercial de la semana', '#0891b2', ['Todavía no hay', 'Lo prepara Claude cada domingo por la tarde.']);
 /* 📣 Plan de Google y redes: solo lo ve Fernando (la tabla plan_fernando solo deja leer a su correo). Lo escribe y actualiza Claude; aquí solo se lee. */
 async function pintaPlanFernando(box) {
   box.replaceChildren();
@@ -9318,8 +9321,8 @@ function vistaResumen() {
   $app.replaceChildren(shell('Resumen del día y correo', cont, { volver: volverIni })); renderBanner();
   async function cargar() {
     const inp = h('input', { type: 'date', value: fecha, onchange: e => { fecha = e.target.value || hoy(); cargar(); } });
-    const caja = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); const correo = h('div', {}), leads = h('div', {}), mercado = h('div', {}), visitas = h('div', {}), plan = h('div', {}); cont.replaceChildren(h('div', { class: 'barra' }, inp, h('button', { class: 'ghost', onclick: () => cargar() }, '↻')), plan, correo, leads, mercado, visitas, caja);
-    pintaResumenCorreo(correo, fecha); pintaLeads(leads, fecha); pintaResumenMercado(mercado, fecha); pintaVisitasWeb(visitas); if (!PRACTICA) pintaPlanFernando(plan);
+    const caja = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); const correo = h('div', {}), comercial = h('div', {}), semana = h('div', {}), leads = h('div', {}), mercado = h('div', {}), visitas = h('div', {}), plan = h('div', {}); cont.replaceChildren(h('div', { class: 'barra' }, inp, h('button', { class: 'ghost', onclick: () => cargar() }, '↻')), plan, correo, comercial, semana, leads, mercado, visitas, caja);
+    pintaResumenCorreo(correo, fecha); pintaComercial(comercial, fecha); pintaSemana(semana, fecha); pintaLeads(leads, fecha); pintaResumenMercado(mercado, fecha); pintaVisitasWeb(visitas); if (!PRACTICA) pintaPlanFernando(plan);
     try {
       try { await cargarGente(); } catch (e) { }
       const d0 = new Date(fecha + 'T00:00:00'), d1 = new Date(d0.getTime() + 86400000);
@@ -12828,8 +12831,8 @@ async function tabAvisos(el) {
   const selT = comSelect([['todos', 'Todos los tipos']].concat(PRO_TIPOS), 'todos'); selT.addEventListener('change', () => { filtro.tipo = selT.value; pintaP(); });
   const selE = comSelect([['abiertos', 'Pendientes'], ['todos', 'Todos']].concat(PRO_ESTADOS), 'abiertos'); selE.addEventListener('change', () => { filtro.estado = selE.value; pintaP(); });
   const busq = (txt, q) => comEnlace(txt, comMapas(q));
-  const leads = h('div', {}); pintaLeads(leads, dia);
-  el.replaceChildren(leads,
+  const leads = h('div', {}), comercial = h('div', {}), semana = h('div', {}); pintaComercial(comercial, dia); pintaSemana(semana, dia); pintaLeads(leads, dia);
+  el.replaceChildren(comercial, semana, leads,
     h('h3', {}, '🧮 Primeros pedidos y su tarifa (' + pp.length + ')'),
     ...(pp.length ? pp.map(r => ppTarjeta(r, () => tabAvisos(el))) : [h('p', { class: 'vacio' }, 'Todavía nadie ha rellenado su primer pedido.')]),
     h('button', { class: 'ghost small', onclick: () => hojaPrimerPedido(null) }, '🧮 Mandar el enlace a alguien nuevo'),
