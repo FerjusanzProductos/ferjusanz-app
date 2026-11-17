@@ -1,7 +1,7 @@
 {
   "desde": "2026-11-17",
   "hasta": "2026-11-23",
-  "nota": "IVA (4 %) incluido",
+  "nota": "+ 4 % de IVA",
   "items": [
     [
       "Tomate ensalada",
@@ -49,5 +49,5 @@
       "docena"
     ]
   ],
-  "ejemplo": "El precio que ves es el que pagas, con el IVA ya dentro. Ejemplo: si pagas 100 € en total, 96,15 € son el producto y 3,85 € son el IVA (el 4 % se calcula sobre 96,15 €, no sobre 100 €; por eso no son 4 € justos)."
+  "ejemplo": "El IVA (4 %) se suma al final, sobre el total del pedido. Ejemplo: si tus productos suman 100 €, el IVA son 4 € y pagas 104 €."
 }

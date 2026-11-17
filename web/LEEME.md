@@ -13,7 +13,7 @@ Web de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., sin WordPress, en Cloudflare (
 - **NO hay cosecha propia** (Fernando, 15/11/2026): decir «agricultores de confianza» y Mercamadrid. Agricultura ecológica: «colaboramos con productores ecológicos siempre que tienen producto disponible». Reparto con camiones y furgonetas refrigerados (sí, confirmado).
 - Confirmado por Fernando (15/11/2026): más de 200 productos, reparto en Segovia, sin pedido mínimo, pedidos hasta la tarde anterior, exportación posible, pago al contado o con factura.
 - Frase de Fernando (15/11/2026): «seleccionamos nuestros productos minuciosamente y pensamos en que nos sentamos a la mesa de ese restaurante a disfrutar del menú; vamos de la mano con nuestros clientes».
-- **No** se publican precios: siempre «pide precio por WhatsApp». **Excepción: las ofertas de la semana** (Fernando, 17/11/2026: «con precio»), en la portada, con «IVA (4 %) incluido».
+- **No** se publican precios: siempre «pide precio por WhatsApp». **Excepción: las ofertas de la semana** (Fernando, 17/11/2026: «con precio»), en la portada, con «+ 4 % de IVA» (el IVA se suma al final sobre el total: 100 € → 104 €).
 
 ## Archivos
 - La sección de artículos se llama **«Guías»** (15/11/2026) aunque la dirección siga siendo `/blog/`; las últimas salen en la portada.
