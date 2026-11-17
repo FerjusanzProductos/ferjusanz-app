@@ -12277,34 +12277,33 @@ async function presVerPdf(laminas) {
   catch (e) { caja.replaceChildren(h('p', { style: 'color:#fff' }, 'No se pudo preparar: ' + msgErr(e))); }
 }
 /* Guion para el vídeo (Fernando: «que influya psicológicamente… que los primeros segundos se queden en el vídeo y no se vayan»;
-   «no contradigas lo que he editado»). Gancho con pregunta en los 3 primeros segundos, prueba (60 años, 3.ª generación),
-   facilidad (un minuto), sin riesgo (sin compromiso, sin pedido mínimo) y petición clara al final. Usa sus frases. */
+   «no contradigas lo que he editado»; 17/11/2026: «más corto pero que no falte la información esencial»).
+   Unos 45 s: gancho suyo, quiénes somos, cómo trabajamos, sin riesgo y petición. Los detalles van en el mensaje y el PDF. */
 function pvGuion(d, clave) {
   const ex = clave.startsWith('ex-'), col = ppBase(clave) === 'colectivos', t = (d.titulo || '').toLowerCase();
   /* Exclientes (Fernando, 16/11/2026): en primera persona y de tú; Fernando Sanz hijo, equipo nuevo y él al mando; termina proponiendo visitarle. */
   if (ex) {
     if (d.t === 'portada') return 'Hace un tiempo que no trabajamos juntos, y quiero volver a ganarme tu confianza. Soy Fernando Sanz, hijo, de Ferjusanz Productos.';
-    if (d.t === 'texto' || /qui[eé]nes somos/.test(t)) return 'Es la empresa que ya conocías, pero ahora con un equipo nuevo y conmigo al mando. Quiero que quedes plenamente satisfecho con la calidad, el precio y el servicio.';
-    if (d.enlace) return 'Como ya hemos trabajado juntos, me hago una idea de lo que necesitas: no hace falta que rellenes nada.';
-    if (d.t === 'contacto') return 'Si te parece bien, me gustaría visitarte, contarte en persona los cambios que hemos hecho y enseñarte mis ganas de trabajar contigo. Quiero que nos vaya bien a los dos, de la mano. Y recuerda: no tenemos pedido mínimo.';
-    if (/vuelva a confiar|por qu[eé]/.test(t)) return 'Me comprometo a que el género te llegue siempre igual de bien, pedido tras pedido, y con la mejor relación calidad-precio para que salgas beneficiado.';
-    if (/c[oó]mo trabajamos/.test(t)) return 'Pides por WhatsApp o por teléfono, hasta la tarde anterior, y te lo llevamos nosotros, de lunes a sábado.';
-    if (/as[ií] trabajamos/.test(t)) return 'Con camiones refrigerados, en Madrid y Segovia, y el albarán con los pesos reales: pagas lo que recibes.';
-    if (d.t === 'productos') return 'Y todo en un solo proveedor: más de doscientos productos, también patata pelada y cortada, legumbres, setas y hierbas.';
-    if (d.t === 'ofertas') return 'Y cada semana, ofertas. Pregúntame.';
+    if (d.t === 'texto' || /qui[eé]nes somos/.test(t)) return 'La misma empresa, ahora con un equipo nuevo y conmigo al mando.';
+    if (d.enlace) return 'No hace falta que rellenes nada: ya sé lo que necesitas.';
+    if (d.t === 'contacto') return 'Me gustaría visitarte y contártelo en persona. Y recuerda: no hay pedido mínimo.';
+    if (/vuelva a confiar|por qu[eé]/.test(t)) return 'Me comprometo a que el género te llegue siempre igual de bien y a buen precio.';
+    if (/c[oó]mo trabajamos/.test(t)) return 'Pides por WhatsApp hasta la tarde anterior y te lo llevamos, de lunes a sábado.';
+    if (/as[ií] trabajamos/.test(t)) return 'En camión refrigerado, con el peso real en el albarán.';
+    if (d.t === 'productos') return 'Más de doscientos productos, en un solo proveedor.';
+    if (d.t === 'ofertas') return 'Y ofertas cada semana.';
     if (d.t === 'precios') return 'Aquí tienes nuestra lista de precios.';
     return d.titulo || '';
   }
-  if (d.t === 'portada') return ex ? 'Hace tiempo que no trabajamos juntos… y queremos volver a ganarnos su confianza. Soy Fernando, de Ferjusanz Productos.' : '¿Y si sus patatas, fruta o verduras le costaran menos sin bajar la calidad? Quizás no esté disponiendo de un buen servicio… o quizás no nos conozca. ¡Somos Ferjusanz! Soy Fernando, y en un minuto se lo cuento.'; // gancho de Fernando (16/11/2026), en usted como el resto
-  if (d.t === 'contacto') return ex ? 'Y debe saber que no tenemos pedido mínimo. Cualquier consulta, estamos a su disposición. Nos encantará volver a servirle.' : 'Y debe saber que no tenemos pedido mínimo. No pierde nada por comparar: estamos a su disposición.';
-  if (d.t === 'texto' || /qui[eé]nes somos/.test(t)) return ex ? 'Seguimos siendo la misma empresa familiar que usted ya conoce: tercera generación y más de seis décadas en el sector.' : col ? 'Somos una empresa familiar, tercera generación y más de seis décadas sirviendo a colegios y residencias.' : 'Somos una empresa familiar, tercera generación y más de seis décadas sirviendo a cocinas como la suya.';
-  if (d.enlace) return ex ? 'Como ya hemos trabajado juntos, nos hacemos una idea de lo que necesita: no hace falta que rellene nada.' : 'Ahora, lo más fácil: imagine cómo sería su primer pedido, márquelo en un minuto y le enviamos su tarifa. Si le interesa, tan solo tiene que decírnoslo.';
-  if (/vuelva a confiar/.test(t)) return 'Seguimos trabajando con las mismas ganas: calidad homogénea, pedido tras pedido, y la mejor relación calidad-precio para que salga beneficiado.';
-  if (/por qu[eé]/.test(t)) return 'Trabajamos con agricultores de confianza y elegimos el género cada mañana en Mercamadrid. Por eso destacamos por la relación calidad-precio.';
-  if (/c[oó]mo trabajamos/.test(t)) return ex ? 'Como ya sabe: pide por WhatsApp o por teléfono, hasta la tarde anterior, y se lo llevamos nosotros, de lunes a sábado. Así de fácil volver.' : col ? 'Acordamos con su centro los días y horarios de entrega, con formatos adaptados, como la patata pelada en varios cortes.' : 'Usted pide por WhatsApp o por teléfono, hasta la tarde anterior, y se lo llevamos nosotros, de lunes a sábado.';
-  if (/as[ií] trabajamos/.test(t)) return 'Con camiones refrigerados, en Madrid y Segovia, y el albarán con los pesos reales: paga lo que recibe.';
-  if (d.t === 'productos') return ex ? 'Y todo en un solo proveedor: más de doscientos productos, también patata pelada y cortada, legumbres, setas y hierbas.' : 'Más de doscientos productos: también patata pelada y cortada, legumbres, setas y hierbas. Todo en un solo proveedor.';
-  if (d.t === 'ofertas') return 'Y cada semana, ofertas. Pregúntenos.';
+  if (d.t === 'portada') return '¿Y si sus patatas, fruta o verduras le costaran menos sin bajar la calidad? Quizás no esté disponiendo de un buen servicio… o quizás no nos conozca. ¡Somos Ferjusanz! Soy Fernando, y en un minuto se lo cuento.'; // gancho de Fernando (16/11/2026), sin tocar
+  if (d.t === 'contacto') return 'Sin compromiso y sin pedido mínimo. No pierde nada por comparar.';
+  if (d.t === 'texto' || /qui[eé]nes somos/.test(t)) return 'Empresa familiar: tercera generación y más de seis décadas en Mercamadrid, sirviendo a ' + (col ? 'colegios y residencias.' : 'cocinas como la suya.');
+  if (d.enlace) return 'Pulse el enlace del mensaje, marque su primer pedido en un minuto y le mandamos su tarifa.';
+  if (/por qu[eé]/.test(t)) return 'Elegimos el género cada mañana, de agricultores de confianza.';
+  if (/c[oó]mo trabajamos/.test(t)) return col ? 'Acordamos con su centro los días y horarios de entrega.' : 'Pide por WhatsApp hasta la tarde anterior y se lo llevamos, de lunes a sábado.';
+  if (/as[ií] trabajamos/.test(t)) return 'En camión refrigerado, y paga el peso real del albarán.';
+  if (d.t === 'productos') return 'Más de doscientos productos, también patata pelada: un solo proveedor.';
+  if (d.t === 'ofertas') return 'Y ofertas cada semana.';
   if (d.t === 'precios') return 'Aquí tiene nuestra lista de precios.';
   return d.titulo || '';
 }
@@ -12374,7 +12373,7 @@ async function grabarVideoPres(tipo, alGuardar) {
   } catch (e) { fuera(); toast('No se pudieron preparar las hojas: ' + msgErr(e), 'err'); return; }
   pinta();
   const tipoVideo = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp8,opus', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t)) || '';
-  const listo = () => { info.textContent = 'Vídeo de la presentación (' + (tipo.startsWith('ex-') ? 'exclientes, ' : '') + (ppBase(tipo) === 'colectivos' ? 'colegios y residencias' : 'hostelería') + '): ' + hojas.length + ' hojas. Como mucho 1:20 (unos 8 segundos por hoja). Debajo de cada hoja sale en amarillo lo que puedes decir. Pulsa «Empezar», habla y pasa las hojas con «Siguiente».';
+  const listo = () => { info.textContent = 'Vídeo de la presentación (' + (tipo.startsWith('ex-') ? 'exclientes, ' : '') + (ppBase(tipo) === 'colectivos' ? 'colegios y residencias' : 'hostelería') + '): ' + hojas.length + ' hojas. Lo ideal, unos 45 segundos: frases cortas y pasa rápido las hojas (como mucho 1:20). Debajo de cada hoja sale en amarillo lo que puedes decir. Pulsa «Empezar», habla y pasa las hojas con «Siguiente».';
     botones.replaceChildren(BT('⏺ Empezar a grabar', empezar, 'guardar'), BT('Cancelar', fuera)); };
   const empezar = async () => {
     try { mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { toast('Hace falta permiso para el micrófono.', 'err'); return; }
