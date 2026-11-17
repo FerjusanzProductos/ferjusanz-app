@@ -421,6 +421,7 @@ ${OFERTAS && OFERTAS.items.length ? `<section class="bloque" id="ofertas">
   <div class="envoltura">
     <div class="bloque-cabeza"><div><h2>Ofertas de la semana</h2><p>Del ${diaMes(OFERTAS.desde)} al ${diaMes(OFERTAS.hasta)} · ${esc(OFERTAS.nota)}</p></div><a class="enlace" href="${wa(WHATSAPP[0].num, 'Hola, quería pedir de las ofertas de esta semana.')}" rel="nofollow">Pedir por WhatsApp ${I.flecha}</a></div>
     <ul class="ofertas">${OFERTAS.items.map(([n, p, u]) => `<li><strong>${esc(n)}</strong><span>${p.toFixed(2).replace('.', ',')} €/${esc(u)}</span></li>`).join('')}</ul>
+    ${OFERTAS.ejemplo ? `<p class="ofertas-iva">${esc(OFERTAS.ejemplo)}</p>` : ''}
   </div>
 </section>` : ''}
 
