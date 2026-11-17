@@ -9,3 +9,4 @@ Una línea por publicación: fecha · novedades · artículo · fotos de Drive n
 - 15/11/2026 · novedad «Nuestras furgonetas, listas a primera hora» (foto de Fernando por el chat: recortada sin la hora, la persona ni la matrícula, con filtro) · sin artículo
 - 16/11/2026 (a mano, pedido por Fernando) · Artículo: /blog/fruta-y-verdura-para-deportistas-y-vida-sana/ con la imagen «Peleamos a tu lado».
 - 16/11/2026 (a mano, pedido por Fernando) · Artículo de deportistas reescrito (más humano, con Fernando boxeando) y portada nueva · Cola `web/cola/` con 4 artículos de la serie «deporte y vida sana» (uno cada 2 días, desde el 17/11).
+- 17/11/2026 (a mano, Fernando subió fotos a Drive) · Novedades: 16 fotos (berza, ajos pelados, calabacín, patata pelada, alcachofas, coliflor, aguacates, fresas, naranjas ×2, manzanas, tomate RAF, chalotas, peras, cebolla morada, champiñón) · sin artículo · Drive: todas publicadas (recortados zapatos y etiqueta de palé).

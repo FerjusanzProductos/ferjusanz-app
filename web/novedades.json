@@ -104,5 +104,133 @@
   "titulo": "Esta semana en Mercamadrid (vídeo)",
   "texto": "Fernando os cuenta lo que destacamos: tomate de ensalada, granada mollar de Elche y setas de ostra.",
   "alt": "Vídeo de Fernando con el género de esta semana en Mercamadrid"
+ },
+ {
+  "fecha": "2026-11-17",
+  "foto": "/fotos/2026/11/novedad-2026-11-17-berza-rizada.jpg",
+  "titulo": "Berza rizada",
+  "texto": "Cajas de berza de hoja rizada, recién llegadas al puesto.",
+  "alt": "Berza rizada",
+  "driveId": "1u0SkGJWStIZyV0fpBzsd0MLnhGk7rMQ7"
+ },
+ {
+  "fecha": "2026-11-17",
+  "foto": "/fotos/2026/11/novedad-2026-11-17-ajos-pelados.jpg",
+  "titulo": "Ajos pelados",
+  "texto": "Bolsas de ajo pelado, listas para la cocina: sin pelar uno a uno.",
+  "alt": "Ajos pelados",
+  "driveId": "1ruq0fsyHgLLf6k_xb_ndg-W5QDhaYEn4"
+ },
+ {
+  "fecha": "2026-11-17",
+  "foto": "/fotos/2026/11/novedad-2026-11-17-calabacin.jpg",
+  "titulo": "Calabacín",
+  "texto": "Cajas de calabacín verde en el almacén.",
+  "alt": "Calabacín",
+  "driveId": "1NFChqDey4V4_7n8shyf_HksfeH5Erpsy"
+ },
+ {
+  "fecha": "2026-11-17",
+  "foto": "/fotos/2026/11/novedad-2026-11-17-patata-pelada-y-cortada.jpg",
+  "titulo": "Patata pelada y cortada",
+  "texto": "Patata ya pelada y cortada en tiras, envasada al vacío.",
+  "alt": "Patata pelada y cortada",
+  "driveId": "1T4f9g_Pq4ybAp2kFdoOY_8Xf906GDGuu"
+ },
+ {
+  "fecha": "2026-11-17",
+  "foto": "/fotos/2026/11/novedad-2026-11-17-alcachofas.jpg",
+  "titulo": "Alcachofas",
+  "texto": "Caja de alcachofas de temporada.",
+  "alt": "Alcachofas",
+  "driveId": "1AVOZP4hd4Wlgaw4EGurcclnvC5vCMaT9"
+ },
+ {
+  "fecha": "2026-11-17",
+  "foto": "/fotos/2026/11/novedad-2026-11-17-coliflor.jpg",
+  "titulo": "Coliflor",
+  "texto": "Caja de coliflores blancas con sus hojas.",
+  "alt": "Coliflor",
+  "driveId": "1TBhbo0UmWgFLgbNyd0ADCNcOxYgGq3bk"
+ },
+ {
+  "fecha": "2026-11-17",
+  "foto": "/fotos/2026/11/novedad-2026-11-17-aguacates.jpg",
+  "titulo": "Aguacates",
+  "texto": "Caja de aguacates de piel oscura.",
+  "alt": "Aguacates",
+  "driveId": "14NYgh7S490iILkgyi_03vXLXuMxV2wLj"
+ },
+ {
+  "fecha": "2026-11-17",
+  "foto": "/fotos/2026/11/novedad-2026-11-17-fresas-en-tarrina.jpg",
+  "titulo": "Fresas en tarrina",
+  "texto": "Tarrinas de fresas de 500 g.",
+  "alt": "Fresas en tarrina",
+  "driveId": "1nFe0IxO9ggUQJSBE7GqxeCJkOek_m17h"
+ },
+ {
+  "fecha": "2026-11-17",
+  "foto": "/fotos/2026/11/novedad-2026-11-17-naranjas.jpg",
+  "titulo": "Naranjas",
+  "texto": "Una caja de naranjas recién llegadas.",
+  "alt": "Naranjas",
+  "driveId": "1kka6ufCkLPKYAYeErKkGPM8xDM_j3KR9"
+ },
+ {
+  "fecha": "2026-11-17",
+  "foto": "/fotos/2026/11/novedad-2026-11-17-naranjas-en-papel-de-seda.jpg",
+  "titulo": "Naranjas en papel de seda",
+  "texto": "Naranjas envueltas una a una, en caja.",
+  "alt": "Naranjas en papel de seda",
+  "driveId": "1t3lpyDkL_WJL7Ry3TQrqEwHKlUrLlejr"
+ },
+ {
+  "fecha": "2026-11-17",
+  "foto": "/fotos/2026/11/novedad-2026-11-17-manzanas-amarillas.jpg",
+  "titulo": "Manzanas amarillas",
+  "texto": "Manzanas amarillas colocadas en bandeja.",
+  "alt": "Manzanas amarillas",
+  "driveId": "1ghumqw9yhdaQARbEFHymX4MHDOUeMTQC"
+ },
+ {
+  "fecha": "2026-11-17",
+  "foto": "/fotos/2026/11/novedad-2026-11-17-tomate-raf.jpg",
+  "titulo": "Tomate RAF",
+  "texto": "Caja de tomate RAF, con su paja.",
+  "alt": "Tomate RAF",
+  "driveId": "1eAk-czE53j7FVE7fRegR3E-bJvrtl1cM"
+ },
+ {
+  "fecha": "2026-11-17",
+  "foto": "/fotos/2026/11/novedad-2026-11-17-chalotas-de-bretana.jpg",
+  "titulo": "Chalotas de Bretaña",
+  "texto": "Sacos de chalota alargada de Bretaña.",
+  "alt": "Chalotas de Bretaña",
+  "driveId": "1HqmctNr-vk0dp_jzFsHqYJJT53Xkh1Qx"
+ },
+ {
+  "fecha": "2026-11-17",
+  "foto": "/fotos/2026/11/novedad-2026-11-17-peras.jpg",
+  "titulo": "Peras",
+  "texto": "Caja de peras colocadas en bandeja.",
+  "alt": "Peras",
+  "driveId": "1wvUsn_KAQrYQYM-Z-RhhUoNypLUQ4NCc"
+ },
+ {
+  "fecha": "2026-11-17",
+  "foto": "/fotos/2026/11/novedad-2026-11-17-cebolla-morada.jpg",
+  "titulo": "Cebolla morada",
+  "texto": "Caja de cebolla morada.",
+  "alt": "Cebolla morada",
+  "driveId": "18lWJgZkgJqZUAAOZnAmAWTnbEWBrZGhQ"
+ },
+ {
+  "fecha": "2026-11-17",
+  "foto": "/fotos/2026/11/novedad-2026-11-17-champinon-grande.jpg",
+  "titulo": "Champiñón grande",
+  "texto": "Champiñón blanco de buen tamaño: al lado de un bolígrafo se ve lo grande que es.",
+  "alt": "Champiñón grande",
+  "driveId": "1DoXThju8NI7TLkZy3GjQHMvdVisGdVFV"
  }
 ]
