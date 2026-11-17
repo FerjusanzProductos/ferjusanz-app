@@ -1,0 +1,16 @@
+{
+  "desde": "2026-11-17",
+  "hasta": "2026-11-23",
+  "nota": "IVA (4 %) incluido",
+  "items": [
+    ["Tomate ensalada", 2.00, "kg"],
+    ["Tomate pera gordo", 2.40, "kg"],
+    ["Lechuga en bandeja", 1.95, "bandeja"],
+    ["Limón nuevo", 1.75, "kg"],
+    ["Naranja de mesa", 1.40, "kg"],
+    ["Clementinas", 1.90, "kg"],
+    ["Pimiento de Padrón", 3.00, "kg"],
+    ["Cebolla", 0.70, "kg"],
+    ["Huevos", 2.35, "docena"]
+  ]
+}

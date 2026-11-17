@@ -13,6 +13,8 @@ const DOMINIO = 'https://www.ferjusanz-frutas-verduras.es';
 const REDIRECCIONES = require('./redirecciones.json');
 const paginas = require('./paginas.json').filter(p => !REDIRECCIONES[p.path])
   .map(p => p.html ? { ...p, html: p.html.replace(/\/blog\/[^"'#?\s]+\//g, r => REDIRECCIONES[r] || r) } : p);
+// Ofertas de la semana (las dicta Fernando; mismas que Comercial › Recomendaciones de la app). Se cambian en ofertas.json.
+const OFERTAS = fs.existsSync(path.join(DIR, 'ofertas.json')) ? require('./ofertas.json') : null;
 const novedades = fs.existsSync(path.join(DIR, 'novedades.json')) ? require('./novedades.json') : [];
 
 // ───────── Datos de la empresa ─────────
@@ -137,6 +139,7 @@ const PREGUNTAS = [
 
 // ───────── Utilidades ─────────
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const diaMes = iso => new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
 const fecha = iso => iso ? new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
 const tituloCorto = t => String(t).replace(/\s*-\s*Ferjusanz\s*$/i, '');
 // Google corta los títulos de más de ~65 letras: si no cabe, se quita la marca del final.
@@ -413,6 +416,13 @@ function inicio(p) {
     <div><strong>1</strong><span>solo pedido para todo</span></div>
   </div>
 </section>
+
+${OFERTAS && OFERTAS.items.length ? `<section class="bloque" id="ofertas">
+  <div class="envoltura">
+    <div class="bloque-cabeza"><div><h2>Ofertas de la semana</h2><p>Del ${diaMes(OFERTAS.desde)} al ${diaMes(OFERTAS.hasta)} · ${esc(OFERTAS.nota)}</p></div><a class="enlace" href="${wa(WHATSAPP[0].num, 'Hola, quería pedir de las ofertas de esta semana.')}" rel="nofollow">Pedir por WhatsApp ${I.flecha}</a></div>
+    <ul class="ofertas">${OFERTAS.items.map(([n, p, u]) => `<li><strong>${esc(n)}</strong><span>${p.toFixed(2).replace('.', ',')} €/${esc(u)}</span></li>`).join('')}</ul>
+  </div>
+</section>` : ''}
 
 ${(a => `<section class="guia-portada" aria-label="Última guía">
   <a class="envoltura guia-portada-in" href="${a.path}">

@@ -519,3 +519,7 @@ a:active, button:active, summary:active { opacity: .75; }
 .primer-pedido .pp-fila { grid-template-columns: minmax(0, 1fr) 66px 80px; }
 .primer-pedido .pp-usa span { overflow-wrap: anywhere; }
 .primer-pedido .pp-fila input[type=text] { padding: 6px; text-align: center; }
+/* Ofertas de la semana (portada) */
+.ofertas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); border-top: 1px solid var(--linea, #ddd); }
+.ofertas li { display: flex; justify-content: space-between; gap: 12px; padding: 14px 4px; border-bottom: 1px solid var(--linea, #ddd); }
+.ofertas span { color: var(--granate); font-weight: 700; white-space: nowrap; }

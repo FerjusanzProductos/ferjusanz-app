@@ -13,12 +13,13 @@ Web de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., sin WordPress, en Cloudflare (
 - **NO hay cosecha propia** (Fernando, 15/11/2026): decir «agricultores de confianza» y Mercamadrid. Agricultura ecológica: «colaboramos con productores ecológicos siempre que tienen producto disponible». Reparto con camiones y furgonetas refrigerados (sí, confirmado).
 - Confirmado por Fernando (15/11/2026): más de 200 productos, reparto en Segovia, sin pedido mínimo, pedidos hasta la tarde anterior, exportación posible, pago al contado o con factura.
 - Frase de Fernando (15/11/2026): «seleccionamos nuestros productos minuciosamente y pensamos en que nos sentamos a la mesa de ese restaurante a disfrutar del menú; vamos de la mano con nuestros clientes».
-- **No** se publican precios: siempre «pide precio por WhatsApp».
+- **No** se publican precios: siempre «pide precio por WhatsApp». **Excepción: las ofertas de la semana** (Fernando, 17/11/2026: «con precio»), en la portada, con «IVA (4 %) incluido».
 
 ## Archivos
 - La sección de artículos se llama **«Guías»** (15/11/2026) aunque la dirección siga siendo `/blog/`; las últimas salen en la portada.
 - `paginas.json`: textos de cada página (los de la web antigua y los artículos nuevos). **Aquí se cambian los textos.**
 - `redirecciones.json`: artículos viejos juntados en otro (no se generan; el Worker los manda al nuevo con 301).
+- `ofertas.json`: **ofertas de la semana** (fechas, nota de IVA y lista producto · precio · unidad). Sale en la portada (sección «Ofertas de la semana») entre las cifras y la última guía. Si `items` está vacío, la sección no sale. Las mismas ofertas van en la app: Comercial › ⭐ Recomendaciones (tabla `recomendaciones`, base real y pruebas).
 - `novedades.json`: fotos y avisos del almacén (página `/novedades/` y portada).
 - `construir.cjs`: diseño, catálogo (`FAMILIAS`), preguntas frecuentes, páginas nuevas y legales; genera `public/` y `archivos.generado.js`.
 - **Vídeos en Novedades** (16/11/2026): en `novedades.json`, `"video": "/fotos/AAAA/MM/x.mp4"` y `"foto"` con su portada (.jpg). Los dos se suben al KV como las fotos (copia en `fotos/`). MP4 ligero (720 px, ver `redes/videos/LEEME.md`).
