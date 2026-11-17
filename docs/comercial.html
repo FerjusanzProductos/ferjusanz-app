@@ -1,0 +1,35 @@
+<title>Comercial Ferjusanz</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Una columna para leer en el móvil: dos bloques (hoy / semana) con salto rápido arriba. */
+:root{--bg:#f5f6f2;--fg:#1d261d;--muted:#5b675a;--line:#dbe1d7;--card:#fff;--dia:#6d28d9;--sem:#0e7490;--acc:#2e7d32}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#131913;--fg:#e5ebe3;--muted:#9eac9c;--line:#2b352a;--card:#1a221a;--dia:#b79cf5;--sem:#5ec8de;--acc:#7cc47f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#131913;--fg:#e5ebe3;--muted:#9eac9c;--line:#2b352a;--card:#1a221a;--dia:#b79cf5;--sem:#5ec8de;--acc:#7cc47f;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,sans-serif;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+main{max-width:720px;margin:0 auto}
+h1{font-size:1.5rem;margin:0;text-wrap:balance}
+.sub{color:var(--muted);font-size:.9rem;margin:.25rem 0 1rem}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+nav a{flex:1;min-width:140px;text-align:center;padding:12px;border-radius:10px;font-weight:600;text-decoration:none;color:#fff}
+nav a:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
+.a-dia{background:var(--dia)}.a-sem{background:var(--sem)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) nav a{color:#111}}
+:root[data-theme="dark"] nav a{color:#111}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px 16px 14px;margin-bottom:16px;border-top:5px solid var(--c)}
+#hoy{--c:var(--dia)}#semana{--c:var(--sem)}
+h2{font-size:1.2rem;color:var(--c);margin:12px 0 0}
+h3{font-size:.95rem;letter-spacing:.02em;margin:18px 0 4px}
+.fecha{color:var(--muted);font-size:.85rem;margin:2px 0 8px}
+p{margin:6px 0;overflow-wrap:anywhere}
+ul{padding-left:20px;margin:4px 0}
+li{margin:4px 0;overflow-wrap:anywhere}
+.pie{color:var(--muted);font-size:.85rem}
+</style>
+<main>
+<h1>Comercial Ferjusanz</h1>
+<p class="sub">Actualizado el 18/11, 00:19. Solo son borradores: nada se envía sin ti.</p>
+<nav><a class="a-dia" href="#hoy">📞 Hoy</a><a class="a-sem" href="#semana">🗓️ Esta semana</a></nav>
+<section id="hoy"><h2>📞 Comercial del día</h2><p class="fecha">Todavía no hay. Sale de lunes a sábado a las 8:27.</p></section>
+<section id="semana"><h2>🗓️ Plan de la semana</h2><p class="fecha">Todavía no hay. Sale cada domingo a las 19:23.</p></section>
+<p class="pie">También en la app: 📊 Resumen y correo, o Comercial → Avisos.</p>
+</main>
