@@ -17,6 +17,10 @@ Solo toca la web (`web/`). **Nunca**: la app, la base de datos (solo leer), prec
   `download_file_content` → guardar en el scratchpad → **mirar la foto** (Read) → título corto y una frase **solo con lo que se ve** (producto, cajas, camión, campo…).
   No inventar origen, precio ni cantidades.
 - **No publicar** (y apuntarlo en el diario) si sale una cara reconocible, una matrícula, un albarán, un nombre de cliente o algo que no sea del negocio.
+- **Editar cada foto antes** (Fernando, 17/11/2026: «que se pueda comprobar el tamaño, que se note que no es trampa, pero también unos filtros… que elijas bien el recorte»). En la web salen **cuadradas**: recortar tú en cuadrado, con el producto llenando la foto y **algo que dé la escala** (borde de la caja, mano, bolígrafo). Fuera del recorte: piezas feas o sucias, paja o papeles encima del género, zapatos, etiquetas de palé/proveedor, matrículas y caras. Retoque **suave**, sin cambiar el color real:
+  `convert original.jpg -auto-orient -crop <ANCHOxALTO+X+Y> +repage -resize 1000x1000 -modulate 102,110 -sigmoidal-contrast 2x50% -unsharp 0x0.8 -strip -quality 82 foto.jpg`
+  Probar 2-3 recortes, mirarlos juntos (`montage a.jpg b.jpg -tile 3x1 -geometry 400x400+4+4 h.png`) y quedarse con el mejor. Si no hay recorte limpio, publicarla igual y apuntarlo en el diario (o pedir otra foto).
+- Título con **variedad y calibre** si se saben (los dice Fernando o se leen en la caja) y una frase de 1-2 líneas: qué es + para qué le sirve a una cocina. Sin precios ni cifras inventadas.
 - `node web/anadir.cjs novedad <archivo> "<título>" "<frase>" <driveId>` (la comprime, quita el GPS y la sube al almacén de Cloudflare).
 
 ## 2. Si no hay fotos nuevas
