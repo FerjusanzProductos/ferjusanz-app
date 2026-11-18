@@ -26,6 +26,7 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - ⚪ Otras ideas para subir en Google: reseñas, publicaciones semanales en la ficha, directorios, informe mensual. Plan: `docs/PLAN_MARKETING.md`; lista completa en `docs/LISTA_PARA_ENVIAR.md`.
 
 ## 📱 LA APP
+- 🟡 **Gastos para calcular el beneficio** (Fernando, 18/11/2026; se lo pregunta a su padre): cuánto se paga al mes de **puesto/nave en Mercamadrid, seguros, gestoría (Jorge), teléfono, Golden, furgonetas (renting, taller, ITV), Seguridad Social** de Carmen, Dani y Cristian (o si los sueldos que dio son brutos o netos), **cuota de autónomos** de Juli y Fernando, y lo que se paga a Hacienda. Con eso, Claude rehace el beneficio de 2026 con datos y no con estimaciones. La gasolina y los gastos del reparto ya se apuntan en la app (desde la v440).
 - 🟡 **Oficina**: ir apuntando las respuestas de los 17 clientes a los que se escribió el 18/11 («✔ Usar» / «✏️ Escribir a mano» y «✅ Contestado» en Clientes › «📇 Pedir correo y teléfono») y llamar a los que no tienen correo público.
 ### 👤 Fernando
 - 🟡 Hablar con **Carmen** y con **Jorge** (o la gestoría) de sus funciones desde enero: oficina + clientes, objetivos y premio por escrito (https://claude.ai/artifact/R8Zor6BHenQdEi3FMbJJSn).

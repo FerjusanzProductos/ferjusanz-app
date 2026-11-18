@@ -188,6 +188,11 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - **Patatas del Olmo** (proveedor): no está en Golden; se le compra de verdad, normalmente **huevos** (es primo de Fernando).
 - Bulevar: el cliente bueno es **BULEVAR** (C/ López de Hoyos 401); BULE (Gran Vía de Hortaleza 62) ya no. Handyman: **HANDYMAN** (Made For You Iris Taberna SL); la ficha antigua HATA se borró (18/11/2026, Fernando).
 
+## Gastos del reparto (Fernando, 18/11/2026)
+- Al **terminar el reparto**, el repartidor apunta si ha **repostado** (gasolina o gasóleo, cuántos euros y, si lo sabe, litros) o «No he repostado».
+- Antes de **fichar la salida** apunta si ha tenido **otros gastos** (parking, peaje, comida…) o «No, ninguno». La app no deja fichar la salida hasta contestar.
+- El **ticket o la factura** se deja siempre **en el sobre para la oficina**. La oficina lo marca como recibido en «⛽ Gastos de reparto». Un gasto no se borra: si está mal o repetido, se anula.
+
 ## Mensajes a clientes: nunca de noche (Fernando, 18/11/2026)
 - Correos y WhatsApp a clientes **solo entre las 8:00 y las 20:00** (hora de Madrid), de lunes a sábado. Si Fernando dice «manda» fuera de esa hora sin decir cuándo, se **programa para las 8:00** siguientes; nunca se envía al momento de noche. (El 18/11 salieron 17 correos a las 3:00 y no estuvo bien.)
 
