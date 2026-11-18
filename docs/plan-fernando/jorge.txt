@@ -7,7 +7,11 @@
 4. FALTA RELLENAR O DECIDIR:
 • Factura por entrega o una al mes.
 • Series 2027-0001 y R2027-0001; rectificativas como R1.
-• Saldo inicial de caja.
+• Saldo inicial de caja (hojas de Carmen a 16/11: CAJA1 2.749,87 €, CAJA2 24,12 €). ¿Comidas, propinas y lotería de caja: empresa o personal?
+• Golden intentó mandar 120 facturas a Hacienda el 06/02/2026: fallaron todas y salían a nombre de la C.B.
+• Furgonetas y orden SEPA siguen a nombre de la C.B.: ¿se pasan a la S.L.?
+• Domicilio fiscal: Hacienda pone 1º Izq., los papeles 3º Dcha. ¿Cuál vale?
+• Ayto. de Becerril: pide factura electrónica (FACe). ¿Cómo en 2027?
 • Factura de Ibérica FV-B-26-032668 a nombre de C.B.
 • Declaración responsable del programa: la firma Fernando o Julián (FERJUSANZ es la productora). Que confirme que Anthropic, Cloudflare y Supabase no firman (son herramientas).
 
