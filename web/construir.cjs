@@ -760,7 +760,7 @@ function tarjeta() {
 
 // Socio recomendado (18/11/2026, Tito): Carnicería Super 9 (Carlos Zúñiga). Se recomiendan el uno al otro a sus clientes.
 // Sin lista de precios de Super 9 todavía: cuando la pase, se añade aquí. Su WhatsApp: 680 27 20 28.
-const SUPER9 = { num: '34680272028', ver: '680 27 20 28', insta: 'https://www.instagram.com/super9_carnicerias/' };
+const SUPER9 = { num: '34680272028', ver: '680 27 20 28', insta: 'https://www.instagram.com/super9_carnicerias/', tiktok: 'https://www.tiktok.com/@super9carnicerias' };
 const socioSuper9 = () => `<div class="socio" style="border:1px solid currentColor;padding:16px;margin:24px 0;display:flex;gap:14px;align-items:center;flex-wrap:wrap">
   <img src="/marca/super9.png" alt="Carnicería Super 9" width="96" height="96" loading="lazy" style="flex:none">
   <div style="flex:1;min-width:220px"><h2 style="margin-top:0">Socio recomendado: Carnicería Super 9</h2>
@@ -775,7 +775,8 @@ function super9() {
   <div style="display:flex;gap:14px;align-items:center;margin-top:24px"><img src="/marca/super9.png" alt="Carnicería Super 9" width="96" height="96"><h2 style="margin:0">Carnicería Super 9 · Carlos Zúñiga</h2></div>
   <p>Más de 10 años sirviendo, empresa en crecimiento y muchísima variedad de género, con buena relación calidad-precio. <strong>100 % recomendado.</strong></p>
   <div class="acciones apiladas"><a class="btn btn-wa" href="${wa(SUPER9.num, 'Hola Carlos, he visto la tarjeta de Super 9 y Ferjusanz y quería información de la carne: ')}" rel="nofollow">${I.wa}<span>WhatsApp de Carlos <small>(${SUPER9.ver})</small></span></a>
-  <a class="btn btn-borde" href="${SUPER9.insta}" rel="nofollow"><span>Ver Super 9 en Instagram</span>${I.flecha}</a></div>
+  <a class="btn btn-borde" href="${SUPER9.insta}" rel="nofollow"><span>Ver Super 9 en Instagram</span>${I.flecha}</a>
+  <a class="btn btn-borde" href="${SUPER9.tiktok}" rel="nofollow"><span>Ver Super 9 en TikTok</span>${I.flecha}</a></div>
   <p class="nota">Lista de precios de Super 9: muy pronto. Mientras tanto, pídasela a Carlos por WhatsApp.</p>
   <div style="display:flex;gap:14px;align-items:center;margin-top:32px"><img src="/marca/logo.png" alt="Ferjusanz" style="width:170px;height:auto"></div>
   <h2>Ferjusanz · patatas, frutas, verduras y huevos</h2>
