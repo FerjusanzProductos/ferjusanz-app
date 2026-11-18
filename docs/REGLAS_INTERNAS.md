@@ -189,6 +189,10 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - **Patatas del Olmo** (proveedor): no está en Golden; se le compra de verdad, normalmente **huevos** (es primo de Fernando).
 - Bulevar: el cliente bueno es **BULEVAR** (C/ López de Hoyos 401); BULE (Gran Vía de Hortaleza 62) ya no. Handyman: **HANDYMAN** (Made For You Iris Taberna SL); la ficha antigua HATA se borró (18/11/2026, Fernando).
 
+## Clientes que no se contactan (Fernando, 18/11/2026)
+- Las tareas comerciales (Comercial del día, Plan de la semana, Leads) **solo proponen clientes con `activo = true`**. Los inactivos no salen en «a quién llamo», «clientes a recuperar» ni «clientes que se enfrían».
+- **LA DEFINITIVA** (Nadamalu SLU, Alcobendas, código `DEFINITIVA`): **no contactar nunca**. Ya no se llama así y el nuevo dueño es **mal pagador**: dejó deuda, devolvió 2 recibos y hubo que cobrarle con datáfono. No volver a proponerla.
+
 ## Gastos del reparto (Fernando, 18/11/2026)
 - Al **terminar el reparto**, el repartidor apunta si ha **repostado** (gasolina o gasóleo, cuántos euros y, si lo sabe, litros) o «No he repostado».
 - Antes de **fichar la salida** apunta si ha tenido **otros gastos** (parking, peaje, comida…) o «No, ninguno». La app no deja fichar la salida hasta contestar.
