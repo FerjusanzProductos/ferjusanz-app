@@ -2882,7 +2882,7 @@ async function vistaPaginasClientes() {
       h('button', { class: 'small ghost', onclick: async () => { try { await navigator.clipboard.writeText(urlPortal(await tok(c))); toast('Enlace copiado', 'ok'); } catch (e) { err(e); } } }, '🔗 Copiar'),
       h('button', { class: 'small ghost', onclick: async () => { try { verComoCliente(urlPortal(await tok(c))); } catch (e) { err(e); } } }, '👁 Ver como cliente'),
       esOficina() ? h('button', { class: 'small ghost', style: 'color:#b91c1c', onclick: async () => { if (!await confirmar('El enlace de «' + nombreCli(c) + '» dejará de funcionar y se creará uno nuevo (habrá que dárselo otra vez). ¿Seguir?')) return; try { await tok(c, true); toast('Enlace anulado. Ya hay uno nuevo.', 'ok'); } catch (e) { err(e); } } }, '🔒 Anular') : null));
-  const pinta = () => { const t = sinTilde(q.value.trim()); const f = cls.filter(c => !t || sinTilde([c.nombre, c.nombre_comercial, c.codigo, c.localidad].join(' ')).includes(t)); lista.replaceChildren(...(f.length ? f.slice(0, 60).map(fila) : [h('p', { class: 'vacio' }, 'Ningún cliente con ese nombre.')]), ...(f.length > 60 ? [h('p', { class: 'sub' }, 'Hay más: escribe más letras para afinar.')] : [])); };
+  const pinta = () => { const t = sinTilde(q.value.trim()); const f = filtraBusca(cls, t, c => [c.nombre, c.nombre_comercial, c.codigo, c.localidad].join(' ')); lista.replaceChildren(...(f.length ? f.slice(0, 60).map(fila) : [h('p', { class: 'vacio' }, 'Ningún cliente con ese nombre.')]), ...(f.length > 60 ? [h('p', { class: 'sub' }, 'Hay más: escribe más letras para afinar.')] : [])); };
   q.addEventListener('input', pinta); pinta();
 }
 /* Portal del cliente: el albarán se publica en la página privada del cliente (se publica solo al marcar la entrega; aquí se puede hacer o deshacer a mano) */
@@ -4481,6 +4481,26 @@ async function guardarTarifa(productoId, clienteId, precio) {
 /* =====================  CLIENTES (oficina)  ===================== */
 let clientesCache = null;
 const sinTilde = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+/* Buscador que perdona (Fernando, 18/11/2026: «que reconozca definitiva sin el la… erratas también»).
+   Cada palabra escrita (sin «la», «el», «de»…) tiene que estar en el texto, o parecerse a una palabra suya
+   con 1 letra mal (2 si tiene 7 letras o más). 2 = está tal cual, 1 = por errata, 0 = no. */
+const BUSCA_RELLENO = new Set(['la', 'el', 'los', 'las', 'de', 'del', 'y', 'e', 'a', 'en', 'al']);
+function distEdit(a, b) { const m = a.length, n = b.length; if (Math.abs(m - n) > 2) return 9; let p2 = null, p = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) { const c = [i]; for (let j = 1; j <= n; j++) { c[j] = Math.min(p[j] + 1, c[j - 1] + 1, p[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); if (p2 && i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) c[j] = Math.min(c[j], p2[j - 2] + 1); } p2 = p; p = c; }
+  return p[n]; }
+function buscaPuntos(texto, q) {
+  const qs = sinTilde(limpiaBusqueda(q)).split(/\s+/).filter(Boolean); let ws = qs.filter(w => !BUSCA_RELLENO.has(w)); if (!ws.length) ws = qs; if (!ws.length) return 2;
+  const x = sinTilde(texto), pal = x.split(/[^a-z0-9]+/).filter(Boolean); let r = 2;
+  for (const w of ws) {
+    if (x.includes(w) || (w.length > 3 && w.endsWith('s') && x.includes(w.slice(0, -1))) || (w.length > 4 && w.endsWith('es') && x.includes(w.slice(0, -2)))) continue;
+    const tope = w.length >= 7 ? 2 : w.length >= 4 ? 1 : 0;
+    if (tope && pal.some(v => distEdit(w, v) <= tope || (v.length > w.length && distEdit(w, v.slice(0, w.length)) <= tope))) { r = 1; continue; }
+    return 0;
+  }
+  return r;
+}
+/* Si hay algo escrito tal cual, solo eso; si no, lo que se parece (erratas) */
+const filtraBusca = (arr, q, txt) => { if (!sinTilde(limpiaBusqueda(q))) return arr; const ps = arr.map(e => [e, buscaPuntos(txt(e), q)]), ex = ps.filter(z => z[1] === 2); return (ex.length ? ex : ps.filter(z => z[1] === 1)).map(z => z[0]); };
 /* ===== FACTURAS DE CLIENTES (las emite Golden; aquí se registran para consultarlas por cliente) ===== */
 let fcliPer = {};   // id → nombre, para decir quién marcó el cobro
 async function cargarFacturasCli(clienteId) {
@@ -5170,7 +5190,7 @@ function vistaClientes() {
     marca();
     if (!clientesCache) { lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); return; }
     const t = sinTilde(limpiaBusqueda(inp.value));
-    let r = clientesCache.filter(c => !soloActivos || c.activo);
+    let r = clientesCache.filter(c => !soloActivos || t || c.activo); /* al buscar, también los inactivos (salen con «Inactivo») */
     const completo = cargadoFis; /* otra pantalla pudo guardar la lista sin direcciones: esperar a la carga de aquí */
     const nFis = completo ? clientesCache.filter(c => c.activo && faltaFiscal(c).length).length : '…';
     if (bFis) bFis.textContent = '🧾 Faltan datos para facturar (' + nFis + ')';
@@ -5178,7 +5198,7 @@ function vistaClientes() {
     if (soloFiscal) r = r.filter(c => c.activo && faltaFiscal(c).length);
     if (soloNif) r = r.filter(c => nifProp[c.id]);
     if (soloCon) r = r.filter(faltaCon);
-    if (t) r = r.filter(c => sinTilde([c.nombre, c.nombre_comercial, c.codigo, lectura ? '' : c.nif, c.telefono, c.localidad].join(' ')).includes(t));
+    if (t) r = filtraBusca(r, t, c => [c.nombre, c.nombre_comercial, c.codigo, lectura ? '' : c.nif, c.telefono, c.localidad, Array.isArray(c.alias) ? c.alias.join(' ') : ''].join(' '));
     avFis.replaceChildren(...(soloFiscal ? [h('div', { class: 'aviso-card', style: 'border-color:#fca5a5;background:#fef2f2' },
       h('b', {}, 'Desde el 1/1/2027 se factura con la app. '), 'A estos clientes no se les podrá hacer factura hasta tener ', h('b', {}, 'NIF, dirección, código postal y localidad'), '. Toca cada uno, rellena lo que sale en rojo y «Guardar cambios». Los datos suelen estar en Golden o en sus facturas.',
       h('button', { class: 'ghost small', style: 'display:block;margin-top:8px', onclick: async () => { const txt = r.map(c => [c.codigo, nombreCli(c), 'falta: ' + faltaFiscal(c).join(', ')].join(' · ')).join('\n'); try { await navigator.clipboard.writeText(txt); toast('Lista copiada (' + r.length + ')', 'ok'); } catch (e) { toast('No se pudo copiar', 'err'); } } }, '📋 Copiar la lista'))] : soloNif ? [h('div', { class: 'aviso-card', style: 'border-color:#93c5fd;background:#eff6ff' },
@@ -5246,11 +5266,16 @@ function vistaCliente() {
     cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
     try {
       const r = await sb.from('clientes').select('*').eq('id', id).single();
-      if (r.error) throw r.error; c = r.data; pintar();
+      if (r.error) throw r.error; c = r.data; pintar(); cargaDebe().catch(() => {});
     } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver el cliente.' : msgErr(e))); }
   }
+  /* Lo que debe según Golden, arriba del todo y en rojo (Fernando, 18/11/2026: «si debe algo que salga aquí al principio y en rojo») */
+  const banDebe = h('div', {}); /* se rellena aparte, sin volver a pintar, para no borrar lo que se esté escribiendo */
+  async function cargaDebe() { if (!id || !c || !c.codigo || !esOficina()) return; const q = await sb.from('golden_tesoreria').select('total').eq('tipo', 'C').eq('estado', 'PEN').ilike('codigo', c.codigo); if (q.error || !(q.data || []).length) return; const n = q.data.length, t = q.data.reduce((a, x) => a + Number(x.total || 0), 0);
+    banDebe.replaceChildren(h('div', { class: 'card tap', style: 'border-left:5px solid var(--rojo)', onclick: () => { pestana = 'fact'; pintar(); } }, h('div', { class: 'fila' }, h('div', { class: 'nombre', style: 'color:var(--rojo)' }, '⚠️ Debe'), h('div', { class: 'tot-num', style: 'color:var(--rojo)' }, eur(t) + '\u00a0€')), h('div', { class: 'sub' }, n + (n === 1 ? ' factura sin cobrar' : ' facturas sin cobrar') + ' en Golden · toca para verlas'))); }
   function pintar() {
     const kids = [];
+    banDebe.style.display = pestana === 'fact' ? 'none' : ''; if (id) kids.push(banDebe);
     if (id) kids.push(h('div', { class: 'chips' },
       h('button', { class: 'chip' + (pestana === 'datos' ? ' on' : ''), onclick: () => { pestana = 'datos'; pintar(); } }, 'Datos'),
       h('button', { class: 'chip' + (pestana === 'precios' ? ' on' : ''), onclick: () => { pestana = 'precios'; pintar(); } }, 'Precios'),
@@ -7387,7 +7412,7 @@ function vistaCatalogo() {
     try {
       if (!productosCache) { lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); const q = await sb.from('productos').select('*').range(0, 4999); if (q.error) throw q.error; productosCache = q.data.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')); }
       const t = sinTilde(limpiaBusqueda(inp.value));
-      let todos = productosCache.filter(x => !soloActivos || t || x.activo); if (t) todos = todos.filter(x => sinTilde(x.nombre + ' ' + x.codigo).includes(t));
+      let todos = productosCache.filter(x => !soloActivos || t || x.activo); if (t) todos = filtraBusca(todos, t, x => x.nombre + ' ' + x.codigo + ' ' + (Array.isArray(x.alias) ? x.alias.join(' ') : ''));
       if (tabla === 'productos' && productosCache.length && 'iva_origen' in productosCache[0]) {
         const base = productosCache.filter(x => !soloActivos || x.activo);
         const nSin = base.filter(x => ivaEstado(x) === 'sin').length, nRev = base.filter(x => ivaEstado(x) === 'revisar').length;
@@ -8339,7 +8364,7 @@ async function vistaReglasProd() {
     h('thead', {}, h('tr', {}, ...['En la factura del proveedor', 'Se anota en la app', 'Sale en el albarán', 'Se pone en Golden'].map(t => h('th', { style: 'text-align:left;font-size:12px;padding:6px;background:#166534;color:#fff' }, t)))),
     h('tbody', {}, ...filas.map(([prov, c]) => { const p = P(c); return h('tr', {}, celda(prov), celda(h('span', {}, h('b', {}, p.codigo), ' ', p.nombre)), celda(p.nombre_albaran || p.nombre), celda(h('span', {}, h('b', {}, p.codigo), ' · ', golden(p)), ';background:#fef9c3')); }))));
   const bus = h('input', { placeholder: 'Buscar producto o código…' }); const res = h('div', {});
-  const pintaRes = () => { const t = sinTilde(bus.value.toLowerCase().trim()); const l = (t ? prods.filter(p => sinTilde((p.codigo + ' ' + p.nombre + ' ' + (p.nombre_albaran || '')).toLowerCase()).includes(t)) : prods).slice(0, 60);
+  const pintaRes = () => { const t = sinTilde(bus.value.toLowerCase().trim()); const l = filtraBusca(prods, t, p => p.codigo + ' ' + p.nombre + ' ' + (p.nombre_albaran || '')).slice(0, 60);
     res.replaceChildren(...l.map(p => h('div', { class: 'fila', style: 'padding:6px 2px;border-bottom:1px solid var(--borde)' }, h('div', {}, h('b', {}, p.codigo), ' · ', p.nombre, p.nombre_albaran && p.nombre_albaran !== p.nombre ? h('div', { class: 'sub' }, 'En el albarán: ' + p.nombre_albaran) : null), h('span', { class: 'sub' }, p.unidad_venta || '')))); };
   bus.addEventListener('input', debounce(pintaRes, 200));
   cont.replaceChildren(
@@ -9096,7 +9121,7 @@ function panelFormatosCV(cont) {
     const nR = prods.filter(P => det.sosp[P.id]).length;
     chips.replaceChildren(...[['revisar', '⚠️ Revisar (' + nR + ')'], ['todos', 'Todos'], ['nokg', 'No van por kg']].map(([k, t]) => h('button', { class: 'chip' + (filtro === k ? ' on' : ''), onclick: () => { filtro = k; LS.set('fj_fcv_filtro', k); pinta(); } }, t)));
     const t = sinTilde(limpiaBusqueda(busca.value || ''));
-    let L = prods.filter(P => !t || sinTilde(P.nombre + ' ' + P.codigo).includes(t));
+    let L = filtraBusca(prods, t || '', P => P.nombre + ' ' + P.codigo);
     if (!t) L = L.filter(P => filtro === 'todos' || (filtro === 'nokg' ? (P.unidad_venta !== 'kg' || P.unidad_compra) : !!det.sosp[P.id]));
     lista.replaceChildren(h('div', { class: 'sub', style: 'margin:6px 0' }, L.length + ' producto(s)' + (filtro === 'revisar' && !t ? ' para revisar' : '')), ...L.slice(0, 120).map(P => {
       const ss = det.sosp[P.id] || [], ed = editorFormato(P, () => { delete det.sosp[P.id]; });
@@ -10682,7 +10707,7 @@ function waPanelFormatos(cont, ctx) {
     /* 1. formatos por producto */
     kids.push(h('h3', {}, '1. Formatos de cada producto'), h('div', { class: 'sub' }, 'Para cada producto, qué formatos se venden (saco, caja, bolsa…) y cuánto pesan de forma estimada. El peso estimado nunca se usa como peso real.'));
     const busca = h('input', { placeholder: 'Buscar producto…' }); const res = h('div', {});
-    busca.oninput = debounce(() => { const t = sinTilde(limpiaBusqueda(busca.value)); if (!t) { res.replaceChildren(); return; } const r = ctx.prods.filter(p => t.split(/\s+/).every(w => sinTilde(p.nombre + ' ' + p.codigo).includes(w))).slice(0, 8); res.replaceChildren(h('div', { class: 'res' }, r.map(p => h('button', { onclick: () => { st.prod = p; st.edit = null; pintar(); } }, p.nombre + ' · ' + p.codigo)))); }, 200);
+    busca.oninput = debounce(() => { const t = sinTilde(limpiaBusqueda(busca.value)); if (!t) { res.replaceChildren(); return; } const r = filtraBusca(ctx.prods, t, p => p.nombre + ' ' + p.codigo).slice(0, 8); res.replaceChildren(h('div', { class: 'res' }, r.map(p => h('button', { onclick: () => { st.prod = p; st.edit = null; pintar(); } }, p.nombre + ' · ' + p.codigo)))); }, 200);
     kids.push(busca, res);
     if (st.prod) {
       const P = st.prod; const lista = waFmtList(P.id); const e = st.edit;
@@ -10703,7 +10728,7 @@ function waPanelFormatos(cont, ctx) {
     /* 2. formato habitual por cliente */
     kids.push(h('h3', { style: 'margin-top:18px' }, '2. Formato habitual de cada cliente'), h('div', { class: 'sub' }, 'Se aprende solo al confirmar pedidos. Aquí puedes verlo y quitarlo.'));
     const bc = h('input', { placeholder: 'Buscar cliente…' }); const rc = h('div', {});
-    bc.oninput = debounce(() => { const t = sinTilde(limpiaBusqueda(bc.value)); if (!t) { rc.replaceChildren(); return; } const r = ctx.clis.filter(c => t.split(/\s+/).every(w => sinTilde(nombreCli(c) + ' ' + c.nombre + ' ' + c.codigo).includes(w))).slice(0, 8); rc.replaceChildren(h('div', { class: 'res' }, r.map(c => h('button', { onclick: async () => { st.cli = c; await waCliCargar(c.id); pintar(); } }, nombreCli(c) + ' · ' + c.codigo)))); }, 200);
+    bc.oninput = debounce(() => { const t = sinTilde(limpiaBusqueda(bc.value)); if (!t) { rc.replaceChildren(); return; } const r = filtraBusca(ctx.clis, t, c => nombreCli(c) + ' ' + c.nombre + ' ' + c.codigo).slice(0, 8); rc.replaceChildren(h('div', { class: 'res' }, r.map(c => h('button', { onclick: async () => { st.cli = c; await waCliCargar(c.id); pintar(); } }, nombreCli(c) + ' · ' + c.codigo)))); }, 200);
     kids.push(bc, rc);
     if (st.cli) {
       const filas = Object.keys(WAMEM.cli).map(k => WAMEM.cli[k]).filter(x => x.cliente_id === st.cli.id);
@@ -13354,7 +13379,7 @@ async function h2TarifaProductos(L, alGuardar) {
   const elegidos = new Set(); const res = h('div', { style: 'max-height:55vh;overflow:auto' }); const bG = h('button', { class: 'guardar', style: 'width:100%;min-height:52px;margin-top:8px' });
   const pintaB = () => { bG.textContent = '💾 Guardar productos (' + elegidos.size + ')'; bG.disabled = !elegidos.size; };
   const inp = comInput('text', '', { placeholder: 'Busca: pera, banana, patata…' });
-  const pinta = () => { const t = sinTilde(inp.value.trim().toLowerCase()); const lista = (r.data || []).filter(p => !t || sinTilde((p.nombre + ' ' + p.codigo).toLowerCase()).includes(t)).slice(0, 80);
+  const pinta = () => { const t = sinTilde(inp.value.trim().toLowerCase()); const lista = filtraBusca(r.data || [], t, p => p.nombre + ' ' + p.codigo).slice(0, 80);
     res.replaceChildren(...lista.map(p => { const dentro = enLista.has(p.id); const ck = h('input', { type: 'checkbox', checked: dentro || elegidos.has(p.id), disabled: dentro, onchange: e => { e.target.checked ? elegidos.add(p.id) : elegidos.delete(p.id); pintaB(); } });
       return h('label', { class: 'card', style: 'display:flex;gap:8px;align-items:center;padding:8px 10px;margin:4px 0' + (dentro ? ';opacity:.6' : '') }, ck, h('span', {}, h('b', {}, p.nombre), h('span', { class: 'sub' }, ' · ' + p.codigo + (dentro ? ' · ya está en la lista' : '')))); })); };
   inp.addEventListener('input', debounce(pinta, 200));
@@ -13536,7 +13561,7 @@ function aplicarCompartido() {
 function buscarCliLocal(clis, texto) {
   const t = sinTilde(limpiaBusqueda(texto)); if (!t) return [];
   const act = (a, b) => (b.activo ? 1 : 0) - (a.activo ? 1 : 0);
-  const ex = clis.filter(c => t.split(/\s+/).every(w => sinTilde([c.nombre, c.nombre_comercial, c.codigo].filter(Boolean).join(' ')).includes(w))).sort(act);
+  const ex = clis.filter(c => buscaPuntos([c.nombre, c.nombre_comercial, c.codigo].filter(Boolean).join(' '), t) === 2).sort(act);
   if (ex.length >= 12) return ex.slice(0, 12);
   let dif = [];
   try {
@@ -13699,7 +13724,7 @@ function vistaRapido() {
       const t = sinTilde(limpiaBusqueda(inp.value)); if (!t) { res.replaceChildren(); return; }
       if (!R.prods) { try { R.prods = await waProductos(); } catch (e) { res.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para buscar productos.' : msgErr(e))); return; } }
       const hist = {}; ((R.mem && R.mem.items) || []).forEach(i => { hist[i.p.id] = i.n; });
-      const r = R.prods.filter(p => p.activo !== false && t.split(/\s+/).every(w => sinTilde(p.nombre + ' ' + p.codigo + ' ' + (Array.isArray(p.alias) ? p.alias.join(' ') : '')).includes(w))).sort((a, b) => (hist[b.id] || 0) - (hist[a.id] || 0) || a.nombre.localeCompare(b.nombre, 'es')).slice(0, 8);
+      const r = filtraBusca(R.prods.filter(p => p.activo !== false), t, p => p.nombre + ' ' + p.codigo + ' ' + (Array.isArray(p.alias) ? p.alias.join(' ') : '')).sort((a, b) => (hist[b.id] || 0) - (hist[a.id] || 0) || a.nombre.localeCompare(b.nombre, 'es')).slice(0, 8);
       res.replaceChildren(r.length ? h('div', { class: 'res' }, r.map(p => h('button', { style: 'min-height:48px;font-size:16px', onclick: () => añadirProd(p) }, (hist[p.id] ? '★ ' : '') + p.nombre + '  ·  ' + p.codigo))) : h('p', { class: 'sub' }, 'Ningún producto activo con ese nombre.'));
     }, 120) });
     masBox.replaceChildren(inp, res);
@@ -13971,7 +13996,7 @@ function vistaImportar() {
       if (l.estado === 'ambiguo' || l.estado === 'noenc' || l.estado === 'dudoso' || l.cambiando) {
         if (l.cand && l.cand.length) kids.push(h('div', { class: 'sub' }, l.estado === 'ambiguo' ? 'Varias opciones parecidas:' : 'Opciones parecidas:'), h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:4px 0' }, l.cand.slice().sort((a, b) => l.estado === 'ambiguo' ? ((S.hist[b.p.id] || 0) - (S.hist[a.p.id] || 0) || b.score - a.score) : 0).map(c => h('button', { class: 'chip' + (l.producto && l.producto.id === c.p.id ? ' on' : ''), onclick: () => { asigna(l, c.p, true); l.cambiando = false; ponPrecios(); pintarLineas(); pintarPie(); } }, (S.hist[c.p.id] ? '★ ' : '') + c.p.nombre + (c.p.activo === false ? ' (inactivo)' : ''))), ...(Object.keys(S.hist).length && l.cand.some(c => S.hist[c.p.id]) ? [h('div', { class: 'sub' }, '★ = este cliente ya lo ha pedido antes')] : [])));
         const res = h('div', {}); const bi = h('input', { placeholder: 'Buscar otro producto…', oninput: debounce(() => { const t = sinTilde(limpiaBusqueda(bi.value)); if (!t) { res.replaceChildren(); return; }
-          const r = (S.prods || []).filter(p => t.split(/\s+/).every(w => sinTilde(p.nombre + ' ' + p.codigo).includes(w))).sort((a, b) => (b.activo ? 1 : 0) - (a.activo ? 1 : 0)).slice(0, 10);
+          const r = filtraBusca(S.prods || [], t, p => p.nombre + ' ' + p.codigo).sort((a, b) => (b.activo ? 1 : 0) - (a.activo ? 1 : 0)).slice(0, 10);
           res.replaceChildren(r.length ? h('div', { class: 'res' }, r.map(p => h('button', { onclick: () => { asigna(l, p, true); l.cambiando = false; ponPrecios(); pintarLineas(); pintarPie(); } }, p.nombre + ' · ' + p.codigo + (p.activo ? '' : ' (inactivo)')))) : h('p', { class: 'sub' }, 'Sin resultados.')); }, 200) });
         kids.push(bi, res);
       } else kids.push(h('button', { class: 'ghost small', onclick: () => { l.cambiando = true; pintarLineas(); } }, 'Cambiar producto'));
@@ -15463,7 +15488,7 @@ function vistaBuscar() {
   const inp = h('input', { type: 'search', placeholder: '🔍 Florencio, tomate pera, F 5723…', autocomplete: 'off', oninput: debounce(() => buscarTodo(inp.value), 300) });
   inp.value = (state.params && state.params.q) || '';
   $app.replaceChildren(shell('Buscar', h('div', {}, inp, info, res), { volver: volverIni })); renderBanner();
-  const f = (a, t) => { const x = sinTilde([a.nombre, a.nombre_comercial, a.codigo].filter(Boolean).join(' ')); return t.split(/\s+/).every(w => x.includes(w) || (w.length > 3 && w.endsWith('s') && (x.includes(w.slice(0, -1)) || (w.endsWith('es') && x.includes(w.slice(0, -2)))))); };
+  const txtB = a => [a.nombre, a.nombre_comercial, a.codigo].concat(Array.isArray(a.alias) ? a.alias : []).filter(Boolean).join(' ');
   const grupo = (titulo, filas, mas) => filas.length ? h('div', {}, h('div', { class: 'letra' }, titulo + ' (' + filas.length + (mas ? '+' : '') + ')'), ...filas) : null;
   const fila = (t1, t2, onclick, badge) => h('div', { class: 'card tap', onclick }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:16px' }, t1), t2 ? h('div', { class: 'sub' }, t2) : null), badge ? h('span', { class: 'badge' }, badge) : null));
   const nc = c => nombreCli(c);
@@ -15490,9 +15515,9 @@ function vistaBuscar() {
     info.textContent = 'Buscando…';
     try {
       const base = await bgCargarBase(); if (mi !== seq) return;
-      const cl = base.clientes.filter(c => f(c, tn)).sort((a, b) => (b.activo ? 1 : 0) - (a.activo ? 1 : 0)).slice(0, 30);
-      const pd = base.productos.filter(p => f(p, tn)).sort((a, b) => (b.activo ? 1 : 0) - (a.activo ? 1 : 0)).slice(0, 30);
-      const pv = base.proveedores.filter(p => f(p, tn)).slice(0, 20);
+      const cl = filtraBusca(base.clientes, tn, txtB).sort((a, b) => (b.activo ? 1 : 0) - (a.activo ? 1 : 0)).slice(0, 30);
+      const pd = filtraBusca(base.productos, tn, txtB).sort((a, b) => (b.activo ? 1 : 0) - (a.activo ? 1 : 0)).slice(0, 30);
+      const pv = filtraBusca(base.proveedores, tn, txtB).slice(0, 20);
       const idC = cl.map(c => c.id), idP = pd.map(p => p.id), idV = pv.map(p => p.id); const mapC = Object.fromEntries(base.clientes.map(c => [c.id, c])), mapP = Object.fromEntries(base.productos.map(p => [p.id, p]));
       const dig = (t.match(/\d+/g) || []).join(''); const numero = /^(f\s*)?\d{3,}$/.test(t) ? Number(dig) : null;
       const q = [];
