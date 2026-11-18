@@ -9918,7 +9918,8 @@ const nomProvG = (cod, n) => (n || cod) + (PROV_ALIAS[cod] ? ' (' + PROV_ALIAS[c
 /* ---------- Rentabilidad ---------- */
 function vistaRentabilidad() {
   state.view = 'rentabilidad'; if (!veMargenes()) { go('inicio'); return; }
-  let hasta = hoy(), desde = hasta.slice(0, 8) + '01', modo = LS.get('fj_rent_modo', 'producto'), R = null;
+  let hasta = hoy(), desde = hasta.slice(0, 8) + '01', modo = LS.get('fj_rent_modo', 'producto'), R = null, fuente = LS.get('fj_rent_fuente', 'golden');  // Golden mientras la app no se use de verdad (Fernando, 18/11/2026)
+  const chipsF = h('div', { class: 'chips' });
   const cont = h('div', {}), chipsM = h('div', { class: 'chips' }), chipsP = h('div', { class: 'chips' }), res = h('div', {});
   const suma = (a, k) => a.reduce((s, x) => s + x[k], 0), r2 = n => Math.round(n * 100) / 100;
   const dd = (iso, n) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return hoy(d); };
@@ -9926,10 +9927,17 @@ function vistaRentabilidad() {
   const inpD = h('input', { type: 'date', value: desde, onchange: e => { desde = e.target.value || desde; cargar(); } }), inpH = h('input', { type: 'date', value: hasta, onchange: e => { hasta = e.target.value || hasta; cargar(); } });
   const periodos = [['Hoy', () => { desde = hasta = hoy(); }], ['7 días', () => { hasta = hoy(); desde = dd(hasta, -6); }], ['Este mes', () => { hasta = hoy(); desde = hasta.slice(0, 8) + '01'; }], ['Este año', () => { hasta = hoy(); desde = hasta.slice(0, 5) + '01-01'; }]];
   const pintarChips = () => { chipsM.replaceChildren(...[['producto', 'Productos'], ['cliente', 'Clientes'], ['perdidas', 'Pérdidas'], ['dia', 'Por día']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_rent_modo', m); pintarChips(); pintar(); } }, n)));
+    chipsF.replaceChildren(...[['golden', '📚 Golden (real)'], ['app', '📱 Pedidos de la app']].map(([f, n]) => h('button', { class: 'chip' + (fuente === f ? ' on' : ''), onclick: () => { fuente = f; LS.set('fj_rent_fuente', f); pintarChips(); cargar(); } }, n)));
     chipsP.replaceChildren(...periodos.map(([n, f]) => h('button', { class: 'chip', onclick: () => { f(); inpD.value = desde; inpH.value = hasta; cargar(); } }, n))); };
   async function cargar() {
     res.replaceChildren(h('p', { class: 'vacio' }, 'Calculando…'));
     try {
+      if (fuente === 'golden') {
+        const g = await sb.rpc('golden_rentabilidad', { p_desde: desde, p_hasta: hasta }); if (g.error) throw g.error; const d = g.data || {};
+        const mapa = (a, nom) => { const o = {}; (a || []).forEach(x => { o[x.k] = { n: nom(x), venta: Number(x.venta || 0), vc: Number(x.vc || 0), coste: Number(x.coste || 0), cant: Number(x.cant || 0) }; }); return o; };
+        const P = mapa(d.p, x => x.n || x.k), C = mapa(d.c, x => x.n || x.k), D = mapa(d.d, x => fechaES(x.k));
+        R = { P, C, D, golden: true, perd: (d.perd || []).map(x => ({ producto: x.producto, cliente: x.cliente, fecha: x.fecha, precio: Number(x.precio), coste: Number(x.coste_u), kg: Number(x.kg), perdida: Number(x.perdida) })), provisionales: 0, pedidos: Number(d.facturas || 0), venta: r2(Object.values(P).reduce((s, x) => s + x.venta, 0)) }; pintar(); return;
+      }
       const pe = await sb.from('pedidos').select('id,cliente_id,fecha_entrega,clientes(nombre,nombre_comercial)').eq('estado', 'terminado').gte('fecha_entrega', desde).lt('fecha_entrega', dd(hasta, 1)).neq('archivado', true).range(0, 4999); if (pe.error) throw pe.error;
       const info = {}; pe.data.forEach(p => info[p.id] = p); const ids = Object.keys(info); let ls = [];
       for (let i = 0; i < ids.length; i += 150) { const r = await sb.from('lineas_pedido').select('pedido_id,producto_id,peso_real,precio,productos(codigo,nombre,coste_compra,unidad_precio)').in('pedido_id', ids.slice(i, i + 150)); if (r.error) throw r.error; ls = ls.concat(r.data); }
@@ -9956,10 +9964,11 @@ function vistaRentabilidad() {
     if (!R) return; const kids = [];
     const vc = r2(Object.values(R.P).reduce((s, x) => s + x.vc, 0)), co = r2(Object.values(R.P).reduce((s, x) => s + x.coste, 0)), m = r2(vc - co);
     kids.push(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', { class: 'nombre' }, 'Facturación (sin IVA)'), h('div', { class: 'tot-num' }, eur(R.venta) + '\u00a0€')),
-      h('div', { class: 'sub' }, R.pedidos + ' pedidos terminados · ticket medio ' + eur(R.pedidos ? r2(R.venta / R.pedidos) : 0) + '\u00a0€'),
+      h('div', { class: 'sub' }, R.pedidos + (R.golden ? ' facturas de Golden · media por factura ' : ' pedidos terminados · ticket medio ') + eur(R.pedidos ? r2(R.venta / R.pedidos) : 0) + '\u00a0€'),
       h('div', { class: 'sub' }, vc ? 'Margen sobre lo que tiene coste: ' + (m >= 0 ? '+' : '') + eur(m) + '\u00a0€ (' + pct(m, vc) + ' %)' : 'Aún no hay costes para calcular márgenes.')));
-    kids.push(h('div', { class: 'sub', style: 'margin:4px 0 8px' }, 'Cada venta se compara con la compra de su mismo día (factura leída, lote o precio del mercado).' + (R.provisionales ? ' ⏳ ' + R.provisionales + ' línea(s) con coste provisional porque aún no ha llegado la factura de ese día: se corrigen solas cuando llegue.' : ' ✔ Todas con la compra de su día.')));
-    if (R.venta - vc > 0.5) kids.push(h('div', { class: 'aviso-card' }, 'Para que haya margen hace falta coste: registra las compras con precio por kg, o escribe el "Coste €/kg" de cada producto en la pestaña Productos.'));
+    if (R.golden) kids.push(h('div', { class: 'sub', style: 'margin:4px 0 8px' }, 'Datos reales de Golden: cada línea de factura con su coste (el del «Listado de beneficios»). Se ponen al día solos cada mañana.'));
+    else kids.push(h('div', { class: 'sub', style: 'margin:4px 0 8px' }, 'Cada venta se compara con la compra de su mismo día (factura leída, lote o precio del mercado).' + (R.provisionales ? ' ⏳ ' + R.provisionales + ' línea(s) con coste provisional porque aún no ha llegado la factura de ese día: se corrigen solas cuando llegue.' : ' ✔ Todas con la compra de su día.')));
+    if (!R.golden && R.venta - vc > 0.5) kids.push(h('div', { class: 'aviso-card' }, 'Para que haya margen hace falta coste: registra las compras con precio por kg, o escribe el "Coste €/kg" de cada producto en la pestaña Productos.'));
     if (modo === 'producto' || modo === 'cliente') {
       const o = Object.values(modo === 'producto' ? R.P : R.C).sort((a, b) => b.venta - a.venta); o.slice(0, 80).forEach(x => kids.push(fila(x))); if (!o.length) kids.push(h('p', { class: 'vacio' }, 'No hay ventas en estas fechas.'));
     } else if (modo === 'perdidas') {
@@ -9969,7 +9978,7 @@ function vistaRentabilidad() {
     } else Object.keys(R.D).sort().reverse().forEach(k => { const x = R.D[k]; kids.push(h('div', { class: 'card fila' }, h('div', { class: 'nombre', style: 'font-size:16px' }, x.n), h('div', { style: 'text-align:right' }, h('b', {}, eur(r2(x.venta)) + '\u00a0€'), x.vc ? h('div', { class: 'sub' }, 'margen ' + eur(r2(x.vc - x.coste)) + '\u00a0€') : null))); });
     res.replaceChildren(...kids);
   }
-  cont.append(chipsP, h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px' }, h('label', { class: 'campo' }, 'Desde', inpD), h('label', { class: 'campo' }, 'Hasta', inpH)), chipsM, res);
+  cont.append(chipsF, chipsP, h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px' }, h('label', { class: 'campo' }, 'Desde', inpD), h('label', { class: 'campo' }, 'Hasta', inpH)), chipsM, res);
   $app.replaceChildren(shell('Rentabilidad', cont, { volver: volverIni })); renderBanner(); pintarChips(); cargar();
 }
 
@@ -9993,8 +10002,9 @@ function vistaGoldenMargen() {
     try {
       if (modo === 'cobros' || modo === 'pagos') {
         const ts = await gesTodas(() => sb.from('golden_tesoreria').select('codigo,nombre,vencimiento,total,serie,numero').eq('tipo', modo === 'cobros' ? 'C' : 'P').eq('estado', 'PEN').order('vencimiento'));
-        if (yo !== pide) return; const por = {}, hoyS = hoy(); let suma = 0, vencido = 0;
-        ts.forEach(t => { const x = por[t.codigo] = por[t.codigo] || { n: nomProvG(t.codigo, t.nombre), t: 0, v: 0, ls: [] }; const im = Number(t.total || 0); x.t += im; x.ls.push(t); suma += im; if (t.vencimiento && t.vencimiento < hoyS) { x.v += im; vencido += im; } });
+        if (yo !== pide) return; const por = {}, hoyS = hoy(); let suma = 0, vencido = 0; const comerc = {};
+        if (modo === 'cobros') { const cs = await sb.from('clientes').select('codigo,nombre_comercial').in('codigo', [...new Set(ts.map(t => t.codigo))]); (cs.data || []).forEach(c => { if (c.nombre_comercial) comerc[c.codigo] = c.nombre_comercial; }); if (yo !== pide) return; }  // nombre normal, no el de la empresa (Fernando, 18/11/2026)
+        ts.forEach(t => { const x = por[t.codigo] = por[t.codigo] || { n: comerc[t.codigo] || nomProvG(t.codigo, t.nombre), t: 0, v: 0, ls: [] }; const im = Number(t.total || 0); x.t += im; x.ls.push(t); suma += im; if (t.vencimiento && t.vencimiento < hoyS) { x.v += im; vencido += im; } });
         tot.replaceChildren(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', { class: 'nombre' }, modo === 'cobros' ? 'Nos deben (pendiente de cobro)' : 'Debemos (pendiente de pago)'), h('div', { class: 'tot-num' }, eur(suma) + ' €')),
           h('div', { class: 'sub' }, ts.length + ' vencimientos · ya vencido ' + eur(vencido) + ' € · todo lo pendiente en Golden, sin mirar las fechas de arriba')));
         const o = Object.values(por).sort((a, b) => b.t - a.t);
