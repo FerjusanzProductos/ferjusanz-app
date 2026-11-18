@@ -1013,6 +1013,7 @@ function isNetErr(e) {
   return e.name === 'TypeError' || m.includes('fetch') || m.includes('network') || m.includes('load failed') || m.includes('internet');
 }
 const esOficina = () => !!state.perfil && ['oficina', 'admin'].includes(state.perfil.rol);
+const veMargenes = () => !!state.perfil && !!state.perfil.ve_margenes;
 const ESTADO = { pendiente: 'Pendiente', en_preparacion: 'En preparación', terminado: 'Terminado', anulado: 'Anulado' };
 const CLASE_ESTADO = { pendiente: 'pend', en_preparacion: 'prep', terminado: 'fin', anulado: 'pend', previsto: 'prev' };
 ESTADO.previsto = 'Previsto';
@@ -1356,6 +1357,7 @@ async function cargarPerfil(user) {
   const { data, error } = await sb.from('perfiles').select('id,nombre,rol,activo').eq('id', user.id).maybeSingle();
   if (error && isNetErr(error)) { const p = LS.get('fj_perfil', null); state.perfil = p && p.id === user.id ? p : null; return; }
   state.perfil = data && data.activo ? data : null;
+  if (state.perfil) { const vm = await sb.from('ver_margenes').select('user_id').eq('user_id', user.id).maybeSingle(); state.perfil.ve_margenes = !!(vm && vm.data); }  // margen y rentabilidad: solo los de la lista (Fernando, 18/11/2026)
   LS.set('fj_perfil', state.perfil);
 }
 function vistaLogin() {
@@ -5854,7 +5856,7 @@ function vistaMas() {
     ...g('Entregas y pedidos', c('🚦', 'Camino de los pedidos', () => go('camino'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a')),
     ...g('Compras y mercancía', puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Clientes y productos', c('👥', 'Clientes', () => { window.__cliFiscal = false; go('clientes'); }, Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z), c('📇', 'Tarjeta para clientes', hojaTarjeta, Z)),
-    ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() && FACTURAR_APP ? c('🧾', 'Facturas (desde la app) · PRUEBAS', () => go('facturasapp'), Z) : null, esOficina() ? c('🏢', 'Datos de la empresa', () => go('empresa'), Z) : null, esOficina() ? c('🧾', 'Clientes sin datos para facturar', () => { window.__cliFiscal = true; go('clientes'); }, Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen y correo', () => go('resumen'), Z) : null, esOficina() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, esOficina() ? c('💶', 'Margen y cobros (Golden)', () => go('goldenmargen'), Z) : null, esOficina() && CAJA_APP ? c('💵', 'Caja (efectivo)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('caja'), Z) : null, esOficina() && BANCO_APP ? c('🏦', 'Banco' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('banco'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
+    ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() && FACTURAR_APP ? c('🧾', 'Facturas (desde la app) · PRUEBAS', () => go('facturasapp'), Z) : null, esOficina() ? c('🏢', 'Datos de la empresa', () => go('empresa'), Z) : null, esOficina() ? c('🧾', 'Clientes sin datos para facturar', () => { window.__cliFiscal = true; go('clientes'); }, Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen y correo', () => go('resumen'), Z) : null, veMargenes() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, veMargenes() ? c('💶', 'Margen y cobros (Golden)', () => go('goldenmargen'), Z) : null, esOficina() && CAJA_APP ? c('💵', 'Caja (efectivo)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('caja'), Z) : null, esOficina() && BANCO_APP ? c('🏦', 'Banco' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('banco'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('❓', 'Ayuda y guía', () => go('ayuda'), T), c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
@@ -9820,7 +9822,7 @@ function vistaRuta() {
 
 /* ---------- Rentabilidad ---------- */
 function vistaRentabilidad() {
-  state.view = 'rentabilidad'; if (!esOficina()) { go('inicio'); return; }
+  state.view = 'rentabilidad'; if (!veMargenes()) { go('inicio'); return; }
   let hasta = hoy(), desde = hasta.slice(0, 8) + '01', modo = LS.get('fj_rent_modo', 'producto'), R = null;
   const cont = h('div', {}), chipsM = h('div', { class: 'chips' }), chipsP = h('div', { class: 'chips' }), res = h('div', {});
   const suma = (a, k) => a.reduce((s, x) => s + x[k], 0), r2 = n => Math.round(n * 100) / 100;
@@ -9878,7 +9880,7 @@ function vistaRentabilidad() {
 
 /* ---------- Margen, compras y cobros de Golden (solo consulta; lo real hasta que la app se use de verdad) ---------- */
 function vistaGoldenMargen() {
-  state.view = 'goldenmargen'; if (!esOficina()) { go('inicio'); return; }
+  state.view = 'goldenmargen'; if (!veMargenes()) { go('inicio'); return; }
   let hasta = hoy(), desde = hasta.slice(0, 5) + '01-01', modo = LS.get('fj_gm_modo', 'producto'), pide = 0;
   const res = h('div', {}), chipsM = h('div', { class: 'chips' }), chipsP = h('div', { class: 'chips' }), tot = h('div', {});
   const pct = (m, v) => v > 0 ? (Math.round(m / v * 1000) / 10).toLocaleString('es-ES') + ' %' : '';
@@ -15224,8 +15226,8 @@ const BUSCA_PANTALLAS = [
   ['🗂️', 'Histórico de Golden', 'historico golden ventas antiguas', () => go('golden'), 'o'],
   ['📊', 'Resumen del día y correo', 'resumen ventas totales numeros informe correo email gmail manana visitas web', () => go('resumen'), 'o'],
   ['📈', 'Mercado (precios de los Mercas y noticias)', 'mercado mercas mercamadrid noticias semanal precios mercado', () => go('resumen'), 'o'],
-  ['📈', 'Rentabilidad', 'rentabilidad ganancia beneficio margen ganamos perdemos', () => go('rentabilidad'), 'o'],
-  ['💶', 'Margen y cobros (Golden)', 'margen beneficio coste golden compras proveedores cobros pagos pendientes deben debemos tesoreria', () => go('goldenmargen'), 'o'],
+  ['📈', 'Rentabilidad', 'rentabilidad ganancia beneficio margen ganamos perdemos', () => go('rentabilidad'), 'm'],
+  ['💶', 'Margen y cobros (Golden)', 'margen beneficio coste golden compras proveedores cobros pagos pendientes deben debemos tesoreria', () => go('goldenmargen'), 'm'],
   ['🤝', 'Comercial', 'comercial listas precios recomendaciones guiones web seo', () => go('comercial'), 'o'],
   ['🤵', 'Harvey · a quién escribir hoy', 'harvey whatsapp escribir clientes mensajes leads comercial', () => { LS.set('fj_h2_sub', 'hoy'); go('comercial', { tab: 'harvey' }); }, 'o'],
   ['📄', 'Listas de precios', 'listas lista precios tarifa oferta pdf', () => go('comercial', { tab: 'listas' }), 'o'],
@@ -15244,7 +15246,7 @@ const BUSCA_PANTALLAS = [
   ['📥', 'Importar pedido', 'importar pegar texto pedido', () => go('importar'), 'o']
 ];
 function buscaPantallas(t) {
-  const ok = x => !x[4] || (x[4] === 'o' ? esOficina() : puedeCompras());
+  const ok = x => !x[4] || (x[4] === 'o' ? esOficina() : x[4] === 'm' ? veMargenes() : puedeCompras());
   const ws = palabrasPantalla(t); if (!ws.length) return [];
   const pal = s => sinTilde(s.toLowerCase()).split(/[\s()·]+/).filter(Boolean);
   const raiz = w => w.replace(/(es|s)$/, '');
