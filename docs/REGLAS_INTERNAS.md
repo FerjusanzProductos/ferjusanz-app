@@ -179,6 +179,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Si el justificante llega después (gasolina…), se apunta igual y se añade luego: queda marcado con la fecha y quién.
 - **Un apunte de caja nunca se borra**: se corrige o se anula, siempre con motivo. Todo queda registrado y sale en el informe de Jorge.
 - Con empresas o autónomos, nada en efectivo si la operación llega a **1.000 €** (Ley 7/2012): la app avisa.
+- **La caja puede quedar en negativo** (Fernando, 18/11/2026: «a veces es necesario»): la app **no lo bloquea**. No volver a proponerlo.
 
 ## Datos de clientes y proveedores: manda Golden (Fernando, 18/11/2026)
 - Lo que dice **Golden** (NIF, razón social, dirección, código) **manda** sobre lo buscado en internet por el nombre y sobre las **fichas provisionales** que puso Fernando sin Golden (código «Falta poner N», «Por poner…», NIF «FALTA PONER»).
