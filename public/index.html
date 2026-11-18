@@ -12845,7 +12845,7 @@ async function presExpandir(slides, conLista) {
       for (let i = 0; i < it.length; i += N) out.push(Object.assign({}, d, { items: it.slice(i, i + N), conFoto })); continue; }
     if (d.t === 'ofertas') {
       if (!recs) { try { const dia = hoy(); const r = await sb.from('recomendaciones').select('*').order('orden').order('created_at'); recs = (r.data || []).filter(x => x.activa !== false && (!x.desde || x.desde <= dia) && (!x.hasta || x.hasta >= dia)); } catch (e) { recs = []; } }
-      out.push(Object.assign({}, d, { items: recs.slice(0, 5).map(x => ({ n: x.titulo, t: x.texto || '' })) })); continue; }
+      out.push(Object.assign({}, d, { items: recs.slice(0, 5).map(x => ({ n: x.titulo, t: presSinIva(x.texto) })) })); continue; }
     if (d.t !== 'precios') { out.push(d); continue; }
     let items = [], aviso = '';
     let lid = d.lista_id;
@@ -12860,6 +12860,8 @@ async function presExpandir(slides, conLista) {
   }
   return out;
 }
+/* En la presentación, sin las frases del IVA ni el ejemplo (Tito, 18/11/2026: «no se acaba la frase. Quita lo de IVA ahí»). */
+const presSinIva = t => String(t || '').split(/(?<=\.)\s+/).filter(f => !/\bIVA\b|ejemplo/i.test(f)).join(' ').trim();
 const presPrecio = (p, u) => Number(p).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 3 }).replace(/(,\d\d)0$/, '$1') + ' € / ' + (u || 'kg');
 /* ===== Presentación dibujada como imágenes (16/11/2026, Fernando: «parece un PowerPoint de primaria; hazlo muchísimo mejor») =====
    Cada hoja se pinta en un lienzo de 1500×1061 (proporción A4 apaisado) con fotos a sangre, degradados y las letras de la web
@@ -12937,7 +12939,7 @@ async function presLienzos(laminas) {
     }
     else if (d.t === 'ofertas') {
       kicker('ESTA SEMANA', M, 150); let y = titulo(d.titulo, M, 250, W - 2 * M, VO, 86, 1) + 60;
-      d.items.slice(0, 5).forEach(x => { sombra(() => { rr(M, y, W - 2 * M, 118, 22); c.fillStyle = '#ffffff'; c.fill(); }); c.fillStyle = AM; c.fillRect(M, y + 20, 8, 78); texto(String(x.n || '').toUpperCase(), M + 40, y + 52, FT(40), VO); c.font = FR(24); texto(parte(x.t || '', W - 2 * M - 80)[0] || '', M + 40, y + 92, FR(24), GR); y += 140; });
+      d.items.slice(0, 5).forEach(x => { sombra(() => { rr(M, y, W - 2 * M, 118, 22); c.fillStyle = '#ffffff'; c.fill(); }); c.fillStyle = AM; c.fillRect(M, y + 20, 8, 78); texto(String(x.n || '').toUpperCase(), M + 40, y + 52, FT(40), VO); c.font = FR(24); const L = parte(x.t || '', W - 2 * M - 80); texto((L[0] || '') + (L.length > 1 ? '…' : ''), M + 40, y + 92, FR(24), GR); y += 132; });
     }
     else if (d.t === 'productos' && d.conFoto) {
       kicker('PRODUCTO', M, 150); titulo(d.titulo, M, 250, W - 2 * M, VO, 86, 1);
