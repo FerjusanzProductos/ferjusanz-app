@@ -9,3 +9,6 @@ Encargo de Fernando: «a los clientes que no tengan correo o teléfono envíales
   - 7 a correos que ya estaban en su ficha (les falta el teléfono): CAEL93, CLARA, DOCU, EL21, FIGAL, L-EVROPE, ORGAZ.
 - **Sin correo público** (unos 140): no se les manda nada; en la pestaña salen como «📞 Sin correo público: llamar».
 - **Dudas que mirar**: ARROZ (en internet solo existe en otra dirección), CARDENAL y Las Musas (los datos son del colegio/instituto, no de la cafetería), TENIS (datos del club, no del restaurante), BULE y BULEVAR quizá son el mismo, HATA y HANDYMAN también, «Falta poner 10» = EPOCA (ya unidas por la sesión de Golden el 18/11: BARELCONDE→CONDE, «Falta poner 9»→MUSAS; «Falta poner 10/7» y «Por poner 2» inactivas, lo suyo pasado a EPOCA, CAFETIN y NIL).
+
+## Enviados (18/11/2026, ~02:00)
+Fernando: «Manda todos excepto el Amira y Cafetería 93, que ya no son nuestros». **17 enviados** desde el Gmail de facturas: BACAM, BASTIAN, BECERRIL, C.REGGIO, CARAMBOLA, CARNICERO, CARPANES, CECA, CHATO, CHICO, MESONCAN, CLARA, DOCU, EL21, FIGAL, L-EVROPE, ORGAZ. Apuntados en `cliente_peticion_contacto`. AMIRA y CAEL93 pasados a inactivos y sus borradores borrados. La tarea programada de las 7:00 quedó desactivada.
