@@ -26,7 +26,7 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - ⚪ Otras ideas para subir en Google: reseñas, publicaciones semanales en la ficha, directorios, informe mensual. Plan: `docs/PLAN_MARKETING.md`; lista completa en `docs/LISTA_PARA_ENVIAR.md`.
 
 ## 📱 LA APP
-- 🔴 **Fernando**: revisar los **19 correos** pidiendo correo y teléfono para las facturas (https://claude.ai/artifact/75kQbd3y4Ro3bkncKkwyJ9) y decir cuáles se mandan y a qué hora. No se envía nada hasta entonces. Después, la oficina: llamar a los que no tienen correo público y pulsar «✔ Usar» / «✅ Contestado» en Clientes › «📇 Pedir correo y teléfono».
+- 🟡 **Oficina**: ir apuntando las respuestas de los 17 clientes a los que se escribió el 18/11 («✔ Usar» / «✏️ Escribir a mano» y «✅ Contestado» en Clientes › «📇 Pedir correo y teléfono») y llamar a los que no tienen correo público.
 ### 👤 Fernando
 - 🟡 Hablar con **Carmen** y con **Jorge** (o la gestoría) de sus funciones desde enero: oficina + clientes, objetivos y premio por escrito (https://claude.ai/artifact/R8Zor6BHenQdEi3FMbJJSn).
 - 🔴 Avisar **2-3 días antes** del día en que se empieza a usar la app de verdad.
