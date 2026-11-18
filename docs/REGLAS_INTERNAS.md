@@ -184,3 +184,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Golden se lee solo cada día (`scripts/golden/LEEME.md`): rellena huecos, nunca borra.
 - **Patatas del Olmo** (proveedor): no está en Golden; se le compra de verdad, normalmente **huevos** (es primo de Fernando).
 - Bulevar: el cliente bueno es **BULEVAR** (C/ López de Hoyos 401); BULE (Gran Vía de Hortaleza 62) ya no. Handyman: **HANDYMAN** (Made For You Iris Taberna SL); la ficha antigua HATA se borró (18/11/2026, Fernando).
+
+## Mensajes a clientes: nunca de noche (Fernando, 18/11/2026)
+- Correos y WhatsApp a clientes **solo entre las 8:00 y las 20:00** (hora de Madrid), de lunes a sábado. Si Fernando dice «manda» fuera de esa hora sin decir cuándo, se **programa para las 8:00** siguientes; nunca se envía al momento de noche. (El 18/11 salieron 17 correos a las 3:00 y no estuvo bien.)
+
