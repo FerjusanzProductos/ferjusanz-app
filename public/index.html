@@ -9820,6 +9820,9 @@ function vistaRuta() {
   cargar();
 }
 
+// Golden llama a algunos puestos por su nombre legal; entre paréntesis, como los conoce Fernando (18/11/2026)
+const PROV_ALIAS = { HERE: 'Izquierdo' };
+const nomProvG = (cod, n) => (n || cod) + (PROV_ALIAS[cod] ? ' (' + PROV_ALIAS[cod] + ')' : '');
 /* ---------- Rentabilidad ---------- */
 function vistaRentabilidad() {
   state.view = 'rentabilidad'; if (!veMargenes()) { go('inicio'); return; }
@@ -9899,7 +9902,7 @@ function vistaGoldenMargen() {
       if (modo === 'cobros' || modo === 'pagos') {
         const ts = await gesTodas(() => sb.from('golden_tesoreria').select('codigo,nombre,vencimiento,total,serie,numero').eq('tipo', modo === 'cobros' ? 'C' : 'P').eq('estado', 'PEN').order('vencimiento'));
         if (yo !== pide) return; const por = {}, hoyS = hoy(); let suma = 0, vencido = 0;
-        ts.forEach(t => { const x = por[t.codigo] = por[t.codigo] || { n: t.nombre || t.codigo, t: 0, v: 0, ls: [] }; const im = Number(t.total || 0); x.t += im; x.ls.push(t); suma += im; if (t.vencimiento && t.vencimiento < hoyS) { x.v += im; vencido += im; } });
+        ts.forEach(t => { const x = por[t.codigo] = por[t.codigo] || { n: nomProvG(t.codigo, t.nombre), t: 0, v: 0, ls: [] }; const im = Number(t.total || 0); x.t += im; x.ls.push(t); suma += im; if (t.vencimiento && t.vencimiento < hoyS) { x.v += im; vencido += im; } });
         tot.replaceChildren(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', { class: 'nombre' }, modo === 'cobros' ? 'Nos deben (pendiente de cobro)' : 'Debemos (pendiente de pago)'), h('div', { class: 'tot-num' }, eur(suma) + ' €')),
           h('div', { class: 'sub' }, ts.length + ' vencimientos · ya vencido ' + eur(vencido) + ' € · todo lo pendiente en Golden, sin mirar las fechas de arriba')));
         const o = Object.values(por).sort((a, b) => b.t - a.t);
@@ -9911,8 +9914,8 @@ function vistaGoldenMargen() {
         const r = await sb.rpc('golden_compras_por', { p_desde: desde, p_hasta: hasta }); if (r.error) throw r.error; if (yo !== pide) return;
         const o = r.data || [], b = o.reduce((s, x) => s + Number(x.base || 0), 0), t = o.reduce((s, x) => s + Number(x.total || 0), 0);
         tot.replaceChildren(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', { class: 'nombre' }, 'Compras (sin IVA)'), h('div', { class: 'tot-num' }, eur(b) + ' €')), h('div', { class: 'sub' }, o.reduce((s, x) => s + Number(x.facturas), 0) + ' facturas de ' + o.length + ' proveedores · con IVA ' + eur(t) + ' €')));
-        res.replaceChildren(...(o.length ? o.map(x => tarjeta(x.nombre || x.clave, eur(x.base) + ' €', 'var(--txt)', x.facturas + (Number(x.facturas) === 1 ? ' factura' : ' facturas') + ' · ' + pct(Number(x.base), b) + ' de lo comprado · toca para ver qué',
-          async () => { const c = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); hoja(x.nombre || x.clave, c); try { const p = await sb.rpc('golden_compras_productos', { p_prov: x.clave, p_desde: desde, p_hasta: hasta }); if (p.error) throw p.error;
+        res.replaceChildren(...(o.length ? o.map(x => tarjeta(nomProvG(x.clave, x.nombre), eur(x.base) + ' €', 'var(--txt)', x.facturas + (Number(x.facturas) === 1 ? ' factura' : ' facturas') + ' · ' + pct(Number(x.base), b) + ' de lo comprado · toca para ver qué',
+          async () => { const c = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); hoja(nomProvG(x.clave, x.nombre), c); try { const p = await sb.rpc('golden_compras_productos', { p_prov: x.clave, p_desde: desde, p_hasta: hasta }); if (p.error) throw p.error;
             c.replaceChildren(...(p.data || []).map(l => h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:15px' }, l.nombre || l.clave), h('div', { class: 'sub' }, num(l.cantidad) + ' ud/kg' + (Number(l.cantidad) ? ' · ' + eur(Number(l.neto) / Number(l.cantidad)) + ' € de media' : ''))), h('b', {}, eur(l.neto) + ' €')))); } catch (e) { c.replaceChildren(h('p', { class: 'err' }, msgErr(e))); } })) : [h('p', { class: 'vacio' }, 'No hay compras en estas fechas.')]));
         return;
       }
