@@ -14,7 +14,7 @@ const eur = n => Math.round(Number(n) || 0).toLocaleString('es-ES') + ' €';
 const fecha = f => f ? new Date(f + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '—';
 const mes = f => new Date(f + 'T12:00:00').toLocaleDateString('es-ES', { month: 'short', year: '2-digit' });
 
-const [[g], ventas, deudores, [cob], [pag], [prov], [pros], [web], [cli], tareas] = await Promise.all([
+const [[g], ventas, deudores, [cob], [pag], [prov], [cli], tareas] = await Promise.all([
   sql(`select max(fecha)::text hasta from golden_facturas where not borrador`),
   sql(`select date_trunc('month', fecha)::date::text m, sum(base) base,
          sum(base) filter (where coste > 0) base_c, sum(coste) filter (where coste > 0) coste
@@ -30,9 +30,6 @@ const [[g], ventas, deudores, [cob], [pag], [prov], [pros], [web], [cli], tareas
        from golden_tesoreria where tipo = 'P' and estado = 'PEN'`),
   sql(`select count(*) filter (where estado = 'nueva') por_revisar, count(*) filter (where recibido_en > now() - interval '7 days') semana
        from facturas_recibidas`),
-  sql(`select count(*) total, count(*) filter (where estado = 'nuevo') sin_contactar,
-         count(*) filter (where proximo_contacto <= current_date) toca from prospectos`),
-  sql(`select count(*) visitas, count(*) filter (where movil) movil from web_visitas where creado > now() - interval '7 days'`),
   sql(`select count(*) filter (where activo) activos from clientes`),
   sql(`select 'Mercado' t, max(fecha)::text f from resumen_mercado union all select 'Comercial del día', max(fecha)::text from resumen_comercial
        union all select 'Posibles clientes', max(fecha)::text from resumen_leads union all select 'Plan de la semana', max(fecha)::text from resumen_semana`),
@@ -85,7 +82,7 @@ a{color:var(--acc)}
 ${tarjeta(eur(cob.vencido), `por cobrar ya vencido (${cob.n_venc} recibos)`, true)}
 ${tarjeta(eur(ventas.at(-2)?.base), `ventas de ${ventas.at(-2) ? mes(ventas.at(-2).m) : 'el mes pasado'} (sin IVA)`)}
 ${tarjeta(prov.por_revisar, 'facturas de proveedor por revisar', prov.por_revisar > 0)}
-${tarjeta(pros.toca, 'posibles clientes a los que toca llamar', pros.toca > 0)}
+${tarjeta(cli.activos, 'clientes activos')}
 </div>
 
 <section><h2>💶 Ventas por mes (Golden, sin IVA)</h2>
@@ -103,8 +100,7 @@ ${filasVentas}
 <p>Facturas de proveedor llegadas en 7 días: <b>${prov.semana}</b> · por revisar en la app: <b>${prov.por_revisar}</b>.</p></section>
 
 <section><h2>🎯 Clientes</h2>
-<p>Clientes activos: <b>${cli.activos}</b> · posibles clientes: <b>${pros.total}</b> (sin contactar: ${pros.sin_contactar}).</p>
-<p>Visitas a la web en 7 días: <b>${web.visitas}</b> (${web.movil} desde móvil).</p></section>
+<p>Clientes activos: <b>${cli.activos}</b>. Posibles clientes, a quién llamar y web: en <a href="https://claude.ai/artifact/WomsAtCVCe1cqaQCwqd9Wh">Comercial Ferjusanz</a>.</p></section>
 
 <section><h2>🤖 Lo último de los ayudantes</h2>
 <ul>${tareas.map(t => `<li>${t.t}: ${t.f ? 'del ' + fecha(t.f) : 'todavía no hay'}</li>`).join('')}</ul>

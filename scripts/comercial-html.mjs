@@ -30,7 +30,14 @@ const bloque = (id, titulo, x, vacio) => `<section id="${id}"><h2>${titulo}</h2>
   ? `<p class="fecha">Del ${fechaES(x.fecha)}</p>${cuerpo(x.texto)}`
   : `<p class="fecha">${vacio}</p>`}</section>`;
 
-const [dia, semana] = await Promise.all([ultimo('resumen_comercial'), ultimo('resumen_semana')]);
+const [dia, semana, [c]] = await Promise.all([ultimo('resumen_comercial'), ultimo('resumen_semana'),
+  // Cifras comerciales, solo datos reales (nada de pedidos de la app, que son de prueba).
+  sql(`select (select count(*) from prospectos) pros, (select count(*) from prospectos where estado = 'nuevo') sin_contactar,
+    (select count(*) from prospectos where proximo_contacto <= current_date) toca,
+    (select count(*) from prospectos where created_at > now() - interval '7 days') nuevos7,
+    (select count(*) from cliente_peticion_contacto where contestado_at is null) sin_contestar,
+    (select count(*) from web_visitas where creado > now() - interval '7 days') web7`)]);
+const tarjeta = (n, txt, aviso) => `<div class="t${aviso && n > 0 ? ' aviso' : ''}"><b>${n}</b><span>${txt}</span></div>`;
 const ahora = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 writeFileSync(new URL('../docs/comercial.html', import.meta.url), `<title>Comercial Ferjusanz</title>
@@ -50,6 +57,13 @@ nav a:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .a-dia{background:var(--dia)}.a-sem{background:var(--sem)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) nav a{color:#111}}
 :root[data-theme="dark"] nav a{color:#111}
+/* Cifras de arriba: rejilla de 2 en el móvil. */
+.tarjetas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 0 16px}
+.t{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;border-left:5px solid var(--acc)}
+.pie a{color:var(--acc)}
+.t.aviso{border-left-color:var(--dia)}
+.t b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums}
+.t span{font-size:.85rem;color:var(--muted)}
 section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px 16px 14px;margin-bottom:16px;border-top:5px solid var(--c)}
 #hoy{--c:var(--dia)}#semana{--c:var(--sem)}
 h2{font-size:1.2rem;color:var(--c);margin:12px 0 0}
@@ -63,10 +77,16 @@ li{margin:4px 0;overflow-wrap:anywhere}
 <main>
 <h1>Comercial Ferjusanz</h1>
 <p class="sub">Actualizado el ${ahora}. Solo son borradores: nada se envía sin ti.</p>
+<div class="tarjetas">
+${tarjeta(c.toca, 'posibles clientes a los que toca llamar', true)}
+${tarjeta(c.sin_contestar, 'clientes a los que se pidió correo y teléfono y no han contestado', true)}
+${tarjeta(c.pros, `posibles clientes (${c.sin_contactar} sin contactar · ${c.nuevos7} nuevos en 7 días)`)}
+${tarjeta(c.web7, 'visitas a la web en 7 días')}
+</div>
 <nav><a class="a-dia" href="#hoy">📞 Hoy</a><a class="a-sem" href="#semana">🗓️ Esta semana</a></nav>
 ${bloque('hoy', '📞 Comercial del día', dia, 'Todavía no hay. Sale de lunes a sábado a las 8:27.')}
 ${bloque('semana', '🗓️ Plan de la semana', semana, 'Todavía no hay. Sale cada domingo a las 19:23.')}
-<p class="pie">También en la app: 📊 Resumen y correo, o Comercial → Avisos.</p>
+<p class="pie">Ventas, cobros y pagos: <a href="https://claude.ai/artifact/4k7wxTzvttkdBF6xU7AWak">Panel Ferjusanz</a>. También en la app: 📊 Resumen y correo, o Comercial → Avisos.</p>
 </main>
 `);
 console.log('docs/comercial.html:', dia?.fecha || 'sin día', '/', semana?.fecha || 'sin semana');
