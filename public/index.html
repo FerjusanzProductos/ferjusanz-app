@@ -5133,12 +5133,33 @@ function vistaClientes() {
   const bAct = h('button', { class: 'chip', onclick: () => { soloActivos = true; LS.set('fj_cli_activos', true); marca(); pintar(); } }, 'Activos');
   const bTod = h('button', { class: 'chip', onclick: () => { soloActivos = false; LS.set('fj_cli_activos', false); marca(); pintar(); } }, 'Todos');
   /* 🧾 Fase 1 de facturación: clientes activos a los que les falta algo para poder facturarles */
-  const bFis = esOficina() ? h('button', { class: 'chip', onclick: () => { soloFiscal = !soloFiscal; window.__cliFiscal = soloFiscal; if (soloFiscal) { soloActivos = true; soloNif = false; } tope = 80; marca(); pintar(); } }, '🧾 Faltan datos para facturar') : null;
+  const bFis = esOficina() ? h('button', { class: 'chip', onclick: () => { soloFiscal = !soloFiscal; window.__cliFiscal = soloFiscal; if (soloFiscal) { soloActivos = true; soloNif = false; soloCon = false; } tope = 80; marca(); pintar(); } }, '🧾 Faltan datos para facturar') : null;
   /* 🔎 NIF encontrados en internet que hay que confirmar con el cliente antes de aceptarlos */
   let soloNif = !!state.params.nif && esOficina();
-  const bNif = esOficina() ? h('button', { class: 'chip', onclick: () => { soloNif = !soloNif; if (soloNif) { soloFiscal = false; window.__cliFiscal = false; } tope = 80; pintar(); } }, '🔎 NIF por confirmar') : null;
+  const bNif = esOficina() ? h('button', { class: 'chip', onclick: () => { soloNif = !soloNif; if (soloNif) { soloFiscal = false; window.__cliFiscal = false; soloCon = false; } tope = 80; pintar(); } }, '🔎 NIF por confirmar') : null;
+  /* 📇 Activos sin correo o sin teléfono: lo encontrado en internet y si ya se les pidió por correo */
+  let soloCon = !!state.params.contacto && esOficina(), conProp = {}, peticion = {};
+  const faltaCon = c => c.activo && c.codigo !== '0001' && (!(c.email || '').trim() || !(c.telefono || '').trim());
+  const bCon = esOficina() ? h('button', { class: 'chip', onclick: () => { soloCon = !soloCon; if (soloCon) { soloActivos = true; soloFiscal = false; window.__cliFiscal = false; soloNif = false; } tope = 80; pintar(); } }, '📇 Pedir correo y teléfono') : null;
   const avFis = h('div', {}); let cargadoFis = false, nProp = {}, nifProp = {};
-  function marca() { bAct.className = 'chip' + (soloActivos ? ' on' : ''); bTod.className = 'chip' + (!soloActivos ? ' on' : ''); if (bFis) { bFis.className = 'chip' + (soloFiscal ? ' on' : ''); bFis.style.cssText = soloFiscal ? '' : 'color:#b91c1c;border-color:#fca5a5'; } if (bNif) { bNif.className = 'chip' + (soloNif ? ' on' : ''); bNif.style.cssText = soloNif ? '' : 'color:#1d4ed8;border-color:#93c5fd'; bNif.textContent = '🔎 NIF por confirmar (' + Object.keys(nifProp).length + ')'; } }
+  function marca() { bAct.className = 'chip' + (soloActivos ? ' on' : ''); bTod.className = 'chip' + (!soloActivos ? ' on' : ''); if (bFis) { bFis.className = 'chip' + (soloFiscal ? ' on' : ''); bFis.style.cssText = soloFiscal ? '' : 'color:#b91c1c;border-color:#fca5a5'; } if (bNif) { bNif.className = 'chip' + (soloNif ? ' on' : ''); bNif.style.cssText = soloNif ? '' : 'color:#1d4ed8;border-color:#93c5fd'; bNif.textContent = '🔎 NIF por confirmar (' + Object.keys(nifProp).length + ')'; } if (bCon) { bCon.className = 'chip' + (soloCon ? ' on' : ''); bCon.style.cssText = soloCon ? '' : 'color:#047857;border-color:#6ee7b7'; bCon.textContent = '📇 Pedir correo y teléfono (' + (clientesCache && cargadoFis ? clientesCache.filter(faltaCon).length : '…') + ')'; } }
+  function cajaCon(c) {
+    const falta = [!(c.email || '').trim() ? 'correo' : '', !(c.telefono || '').trim() ? 'teléfono' : ''].filter(Boolean);
+    const pe = peticion[c.id] || {}; const fe = d => new Date(d).toLocaleDateString('es-ES', { day: 'numeric', month: 'numeric' });
+    const guardaPe = async cambios => { const x = await sb.from('cliente_peticion_contacto').upsert({ cliente_id: c.id, ...cambios, updated_at: new Date().toISOString(), updated_by: state.user.id }).select().single(); if (x.error) { toast(msgErr(x.error), 'err'); return; } peticion[c.id] = x.data; pintar(); };
+    const usar = async p => { const x = await sb.from('clientes').update({ [p.campo]: p.valor }).eq('id', c.id); if (x.error) { toast(msgErr(x.error), 'err'); return; }
+      await sb.from('cliente_propuestas').update({ estado: 'aceptado', revisado_por: state.user.id, revisado_at: new Date().toISOString() }).eq('id', p.id);
+      c[p.campo] = p.valor; conProp[c.id] = (conProp[c.id] || []).filter(q => q.id !== p.id); toast('Guardado en la ficha', 'ok'); pintar(); };
+    const props = (conProp[c.id] || []).filter(p => !(c[p.campo] || '').trim());
+    return h('div', { onclick: e => e.stopPropagation(), style: 'font-size:14px;margin-top:4px' },
+      h('div', { style: 'color:#b45309;font-weight:700' }, '📇 Falta: ' + falta.join(' y ')),
+      ...props.map(p => h('div', { style: 'color:#1d4ed8;margin-top:4px' }, '🌐 ' + (p.campo === 'email' ? 'Correo' : 'Teléfono') + ' en internet: ', h('b', {}, p.valor), ' (confianza ' + p.confianza + ', ', /^https?:\/\//.test(p.fuente) ? h('a', { href: p.fuente, target: '_blank', rel: 'noopener' }, p.fuente.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]) : p.fuente, ') ',
+        h('button', { class: 'ghost small', onclick: () => usar(p) }, '✔ Usar'))),
+      h('div', { style: 'margin-top:4px;color:' + (pe.contestado_at ? '#047857' : pe.enviado_at ? '#1d4ed8' : '#6b7280') }, pe.contestado_at ? '✅ Contestado el ' + fe(pe.contestado_at) : pe.enviado_at ? '✉️ Correo enviado el ' + fe(pe.enviado_at) + (pe.enviado_a ? ' a ' + pe.enviado_a : '') + ' · sin respuesta' : props.some(p => p.campo === 'email') ? '✉️ Sin enviar todavía' : '📞 Sin correo público: llamar'),
+      h('div', { style: 'display:flex;gap:8px;margin-top:6px;flex-wrap:wrap' },
+        h('button', { class: 'ghost small', onclick: () => go('cliente', { id: c.id }) }, '✏️ Escribir a mano'),
+        pe.contestado_at ? h('button', { class: 'ghost small', onclick: () => guardaPe({ contestado_at: null }) }, '↺ Quitar contestado') : h('button', { class: 'ghost small', onclick: () => guardaPe({ contestado_at: new Date().toISOString() }) }, '✅ Contestado')));
+  }
   function pintar() {
     marca();
     if (!clientesCache) { lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); return; }
@@ -5150,12 +5171,15 @@ function vistaClientes() {
     if (soloFiscal && !completo) { lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); return; }
     if (soloFiscal) r = r.filter(c => c.activo && faltaFiscal(c).length);
     if (soloNif) r = r.filter(c => nifProp[c.id]);
+    if (soloCon) r = r.filter(faltaCon);
     if (t) r = r.filter(c => sinTilde([c.nombre, c.nombre_comercial, c.codigo, lectura ? '' : c.nif, c.telefono, c.localidad].join(' ')).includes(t));
     avFis.replaceChildren(...(soloFiscal ? [h('div', { class: 'aviso-card', style: 'border-color:#fca5a5;background:#fef2f2' },
       h('b', {}, 'Desde el 1/1/2027 se factura con la app. '), 'A estos clientes no se les podrá hacer factura hasta tener ', h('b', {}, 'NIF, dirección, código postal y localidad'), '. Toca cada uno, rellena lo que sale en rojo y «Guardar cambios». Los datos suelen estar en Golden o en sus facturas.',
       h('button', { class: 'ghost small', style: 'display:block;margin-top:8px', onclick: async () => { const txt = r.map(c => [c.codigo, nombreCli(c), 'falta: ' + faltaFiscal(c).join(', ')].join(' · ')).join('\n'); try { await navigator.clipboard.writeText(txt); toast('Lista copiada (' + r.length + ')', 'ok'); } catch (e) { toast('No se pudo copiar', 'err'); } } }, '📋 Copiar la lista'))] : soloNif ? [h('div', { class: 'aviso-card', style: 'border-color:#93c5fd;background:#eff6ff' },
-      h('b', {}, 'NIF encontrados en internet, sin confirmar. '), 'Antes de aceptarlos, pregunta al cliente si factura con esa sociedad (sobre todo los de confianza media). Toca el cliente y, en «🔎 Datos encontrados», acéptalo o descártalo.')] : []));
-    info.textContent = r.length + (r.length === 1 ? ' cliente' : ' clientes') + (soloFiscal ? ' sin datos completos para facturar' : '') + ' · de la A a la Z';
+      h('b', {}, 'NIF encontrados en internet, sin confirmar. '), 'Antes de aceptarlos, pregunta al cliente si factura con esa sociedad (sobre todo los de confianza media). Toca el cliente y, en «🔎 Datos encontrados», acéptalo o descártalo.')] : soloCon ? [h('div', { class: 'aviso-card', style: 'border-color:#6ee7b7;background:#ecfdf5' },
+      h('b', {}, 'Queremos hacerlo bien: '), 'desde enero las facturas salen de la app y se mandan por correo. A estos clientes activos les falta el correo o el teléfono. Hemos buscado lo que publican en internet (Google, su web…) y les escribimos pidiéndoles el correo y el teléfono donde quieren recibir la factura y los avisos. ',
+      h('b', {}, 'Los que no tienen correo público: llámalos. '), 'Cuando contesten, pulsa «✔ Usar» en el dato o «✏️ Escribir a mano», y luego «✅ Contestado».')] : []));
+    info.textContent = r.length + (r.length === 1 ? ' cliente' : ' clientes') + (soloFiscal ? ' sin datos completos para facturar' : soloCon ? (r.length === 1 ? ' activo' : ' activos') + ' sin correo o sin teléfono' : '') + ' · de la A a la Z';
     const kids = []; let letra = '';
     for (const c of r.slice(0, tope)) {
       const n = nombreCli(c); const l = (sinTilde(n).charAt(0) || '#').toUpperCase(); const L = /[A-Z]/.test(l) ? l : '#';
@@ -5164,7 +5188,7 @@ function vistaClientes() {
       const btnF = esOficina() ? h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: e => { e.stopPropagation(); if (desp.style.display === 'none') { desp.style.display = ''; if (!desp.hasChildNodes()) desp.append(panelFacturasCli(c)); btnF.textContent = '▴ Ocultar facturas'; } else { desp.style.display = 'none'; btnF.textContent = '▾ Facturas'; } } }, '▾ Facturas') : null;
       kids.push(h('div', { class: 'card tap', onclick: () => go('cliente', { id: c.id }) },
         h('div', { class: 'fila' },
-          h('div', {}, h('div', { class: 'nombre' }, n), h('div', { class: 'sub' }, [c.codigo, c.localidad, c.telefono].filter(Boolean).join(' · ')), soloFiscal ? h('div', { style: 'color:#b91c1c;font-weight:700;font-size:14px;margin-top:2px' }, '🧾 Falta: ' + faltaFiscal(c).join(', ')) : null, soloNif && nifProp[c.id] ? h('div', { style: 'color:#1d4ed8;font-weight:700;font-size:14px;margin-top:2px' }, '🔎 NIF por confirmar: ' + nifProp[c.id].map(p => p.valor + ' (confianza ' + p.confianza + ')').join(' o ')) : null, !soloNif && nProp[c.id] ? h('div', { style: 'color:#1d4ed8;font-weight:700;font-size:14px' }, '🔎 ' + nProp[c.id] + (nProp[c.id] === 1 ? ' dato encontrado' : ' datos encontrados') + ' para revisar') : null),
+          h('div', {}, h('div', { class: 'nombre' }, n), h('div', { class: 'sub' }, [c.codigo, c.localidad, c.telefono].filter(Boolean).join(' · ')), soloFiscal ? h('div', { style: 'color:#b91c1c;font-weight:700;font-size:14px;margin-top:2px' }, '🧾 Falta: ' + faltaFiscal(c).join(', ')) : null, soloNif && nifProp[c.id] ? h('div', { style: 'color:#1d4ed8;font-weight:700;font-size:14px;margin-top:2px' }, '🔎 NIF por confirmar: ' + nifProp[c.id].map(p => p.valor + ' (confianza ' + p.confianza + ')').join(' o ')) : null, soloCon ? cajaCon(c) : null, !soloNif && !soloCon && nProp[c.id] ? h('div', { style: 'color:#1d4ed8;font-weight:700;font-size:14px' }, '🔎 ' + nProp[c.id] + (nProp[c.id] === 1 ? ' dato encontrado' : ' datos encontrados') + ' para revisar') : null),
           h('div', { style: 'text-align:right' }, c.activo ? null : h('span', { class: 'badge' }, 'Inactivo'), !lectura && c.forma_pago === 'contado' ? [' ', h('span', { class: 'badge cont' }, 'Contado')] : null)), btnF,
         h('div', { onclick: e => e.stopPropagation() }, desp)));
     }
@@ -5177,12 +5201,12 @@ function vistaClientes() {
       const { data, error } = await sb.from('clientes').select(lectura ? 'id,codigo,nombre,nombre_comercial,telefono,localidad,activo' : 'id,codigo,nombre,nombre_comercial,nif,telefono,email,direccion,codigo_postal,localidad,forma_pago,activo').range(0, 4999);
       if (error) throw error;
       clientesCache = data.sort((a, b) => nombreCli(a).localeCompare(nombreCli(b), 'es')); cargadoFis = true; pintar();
-      if (esOficina()) { const pr = await sb.from('cliente_propuestas').select('cliente_id,campo,valor,confianza').eq('estado', 'pendiente').range(0, 4999); if (!pr.error && pr.data && pr.data.length) { nProp = {}; nifProp = {}; pr.data.forEach(x => { nProp[x.cliente_id] = (nProp[x.cliente_id] || 0) + 1; if (x.campo === 'nif') (nifProp[x.cliente_id] = nifProp[x.cliente_id] || []).push(x); }); pintar(); } }
+      if (esOficina()) { const [pr, pe] = await Promise.all([sb.from('cliente_propuestas').select('id,cliente_id,campo,valor,fuente,confianza').eq('estado', 'pendiente').range(0, 4999), sb.from('cliente_peticion_contacto').select('*').range(0, 4999)]); if (!pe.error && pe.data) pe.data.forEach(x => { peticion[x.cliente_id] = x; }); if (!pr.error && pr.data && pr.data.length) { nProp = {}; nifProp = {}; conProp = {}; pr.data.forEach(x => { nProp[x.cliente_id] = (nProp[x.cliente_id] || 0) + 1; if (x.campo === 'nif') (nifProp[x.cliente_id] = nifProp[x.cliente_id] || []).push(x); if (x.campo === 'email' || x.campo === 'telefono') (conProp[x.cliente_id] = conProp[x.cliente_id] || []).push(x); }); } pintar(); }
     } catch (e) { lista.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión para ver los clientes.' : msgErr(e))); }
   }
   $app.replaceChildren(shell('Clientes', h('div', {},
     lectura ? h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Solo consulta: los datos los modifica administración.') : h('button', { style: 'width:100%;margin-bottom:10px', onclick: () => go('cliente', { id: null }) }, '+ Añadir cliente'),
-    h('div', { class: 'chips' }, bAct, bTod, bFis, bNif), avFis, inp, info, lista)));
+    h('div', { class: 'chips' }, bAct, bTod, bFis, bNif, bCon), avFis, inp, info, lista)));
   renderBanner(); pintar(); cargar();
 }
 /* Ficha de cliente de solo lectura (preparadores y repartidores): sin datos económicos */
