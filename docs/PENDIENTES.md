@@ -27,8 +27,8 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - ⚪ **Claude**: al pasar el artículo 45 del plan (11/02/2027), añadir la siguiente tanda en `docs/PLAN_MARKETING.md`.
 - ⚪ Otras ideas para subir en Google: reseñas, publicaciones semanales en la ficha, directorios, informe mensual. Plan: `docs/PLAN_MARKETING.md`; lista completa en `docs/LISTA_PARA_ENVIAR.md`.
 
-## 🤖 IDEAS DEL TIKTOK DE LOS 5 AYUDANTES (Fernando, 18/11/2026; el panel ya está hecho)
-- 🟡 **Buscador de clientes**: lista de negocios con cocina propia de Madrid y Segovia (bares, restaurantes, colegios, residencias) que no sean ya clientes ni prospectos, puntuados y con canal de contacto legal.
+## 🤖 IDEAS DEL TIKTOK DE LOS 5 AYUDANTES (Fernando, 18/11/2026; panel y buscador ya hechos)
+- 🟡 **Fernando**: probar en el móvil Comercial › «🔎 Buscar clientes» (p. ej. Colegios en Boadilla) y decir si el mapa contesta y si sirve. Si se queda «Buscando…» mucho rato, avisar: el plan B es sacar los negocios de Google Maps.
 - 🟡 **Radar de ideas**: cada mañana, 3 problemas o novedades reales del sector (quejas de hosteleros, precios, competencia) con una idea de qué hacer.
 - 🟡 **Respondedor automático**: que Harvey deje preparadas las respuestas a WhatsApp y correo de clientes; nunca se envía nada sin Fernando.
 - ⚪ **Equipo de agentes**: juntar las tareas automáticas que ya hay (comercial, mercado, leads, web, Golden, panel) en un solo sitio para verlas y encenderlas o apagarlas.

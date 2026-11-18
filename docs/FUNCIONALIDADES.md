@@ -46,6 +46,9 @@ _Sacadas del historial de GitLab y de los documentos (📝). Versión normal v18
 - **Listas de precios**: envío por WhatsApp o PDF con un diseño elegante. Se permiten productos regalados (por ejemplo perejil a 0,00) avisando.
 - Aprobación de precios por WhatsApp (Harvey 2).
 
+## Comercial: 🔎 Buscar clientes
+- (v490, 18/11/2026) Comercial › «🔎 Buscar clientes»: negocios por tipo y pueblo/barrio de Madrid o Segovia desde OpenStreetMap (lo pide el móvil), marca los que ya son clientes o posibles clientes, filtros «solo los que no tenemos» y «sin web», y botón «➕ A posibles clientes». `tabBuscar`, `buscaNegocios`.
+
 ## Comercial: Harvey
 - **🧮 Primer pedido y tarifa** (16/11/2026): la tarjeta del QR (`/tarjeta/`) pide arriba lo que el negocio suele pedir a la semana, días de reparto y si quiere reunión. Se manda con enlace personal desde la ficha del contacto o desde Harvey (WhatsApp, correo o copiar). Llega a Comercial › Avisos › «Primeros pedidos» con la tarifa general calculada y el total por semana; precios tapados hasta que Fernando los aprueba.
 - **Harvey 1**: escribe mensajes, guiones, ofertas y respuestas a quejas. Consulta clientes, deudas, pedidos, ventas, prospectos y quejas (solo lectura). Alta de cliente provisional con confirmación. No envía nada solo.

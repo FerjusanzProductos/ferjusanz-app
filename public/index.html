@@ -13095,6 +13095,86 @@ function presVoz(p) {
   return grabarVideoPres(null, null, { nombre: p.titulo || 'Presentación', preparar: async () => { const lam = await presExpandir(presConEnlace(p.diapositivas), false);
     const hojas = (await presArchivoPdf(lam, [await socioLienzo('ferjusanz')])).hojas; return { hojas, guion: lam.map(d => pvGuion(d, 'hosteleria')).concat(pvGuion({ t: 'socio' }, 'hosteleria')) }; } });
 }
+/* ===== 🔎 Buscar clientes (18/11/2026, Tito, idea de un TikTok: «un buscador de clientes») =====
+   Negocios de un tipo en un pueblo o barrio de Madrid o Segovia, sacados del mapa libre OpenStreetMap (gratis, sin claves).
+   Lo pide el propio móvil: los servidores del mapa no contestan bien a Cloudflare. Marca los que ya son clientes o posibles clientes. */
+const BUSCA_TIPOS = [['restaurante', 'Restaurantes', ['["amenity"="restaurant"]']], ['bar', 'Bares y cafeterías', ['["amenity"~"^(bar|pub|cafe)$"]']],
+  ['colegio', 'Colegios', ['["amenity"="school"]']], ['escuela_infantil', 'Escuelas infantiles', ['["amenity"="kindergarten"]']],
+  ['residencia', 'Residencias de mayores', ['["social_facility"~"nursing_home|assisted_living"]', '["amenity"="nursing_home"]']],
+  ['hotel', 'Hoteles', ['["tourism"="hotel"]']], ['catering', 'Catering', ['["craft"="caterer"]']]];
+const BUSCA_MAPA = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.private.coffee/api/interpreter'];
+// Para comparar nombres: sin tildes, sin «restaurante», «bar», «S.L.»… («Bar Casa Pepe» = «Casa Pepe»).
+const buscaClave = t => sinTilde(t).replace(/\b(restaurante|restaurant|bar|cafeteria|cafe|colegio|residencia|hotel|meson|taberna|cerveceria|asador|el|la|los|las|de|del|y|sl|sa|slu|s l)\b/g, ' ').replace(/[^a-z0-9ñ]/g, '');
+async function buscaNegocios(tipo, zona) {
+  // 1) La zona (pueblo o barrio), solo dentro de Madrid y Segovia.
+  const z = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=es&bounded=1&viewbox=-4.6,41.45,-3.0,39.85&q=' + encodeURIComponent(zona), { headers: { 'Accept-Language': 'es' } }).then(r => r.json());
+  const area = (z || []).find(x => x.osm_type === 'relation');
+  if (!area) throw new Error('No encuentro «' + zona + '» en Madrid ni en Segovia. Prueba con el nombre del pueblo o del barrio.');
+  // 2) Los negocios de ese tipo dentro de la zona. El mismo mapa está en varios servidores: si uno no contesta, el siguiente.
+  const q = '[out:json][timeout:25];(' + BUSCA_TIPOS.find(t => t[0] === tipo)[2].map(f => 'nwr(area:' + (3600000000 + Number(area.osm_id)) + ')' + f + ';').join('') + ');out center tags 400;';
+  for (const srv of BUSCA_MAPA) {
+    try {
+      const r = await fetch(srv, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: AbortSignal.timeout(30000) });
+      if (!r.ok) continue;
+      const lista = ((await r.json()).elements || []).filter(e => e.tags && e.tags.name).map(e => { const t = e.tags;
+        return { id: e.type + '/' + e.id, nombre: t.name, direccion: [t['addr:street'], t['addr:housenumber']].filter(Boolean).join(', '), cp: t['addr:postcode'] || '', localidad: t['addr:city'] || '',
+          telefono: t.phone || t['contact:phone'] || '', web: t.website || t['contact:website'] || '', cocina: t.cuisine || '', lat: e.lat ?? (e.center && e.center.lat), lon: e.lon ?? (e.center && e.center.lon) }; });
+      return { zona: area.display_name.split(',').slice(0, 2).join(','), localidad: area.name || zona, lista };
+    } catch (e) { /* siguiente servidor */ }
+  }
+  throw new Error('El mapa no responde ahora. Prueba en un rato.');
+}
+async function tabBuscar(el) {
+  const selT = comSelect(BUSCA_TIPOS.map(t => [t[0], t[1]]), LS.get('fj_busca_tipo', 'restaurante'));
+  const zona = comInput('text', LS.get('fj_busca_zona', ''), { placeholder: 'Ej.: Pozuelo, Chamartín, Segovia…', enterkeyhint: 'search' });
+  const casilla = { type: 'checkbox', style: 'width:22px;height:22px;vertical-align:middle;margin:0 6px 0 0' };
+  const soloNuevos = h('input', Object.assign({ checked: true }, casilla)), sinWeb = h('input', casilla);
+  const res = h('div', {}); let datos = null, conocidos = [];
+  const pinta = () => {
+    if (!datos) return;
+    const marca = n => { const k = buscaClave(n); return k.length < 3 ? null : conocidos.find(c => c.k === k || (k.length >= 5 && c.k.length >= 5 && (c.k.includes(k) || k.includes(c.k)))); };
+    const todos = datos.lista.map(x => Object.assign(x, { ya: x.ya || marca(x.nombre) }));
+    const lst = todos.filter(x => (!soloNuevos.checked || !x.ya) && (!sinWeb.checked || !x.web)).sort((a, b) => (!!b.telefono - !!a.telefono) || a.nombre.localeCompare(b.nombre));
+    res.replaceChildren(
+      h('p', { class: 'sub' }, '📍 ' + datos.zona + ': ' + todos.length + ' encontrados · ' + todos.filter(x => x.ya).length + ' ya los tenemos · ' + todos.filter(x => !x.web).length + ' sin web · ' + todos.filter(x => x.telefono).length + ' con teléfono.'),
+      ...(lst.length ? lst.map(x => h('div', { class: 'card' },
+        h('div', { class: 'nombre' }, x.nombre),
+        h('div', { class: 'sub' }, [x.direccion, x.cp, x.localidad].filter(Boolean).join(' · ') || 'Sin dirección en el mapa', x.cocina ? ' · cocina ' + x.cocina.replace(/;/g, ', ') : ''),
+        x.ya ? h('div', { style: 'font-weight:700;color:#166534;margin-top:4px' }, x.ya.tipo === 'cli' ? '✅ Ya es cliente: ' + x.ya.n : '📋 Ya está en posibles clientes: ' + x.ya.n) : null,
+        h('div', {}, x.telefono ? comEnlace('📞 ' + x.telefono, 'tel:' + x.telefono.replace(/[^\d+]/g, '')) : null, x.web ? comEnlace('🌐 Web', comWeb(x.web)) : h('span', { class: 'sub', style: 'margin-right:6px' }, 'Sin web'),
+          comEnlace('📍 Ver en Google Maps', comMapas(x.nombre + ' ' + (x.direccion || '') + ' ' + (x.localidad || datos.localidad))),
+          x.ya ? null : h('button', { class: 'small', onclick: async ev => {
+            const b = ev.currentTarget; b.disabled = true;
+            const fila = { nombre: x.nombre, tipo: PRO_TIPOS.some(t => t[0] === selT.value) ? selT.value : 'otro', direccion: [x.direccion, x.cp].filter(Boolean).join(', ') || null, localidad: x.localidad || datos.localidad,
+              telefono: x.telefono || null, web: x.web || null, fuente: 'Buscador de la app (mapa OpenStreetMap, ' + fechaES(hoy()) + ')', estado: 'nuevo', notas: [selT.value === 'hotel' ? 'Hotel' : '', x.cocina ? 'Cocina: ' + x.cocina : ''].filter(Boolean).join(' · ') || null };
+            const r = await sb.from('prospectos').insert(fila);
+            if (r.error) { b.disabled = false; toast(isNetErr(r.error) ? 'Necesitas conexión.' : msgErr(r.error), 'err'); return; }
+            x.ya = { tipo: 'pro', n: x.nombre }; conocidos.push({ k: buscaClave(x.nombre), tipo: 'pro', n: x.nombre }); toast('Añadido a posibles clientes', 'ok'); pinta();
+          } }, '➕ A posibles clientes')))) : [h('p', { class: 'vacio' }, soloNuevos.checked ? 'Ninguno nuevo con estos filtros.' : 'Ninguno con estos filtros.')]));
+  };
+  const buscar = async () => {
+    const z = zona.value.trim(); if (z.length < 3) { toast('Escribe el pueblo o el barrio.', 'err'); return; }
+    LS.set('fj_busca_tipo', selT.value); LS.set('fj_busca_zona', z);
+    res.replaceChildren(h('p', { class: 'vacio' }, '🔎 Buscando en el mapa… (puede tardar hasta un minuto)')); datos = null;
+    try {
+      const [d, cl, pr] = await Promise.all([buscaNegocios(selT.value, z),
+        sb.from('clientes').select('nombre,nombre_comercial,alias').range(0, 4999), sb.from('prospectos').select('nombre').range(0, 4999)]);
+      conocidos = [];
+      (cl.data || []).forEach(c => [c.nombre, c.nombre_comercial, c.alias].filter(Boolean).forEach(n => conocidos.push({ k: buscaClave(n), tipo: 'cli', n: nombreCli(c) })));
+      (pr.data || []).forEach(p => conocidos.push({ k: buscaClave(p.nombre), tipo: 'pro', n: p.nombre }));
+      conocidos = conocidos.filter(c => c.k.length >= 3); datos = d; pinta();
+    } catch (e) { res.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : (e.message || String(e)))); }
+  };
+  zona.addEventListener('keydown', e => { if (e.key === 'Enter') buscar(); });
+  [soloNuevos, sinWeb].forEach(c => c.addEventListener('change', pinta));
+  el.replaceChildren(
+    h('p', { class: 'sub' }, 'Negocios de Madrid y Segovia sacados del mapa libre (OpenStreetMap). No están todos y algunos datos pueden estar viejos: mira en Google Maps antes de llamar.'),
+    comCampo('Qué busco', selT), comCampo('Dónde (pueblo o barrio)', zona),
+    h('button', { style: 'width:100%;min-height:48px', onclick: buscar }, '🔎 Buscar'),
+    h('div', { style: 'display:flex;gap:16px;flex-wrap:wrap;margin:10px 0' }, h('label', {}, soloNuevos, ' Solo los que no tenemos'), h('label', {}, sinWeb, ' Solo sin web')),
+    h('p', { class: 'sub' }, '⚖️ Para el primer contacto: llama al teléfono del negocio o pasa por el local. Correo o WhatsApp, solo si te lo piden.'),
+    res);
+}
 async function tabTarjetas(el) {
   const fila = (quien, titulo, sub, extra) => { const img = h('img', { alt: titulo, style: 'width:100%;border-radius:8px;border:1px solid #0002;margin:6px 0;aspect-ratio:1500/1061;background:#eee' });
     socioLienzo(quien).then(cv => { img.src = cv.toDataURL('image/jpeg', 0.7); }).catch(() => { });
@@ -13244,10 +13324,10 @@ function vistaComercial() {
   state.view = 'comercial';
   if (!esOficina()) { $app.replaceChildren(shell('Comercial', h('p', { class: 'vacio' }, 'Solo la oficina puede entrar aquí.'), { volver: volverIni })); return; }
   let tab = (state.params && state.params.tab) || LS.get('fj_com_tab', 'listas'); const cont = h('div', {}); const cuerpo = h('div', {});
-  const TABS = [['harvey', '🤵 Harvey'], ['tarjetas', '📇 Tarjetas'], ['listas', '📄 Listas'], ['recs', '⭐ Recomendaciones'], ['avisos', '🔔 Avisos'], ['calc', '🧮 Calculadora'], ['pres', '🎬 Presentaciones'], ['guion', '🗣️ Guiones'], ['web', '🌐 Web y SEO']];
+  const TABS = [['harvey', '🤵 Harvey'], ['tarjetas', '📇 Tarjetas'], ['listas', '📄 Listas'], ['recs', '⭐ Recomendaciones'], ['avisos', '🔔 Avisos'], ['buscar', '🔎 Buscar clientes'], ['calc', '🧮 Calculadora'], ['pres', '🎬 Presentaciones'], ['guion', '🗣️ Guiones'], ['web', '🌐 Web y SEO']];
   const pintarTabs = () => chips.replaceChildren(...TABS.map(([k, t]) => h('button', { class: 'chip' + (tab === k ? ' on' : ''), onclick: () => { if (k === 'pres') { go('presentaciones'); return; } tab = k; LS.set('fj_com_tab', k); pintarTabs(); pintar(); } }, t)));
   const chips = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px' });
-  const pintar = () => { cuerpo.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); ({ harvey: tabHarvey, tarjetas: tabTarjetas, listas: tabListas, recs: tabRecs, avisos: tabAvisos, calc: tabCalc, guion: tabGuion, web: tabWeb })[tab](cuerpo); };
+  const pintar = () => { cuerpo.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); ({ harvey: tabHarvey, tarjetas: tabTarjetas, listas: tabListas, recs: tabRecs, avisos: tabAvisos, buscar: tabBuscar, calc: tabCalc, guion: tabGuion, web: tabWeb })[tab](cuerpo); };
   cont.append(chips, cuerpo); $app.replaceChildren(shell('Comercial', cont, { volver: volverIni })); renderBanner(); pintarTabs(); pintar();
 }
 async function tabListas(el) {
