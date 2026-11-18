@@ -13043,7 +13043,15 @@ async function tabTarjetas(el) {
     h('div', { class: 'aviso-card' }, 'Todas las tarjetas juntas. La de Ferjusanz lleva a Super 9 como socio recomendado y la de Super 9 lleva a Ferjusanz: las dos a la par, cada una con su QR.'),
     h('button', { class: 'bandeja-fac', style: 'width:100%;margin-bottom:8px', onclick: hojaTarjeta }, h('span', { class: 'ic' }, '📇'), h('span', { class: 'tt' }, 'Tarjeta para clientes (QR)', h('small', {}, 'Imagine su primer pedido: el QR y el mensaje de siempre'))),
     fila('ferjusanz', '🥬 Ferjusanz · socio recomendado Super 9', 'La tuya: para tus clientes.', h('button', { class: 'ghost', style: 'width:100%;min-height:44px;margin-top:8px', onclick: hojaSuper9 }, '🔗 Mandar el enlace de los dos por WhatsApp')),
-    fila('super9', '🥩 Super 9 · socio recomendado Ferjusanz', 'La de Carlos: para que la mande él a sus restaurantes. Con «Enviar» elige el chat de Carlos.'));
+    fila('super9', '🥩 Super 9 · socio recomendado Ferjusanz', 'La de Carlos: para que la mande él a sus restaurantes. Con «Enviar» elige el chat de Carlos.', carlosVoz()));
+}
+/* 🎙️ Vídeo de la tarjeta de Super 9 con la voz de Carlos (audio suyo del 18/11/2026, subido a Drive por Tito; hecho con ffmpeg, 20 s). */
+function carlosVoz() {
+  const URLV = 'pres/super9-carlos.mp4', fichero = async () => new File([await (await fetch(URLV)).blob()], 'super9-carnicerias-voz-de-carlos.mp4', { type: 'video/mp4' });
+  const B = (t, f, cls) => h('button', { class: cls, style: 'flex:1;min-height:44px', onclick: async () => { try { await f(); } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); } } }, t);
+  return h('div', { style: 'margin-top:10px;border-top:1px solid #0002;padding-top:8px' }, h('div', { class: 'nombre' }, '🎬 Vídeo con la voz de Carlos'),
+    h('video', { src: URLV, controls: true, playsinline: true, preload: 'metadata', style: 'width:100%;border-radius:8px;margin:6px 0;background:#000' }),
+    h('div', { style: 'display:flex;gap:6px' }, B('⬇️ Descargar', async () => archivosSalida([await fichero()], 'bajar'), 'small'), B('📲 Enviar', async () => archivosSalida([await fichero()], 'enviar', 'Super 9 Carnicerías y Ferjusanz: ' + URL_SUPER9), 'guardar small')));
 }
 /* PDF con una imagen por hoja (JPEG) y el botón del formulario que se puede pulsar. «extra»: lienzos que se añaden al final (la tarjeta de socios). */
 async function presArchivoPdf(laminas, extra) {

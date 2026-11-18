@@ -23,6 +23,7 @@ import pres_lado3 from "../public/pres/lado3.jpg";
 import pres_lado4 from "../public/pres/lado4.jpg";
 import pres_logo from "../public/pres/logo.png";
 import pres_super9 from "../public/pres/super9.png";
+import pres_super9_carlos from "../public/pres/super9-carlos.mp4";
 import pres_logo_jpg from "../public/pres/logo.jpg";
 import pres_logo_oscuro from "../public/pres/logo-oscuro.png";
 import pres_etiqueta from "../public/pres/etiqueta.jpg";
@@ -73,6 +74,7 @@ const ARCHIVOS = {
   "/pres/lado4.jpg": [pres_lado4, "image/jpeg"],
   "/pres/logo.png": [pres_logo, "image/png"],
   "/pres/super9.png": [pres_super9, "image/png"],
+  "/pres/super9-carlos.mp4": [pres_super9_carlos, "video/mp4"],
   "/pres/logo.jpg": [pres_logo_jpg, "image/jpeg"],
   "/pres/logo-oscuro.png": [pres_logo_oscuro, "image/png"],
   "/pres/etiqueta.jpg": [pres_etiqueta, "image/jpeg"],
