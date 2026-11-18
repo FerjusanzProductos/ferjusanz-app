@@ -22,6 +22,7 @@ import pres_lado2 from "../public/pres/lado2.jpg";
 import pres_lado3 from "../public/pres/lado3.jpg";
 import pres_lado4 from "../public/pres/lado4.jpg";
 import pres_logo from "../public/pres/logo.png";
+import pres_super9 from "../public/pres/super9.png";
 import pres_logo_jpg from "../public/pres/logo.jpg";
 import pres_logo_oscuro from "../public/pres/logo-oscuro.png";
 import pres_etiqueta from "../public/pres/etiqueta.jpg";
@@ -71,6 +72,7 @@ const ARCHIVOS = {
   "/pres/lado3.jpg": [pres_lado3, "image/jpeg"],
   "/pres/lado4.jpg": [pres_lado4, "image/jpeg"],
   "/pres/logo.png": [pres_logo, "image/png"],
+  "/pres/super9.png": [pres_super9, "image/png"],
   "/pres/logo.jpg": [pres_logo_jpg, "image/jpeg"],
   "/pres/logo-oscuro.png": [pres_logo_oscuro, "image/png"],
   "/pres/etiqueta.jpg": [pres_etiqueta, "image/jpeg"],
@@ -114,6 +116,7 @@ export default {
     // Tarjeta virtual para posibles clientes (QR y WhatsApp): vive en la web. Al pasar al dominio, cambiar solo esta dirección.
     // ?p= = enlace personal de un contacto (formulario «primer pedido»); se pasa tal cual.
     if (ruta === "/tarjeta") return Response.redirect("https://ferjusanz-web.fernandosanzalba.workers.dev/tarjeta/" + url.search, 302);
+    if (ruta === "/super9") return Response.redirect("https://ferjusanz-web.fernandosanzalba.workers.dev/super9/", 302); // tarjeta de socios (Ferjusanz + Super 9)
     if (ruta === "/web") return Response.redirect("https://ferjusanz-web.fernandosanzalba.workers.dev/", 302);
     const archivo = (url.hostname.includes("pruebas") && PRUEBAS[ruta]) || ARCHIVOS[ruta];
     if (!archivo) return new Response("No encontrado", { status: 404 });
