@@ -12524,6 +12524,7 @@ const presVerPdf = laminas => presVisor(laminas);
 function pvGuion(d, clave) {
   const ex = clave.startsWith('ex-'), col = ppBase(clave) === 'colectivos', t = (d.titulo || '').toLowerCase();
   /* Exclientes (Fernando, 16/11/2026): en primera persona y de tú; Fernando Sanz hijo, equipo nuevo y él al mando; termina proponiendo visitarle. */
+  if (d.t === 'socio') return ex ? 'Y para la carne, te recomiendo a mi socio, Carnicería Super 9: escanea su QR y habla con Carlos.' : 'Y para la carne, le recomiendo a nuestro socio, Carnicería Super 9: escanee su QR y hable con Carlos.';
   if (ex) {
     if (d.t === 'portada') return 'Hace tiempo que no trabajamos juntos y quiero recuperar tu confianza. Soy Fernando Sanz, hijo, de Ferjusanz.';
     if (d.t === 'texto' || /qui[eé]nes somos/.test(t)) return 'Misma empresa, equipo nuevo y yo al mando.';
@@ -12611,7 +12612,7 @@ async function grabarVideoPres(tipo, alGuardar) {
   const BT = (t, f, cls) => h('button', { class: cls || 'ghost', style: 'flex:1;min-height:56px;font-size:17px', onclick: f }, t);
   const pinta = () => { decir.textContent = '🗣️ ' + pvGuion(lamX[n] || {}, tipo); cx.fillStyle = '#ffffff'; cx.fillRect(0, 0, cv.width, cv.height); const im = hojas[n]; if (im) cx.drawImage(im, 0, 0, cv.width, cv.height); };
   try {
-    lamX = await presExpandir(await pvLaminas(tipo), false); hojas = (await presArchivoPdf(lamX)).hojas;
+    lamX = await presExpandir(await pvLaminas(tipo), false); hojas = (await presArchivoPdf(lamX, [await socioLienzo('ferjusanz')])).hojas; lamX = lamX.concat({ t: 'socio' }); // al final, la tarjeta con Super 9
   } catch (e) { fuera(); toast('No se pudieron preparar las hojas: ' + msgErr(e), 'err'); return; }
   pinta();
   const tipoVideo = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp8,opus', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t)) || '';
