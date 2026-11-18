@@ -71,7 +71,8 @@
     "playwright",
     "firecrawl",
     "perplexity",
-    "posthog"
+    "posthog",
+    "21st"
   ],
   "permissions": {
     "allow": [
