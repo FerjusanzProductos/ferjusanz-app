@@ -56,6 +56,7 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - 🔴 Completar los **clientes sin NIF / dirección / CP** antes del 1/1/2027 (Clientes → «🧾 Faltan datos para facturar» → «🔎»): revisar las propuestas (botón **«🔎 NIF por confirmar»** en Clientes) (las de confianza media, confirmarlas con el cliente; nuevas del 16/11: **El Chato de Boadilla, Gallo Descorchado, Sidrería Don Carlos y d'Coysa**), CAPARRA, BOUZAS, CUENDA, HANDYMAN; sin encontrar: Cervecería Los Picos, Purakai, Restaurante Hawaii (Lasga) y Restaurante los Ángeles (Tapeador): pedírselo al cliente y pedir datos a autónomos y a las sociedades que no salen en internet.
 - 🟡 Compras → «🧾 NIF e IVA»: leer los que faltan y poner a mano el NIF de Pataleta, Perichán…
 - 🟡 Empezar a apuntar la **caja** en la app (Más → «💵 Caja (efectivo)»).
+- 🟡 Leer las **guías con fotos** (https://claude.ai/artifact/PAhgeMH8eQYdB3HBkxwxvc) y decir qué no se entiende. (Fernando: compartirle la página desde el menú «Compartir».)
 - 🟡 Prueba completa de facturas en la naranja el **15–18/12** con Fernando (`docs/GUION_PRUEBA_DICIEMBRE.md`).
 
 ### 🧮 Jorge (contable)
@@ -67,7 +68,6 @@ _Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/arti
 - 🟡 Avisarle (e Ibérica) de la factura FV-B-26-032668 a nombre de FERJUSANZ C.B.
 
 ### 🤖 Claude (sin esperar a nadie)
-- 🟡 Antes de enero: **guías cortas con fotos** para Carmen (facturar, caja, banco, proveedores, informes para Jorge, pedidos por teléfono) y **guion de llamadas** comerciales.
 - 🟡 Revisar cada lunes si sale en el BOE el aplazamiento de Verifactu: **lo hace sola** la tarea automática «Verifactu en el BOE (lunes)» (`trig_01Q2osxJtGHJMTo3oksNiXG7`, lunes 9:47 hora de Madrid, avisa al móvil). Se quita cuando salga o pase el 22/12.
 - ⚪ Hacer más pequeño `public/index.html`.
 
