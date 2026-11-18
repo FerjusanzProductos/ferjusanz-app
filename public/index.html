@@ -12930,15 +12930,19 @@ async function presLienzos(laminas) {
 const SUPER9_SOCIAL = 'TikTok e Instagram: @super9carnicerias · @super9_carnicerias';
 const SOCIOS = {
   ferjusanz: { fondo: '#f6f2ea', tinta: '#1c1c1a', acento: '#0d3a22', logo: 'pres/logo.png', ancho: true, nombre: 'FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L.', titulo: 'Patatas, frutas, verduras y huevos',
-    lineas: ['Empresa familiar · tercera generación · más de 60 años', 'Agricultores de confianza y Mercamadrid', 'Reparto de lunes a sábado · sin pedido mínimo', 'Destacamos por la relación calidad-precio'], cortas: ['3.ª generación · más de 60 años', 'Agricultores de confianza', 'Lunes a sábado · sin pedido mínimo'], qr: () => URL_TARJETA, qrTxt: 'Escanee: quiénes somos y su tarifa', contacto: 'WhatsApp 609 567 354 · Oficina 91 763 21 86' },
+    lineas: ['Empresa familiar · tercera generación · más de 60 años', 'Agricultores de confianza y Mercamadrid', 'Reparto de lunes a sábado · sin pedido mínimo', 'Destacamos por la relación calidad-precio'], cortas: ['3.ª generación · más de 60 años', 'Agricultores de confianza', 'Lunes a sábado · sin pedido mínimo'], qr: () => URL_TARJETA, qrTxt: 'Escanee: quiénes somos y su tarifa', contacto: 'WhatsApp 609 567 354 · Oficina 91 763 21 86', corto: 'WhatsApp 609 567 354', enlace: () => URL_TARJETA },
   super9: { fondo: '#141414', tinta: '#f3ead2', acento: '#d9b44a', logo: 'pres/super9.png', nombre: 'SUPER 9 CARNICERÍAS S.L. · CARLOS ZÚÑIGA', titulo: 'Carnicería Super 9',
-    lineas: ['Más de 10 años sirviendo', 'Empresa en ascenso, muchísima variedad de género', 'Calidad-precio · 100 % recomendado', SUPER9_SOCIAL], qr: () => SUPER9_WA, qrTxt: 'Escanee: WhatsApp de Carlos', contacto: 'WhatsApp 680 27 20 28' } };
+    lineas: ['Más de 10 años sirviendo', 'Empresa en ascenso, muchísima variedad de género', 'Calidad-precio · 100 % recomendado', SUPER9_SOCIAL], qr: principal => principal ? 'https://wa.me/34' + SUPER9_TEL + '?text=' + encodeURIComponent('Hola Carlos, quería información de la carne: ') : SUPER9_WA, qrTxt: 'Escanee: WhatsApp de Carlos', contacto: 'WhatsApp 680 27 20 28', wa: () => SUPER9_WA } };
+/* Enlace del formulario en las tarjetas (Tito, 18/11/2026): sale de URL_TARJETA; al tener el dominio se cambia ahí (y la redirección de src/worker.js) y las tarjetas salen solas con el nuevo. */
+const enlaceVer = u => String(u).replace(/^https?:\/\//, '');
 async function socioLienzo(quien) {
   await presRecursos();
   const otro = quien === 'ferjusanz' ? 'super9' : 'ferjusanz', A = SOCIOS[quien], B = SOCIOS[otro];
-  const [la, lb, qa, qb] = await Promise.all([presImgDe(A.logo), presImgDe(B.logo), presImgDe(qrDataUrl(A.qr(), 8)), presImgDe(qrDataUrl(B.qr(), 8))]);
-  const cv = document.createElement('canvas'); cv.width = PRES_W; cv.height = PRES_H; const g = cv.getContext('2d');
-  const txt = (t, x, y, px, col, peso, maxW) => { g.fillStyle = col; let f = px; do { g.font = (peso || '400') + ' ' + f + 'px ' + (peso === '700' ? '"FJ Titular"' : '"FJ Texto"') + ', sans-serif'; f -= 2; } while (maxW && g.measureText(t).width > maxW && f > 12); g.fillText(t, x, y); };
+  const [la, lb, qa, qb] = await Promise.all([presImgDe(A.logo), presImgDe(B.logo), presImgDe(qrDataUrl(A.qr(true), 8)), presImgDe(qrDataUrl(B.qr(), 8))]);
+  const cv = document.createElement('canvas'); cv.width = PRES_W; cv.height = PRES_H; const g = cv.getContext('2d'); cv.enlaces = []; // zonas que se pulsan en el PDF
+  const txt = (t, x, y, px, col, peso, maxW, url) => { g.fillStyle = col; let f = px; do { g.font = (peso || '400') + ' ' + f + 'px ' + (peso === '700' ? '"FJ Titular"' : '"FJ Texto"') + ', sans-serif'; f -= 2; } while (maxW && g.measureText(t).width > maxW && f > 12); g.fillText(t, x, y);
+    const w = g.measureText(t).width; f += 2; if (url) { g.fillRect(x, y + 4, w, 2); cv.enlaces.push({ x, y: y - f, w, h: f * 1.35, url }); } };
+  const zona = (x, y, w, h, url) => { if (url) cv.enlaces.push({ x, y, w, h, url }); };
   const logo = (im, d, x, y, h) => { if (!im) return 0; const w = d.ancho ? h * im.width / im.height : h; g.drawImage(im, x, y, w, h); return w; };
   const qr = (im, x, y, t, d) => { g.fillStyle = '#fff'; g.fillRect(x - 12, y - 12, t + 24, t + 24); if (im) { g.imageSmoothingEnabled = false; g.drawImage(im, x, y, t, t); g.imageSmoothingEnabled = true; } };
   // Principal (arriba, 64 %)
@@ -12946,16 +12950,18 @@ async function socioLienzo(quien) {
   logo(la, A, 70, 70, A.ancho ? 130 : 190);
   txt(A.titulo, 70, (A.ancho ? 290 : 340), 70, A.acento, '700', 900);
   A.lineas.forEach((l, i) => txt('•  ' + l, 70, (A.ancho ? 370 : 410) + i * 54, 36, A.tinta, '400', 900));
-  txt(A.contacto, 70, 640, 34, A.acento, '600', 900);
-  qr(qa, 1080, 110, 360); txt(A.qrTxt, 1060, 520, 28, A.tinta, '600', 400);
+  if (A.enlace) { txt(A.contacto, 70, 595, 32, A.acento, '600', 900); txt('🔗 ' + enlaceVer(A.enlace()), 70, 648, 30, A.acento, '600', 960, A.enlace()); }
+  else txt(A.contacto, 70, 640, 34, A.acento, '600', 900, A.qr(true));
+  qr(qa, 1080, 110, 360); zona(1068, 98, 384, 384, A.qr(true)); txt(A.qrTxt, 1060, 520, 28, A.tinta, '600', 400);
   // Socio recomendado (abajo)
   g.fillStyle = B.fondo; g.fillRect(0, H1, PRES_W, PRES_H - H1); g.fillStyle = B.acento; g.fillRect(0, H1, PRES_W, 10);
   txt('SOCIO RECOMENDADO', 70, H1 + 70, 34, B.acento, '700');
   const wl = logo(lb, B, 70, H1 + 95, B.ancho ? 70 : 150);
   const xb = 70 + wl + 40; txt(B.titulo, xb, H1 + 140, 52, B.acento, '700', 1000 - xb);
   (B.cortas || B.lineas).slice(0, 3).forEach((l, i) => txt(l, xb, H1 + 190 + i * 40, 28, B.tinta, '400', 1010 - xb));
-  txt(B.nombre, 70, PRES_H - 70, 24, B.tinta, '600', 900); txt(B.contacto + (otro === 'super9' ? ' · ' + SUPER9_SOCIAL : ''), 70, PRES_H - 32, 24, B.acento, '600', 980);
-  qr(qb, 1150, H1 + 60, 230); txt(B.qrTxt, 1110, PRES_H - 22, 24, B.tinta, '600', 370);
+  txt(B.nombre, 70, PRES_H - 70, 24, B.tinta, '600', 900);
+  if (B.enlace) txt(B.corto + ' · 🔗 ' + enlaceVer(B.enlace()), 70, PRES_H - 32, 24, B.acento, '600', 1040, B.enlace()); else txt(B.contacto + ' · ' + SUPER9_SOCIAL, 70, PRES_H - 32, 24, B.acento, '600', 980, B.wa && B.wa());
+  qr(qb, 1150, H1 + 60, 230); zona(1138, H1 + 48, 254, 254, B.qr()); txt(B.qrTxt, 1110, PRES_H - 22, 24, B.tinta, '600', 370);
   return cv;
 }
 /* Guardar o compartir archivos: compartir abre la hoja del móvil (WhatsApp…); si no deja, se descargan. */
@@ -12987,7 +12993,7 @@ async function lienzosArchivos(cvs, base, que, enlaces) {
   if (que === 'video') { toast('🎬 Haciendo el vídeo (' + Math.ceil(cvs.length * (cvs.length > 1 ? 4 : 8)) + ' s)… no cierres la app.', 'ok'); return [await lienzosVideo(cvs, nombre, cvs.length > 1 ? 4 : 8)]; }
   const doc = pdfNuevo(841.89, 595.28), k = 841.89 / PRES_W;
   for (let i = 0; i < cvs.length; i++) { if (i) doc.pagina(); doc.imagen(new Uint8Array(await (await jpg(cvs[i])).arrayBuffer()), PRES_W, PRES_H, 0, 0, 841.89, 595.28);
-    const e = enlaces && enlaces[i]; if (e && e.url) doc.enlace(e.x * k, e.y * k, e.w * k, e.h * k, e.url); }
+    [].concat((enlaces && enlaces[i]) || [], cvs[i].enlaces || []).forEach(e => { if (e && e.url) doc.enlace(e.x * k, e.y * k, e.w * k, e.h * k, e.url); }); }
   return [new File([doc.bytes()], nombre + '.pdf', { type: 'application/pdf' })];
 }
 async function socioArchivo(quien, que, accion) {
@@ -13000,6 +13006,7 @@ async function tabTarjetas(el) {
     socioLienzo(quien).then(cv => { img.src = cv.toDataURL('image/jpeg', 0.7); }).catch(() => { });
     const b = (t, f, cls) => h('button', { class: cls || 'small', style: 'flex:1;min-height:44px', onclick: f }, t);
     return h('div', { class: 'card' }, h('div', { class: 'nombre' }, titulo), h('div', { class: 'sub' }, sub), img,
+      h('a', { href: URL_TARJETA, target: '_blank', rel: 'noopener', style: 'display:block;font-weight:600;overflow-wrap:anywhere;margin-bottom:6px' }, '🔗 ' + enlaceVer(URL_TARJETA) + ' (formulario)'),
       h('div', { class: 'sub' }, '⬇️ Descargar:'), h('div', { style: 'display:flex;gap:6px' }, b('🖼 JPG', () => socioArchivo(quien, 'jpg')), b('📄 PDF', () => socioArchivo(quien, 'pdf')), b('🎬 Vídeo', () => socioArchivo(quien, 'video'))),
       h('div', { class: 'sub', style: 'margin-top:6px' }, '📲 Enviar (WhatsApp…):'), h('div', { style: 'display:flex;gap:6px' }, b('🖼 JPG', () => socioArchivo(quien, 'jpg', 'enviar'), 'guardar small'), b('📄 PDF', () => socioArchivo(quien, 'pdf', 'enviar'), 'ghost small'), b('🎬 Vídeo', () => socioArchivo(quien, 'video', 'enviar'), 'ghost small')), extra || null); };
   el.replaceChildren(
@@ -13015,7 +13022,7 @@ async function presArchivoPdf(laminas, extra) {
     if (i) doc.pagina();
     const b = await new Promise(ok => hojas[i].cv.toBlob(ok, 'image/jpeg', 0.8)), bytes = new Uint8Array(await b.arrayBuffer());
     doc.imagen(bytes, PRES_W, PRES_H, 0, 0, 841.89, 595.28);
-    const e = hojas[i].enlace; if (e && e.url) doc.enlace(e.x * k, e.y * k, e.w * k, e.h * k, e.url);
+    [].concat(hojas[i].enlace || [], hojas[i].cv.enlaces || []).forEach(e => { if (e && e.url) doc.enlace(e.x * k, e.y * k, e.w * k, e.h * k, e.url); });
   }
   return { bytes: doc.bytes(), hojas: hojas.map(x => x.cv) };
 }
@@ -13037,7 +13044,7 @@ async function presVisor(laminas, botones, conTarjeta) {
   if (conTarjeta) { const tel = h('input', { type: 'tel', inputmode: 'tel', placeholder: 'Su móvil: 600 000 000' }), wa = pkg => abrirWhatsApp(tel.value, tarjetaMsg(), pkg);
     sls.push(h('div', { class: 'pres-sl' }, h('div', { class: 'pres-lam pres-fin' },
       h('div', { class: 'pres-qr' }, h('img', { src: qrDataUrl(URL_TARJETA, 8), alt: 'QR de la tarjeta' }), h('b', {}, '📷 Escanéelo con la cámara')),
-      h('div', { class: 'pres-wa' }, h('img', { src: 'pres/logo.png', alt: 'Ferjusanz' }), h('h3', {}, 'Imagine su primer pedido y le calculamos su tarifa'), h('p', {}, 'O le mandamos la tarjeta por WhatsApp:'), tel,
+      h('div', { class: 'pres-wa' }, h('img', { src: 'pres/logo.png', alt: 'Ferjusanz' }), h('h3', {}, 'Imagine su primer pedido y le calculamos su tarifa'), h('a', { href: URL_TARJETA, target: '_blank', rel: 'noopener', style: 'font-weight:600;color:#0d3a22;overflow-wrap:anywhere' }, '🔗 ' + enlaceVer(URL_TARJETA)), h('p', {}, 'O le mandamos la tarjeta por WhatsApp:'), tel,
         h('button', { class: 'pres-b', onclick: () => wa('com.whatsapp') }, '💬 Enviar por WhatsApp'), h('button', { class: 'pres-r', onclick: () => wa('com.whatsapp.w4b') }, '💼 WhatsApp Business'))))); }
   if (conTarjeta) { const tel = h('input', { type: 'tel', inputmode: 'tel', placeholder: 'Su móvil: 600 000 000' }), wa = pkg => abrirWhatsApp(tel.value, super9Msg(), pkg);
     sls.push(h('div', { class: 'pres-sl' }, h('div', { class: 'pres-lam pres-fin' },
