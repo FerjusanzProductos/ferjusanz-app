@@ -73,7 +73,7 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 ### 🧮 Jorge (contable)
 _Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/artifact/5qQe3mrM3E9wHwrQACgkmG (`docs/PREGUNTAS_JORGE.md`). Lo que conteste se quita de aquí y de esa hoja._
 - 🔴 **Decisión de Verifactu el 22/12** (no está en el BOE el aplazamiento; si no se cumple todo, Plan B: Golden en enero). Su visto bueno (de palabra, 16/11) vale como si fuera por escrito (Fernando). Ver `docs/FACTURACION_2027.md`.
-- 🔴 Tramitar el **certificado de representante (FNMT)**; con él, Claude hace la fase 8d (envío a Hacienda).
+- 🔴 **Certificado de la empresa: ya existe** (con él se presentaron el IVA del 2T y Sociedades en julio de 2026). Preguntar a Jorge dónde está, a nombre de quién, hasta cuándo vale y pedir una copia segura (.pfx/.p12, nunca por WhatsApp); con ella, Claude hace la fase 8d (envío a Hacienda).
 - 🟡 Saldo inicial de caja (las hojas de Carmen dan a 16/11: CAJA1 2.749,87 € y CAJA2 24,12 €). Y si **comidas, propinas y lotería** pagadas de caja son gasto de la empresa o personal.
 - 🟡 **Golden y VERI\*FACTU**: el 06/02/2026 Golden intentó mandar 120 facturas (P/19451–P/19569) a Hacienda; fallaron todas (sin certificado) y el emisor salía como **FERJUSANZ C.B.**
 - 🟡 Furgonetas a nombre de la C.B.: ¿se pasan a la S.L.?

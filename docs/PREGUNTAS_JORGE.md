@@ -2,12 +2,13 @@
 _Preparado por Claude el 15/11/2026 para la reunión del 16/11. Se actualiza cada vez que Jorge contesta algo: lo contestado se quita de aquí y va a `docs/HISTORIAL.md`._
 _Consejo: que lo importante te lo confirme **por escrito** (WhatsApp o correo vale)._
 
-## 🔴 1. Certificado de representante (FNMT)
-Sin él no se puede enviar nada a Hacienda desde la app ni firmar la declaración del programa.
-- ¿La empresa **ya tiene** certificado de representante de la S.L.? ¿Quién lo tiene y hasta cuándo vale?
-- Si no lo tiene: **¿lo tramita él?** (quedamos en que sí). Qué necesita de vosotros: DNI del que firma y **certificado del Registro Mercantil** del nombramiento (de menos de 15 días).
-- ¿Los administradores (Fernando y Julián) son **solidarios o mancomunados**? Así sabemos quién puede firmar solo.
-- Cuando esté, que avise: Claude hace el último paso (envío a Hacienda en pruebas).
+## 🔴 1. Certificado electrónico de la empresa: **ya existe**
+_Corregido el 18/11/2026 con los papeles de Drive._ El **IVA del 2.º trimestre** (14/07/2026) y el **Impuesto de Sociedades 2025** (02/07/2026) se presentaron por internet a nombre de la **propia S.L. «en calidad de titular»**: eso solo se puede hacer con el **certificado de la empresa**. O sea, **no hay que tramitarlo**: ya lo tenéis (el del 1.er trimestre, 15/04, lo presentó Jorge como colaborador).
+Además ya sabemos (no preguntar): administradores **Fernando y Julián, solidarios** (BORME de constitución, 2016): **cualquiera de los dos firma solo**. Registro Mercantil de Madrid, tomo 34.358, folio 101, hoja M-618046; poderes ante la notaria Ana M. Carrió (17/12/2015).
+Preguntarle solo esto:
+- **¿Dónde está instalado** (su despacho, el ordenador de Carmen…), **a nombre de quién** (Fernando o Julián) y **hasta cuándo vale**? Si caduca antes de marzo de 2027, renovarlo ya.
+- ¿Nos puede dar **una copia** (archivo .pfx o .p12 con su contraseña) para que la app mande las facturas a Hacienda? **Nunca por WhatsApp ni por el chat**: Claude dirá cómo subirlo de forma segura. O, si lo prefiere, que lo envíe él con su certificado de colaborador (⚠️ Claude comprobará si Verifactu lo permite así).
+- Cuando esté, Claude hace el último paso (envío a Hacienda en pruebas).
 
 ## 🔴 2. Verifactu y facturar con la app desde el 1/1/2027
 - El aplazamiento a **octubre de 2028** está **anunciado, pero a 15/11/2026 no aparece en el BOE** (Claude lo mira cada lunes). ¿Él sabe algo más?

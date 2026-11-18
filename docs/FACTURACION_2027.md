@@ -45,7 +45,7 @@ Se enciende **solo si están las 5 cosas**:
 | Al arrancar la app de verdad | Supabase **Pro** (copias) y el **último nº de albarán** de Golden. |
 | 15–18/12 | Estar en la **prueba completa** (guion) o mirarla con Carmen. |
 | 22/12 | **Decisión final** con Jorge (las 5 cosas de arriba). |
-| Cuando toque (antes de oct. 2028) | Escritura o nota simple (¿administradores solidarios o mancomunados?), certificado de representante (FNMT) y **firmar la declaración responsable**. Eso lo firma Fernando o Julián; Claude solo prepara el programa y las pruebas. |
+| Cuando toque (antes de oct. 2028) | Administradores **solidarios** (BORME 2016); el **certificado de la empresa ya existe** (usado en julio de 2026): pedir a Jorge una copia y **firmar la declaración responsable**. Eso lo firma Fernando o Julián; Claude solo prepara el programa y las pruebas. |
 
 ### 👩‍💼 Carmen (oficina)
 | Cuándo | Qué |
