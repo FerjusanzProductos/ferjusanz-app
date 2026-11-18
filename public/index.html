@@ -86,18 +86,20 @@ div[style*="display:grid"]:has(>button:nth-child(3)){grid-template-columns:1fr 1
 .sheet .acciones button{flex:1 1 calc(50% - 10px);min-height:48px}
 .sheet .guardar{min-height:68px;font-size:20px;position:sticky;bottom:0;z-index:5;box-shadow:0 -6px 10px -4px rgba(0,0,0,.18)}
 .barraG{position:sticky;bottom:0;z-index:5;background:var(--bg,#fff);padding:8px 0;display:flex;gap:8px;box-shadow:0 -6px 10px -4px rgba(0,0,0,.15)}.barraG button{flex:1;margin:0;min-height:52px}
-.pres-ov{position:fixed;inset:0;z-index:9999;background:#14532d;display:flex;flex-direction:column}.pres-sc{flex:1;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
-.pd{min-width:100vw;width:100vw;height:100%;scroll-snap-align:start;box-sizing:border-box;padding:70px 22px 40px;display:flex;align-items:center;justify-content:center;color:#fff;background:linear-gradient(160deg,#14532d,#166534 60%,#15803d);overflow-y:auto}
-.pd-texto,.pd-lista,.pd-productos,.pd-precios,.pd-ofertas{background:#f0fdf4;color:#0f172a}.pd-in{width:100%;max-width:760px}
-.pd h1{font-size:clamp(38px,11vw,72px);margin:6px 0 10px;line-height:1.02;color:#fff}.pd h2{font-size:clamp(26px,7vw,44px);margin:0 0 14px;color:#166534;border-bottom:5px solid #facc15;display:inline-block;padding-bottom:4px}
-.pd-contacto h2{color:#fff}.pd-logo{margin-bottom:10px}.pd-logo img{height:clamp(30px,8vw,52px);width:auto}.pd-raya{width:90px;height:6px;background:#facc15;margin:14px auto;border-radius:4px}
-.pd-sub{font-size:clamp(16px,4.6vw,24px);color:#dcfce7;margin:6px 0}.pd-pie{font-size:clamp(13px,3.6vw,18px);color:#facc15;font-weight:700;margin-top:14px}.pd-p{font-size:clamp(16px,4.4vw,24px);line-height:1.45;margin:6px 0}
-.pd-cifras{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.pd-cifra{flex:1;min-width:28%;background:#fff;border:2px solid #86efac;border-radius:14px;padding:12px;text-align:center}.pd-cifra b{display:block;font-size:clamp(20px,6vw,32px);color:#166534}.pd-cifra span{font-size:clamp(11px,3vw,14px);color:#374151}
-.pd-ol{list-style:none;padding:0;margin:0}.pd-ol li{display:flex;gap:12px;align-items:center;margin:12px 0;font-size:clamp(16px,4.4vw,24px)}.pd-ol i{flex-shrink:0;width:38px;height:38px;border-radius:50%;background:#166534;color:#fff;font-style:normal;font-weight:800;display:flex;align-items:center;justify-content:center}
-.pd-foto{background:#fff;border:2px solid #86efac;border-radius:12px;overflow:hidden;display:flex;flex-direction:column}.pd-foto img,.pd-sinfoto{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}.pd-sinfoto{background:#dcfce7;color:#86efac;font-weight:900;font-size:48px;display:flex;align-items:center;justify-content:center}.pd-foto span{padding:8px 6px;text-align:center;font-weight:800;font-size:clamp(13px,3.6vw,18px)}.pd-ofs{display:flex;flex-direction:column;gap:10px}.pd-of{background:#fefce8;border:2px solid #facc15;border-left:8px solid #facc15;border-radius:12px;padding:12px}.pd-of b{display:block;font-size:clamp(16px,4.6vw,22px)}.pd-of span{font-size:clamp(12px,3.4vw,15px);color:#374151}.pd-ofertas{background:#f0fdf4;color:#0f172a}.pd-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.pd-chip{background:#fff;border:2px solid #86efac;border-left:7px solid #166534;border-radius:12px;padding:14px 12px;font-weight:800;font-size:clamp(15px,4.2vw,22px)}
-.pd-tabla{display:block}.pd-fila{display:flex;justify-content:space-between;gap:10px;padding:10px 8px;border-bottom:1px solid #bbf7d0;font-size:clamp(14px,4vw,21px)}.pd-fila:nth-child(odd){background:#fff}.pd-fila b{color:#166534;white-space:nowrap}.pd-nota{font-size:13px;color:#6b7280;margin-top:10px}
-.pres-top span{white-space:nowrap}.pres-top{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:8px;padding:10px 12px;color:#fff;font-weight:700;background:linear-gradient(#0008,#0000)}.pres-x{background:#0008;color:#fff;border:0;border-radius:50%;width:44px;height:44px;font-size:22px;min-height:44px}.pres-b{background:#facc15;color:#14532d;border:0;border-radius:10px;padding:8px 12px;font-weight:800;min-height:44px}
-.pres-n{position:absolute;top:50%;transform:translateY(-50%);background:#0006;color:#fff;border:0;border-radius:50%;width:44px;height:44px;font-size:28px;min-height:44px;padding:0}.pres-izq{left:6px}.pres-der{right:6px}
+.pres-ov{position:fixed;inset:0;z-index:9999;background:radial-gradient(circle at 50% 40%,#123f27,#06180e 75%);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}.pres-ov:fullscreen{background:#06180e}
+.pres-carga{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px}
+.pres-sl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transform:translateX(var(--dx,9%)) scale(.94);transition:opacity .45s ease,transform .6s cubic-bezier(.2,.8,.2,1);pointer-events:none}.pres-sl.antes{--dx:-9%}.pres-sl.on{opacity:1;transform:none;pointer-events:auto}.pres-sl.arrastra{transition:none}
+.pres-lam{position:relative;width:min(100vw,calc(100vh * 1.4137));width:min(100vw,calc(100dvh * 1.4137));aspect-ratio:1500/1061;overflow:hidden;box-shadow:0 20px 60px #0009}.pres-lam canvas{display:block;width:100%;height:100%}.pres-sl.on canvas{animation:presZoom 12s ease-out both}
+@keyframes presZoom{from{transform:scale(1)}to{transform:scale(1.045)}}
+@media (orientation:portrait){.pres-lam{width:calc(100vw - 16px);border-radius:12px}.pres-pie::before{content:'↻ Gira el móvil (o pulsa «⟳ Girar») para verla en grande';text-align:center;font-size:14px;opacity:.85;margin-bottom:4px}}
+.pres-enl{position:absolute;border-radius:999px}
+.pres-top,.pres-pie{position:absolute;left:0;right:0;display:flex;align-items:center;gap:8px;padding:10px 12px;color:#fff;font-weight:700;transition:opacity .3s,transform .3s;z-index:2}.pres-top{top:0;background:linear-gradient(#000a,#0000)}.pres-pie{bottom:0;flex-direction:column;align-items:stretch;padding-bottom:max(10px,env(safe-area-inset-bottom));background:linear-gradient(#0000,#000a)}
+.pres-top span{white-space:nowrap;font-size:17px}.pres-ov .pres-x,.pres-ov .pres-r{background:#ffffff26;color:#fff;border:1px solid #ffffff40;border-radius:999px;min-width:48px;height:48px;min-height:48px;padding:0 14px;font-size:17px;font-weight:800;backdrop-filter:blur(6px)}
+.pres-acc{display:flex;gap:8px}.pres-ov .pres-b{flex:1;background:#f2b705;color:#0d3a22;border:0;border-radius:14px;padding:8px 6px;font-weight:800;font-size:16px;min-height:50px;box-shadow:0 6px 18px #0006}.pres-ov .pres-b:active,.pres-ov .pres-r:active,.pres-ov .pres-x:active{transform:scale(.96)}
+.pres-barra{display:flex;gap:4px}.pres-barra i{flex:1;height:4px;border-radius:2px;background:#ffffff40;overflow:hidden}.pres-barra i.ya{background:#f2b705}.pres-barra i.on{background:linear-gradient(90deg,#f2b705 var(--p,100%),#ffffff40 0)}
+.pres-ov .pres-n{position:absolute;top:50%;transform:translateY(-50%);background:#0007;color:#fff;border:0;border-radius:50%;width:48px;height:48px;font-size:30px;min-height:48px;padding:0;z-index:2;transition:opacity .3s}.pres-izq{left:8px}.pres-der{right:8px}.pres-n:disabled{opacity:0!important}
+@media (orientation:landscape){.pres-ov.quieto .pres-top,.pres-ov.quieto .pres-pie,.pres-ov.quieto .pres-n{opacity:0;pointer-events:none}}
+@media (prefers-reduced-motion:reduce){.pres-sl,.pres-sl.on canvas{transition:opacity .2s;transform:none;animation:none}}
 label.campo{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--txt2);margin-bottom:10px}
 .res{background:#fff;border:1px solid var(--borde);border-radius:12px;margin-top:6px;overflow:hidden}
 .res button{display:block;width:100%;text-align:left;background:#fff;color:var(--txt);border-radius:0;border-bottom:1px solid var(--borde);min-height:48px;font-weight:500}
@@ -1311,8 +1313,8 @@ window.addEventListener('popstate', e => {
   if (NAV.salto != null) { const dd = (e.state && e.state.d) || 0;   /* go() ya pintó la pantalla: solo terminar de retroceder */
     if (e.state && dd > NAV.salto) { try { history.go(NAV.salto - dd); } catch (x) { } return; }
     NAV.salto = null; NAV.d = dd; return; }
-  const vd = document.querySelector('.visordoc');   // el visor de facturas va por encima: «atrás» solo lo cierra a él
-  if (vd) { vd.remove(); return; }   /* el visor tenía su propio paso en el historial: ya se ha gastado */
+  const vd = document.querySelector('.visordoc, .pres-ov');   // el visor de facturas o de la presentación va por encima: «atrás» solo lo cierra a él
+  if (vd) { vd.remove(); if (document.fullscreenElement) document.exitFullscreen().catch(() => { }); return; }   /* el visor tenía su propio paso en el historial: ya se ha gastado */
   const ov = document.querySelector('.overlay');
   if (ov) { ov.remove(); state.sheetAbierta = false; try { history.pushState(navSnap(NAV.d), ''); } catch (x) { } return; }
   if (MR.dentro() && state.view === 'modoreparto' && !(e.state && e.state.v === 'pedido')) { try { history.pushState(navSnap(NAV.d), ''); } catch (x) { } return; }   /* modo reparto: «atrás» no saca de él */
@@ -12552,14 +12554,8 @@ async function presPdfHojas(bytes, ancho) {
   for (let i = 1; i <= pdf.numPages; i++) { const pg = await pdf.getPage(i), vp = pg.getViewport({ scale: ancho / pg.getViewport({ scale: 1 }).width }), c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height; await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise; hojas.push(c); }
   return hojas;
 }
-async function presVerPdf(laminas) {
-  const caja = h('div', { style: 'flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px' }, h('p', { style: 'color:#fff' }, 'Preparando…'));
-  const ov = h('div', { style: 'position:fixed;inset:0;z-index:9999;background:#0b1f12;display:flex;flex-direction:column;padding:10px;gap:8px' },
-    h('div', { style: 'display:flex;gap:8px;align-items:center;color:#fff;font-weight:700' }, h('span', { style: 'flex:1' }, '👁 Así le llega la presentación'), h('button', { class: 'guardar', style: 'min-height:48px;padding:0 18px', onclick: () => ov.remove() }, '✕ Cerrar')), caja);
-  document.body.append(ov);
-  try { const hojas = (await presArchivoPdf(await presExpandir(laminas, false))).hojas; hojas.forEach(c => { c.style.cssText = 'width:100%;height:auto;border-radius:6px;background:#fff'; }); caja.replaceChildren(...hojas); }
-  catch (e) { caja.replaceChildren(h('p', { style: 'color:#fff' }, 'No se pudo preparar: ' + msgErr(e))); }
-}
+/* «👁 Así le llega»: el mismo visor, sin botones de enviar. */
+const presVerPdf = laminas => presVisor(laminas);
 /* Guion para el vídeo (Fernando: «que influya psicológicamente… que los primeros segundos se queden en el vídeo y no se vayan»;
    17/11/2026: «más corto pero que no falte la información esencial» → «más reducido»).
    Unos 30 s: gancho, quiénes somos, cómo trabajamos, sin riesgo y petición. Los detalles van en el mensaje y el PDF. */
@@ -12864,19 +12860,6 @@ async function presExpandir(slides, conLista) {
   return out;
 }
 const presPrecio = (p, u) => Number(p).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 3 }).replace(/(,\d\d)0$/, '$1') + ' € / ' + (u || 'kg');
-function presLamina(d) {
-  const s = h('section', { class: 'pd pd-' + d.t });
-  const tit = t => h('h2', {}, t || '');
-  let c;
-  if (d.t === 'portada') c = h('div', { class: 'pd-in', style: 'text-align:center' }, h('div', { class: 'pd-logo' }, h('img', { src: 'pres/logo-oscuro.png', alt: 'Ferjusanz' })), h('h1', {}, d.titulo), h('div', { class: 'pd-raya' }), h('p', { class: 'pd-sub' }, d.sub), d.pie ? h('p', { class: 'pd-pie' }, d.pie) : null);
-  else if (d.t === 'texto') c = h('div', { class: 'pd-in' }, tit(d.titulo), h('p', { class: 'pd-p' }, d.texto), (d.cifras || []).length ? h('div', { class: 'pd-cifras' }, d.cifras.filter(x => x && (x[0] || x[1])).map(x => h('div', { class: 'pd-cifra' }, h('b', {}, x[0]), h('span', {}, x[1])))) : null);
-  else if (d.t === 'lista') c = h('div', { class: 'pd-in' }, tit(d.titulo), h('ol', { class: 'pd-ol' }, (d.puntos || []).filter(Boolean).map((p, i) => h('li', {}, h('i', {}, String(i + 1)), h('span', {}, p)))), d.enlace && d.enlace.url ? h('a', { href: d.enlace.url, target: '_blank', rel: 'noopener', style: 'display:block;margin-top:14px;padding:14px;background:#166534;color:#fff;text-align:center;font-weight:700;border-radius:6px;text-decoration:none' }, d.enlace.texto) : null);
-  else if (d.t === 'productos') c = h('div', { class: 'pd-in' }, tit(d.titulo), h('div', { class: 'pd-grid' }, (d.items || []).filter(Boolean).map(x => d.conFoto ? h('div', { class: 'pd-foto' }, (d.fotos || {})[x] ? h('img', { src: d.fotos[x].u, alt: x }) : h('div', { class: 'pd-sinfoto' }, x.charAt(0).toUpperCase()), h('span', {}, x)) : h('div', { class: 'pd-chip' }, x))));
-  else if (d.t === 'ofertas') c = h('div', { class: 'pd-in' }, tit(d.titulo), (d.items || []).length ? h('div', { class: 'pd-ofs' }, d.items.map(x => h('div', { class: 'pd-of' }, h('b', {}, '🏷️ ' + x.n), x.t ? h('span', {}, x.t) : null))) : h('p', { class: 'pd-p' }, d.texto || ''));
-  else if (d.t === 'precios') c = h('div', { class: 'pd-in' }, tit((d.titulo || 'Lista de precios') + (d.partes > 1 ? ' (' + d.parte + '/' + d.partes + ')' : '')), d.aviso ? h('p', { class: 'pd-p', style: 'color:#b45309' }, d.aviso) : h('div', { class: 'pd-tabla' }, d.items.map(x => h('div', { class: 'pd-fila' }, h('span', {}, x.nombre), h('b', {}, presPrecio(x.precio, x.unidad))))), d.nota ? h('p', { class: 'pd-nota' }, d.nota) : null);
-  else c = h('div', { class: 'pd-in', style: 'text-align:center' }, h('div', { class: 'pd-logo' }, h('img', { src: 'pres/logo-oscuro.png', alt: 'Ferjusanz' })), tit(d.titulo), ...(d.lineas || []).filter(Boolean).map((l, i) => h('p', { class: i === 0 ? 'pd-p' : 'pd-sub', style: 'margin:6px 0' }, l)));
-  s.append(c); return s;
-}
 /* ===== Presentación dibujada como imágenes (16/11/2026, Fernando: «parece un PowerPoint de primaria; hazlo muchísimo mejor») =====
    Cada hoja se pinta en un lienzo de 1500×1061 (proporción A4 apaisado) con fotos a sangre, degradados y las letras de la web
    (Barlow Condensed / Barlow, en public/pres). El PDF lleva una imagen por hoja + el enlace que se pulsa; la vista previa y el vídeo
@@ -12988,20 +12971,47 @@ async function presArchivoPdf(laminas) {
   }
   return { bytes: doc.bytes(), hojas: hojas.map(x => x.cv) };
 }
-/* Presentar a pantalla completa: se pasa con el dedo (o con las flechas) y se cierra con la X */
-async function presPresentar(p) {
-  toast('Preparando la presentación…', 'ok');
-  const lam = await presExpandir(p.diapositivas || [], false); if (!lam.length) { toast('La presentación no tiene láminas', 'err'); return; }
-  const ov = h('div', { class: 'pres-ov' }); const sc = h('div', { class: 'pres-sc' }, lam.map(presLamina)); const cnt = h('span', {}, '1 / ' + lam.length);
-  const cerrar = () => { ov.remove(); document.removeEventListener('keydown', tecla); state.sheetAbierta = false; };
-  const ir = d => { const w = sc.clientWidth; sc.scrollBy({ left: d * w, behavior: 'smooth' }); };
-  const tecla = e => { if (e.key === 'Escape') cerrar(); else if (e.key === 'ArrowRight') ir(1); else if (e.key === 'ArrowLeft') ir(-1); };
-  sc.addEventListener('scroll', () => { const i = Math.round(sc.scrollLeft / sc.clientWidth); cnt.textContent = (i + 1) + ' / ' + lam.length; });
+/* Visor a pantalla completa (18/11/2026, Fernando: «más dinámico, más bonito y que se pueda girar en horizontal y se vea entero»).
+   Enseña las mismas láminas dibujadas que el PDF, enteras en la pantalla (de pie o tumbado). Se pasa con el dedo, las flechas o solo (▶);
+   «⟳ Girar» pone pantalla completa y tumba el móvil aunque el giro automático esté apagado. Tumbado, los botones se esconden: tocar los saca. */
+async function presVisor(laminas, botones) {
+  document.querySelectorAll('.pres-ov').forEach(o => o.remove());
+  const ov = h('div', { class: 'pres-ov' }, h('div', { class: 'pres-carga' }, '⏳ Preparando la presentación…'));
+  document.body.append(ov); try { history.pushState(navSnap(NAV.d), ''); } catch (e) { }
+  const cerrar = () => { if (ov.isConnected) history.back(); };   /* «atrás» lo quita (popstate) */
+  let hojas; try { hojas = await presLienzos(await presExpandir(laminas || [], false)); } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); cerrar(); return; }
+  if (!ov.isConnected) return; if (!hojas.length) { toast('La presentación no tiene láminas', 'err'); cerrar(); return; }
+  const N = hojas.length, PASO = 7000; let i = 0, auto = null, t0 = 0, quieto = null;
+  const pc = (v, t) => (v / t * 100) + '%';
+  const sls = hojas.map(({ cv, enlace }) => h('div', { class: 'pres-sl' }, h('div', { class: 'pres-lam' }, cv,
+    enlace && enlace.url ? h('a', { class: 'pres-enl', href: enlace.url, target: '_blank', rel: 'noopener', 'aria-label': 'Abrir el formulario', style: 'left:' + pc(enlace.x, PRES_W) + ';top:' + pc(enlace.y, PRES_H) + ';width:' + pc(enlace.w, PRES_W) + ';height:' + pc(enlace.h, PRES_H) }) : null)));
+  const cnt = h('span', {}), barra = h('div', { class: 'pres-barra' }, sls.map(() => h('i'))), izq = h('button', { class: 'pres-n pres-izq', 'aria-label': 'Anterior', onclick: () => ir(i - 1) }, '‹'), der = h('button', { class: 'pres-n pres-der', 'aria-label': 'Siguiente', onclick: () => ir(i + 1) }, '›');
+  const bAuto = h('button', { class: 'pres-r', 'aria-label': 'Pasar solas', onclick: () => { auto ? para() : (i === N - 1 && ir(0), arranca()); } }, '▶');
+  const despierta = () => { ov.classList.remove('quieto'); clearTimeout(quieto); quieto = setTimeout(() => ov.classList.add('quieto'), 3500); };
+  const pinta = () => { sls.forEach((s, k) => { s.classList.toggle('on', k === i); s.classList.toggle('antes', k < i); s.style.transform = ''; }); [...barra.children].forEach((b, k) => { b.className = k < i ? 'ya' : k === i ? 'on' : ''; b.style.removeProperty('--p'); }); cnt.textContent = (i + 1) + ' / ' + N; izq.disabled = i === 0; der.disabled = i === N - 1; };
+  const ir = k => { if (k < 0 || k >= N) return; i = k; t0 = Date.now(); pinta(); };
+  const para = () => { clearInterval(auto); auto = null; bAuto.textContent = '▶'; pinta(); };
+  const arranca = () => { t0 = Date.now(); bAuto.textContent = '⏸'; auto = setInterval(() => { if (!ov.isConnected) return para(); const p = (Date.now() - t0) / PASO; if (p >= 1) { if (i < N - 1) ir(i + 1); else para(); } else barra.children[i].style.setProperty('--p', (p * 100) + '%'); }, 100); };
+  let tumbado = false;
+  const girar = async () => { try { if (tumbado) { tumbado = false; try { screen.orientation.unlock(); } catch (e) { } if (document.fullscreenElement) await document.exitFullscreen(); return; }
+    if (!document.fullscreenElement) await ov.requestFullscreen({ navigationUI: 'hide' }); await screen.orientation.lock('landscape'); tumbado = true; despierta(); }
+    catch (e) { toast('Gira el móvil. Si no gira, baja la barra de arriba del móvil y activa «Rotación automática».', 'ok'); } };
+  const tecla = e => { if (!ov.isConnected) { document.removeEventListener('keydown', tecla); return; } if (e.key === 'Escape') cerrar(); else if (e.key === 'ArrowRight' || e.key === ' ') ir(i + 1); else if (e.key === 'ArrowLeft') ir(i - 1); };
   document.addEventListener('keydown', tecla);
-  ov.append(sc, h('div', { class: 'pres-top' }, h('button', { class: 'pres-x', 'aria-label': 'Cerrar', onclick: cerrar }, '✕'), cnt, h('span', { style: 'flex:1' }), h('button', { class: 'pres-b', onclick: () => presPdf(p, 'bajar') }, '📄 PDF'), h('button', { class: 'pres-b', onclick: () => presPdf(p, 'enviar') }, '📲 Enviar'), h('button', { class: 'pres-b', onclick: () => presPdf(p, 'enviar', true) }, '💶 + precios')),
-    h('button', { class: 'pres-n pres-izq', 'aria-label': 'Anterior', onclick: () => ir(-1) }, '‹'), h('button', { class: 'pres-n pres-der', 'aria-label': 'Siguiente', onclick: () => ir(1) }, '›'));
-  document.body.append(ov); state.sheetAbierta = true;
+  /* Arrastrar: la lámina sigue al dedo; al soltar pasa si se movió bastante. Un toque sin mover saca o esconde los botones. */
+  let x0 = null, dx = 0;
+  ov.addEventListener('pointerdown', e => { if (e.target.closest('button,a')) return; x0 = e.clientX; dx = 0; sls[i].classList.add('arrastra'); });
+  ov.addEventListener('pointermove', e => { if (x0 == null) return; dx = e.clientX - x0; sls[i].style.transform = 'translateX(' + dx + 'px)'; });
+  const suelta = () => { if (x0 == null) return; x0 = null; sls[i].classList.remove('arrastra'); const w = ov.clientWidth;
+    if (Math.abs(dx) > Math.min(70, w * 0.15) && (dx < 0 ? i < N - 1 : i > 0)) { if (auto) para(); ir(i + (dx < 0 ? 1 : -1)); }
+    else { sls[i].style.transform = ''; if (Math.abs(dx) < 8) ov.classList.contains('quieto') ? despierta() : ov.classList.add('quieto'); } };
+  ov.addEventListener('pointerup', suelta); ov.addEventListener('pointercancel', suelta);
+  ov.replaceChildren(...sls, izq, der,
+    h('div', { class: 'pres-top' }, h('button', { class: 'pres-x', 'aria-label': 'Cerrar', onclick: cerrar }, '✕'), cnt, h('span', { style: 'flex:1' }), bAuto, h('button', { class: 'pres-r', onclick: girar }, '⟳ Girar')),
+    h('div', { class: 'pres-pie' }, (botones || []).length ? h('div', { class: 'pres-acc' }, botones.map(([t, f]) => h('button', { class: 'pres-b', onclick: f }, t))) : null, barra));
+  pinta(); despierta();
 }
+const presPresentar = p => presVisor(p.diapositivas, [['📄 PDF', () => presPdf(p, 'bajar')], ['📲 Enviar', () => presPdf(p, 'enviar')], ['💶 + precios', () => presPdf(p, 'enviar', true)]]);
 async function presPdf(p, accion, conLista) {
   try { const lam = await presExpandir(p.diapositivas || [], !!conLista); const bytes = (await presArchivoPdf(lam)).bytes; const nombre = (sinTilde(p.titulo || 'ferjusanz').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'ferjusanz') + (conLista ? '-con-precios' : '') + '-' + hoy() + '.pdf';
     if (accion === 'enviar') await comCompartir(bytes, nombre, p.titulo); else { comDescargar(bytes, nombre); toast('PDF descargado', 'ok'); } }
