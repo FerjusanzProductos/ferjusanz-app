@@ -1,0 +1,78 @@
+<title>Panel Ferjusanz</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Una columna para el móvil: cifras clave arriba y bloques por tema debajo. */
+:root{--bg:#f5f6f2;--fg:#1d261d;--muted:#5b675a;--line:#dbe1d7;--card:#fff;--acc:#2e7d32;--warn:#b45309;--bar:#a5d6a7}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#131913;--fg:#e5ebe3;--muted:#9eac9c;--line:#2b352a;--card:#1a221a;--acc:#7cc47f;--warn:#f0a050;--bar:#2f6b33;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#131913;--fg:#e5ebe3;--muted:#9eac9c;--line:#2b352a;--card:#1a221a;--acc:#7cc47f;--warn:#f0a050;--bar:#2f6b33;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+main{max-width:720px;margin:0 auto}
+h1{font-size:1.5rem;margin:0}
+.sub,small,.pie{color:var(--muted);font-size:.85rem}
+.tarjetas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
+.t{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;border-left:5px solid var(--acc)}
+.t.aviso{border-left-color:var(--warn)}
+.t b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums}
+.t span{font-size:.85rem;color:var(--muted)}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px 16px 14px;margin-bottom:16px}
+h2{font-size:1.1rem;margin:12px 0 6px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:5px 4px;text-align:right;white-space:nowrap}
+th[scope=row]{text-align:left;font-weight:500}
+thead th{font-size:.8rem;color:var(--muted);font-weight:500}
+td.barra{width:100%;min-width:40px}
+th,td{font-size:.95rem}
+td.barra span{display:block;height:12px;background:var(--bar);border-radius:3px}
+ul{padding-left:20px;margin:4px 0}li{margin:5px 0;overflow-wrap:anywhere}
+a{color:var(--acc)}
+</style>
+<main>
+<h1>Panel Ferjusanz</h1>
+<p class="sub">Actualizado el 18/11, 16:19. Datos de Golden hasta el 16 nov. Solo datos reales: los pedidos y cobros de la app aún son de prueba.</p>
+
+<div class="tarjetas">
+<div class="t aviso"><b>41.531 €</b><span>por cobrar ya vencido (58 recibos)</span></div>
+<div class="t"><b>86.957 €</b><span>ventas de oct 26 (sin IVA)</span></div>
+<div class="t aviso"><b>70</b><span>facturas de proveedor por revisar</span></div>
+<div class="t aviso"><b>1</b><span>posibles clientes a los que toca llamar</span></div>
+</div>
+
+<section><h2>💶 Ventas por mes (Golden, sin IVA)</h2>
+<table><thead><tr><th></th><th></th><th>Ventas</th><th>Margen</th></tr></thead><tbody>
+<tr><th scope="row">jun 26</th>
+<td class="barra"><span style="width:99%"></span></td><td>89.508 €</td><td>38 %</td></tr>
+<tr><th scope="row">jul 26</th>
+<td class="barra"><span style="width:81%"></span></td><td>72.676 €</td><td>37 %</td></tr>
+<tr><th scope="row">ago 26</th>
+<td class="barra"><span style="width:53%"></span></td><td>48.099 €</td><td>39 %</td></tr>
+<tr><th scope="row">sept 26</th>
+<td class="barra"><span style="width:100%"></span></td><td>90.268 €</td><td>41 %</td></tr>
+<tr><th scope="row">oct 26</th>
+<td class="barra"><span style="width:96%"></span></td><td>86.957 €</td><td>39 %</td></tr>
+<tr><th scope="row">nov 26*</th>
+<td class="barra"><span style="width:3%"></span></td><td>2787 €</td><td>40 %</td></tr>
+</tbody></table>
+<p class="pie">* Mes en curso. Las facturas mensuales (serie P) salen a final de mes: el mes en curso parece bajo hasta entonces.</p></section>
+
+<section><h2>📥 Cobros (Golden)</h2>
+<p>Sin cobrar según Golden: <b>41.531 €</b>, de ello <b>41.531 €</b> ya vencido. Los que más deben (vencido):</p>
+<ul><li><b>Cubastur2007 S.L</b> · 7550 € <small>(5 recibos, desde el 31 jul)</small></li><li><b>LA FIGAL DE PABLO S.L</b> · 6667 € <small>(1 recibo, desde el 31 oct)</small></li><li><b>CEIIP REGGIO SL</b> · 3352 € <small>(1 recibo, desde el 31 oct)</small></li><li><b>EN UN PISPASS RESTAURACION S.L</b> · 2693 € <small>(1 recibo, desde el 31 oct)</small></li><li><b>Lopez Coca Hosteleros SL</b> · 2125 € <small>(1 recibo, desde el 31 oct)</small></li><li><b>Aguila Rock S.L.</b> · 1976 € <small>(2 recibos, desde el 30 sept)</small></li></ul></section>
+
+<section><h2>📤 Pagos a proveedores (Golden)</h2>
+<p>Sin marcar como pagado en Golden: <b>75.311 €</b> (vence esta semana: 0 €). Si es mucho, puede que en Golden falte marcar pagos ya hechos.</p>
+<p>Facturas de proveedor llegadas en 7 días: <b>43</b> · por revisar en la app: <b>70</b>.</p></section>
+
+<section><h2>🎯 Clientes</h2>
+<p>Clientes activos: <b>148</b> · posibles clientes: <b>56</b> (sin contactar: 55).</p>
+<p>Visitas a la web en 7 días: <b>266</b> (249 desde móvil).</p></section>
+
+<section><h2>🤖 Lo último de los ayudantes</h2>
+<ul><li>Mercado: del 18 nov</li><li>Comercial del día: del 18 nov</li><li>Posibles clientes: del 18 nov</li><li>Plan de la semana: del 18 nov</li></ul>
+<p>Se leen en la app (📊 Resumen y correo) y en <a href="https://claude.ai/artifact/WomsAtCVCe1cqaQCwqd9Wh">Comercial Ferjusanz</a>.</p></section>
+
+<section><h2>📌 Otras páginas</h2>
+<ul><li><a href="https://claude.ai/artifact/5nRfWBHbCCBR6EBRJRxwND">Pendientes</a></li>
+<li><a href="https://claude.ai/artifact/VSPKY1BfUkgc5CVJkm53hi">Plan Google y redes</a></li>
+<li><a href="https://claude.ai/artifact/5qQe3mrM3E9wHwrQACgkmG">Reunión con Jorge</a></li></ul></section>
+<p class="pie">Margen, compras y cobros: solo para Fernando, su padre y Jorge. Se actualiza solo cada mañana.</p>
+</main>

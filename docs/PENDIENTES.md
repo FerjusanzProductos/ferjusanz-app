@@ -27,6 +27,11 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - ⚪ **Claude**: al pasar el artículo 45 del plan (11/02/2027), añadir la siguiente tanda en `docs/PLAN_MARKETING.md`.
 - ⚪ Otras ideas para subir en Google: reseñas, publicaciones semanales en la ficha, directorios, informe mensual. Plan: `docs/PLAN_MARKETING.md`; lista completa en `docs/LISTA_PARA_ENVIAR.md`.
 
+## 🤖 IDEAS DEL TIKTOK DE LOS 5 AYUDANTES (Fernando, 18/11/2026; el panel ya está hecho)
+- 🟡 **Buscador de clientes**: lista de negocios con cocina propia de Madrid y Segovia (bares, restaurantes, colegios, residencias) que no sean ya clientes ni prospectos, puntuados y con canal de contacto legal.
+- 🟡 **Radar de ideas**: cada mañana, 3 problemas o novedades reales del sector (quejas de hosteleros, precios, competencia) con una idea de qué hacer.
+- 🟡 **Respondedor automático**: que Harvey deje preparadas las respuestas a WhatsApp y correo de clientes; nunca se envía nada sin Fernando.
+- ⚪ **Equipo de agentes**: juntar las tareas automáticas que ya hay (comercial, mercado, leads, web, Golden, panel) en un solo sitio para verlas y encenderlas o apagarlas.
 ## 📱 LA APP
 - 🟡 **Gastos para calcular el beneficio** (Fernando, 18/11/2026; se lo pregunta a su padre): cuánto se paga al mes de **puesto/nave en Mercamadrid, seguros, gestoría (Jorge), teléfono, Golden, furgonetas (renting, taller, ITV), Seguridad Social** de Carmen, Dani y Cristian (o si los sueldos que dio son brutos o netos), **cuota de autónomos** de Juli y Fernando, y lo que se paga a Hacienda. Con eso, Claude rehace el beneficio de 2026 con datos y no con estimaciones. La gasolina y los gastos del reparto ya se apuntan en la app (desde la v440).
 - 🟡 **Oficina**: ir apuntando las respuestas de los 17 clientes a los que se escribió el 18/11 («✔ Usar» / «✏️ Escribir a mano» y «✅ Contestado» en Clientes › «📇 Pedir correo y teléfono») y llamar a los que no tienen correo público.
