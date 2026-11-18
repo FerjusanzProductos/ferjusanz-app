@@ -10054,7 +10054,8 @@ function vistaRentabilidad() {
   function pintar() {
     if (!R) return; const kids = [];
     const vc = r2(Object.values(R.P).reduce((s, x) => s + x.vc, 0)), co = r2(Object.values(R.P).reduce((s, x) => s + x.coste, 0)), m = r2(vc - co);
-    kids.push(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', { class: 'nombre' }, 'Facturación (sin IVA)'), h('div', { class: 'tot-num' }, eur(R.venta) + '\u00a0€')),
+    kids.push(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', { class: 'nombre' }, 'Facturado (IVA aparte)'), h('div', { class: 'tot-num' }, eur(R.venta) + '\u00a0€')),
+      h('div', { class: 'sub' }, 'Lo facturado sin sumar el IVA, porque el IVA es de Hacienda y no es ganancia. No tiene nada que ver con los clientes «sin IVA».'),
       h('div', { class: 'sub' }, R.pedidos + (R.golden ? ' facturas de Golden · media por factura ' : ' pedidos terminados · ticket medio ') + eur(R.pedidos ? r2(R.venta / R.pedidos) : 0) + '\u00a0€'),
       h('div', { class: 'sub' }, vc ? 'Margen sobre lo que tiene coste: ' + (m >= 0 ? '+' : '') + eur(m) + '\u00a0€ (' + pct(m, vc) + ' %)' : 'Aún no hay costes para calcular márgenes.')));
     if (R.golden) kids.push(h('div', { class: 'sub', style: 'margin:4px 0 8px' }, 'Datos reales de Golden: cada línea de factura con su coste (el del «Listado de beneficios»). Se ponen al día solos cada mañana.'));
@@ -10106,7 +10107,7 @@ function vistaGoldenMargen() {
       if (modo === 'proveedor') {
         const r = await sb.rpc('golden_compras_por', { p_desde: desde, p_hasta: hasta }); if (r.error) throw r.error; if (yo !== pide) return;
         const o = r.data || [], b = o.reduce((s, x) => s + Number(x.base || 0), 0), t = o.reduce((s, x) => s + Number(x.total || 0), 0);
-        tot.replaceChildren(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', { class: 'nombre' }, 'Compras (sin IVA)'), h('div', { class: 'tot-num' }, eur(b) + ' €')), h('div', { class: 'sub' }, o.reduce((s, x) => s + Number(x.facturas), 0) + ' facturas de ' + o.length + ' proveedores · con IVA ' + eur(t) + ' €')));
+        tot.replaceChildren(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', { class: 'nombre' }, 'Compras (IVA aparte)'), h('div', { class: 'tot-num' }, eur(b) + ' €')), h('div', { class: 'sub' }, o.reduce((s, x) => s + Number(x.facturas), 0) + ' facturas de ' + o.length + ' proveedores · con IVA ' + eur(t) + ' €')));
         res.replaceChildren(...(o.length ? o.map(x => tarjeta(nomProvG(x.clave, x.nombre), eur(x.base) + ' €', 'var(--txt)', x.facturas + (Number(x.facturas) === 1 ? ' factura' : ' facturas') + ' · ' + pct(Number(x.base), b) + ' de lo comprado · toca para ver qué',
           async () => { const c = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…')); hoja(nomProvG(x.clave, x.nombre), c); try { const p = await sb.rpc('golden_compras_productos', { p_prov: x.clave, p_desde: desde, p_hasta: hasta }); if (p.error) throw p.error;
             c.replaceChildren(...(p.data || []).map(l => h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:15px' }, l.nombre || l.clave), h('div', { class: 'sub' }, num(l.cantidad) + ' ud/kg' + (Number(l.cantidad) ? ' · ' + eur(Number(l.neto) / Number(l.cantidad)) + ' € de media' : ''))), h('b', {}, eur(l.neto) + ' €')))); } catch (e) { c.replaceChildren(h('p', { class: 'err' }, msgErr(e))); } })) : [h('p', { class: 'vacio' }, 'No hay compras en estas fechas.')]));
@@ -10116,7 +10117,7 @@ function vistaGoldenMargen() {
       if (r.error) throw r.error; if (yo !== pide) return;
       const v = fs.reduce((s, f) => s + Number(f.base || 0), 0), c = fs.reduce((s, f) => s + Number(f.coste || 0), 0);
       tot.replaceChildren(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', { class: 'nombre' }, 'Beneficio'), h('div', { class: 'tot-num', style: 'color:' + (v - c < 0 ? 'var(--rojo)' : 'var(--verde-osc)') }, signo(v - c))),
-        h('div', { class: 'sub' }, 'Vendido ' + eur(v) + ' € sin IVA · coste ' + eur(c) + ' € · margen ' + pct(v - c, v) + ' · ' + fs.length + ' facturas (como el «Listado de beneficios» de Golden)')));
+        h('div', { class: 'sub' }, 'Vendido ' + eur(v) + ' € (IVA aparte) · coste ' + eur(c) + ' € · margen ' + pct(v - c, v) + ' · ' + fs.length + ' facturas (como el «Listado de beneficios» de Golden)')));
       const o = (r.data || []).filter(x => Math.abs(Number(x.venta || 0)) >= 0.01 || Number(x.coste || 0));
       res.replaceChildren(...(o.length ? o.slice(0, 150).map(x => { const m = Number(x.venta || 0) - Number(x.coste || 0); return tarjeta(x.nombre || x.clave || '(sin código)', signo(m), m < 0 ? 'var(--rojo)' : 'var(--verde-osc)',
         'Vendido ' + eur(x.venta) + ' € · coste ' + eur(x.coste) + ' € · margen ' + pct(m, Number(x.venta)) + (modo === 'producto' ? ' · ' + num(x.cantidad) + ' ud/kg' : ' · ' + x.facturas + (Number(x.facturas) === 1 ? ' factura' : ' facturas'))); }) : [h('p', { class: 'vacio' }, 'No hay ventas en estas fechas.')]));
