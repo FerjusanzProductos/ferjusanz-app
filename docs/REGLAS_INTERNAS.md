@@ -201,3 +201,6 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 ## Mensajes a clientes: nunca de noche (Fernando, 18/11/2026)
 - Correos y WhatsApp a clientes **solo entre las 8:00 y las 20:00** (hora de Madrid), de lunes a sábado. Si Fernando dice «manda» fuera de esa hora sin decir cuándo, se **programa para las 8:00** siguientes; nunca se envía al momento de noche. (El 18/11 salieron 17 correos a las 3:00 y no estuvo bien.)
 
+## Vídeos de Super 9 (Tito, 18/11/2026)
+- El vídeo con la **voz de Carlos** va **solo en la app** (para mandárselo a él). En la **web** va el de **Tito hablando de Carlos**.
+- Siempre **«Super 9 Carnicerías»** (en plural), nunca «Carnicería Super 9».

@@ -774,7 +774,6 @@ function super9() {
   <p class="entradilla">Nos recomendamos el uno al otro: fruta, verdura, patatas y huevos de Ferjusanz y la carne de Super 9. Hable con cada uno directamente por WhatsApp.</p>
   <div style="display:flex;gap:14px;align-items:center;margin-top:24px"><img src="/marca/super9.png" alt="Super 9 Carnicerías" width="96" height="96"><h2 style="margin:0">Super 9 Carnicerías · Carlos Zúñiga</h2></div>
   <p>Más de 10 años sirviendo, empresa en crecimiento y muchísima variedad de género, con buena relación calidad-precio. <strong>100 % recomendado.</strong></p>
-  <video src="/fotos/2026/11/super9-carlos.mp4" poster="/fotos/2026/11/super9-carlos.jpg" controls playsinline preload="none" style="width:100%;margin:16px 0"></video>
   <h3>Nuestras 3 ubicaciones</h3><ul>${SUPER9.tiendas.map(t => `<li>${t}</li>`).join('')}</ul>
   <div class="acciones apiladas"><a class="btn btn-wa" href="${wa(SUPER9.num, 'Hola Carlos, he visto la tarjeta de Super 9 y Ferjusanz y quería información de la carne: ')}" rel="nofollow">${I.wa}<span>WhatsApp de Carlos <small>(${SUPER9.ver})</small></span></a>
   <a class="btn btn-borde" href="${SUPER9.insta}" rel="nofollow"><span>Ver Super 9 en Instagram</span>${I.flecha}</a>
