@@ -39,7 +39,7 @@ Se enciende **solo si están las 5 cosas**:
 | Cuándo | Qué |
 |---|---|
 | ✔️ 13/11 | «Autorizo» dado; Claude lo aplicó en la base real y en la de pruebas. |
-| Antes del 20/11 | 🔴 Sacar de Golden la **lista de clientes en Excel** (código, nombre, NIF, dirección, CP, localidad) para cargar los NIF que faltan. |
+| Antes del 20/11 | ✅ (18/11) Datos de clientes sacados de Golden directamente (SQL Server) y huecos rellenados; ver `scripts/golden/LEEME.md`. |
 | Antes del 30/11 | 🔴 Decidir con Jorge los **clientes «sin IVA»** (todas las ventas facturadas; si se quiere, bajar el precio). Sin esto no se factura desde la app. |
 | Antes del 30/11 | Hablar con **Golden**: que siga disponible en enero (Plan B) y **cómo guardar todo el histórico** de facturas (hay que conservarlas 4–6 años aunque se deje Golden). |
 | Al arrancar la app de verdad | Supabase **Pro** (copias) y el **último nº de albarán** de Golden. |

@@ -31,7 +31,8 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - 🟡 Hablar con **Carmen** y con **Jorge** (o la gestoría) de sus funciones desde enero: oficina + clientes, objetivos y premio por escrito (https://claude.ai/artifact/R8Zor6BHenQdEi3FMbJJSn).
 - 🔴 Avisar **2-3 días antes** del día en que se empieza a usar la app de verdad.
 - 🔴 Antes del 30/11: decidir con Jorge los **clientes «sin IVA»** (todo tiene que ir facturado; si se quiere, se baja el precio). Sin esto no se puede firmar la declaración ni facturar desde la app. Y confirmar la lista.
-- 🔴 Sacar de Golden la **lista de clientes en Excel** (código, nombre, NIF, dirección, CP, localidad) para cargar los NIF que faltan.
+- 🔴 **En EQUIPO-2 (oficina), una vez**: pegar en PowerShell la versión nueva del programa que saca Golden (`scripts/golden/exportar.ps1`: trozos de 4000 filas y los archivos «Reciente …» de 45 días). Sin ella, la tarea diaria «Golden a la app» no encuentra las facturas nuevas. Claude se la da lista para copiar.
+- 🟡 Dejar **EQUIPO-2 encendido** (suspensión ya en «Nunca») y con la sesión de Windows abierta; Google Drive para ordenador abierto. Si quiere, quitar la sincronización del **Escritorio** (Drive › ⚙️ › Preferencias): ya no hace falta.
 - 🟡 Decir el **último nº de albarán de Golden** (serie F, y si hay más series).
 - 🟡 Probar «**He olvidado la contraseña**» con su correo y avisar a Jorge Ruiz Onetti de que ya tiene usuario.
 - 🟡 Probar en la app naranja: **Modo reparto** (orden, venta en ruta y descuento sin IVA, albarán, cobro, firma, cómo cargar la furgoneta), **«🔗 Comprobar que ninguna factura se ha tocado»**, **«🧾 NIF e IVA»** y **anular una factura** (PRUEBA-2026-0002 o 0003).
