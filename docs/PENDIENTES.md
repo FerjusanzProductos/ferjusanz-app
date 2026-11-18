@@ -83,7 +83,9 @@ _Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/arti
 ### 🤖 Claude (sin esperar a nadie)
 - 🟡 Revisar cada lunes si sale en el BOE el aplazamiento de Verifactu: **lo hace sola** la tarea automática «Verifactu en el BOE (lunes)» (`trig_01Q2osxJtGHJMTo3oksNiXG7`, lunes 9:47 hora de Madrid, avisa al móvil). Se quita cuando salga o pase el 22/12.
 - ⚪ Hacer más pequeño `public/index.html`.
-- 🟡 **Propuesta (con el «sí» de Fernando)**: cargar en la app la **Tesorería de Golden** (exportación del 18/11 en Drive: 58 cobros pendientes por 41.530,93 € y 438 pagos pendientes por 75.311,28 €) y la base e IVA de cada tipo de las facturas de 2026 (IVA exacto para Jorge). Y en la caja de la app, **no dejar guardar un apunte que deje el saldo por debajo de 0**.
+- 🟡 **Propuesta (con el «sí» de Fernando)**: cargar la base e IVA de cada tipo de las facturas de 2026 (IVA exacto para Jorge). Y en la caja de la app, **no dejar guardar un apunte que deje el saldo por debajo de 0**.
+- 🔴 **Sesión de la tarea «Golden a la app (diaria)»** (`trig_01TRG7iYGETjn6Yt9GSJtyTw`): añadir el paso nuevo de `scripts/golden/LEEME.md` (bajar también `Cabecera/Lineas Facturacion Compras*` y `Tesoreria*` y ejecutar `compras-sql.py`). Hasta entonces, el coste de las ventas nuevas ya entra solo (va en `facturas-sql.py`), pero compras y cobros/pagos se quedan como el 18/11.
+- 🟡 **Fernando**: decir si se borran las **1.318 líneas repetidas** de `golden_lineas` (83 facturas, cargas viejas; mismas líneas dos veces). No se ha borrado nada: el margen nuevo no las cuenta, pero el «Histórico de Golden» las sigue enseñando dobles.
 
 ### 🚀 El día del arranque
 - Contar y, con el «sí» de Fernando, borrar lo de prueba de la base real (hoy no hay nada; los pedidos fijos y facturas de proveedores **no** se borran).
