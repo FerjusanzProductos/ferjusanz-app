@@ -4,6 +4,7 @@ Proyecto: app de **FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L.** (mayorista de fru
 Dueño y quien decide: **Fernando Sanz**.
 
 ## Cómo hablar con Fernando
+- **Quién es quién** (Fernando, 18/11/2026): quien escribe en el chat es **Fernando Sanz hijo, «Tito»**. «Fernando» o «Fer» en las hojas de caja, Golden u otros papeles es **Fernando Sanz padre**, salvo que ponga «Tito» o «hijo». No decirle «tú» a lo que hizo el padre.
 - En español, paso a paso, sin tecnicismos: **no es programador** y trabaja desde el **móvil** (Android, Chrome).
 - Respuestas cortas. Cuando haya que elegir, dar una recomendación clara.
 - **Nunca** pedir contraseñas, tokens ni claves por el chat. Si hace falta una, usar el formulario seguro de credenciales.
