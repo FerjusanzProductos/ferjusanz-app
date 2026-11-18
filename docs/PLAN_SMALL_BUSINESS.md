@@ -10,8 +10,7 @@ _Preparado el 13/11/2026 a partir de la guía de El Hipster (PDF en el Drive de 
 ## 2. Las 44 habilidades
 | Grupo | Habilidades |
 |---|---|
-| ✅ **Ya instaladas (10)** | reactivate, lead-finder, lead-triage, call-list, outreach-composer, invoice-chase, cash-flow-snapshot, ap-processor, business-pulse, contract-review |
-| ⭐ **Añadir (10)** | speed-to-lead (responder al formulario `/nuevos-clientes`), proposal-builder (ofertas formales para residencias, colegios, restaurantes), grant-rfp-writer (**licitaciones públicas** de suministro de fruta), grow-pipeline + crm-autopilot (con la tabla `prospectos`, no HubSpot), monday-brief, inbox-manager (junto a `/resumen-correo`), ticket-deflector (quejas con datos del pedido), restock (compra sugerida), seo-ai-visibility (web nueva), review-reputation (reseñas de Google; la usa reactivate) |
+| ✅ **Ya instaladas (21)** | reactivate, lead-finder, lead-triage, call-list, outreach-composer, invoice-chase, cash-flow-snapshot, ap-processor, business-pulse, contract-review; y desde el 18/11/2026: speed-to-lead, proposal-builder, grant-rfp-writer, grow-pipeline, crm-autopilot, monday-brief, inbox-manager, ticket-deflector, restock, seo-ai-visibility, review-reputation |
 | ⏳ **Más adelante (8)** | content-strategy, social-content-engine, brand-style, ad-manager, report-pack, report-builder, close-month, pay-the-bills, growth-pulse / marketing-monday |
 | ❌ **No sirven** | tax-prep, tax-season-organizer, plan-payroll, payroll-prep (EE. UU.); smb-onboard, smb-router, build-connector, build-agent (solo Cowork; nosotros: `CLAUDE.md`, kit y tareas programadas); month-end-prep (lo hace 🏦 Banco); inventory-planner (la fruta no se almacena); job-post-builder, hiring-screener (hasta que haya que contratar); canva-creator (solo si se usa Canva) |
 
