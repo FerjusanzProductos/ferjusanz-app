@@ -6041,7 +6041,11 @@ function vistaMas() {
   { const pintaT = () => { const dd = LS.get('fj_imp_dia', 'hoy'); tarj.replaceChildren(h('div', { class: 'fila' }, h('div', { class: 'nombre' }, '🖨 Imprimir ahora'), h('div', { class: 'chips', style: 'margin:0' }, [['hoy', 'Hoy'], ['manana', 'Mañana']].map(([v, t]) => h('button', { class: 'chip' + (dd === v ? ' on' : ''), onclick: () => { LS.set('fj_imp_dia', v); pintaT(); } }, t)))),
       h('div', { style: 'display:flex;gap:8px;margin-top:8px' }, h('button', { style: 'flex:1;min-height:54px;font-size:16px', onclick: () => impRapido('carga') }, '🚚 Hoja de carga'), h('button', { style: 'flex:1;min-height:54px;font-size:16px', onclick: () => impRapido('compra') }, '🛒 Hoja de compra'))); }; pintaT(); }
   const bmr = h('button', { class: 'guardar', style: 'width:100%;min-height:62px;font-size:19px;margin:6px 0;display:none', onclick: mrEntrar }, '🚚 Entrar en MODO REPARTO'); mrReparte().then(v => { if (v) bmr.style.display = ''; }).catch(() => { });
-  k.length = 0; k.push(saludo, bmr, panelHoy(), h('div', { class: 'ini-tit' }, enCirculos ? 'Menú' : 'Lo de cada día'), filtro, bloqueGrande, tarj, ...banners, ...resto, cambiaMenu);
+  /* Paneles de control (páginas fijadas de Claude, se actualizan solas cada mañana): solo oficina, llevan cifras de la empresa */
+  const paneles = esOficina() ? h('div', { style: 'display:flex;gap:8px;margin:8px 0' },
+    h('button', { class: 'ghost', style: 'flex:1;min-height:54px;font-size:15px', onclick: () => window.open('https://claude.ai/artifact/4k7wxTzvttkdBF6xU7AWak', '_blank') }, '📊 Panel Ferjusanz'),
+    h('button', { class: 'ghost', style: 'flex:1;min-height:54px;font-size:15px', onclick: () => window.open('https://claude.ai/artifact/WomsAtCVCe1cqaQCwqd9Wh', '_blank') }, '🤝 Panel comercial')) : null;
+  k.length = 0; k.push(saludo, bmr, panelHoy(), paneles, h('div', { class: 'ini-tit' }, enCirculos ? 'Menú' : 'Lo de cada día'), filtro, bloqueGrande, tarj, ...banners, ...resto, cambiaMenu);
   { const ver = h('div', { class: 'sub', style: 'text-align:center;margin-top:18px' }, 'Versión de la app: ' + APP_VERSION.replace('ferjusanz-', ''));
     const bVer = h('button', { class: 'ghost', style: 'width:100%;min-height:48px;margin-top:6px', onclick: async () => { if (await confirmar('Se cargará la última versión de la app. No se pierde ningún dato. ¿Seguir?')) actualizarApp(); } }, '🔄 Buscar versión nueva');
     k.push(ver, bVer);
