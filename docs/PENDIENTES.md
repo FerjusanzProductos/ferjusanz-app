@@ -33,14 +33,23 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - 🔴 Antes del 30/11: decidir con Jorge los **clientes «sin IVA»** (todo tiene que ir facturado; si se quiere, se baja el precio). Sin esto no se puede firmar la declaración ni facturar desde la app. Y confirmar la lista.
 - 🔴 **En EQUIPO-2 (oficina), una vez**: pegar en PowerShell la versión nueva del programa que saca Golden (`scripts/golden/exportar.ps1`: trozos de 4000 filas y los archivos «Reciente …» de 45 días). Sin ella, la tarea diaria «Golden a la app» no encuentra las facturas nuevas. Claude se la da lista para copiar.
 - 🟡 Dejar **EQUIPO-2 encendido** (suspensión ya en «Nunca») y con la sesión de Windows abierta; Google Drive para ordenador abierto. Si quiere, quitar la sincronización del **Escritorio** (Drive › ⚙️ › Preferencias): ya no hace falta.
-- 🟡 Decir el **último nº de albarán de Golden** (serie F, y si hay más series).
 - 🟡 Probar «**He olvidado la contraseña**» con su correo y avisar a Jorge Ruiz Onetti de que ya tiene usuario.
 - 🟡 Probar en la app naranja: **Modo reparto** (orden, venta en ruta y descuento sin IVA, albarán, cobro, firma, cómo cargar la furgoneta), **«🔗 Comprobar que ninguna factura se ha tocado»**, **«🧾 NIF e IVA»** y **anular una factura** (PRUEBA-2026-0002 o 0003).
 - 🟡 Confirmar formatos: Mango, Bote de garbanzos, Nabo, Cogollos de Tudela, Fresón 1ª; unidad de Arándano (513) y Frambuesa (310) → bandeja, Ensalada Campestre (137-P) → bolsa. Pasar ejemplos de otros formatos mal.
 - 🟡 Revisar en Golden la factura **P/20.453 (30/09/2026)** (IVA al 4,5 %).
 - 🟡 Crear una **clave de Anthropic aparte** (tope 5 $/mes) y ponerla como `ANTHROPIC_API_KEY` en Supabase › `ferjusanz-pruebas` (para Harvey y la ayuda en la naranja; nunca por el chat).
 - 🟡 Hablar con **Golden**: seguir en enero si hace falta (plan B) y guardar el histórico de facturas (**6 años**, Jorge 16/11). Y el archivo de ejemplo para **exportar a Golden** y comprobar Golden ↔ albaranes.
-- 🟡 Preguntar al **banco** qué fichero dan (Norma 43 o Excel) y si hay más de una cuenta; subir el primero real en Más → «🏦 Banco».
+- 🟡 Preguntar al **banco** qué fichero dan (Norma 43 o Excel); subir el primero real en Más → «🏦 Banco». Cuenta de la S.L.: CaixaBank acabada en **4501** (certificado subido a Drive el 18/11); la antigua de la C.B. acaba en 1450.
+
+### 📂 De los papeles subidos a Drive el 18/11/2026
+- 🔴 **ITV de la furgoneta 4741 MCV: 15/12/2026.** De la **8907 MRR** (válida hasta 28/05/2026) y la **5425 KSW** (hasta 23/11/2025; falta el certificado de frío) no hay ITV en vigor en Drive: mirar las pegatinas. Las tres siguen a nombre de la **C.B.**
+- 🟡 **Orden SEPA** a nombre de la C.B. y con la cuenta en «identificador del acreedor»: rehacerla para la S.L. con el identificador que da el banco.
+- 🟡 **Certificado para contratistas** (para AF Canary Islands Studios): era de la C.B. y caducó el 13/11/2026. Sacar uno de la S.L. si lo siguen pidiendo.
+- 🟡 **Cambiar la contraseña del servidor de Golden**: está sin proteger dentro de «ConsultasCorregidas.zip» (Drive). No compartir ese archivo.
+- 🟡 **Domicilio fiscal**: Hacienda tiene «Carare 2, **1º Izq.**» y los papeles internos «3º Dcha.». Confirmar el bueno antes de facturar en 2027.
+- 🟡 **Ayuntamiento de Becerril de la Sierra** recibe factura electrónica (FACe): decidir cómo se le factura en 2027 (la app no hace ese formato).
+- 🟡 **Carmen**: confirmar deudas con proveedores de 2025 (Lubrimatic 16.005,84 € a 31/12/2025; Félix Catalán 5.857,28 €) y el NIF de **COSAMA** y **CONDE** (distinto en Golden y en la app).
+- 🟡 **Caja de Carmen (julio 2025–16/11/2026)**: falta la hoja **CAJA2 nº 17** (Navidad 2025; +727,36 € sin explicar entre la 16 y la 18); unos **6.547 €** de retiradas del sobre sin destino apuntado; **pagos en efectivo de más de 1.000 € a proveedores** (Madremía, Pataleta, Fernández López…). Saldos a 16/11: CAJA1 2.749,87 €, CAJA2 24,12 €. Informe en el chat del 18/11/2026.
 - 🟡 Captar clientes: revisar y enviar los **correos a los 8 prospectos** (https://claude.ai/artifact/Voa8zmukh1GScZ81XYJDaH); **Coffee, Books and Vibes**: llamar el lunes 16/11; probar la **tarjeta virtual** con un cliente; revisar `/nuevos-clientes` y grabar el **vídeo de 1 minuto**.
 - 🔴 **Tarifas para el «primer pedido»**: la tarjeta ya enseña los **206 productos**, pero la tarifa de **hostelería** solo tiene precio en **65** y la de **colectividades** en **3 de 62**: lo que marque un cliente sin precio en la tarifa sale «sin precio» (se pone a mano en el mensaje). Añadir a las tarifas lo que más se pida (patata pelada, legumbres, huevos…). Comercial › 🤵 Harvey › 💶 Tarifas nuevas → margen → «✅ Aplicar»; lo que no se calcule solo (cajas, manojos, docenas), a mano en Comercial › 📄 Listas.
 - 🟡 Quitar «cosechas propias» de la presentación guardada **«Presentación Hostelería (copia)»** (Comercial › 🎬 Presentaciones › ✏️ Editar) o borrarla si ya no se usa.
@@ -64,18 +73,21 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 _Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/artifact/5qQe3mrM3E9wHwrQACgkmG (`docs/PREGUNTAS_JORGE.md`). Lo que conteste se quita de aquí y de esa hoja._
 - 🔴 **Decisión de Verifactu el 22/12** (no está en el BOE el aplazamiento; si no se cumple todo, Plan B: Golden en enero). Su visto bueno (de palabra, 16/11) vale como si fuera por escrito (Fernando). Ver `docs/FACTURACION_2027.md`.
 - 🔴 Tramitar el **certificado de representante (FNMT)**; con él, Claude hace la fase 8d (envío a Hacienda).
-- 🟡 Saldo inicial de caja.
+- 🟡 Saldo inicial de caja (las hojas de Carmen dan a 16/11: CAJA1 2.749,87 € y CAJA2 24,12 €). Y si **comidas, propinas y lotería** pagadas de caja son gasto de la empresa o personal.
+- 🟡 **Golden y VERI\*FACTU**: el 06/02/2026 Golden intentó mandar 120 facturas (P/19451–P/19569) a Hacienda; fallaron todas (sin certificado) y el emisor salía como **FERJUSANZ C.B.**
+- 🟡 Furgonetas a nombre de la C.B.: ¿se pasan a la S.L.?
 - 🟡 Factura por entrega o mensual.
 - 🟡 Avisarle (e Ibérica) de la factura FV-B-26-032668 a nombre de FERJUSANZ C.B.
 
 ### 🤖 Claude (sin esperar a nadie)
 - 🟡 Revisar cada lunes si sale en el BOE el aplazamiento de Verifactu: **lo hace sola** la tarea automática «Verifactu en el BOE (lunes)» (`trig_01Q2osxJtGHJMTo3oksNiXG7`, lunes 9:47 hora de Madrid, avisa al móvil). Se quita cuando salga o pase el 22/12.
 - ⚪ Hacer más pequeño `public/index.html`.
+- 🟡 **Propuesta (con el «sí» de Fernando)**: cargar en la app la **Tesorería de Golden** (exportación del 18/11 en Drive: 58 cobros pendientes por 41.530,93 € y 438 pagos pendientes por 75.311,28 €) y la base e IVA de cada tipo de las facturas de 2026 (IVA exacto para Jorge). Y en la caja de la app, **no dejar guardar un apunte que deje el saldo por debajo de 0**.
 
 ### 🚀 El día del arranque
 - Contar y, con el «sí» de Fernando, borrar lo de prueba de la base real (hoy no hay nada; los pedidos fijos y facturas de proveedores **no** se borran).
 - Contratar **Supabase Pro** (≈ 23 €/mes). Al contratarlo, activar la **comprobación de contraseñas filtradas** (Authentication › Policies; solo existe en Pro).
-- Tabla «último nº / siguiente nº» de cada serie de albaranes.
+- Tabla «último nº / siguiente nº» de cada serie de albaranes. Según los contadores de Golden (18/11/2026): albarán **F siguiente 6027** (último F/6026 del 16/11; ojo, también se han tecleado F a mano en el rango 8xxx, último F/8950); facturas F1 → 8483, P → 20580, R → 43. Volver a mirarlo el día del arranque.
 - Actualizar la regla 5 de `CLAUDE.md` y `docs/ESTADO_ACTUAL.md`.
 - Activar el **seguimiento comercial** (rama `seguimiento-app`, SQL `20261111c_seguimiento_diario.sql`) y quitar la tarea `trig_016V26ajMMcPLQ3Zvg1C2dw2`.
 
