@@ -12617,14 +12617,17 @@ async function grabarVideoPres(tipo, alGuardar) {
   pinta();
   const tipoVideo = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp8,opus', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t)) || '';
   const listo = () => { info.textContent = 'Vídeo de la presentación (' + (tipo.startsWith('ex-') ? 'exclientes, ' : '') + (ppBase(tipo) === 'colectivos' ? 'colegios y residencias' : 'hostelería') + '): ' + hojas.length + ' hojas. Lo ideal, unos 30 segundos: frases cortas y pasa rápido las hojas (como mucho 1:20). Debajo de cada hoja sale en amarillo lo que puedes decir. Pulsa «Empezar», habla y pasa las hojas con «Siguiente».';
-    botones.replaceChildren(BT('⏺ Empezar a grabar', empezar, 'guardar'), BT('Cancelar', fuera)); };
+    botones.replaceChildren(musica, BT('⏺ Empezar a grabar', empezar, 'guardar'), BT('Cancelar', fuera)); };
+  /* 🎵 Con música (Tito, 18/11/2026: música de fondo desde otro móvil): sin quitar ruido ni eco, para que la música no se corte; y más calidad de sonido. */
+  const conMusica = h('input', { type: 'checkbox', style: 'width:24px;height:24px;flex:none' });
+  const musica = h('label', { style: 'flex-basis:100%;display:flex;gap:10px;align-items:center;background:#ffffff14;border-radius:8px;padding:10px;font-size:16px' }, conMusica, h('span', {}, '🎵 Con música de fondo (pon la música baja y prueba 10 segundos primero)'));
   const empezar = async () => {
-    try { mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { toast('Hace falta permiso para el micrófono.', 'err'); return; }
+    const mus = conMusica.checked; try { mic = await navigator.mediaDevices.getUserMedia({ audio: mus ? { echoCancellation: false, noiseSuppression: false, autoGainControl: false } : { echoCancellation: true, noiseSuppression: true } }); } catch (e) { toast('Hace falta permiso para el micrófono.', 'err'); return; }
     n = 0; pinta(); botones.replaceChildren();
     for (const k of [3, 2, 1]) { info.textContent = 'Prepárate: empieza a hablar en cuanto desaparezca… ' + k; await new Promise(r => setTimeout(r, 1000)); } // sin silencio al principio: los primeros segundos son los que retienen
     stream = cv.captureStream(10); const t0 = Date.now(); mic.getAudioTracks().forEach(t => stream.addTrack(t)); trozos = [];
     tic = setInterval(() => { pinta(); const q = MAXS - Math.floor((Date.now() - t0) / 1000); if (rec && rec.state === 'recording') { info.textContent = info.textContent.replace(/ · quedan \d+ s$/, '') + ' · quedan ' + Math.max(q, 0) + ' s'; if (q <= 0) rec.stop(); } }, 250); // repinta (el vídeo necesita imágenes) y corta al minuto
-    rec = new MediaRecorder(stream, Object.assign({ videoBitsPerSecond: 300000, audioBitsPerSecond: 32000 }, tipoVideo ? { mimeType: tipoVideo } : {}));
+    rec = new MediaRecorder(stream, Object.assign({ videoBitsPerSecond: 300000, audioBitsPerSecond: mus ? 96000 : 32000 }, tipoVideo ? { mimeType: tipoVideo } : {}));
     rec.ondataavailable = e => { if (e.data && e.data.size) trozos.push(e.data); };
     rec.onstop = terminado; rec.start(1000);
     const paso = () => { info.textContent = '🔴 Grabando · hoja ' + (n + 1) + ' de ' + hojas.length + '. Habla y pulsa «Siguiente».';
