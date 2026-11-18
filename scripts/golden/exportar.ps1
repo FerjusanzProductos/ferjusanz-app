@@ -1,10 +1,11 @@
-# Se ejecuta en EQUIPO-2 (oficina) con la tarea de Windows «Actualizar Golden para Claude» (7:00 y 14:00).
+﻿# Se ejecuta en EQUIPO-2 (oficina) con la tarea de Windows «Actualizar Golden para Claude» (7:00 y 14:00).
 # Copia en el PC: %USERPROFILE%\ClaudeGolden\exportar.ps1. Solo LEE Golden (SQL Server 192.168.1.30,1434, base NET_FJS).
 # Deja CSV (;) en Mi unidad\Claude Golden\golden_sql (cuenta personal de Fernando, compartida con ferjusanzfacturas).
 # Las tablas grandes van en trozos de 4000 filas (el conector de Drive no descarga más de 10 MB por archivo).
 $g=(Get-PSDrive -PSProvider FileSystem | ?{ (Test-Path "$($_.Root)Mi unidad") -or (Test-Path "$($_.Root)My Drive") } | select -First 1).Root
 $mu= if($g -and (Test-Path "$($g)Mi unidad")){"$($g)Mi unidad"}elseif($g){"$($g)My Drive"}else{$null}
-$out= if($mu){"$mu\Claude Golden\golden_sql"}else{"$([Environment]::GetFolderPath('Desktop'))\Claude Golden\golden_sql"}
+$sc=Get-PSDrive -PSProvider FileSystem | %{"$($_.Root).shortcut-targets-by-id\1xagWKvuh1k8aCcW56Ux2csjBN3OBOq6f\Claude Golden\golden_sql"} | ?{Test-Path $_} | select -First 1  # Drive con la cuenta de facturas: la carpeta compartida va por acceso directo (18/11/2026)
+$out= if($sc){$sc}elseif($mu){"$mu\Claude Golden\golden_sql"}else{"$([Environment]::GetFolderPath('Desktop'))\Claude Golden\golden_sql"}
 md $out -Force | Out-Null
 $c=New-Object System.Data.SqlClient.SqlConnection "Server=192.168.1.30,1434;Database=NET_FJS;Integrated Security=true;Connect Timeout=30"
 $c.Open()
