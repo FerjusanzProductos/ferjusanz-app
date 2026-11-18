@@ -85,7 +85,7 @@ _Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/arti
 - ⚪ Hacer más pequeño `public/index.html`.
 - 🟡 **Propuesta (con el «sí» de Fernando)**: cargar la base e IVA de cada tipo de las facturas de 2026 (IVA exacto para Jorge). Y en la caja de la app, **no dejar guardar un apunte que deje el saldo por debajo de 0**.
 - 🔴 **Sesión de la tarea «Golden a la app (diaria)»** (`trig_01TRG7iYGETjn6Yt9GSJtyTw`): añadir el paso nuevo de `scripts/golden/LEEME.md` (bajar también `Cabecera/Lineas Facturacion Compras*` y `Tesoreria*` y ejecutar `compras-sql.py`). Hasta entonces, el coste de las ventas nuevas ya entra solo (va en `facturas-sql.py`), pero compras y cobros/pagos se quedan como el 18/11.
-- 🟡 **Fernando**: decir si se borran las **1.318 líneas repetidas** de `golden_lineas` (83 facturas, cargas viejas; mismas líneas dos veces). No se ha borrado nada: el margen nuevo no las cuenta, pero el «Histórico de Golden» las sigue enseñando dobles.
+- 🟡 **Propuesta «punto de partida» (espera el «sí» de Fernando, 18/11/2026)**: el día del arranque se guarda una **foto de Golden** (lo que nos deben, lo que debemos, ventas y margen del año hasta ese día). Desde ahí, la app cuenta **desde cero** lo suyo y en «💶 Margen y cobros» sale una pestaña **«Golden ↔ app»** que compara, día a día, lo vendido y cobrado en la app con lo de Golden y marca las diferencias (mientras las facturas sigan en Golden, hasta el 1/1/2027).
 
 ### 🚀 El día del arranque
 - Contar y, con el «sí» de Fernando, borrar lo de prueba de la base real (hoy no hay nada; los pedidos fijos y facturas de proveedores **no** se borran).
