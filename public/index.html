@@ -3519,7 +3519,7 @@ const AQUI = {
     return h('div', { class: 'card', style: 'background:#f0fdf4' }, h('b', {}, '🧺 Hoja de compra'), h('label', { class: 'campo' }, 'Día', f), m,
       h('button', { class: 'small', onclick: async () => { if (!navigator.onLine) { toast('Necesitas conexión.', 'err'); return; } m.textContent = 'Preparando…'; try { const r = await cargarCarga(f.value); m.textContent = ''; if (!totalesCarga(r.datos).length) { m.textContent = 'No hay pedidos para ese día.'; return; } imprimir(htmlHojaCompra(f.value, r.datos)); } catch (e) { m.textContent = msgErr(e); } } }, '🖨️ Imprimir hoja de compra')); },
   fichajes: () => h('div', { class: 'card', style: 'background:#f0fdf4' }, h('b', {}, '⏱️ Fichar'), h('div', { style: 'display:flex;gap:8px;margin-top:6px' },
-    ['entrada', 'salida'].map(ac => h('button', { class: ac === 'salida' ? 'ghost' : '', style: 'flex:1', onclick: async () => { if (!navigator.onLine) { toast('Sin conexión: ficha desde «Mi perfil» para que se guarde y se envíe luego.', 'err'); return; } const r = await sb.rpc('fichar', { p_accion: ac, p_cuando: new Date().toISOString() }); if (r.error) toast(String(r.error.message).includes('SIN_ENTRADA') ? 'No hay una entrada abierta.' : msgErr(r.error), 'err'); else toast('Fichada la ' + ac, 'ok'); } }, ac === 'entrada' ? 'Fichar ENTRADA' : 'Fichar SALIDA'))))
+    ['entrada', 'salida'].map(ac => h('button', { class: ac === 'salida' ? 'ghost' : '', style: 'flex:1', onclick: async () => { if (!navigator.onLine) { toast('Sin conexión: ficha desde «Mi perfil» para que se guarde y se envíe luego.', 'err'); return; } if (ac === 'salida' && !(await antesDeSalida())) return; const r = await sb.rpc('fichar', { p_accion: ac, p_cuando: new Date().toISOString() }); if (r.error) toast(String(r.error.message).includes('SIN_ENTRADA') ? 'No hay una entrada abierta.' : msgErr(r.error), 'err'); else toast('Fichada la ' + ac, 'ok'); } }, ac === 'entrada' ? 'Fichar ENTRADA' : 'Fichar SALIDA'))))
 };
 AQUI.hojacarga_imp = AQUI.compra;
 /* Guía flotante: se queda encima de la app mientras trabajas, para no tener que memorizar los pasos */
@@ -5558,6 +5558,7 @@ function vistaPerfil() {
     const { abierto } = fichajeAbierto(filas); const accion = abierto ? 'salida' : 'entrada';
     if (accion === 'salida' && abierto && Date.now() - new Date(abierto.entrada).getTime() > 16 * 3600000 &&
       !confirm('La entrada es de hace más de 16 horas. ¿Fichar la salida ahora? Avisa a administración para corregirla.')) return;
+    if (accion === 'salida' && !(await antesDeSalida())) return;
     const cuando = new Date().toISOString();
     if (navigator.onLine) {
       const r = await sb.rpc('fichar', { p_accion: accion });
@@ -5856,7 +5857,7 @@ function vistaMas() {
     ...g('Entregas y pedidos', c('🚦', 'Camino de los pedidos', () => go('camino'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a')),
     ...g('Compras y mercancía', puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Clientes y productos', c('👥', 'Clientes', () => { window.__cliFiscal = false; go('clientes'); }, Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z), c('📇', 'Tarjeta para clientes', hojaTarjeta, Z)),
-    ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() && FACTURAR_APP ? c('🧾', 'Facturas (desde la app) · PRUEBAS', () => go('facturasapp'), Z) : null, esOficina() ? c('🏢', 'Datos de la empresa', () => go('empresa'), Z) : null, esOficina() ? c('🧾', 'Clientes sin datos para facturar', () => { window.__cliFiscal = true; go('clientes'); }, Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen y correo', () => go('resumen'), Z) : null, veMargenes() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, veMargenes() ? c('💶', 'Margen y cobros (Golden)', () => go('goldenmargen'), Z) : null, esOficina() && CAJA_APP ? c('💵', 'Caja (efectivo)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('caja'), Z) : null, esOficina() && BANCO_APP ? c('🏦', 'Banco' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('banco'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
+    ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() && FACTURAR_APP ? c('🧾', 'Facturas (desde la app) · PRUEBAS', () => go('facturasapp'), Z) : null, esOficina() ? c('🏢', 'Datos de la empresa', () => go('empresa'), Z) : null, esOficina() ? c('🧾', 'Clientes sin datos para facturar', () => { window.__cliFiscal = true; go('clientes'); }, Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen y correo', () => go('resumen'), Z) : null, veMargenes() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, veMargenes() ? c('💶', 'Margen y cobros (Golden)', () => go('goldenmargen'), Z) : null, esOficina() && CAJA_APP ? c('💵', 'Caja (efectivo)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('caja'), Z) : null, esOficina() ? c('⛽', 'Gastos de reparto', () => go('gastosreparto'), Z) : null, esOficina() && BANCO_APP ? c('🏦', 'Banco' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('banco'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('❓', 'Ayuda y guía', () => go('ayuda'), T), c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
@@ -8019,7 +8020,7 @@ function vistaModoReparto() {
     const pie = h('div', { class: 'mr-pie' });
     if (!g.hecho) pie.append(B('mr-ent', '✔ ENTREGADO', () => confirmarEntrega(g), g.listo ? '' : 'opacity:.45'));
     else pie.append(h('div', { class: 'mr-ok' }, '✔ Entregado' + (() => { const e = g.peds.map(p => uno(p.entregas)).find(Boolean); return e ? ' a las ' + fmtHora(e.entregado_at) : ''; })()),
-      sig ? B('mr-sig', 'SIGUIENTE CLIENTE ›', () => irA(sig.id)) : h('div', { class: 'mr-fin' }, '🏁 ¡Reparto terminado! Todos entregados.'));
+      sig ? B('mr-sig', 'SIGUIENTE CLIENTE ›', () => irA(sig.id)) : h('div', {}, h('div', { class: 'mr-fin' }, '🏁 ¡Reparto terminado! Todos entregados.'), tarjetaRepostaje()));
     out.push(pie);
     out.push(h('div', { class: 'mr-2col', style: 'margin-top:10px' },
       i > 0 ? B('ghost mr-peq', '‹ Anterior', () => irA(gs[i - 1].id)) : h('span', {}),
@@ -9820,6 +9821,97 @@ function vistaRuta() {
   cargar();
 }
 
+/* ---------- Gastos de reparto (Fernando, 18/11/2026): repostaje al terminar el reparto y otros gastos antes de fichar la salida ---------- */
+const esReparto = () => !!state.perfil && ['preparador', 'repartidor'].includes(state.perfil.rol);
+const SOBRE = '📩 No olvides dejar el ticket o la factura en el sobre para la oficina.';
+async function gastosHoy() {
+  const r = await sb.from('gastos_reparto').select('tipo,combustible,importe,concepto').eq('usuario_id', state.perfil.id).eq('fecha', hoy()).eq('anulado', false); if (r.error) throw r.error; return r.data || [];
+}
+async function guardarGasto(g) { const r = await sb.from('gastos_reparto').insert(Object.assign({ fecha: hoy() }, g)); if (r.error) throw r.error; }
+const leerEur = inp => { const v = Number(String(inp.value).replace(',', '.')); return v > 0 ? Math.round(v * 100) / 100 : 0; };
+const txtGasto = g => g.tipo === 'combustible' ? (g.combustible === 'gasoleo' ? 'Gasóleo' : 'Gasolina') + ' ' + eur(g.importe) + ' €' : g.tipo === 'otro' ? (g.concepto || 'Otro gasto') + ' ' + eur(g.importe) + ' €' : '';
+/* Tarjeta «¿Has repostado?». listo(true) cuando ya está contestado hoy. */
+function tarjetaRepostaje(listo) {
+  const caja = h('div', { class: 'mr-caja', style: 'margin-top:12px;background:#fffbeb;border-left:6px solid #d97706' });
+  const pinta = ds => {
+    const r = ds.filter(g => g.tipo === 'combustible'), dicho = r.length || ds.some(g => g.tipo === 'nada' && g.concepto === 'combustible');
+    if (listo) listo(!!dicho);
+    const form = comb => { const imp = h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Euros (ej. 60)', style: 'font-size:20px' }), lit = h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Litros (si lo sabes)', style: 'font-size:18px' });
+      caja.replaceChildren(h('div', { style: 'font-weight:800;font-size:18px' }, '⛽ ' + (comb === 'gasoleo' ? 'Gasóleo' : 'Gasolina') + ': ¿cuánto?'), h('label', { class: 'campo' }, 'Importe (€)', imp), h('label', { class: 'campo' }, 'Litros', lit),
+        h('div', { style: 'display:flex;gap:8px' }, h('button', { class: 'guardar', style: 'flex:2;min-height:52px;font-size:18px', onclick: async () => { const e = leerEur(imp); if (!e) { toast('Pon cuántos euros', 'err'); return; }
+          try { await guardarGasto({ tipo: 'combustible', combustible: comb, importe: e, litros: leerEur(lit) || null }); toast('Repostaje apuntado', 'ok'); cargar(); } catch (er) { toast(isNetErr(er) ? 'Necesitas cobertura para apuntarlo.' : msgErr(er), 'err'); } } }, '✔ Guardar'),
+          h('button', { class: 'ghost', style: 'flex:1', onclick: () => pinta(ds) }, 'Atrás'))); imp.focus(); };
+    caja.replaceChildren(
+      h('div', { style: 'font-weight:800;font-size:18px' }, dicho ? '⛽ Repostaje de hoy' : '⛽ Antes de terminar: ¿has repostado hoy?'),
+      ...r.map(g => h('div', { style: 'font-size:17px;margin-top:4px' }, '✔ ' + txtGasto(g))),
+      !r.length && dicho ? h('div', { style: 'font-size:17px;margin-top:4px' }, '✔ Hoy no has repostado') : null,
+      r.length ? h('div', { class: 'sub', style: 'font-size:16px;margin-top:6px' }, SOBRE) : null,
+      h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;margin-top:8px' },
+        h('button', { style: 'flex:1;min-height:52px;font-size:17px', onclick: () => form('gasolina') }, dicho ? '+ Gasolina' : 'Gasolina'),
+        h('button', { style: 'flex:1;min-height:52px;font-size:17px', onclick: () => form('gasoleo') }, dicho ? '+ Gasóleo' : 'Gasóleo'),
+        dicho ? null : h('button', { class: 'ghost', style: 'flex-basis:100%;min-height:48px;font-size:17px', onclick: async () => { try { await guardarGasto({ tipo: 'nada', concepto: 'combustible' }); cargar(); } catch (er) { toast(isNetErr(er) ? 'Necesitas cobertura.' : msgErr(er), 'err'); } } }, 'No he repostado')));
+  };
+  const cargar = async () => { try { pinta(await gastosHoy()); } catch (e) { caja.replaceChildren(h('div', { class: 'sub' }, '⛽ ' + (isNetErr(e) ? 'Sin cobertura: apunta el repostaje cuando la tengas.' : msgErr(e)))); if (listo) listo(true); } };
+  caja.append(h('div', { class: 'sub' }, '⛽ Cargando…')); cargar(); return caja;
+}
+/* Antes de fichar la salida: repostaje (si falta) y otros gastos. Devuelve true si se puede fichar. */
+function antesDeSalida() {
+  // shortcut: sin cobertura no se pregunta (no se guarda sin red); si molesta, guardar en cola como los fichajes
+  if (!esReparto() || !navigator.onLine) return Promise.resolve(true);
+  return new Promise(res => {
+    let combOk = false, otrosOk = false, hecho = false;
+    const btn = h('button', { class: 'fichar-btn sal', style: 'width:100%;margin-top:12px', onclick: () => { if (!combOk || !otrosOk) { toast('Contesta primero lo del repostaje y lo de otros gastos', 'err'); return; } hecho = true; cerrar(); res(true); } }, 'Fichar SALIDA');
+    const act = () => { btn.style.opacity = combOk && otrosOk ? '1' : '.45'; };
+    const otros = h('div', { class: 'mr-caja', style: 'margin-top:12px;background:#f0f9ff;border-left:6px solid #0284c7' });
+    const pintaOtros = ds => { const o = ds.filter(g => g.tipo === 'otro'); otrosOk = otrosOk || o.length > 0 || ds.some(g => g.tipo === 'nada' && g.concepto === 'otros'); act();
+      const con = h('input', { placeholder: 'Qué ha sido (parking, peaje, comida…)', style: 'font-size:17px' }), imp = h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Euros', style: 'font-size:20px' });
+      otros.replaceChildren(h('div', { style: 'font-weight:800;font-size:18px' }, '🧾 ¿Has tenido otros gastos hoy?'), ...o.map(g => h('div', { style: 'font-size:17px;margin-top:4px' }, '✔ ' + txtGasto(g))),
+        h('label', { class: 'campo' }, 'Qué', con), h('label', { class: 'campo' }, 'Importe (€)', imp),
+        h('div', { style: 'display:flex;gap:8px' }, h('button', { class: 'guardar', style: 'flex:1;min-height:52px;font-size:17px', onclick: async () => { const e = leerEur(imp); if (!con.value.trim() || !e) { toast('Pon qué ha sido y cuántos euros', 'err'); return; }
+          try { await guardarGasto({ tipo: 'otro', concepto: con.value.trim(), importe: e }); otrosOk = true; toast('Gasto apuntado', 'ok'); pintaOtros(await gastosHoy()); } catch (er) { toast(isNetErr(er) ? 'Necesitas cobertura.' : msgErr(er), 'err'); } } }, '+ Apuntar gasto'),
+          o.length || otrosOk ? null : h('button', { class: 'ghost', style: 'flex:1;min-height:52px;font-size:17px', onclick: async () => { try { await guardarGasto({ tipo: 'nada', concepto: 'otros' }); otrosOk = true; pintaOtros(await gastosHoy()); } catch (er) { toast(isNetErr(er) ? 'Necesitas cobertura.' : msgErr(er), 'err'); } } }, 'No, ninguno')),
+        otrosOk && !o.length ? h('div', { style: 'font-size:17px;margin-top:6px' }, '✔ Sin otros gastos') : null); };
+    const cerrar = hoja('Antes de fichar la salida', h('div', {}, tarjetaRepostaje(ok => { combOk = ok; act(); }), otros,
+      h('div', { class: 'aviso-card', style: 'margin-top:12px;font-size:17px;font-weight:700' }, SOBRE), btn));
+    act(); otros.append(h('div', { class: 'sub' }, 'Cargando…'));
+    gastosHoy().then(pintaOtros).catch(() => { otrosOk = combOk = true; act(); otros.replaceChildren(h('div', { class: 'sub' }, 'Sin cobertura: apunta los gastos cuando la tengas.')); });
+    // Si cierra la hoja sin fichar, no se ficha
+    const vigila = setInterval(() => { if (!state.sheetAbierta) { clearInterval(vigila); if (!hecho) res(false); } }, 300);
+  });
+}
+/* Oficina: lo apuntado por los repartidores, y marcar el ticket cuando llega en el sobre */
+function vistaGastosReparto() {
+  state.view = 'gastosreparto'; if (!esOficina()) { go('inicio'); return; }
+  let mes = hoy().slice(0, 7), soloSin = false; const cont = h('div', {}), cab = h('div', {});
+  const nom = id => (state.gente[id] && state.gente[id].nombre) || 'Repartidor';
+  async function cargar() {
+    cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
+    try {
+      const fin = new Date(+mes.slice(0, 4), +mes.slice(5, 7), 0).getDate();
+      const r = await sb.from('gastos_reparto').select('*').gte('fecha', mes + '-01').lte('fecha', mes + '-' + fin).eq('anulado', false).order('fecha', { ascending: false }).order('created_at', { ascending: false }); if (r.error) throw r.error;
+      const gs = r.data.filter(g => g.tipo !== 'nada'), comb = gs.filter(g => g.tipo === 'combustible').reduce((a, g) => a + Number(g.importe), 0), otr = gs.filter(g => g.tipo === 'otro').reduce((a, g) => a + Number(g.importe), 0), sin = gs.filter(g => !g.ticket_recibido);
+      cab.replaceChildren(h('div', { class: 'card' }, h('div', { class: 'fila' }, h('span', {}, '⛽ Combustible'), h('b', {}, eur(comb) + ' €')), h('div', { class: 'fila' }, h('span', {}, '🧾 Otros gastos'), h('b', {}, eur(otr) + ' €')),
+        h('div', { class: 'fila' }, h('span', {}, '⚠️ Sin ticket en el sobre'), h('b', { style: sin.length ? 'color:var(--rojo)' : '' }, sin.length + ' · ' + eur(sin.reduce((a, g) => a + Number(g.importe), 0)) + ' €'))),
+        h('div', { class: 'chips' }, h('button', { class: 'chip' + (!soloSin ? ' on' : ''), onclick: () => { soloSin = false; cargar(); } }, 'Todo'), h('button', { class: 'chip' + (soloSin ? ' on' : ''), onclick: () => { soloSin = true; cargar(); } }, '⚠️ Sin ticket (' + sin.length + ')')));
+      const ver = soloSin ? sin : gs;
+      cont.replaceChildren(...(ver.length ? ver.map(g => h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:16px' }, (g.tipo === 'combustible' ? '⛽ ' : '🧾 ') + txtGasto(g).replace(/ [\d.,]+ €$/, '') + (g.litros ? ' · ' + num(g.litros) + ' l' : '')),
+          h('div', { class: 'sub' }, fechaES(g.fecha) + ' · ' + nom(g.usuario_id))), h('b', {}, eur(g.importe) + ' €')),
+        h('div', { style: 'display:flex;gap:8px;margin-top:6px' }, h('button', { class: g.ticket_recibido ? 'ghost small' : 'small', style: 'flex:2', onclick: async () => { const u = await sb.from('gastos_reparto').update({ ticket_recibido: !g.ticket_recibido }).eq('id', g.id); if (u.error) toast(msgErr(u.error), 'err'); else cargar(); } }, g.ticket_recibido ? '✔ Ticket recibido (deshacer)' : '📩 Marcar ticket recibido'),
+          h('button', { class: 'ghost small', style: 'flex:1', onclick: async () => { if (!confirm('¿Anular este gasto? (por ejemplo, si está repetido)')) return; const u = await sb.from('gastos_reparto').update({ anulado: true }).eq('id', g.id); if (u.error) toast(msgErr(u.error), 'err'); else cargar(); } }, 'Anular')))) : [h('p', { class: 'vacio' }, 'No hay gastos apuntados este mes.')]));
+    } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+  }
+  const mesInp = h('input', { type: 'month', value: mes, max: hoy().slice(0, 7), onchange: () => { mes = mesInp.value || mes; cargar(); } });
+  $app.replaceChildren(shell('Gastos de reparto', h('div', {}, h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Lo que apuntan los repartidores al terminar el reparto (repostaje) y antes de fichar la salida (otros gastos). Marca el ticket cuando llegue en el sobre.'), h('label', { class: 'campo' }, 'Mes', mesInp), cab, cont), { volver: volverIni }));
+  renderBanner(); cargarGente().then(cargar);
+}
+
+// Cobro pendiente → su factura del histórico (Fernando, 18/11/2026: «pinchar y ver esa factura para enseñarla»). Golden guarda «F1/8.467».
+const numGolden = (serie, n) => (serie ? serie + '/' : '') + String(n || '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+async function verFacturaPendiente(t) {
+  try { const r = await sb.from('golden_facturas').select('*').eq('numero', numGolden(t.serie, t.numero)).maybeSingle(); if (r.error) throw r.error;
+    if (r.data) abrirFacturaGolden(r.data); else toast('La factura ' + numGolden(t.serie, t.numero) + ' no está en el histórico de Golden de la app.', 'err');
+  } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); }
+}
 // Golden llama a algunos puestos por su nombre legal; entre paréntesis, como los conoce Fernando (18/11/2026)
 const PROV_ALIAS = { HERE: 'Izquierdo' };
 const nomProvG = (cod, n) => (n || cod) + (PROV_ALIAS[cod] ? ' (' + PROV_ALIAS[cod] + ')' : '');
@@ -9907,7 +9999,7 @@ function vistaGoldenMargen() {
           h('div', { class: 'sub' }, ts.length + ' vencimientos · ya vencido ' + eur(vencido) + ' € · todo lo pendiente en Golden, sin mirar las fechas de arriba')));
         const o = Object.values(por).sort((a, b) => b.t - a.t);
         res.replaceChildren(...(o.length ? o.map(x => tarjeta(x.n, eur(x.t) + ' €', x.v > 0 ? 'var(--rojo)' : 'var(--verde-osc)', x.ls.length + (x.ls.length === 1 ? ' vencimiento' : ' vencimientos') + (x.v > 0 ? ' · vencido ' + eur(x.v) + ' €' : '') + ' · primero el ' + fechaES(x.ls[0].vencimiento),
-          () => hoja(x.n, h('div', {}, ...x.ls.map(t => h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:15px' }, 'Fra. ' + (t.serie || '') + '/' + (t.numero || '')), h('div', { class: 'sub' }, 'Vence el ' + fechaES(t.vencimiento))), h('b', { style: t.vencimiento < hoyS ? 'color:var(--rojo)' : '' }, eur(t.total) + ' €'))))))) : [h('p', { class: 'vacio' }, 'No hay nada pendiente. 👍')]));
+          () => hoja(x.n, h('div', {}, ...x.ls.map(t => h('div', { class: 'card fila' + (modo === 'cobros' ? ' tap' : ''), onclick: modo === 'cobros' ? () => verFacturaPendiente(t) : null }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:15px' }, 'Fra. ' + (t.serie || '') + '/' + (t.numero || '')), h('div', { class: 'sub' }, 'Vence el ' + fechaES(t.vencimiento) + (modo === 'cobros' ? ' · toca para verla' : ''))), h('b', { style: t.vencimiento < hoyS ? 'color:var(--rojo)' : '' }, eur(t.total) + ' €'))))))) : [h('p', { class: 'vacio' }, 'No hay nada pendiente. 👍')]));
         return;
       }
       if (modo === 'proveedor') {
@@ -15230,6 +15322,7 @@ const BUSCA_PANTALLAS = [
   ['📊', 'Resumen del día y correo', 'resumen ventas totales numeros informe correo email gmail manana visitas web', () => go('resumen'), 'o'],
   ['📈', 'Mercado (precios de los Mercas y noticias)', 'mercado mercas mercamadrid noticias semanal precios mercado', () => go('resumen'), 'o'],
   ['📈', 'Rentabilidad', 'rentabilidad ganancia beneficio margen ganamos perdemos', () => go('rentabilidad'), 'm'],
+  ['⛽', 'Gastos de reparto', 'gasolina gasoleo combustible repostar repostaje gastos reparto tickets sobre parking peaje', () => go('gastosreparto'), 'o'],
   ['💶', 'Margen y cobros (Golden)', 'margen beneficio coste golden compras proveedores cobros pagos pendientes deben debemos tesoreria', () => go('goldenmargen'), 'm'],
   ['🤝', 'Comercial', 'comercial listas precios recomendaciones guiones web seo', () => go('comercial'), 'o'],
   ['🤵', 'Harvey · a quién escribir hoy', 'harvey whatsapp escribir clientes mensajes leads comercial', () => { LS.set('fj_h2_sub', 'hoy'); go('comercial', { tab: 'harvey' }); }, 'o'],
@@ -15655,7 +15748,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { facturasapp: vistaFacturasApp, caja: vistaCaja, banco: vistaBanco, empresa: vistaEmpresa, modoreparto: vistaModoReparto, tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, camino: vistaCamino, rentabilidad: vistaRentabilidad, goldenmargen: vistaGoldenMargen, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { facturasapp: vistaFacturasApp, caja: vistaCaja, banco: vistaBanco, empresa: vistaEmpresa, modoreparto: vistaModoReparto, tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, camino: vistaCamino, rentabilidad: vistaRentabilidad, goldenmargen: vistaGoldenMargen, gastosreparto: vistaGastosReparto, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   if (MR.dentro() && state.view === 'inicio' && !state.mrMirado) { state.mrMirado = true; return vistaModoReparto(); }   /* vuelve al modo reparto si se cerró la app */
   v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); if (state.view === 'inicio') setTimeout(mrAuto, 300); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
