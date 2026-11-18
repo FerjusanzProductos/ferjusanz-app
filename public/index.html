@@ -5930,7 +5930,7 @@ function vistaMas() {
       puedeCompras() ? c('💲', 'Precios de compra del día', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, V) : null, c('♻️', 'Sobrante', () => go('sobrante'), V)),
     ...g('Entregas y pedidos', c('🚦', 'Camino de los pedidos', () => go('camino'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a')),
     ...g('Compras y mercancía', puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
-    ...g('Clientes y productos', c('👥', 'Clientes', () => { window.__cliFiscal = false; go('clientes'); }, Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z), c('📇', 'Tarjeta para clientes', hojaTarjeta, Z)),
+    ...g('Clientes y productos', c('👥', 'Clientes', () => { window.__cliFiscal = false; go('clientes'); }, Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z), c('📇', 'Tarjetas', () => go('comercial', { tab: 'tarjetas' }), Z)),
     ...g('Facturas y análisis', esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() && FACTURAR_APP ? c('🧾', 'Facturas (desde la app) · PRUEBAS', () => go('facturasapp'), Z) : null, esOficina() ? c('🏢', 'Datos de la empresa', () => go('empresa'), Z) : null, esOficina() ? c('🧾', 'Clientes sin datos para facturar', () => { window.__cliFiscal = true; go('clientes'); }, Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen y correo', () => go('resumen'), Z) : null, veMargenes() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, veCobros() ? c('💶', veMargenes() ? 'Margen y cobros (Golden)' : 'Cobros y pagos (Golden)', () => go('goldenmargen'), Z) : null, esOficina() && CAJA_APP ? c('💵', 'Caja (efectivo)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('caja'), Z) : null, esOficina() ? c('⛽', 'Gastos de reparto', () => go('gastosreparto'), Z) : null, esOficina() && BANCO_APP ? c('🏦', 'Banco' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('banco'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
@@ -12417,7 +12417,7 @@ function hojaPrimerPedido(p, ex) {
     comCampo('🎥 Otro vídeo (opcional, de la galería)', video));
   const archivos = async () => {
     const lam = ppLaminas(await ppPresentacion(clave), url, clave);
-    const files = conPdf.checked ? [new File([(await presArchivoPdf(await presExpandir(lam, conLista.checked))).bytes], 'Ferjusanz-presentacion' + (conLista.checked ? '-con-precios' : '') + '.pdf', { type: 'application/pdf' })] : [];
+    const files = conPdf.checked ? [new File([(await presArchivoPdf(await presExpandir(lam, conLista.checked), [await socioLienzo('ferjusanz')])).bytes], 'Ferjusanz-presentacion' + (conLista.checked ? '-con-precios' : '') + '.pdf', { type: 'application/pdf' })] : [];
     if (conVideo.checked) { const v = await pvArchivo(clave); if (v) files.push(v); }
     if (video.files[0]) files.push(video.files[0]);
     if (!files.length) throw new Error('marca el PDF o el vídeo');
@@ -12924,9 +12924,92 @@ async function presLienzos(laminas) {
   }
   return out;
 }
-/* PDF con una imagen por hoja (JPEG) y el botón del formulario que se puede pulsar. */
-async function presArchivoPdf(laminas) {
-  const hojas = await presLienzos(laminas), doc = pdfNuevo(841.89, 595.28), k = 841.89 / PRES_W;
+/* ===== 📇 Tarjetas de socios dibujadas (18/11/2026, Tito: «que estén las dos tarjetas… a la par», para descargar en PDF, JPG y vídeo) =====
+   'ferjusanz' = la nuestra con Super 9 de socio recomendado; 'super9' = la de Carlos con Ferjusanz de socio. Mismo tamaño que las láminas. */
+const SUPER9_SOCIAL = 'TikTok e Instagram: @super9carnicerias · @super9_carnicerias';
+const SOCIOS = {
+  ferjusanz: { fondo: '#f6f2ea', tinta: '#1c1c1a', acento: '#0d3a22', logo: 'pres/logo.png', ancho: true, nombre: 'FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L.', titulo: 'Patatas, frutas, verduras y huevos',
+    lineas: ['Empresa familiar · tercera generación · más de 60 años', 'Agricultores de confianza y Mercamadrid', 'Reparto de lunes a sábado · sin pedido mínimo', 'Destacamos por la relación calidad-precio'], cortas: ['3.ª generación · más de 60 años', 'Agricultores de confianza', 'Lunes a sábado · sin pedido mínimo'], qr: () => URL_TARJETA, qrTxt: 'Escanee: quiénes somos y su tarifa', contacto: 'WhatsApp 609 567 354 · Oficina 91 763 21 86' },
+  super9: { fondo: '#141414', tinta: '#f3ead2', acento: '#d9b44a', logo: 'pres/super9.png', nombre: 'SUPER 9 CARNICERÍAS S.L. · CARLOS ZÚÑIGA', titulo: 'Carnicería Super 9',
+    lineas: ['Más de 10 años sirviendo', 'Empresa en ascenso, muchísima variedad de género', 'Calidad-precio · 100 % recomendado', SUPER9_SOCIAL], qr: () => SUPER9_WA, qrTxt: 'Escanee: WhatsApp de Carlos', contacto: 'WhatsApp 680 27 20 28' } };
+async function socioLienzo(quien) {
+  await presRecursos();
+  const otro = quien === 'ferjusanz' ? 'super9' : 'ferjusanz', A = SOCIOS[quien], B = SOCIOS[otro];
+  const [la, lb, qa, qb] = await Promise.all([presImgDe(A.logo), presImgDe(B.logo), presImgDe(qrDataUrl(A.qr(), 8)), presImgDe(qrDataUrl(B.qr(), 8))]);
+  const cv = document.createElement('canvas'); cv.width = PRES_W; cv.height = PRES_H; const g = cv.getContext('2d');
+  const txt = (t, x, y, px, col, peso, maxW) => { g.fillStyle = col; let f = px; do { g.font = (peso || '400') + ' ' + f + 'px ' + (peso === '700' ? '"FJ Titular"' : '"FJ Texto"') + ', sans-serif'; f -= 2; } while (maxW && g.measureText(t).width > maxW && f > 12); g.fillText(t, x, y); };
+  const logo = (im, d, x, y, h) => { if (!im) return 0; const w = d.ancho ? h * im.width / im.height : h; g.drawImage(im, x, y, w, h); return w; };
+  const qr = (im, x, y, t, d) => { g.fillStyle = '#fff'; g.fillRect(x - 12, y - 12, t + 24, t + 24); if (im) { g.imageSmoothingEnabled = false; g.drawImage(im, x, y, t, t); g.imageSmoothingEnabled = true; } };
+  // Principal (arriba, 64 %)
+  const H1 = 680; g.fillStyle = A.fondo; g.fillRect(0, 0, PRES_W, H1); g.fillStyle = A.acento; g.fillRect(0, 0, PRES_W, 14);
+  logo(la, A, 70, 70, A.ancho ? 130 : 190);
+  txt(A.titulo, 70, (A.ancho ? 290 : 340), 70, A.acento, '700', 900);
+  A.lineas.forEach((l, i) => txt('•  ' + l, 70, (A.ancho ? 370 : 410) + i * 54, 36, A.tinta, '400', 900));
+  txt(A.contacto, 70, 640, 34, A.acento, '600', 900);
+  qr(qa, 1080, 110, 360); txt(A.qrTxt, 1060, 520, 28, A.tinta, '600', 400);
+  // Socio recomendado (abajo)
+  g.fillStyle = B.fondo; g.fillRect(0, H1, PRES_W, PRES_H - H1); g.fillStyle = B.acento; g.fillRect(0, H1, PRES_W, 10);
+  txt('SOCIO RECOMENDADO', 70, H1 + 70, 34, B.acento, '700');
+  const wl = logo(lb, B, 70, H1 + 95, B.ancho ? 70 : 150);
+  const xb = 70 + wl + 40; txt(B.titulo, xb, H1 + 140, 52, B.acento, '700', 1000 - xb);
+  (B.cortas || B.lineas).slice(0, 3).forEach((l, i) => txt(l, xb, H1 + 190 + i * 40, 28, B.tinta, '400', 1010 - xb));
+  txt(B.nombre, 70, PRES_H - 70, 24, B.tinta, '600', 900); txt(B.contacto + (otro === 'super9' ? ' · ' + SUPER9_SOCIAL : ''), 70, PRES_H - 32, 24, B.acento, '600', 980);
+  qr(qb, 1150, H1 + 60, 230); txt(B.qrTxt, 1110, PRES_H - 22, 24, B.tinta, '600', 370);
+  return cv;
+}
+/* Guardar o compartir archivos: compartir abre la hoja del móvil (WhatsApp…); si no deja, se descargan. */
+async function archivosSalida(files, accion, texto) {
+  if (accion === 'enviar') { try { if (navigator.canShare && navigator.canShare({ files })) { await navigator.share({ files, text: texto || '' }); return; } } catch (e) { if (e && e.name === 'AbortError') return; } }
+  files.forEach(f => { const u = URL.createObjectURL(f), a = h('a', { href: u, download: f.name }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); });
+  toast((accion === 'enviar' ? 'Tu móvil no deja compartir desde aquí: ' : '') + 'descargado en «Descargas».', 'ok');
+}
+/* Vídeo sin voz con las hojas pasando solas (seg segundos cada una). Para el vídeo con la voz de Fernando está «🎙️ Grabar el vídeo». */
+async function lienzosVideo(cvs, nombre, seg) {
+  if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) throw new Error('Este móvil no deja hacer vídeo desde la app.');
+  const cv = document.createElement('canvas'); cv.width = 1200; cv.height = 849; const g = cv.getContext('2d');
+  const ty = ['video/mp4;codecs=avc1.42E01E', 'video/mp4', 'video/webm;codecs=vp8', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t)) || '';
+  const pinta = i => { g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(cvs[i], 0, 0, cv.width, cv.height); };
+  pinta(0); const st = cv.captureStream(10), rec = new MediaRecorder(st, Object.assign({ videoBitsPerSecond: 700000 }, ty ? { mimeType: ty } : {})), tr = [];
+  rec.ondataavailable = e => { if (e.data && e.data.size) tr.push(e.data); }; const fin = new Promise(ok => { rec.onstop = ok; });
+  const SEG = (seg || 4) * 1000, total = cvs.length * SEG, t0 = Date.now(); rec.start(1000);
+  await new Promise(ok => { const tic = setInterval(() => { const t = Date.now() - t0; if (t >= total) { clearInterval(tic); ok(); } else pinta(Math.floor(t / SEG)); }, 100); });
+  rec.stop(); await fin; st.getTracks().forEach(t => t.stop());
+  const tipo = (rec.mimeType || ty || 'video/webm').split(';')[0], ext = tipo.includes('mp4') ? 'mp4' : 'webm';
+  let b = new Blob(tr, { type: tipo }); if (ext === 'mp4') { try { b = new Blob([mp4Normal(new Uint8Array(await b.arrayBuffer()))], { type: tipo }); } catch (e) { console.warn('mp4Normal', e); } }
+  return new File([b], nombre + '.' + ext, { type: tipo });
+}
+/* que: 'pdf' | 'jpg' | 'video'. enlaces[i] = botón que se pulsa en el PDF (opcional). */
+async function lienzosArchivos(cvs, base, que, enlaces) {
+  const nombre = (sinTilde(base).replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'ferjusanz') + '-' + hoy();
+  const jpg = cv => new Promise(ok => cv.toBlob(ok, 'image/jpeg', 0.88));
+  if (que === 'jpg') return Promise.all(cvs.map(async (cv, i) => new File([await jpg(cv)], nombre + (cvs.length > 1 ? '-' + String(i + 1).padStart(2, '0') : '') + '.jpg', { type: 'image/jpeg' })));
+  if (que === 'video') { toast('🎬 Haciendo el vídeo (' + Math.ceil(cvs.length * (cvs.length > 1 ? 4 : 8)) + ' s)… no cierres la app.', 'ok'); return [await lienzosVideo(cvs, nombre, cvs.length > 1 ? 4 : 8)]; }
+  const doc = pdfNuevo(841.89, 595.28), k = 841.89 / PRES_W;
+  for (let i = 0; i < cvs.length; i++) { if (i) doc.pagina(); doc.imagen(new Uint8Array(await (await jpg(cvs[i])).arrayBuffer()), PRES_W, PRES_H, 0, 0, 841.89, 595.28);
+    const e = enlaces && enlaces[i]; if (e && e.url) doc.enlace(e.x * k, e.y * k, e.w * k, e.h * k, e.url); }
+  return [new File([doc.bytes()], nombre + '.pdf', { type: 'application/pdf' })];
+}
+async function socioArchivo(quien, que, accion) {
+  try { const titulo = quien === 'ferjusanz' ? 'Tarjeta Ferjusanz y Super 9' : 'Tarjeta Super 9 y Ferjusanz';
+    await archivosSalida(await lienzosArchivos([await socioLienzo(quien)], titulo, que), accion, quien === 'ferjusanz' ? super9Msg() : 'Carnicería Super 9 (Carlos Zúñiga) y nuestro socio recomendado, Ferjusanz: ' + URL_SUPER9); }
+  catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); }
+}
+async function tabTarjetas(el) {
+  const fila = (quien, titulo, sub, extra) => { const img = h('img', { alt: titulo, style: 'width:100%;border-radius:8px;border:1px solid #0002;margin:6px 0;aspect-ratio:1500/1061;background:#eee' });
+    socioLienzo(quien).then(cv => { img.src = cv.toDataURL('image/jpeg', 0.7); }).catch(() => { });
+    const b = (t, f, cls) => h('button', { class: cls || 'small', style: 'flex:1;min-height:44px', onclick: f }, t);
+    return h('div', { class: 'card' }, h('div', { class: 'nombre' }, titulo), h('div', { class: 'sub' }, sub), img,
+      h('div', { class: 'sub' }, '⬇️ Descargar:'), h('div', { style: 'display:flex;gap:6px' }, b('🖼 JPG', () => socioArchivo(quien, 'jpg')), b('📄 PDF', () => socioArchivo(quien, 'pdf')), b('🎬 Vídeo', () => socioArchivo(quien, 'video'))),
+      h('div', { class: 'sub', style: 'margin-top:6px' }, '📲 Enviar (WhatsApp…):'), h('div', { style: 'display:flex;gap:6px' }, b('🖼 JPG', () => socioArchivo(quien, 'jpg', 'enviar'), 'guardar small'), b('📄 PDF', () => socioArchivo(quien, 'pdf', 'enviar'), 'ghost small'), b('🎬 Vídeo', () => socioArchivo(quien, 'video', 'enviar'), 'ghost small')), extra || null); };
+  el.replaceChildren(
+    h('div', { class: 'aviso-card' }, 'Todas las tarjetas juntas. La de Ferjusanz lleva a Super 9 como socio recomendado y la de Super 9 lleva a Ferjusanz: las dos a la par, cada una con su QR.'),
+    h('button', { class: 'bandeja-fac', style: 'width:100%;margin-bottom:8px', onclick: hojaTarjeta }, h('span', { class: 'ic' }, '📇'), h('span', { class: 'tt' }, 'Tarjeta para clientes (QR)', h('small', {}, 'Imagine su primer pedido: el QR y el mensaje de siempre'))),
+    fila('ferjusanz', '🥬 Ferjusanz · socio recomendado Super 9', 'La tuya: para tus clientes.', h('button', { class: 'ghost', style: 'width:100%;min-height:44px;margin-top:8px', onclick: hojaSuper9 }, '🔗 Mandar el enlace de los dos por WhatsApp')),
+    fila('super9', '🥩 Super 9 · socio recomendado Ferjusanz', 'La de Carlos: para que la mande él a sus restaurantes. Con «Enviar» elige el chat de Carlos.'));
+}
+/* PDF con una imagen por hoja (JPEG) y el botón del formulario que se puede pulsar. «extra»: lienzos que se añaden al final (la tarjeta de socios). */
+async function presArchivoPdf(laminas, extra) {
+  const hojas = (await presLienzos(laminas)).concat((extra || []).map(cv => ({ cv }))), doc = pdfNuevo(841.89, 595.28), k = 841.89 / PRES_W;
   for (let i = 0; i < hojas.length; i++) {
     if (i) doc.pagina();
     const b = await new Promise(ok => hojas[i].cv.toBlob(ok, 'image/jpeg', 0.8)), bytes = new Uint8Array(await b.arrayBuffer());
@@ -12959,7 +13042,7 @@ async function presVisor(laminas, botones, conTarjeta) {
     sls.push(h('div', { class: 'pres-sl' }, h('div', { class: 'pres-lam pres-fin' },
       h('div', { class: 'pres-qr' }, h('img', { src: qrDataUrl(SUPER9_WA, 8), alt: 'QR del WhatsApp de Super 9' }), h('b', {}, '📷 WhatsApp de Carlos · ' + SUPER9_TEL.replace(/(\d{3})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4'))),
       h('div', { class: 'pres-wa' }, h('div', { style: 'display:flex;gap:10px;align-items:center' }, h('img', { src: 'pres/super9.png', alt: 'Super 9', style: 'width:56px;height:56px;flex:none' }), h('h3', {}, 'Socio recomendado: Super 9')),
-        h('p', {}, 'Carnicería de Carlos Zúñiga: más de 10 años sirviendo, empresa en ascenso, muchísima variedad y buena calidad-precio. 100 % recomendado. Lista de precios: muy pronto.'),
+        h('p', {}, 'Carnicería de Carlos Zúñiga: más de 10 años sirviendo, empresa en ascenso, muchísima variedad y buena calidad-precio. 100 % recomendado. Lista de precios: muy pronto. ' + SUPER9_SOCIAL + '.'),
         h('p', {}, 'Le mandamos la tarjeta de los dos por WhatsApp:'), tel,
         h('button', { class: 'pres-b', onclick: () => wa('com.whatsapp') }, '💬 Enviar por WhatsApp'), h('button', { class: 'pres-r', onclick: () => wa('com.whatsapp.w4b') }, '💼 WhatsApp Business'))))); }
   const cnt = h('span', {}), barra = h('div', { class: 'pres-barra' }, sls.map(() => h('i'))), izq = h('button', { class: 'pres-n pres-izq', 'aria-label': 'Anterior', onclick: () => ir(i - 1) }, '‹'), der = h('button', { class: 'pres-n pres-der', 'aria-label': 'Siguiente', onclick: () => ir(i + 1) }, '›');
@@ -12988,11 +13071,13 @@ async function presVisor(laminas, botones, conTarjeta) {
     h('div', { class: 'pres-pie' }, (botones || []).length ? h('div', { class: 'pres-acc' }, botones.map(([t, f]) => h('button', { class: 'pres-b', onclick: f }, t))) : null, barra));
   pinta(); despierta();
 }
-const presPresentar = p => presVisor(presConEnlace(p.diapositivas), [['📄 PDF', () => presPdf(p, 'bajar')], ['📲 Enviar', () => presPdf(p, 'enviar')], ['💶 + precios', () => presPdf(p, 'enviar', true)]], true);
+const presPresentar = p => presVisor(presConEnlace(p.diapositivas), [['📄 PDF', () => presPdf(p, 'bajar')], ['🖼 JPG', () => presPdf(p, 'jpg')], ['🎬 Vídeo', () => presPdf(p, 'video')], ['📲 Enviar', () => presPdf(p, 'enviar')], ['💶 + precios', () => presPdf(p, 'enviar', true)]], true);
 /* Las guardadas llevan el botón del formulario vacío (lo rellena el envío con su enlace): aquí apunta a la tarjeta. */
 const presConEnlace = sl => (sl || []).map(d => d.enlace && !d.enlace.url ? Object.assign({}, d, { enlace: { texto: 'Pulse aquí para rellenarlo', url: URL_TARJETA } }) : d);
 async function presPdf(p, accion, conLista) {
-  try { const lam = await presExpandir(presConEnlace(p.diapositivas), !!conLista); const bytes = (await presArchivoPdf(lam)).bytes; const nombre = (sinTilde(p.titulo || 'ferjusanz').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'ferjusanz') + (conLista ? '-con-precios' : '') + '-' + hoy() + '.pdf';
+  try { const lam = await presExpandir(presConEnlace(p.diapositivas), !!conLista), socio = [await socioLienzo('ferjusanz')]; /* al final, la tarjeta con Super 9 (Tito, 18/11/2026) */
+    if (accion === 'jpg' || accion === 'video') { const hojas = (await presArchivoPdf(lam, socio)).hojas; await archivosSalida(await lienzosArchivos(hojas, p.titulo || 'ferjusanz', accion), 'bajar'); return; }
+    const bytes = (await presArchivoPdf(lam, socio)).bytes; const nombre = (sinTilde(p.titulo || 'ferjusanz').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'ferjusanz') + (conLista ? '-con-precios' : '') + '-' + hoy() + '.pdf';
     if (accion === 'enviar') await comCompartir(bytes, nombre, p.titulo); else { comDescargar(bytes, nombre); toast('PDF descargado', 'ok'); } }
   catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); }
 }
@@ -13007,7 +13092,7 @@ async function vistaPresentaciones() {
       cont.replaceChildren(
         h('div', { class: 'aviso-card' }, 'Presentaciones para enseñar a clientes: quiénes somos, cómo trabajamos, productos y listas de precios. Se pasan con el dedo a pantalla completa y se envían en PDF. Los precios de compra NUNCA salen.'),
         ...(r.data || []).map(p => h('div', { class: 'card' }, h('div', { class: 'nombre', style: 'font-size:18px' }, p.titulo), h('div', { class: 'sub' }, (p.diapositivas || []).length + ' láminas · cambiada ' + fechaES(String(p.updated_at || '').slice(0, 10))), Object.values(PP_PRES).includes(p.titulo) ? h('div', { class: 'sub', style: 'color:#166534;font-weight:700' }, '📨 Es la que se envía a ' + (p.titulo.includes('exclientes') ? 'exclientes' : 'posibles clientes') + ' (y la del vídeo)') : null,
-          h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' }, h('button', { class: 'small', onclick: () => presPresentar(p) }, '▶ Presentar'), h('button', { class: 'small ghost', onclick: () => editar(p) }, '✏️ Editar'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'bajar') }, '📄 PDF'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'enviar') }, '📲 Enviar'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'enviar', true) }, '💶 Enviar con lista de precios'),
+          h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' }, h('button', { class: 'small', onclick: () => presPresentar(p) }, '▶ Presentar'), h('button', { class: 'small ghost', onclick: () => editar(p) }, '✏️ Editar'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'bajar') }, '📄 PDF'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'jpg') }, '🖼 JPG'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'video') }, '🎬 Vídeo'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'enviar') }, '📲 Enviar'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'enviar', true) }, '💶 Enviar con lista de precios'),
             h('button', { class: 'small ghost', onclick: () => duplicar(p) }, '⧉ Copiar')))),
         h('button', { class: 'guardar', style: 'width:100%;min-height:54px;margin-top:10px', onclick: () => editar(null, 'hosteleria') }, '➕ Nueva: ' + PRES_MODELOS.hosteleria), h('button', { class: 'guardar', style: 'width:100%;min-height:54px;margin-top:8px', onclick: () => editar(null, 'colectivos') }, '➕ Nueva: ' + PRES_MODELOS.colectivos));
     } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : /does not exist|schema cache|relation/i.test(e.message || '') ? 'Falta ejecutar en Supabase el archivo «Parte 56» (presentaciones).' : msgErr(e))); }
@@ -13048,10 +13133,10 @@ function vistaComercial() {
   state.view = 'comercial';
   if (!esOficina()) { $app.replaceChildren(shell('Comercial', h('p', { class: 'vacio' }, 'Solo la oficina puede entrar aquí.'), { volver: volverIni })); return; }
   let tab = (state.params && state.params.tab) || LS.get('fj_com_tab', 'listas'); const cont = h('div', {}); const cuerpo = h('div', {});
-  const TABS = [['harvey', '🤵 Harvey'], ['listas', '📄 Listas'], ['recs', '⭐ Recomendaciones'], ['avisos', '🔔 Avisos'], ['calc', '🧮 Calculadora'], ['pres', '🎬 Presentaciones'], ['guion', '🗣️ Guiones'], ['web', '🌐 Web y SEO']];
+  const TABS = [['harvey', '🤵 Harvey'], ['tarjetas', '📇 Tarjetas'], ['listas', '📄 Listas'], ['recs', '⭐ Recomendaciones'], ['avisos', '🔔 Avisos'], ['calc', '🧮 Calculadora'], ['pres', '🎬 Presentaciones'], ['guion', '🗣️ Guiones'], ['web', '🌐 Web y SEO']];
   const pintarTabs = () => chips.replaceChildren(...TABS.map(([k, t]) => h('button', { class: 'chip' + (tab === k ? ' on' : ''), onclick: () => { if (k === 'pres') { go('presentaciones'); return; } tab = k; LS.set('fj_com_tab', k); pintarTabs(); pintar(); } }, t)));
   const chips = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px' });
-  const pintar = () => { cuerpo.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); ({ harvey: tabHarvey, listas: tabListas, recs: tabRecs, avisos: tabAvisos, calc: tabCalc, guion: tabGuion, web: tabWeb })[tab](cuerpo); };
+  const pintar = () => { cuerpo.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); ({ harvey: tabHarvey, tarjetas: tabTarjetas, listas: tabListas, recs: tabRecs, avisos: tabAvisos, calc: tabCalc, guion: tabGuion, web: tabWeb })[tab](cuerpo); };
   cont.append(chips, cuerpo); $app.replaceChildren(shell('Comercial', cont, { volver: volverIni })); renderBanner(); pintarTabs(); pintar();
 }
 async function tabListas(el) {
@@ -15462,7 +15547,7 @@ const BUSCA_PANTALLAS = [
   ['📐', 'Formatos', 'formatos formato caja kilos peso cliente unidades bote bandeja compra venta se vende se compra', () => go('formatos'), 'o'],
   ['🌐', 'Portal de clientes', 'portal pagina clientes web qr enlace publicar albaranes', () => go('paginasclientes')],
   ['📇', 'Tarjeta para clientes', 'tarjeta virtual qr whatsapp business clientes nuevos dar contacto', () => hojaTarjeta()],
-  ['🤝', 'Socio: Carnicería Super 9', 'super 9 carniceria carne carlos zuñiga socio recomendado qr tarjeta', () => hojaSuper9()],
+  ['🤝', 'Tarjetas (Ferjusanz y Super 9)', 'tarjetas super 9 carniceria carne carlos zuñiga socio recomendado qr jpg pdf video', () => go('comercial', { tab: 'tarjetas' })],
   ['📲', 'Móviles y correos de clientes', 'moviles correos telefonos contactos clientes dejan qr whatsapp email', () => go('contactosportal'), 'o'],
   ...(CAJA_APP ? [['💵', 'Caja (efectivo)', 'caja efectivo entradas salidas gasolina justificante ticket debe haber dinero metalico', () => go('caja'), 'o']] : []),
   ...(BANCO_APP ? [['🏦', 'Banco', 'banco norma 43 n43 cuaderno 43 extracto movimientos transferencias cobros pagos conciliar conciliacion excel', () => go('banco'), 'o']] : []),
