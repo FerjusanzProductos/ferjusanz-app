@@ -110,7 +110,6 @@ _Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/arti
 - Harvey v2 en la normal (`harvey-v2` «investiga y prepara la oferta») tras probarlo en pruebas; preparar pedido desde WhatsApp y recordatorios de cobro.
 - **WhatsApp automático** (`docs/PLAN_WHATSAPP.md`) · **Tienda online** (`docs/PLAN_TIENDA.md`) · anuncios de Meta y seguimiento automático por correo a contactos.
 - Agentes: ofertas semanales, cobros, buscador de clientes con cocina propia.
-- Skills «⏳ Más adelante» del plan Small Business (`docs/PLAN_SMALL_BUSINESS.md`) cuando lo autorice.
 - Resumen de correo automático cada mañana (las tareas programadas no ven Gmail; mientras, **/resumen-correo** en un chat).
 - Cambio de temporada de patata (09-F → 01-F) cuando diga «cambio de temporada patata».
 - No se hace: ocultar las ventas «sin IVA» (ilegal, art. 29.2.j y 201 bis LGT).
