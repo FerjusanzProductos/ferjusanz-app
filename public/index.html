@@ -4205,12 +4205,16 @@ async function abrirFacturaGolden(f) {
     cuerpo.replaceChildren(...(kids.length ? kids : [h('p', { class: 'vacio' }, 'Sin líneas.')]));
   } catch (e) { cuerpo.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
 }
-const filaFacturaGolden = f => h('div', { class: 'card tap', onclick: () => abrirFacturaGolden(f) }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, 'Factura ' + f.numero), h('div', { class: 'sub' }, fechaES(f.fecha) + (f.cliente_nombre ? ' · ' + f.cliente_nombre : ''))), h('div', { style: 'text-align:right' }, h('b', {}, eur(f.total) + '\u00a0€'), f.borrador ? h('div', {}, h('span', { class: 'badge' }, 'Borrador')) : null)));
+const filaFacturaGolden = (f, sinCobrar) => h('div', { class: 'card tap', onclick: () => abrirFacturaGolden(f) }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, 'Factura ' + f.numero), h('div', { class: 'sub' }, fechaES(f.fecha) + (f.cliente_nombre ? ' · ' + f.cliente_nombre : ''))), h('div', { style: 'text-align:right' }, h('b', {}, eur(f.total) + '\u00a0€'), f.borrador ? h('div', {}, h('span', { class: 'badge' }, 'Borrador')) : null, sinCobrar ? h('div', {}, h('span', { class: 'badge', style: 'background:var(--rojo);color:#fff' }, 'Sin cobrar')) : null)));
 /* Para la ficha del cliente */
 function panelGoldenCliente(c) {
   const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando historial de Golden…'));
-  (async () => { try { const r = await sb.from('golden_facturas').select('*').ilike('cliente_codigo', c.codigo).order('fecha', { ascending: false }).limit(500); if (r.error) throw r.error; const fs = (r.data || []).filter(f => !f.borrador); const tot = fs.reduce((a, f) => a + Number(f.total || 0), 0);
-    cont.replaceChildren(h('div', { class: 'letra' }, 'Historial de Golden (2026)'), fs.length ? h('div', { class: 'sub', style: 'margin-bottom:6px' }, fs.length + ' facturas · ' + eur(tot) + '\u00a0€ en total') : null, ...(fs.length ? fs.map(filaFacturaGolden) : [h('p', { class: 'vacio' }, 'No hay facturas de Golden de este cliente en 2026.')]));
+  (async () => { try { const [r, tq] = await Promise.all([sb.from('golden_facturas').select('*').ilike('cliente_codigo', c.codigo).order('fecha', { ascending: false }).limit(500), sb.from('golden_tesoreria').select('vencimiento,total,serie,numero').eq('tipo', 'C').eq('estado', 'PEN').ilike('codigo', c.codigo).order('vencimiento')]); if (r.error) throw r.error; const fs = (r.data || []).filter(f => !f.borrador); const tot = fs.reduce((a, f) => a + Number(f.total || 0), 0);
+    // Lo que nos debe según Golden (Fernando, 18/11/2026: «cuando busco la definitiva no sé cuánto debe»). Sin permiso de tesorería, no sale.
+    const ts = tq.error ? [] : (tq.data || []), debe = ts.reduce((a, t) => a + Number(t.total || 0), 0), hoyS = hoy(), pend = new Set(ts.map(t => numGolden(t.serie, t.numero)));
+    const deuda = ts.length ? h('div', { class: 'card', style: 'border-left:5px solid var(--rojo)' }, h('div', { class: 'fila' }, h('div', { class: 'nombre', style: 'color:var(--rojo)' }, 'Debe'), h('div', { class: 'tot-num', style: 'color:var(--rojo)' }, eur(debe) + '\u00a0€')), h('div', { class: 'sub' }, ts.length + (ts.length === 1 ? ' factura sin cobrar' : ' facturas sin cobrar') + ' en Golden · toca una para verla'),
+      ...ts.map(t => h('div', { class: 'card fila tap', onclick: () => verFacturaPendiente(t) }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:15px' }, 'Fra. ' + numGolden(t.serie, t.numero)), h('div', { class: 'sub' }, 'Vence el ' + fechaES(t.vencimiento))), h('b', { style: t.vencimiento < hoyS ? 'color:var(--rojo)' : '' }, eur(t.total) + '\u00a0€')))) : null;
+    cont.replaceChildren(h('div', { class: 'letra' }, 'Historial de Golden (2026)'), deuda, fs.length ? h('div', { class: 'sub', style: 'margin-bottom:6px' }, fs.length + ' facturas · ' + eur(tot) + '\u00a0€ en total') : null, ...(fs.length ? fs.map(f => filaFacturaGolden(f, pend.has(f.numero))) : [h('p', { class: 'vacio' }, 'No hay facturas de Golden de este cliente en 2026.')]));
   } catch (e) { cont.replaceChildren(h('p', { class: 'sub' }, /golden_|relation|schema cache/i.test((e && e.message) || '') ? 'Historial de Golden aún sin cargar (Parte 35).' : (isNetErr(e) ? 'Necesitas conexión.' : msgErr(e)))); } })();
   return cont;
 }
@@ -4235,7 +4239,7 @@ function vistaGolden() {
     }
     const r = b.filter(f => !texto || sinTilde((f.cliente_nombre || '') + ' ' + (f.cliente_codigo || '') + ' ' + f.numero).includes(texto));
     const t2 = r.reduce((a, f) => a + Number(f.total || 0), 0); info.textContent = r.length + ' facturas · ' + eur(t2) + '\u00a0€';
-    cont.replaceChildren(...r.slice(0, tope).map(filaFacturaGolden), r.length > tope ? h('button', { class: 'ghost', style: 'width:100%', onclick: () => { tope += 100; pintar(); } }, 'Mostrar más (' + (r.length - tope) + ')') : null, !r.length ? h('p', { class: 'vacio' }, 'No hay facturas con este filtro.') : null);
+    cont.replaceChildren(...r.slice(0, tope).map(f => filaFacturaGolden(f)), r.length > tope ? h('button', { class: 'ghost', style: 'width:100%', onclick: () => { tope += 100; pintar(); } }, 'Mostrar más (' + (r.length - tope) + ')') : null, !r.length ? h('p', { class: 'vacio' }, 'No hay facturas con este filtro.') : null);
   }
   const buscaProd = debounce(async () => {
     if (modo !== 'productos') return; const t = limpiaBusqueda(bus.value).trim(); if (t.length < 3) { cont.replaceChildren(h('p', { class: 'vacio' }, 'Escribe al menos 3 letras del producto.')); return; }
