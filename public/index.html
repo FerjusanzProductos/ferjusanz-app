@@ -12660,7 +12660,9 @@ function mp4Normal(u8) {
   ids.forEach(id => pistas[id].m.forEach(s => { out.set(u8.subarray(s.at, s.at + s.size), o); o += s.size; }));
   return out;
 }
-async function grabarVideoPres(tipo, alGuardar) {
+/* opts (18/11/2026, Tito: vídeo con su voz desde Presentaciones y Tarjetas): { nombre, preparar: async () => ({ hojas: [lienzos], guion: [frases] }) }.
+   Con opts el vídeo no se guarda en la carpeta del primer pedido: se descarga o se envía. */
+async function grabarVideoPres(tipo, alGuardar, opts) {
   if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) { toast('Este móvil no deja grabar vídeo desde la app.', 'err'); return; }
   // Pequeño para poder mandarlo por correo (Fernando: «que ocupe lo mínimo»; «necesito 1:20»): 960×680, 0,3 Mbit/s → ~1,3 MB en 1:20.
   const MAXS = 80, cv = document.createElement('canvas'); cv.width = 960; cv.height = 680; const cx = cv.getContext('2d');
@@ -12672,13 +12674,14 @@ async function grabarVideoPres(tipo, alGuardar) {
   const fuera = () => { try { stream && stream.getTracks().forEach(t => t.stop()); mic && mic.getTracks().forEach(t => t.stop()); } catch (e) { } clearInterval(tic); tapa.remove(); };
   let lamX = [], hojas = [], n = 0, rec = null, stream = null, mic = null, tic = null, trozos = [];
   const BT = (t, f, cls) => h('button', { class: cls || 'ghost', style: 'flex:1;min-height:56px;font-size:17px', onclick: f }, t);
-  const pinta = () => { decir.textContent = '🗣️ ' + pvGuion(lamX[n] || {}, tipo); cx.fillStyle = '#ffffff'; cx.fillRect(0, 0, cv.width, cv.height); const im = hojas[n]; if (im) cx.drawImage(im, 0, 0, cv.width, cv.height); };
+  let frases = null; const pinta = () => { decir.textContent = '🗣️ ' + (frases ? frases[n] || '' : pvGuion(lamX[n] || {}, tipo)); cx.fillStyle = '#ffffff'; cx.fillRect(0, 0, cv.width, cv.height); const im = hojas[n]; if (im) cx.drawImage(im, 0, 0, cv.width, cv.height); };
   try {
-    lamX = await presExpandir(await pvLaminas(tipo), false); hojas = (await presArchivoPdf(lamX, [await socioLienzo('ferjusanz')])).hojas; lamX = lamX.concat({ t: 'socio' }); // al final, la tarjeta con Super 9
+    if (opts) { const r = await opts.preparar(); hojas = r.hojas; frases = r.guion; } else {
+    lamX = await presExpandir(await pvLaminas(tipo), false); hojas = (await presArchivoPdf(lamX, [await socioLienzo('ferjusanz')])).hojas; lamX = lamX.concat({ t: 'socio' }); } // al final, la tarjeta con Super 9
   } catch (e) { fuera(); toast('No se pudieron preparar las hojas: ' + msgErr(e), 'err'); return; }
   pinta();
   const tipoVideo = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp8,opus', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t)) || '';
-  const listo = () => { info.textContent = 'Vídeo de la presentación (' + (tipo.startsWith('ex-') ? 'exclientes, ' : '') + (ppBase(tipo) === 'colectivos' ? 'colegios y residencias' : 'hostelería') + '): ' + hojas.length + ' hojas. Lo ideal, unos 30 segundos: frases cortas y pasa rápido las hojas (como mucho 1:20). Debajo de cada hoja sale en amarillo lo que puedes decir. Pulsa «Empezar», habla y pasa las hojas con «Siguiente».';
+  const listo = () => { info.textContent = opts ? 'Vídeo con tu voz: ' + opts.nombre + ' (' + hojas.length + ' frases). Pulsa «Empezar», lee la frase amarilla y pulsa «Siguiente». Al acabar, «⏹ Terminar».' : 'Vídeo de la presentación (' + (tipo.startsWith('ex-') ? 'exclientes, ' : '') + (ppBase(tipo) === 'colectivos' ? 'colegios y residencias' : 'hostelería') + '): ' + hojas.length + ' hojas. Lo ideal, unos 30 segundos: frases cortas y pasa rápido las hojas (como mucho 1:20). Debajo de cada hoja sale en amarillo lo que puedes decir. Pulsa «Empezar», habla y pasa las hojas con «Siguiente».';
     botones.replaceChildren(musica, BT('⏺ Empezar a grabar', empezar, 'guardar'), BT('Cancelar', fuera)); };
   /* 🎵 Con música (Tito, 18/11/2026: música de fondo desde otro móvil): sin quitar ruido ni eco, para que la música no se corte; y más calidad de sonido. */
   const conMusica = h('input', { type: 'checkbox', style: 'width:24px;height:24px;flex:none' });
@@ -12700,15 +12703,18 @@ async function grabarVideoPres(tipo, alGuardar) {
     clearInterval(tic); stream.getTracks().forEach(t => t.stop());
     const ty = (rec.mimeType || tipoVideo || 'video/webm').split(';')[0], blob = new Blob(trozos, { type: ty }), ext = ty.includes('mp4') ? 'mp4' : 'webm';
     const ver = h('video', { src: URL.createObjectURL(blob), controls: true, playsinline: true, style: 'width:100%;max-height:60vh;background:#000' });
-    cv.replaceWith(ver); info.textContent = 'Revisa el vídeo (' + Math.round(blob.size / 1048576 * 10) / 10 + ' MB). Si te gusta, guárdalo.';
-    botones.replaceChildren(BT('💾 Guardar este vídeo', async e => {
+    cv.replaceWith(ver); info.textContent = 'Revisa el vídeo (' + Math.round(blob.size / 1048576 * 10) / 10 + ' MB). Si te gusta, ' + (opts ? 'descárgalo o envíalo.' : 'guárdalo.');
+    const archivo = async () => { let b = blob; if (ext === 'mp4') { try { b = new Blob([mp4Normal(new Uint8Array(await blob.arrayBuffer()))], { type: ty }); } catch (er) { console.warn('mp4Normal', er); } }
+      return new File([b], (sinTilde(opts ? opts.nombre : tipo).replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'video') + '-voz-' + hoy() + '.' + ext, { type: ty }); };
+    botones.replaceChildren(opts ? null : BT('💾 Guardar este vídeo', async e => {
       const b = e.currentTarget; b.disabled = true; b.textContent = '⏳ Subiendo…';
       try { const viejo = await pvBuscar(tipo); if (viejo && viejo.name !== tipo + '.' + ext) await sb.storage.from(PV_BUCKET).remove([viejo.name]);
         let sube = blob; if (ext === 'mp4') { try { sube = new Blob([mp4Normal(new Uint8Array(await blob.arrayBuffer()))], { type: ty }); } catch (er) { console.warn('mp4Normal', er); } } // MP4 normal: WhatsApp y Gmail lo aceptan
         const r = await sb.storage.from(PV_BUCKET).upload(tipo + '.' + ext, sube, { upsert: true, contentType: ty }); if (r.error) throw r.error;
         toast('Vídeo guardado. Ya puedes enviarlo con «🎬 Vídeo de la presentación».', 'ok'); fuera(); if (alGuardar) alGuardar(); }
       catch (er) { b.disabled = false; b.textContent = '💾 Guardar este vídeo'; toast(isNetErr(er) ? 'Necesitas conexión.' : msgErr(er), 'err'); } }, 'guardar'),
-      BT('🔁 Repetir', () => { ver.replaceWith(cv); listo(); }), BT('Cancelar', fuera));
+      BT('⬇️ Descargar', async () => archivosSalida([await archivo()], 'bajar'), opts ? 'guardar' : 'ghost'), BT('📲 Enviar', async () => archivosSalida([await archivo()], 'enviar')),
+      BT('🔁 Repetir', () => { ver.replaceWith(cv); listo(); }), BT(opts ? 'Cerrar' : 'Cancelar', fuera));
   };
   listo();
 }
@@ -13066,6 +13072,18 @@ async function socioArchivo(quien, que, accion) {
     await archivosSalida(await lienzosArchivos([await socioLienzo(quien)], titulo, que), accion, quien === 'ferjusanz' ? super9Msg() : 'Carnicería Super 9 (Carlos Zúñiga) y nuestro socio recomendado, Ferjusanz: ' + URL_SUPER9); }
   catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); }
 }
+/* Guion del vídeo con voz de cada tarjeta: una frase por «Siguiente». La de Super 9, para que la grabe Carlos. */
+const TARJETA_GUION = {
+  ferjusanz: ['Hola, soy Fernando, de Ferjusanz: patatas, frutas, verduras y huevos para hostelería.', 'Empresa familiar, tercera generación y más de sesenta años en Mercamadrid.', 'Pida por WhatsApp hasta la tarde anterior y se lo llevamos, sin pedido mínimo.', 'Escanee nuestro QR, marque su primer pedido y le mandamos su tarifa.', 'Y para la carne, le recomiendo a nuestro socio Carlos, de Carnicería Super 9: escanee su QR y hable con él.'],
+  super9: ['Hola, soy Carlos, de Carnicería Super 9.', 'Más de diez años sirviendo carne, con muchísima variedad y buena calidad-precio.', 'Escanee el QR y escríbame por WhatsApp.', 'Y para la fruta, la verdura, las patatas y los huevos, le recomiendo a mi socio Fernando, de Ferjusanz: escanee su QR y pida su tarifa.'] };
+const tarjetaVoz = quien => grabarVideoPres(null, null, { nombre: quien === 'ferjusanz' ? 'Tarjeta Ferjusanz y Super 9' : 'Tarjeta Super 9 y Ferjusanz',
+  preparar: async () => { const cv = await socioLienzo(quien); return { hojas: TARJETA_GUION[quien].map(() => cv), guion: TARJETA_GUION[quien] }; } });
+/* Presentaciones: vídeo con voz de cualquiera. La que se envía a posibles clientes se graba como siempre (se guarda para el envío). */
+function presVoz(p) {
+  const clave = Object.keys(PP_PRES).find(k => PP_PRES[k] === p.titulo); if (clave) return grabarVideoPres(clave);
+  return grabarVideoPres(null, null, { nombre: p.titulo || 'Presentación', preparar: async () => { const lam = await presExpandir(presConEnlace(p.diapositivas), false);
+    const hojas = (await presArchivoPdf(lam, [await socioLienzo('ferjusanz')])).hojas; return { hojas, guion: lam.map(d => pvGuion(d, 'hosteleria')).concat(pvGuion({ t: 'socio' }, 'hosteleria')) }; } });
+}
 async function tabTarjetas(el) {
   const fila = (quien, titulo, sub, extra) => { const img = h('img', { alt: titulo, style: 'width:100%;border-radius:8px;border:1px solid #0002;margin:6px 0;aspect-ratio:1500/1061;background:#eee' });
     socioLienzo(quien).then(cv => { img.src = cv.toDataURL('image/jpeg', 0.7); }).catch(() => { });
@@ -13073,6 +13091,7 @@ async function tabTarjetas(el) {
     return h('div', { class: 'card' }, h('div', { class: 'nombre' }, titulo), h('div', { class: 'sub' }, sub), img,
       h('a', { href: URL_TARJETA, target: '_blank', rel: 'noopener', style: 'display:block;font-weight:600;overflow-wrap:anywhere;margin-bottom:6px' }, '🔗 ' + enlaceVer(URL_TARJETA) + ' (formulario)'),
       h('div', { class: 'sub' }, '⬇️ Descargar:'), h('div', { style: 'display:flex;gap:6px' }, b('🖼 JPG', () => socioArchivo(quien, 'jpg')), b('📄 PDF', () => socioArchivo(quien, 'pdf')), b('🎬 Vídeo', () => socioArchivo(quien, 'video'))),
+      h('button', { class: 'guardar', style: 'width:100%;min-height:48px;margin-top:8px;position:static', onclick: () => tarjetaVoz(quien) }, '🎙️ Vídeo con tu voz (con guion)'),
       h('div', { class: 'sub', style: 'margin-top:6px' }, '📲 Enviar (WhatsApp…):'), h('div', { style: 'display:flex;gap:6px' }, b('🖼 JPG', () => socioArchivo(quien, 'jpg', 'enviar'), 'guardar small'), b('📄 PDF', () => socioArchivo(quien, 'pdf', 'enviar'), 'ghost small'), b('🎬 Vídeo', () => socioArchivo(quien, 'video', 'enviar'), 'ghost small')), extra || null); };
   el.replaceChildren(
     h('div', { class: 'aviso-card' }, 'Todas las tarjetas juntas. La de Ferjusanz lleva a Super 9 como socio recomendado y la de Super 9 lleva a Ferjusanz: las dos a la par, cada una con su QR.'),
@@ -13165,7 +13184,7 @@ async function vistaPresentaciones() {
       cont.replaceChildren(
         h('div', { class: 'aviso-card' }, 'Presentaciones para enseñar a clientes: quiénes somos, cómo trabajamos, productos y listas de precios. Se pasan con el dedo a pantalla completa y se envían en PDF. Los precios de compra NUNCA salen.'),
         ...(r.data || []).map(p => h('div', { class: 'card' }, h('div', { class: 'nombre', style: 'font-size:18px' }, p.titulo), h('div', { class: 'sub' }, (p.diapositivas || []).length + ' láminas · cambiada ' + fechaES(String(p.updated_at || '').slice(0, 10))), Object.values(PP_PRES).includes(p.titulo) ? h('div', { class: 'sub', style: 'color:#166534;font-weight:700' }, '📨 Es la que se envía a ' + (p.titulo.includes('exclientes') ? 'exclientes' : 'posibles clientes') + ' (y la del vídeo)') : null,
-          h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' }, h('button', { class: 'small', onclick: () => presPresentar(p) }, '▶ Presentar'), h('button', { class: 'small ghost', onclick: () => editar(p) }, '✏️ Editar'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'bajar') }, '📄 PDF'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'jpg') }, '🖼 JPG'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'video') }, '🎬 Vídeo'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'enviar') }, '📲 Enviar'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'enviar', true) }, '💶 Enviar con lista de precios'),
+          h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' }, h('button', { class: 'small', onclick: () => presPresentar(p) }, '▶ Presentar'), h('button', { class: 'small ghost', onclick: () => editar(p) }, '✏️ Editar'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'bajar') }, '📄 PDF'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'jpg') }, '🖼 JPG'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'video') }, '🎬 Vídeo'), h('button', { class: 'small', onclick: () => presVoz(p) }, '🎙️ Vídeo con tu voz'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'enviar') }, '📲 Enviar'), h('button', { class: 'small ghost', onclick: () => presPdf(p, 'enviar', true) }, '💶 Enviar con lista de precios'),
             h('button', { class: 'small ghost', onclick: () => duplicar(p) }, '⧉ Copiar')))),
         h('button', { class: 'guardar', style: 'width:100%;min-height:54px;margin-top:10px', onclick: () => editar(null, 'hosteleria') }, '➕ Nueva: ' + PRES_MODELOS.hosteleria), h('button', { class: 'guardar', style: 'width:100%;min-height:54px;margin-top:8px', onclick: () => editar(null, 'colectivos') }, '➕ Nueva: ' + PRES_MODELOS.colectivos));
     } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : /does not exist|schema cache|relation/i.test(e.message || '') ? 'Falta ejecutar en Supabase el archivo «Parte 56» (presentaciones).' : msgErr(e))); }
