@@ -139,6 +139,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - El archivo de la factura se nombra **«PROVEEDOR · Fra. Nº»** para que se sepa de quién es.
 - Cada factura de proveedor guarda **NIF, CP y desglose de IVA** (base, %, cuota, recargo y total por tipo). Lo leído por la app solo rellena lo vacío; lo corregido por la oficina manda. En el listado de COMPRAS para Jorge el concepto es **«Compra de mercaderías»** (Jorge, 13/11/2026).
 - Las facturas deben venir a nombre de **FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. (B87446670)**; si vienen a nombre de FERJUSANZ C.B. (E80746670), la app avisa.
+- **Margen, rentabilidad, compras y cobros/pagos de Golden: solo Fernando, su padre y Jorge** (Fernando, 18/11/2026). Carmen y el resto, no. Lista en la tabla `ver_margenes`.
 - **La C.B. sigue existiendo, pero todo se hace ya a través de la S.L.** (Fernando, 18/11/2026). Lo que aún esté a nombre de la C.B. (furgonetas, orden SEPA, certificados, facturas de proveedores) es algo pendiente de pasar a la S.L., no una forma válida de trabajar.
 
 ## Reparto (Fernando, 12/11/2026)
