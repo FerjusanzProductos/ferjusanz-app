@@ -14931,7 +14931,6 @@ function vistaCaja() {
   const abrir = (tit, cuerpo) => { const c = hoja(tit, cuerpo); return c; };
   const nuevo = tipo => { let cerrar = null; cerrar = abrir(tipo === 'entrada' ? '➕ Entra efectivo' : '➖ Sale efectivo', cajaFormulario(tipo, null, () => { cerrar(); cargar(); })); };
   function detalle(m) {
-    if (!M) { toast('Un momento: estoy buscando las propuestas…', 'err'); return; }
     let cerrar = null; const per = datos.per; const fj = cajaFaltaJust(m);
     const lin = (a, b) => b ? h('div', { style: 'padding:3px 0' }, h('span', { class: 'sub' }, a + ': '), h('b', {}, b)) : null;
     const hist = h('div', { class: 'sub', style: 'margin-top:8px;line-height:1.5' }, h('div', {}, '🕓 Apuntado el ' + fechaES(hoy(new Date(m.created_at))) + (per[m.creado_por] ? ' por ' + per[m.creado_por] : '')), ...m.cambios.map(c => h('div', { style: c.accion === 'anulado' ? 'color:var(--rojo)' : 'color:#b45309' }, '✏️ ' + cajaTextoCambio(c, per))));
