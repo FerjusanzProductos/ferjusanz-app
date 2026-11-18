@@ -91,7 +91,8 @@ div[style*="display:grid"]:has(>button:nth-child(3)){grid-template-columns:1fr 1
 .pres-sl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transform:translateX(var(--dx,9%)) scale(.94);transition:opacity .45s ease,transform .6s cubic-bezier(.2,.8,.2,1);pointer-events:none}.pres-sl.antes{--dx:-9%}.pres-sl.on{opacity:1;transform:none;pointer-events:auto}.pres-sl.arrastra{transition:none}
 .pres-lam{position:relative;width:min(100vw,calc(100vh * 1.4137));width:min(100vw,calc(100dvh * 1.4137));aspect-ratio:1500/1061;overflow:hidden;box-shadow:0 20px 60px #0009}.pres-lam canvas{display:block;width:100%;height:100%}.pres-sl.on canvas{animation:presZoom 12s ease-out both}
 @keyframes presZoom{from{transform:scale(1)}to{transform:scale(1.045)}}
-@media (orientation:portrait){.pres-lam{width:calc(100vw - 16px);border-radius:12px}.pres-pie::before{content:'↻ Gira el móvil (o pulsa «⟳ Girar») para verla en grande';text-align:center;font-size:14px;opacity:.85;margin-bottom:4px}}
+.pres-fin{background:#f6f2ea;display:flex;align-items:center;gap:4%;padding:3% 5%;box-sizing:border-box}.pres-qr{flex:0 0 40%;text-align:center;color:#0d3a22}.pres-qr img{width:100%;border-radius:12px;image-rendering:pixelated;display:block;margin-bottom:6px}.pres-wa{flex:1;display:flex;flex-direction:column;gap:8px;color:#1c1c1a}.pres-wa img{width:55%;max-width:200px}.pres-wa h3{margin:0;color:#0d3a22;font-size:clamp(16px,2.6vw,26px);line-height:1.1}.pres-wa p{margin:0;font-size:14px}.pres-wa input{width:100%;min-height:46px;font-size:17px;box-sizing:border-box}.pres-wa .pres-r{color:#0d3a22;border-color:#0d3a2240;background:#fff}
+@media (orientation:portrait){.pres-lam{width:calc(100vw - 16px);border-radius:12px}.pres-fin{aspect-ratio:auto;flex-direction:column;padding:16px}.pres-qr{width:62%}.pres-ov button.pres-n{top:auto;bottom:calc(max(10px,env(safe-area-inset-bottom)) + 62px);transform:none}.pres-pie::before{content:'↻ Gira el móvil para verla en grande';text-align:center;font-size:14px;opacity:.85;margin-bottom:4px}}
 .pres-enl{position:absolute;border-radius:999px}
 .pres-top,.pres-pie{position:absolute;left:0;right:0;display:flex;align-items:center;gap:8px;padding:10px 12px;color:#fff;font-weight:700;transition:opacity .3s,transform .3s;z-index:2}.pres-top{top:0;background:linear-gradient(#000a,#0000)}.pres-pie{bottom:0;flex-direction:column;align-items:stretch;padding-bottom:max(10px,env(safe-area-inset-bottom));background:linear-gradient(#0000,#000a)}
 .pres-top span{white-space:nowrap;font-size:17px}.pres-ov .pres-x,.pres-ov .pres-r{background:#ffffff26;color:#fff;border:1px solid #ffffff40;border-radius:999px;min-width:48px;height:48px;min-height:48px;padding:0 14px;font-size:17px;font-weight:800;backdrop-filter:blur(6px)}
@@ -2834,10 +2835,10 @@ function abrirWhatsApp(telefono, texto, pkg) {
   if (!/Android/i.test(navigator.userAgent)) { window.open(web, '_blank'); return; }
   location.href = 'intent://send?' + (t ? 'phone=' + t + '&' : '') + 'text=' + encodeURIComponent(texto) + '#Intent;scheme=whatsapp;package=' + (pkg || 'com.whatsapp') + ';S.browser_fallback_url=' + encodeURIComponent(web) + ';end';
 }
+const tarjetaMsg = () => 'Hola, soy ' + String((state.perfil && state.perfil.nombre) || '').split(' ')[0] + ', de Ferjusanz (patatas, frutas, verduras y huevos). Destacamos por la relación calidad-precio. Para calcular los precios que le haríamos, imagine su primer pedido: marque en un minuto lo que usa y cuánto a la semana, y le enviamos su tarifa según lo que gasta. Sin compromiso y sin pedido mínimo. Abajo tiene quiénes somos y de dónde sale el género:\n' + URL_TARJETA + '\n\nSi lo prefiere, contésteme por aquí con lo que suele pedir y lo apunto yo.';
 function hojaTarjeta() {
-  const yo = String((state.perfil && state.perfil.nombre) || '').split(' ')[0];
   const msg = h('textarea', { rows: 4, style: 'width:100%;font-size:15px' });
-  msg.value = 'Hola, soy ' + yo + ', de Ferjusanz (patatas, frutas, verduras y huevos). Destacamos por la relación calidad-precio. Para calcular los precios que le haríamos, imagine su primer pedido: marque en un minuto lo que usa y cuánto a la semana, y le enviamos su tarifa según lo que gasta. Sin compromiso y sin pedido mínimo. Abajo tiene quiénes somos y de dónde sale el género:\n' + URL_TARJETA + '\n\nSi lo prefiere, contésteme por aquí con lo que suele pedir y lo apunto yo.';
+  msg.value = tarjetaMsg();
   const tel = h('input', { type: 'tel', inputmode: 'tel', placeholder: 'Su móvil (opcional): 600 000 000', style: 'width:100%' });
   const abrirWa = pkg => abrirWhatsApp(tel.value, msg.value, pkg);
   const copiar = async () => { try { await navigator.clipboard.writeText(msg.value); toast('Mensaje copiado: pégalo en WhatsApp', 'ok'); } catch (e) { msg.select(); toast('Mantén pulsado el texto para copiarlo', 'err'); } };
@@ -12914,17 +12915,23 @@ async function presArchivoPdf(laminas) {
 /* Visor a pantalla completa (18/11/2026, Fernando: «más dinámico, más bonito y que se pueda girar en horizontal y se vea entero»).
    Enseña las mismas láminas dibujadas que el PDF, enteras en la pantalla (de pie o tumbado). Se pasa con el dedo, las flechas o solo (▶);
    «⟳ Girar» pone pantalla completa y tumba el móvil aunque el giro automático esté apagado. Tumbado, los botones se esconden: tocar los saca. */
-async function presVisor(laminas, botones) {
+async function presVisor(laminas, botones, conTarjeta) {
   document.querySelectorAll('.pres-ov').forEach(o => o.remove());
   const ov = h('div', { class: 'pres-ov' }, h('div', { class: 'pres-carga' }, '⏳ Preparando la presentación…'));
   document.body.append(ov); try { history.pushState(navSnap(NAV.d), ''); } catch (e) { }
   const cerrar = () => { if (ov.isConnected) history.back(); };   /* «atrás» lo quita (popstate) */
   let hojas; try { hojas = await presLienzos(await presExpandir(laminas || [], false)); } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); cerrar(); return; }
   if (!ov.isConnected) return; if (!hojas.length) { toast('La presentación no tiene láminas', 'err'); cerrar(); return; }
-  const N = hojas.length, PASO = 7000; let i = 0, auto = null, t0 = 0, quieto = null;
+  const N = hojas.length + (conTarjeta ? 1 : 0), PASO = 7000; let i = 0, auto = null, t0 = 0, quieto = null;
   const pc = (v, t) => (v / t * 100) + '%';
   const sls = hojas.map(({ cv, enlace }) => h('div', { class: 'pres-sl' }, h('div', { class: 'pres-lam' }, cv,
     enlace && enlace.url ? h('a', { class: 'pres-enl', href: enlace.url, target: '_blank', rel: 'noopener', 'aria-label': 'Abrir el formulario', style: 'left:' + pc(enlace.x, PRES_W) + ';top:' + pc(enlace.y, PRES_H) + ';width:' + pc(enlace.w, PRES_W) + ';height:' + pc(enlace.h, PRES_H) }) : null)));
+  /* Al final, la tarjeta (Tito, 18/11/2026: «al final… el QR con la tarjeta de cliente para que escanee y la opción de apuntar su número y enviárselo a WhatsApp»). */
+  if (conTarjeta) { const tel = h('input', { type: 'tel', inputmode: 'tel', placeholder: 'Su móvil: 600 000 000' }), wa = pkg => abrirWhatsApp(tel.value, tarjetaMsg(), pkg);
+    sls.push(h('div', { class: 'pres-sl' }, h('div', { class: 'pres-lam pres-fin' },
+      h('div', { class: 'pres-qr' }, h('img', { src: qrDataUrl(URL_TARJETA, 8), alt: 'QR de la tarjeta' }), h('b', {}, '📷 Escanéelo con la cámara')),
+      h('div', { class: 'pres-wa' }, h('img', { src: 'pres/logo.png', alt: 'Ferjusanz' }), h('h3', {}, 'Imagine su primer pedido y le calculamos su tarifa'), h('p', {}, 'O le mandamos la tarjeta por WhatsApp:'), tel,
+        h('button', { class: 'pres-b', onclick: () => wa('com.whatsapp') }, '💬 Enviar por WhatsApp'), h('button', { class: 'pres-r', onclick: () => wa('com.whatsapp.w4b') }, '💼 WhatsApp Business'))))); }
   const cnt = h('span', {}), barra = h('div', { class: 'pres-barra' }, sls.map(() => h('i'))), izq = h('button', { class: 'pres-n pres-izq', 'aria-label': 'Anterior', onclick: () => ir(i - 1) }, '‹'), der = h('button', { class: 'pres-n pres-der', 'aria-label': 'Siguiente', onclick: () => ir(i + 1) }, '›');
   const bAuto = h('button', { class: 'pres-r', 'aria-label': 'Pasar solas', onclick: () => { auto ? para() : (i === N - 1 && ir(0), arranca()); } }, '▶');
   const despierta = () => { ov.classList.remove('quieto'); clearTimeout(quieto); quieto = setTimeout(() => ov.classList.add('quieto'), 3500); };
@@ -12936,11 +12943,11 @@ async function presVisor(laminas, botones) {
   const girar = async () => { try { if (tumbado) { tumbado = false; try { screen.orientation.unlock(); } catch (e) { } if (document.fullscreenElement) await document.exitFullscreen(); return; }
     if (!document.fullscreenElement) await ov.requestFullscreen({ navigationUI: 'hide' }); await screen.orientation.lock('landscape'); tumbado = true; despierta(); }
     catch (e) { toast('Gira el móvil. Si no gira, baja la barra de arriba del móvil y activa «Rotación automática».', 'ok'); } };
-  const tecla = e => { if (!ov.isConnected) { document.removeEventListener('keydown', tecla); return; } if (e.key === 'Escape') cerrar(); else if (e.key === 'ArrowRight' || e.key === ' ') ir(i + 1); else if (e.key === 'ArrowLeft') ir(i - 1); };
+  const tecla = e => { if (!ov.isConnected) { document.removeEventListener('keydown', tecla); return; } if (e.target.closest && e.target.closest('input')) return; if (e.key === 'Escape') cerrar(); else if (e.key === 'ArrowRight' || e.key === ' ') ir(i + 1); else if (e.key === 'ArrowLeft') ir(i - 1); };
   document.addEventListener('keydown', tecla);
   /* Arrastrar: la lámina sigue al dedo; al soltar pasa si se movió bastante. Un toque sin mover saca o esconde los botones. */
   let x0 = null, dx = 0;
-  ov.addEventListener('pointerdown', e => { if (e.target.closest('button,a')) return; x0 = e.clientX; dx = 0; sls[i].classList.add('arrastra'); });
+  ov.addEventListener('pointerdown', e => { if (e.target.closest('button,a,input')) return; x0 = e.clientX; dx = 0; sls[i].classList.add('arrastra'); });
   ov.addEventListener('pointermove', e => { if (x0 == null) return; dx = e.clientX - x0; sls[i].style.transform = 'translateX(' + dx + 'px)'; });
   const suelta = () => { if (x0 == null) return; x0 = null; sls[i].classList.remove('arrastra'); const w = ov.clientWidth;
     if (Math.abs(dx) > Math.min(70, w * 0.15) && (dx < 0 ? i < N - 1 : i > 0)) { if (auto) para(); ir(i + (dx < 0 ? 1 : -1)); }
@@ -12951,9 +12958,11 @@ async function presVisor(laminas, botones) {
     h('div', { class: 'pres-pie' }, (botones || []).length ? h('div', { class: 'pres-acc' }, botones.map(([t, f]) => h('button', { class: 'pres-b', onclick: f }, t))) : null, barra));
   pinta(); despierta();
 }
-const presPresentar = p => presVisor(p.diapositivas, [['📄 PDF', () => presPdf(p, 'bajar')], ['📲 Enviar', () => presPdf(p, 'enviar')], ['💶 + precios', () => presPdf(p, 'enviar', true)]]);
+const presPresentar = p => presVisor(presConEnlace(p.diapositivas), [['📄 PDF', () => presPdf(p, 'bajar')], ['📲 Enviar', () => presPdf(p, 'enviar')], ['💶 + precios', () => presPdf(p, 'enviar', true)]], true);
+/* Las guardadas llevan el botón del formulario vacío (lo rellena el envío con su enlace): aquí apunta a la tarjeta. */
+const presConEnlace = sl => (sl || []).map(d => d.enlace && !d.enlace.url ? Object.assign({}, d, { enlace: { texto: 'Pulse aquí para rellenarlo', url: URL_TARJETA } }) : d);
 async function presPdf(p, accion, conLista) {
-  try { const lam = await presExpandir(p.diapositivas || [], !!conLista); const bytes = (await presArchivoPdf(lam)).bytes; const nombre = (sinTilde(p.titulo || 'ferjusanz').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'ferjusanz') + (conLista ? '-con-precios' : '') + '-' + hoy() + '.pdf';
+  try { const lam = await presExpandir(presConEnlace(p.diapositivas), !!conLista); const bytes = (await presArchivoPdf(lam)).bytes; const nombre = (sinTilde(p.titulo || 'ferjusanz').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'ferjusanz') + (conLista ? '-con-precios' : '') + '-' + hoy() + '.pdf';
     if (accion === 'enviar') await comCompartir(bytes, nombre, p.titulo); else { comDescargar(bytes, nombre); toast('PDF descargado', 'ok'); } }
   catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); }
 }
