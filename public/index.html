@@ -10203,14 +10203,15 @@ async function sinArchivados(filas) {
 }
 function vistaDeudas() {
   state.view = 'deudas';
-  let modo = LS.get('fj_deudas_modo', 'albaranes'); if (modo === 'proveedores' && !puedeCompras()) modo = 'albaranes'; let filas = [], dias = {}, facturas = [], cache = false, gold = [], gcli = {};
-  const cont = h('div', { class: 'deu' }), chips = h('div', { class: 'chips' }), pa = h('div', { class: 'pa' }), pb = h('div', { class: 'pb' }), pc = h('div', { class: 'pc' });
+  let modo = LS.get('fj_deudas_modo', 'albaranes'); if ((modo === 'proveedores' && !puedeCompras()) || (modo === 'pago' && !esOficina())) modo = 'albaranes'; let filas = [], dias = {}, facturas = [], cache = false, gold = [], gcli = {}, gfac = [], clis = [], tipoDe = {}, fPago = LS.get('fj_deu_fpago', 'todos');
+  const cont = h('div', { class: 'deu' }), chips = h('div', { class: 'chips' }), pa = h('div', { class: 'pa' }), pb = h('div', { class: 'pb' }), pc = h('div', { class: 'pc' }), pd = h('div', { class: 'deu-pago' });
+  const buscar3 = h('input', { placeholder: 'Buscar cliente…', oninput: debounce(() => pintar(), 200) });
   const buscar2 = h('input', { placeholder: 'Buscar cliente…', oninput: debounce(() => pintar(), 200) });
   const r2 = n => Math.round(n * 100) / 100;
   const plazoDe = f => dias[f.cliente_id] != null ? Number(dias[f.cliente_id]) : (f.forma_pago === 'contado' ? 0 : 30);
   const venceDe = f => { const d = new Date(String(f.fecha_entrega).slice(0, 10) + 'T12:00:00'); d.setDate(d.getDate() + plazoDe(f)); return hoy(d); };
-  const pintarChips = () => chips.replaceChildren(...[['albaranes', 'Albaranes por cobrar'], ['clientes', 'Clientes con deuda']].concat(puedeCompras() ? [['proveedores', 'Facturas por pagar']] : []).map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_deudas_modo', m); pintarChips(); mostrar(); } }, n)));
-  function mostrar() { pa.style.display = modo === 'albaranes' ? '' : 'none'; pb.style.display = modo === 'clientes' ? '' : 'none'; pc.style.display = modo === 'proveedores' ? '' : 'none'; cont.className = 'deu' + (modo === 'proveedores' ? '' : ' dos'); }
+  const pintarChips = () => chips.replaceChildren(...[['albaranes', 'Albaranes por cobrar'], ['clientes', 'Clientes con deuda']].concat(esOficina() ? [['pago', 'Cómo paga cada cliente']] : [], puedeCompras() ? [['proveedores', 'Facturas por pagar']] : []).map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_deudas_modo', m); pintarChips(); mostrar(); } }, n)));
+  function mostrar() { pa.style.display = modo === 'albaranes' ? '' : 'none'; pb.style.display = modo === 'clientes' ? '' : 'none'; pc.style.display = modo === 'proveedores' ? '' : 'none'; pd.style.display = modo === 'pago' ? '' : 'none'; cont.className = 'deu' + (modo === 'proveedores' || modo === 'pago' ? '' : ' dos'); }
   async function cargar() {
     try {
       if (!navigator.onLine) throw new TypeError('network');
@@ -10222,6 +10223,8 @@ function vistaDeudas() {
         if (gold.length) { const cs = await sb.from('clientes').select('codigo,nombre_comercial').in('codigo', [...new Set(gold.map(x => x.codigo))]); (cs.data || []).forEach(c => { if (c.nombre_comercial) gcli[c.codigo] = c.nombre_comercial; }); }
         LS.set('fj_deudas_gold', [gold, gcli]); } catch (e3) { if (!isNetErr(e3)) gold = []; else [gold, gcli] = LS.get('fj_deudas_gold', [[], {}]); }
     } catch (e) { if (!isNetErr(e)) { cont.replaceChildren(h('p', { class: 'err' }, msgErr(e))); return; } filas = LS.get('fj_cobros_pend', []); dias = LS.get('fj_cobros_dias', {}); [gold, gcli] = LS.get('fj_deudas_gold', [[], {}]); cache = true; }
+    /* Para deducir cómo paga cada cliente: sus facturas de Golden de los últimos 5 meses */
+    if (esOficina() && !cache) try { const d = new Date(); d.setDate(d.getDate() - 150); const [gf, cs] = await Promise.all([gesTodas(() => sb.from('golden_facturas').select('cliente_codigo,serie,fecha').eq('borrador', false).gte('fecha', hoy(d))), sb.from('clientes').select('id,codigo,nombre,nombre_comercial,forma_pago,activo').range(0, 4999)]); gfac = gf; clis = cs.error ? [] : cs.data; } catch (e4) { }
     pintar();
   }
   function pintar() {
@@ -10238,17 +10241,18 @@ function vistaDeudas() {
     pb.replaceChildren(buscar2, h('div', { class: 'letra' }, 'Clientes con deuda (' + cl.length + ')'), ...cl.map(c => h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:16px' }, c.nombre), h('div', { class: 'sub' }, c.items.length + (c.items.length === 1 ? ' albarán' : ' albaranes') + ' · el más antiguo del ' + fechaES(c.ant))),
       h('div', { style: 'text-align:right' }, h('b', { style: 'font-size:18px' }, eur(r2(c.tot)) + '\u00a0€'), c.venc ? h('div', { style: 'color:var(--rojo);font-size:13px;font-weight:700' }, 'vencido ' + eur(r2(c.venc)) + '\u00a0€') : null)),
       h('button', { class: 'ghost small', style: 'width:100%;margin-top:8px', onclick: () => abrirCobro('Cobrar a ' + c.nombre, c.items.map(f => ({ pedido_id: f.pedido_id, pendiente: f.pend, total: f.total })), cargar) }, 'Cobrar'), esOficina() ? h('button', { class: 'ghost small', style: 'width:100%;margin-top:6px', onclick: async () => { if (!await confirmar('¿Archivar los ' + c.items.length + ' albaranes pendientes de ' + c.nombre + '? Dejarán de salir como deuda (se pueden restaurar desde Archivo).')) return; let bad = 0; for (const f of c.items) { const u = await sb.from('pedidos').update({ archivado: true }).eq('id', f.pedido_id); if (u.error) bad++; } toast(bad ? 'Algunos no se pudieron archivar' : 'Archivados', bad ? 'err' : 'ok'); cargar(); } }, 'Archivar deuda del cliente') : null), ), ...(cl.length ? [] : [h('p', { class: 'vacio' }, 'Ningún cliente con deuda.')]));
+    if (esOficina()) pintarPago(hoyS);
     if (gold.length) {
       const gs = gold.map(x => Object.assign({}, x, { n: gcli[x.codigo] || x.nombre || x.codigo, venc: !!x.vencimiento && x.vencimiento < hoyS })).filter(x => !t || sinTilde(x.n + ' ' + x.nombre + ' ' + x.codigo).includes(t));
       const gT = r2(gs.reduce((a, x) => a + Number(x.total || 0), 0)), gV = r2(gs.filter(x => x.venc).reduce((a, x) => a + Number(x.total || 0), 0));
       const resG = h('div', { class: 'card', style: 'border-left:5px solid var(--rojo)' }, h('div', { class: 'fila' }, h('div', { class: 'nombre' }, 'Nos deben (Golden)'), h('div', { class: 'tot-num', style: 'color:var(--rojo)' }, eur(gT) + '\u00a0€')), h('div', { class: 'sub' }, gs.length + (gs.length === 1 ? ' factura sin cobrar' : ' facturas sin cobrar') + (gV ? ' · vencido ' + eur(gV) + '\u00a0€' : '') + ' · lo real, de Golden'));
-      const filaG = x => h('div', { class: 'card fila tap', onclick: () => verFacturaPendiente(x) }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:16px' }, x.n), h('div', { class: 'sub' }, 'Fra. ' + numGolden(x.serie, x.numero)), h('div', { class: 'sub', style: x.venc ? 'color:var(--rojo);font-weight:700' : '' }, (x.venc ? 'Vencida el ' : 'Vence el ') + fechaES(x.vencimiento))), h('b', { style: 'font-size:18px' + (x.venc ? ';color:var(--rojo)' : '') }, eur(x.total) + '\u00a0€'));
+      const filaG = x => h('div', { class: 'card fila tap', onclick: () => verFacturaPendiente(x) }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:16px' }, x.n), h('div', { class: 'sub' }, 'Fra. ' + numGolden(x.serie, x.numero) + (tipoDe[String(x.codigo).toUpperCase()] ? ' · paga: ' + tipoDe[String(x.codigo).toUpperCase()].toLowerCase() : '')), h('div', { class: 'sub', style: x.venc ? 'color:var(--rojo);font-weight:700' : '' }, (x.venc ? 'Vencida el ' : 'Vence el ') + fechaES(x.vencimiento))), h('b', { style: 'font-size:18px' + (x.venc ? ';color:var(--rojo)' : '') }, eur(x.total) + '\u00a0€'));
       const gp = {}; gs.forEach(x => { const c = gp[x.codigo] || (gp[x.codigo] = { n: x.n, ls: [], t: 0, v: 0 }); c.ls.push(x); c.t += Number(x.total || 0); if (x.venc) c.v += Number(x.total || 0); });
       const gc = Object.values(gp).sort((a, b) => b.t - a.t);
       if (!ps.length) pa.replaceChildren(); /* sin «No hay albaranes…» si Golden sí tiene deudas */
       pa.prepend(resG, h('div', { class: 'letra' }, 'Facturas por cobrar en Golden (' + gs.length + ')'), ...gs.map(filaG), ...(ps.length ? [h('div', { class: 'letra' }, 'Albaranes de la app (pruebas)')] : []));
       if (!cl.length) pb.replaceChildren(buscar2);
-      buscar2.after(h('div', { class: 'letra' }, 'Clientes con deuda en Golden (' + gc.length + ')'), ...gc.map(c => h('div', { class: 'card tap', style: c.v ? 'border-left:5px solid var(--rojo)' : '', onclick: () => hoja(c.n + ' · debe ' + eur(r2(c.t)) + '\u00a0€', h('div', {}, ...c.ls.map(filaG))) }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:16px' }, c.n), h('div', { class: 'sub' }, c.ls.length + (c.ls.length === 1 ? ' factura' : ' facturas') + ' · toca para verlas')),
+      buscar2.after(h('div', { class: 'letra' }, 'Clientes con deuda en Golden (' + gc.length + ')'), ...gc.map(c => h('div', { class: 'card tap', style: c.v ? 'border-left:5px solid var(--rojo)' : '', onclick: () => hoja(c.n + ' · debe ' + eur(r2(c.t)) + '\u00a0€', h('div', {}, ...c.ls.map(filaG))) }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:16px' }, c.n), h('div', { class: 'sub' }, c.ls.length + (c.ls.length === 1 ? ' factura' : ' facturas') + (tipoDe[String(c.ls[0].codigo).toUpperCase()] ? ' · paga: ' + tipoDe[String(c.ls[0].codigo).toUpperCase()].toLowerCase() : '') + ' · toca para verlas')),
         h('div', { style: 'text-align:right' }, h('b', { style: 'font-size:18px;color:var(--rojo)' }, eur(r2(c.t)) + '\u00a0€'), c.v ? h('div', { style: 'color:var(--rojo);font-size:13px;font-weight:700' }, 'vencido\u00a0' + eur(r2(c.v)) + '\u00a0€') : null)))), ...(cl.length ? [h('div', { class: 'letra' }, 'De la app (pruebas)')] : []));
     }
     const tf = r2(facturas.reduce((a, f) => a + Number(f.importe || 0), 0));
@@ -10257,7 +10261,32 @@ function vistaDeudas() {
         h('div', { style: 'text-align:right' }, h('b', {}, f.importe != null ? eur(f.importe) + '\u00a0€' : 'sin importe'), h('div', {}, h('button', { class: 'small', onclick: async () => { if (!await confirmar('¿Marcar como pagada?')) return; const u = await sb.from('documentos_compra').update({ pagada: true, fecha_pago: hoy() }).eq('id', f.id); if (u.error) toast(msgErr(u.error), 'err'); else { toast('Marcada como pagada', 'ok'); cargar(); } } }, 'Pagada'), esOficina() ? h('div', { style: 'margin-top:6px' }, h('button', { class: 'ghost small', onclick: async () => { if (!await confirmar('¿Archivar este documento? Dejará de verse (no se borra).')) return; const u = await sb.from('documentos_compra').update({ archivado: true }).eq('id', f.id); if (u.error) toast(msgErr(u.error), 'err'); else cargar(); } }, 'Archivar'), h('button', { class: 'peligro small', style: 'margin-left:6px', onclick: async () => { if (!await confirmar('¿ELIMINAR este documento y su archivo? No se podrá recuperar.')) return; if (!await confirmar('Última confirmación: ¿eliminar de verdad?')) return; const x = await sb.from('documentos_compra').delete().eq('id', f.id); if (x.error) { toast(msgErr(x.error), 'err'); return; } if (f.ruta) await sb.storage.from('facturas').remove([f.ruta]); cargar(); } }, 'Eliminar')) : null)))),
       ...(facturas.length ? [] : [h('p', { class: 'vacio' }, 'No hay facturas de proveedores pendientes. Se añaden en Facturas de compra.')]));
   }
-  cont.append(pa, pb, pc);
+  /* Cómo paga cada cliente, deducido de Golden (Fernando, 18/11/2026: «que se sepa quién paga al mes y quién al contado… semanal o cada quince días… amarillo, rojo (que deben) y verde (cobrados)»).
+     Factura P de fin de mes = al mes; tickets F1 cobrados en el momento: cada pocos días = contado, cada semana = semanal, cada 2 semanas = quincenal. */
+  function pintarPago(hoyS) {
+    const por = {}; gfac.forEach(f => { const k = String(f.cliente_codigo || '').toUpperCase(); const x = por[k] || (por[k] = { P: new Set(), F1: new Set(), ult: '' }); if (x[f.serie]) x[f.serie].add(f.fecha); if (f.fecha > x.ult) x.ult = f.fecha; });
+    const deb = {}; gold.forEach(g => { const k = String(g.codigo || '').toUpperCase(); deb[k] = (deb[k] || 0) + Number(g.total || 0); });
+    const conTes = gold.length > 0;  /* sin permiso de tesorería no se sabe quién debe */
+    const tipo = c => { const x = por[String(c.codigo || '').toUpperCase()]; if (!x) return c.forma_pago === 'contado' ? 'contado' : 'sin';
+      const gap = st => { const a = [...st].sort(); if (a.length < 2) return null; const g = a.slice(1).map((d, i) => (new Date(d) - new Date(a[i])) / 864e5).sort((m, n) => m - n); return g[Math.floor(g.length / 2)]; };
+      if (x.P.size && x.P.size >= x.F1.size) { const g = gap(x.P); return g == null || g > 20 ? 'mensual' : g > 10 ? 'quincenal' : 'semanal'; }
+      const g = gap(x.F1); return g == null || g <= 5 || g > 20 ? 'contado' : g <= 10 ? 'semanal' : 'quincenal'; };
+    const NOM = { contado: 'Al contado', semanal: 'Cada semana', quincenal: 'Cada 15 días', mensual: 'Al mes', sin: 'Sin compras recientes' };
+    tipoDe = Object.fromEntries(clis.filter(c => c.codigo).map(c => [String(c.codigo).toUpperCase(), NOM[tipo(c)]]));
+    const t = sinTilde(buscar3.value);
+    const lista = clis.filter(c => c.codigo && (c.activo || por[String(c.codigo).toUpperCase()] || deb[String(c.codigo).toUpperCase()])).map(c => { const k = String(c.codigo).toUpperCase(), tp = tipo(c), d = r2(deb[k] || 0);
+      return { c, tp, d, ult: (por[k] || {}).ult, color: d > 0.009 ? 'rojo' : tp === 'semanal' || tp === 'quincenal' ? 'amarillo' : conTes && tp !== 'sin' ? 'verde' : 'gris' }; });
+    const vis = filtraBusca(lista.filter(x => fPago === 'todos' || x.tp === fPago), t, x => [x.c.nombre, x.c.nombre_comercial, x.c.codigo].join(' '))
+      .sort((a, b) => ['rojo', 'amarillo', 'verde', 'gris'].indexOf(a.color) - ['rojo', 'amarillo', 'verde', 'gris'].indexOf(b.color) || b.d - a.d || nombreCli(a.c).localeCompare(nombreCli(b.c), 'es'));
+    const COL = { rojo: 'var(--rojo)', amarillo: '#d4a017', verde: 'var(--verde)', gris: 'var(--borde)' };
+    const chipsP = h('div', { class: 'chips' }, ...[['todos', 'Todos'], ['contado', 'Contado'], ['semanal', 'Semanal'], ['quincenal', 'Quincenal'], ['mensual', 'Mensual'], ['sin', 'Sin compras']].map(([k, n]) => h('button', { class: 'chip' + (fPago === k ? ' on' : ''), onclick: () => { fPago = k; LS.set('fj_deu_fpago', k); pintar(); } }, n + ' (' + (k === 'todos' ? lista.length : lista.filter(x => x.tp === k).length) + ')')));
+    pd.replaceChildren(h('div', { class: 'sub', style: 'margin-bottom:6px' }, (conTes ? '🔴 debe · 🟡 paga cada semana o cada 15 días · 🟢 cobrado, al día' : '🟡 paga cada semana o cada 15 días') + '. Deducido de sus facturas de Golden de los últimos 5 meses.'), chipsP, buscar3,
+      h('div', { class: 'letra' }, vis.length + (vis.length === 1 ? ' cliente' : ' clientes')),
+      ...vis.slice(0, 300).map(x => h('div', { class: 'card tap', style: 'border-left:6px solid ' + COL[x.color], onclick: () => go('cliente', { id: x.c.id }) }, h('div', { class: 'fila' },
+        h('div', {}, h('div', { class: 'nombre', style: 'font-size:16px' }, nombreCli(x.c)), h('div', { class: 'sub' }, NOM[x.tp] + (x.ult ? ' · última factura el ' + fechaES(x.ult) : '') + (x.c.activo ? '' : ' · inactivo'))),
+        h('div', { style: 'text-align:right;white-space:nowrap' }, x.color === 'rojo' ? h('b', { style: 'color:var(--rojo);font-size:17px' }, 'Debe ' + eur(x.d) + '\u00a0€') : x.color === 'amarillo' ? h('b', { style: 'color:#a07800' }, conTes ? '✓ al día' : NOM[x.tp]) : x.color === 'verde' ? h('b', { style: 'color:var(--verde)' }, '✓ cobrado') : null)))));
+  }
+  cont.append(pa, pb, pc, pd);
   $app.replaceChildren(shell('Deudas', h('div', {}, chips, cont))); renderBanner(); pintarChips(); mostrar(); cargar();
   state.refrescarCobros = cargar;
 }
