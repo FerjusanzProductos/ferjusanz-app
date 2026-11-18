@@ -176,3 +176,10 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Si el justificante llega después (gasolina…), se apunta igual y se añade luego: queda marcado con la fecha y quién.
 - **Un apunte de caja nunca se borra**: se corrige o se anula, siempre con motivo. Todo queda registrado y sale en el informe de Jorge.
 - Con empresas o autónomos, nada en efectivo si la operación llega a **1.000 €** (Ley 7/2012): la app avisa.
+
+## Datos de clientes y proveedores: manda Golden (Fernando, 18/11/2026)
+- Lo que dice **Golden** (NIF, razón social, dirección, código) **manda** sobre lo buscado en internet por el nombre y sobre las **fichas provisionales** que puso Fernando sin Golden (código «Falta poner N», «Por poner…», NIF «FALTA PONER»).
+- Si una ficha provisional es un cliente que ya está en Golden: se usa el **código de Golden**; si había dos fichas, todo pasa a la de Golden y la provisional queda **inactiva** (no se borra).
+- Excepción: **Bar Delfín** y **Frutas Pedro** no están en Golden porque son clientes «sin IVA»; no se unen con «Bar Delfines» ni con «Frutas Pedro S.L.». **Mesón Jesús** («Falta poner 13») se factura en Golden a **LALI** (LALI ATM SL) pero se reparte en otra dirección: conserva su ficha.
+- Golden se lee solo cada día (`scripts/golden/LEEME.md`): rellena huecos, nunca borra.
+
