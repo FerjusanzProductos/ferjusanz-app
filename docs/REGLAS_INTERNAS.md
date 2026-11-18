@@ -141,6 +141,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Las facturas deben venir a nombre de **FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. (B87446670)**; si vienen a nombre de FERJUSANZ C.B. (E80746670), la app avisa.
 - **Margen, rentabilidad, compras y cobros/pagos de Golden: solo Fernando, su padre y Jorge** (Fernando, 18/11/2026). Carmen y el resto, no. Lista en la tabla `ver_margenes`.
 - **La C.B. sigue existiendo, pero todo se hace ya a través de la S.L.** (Fernando, 18/11/2026). Lo que aún esté a nombre de la C.B. (furgonetas, orden SEPA, certificados, facturas de proveedores) es algo pendiente de pasar a la S.L., no una forma válida de trabajar.
+- **El proveedor se identifica por el NIF y el logo de la factura, no por el nombre del correo** (Fernando, 18/11/2026: «mira bien a quién pertenece, si no estaría repetido el gasto»). Antes de sumar gastos o pagos pendientes, comprobar que dos nombres no son el mismo proveedor. Comprobado el 18/11/2026: **«CARMEN MARTINEZ ORTEGA Y DOS MAS C.B.» es Herederos de Carlos Gómez Izquierdo** (puesto 44, Nave B, NIF E79125241, código Golden `HERE`), **no Madremía** (B46207858, código `MADRE`). Sus correos van a carmensegu@hotmail.com con copia a ferjusanz@hotmail.com. No había facturas repetidas entre los dos.
 
 ## Reparto (Fernando, 12/11/2026)
 - Reparten: **Dani** (Daniel Ferjusanz), **Cristian**, **Fernando Sanz (hijo)** y **Fernando Sanz Boss**. **Juli** (Julián) prepara pedidos; su ruta la lleva Dani.
