@@ -26,11 +26,13 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - ⚪ Otras ideas para subir en Google: reseñas, publicaciones semanales en la ficha, directorios, informe mensual. Plan: `docs/PLAN_MARKETING.md`; lista completa en `docs/LISTA_PARA_ENVIAR.md`.
 
 ## 📱 LA APP
+- 🔴 **Claude**: enviar a las 7:00 del 18/11 los **20 correos** pidiendo correo y teléfono para las facturas (Fernando dijo «sí»; lista en `docs/PEDIR_CONTACTO_CLIENTES.md`). Después, la oficina: llamar a los que no tienen correo público y pulsar «✔ Usar» / «✅ Contestado» en Clientes › «📇 Pedir correo y teléfono».
 ### 👤 Fernando
 - 🟡 Hablar con **Carmen** y con **Jorge** (o la gestoría) de sus funciones desde enero: oficina + clientes, objetivos y premio por escrito (https://claude.ai/artifact/R8Zor6BHenQdEi3FMbJJSn).
 - 🔴 Avisar **2-3 días antes** del día en que se empieza a usar la app de verdad.
 - 🔴 Antes del 30/11: decidir con Jorge los **clientes «sin IVA»** (todo tiene que ir facturado; si se quiere, se baja el precio). Sin esto no se puede firmar la declaración ni facturar desde la app. Y confirmar la lista.
-- 🔴 Sacar de Golden la **lista de clientes en Excel** (código, nombre, NIF, dirección, CP, localidad) para cargar los NIF que faltan.
+- 🔴 **En EQUIPO-2 (oficina), una vez**: pegar en PowerShell la versión nueva del programa que saca Golden (`scripts/golden/exportar.ps1`: trozos de 4000 filas y los archivos «Reciente …» de 45 días). Sin ella, la tarea diaria «Golden a la app» no encuentra las facturas nuevas. Claude se la da lista para copiar.
+- 🟡 Dejar **EQUIPO-2 encendido** (suspensión ya en «Nunca») y con la sesión de Windows abierta; Google Drive para ordenador abierto. Si quiere, quitar la sincronización del **Escritorio** (Drive › ⚙️ › Preferencias): ya no hace falta.
 - 🟡 Probar «**He olvidado la contraseña**» con su correo y avisar a Jorge Ruiz Onetti de que ya tiene usuario.
 - 🟡 Probar en la app naranja: **Modo reparto** (orden, venta en ruta y descuento sin IVA, albarán, cobro, firma, cómo cargar la furgoneta), **«🔗 Comprobar que ninguna factura se ha tocado»**, **«🧾 NIF e IVA»** y **anular una factura** (PRUEBA-2026-0002 o 0003).
 - 🟡 Confirmar formatos: Mango, Bote de garbanzos, Nabo, Cogollos de Tudela, Fresón 1ª; unidad de Arándano (513) y Frambuesa (310) → bandeja, Ensalada Campestre (137-P) → bolsa. Pasar ejemplos de otros formatos mal.
@@ -64,6 +66,7 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - 🔴 Completar los **clientes sin NIF / dirección / CP** antes del 1/1/2027 (Clientes → «🧾 Faltan datos para facturar» → «🔎»): revisar las propuestas (botón **«🔎 NIF por confirmar»** en Clientes) (las de confianza media, confirmarlas con el cliente; nuevas del 16/11: **El Chato de Boadilla, Gallo Descorchado, Sidrería Don Carlos y d'Coysa**), CAPARRA, BOUZAS, CUENDA, HANDYMAN; sin encontrar: Cervecería Los Picos, Purakai, Restaurante Hawaii (Lasga) y Restaurante los Ángeles (Tapeador): pedírselo al cliente y pedir datos a autónomos y a las sociedades que no salen en internet.
 - 🟡 Compras → «🧾 NIF e IVA»: leer los que faltan y poner a mano el NIF de Pataleta, Perichán…
 - 🟡 Empezar a apuntar la **caja** en la app (Más → «💵 Caja (efectivo)»).
+- 🟡 Leer las **guías con fotos** (https://claude.ai/artifact/PAhgeMH8eQYdB3HBkxwxvc) y decir qué no se entiende. (Fernando: compartirle la página desde el menú «Compartir».)
 - 🟡 Prueba completa de facturas en la naranja el **15–18/12** con Fernando (`docs/GUION_PRUEBA_DICIEMBRE.md`).
 
 ### 🧮 Jorge (contable)
@@ -77,7 +80,6 @@ _Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/arti
 - 🟡 Avisarle (e Ibérica) de la factura FV-B-26-032668 a nombre de FERJUSANZ C.B.
 
 ### 🤖 Claude (sin esperar a nadie)
-- 🟡 Antes de enero: **guías cortas con fotos** para Carmen (facturar, caja, banco, proveedores, informes para Jorge, pedidos por teléfono) y **guion de llamadas** comerciales.
 - 🟡 Revisar cada lunes si sale en el BOE el aplazamiento de Verifactu: **lo hace sola** la tarea automática «Verifactu en el BOE (lunes)» (`trig_01Q2osxJtGHJMTo3oksNiXG7`, lunes 9:47 hora de Madrid, avisa al móvil). Se quita cuando salga o pase el 22/12.
 - ⚪ Hacer más pequeño `public/index.html`.
 - 🟡 **Propuesta (con el «sí» de Fernando)**: cargar en la app la **Tesorería de Golden** (exportación del 18/11 en Drive: 58 cobros pendientes por 41.530,93 € y 438 pagos pendientes por 75.311,28 €) y la base e IVA de cada tipo de las facturas de 2026 (IVA exacto para Jorge). Y en la caja de la app, **no dejar guardar un apunte que deje el saldo por debajo de 0**.
