@@ -2857,6 +2857,27 @@ function hojaTarjeta() {
       B('ghost', '📋 Copiar', copiar, 'flex:1'),
       B('ghost', '👀 Ver tarjeta', () => window.open(URL_TARJETA, '_blank'), 'flex:1'))));
 }
+/* 🤝 Socio recomendado (18/11/2026, Tito): Carnicería Super 9 (Carlos Zúñiga). Se recomiendan el uno al otro.
+   La tarjeta de los dos vive en la web (/super9/); lista de precios de Super 9: cuando la pase Carlos. */
+const SUPER9_TEL = '680272028', URL_SUPER9 = URL_TARJETA.replace(/tarjeta$/, 'super9');
+const SUPER9_WA = 'https://wa.me/34' + SUPER9_TEL + '?text=' + encodeURIComponent('Hola Carlos, vengo de parte de Ferjusanz y quería información de la carne: ');
+const super9Msg = () => 'Hola, soy ' + String((state.perfil && state.perfil.nombre) || '').split(' ')[0] + ', de Ferjusanz. Le paso la tarjeta de nuestros dos proveedores de confianza: Ferjusanz (patatas, frutas, verduras y huevos) y Carnicería Super 9 de Carlos Zúñiga (carne: más de 10 años sirviendo, muchísima variedad y buena calidad-precio; 100 % recomendado). Desde aquí puede escribir a cada uno por WhatsApp y pedir su tarifa:\n' + URL_SUPER9;
+function hojaSuper9() {
+  const msg = h('textarea', { rows: 5, style: 'width:100%;font-size:15px' }); msg.value = super9Msg();
+  const tel = h('input', { type: 'tel', inputmode: 'tel', placeholder: 'Su móvil (en blanco: elegir chat)', style: 'width:100%' });
+  const B = (cls, t, f, st) => h('button', { class: cls, style: 'width:100%;min-height:50px;margin-top:8px;position:static;' + (st || ''), onclick: f }, t);
+  hoja('🤝 Socio: Carnicería Super 9', h('div', {},
+    h('div', { style: 'display:flex;gap:12px;align-items:center' },
+      h('img', { src: qrDataUrl(URL_SUPER9, 6), alt: 'QR de la tarjeta de los dos', style: 'width:150px;height:150px;flex:none;border-radius:10px;image-rendering:pixelated' }),
+      h('div', { style: 'flex:1;min-width:0' }, h('img', { src: 'pres/super9.png', alt: 'Super 9', style: 'width:64px;height:64px' }),
+        h('div', { class: 'sub' }, 'Tarjeta de los dos (Ferjusanz + Super 9): cada uno con su WhatsApp, tu tarifa y las ofertas. Mándasela a Carlos para que la pase a sus restaurantes, o a tus clientes.'))),
+    h('label', { class: 'campo' }, 'Mensaje', msg),
+    h('label', { class: 'campo' }, 'Móvil de la persona', tel),
+    B('guardar', '💬 Enviar por WhatsApp', () => abrirWhatsApp(tel.value, msg.value, 'com.whatsapp')),
+    B('ghost', '💼 Enviar por WhatsApp Business', () => abrirWhatsApp(tel.value, msg.value, 'com.whatsapp.w4b')),
+    B('ghost', '🥩 Mandársela a Carlos (' + SUPER9_TEL.replace(/(\d{3})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4') + ')', () => abrirWhatsApp(SUPER9_TEL, 'Carlos, esta es la tarjeta de los dos para que se la pases a tus restaurantes: ' + URL_SUPER9, 'com.whatsapp.w4b')),
+    B('ghost', '👀 Ver la tarjeta', () => window.open(URL_SUPER9, '_blank'))));
+}
 function hojaQrEnlace(titulo, url, nota, wa) {
   const copiar = async () => { try { await navigator.clipboard.writeText(url); toast('Enlace copiado', 'ok'); } catch (e) { toast('Mantén pulsado el enlace de arriba para copiarlo', 'err'); } };
   return hoja(titulo, h('div', { style: 'text-align:center' }, h('img', { src: qrDataUrl(url, 8), style: 'width:100%;max-width:320px;image-rendering:pixelated' }), h('p', { class: 'sub' }, nota || ''),
@@ -12984,7 +13005,7 @@ async function presVisor(laminas, botones, conTarjeta) {
   const cerrar = () => { if (ov.isConnected) history.back(); };   /* «atrás» lo quita (popstate) */
   let hojas; try { hojas = await presLienzos(await presExpandir(laminas || [], false)); } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); cerrar(); return; }
   if (!ov.isConnected) return; if (!hojas.length) { toast('La presentación no tiene láminas', 'err'); cerrar(); return; }
-  const N = hojas.length + (conTarjeta ? 1 : 0), PASO = 7000; let i = 0, auto = null, t0 = 0, quieto = null;
+  const N = hojas.length + (conTarjeta ? 2 : 0), PASO = 7000; let i = 0, auto = null, t0 = 0, quieto = null;
   const pc = (v, t) => (v / t * 100) + '%';
   const sls = hojas.map(({ cv, enlace }) => h('div', { class: 'pres-sl' }, h('div', { class: 'pres-lam' }, cv,
     enlace && enlace.url ? h('a', { class: 'pres-enl', href: enlace.url, target: '_blank', rel: 'noopener', 'aria-label': 'Abrir el formulario', style: 'left:' + pc(enlace.x, PRES_W) + ';top:' + pc(enlace.y, PRES_H) + ';width:' + pc(enlace.w, PRES_W) + ';height:' + pc(enlace.h, PRES_H) }) : null)));
@@ -12993,6 +13014,13 @@ async function presVisor(laminas, botones, conTarjeta) {
     sls.push(h('div', { class: 'pres-sl' }, h('div', { class: 'pres-lam pres-fin' },
       h('div', { class: 'pres-qr' }, h('img', { src: qrDataUrl(URL_TARJETA, 8), alt: 'QR de la tarjeta' }), h('b', {}, '📷 Escanéelo con la cámara')),
       h('div', { class: 'pres-wa' }, h('img', { src: 'pres/logo.png', alt: 'Ferjusanz' }), h('h3', {}, 'Imagine su primer pedido y le calculamos su tarifa'), h('p', {}, 'O le mandamos la tarjeta por WhatsApp:'), tel,
+        h('button', { class: 'pres-b', onclick: () => wa('com.whatsapp') }, '💬 Enviar por WhatsApp'), h('button', { class: 'pres-r', onclick: () => wa('com.whatsapp.w4b') }, '💼 WhatsApp Business'))))); }
+  if (conTarjeta) { const tel = h('input', { type: 'tel', inputmode: 'tel', placeholder: 'Su móvil: 600 000 000' }), wa = pkg => abrirWhatsApp(tel.value, super9Msg(), pkg);
+    sls.push(h('div', { class: 'pres-sl' }, h('div', { class: 'pres-lam pres-fin' },
+      h('div', { class: 'pres-qr' }, h('img', { src: qrDataUrl(SUPER9_WA, 8), alt: 'QR del WhatsApp de Super 9' }), h('b', {}, '📷 WhatsApp de Carlos · ' + SUPER9_TEL.replace(/(\d{3})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4'))),
+      h('div', { class: 'pres-wa' }, h('div', { style: 'display:flex;gap:10px;align-items:center' }, h('img', { src: 'pres/super9.png', alt: 'Super 9', style: 'width:56px;height:56px;flex:none' }), h('h3', {}, 'Socio recomendado: Super 9')),
+        h('p', {}, 'Carnicería de Carlos Zúñiga: más de 10 años sirviendo, empresa en ascenso, muchísima variedad y buena calidad-precio. 100 % recomendado. Lista de precios: muy pronto.'),
+        h('p', {}, 'Le mandamos la tarjeta de los dos por WhatsApp:'), tel,
         h('button', { class: 'pres-b', onclick: () => wa('com.whatsapp') }, '💬 Enviar por WhatsApp'), h('button', { class: 'pres-r', onclick: () => wa('com.whatsapp.w4b') }, '💼 WhatsApp Business'))))); }
   const cnt = h('span', {}), barra = h('div', { class: 'pres-barra' }, sls.map(() => h('i'))), izq = h('button', { class: 'pres-n pres-izq', 'aria-label': 'Anterior', onclick: () => ir(i - 1) }, '‹'), der = h('button', { class: 'pres-n pres-der', 'aria-label': 'Siguiente', onclick: () => ir(i + 1) }, '›');
   const bAuto = h('button', { class: 'pres-r', 'aria-label': 'Pasar solas', onclick: () => { auto ? para() : (i === N - 1 && ir(0), arranca()); } }, '▶');
@@ -15508,6 +15536,7 @@ const BUSCA_PANTALLAS = [
   ['📐', 'Formatos', 'formatos formato caja kilos peso cliente unidades bote bandeja compra venta se vende se compra', () => go('formatos'), 'o'],
   ['🌐', 'Portal de clientes', 'portal pagina clientes web qr enlace publicar albaranes', () => go('paginasclientes')],
   ['📇', 'Tarjeta para clientes', 'tarjeta virtual qr whatsapp business clientes nuevos dar contacto', () => hojaTarjeta()],
+  ['🤝', 'Socio: Carnicería Super 9', 'super 9 carniceria carne carlos zuñiga socio recomendado qr tarjeta', () => hojaSuper9()],
   ['📲', 'Móviles y correos de clientes', 'moviles correos telefonos contactos clientes dejan qr whatsapp email', () => go('contactosportal'), 'o'],
   ...(CAJA_APP ? [['💵', 'Caja (efectivo)', 'caja efectivo entradas salidas gasolina justificante ticket debe haber dinero metalico', () => go('caja'), 'o']] : []),
   ...(BANCO_APP ? [['🏦', 'Banco', 'banco norma 43 n43 cuaderno 43 extracto movimientos transferencias cobros pagos conciliar conciliacion excel', () => go('banco'), 'o']] : []),

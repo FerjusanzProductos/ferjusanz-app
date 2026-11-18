@@ -750,11 +750,41 @@ function tarjeta() {
   <ul>${ZONAS.map(([z, l]) => `<li><strong>${z}</strong>: ${l}.</li>`).join('')}</ul>
   <h2>¿Y el precio?</h2>
   <p>Cambia con el mercado de cada día, por eso no lo publicamos. <a href="#primer-pedido"><strong>Rellene arriba lo que suele pedir</strong></a> y le calculamos su tarifa, o díganos por WhatsApp qué productos le interesan. Sin compromiso.</p>
+  ${socioSuper9()}
   <h2>Nuestros datos</h2>
   <p>${EMPRESA} · NIF ${NIF}<br>${DIRECCION}<br>Oficina: <a href="tel:+34917632186">${TEL}</a> · <a href="mailto:${EMAIL}">${EMAIL}</a><br>WhatsApp: ${WHATSAPP.map(w => `<a href="${wa(w.num, 'Hola')}" rel="nofollow">${w.ver}${w.nombre ? ` (${w.nombre})` : ''}</a>`).join(' · ')}</p>
   </div>
 </div></section>`;
   return plantilla({ ruta: '/tarjeta/', titulo: 'Quiénes somos y cómo hacer el pedido | Ferjusanz', descripcion: 'Ferjusanz: mayorista de patatas, frutas, verduras y huevos en Madrid. De dónde sale el género, cuándo pedir y cómo pedir precio por WhatsApp.', cuerpo, datos: [m.datos, NEGOCIO] });
+}
+
+// Socio recomendado (18/11/2026, Tito): Carnicería Super 9 (Carlos Zúñiga). Se recomiendan el uno al otro a sus clientes.
+// Sin lista de precios de Super 9 todavía: cuando la pase, se añade aquí. Su WhatsApp: 680 27 20 28.
+const SUPER9 = { num: '34680272028', ver: '680 27 20 28', insta: 'https://www.instagram.com/super9_carnicerias/' };
+const socioSuper9 = () => `<div class="socio" style="border:1px solid currentColor;padding:16px;margin:24px 0;display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+  <img src="/marca/super9.png" alt="Carnicería Super 9" width="96" height="96" loading="lazy" style="flex:none">
+  <div style="flex:1;min-width:220px"><h2 style="margin-top:0">Socio recomendado: Carnicería Super 9</h2>
+  <p>Para la carne, trabajamos de la mano con <strong>Super 9 Carnicerías</strong> (Carlos Zúñiga): más de 10 años sirviendo, mucha variedad de género y buena relación calidad-precio. 100 % recomendado.</p>
+  <p><a class="btn btn-wa" href="${wa(SUPER9.num, 'Hola Carlos, vengo de parte de Ferjusanz y quería información de la carne: ')}" rel="nofollow">${I.wa}<span>WhatsApp de Carlos (Super 9) <small>${SUPER9.ver}</small></span></a></p></div></div>`;
+function super9() {
+  const fer = WHATSAPP.find(w => w.nombre === 'Fernando');
+  const qr = (txt, url) => `<p><a class="btn btn-borde" href="${url}" rel="nofollow"><span>${txt}</span>${I.flecha}</a></p>`;
+  const cuerpo = `<section class="bloque"><div class="envoltura lectura">
+  <h1>Ferjusanz y Carnicería Super 9: dos proveedores de confianza para su negocio</h1>
+  <p class="entradilla">Nos recomendamos el uno al otro: fruta, verdura, patatas y huevos de Ferjusanz y la carne de Super 9. Hable con cada uno directamente por WhatsApp.</p>
+  <div style="display:flex;gap:14px;align-items:center;margin-top:24px"><img src="/marca/super9.png" alt="Carnicería Super 9" width="96" height="96"><h2 style="margin:0">Carnicería Super 9 · Carlos Zúñiga</h2></div>
+  <p>Más de 10 años sirviendo, empresa en crecimiento y muchísima variedad de género, con buena relación calidad-precio. <strong>100 % recomendado.</strong></p>
+  <div class="acciones apiladas"><a class="btn btn-wa" href="${wa(SUPER9.num, 'Hola Carlos, he visto la tarjeta de Super 9 y Ferjusanz y quería información de la carne: ')}" rel="nofollow">${I.wa}<span>WhatsApp de Carlos <small>(${SUPER9.ver})</small></span></a>
+  <a class="btn btn-borde" href="${SUPER9.insta}" rel="nofollow"><span>Ver Super 9 en Instagram</span>${I.flecha}</a></div>
+  <p class="nota">Lista de precios de Super 9: muy pronto. Mientras tanto, pídasela a Carlos por WhatsApp.</p>
+  <div style="display:flex;gap:14px;align-items:center;margin-top:32px"><img src="/marca/logo.png" alt="Ferjusanz" style="width:170px;height:auto"></div>
+  <h2>Ferjusanz · patatas, frutas, verduras y huevos</h2>
+  <p>Empresa familiar, tercera generación, ${ANIOS} sirviendo a hostelería y colectividades de Madrid y Segovia. Agricultores de confianza y Mercamadrid, reparto de lunes a sábado y sin pedido mínimo.</p>
+  <div class="acciones apiladas"><a class="btn btn-wa" href="${wa(fer.num, 'Hola Fernando, vengo de parte de Super 9 y quería información de: ')}" rel="nofollow">${I.wa}<span>WhatsApp de Fernando <small>(${fer.ver})</small></span></a></div>
+  ${qr('Imagine su primer pedido y le calculamos su tarifa', '/tarjeta/#primer-pedido')}
+  ${qr('Ver las ofertas de la semana', '/')}
+</div></section>`;
+  return plantilla({ ruta: '/super9/', titulo: 'Ferjusanz y Carnicería Super 9 | Proveedores recomendados', descripcion: 'Ferjusanz (patatas, frutas, verduras y huevos) y Carnicería Super 9 (carne): dos proveedores de confianza para hostelería en Madrid.', cuerpo, datos: [NEGOCIO] });
 }
 
 // ───────── Páginas nuevas (no estaban en la web antigua) ─────────
@@ -913,6 +943,7 @@ for (const p of [...paginas, ...NUEVAS]) {
   sitemap.push([p.path, (p.modified || p.date || '').slice(0, 10)]);
 }
 escribir('/tarjeta/', tarjeta());
+escribir('/super9/', super9()); // tarjeta de socios, fuera del mapa del sitio
 escribir('/novedades/', paginaNovedades());
 sitemap.push(['/novedades/', (ultimasNovedades[0]?.fecha || '').slice(0, 10)]);
 for (const [ruta, titulo, html] of LEGALES) { escribir(ruta, paginaLegal(ruta, titulo, html)); sitemap.push([ruta, '']); }
