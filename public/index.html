@@ -1270,7 +1270,23 @@ function renderBanner() {
 
 /* =====================  ESTRUCTURA COMÚN  ===================== */
 /* Navegación con historial: el botón «atrás» del móvil y el «← Volver» funcionan en todas las pantallas */
-const NAV = { d: 0, pila: [], salto: null };
+const NAV = { d: 0, pila: [], salto: null, mem: [] };
+/* Al salir de una pantalla se apunta dónde estabas (scroll, lo escrito en «Buscar…» y state.ui, que cada pantalla usa para sus filtros);
+   al volver con «atrás» o «← Volver» se repone, en vez de empezar la lista desde arriba y sin filtros. */
+function navGuarda() { NAV.mem[NAV.d] = { y: window.scrollY, u: state.ui, q: Array.from(document.querySelectorAll('main input[placeholder^="Buscar"]')).map(i => i.value) }; }
+function navRestaura(m) {
+  window.scrollTo(0, 0); if (!m) return;
+  const v = state.view; let n = 0, toca = false; const para = () => { toca = true; };
+  window.addEventListener('touchstart', para, { once: true, passive: true }); window.addEventListener('wheel', para, { once: true, passive: true });
+  const paso = () => {   /* las listas cargan después: reintentar hasta ~9 s o hasta que el usuario toque la pantalla */
+    if (toca || state.view !== v) return;
+    const ins = document.querySelectorAll('main input[placeholder^="Buscar"]');
+    (m.q || []).forEach((x, k) => { const i = ins[k]; if (x && i && !i.value) { i.value = x; i.dispatchEvent(new Event('input')); } });
+    if (m.y) window.scrollTo(0, m.y);
+    if (++n < 60 && Math.abs(window.scrollY - (m.y || 0)) > 2) setTimeout(paso, 150);
+  };
+  paso();
+}
 function navSnap(d) { let p = {}; try { p = JSON.parse(JSON.stringify(state.params || {})); } catch (e) { } return { v: state.view, p, d }; }
 const navClave = (v, p) => { try { return v + JSON.stringify(p || {}); } catch (e) { return v; } };
 /* Ir a una pantalla que ya está más atrás (Inicio, la lista de la que vienes…) VUELVE a ella en vez de abrirla otra vez encima:
@@ -1278,15 +1294,16 @@ const navClave = (v, p) => { try { return v + JSON.stringify(p || {}); } catch (
 function go(view, params, opts) {
   const mismo = view === state.view && JSON.stringify(params || {}) === JSON.stringify(state.params || {});
   const clave = navClave(view, params);
-  const i = (mismo || (opts && opts.replace) || MR.dentro()) ? -1 : NAV.pila.lastIndexOf(clave, NAV.d - 1);
-  state.view = view; state.params = params || {};
+  const i = (mismo || (opts && opts.replace) || MR.dentro() || NAV.d < 1) ? -1 : NAV.pila.lastIndexOf(clave, NAV.d - 1);   /* con d=0, lastIndexOf(…, -1) buscaba en toda la pila y saltaba hacia delante */
+  navGuarda(); const vuelta = i >= 0 ? NAV.mem[i] : null;
+  state.view = view; state.params = params || {}; state.ui = vuelta ? vuelta.u : {};
   try {
     if (i >= 0) { NAV.salto = i; history.go(i - NAV.d); NAV.d = i; }
     else if (mismo || (opts && opts.replace)) history.replaceState(navSnap(NAV.d), '');
-    else { NAV.d++; history.pushState(navSnap(NAV.d), ''); }
+    else { NAV.d++; NAV.mem.length = NAV.d; history.pushState(navSnap(NAV.d), ''); }
   } catch (e) { }
   NAV.pila[NAV.d] = clave; if (i < 0) NAV.pila.length = NAV.d + 1;
-  render(); window.scrollTo(0, 0);
+  render(); navRestaura(vuelta);
 }
 function atras(fallback) { if (NAV.d > 0) history.back(); else if (fallback) fallback(); else go('inicio', {}, { replace: true }); }
 window.addEventListener('popstate', e => {
@@ -1295,14 +1312,16 @@ window.addEventListener('popstate', e => {
     if (e.state && dd > NAV.salto) { try { history.go(NAV.salto - dd); } catch (x) { } return; }
     NAV.salto = null; NAV.d = dd; return; }
   const vd = document.querySelector('.visordoc');   // el visor de facturas va por encima: «atrás» solo lo cierra a él
-  if (vd) { vd.remove(); try { history.pushState(navSnap(NAV.d), ''); } catch (x) { } return; }
+  if (vd) { vd.remove(); return; }   /* el visor tenía su propio paso en el historial: ya se ha gastado */
   const ov = document.querySelector('.overlay');
   if (ov) { ov.remove(); state.sheetAbierta = false; try { history.pushState(navSnap(NAV.d), ''); } catch (x) { } return; }
   if (MR.dentro() && state.view === 'modoreparto' && !(e.state && e.state.v === 'pedido')) { try { history.pushState(navSnap(NAV.d), ''); } catch (x) { } return; }   /* modo reparto: «atrás» no saca de él */
   if (MR.dentro() && state.user && (!e.state || e.state.v !== 'modoreparto') && state.view === 'pedido') { state.view = 'modoreparto'; state.params = {}; render(); return; }
+  navGuarda();
   const s = e.state; if (!s || !s.v) { NAV.d = 0; state.view = 'inicio'; state.params = {}; } else { NAV.d = s.d || 0; state.view = s.v; state.params = s.p || {}; }
+  const vuelta = NAV.mem[NAV.d] || null; state.ui = vuelta ? vuelta.u : {};
   NAV.pila[NAV.d] = navClave(state.view, state.params);
-  render(); window.scrollTo(0, 0);
+  render(); navRestaura(vuelta);
 });
 const VISTAS_HUB = ['lista', 'semana', 'carga', 'entregas', 'albaranes', 'calendario', 'ruta', 'nuevo', 'importar'];
 const VISTAS_PEDIDOS = VISTAS_HUB.concat(['pedido', 'albaran', 'rapido']);
@@ -5095,8 +5114,8 @@ function vistaEmpresa() {
   cargar();
 }
 function vistaClientes() {
-  state.view = 'clientes'; const lectura = false;
-  let soloActivos = LS.get('fj_cli_activos', true), tope = 80, soloFiscal = !!(state.params.fiscal || window.__cliFiscal) && esOficina();
+  state.view = 'clientes'; const lectura = false; const U = state.ui || (state.ui = {});   /* U: filtros de esta visita, para volver igual */
+  let soloActivos = 'act' in U ? U.act : LS.get('fj_cli_activos', true), tope = U.tope || 80, soloFiscal = 'fis' in U ? U.fis : !!(state.params.fiscal || window.__cliFiscal) && esOficina();
   const lista = h('div', {}); const info = h('p', { class: 'sub' });
   const inp = h('input', { placeholder: 'Buscar por nombre, código, NIF o teléfono…', oninput: debounce(() => { tope = 80; pintar(); }, 200) });
   const bAct = h('button', { class: 'chip', onclick: () => { soloActivos = true; LS.set('fj_cli_activos', true); marca(); pintar(); } }, 'Activos');
@@ -5104,10 +5123,10 @@ function vistaClientes() {
   /* 🧾 Fase 1 de facturación: clientes activos a los que les falta algo para poder facturarles */
   const bFis = esOficina() ? h('button', { class: 'chip', onclick: () => { soloFiscal = !soloFiscal; window.__cliFiscal = soloFiscal; if (soloFiscal) { soloActivos = true; soloNif = false; soloCon = false; } tope = 80; marca(); pintar(); } }, '🧾 Faltan datos para facturar') : null;
   /* 🔎 NIF encontrados en internet que hay que confirmar con el cliente antes de aceptarlos */
-  let soloNif = !!state.params.nif && esOficina();
+  let soloNif = 'nif' in U ? U.nif : !!state.params.nif && esOficina();
   const bNif = esOficina() ? h('button', { class: 'chip', onclick: () => { soloNif = !soloNif; if (soloNif) { soloFiscal = false; window.__cliFiscal = false; soloCon = false; } tope = 80; pintar(); } }, '🔎 NIF por confirmar') : null;
   /* 📇 Activos sin correo o sin teléfono: lo encontrado en internet y si ya se les pidió por correo */
-  let soloCon = !!state.params.contacto && esOficina(), conProp = {}, peticion = {};
+  let soloCon = 'con' in U ? U.con : !!state.params.contacto && esOficina(), conProp = {}, peticion = {};
   const faltaCon = c => c.activo && c.codigo !== '0001' && (!(c.email || '').trim() || !(c.telefono || '').trim());
   const bCon = esOficina() ? h('button', { class: 'chip', onclick: () => { soloCon = !soloCon; if (soloCon) { soloActivos = true; soloFiscal = false; window.__cliFiscal = false; soloNif = false; } tope = 80; pintar(); } }, '📇 Pedir correo y teléfono') : null;
   const avFis = h('div', {}); let cargadoFis = false, nProp = {}, nifProp = {};
@@ -5130,7 +5149,7 @@ function vistaClientes() {
         pe.contestado_at ? h('button', { class: 'ghost small', onclick: () => guardaPe({ contestado_at: null }) }, '↺ Quitar contestado') : h('button', { class: 'ghost small', onclick: () => guardaPe({ contestado_at: new Date().toISOString() }) }, '✅ Contestado')));
   }
   function pintar() {
-    marca();
+    marca(); Object.assign(U, { act: soloActivos, tope, fis: soloFiscal, nif: soloNif, con: soloCon, q: inp.value });
     if (!clientesCache) { lista.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); return; }
     const t = sinTilde(limpiaBusqueda(inp.value));
     let r = clientesCache.filter(c => !soloActivos || t || c.activo); /* al buscar, también los inactivos (salen con «Inactivo») */
@@ -5176,7 +5195,7 @@ function vistaClientes() {
   $app.replaceChildren(shell('Clientes', h('div', {},
     lectura ? h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Solo consulta: los datos los modifica administración.') : h('button', { style: 'width:100%;margin-bottom:10px', onclick: () => go('cliente', { id: null }) }, '+ Añadir cliente'),
     h('div', { class: 'chips' }, bAct, bTod, bFis, bNif, bCon), avFis, inp, info, lista)));
-  renderBanner(); pintar(); cargar();
+  inp.value = U.q || ''; renderBanner(); pintar(); cargar();
 }
 /* Ficha de cliente de solo lectura (preparadores y repartidores): sin datos económicos */
 function fichaClienteLectura() {
@@ -9231,14 +9250,14 @@ async function verDocumento(ruta, titulo) {
 }
 function verArchivoLocal(file, titulo) { return visorDoc(URL.createObjectURL(file), file.type === 'application/pdf' || /\.pdf$/i.test(file.name || ''), titulo || file.name); }
 async function visorDoc(url, esPdf, titulo) {
-  document.querySelectorAll('.visordoc').forEach(x => x.remove());
+  const habia = document.querySelector('.visordoc'); if (habia) habia.remove();
   let zoom = 100; const cuerpo = h('div', { class: 'vcuerpo' }, h('p', { style: 'color:#fff' }, 'Abriendo…'));
-  const cerrar = () => { v.remove(); };
+  const cerrar = () => { if (v.isConnected) history.back(); };   /* «atrás» lo quita (popstate) y no deja un paso de más en el historial */
   const aplicaZoom = () => { cuerpo.querySelectorAll('canvas,img').forEach(c => { c.style.width = zoom + '%'; }); };
   const bz = (t, d) => h('button', { type: 'button', class: 'ghost', style: 'background:#374151;color:#fff;border:0', onclick: () => { zoom = Math.max(50, Math.min(400, zoom + d)); aplicaZoom(); } }, t);
   const v = h('div', { class: 'visordoc' }, h('div', { class: 'vcab' }, h('b', {}, titulo || 'Factura'), bz('−', -25), bz('+', 25), h('button', { type: 'button', style: 'background:#dc2626;color:#fff;border:0', onclick: cerrar }, '✕')), cuerpo);
   document.body.append(v);
-  try { history.pushState(navSnap(NAV.d), ''); } catch (e) { }
+  if (!habia) try { history.pushState(navSnap(NAV.d), ''); } catch (e) { }
   try {
     if (!esPdf) { cuerpo.replaceChildren(h('img', { src: url, style: 'width:100%' })); return; }
     await waCargarScript(WA_PDFJS);
