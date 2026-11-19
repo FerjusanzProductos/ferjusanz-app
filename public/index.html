@@ -14719,10 +14719,13 @@ async function ljVentas(desde, hasta) {
   const fs = await gesTodas(() => sb.from('golden_facturas').select('numero,serie,fecha,cliente_codigo,cliente_nombre,base,total').eq('borrador', false).gte('fecha', desde).lte('fecha', hasta).order('fecha').order('numero'));
   const nums = fs.map(f => f.numero); const lin = {};
   for (let i = 0; i < nums.length; i += 150) (await gesTodas(() => sb.from('golden_lineas').select('factura_numero,iva,importe').in('factura_numero', nums.slice(i, i + 150)))).forEach(l => { const o = lin[l.factura_numero] || (lin[l.factura_numero] = {}); const t = Number(l.iva || 0); o[t] = (o[t] || 0) + Number(l.importe || 0); });
+  // IVA exacto de Golden (base y cuota de cada tipo, sacadas de su cabecera; 19/11/2026). Si una factura no lo tiene, se reparte con las líneas como antes.
+  const ivaG = {}; try { for (let i = 0; i < nums.length; i += 150) (await gesTodas(() => sb.from('golden_facturas_iva').select('factura_numero,tipo_iva,base,cuota,cuota_re').in('factura_numero', nums.slice(i, i + 150)))).forEach(x => (ivaG[x.factura_numero] = ivaG[x.factura_numero] || []).push(x)); } catch (e) { }
   const cods = [...new Set(fs.map(f => f.cliente_codigo).filter(Boolean))]; const cli = {};
   for (let i = 0; i < cods.length; i += 150) (await gesTodas(() => sb.from('clientes').select('codigo,nombre,nif,codigo_postal').in('codigo', cods.slice(i, i + 150)))).forEach(c => { cli[String(c.codigo).toUpperCase()] = c; });
-  fs.forEach(f => { n++; const c = cli[String(f.cliente_codigo || '').toUpperCase()] || {}; const r = ljRepartoGolden(f, lin[f.numero] || {}); if (r.dudosa) dudosas++;
-    r.partes.forEach(p => filas.push([f.fecha, f.numero, f.cliente_nombre || c.nombre || '', c.nif || '', c.codigo_postal || '', 'Venta de fruta y verdura', p.base, p.tipo, p.cuota, ljR(p.base + p.cuota)])); });
+  fs.forEach(f => { n++; const c = cli[String(f.cliente_codigo || '').toUpperCase()] || {}; const ex = ivaG[f.numero];
+    const r = ex ? { partes: ex.slice().sort((a, b) => a.tipo_iva - b.tipo_iva).map(x => ({ base: ljR(Number(x.base)), tipo: Number(x.tipo_iva), cuota: ljR(Number(x.cuota)), re: Number(x.cuota_re || 0) })) } : ljRepartoGolden(f, lin[f.numero] || {}); if (r.dudosa) dudosas++;
+    r.partes.forEach(p => filas.push([f.fecha, f.numero, f.cliente_nombre || c.nombre || '', c.nif || '', c.codigo_postal || '', 'Venta de fruta y verdura', p.base, p.tipo, p.cuota, ljR(p.base + p.cuota + (p.re || 0))])); });
   if (fs.length) { let ult = null; try { const u = await sb.from('golden_facturas').select('fecha').eq('borrador', false).order('fecha', { ascending: false }).limit(1); ult = u.data && u.data[0] && u.data[0].fecha; } catch (e) { }
     if (ult && ult < hasta) avisos.push('⚠️ INCOMPLETO: Golden está importado solo hasta el ' + fechaES(ult) + '. Importa en «Histórico de Golden» las facturas hasta el ' + fechaES(hasta) + ' antes de mandarlo.');
     if (fs.reduce((a, f) => a + Number(f.total || 0) - Number(f.base || 0), 0) < 1) avisos.push('⚠️ Las facturas de Golden de este periodo no traen IVA: el histórico parece incompleto.'); }
