@@ -275,9 +275,9 @@ function plantilla({ ruta, titulo, descripcion, imagen, cuerpo, datos = [], tipo
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/marca/icono-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="/marca/icono-180.png">
-<meta name="theme-color" content="#161210">
-<link rel="preload" href="/fuentes/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fuentes/barlow-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<meta name="theme-color" content="#0f2a1c">
+<link rel="preload" href="/fuentes/prata-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fuentes/manrope-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 ${precarga ? `<link rel="preload" href="${precarga}" as="image" fetchpriority="high">` : ''}
 <link rel="stylesheet" href="/estilo.css?v=${VERSION_CSS}">
 ${datos.map(d => `<script type="application/ld+json">${JSON.stringify(d)}</script>`).join('\n')}
