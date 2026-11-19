@@ -322,7 +322,7 @@ ${cuerpo}
     <div>
       <img class="etiqueta" src="/marca/etiqueta.png" alt="Ferjusanz, mayorista en Madrid" width="760" height="240" loading="lazy">
       <p>Tercera generación de mayoristas de patatas, frutas, verduras y huevos. ${ANIOS[0].toUpperCase() + ANIOS.slice(1)} alegrando la mesa de Madrid.</p>
-      <p><a href="tel:+34917632186">${TEL}</a> · <a href="mailto:${EMAIL}">${EMAIL}</a><br>WhatsApp ${WHATSAPP.map(w => `<a href="${wa(w.num, 'Hola')}" rel="nofollow">${w.ver}</a>`).join(' · ')}<br>${DIRECCION}<br>${HORARIO}</p>
+      <p><a href="tel:+34917632186">${TEL}</a><br><a href="mailto:${EMAIL}">${EMAIL}</a><br>WhatsApp ${WHATSAPP.map(w => `<a href="${wa(w.num, 'Hola')}" rel="nofollow">${w.ver}</a>`).join(' · ')}<br>${DIRECCION}<br>${HORARIO}</p>
     </div>
     <div>
       <h2>Productos</h2>
