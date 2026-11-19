@@ -4247,7 +4247,10 @@ async function abrirFacturaGolden(f) {
     h('div', { class: 'card', style: 'margin-top:8px' }, h('div', { class: 'fila' }, h('span', {}, 'Base imponible'), h('b', {}, eur(f.base) + '\u00a0€')), h('div', { class: 'fila' }, h('span', {}, 'Total con IVA'), h('b', {}, eur(f.total) + '\u00a0€')))));
   try {
     const r = await sb.from('golden_lineas').select('*').eq('factura_numero', f.numero).order('orden', { ascending: true }); if (r.error) throw r.error;
-    const kids = []; let alb = null;
+    const t = () => goldenFacturaTabla(f, r.data || []), nom = 'Factura_' + f.numero;
+    const kids = [h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px' },
+      h('button', { class: 'guardar', onclick: () => { const x = t(); bajarPdfTabla(nom, 'Factura ' + f.numero, x.info, x.filas, [16, 9, 34, 9, 9, 10, 7, 13]); } }, '📄 PDF'),
+      h('button', { class: 'ghost', onclick: () => { const x = t(); bajarXlsx(nom, 'Factura ' + f.numero, [['Factura ' + f.numero], ...x.info.map(i => [i]), [], ...x.filas], x.info.length + 2); } }, '📊 Excel'))]; let alb = null;
     (r.data || []).forEach(l => { if (l.albaran !== alb) { alb = l.albaran; if (alb) kids.push(h('div', { class: 'letra' }, alb)); }
       kids.push(h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:15px' }, l.descripcion), h('div', { class: 'sub' }, num(l.cantidad) + ' × ' + eur(l.precio) + '\u00a0€' + (l.iva ? ' · IVA ' + num(l.iva) + ' %' : ''))), h('b', {}, eur(l.importe) + '\u00a0€'))); });
     cuerpo.replaceChildren(...(kids.length ? kids : [h('p', { class: 'vacio' }, 'Sin líneas.')]));
@@ -4272,9 +4275,24 @@ function vistaGolden() {
   const bus = h('input', { placeholder: 'Buscar cliente o nº de factura…', value: textoIni, oninput: debounce(() => { texto = sinTilde(limpiaBusqueda(bus.value)); tope = 60; pintar(); }, 250) });
   const selMes = h('select', { onchange: () => { mes = selMes.value; tope = 60; pintar(); } }, h('option', { value: '' }, 'Todo 2026'), ...['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'].map(m => h('option', { value: '2026-' + m }, ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][+m])));
   const cb = h('input', { type: 'checkbox', style: 'width:24px;height:24px;min-height:0;flex:none;padding:0', checked: borr, onchange: () => { borr = cb.checked; LS.set('fj_gold_borr', borr); tope = 60; pintar(); } });
-  function base() { return (datos || []).filter(f => (borr || !f.borrador) && (!mes || f.fecha.startsWith(mes))); }
+  // Jorge (19/11/2026): buscar por fechas y por producto, y bajar la lista en Excel o PDF
+  let desde = '', hasta = '', prodSet = null, ultLista = [];
+  const iDesde = h('input', { type: 'date', onchange: () => { desde = iDesde.value; tope = 60; pintar(); } }), iHasta = h('input', { type: 'date', onchange: () => { hasta = iHasta.value; tope = 60; pintar(); } });
+  const iProd = h('input', { placeholder: 'Producto (ej. tomate pera)…', oninput: debounce(async () => { const t = limpiaBusqueda(iProd.value).trim(); if (t.length < 3) { prodSet = null; pintar(); return; }
+    try { const q = await sb.from('golden_lineas').select('factura_numero').ilike('descripcion', '%' + t + '%').limit(20000); if (q.error) throw q.error; prodSet = new Set((q.data || []).map(x => x.factura_numero)); } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); prodSet = null; } tope = 60; pintar(); }, 400) });
+  async function exportar(formato) {
+    if (!ultLista.length) { toast('No hay facturas con este filtro.', 'err'); return; }
+    let nif = {}; try { const q = await sb.from('clientes').select('codigo,nif').range(0, 9999); if (!q.error) (q.data || []).forEach(c => { if (c.codigo) nif[String(c.codigo).toUpperCase()] = c.nif || ''; }); } catch (e) { }
+    const r2 = x => Math.round(x * 100) / 100;
+    const filtro = [desde || hasta ? 'Fechas: ' + (desde ? fechaES(desde) : 'inicio') + ' – ' + (hasta ? fechaES(hasta) : 'hoy') : mes ? 'Mes: ' + mes.split('-').reverse().join('/') : 'Todo 2026', texto ? 'Cliente o nº: «' + bus.value.trim() + '»' : '', prodSet ? 'Producto: «' + iProd.value.trim() + '»' : '', borr ? 'Con borradores' : ''].filter(Boolean).join(' · ');
+    listadoFacturas('Facturas_Golden_' + hoy(), 'Facturas de Golden', [filtro, 'Sacado del histórico de Golden (solo consulta).'], ['Nº factura', 'Fecha', 'Código cliente', 'Cliente', 'NIF', 'Base (€)', 'IVA (€)', 'Total (€)'],
+      ultLista.map(f => [f.numero, f.fecha, f.cliente_codigo || '', f.cliente_nombre || '', nif[String(f.cliente_codigo || '').toUpperCase()] || '', Number(f.base) || 0, r2((Number(f.total) || 0) - (Number(f.base) || 0)), Number(f.total) || 0]), formato);
+  }
+  const enFechas = x => (!desde || x >= desde) && (!hasta || x <= hasta);
+  function base() { return (datos || []).filter(f => (borr || !f.borrador) && (!mes || f.fecha.startsWith(mes)) && enFechas(f.fecha)); }
   function pintar() {
     chips.replaceChildren(...[['facturas', 'Facturas'], ['clientes', 'Por cliente'], ['productos', 'Por producto']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_gold_modo', m); tope = 60; pintar(); } }, n)));
+    iProd.style.display = modo === 'facturas' ? '' : 'none';
     bus.placeholder = modo === 'productos' ? 'Escribe un producto (ej. tomate pera)…' : 'Buscar cliente o nº de factura…'; if (!datos) return;
     const b = base(); const tot = b.reduce((a, f) => a + Number(f.total || 0), 0);
     if (modo === 'productos') { info.textContent = ''; return; }
@@ -4285,23 +4303,25 @@ function vistaGolden() {
       cont.replaceChildren(...r.slice(0, tope).map(x => h('div', { class: 'card tap', onclick: () => { modo = 'facturas'; bus.value = x.cod; texto = sinTilde(x.cod); pintar(); } }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, x.nom), h('div', { class: 'sub' }, x.n + ' facturas · última ' + fechaES(x.ult))), h('b', {}, eur(x.t) + '\u00a0€')))), r.length > tope ? h('button', { class: 'ghost', style: 'width:100%', onclick: () => { tope += 100; pintar(); } }, 'Mostrar más') : null);
       return;
     }
-    const r = b.filter(f => !texto || sinTilde((f.cliente_nombre || '') + ' ' + (f.cliente_codigo || '') + ' ' + f.numero + ' ' + String(f.numero).replace(/\./g, '')).includes(texto));
+    const r = ultLista = b.filter(f => (!prodSet || prodSet.has(f.numero)) && (!texto || sinTilde((f.cliente_nombre || '') + ' ' + (f.cliente_codigo || '') + ' ' + f.numero + ' ' + String(f.numero).replace(/\./g, '')).includes(texto)));
     const t2 = r.reduce((a, f) => a + Number(f.total || 0), 0); info.textContent = r.length + ' facturas · ' + eur(t2) + '\u00a0€';
-    cont.replaceChildren(...r.slice(0, tope).map(f => filaFacturaGolden(f)), r.length > tope ? h('button', { class: 'ghost', style: 'width:100%', onclick: () => { tope += 100; pintar(); } }, 'Mostrar más (' + (r.length - tope) + ')') : null, !r.length ? h('p', { class: 'vacio' }, 'No hay facturas con este filtro.') : null);
+    cont.replaceChildren(h('div', { style: 'display:flex;gap:6px;margin-bottom:8px' }, h('button', { class: 'ghost small', onclick: () => exportar('xlsx') }, '📊 Bajar la lista en Excel'), h('button', { class: 'ghost small', onclick: () => exportar('pdf') }, '📄 En PDF')), ...r.slice(0, tope).map(f => filaFacturaGolden(f)), r.length > tope ? h('button', { class: 'ghost', style: 'width:100%', onclick: () => { tope += 100; pintar(); } }, 'Mostrar más (' + (r.length - tope) + ')') : null, !r.length ? h('p', { class: 'vacio' }, 'No hay facturas con este filtro.') : null);
   }
   const buscaProd = debounce(async () => {
     if (modo !== 'productos') return; const t = limpiaBusqueda(bus.value).trim(); if (t.length < 3) { cont.replaceChildren(h('p', { class: 'vacio' }, 'Escribe al menos 3 letras del producto.')); return; }
     cont.replaceChildren(h('p', { class: 'vacio' }, 'Buscando…'));
     try { const r = await sb.from('golden_lineas').select('factura_numero,descripcion,cantidad,precio,importe').ilike('descripcion', '%' + t + '%').limit(1500); if (r.error) throw r.error;
       const f = {}; (datos || []).forEach(x => f[x.numero] = x); const por = {};
-      (r.data || []).forEach(l => { const fa = f[l.factura_numero]; if (fa && fa.borrador && !borr) return; if (fa && mes && !fa.fecha.startsWith(mes)) return; const x = por[l.descripcion] = por[l.descripcion] || { n: 0, q: 0, t: 0, fs: new Set() }; x.n++; x.q += Number(l.cantidad || 0); x.t += Number(l.importe || 0); x.fs.add(l.factura_numero); });
+      (r.data || []).forEach(l => { const fa = f[l.factura_numero]; if (fa && fa.borrador && !borr) return; if (fa && mes && !fa.fecha.startsWith(mes)) return; if (fa && !enFechas(fa.fecha)) return; const x = por[l.descripcion] = por[l.descripcion] || { n: 0, q: 0, t: 0, fs: new Set() }; x.n++; x.q += Number(l.cantidad || 0); x.t += Number(l.importe || 0); x.fs.add(l.factura_numero); });
       const ls = Object.entries(por).sort((a, b) => b[1].t - a[1].t);
       cont.replaceChildren(...(ls.length ? ls.map(([d, x]) => h('div', { class: 'card' }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, d), h('div', { class: 'sub' }, num(Math.round(x.q * 100) / 100) + ' vendidos · en ' + x.fs.size + ' facturas')), h('b', {}, eur(x.t) + '\u00a0€')))) : [h('p', { class: 'vacio' }, 'Ningún producto con ese nombre.')]));
     } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
   }, 350);
   bus.addEventListener('input', () => { if (modo === 'productos') buscaProd(); });
   chips.addEventListener('click', () => { if (modo === 'productos') { cont.replaceChildren(h('p', { class: 'vacio' }, 'Escribe un producto arriba para ver cuánto se ha vendido.')); } });
-  filtros.replaceChildren(h('div', { style: 'display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end' }, h('label', { class: 'campo' }, 'Periodo', selMes), h('label', { style: 'display:flex;gap:8px;align-items:center;font-size:14px;padding-bottom:12px' }, cb, h('span', {}, 'Con borradores'))));
+  filtros.replaceChildren(h('div', { style: 'display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end' }, h('label', { class: 'campo' }, 'Periodo', selMes), h('label', { style: 'display:flex;gap:8px;align-items:center;font-size:14px;padding-bottom:12px' }, cb, h('span', {}, 'Con borradores'))),
+    h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px' }, h('label', { class: 'campo' }, 'Desde', iDesde), h('label', { class: 'campo' }, 'Hasta', iHasta)), iProd);
+  iProd.title = 'Solo las facturas que llevan ese producto';
   $app.replaceChildren(shell('Histórico de Golden', h('div', {}, h('div', { class: 'aviso-card' }, 'Solo consulta: son las facturas que ya están hechas en Golden (2026). Aquí no se puede cambiar nada.'), chips, filtros, bus, info, cont), { volver: volverIni })); renderBanner(); pintar();
   cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando facturas de Golden…'));
   cargarGolden().then(d => { datos = d; if (!d.length) { cont.replaceChildren(h('p', { class: 'vacio' }, 'Todavía no hay datos de Golden cargados. Hay que ejecutar la Parte 35 y subir los dos archivos CSV.')); return; } pintar(); if (modo === 'productos') cont.replaceChildren(h('p', { class: 'vacio' }, 'Escribe un producto arriba para ver cuánto se ha vendido.')); })
@@ -4942,6 +4962,14 @@ function sifBajarPdf(d) {
   const u = URL.createObjectURL(new Blob([sifPdf(d)], { type: 'application/pdf' })), lk = h('a', { href: u, download: nom }); document.body.append(lk); lk.click(); lk.remove();
   setTimeout(() => URL.revokeObjectURL(u), 60000); toast('PDF descargado: ' + nom, 'ok');
 }
+function sifBajarXlsx(d) {
+  const f = d.f, c = f.cliente || {}, nom = (f.tipo === 'rectificativa' ? 'Rectificativa ' : 'Factura ') + f.codigo;
+  bajarXlsx(nom.replace(' ', '_'), nom, [[nom + (f.prueba ? ' · PRUEBA, SIN VALOR FISCAL' : '') + (d.anul ? ' · ANULADA' : '')], ['Fecha', f.fecha], ['Cliente', c.nombre || ''], ['NIF', c.nif || ''], ['Dirección', [c.direccion, c.codigo_postal, c.localidad].filter(Boolean).join(' ')], ['Forma de pago', SIF_FORMA_TXT[f.forma_pago] || f.forma_pago], f.rectifica_codigo ? ['Rectifica a', f.rectifica_codigo + (f.motivo ? ' · ' + f.motivo : '')] : [], [],
+    ['Albarán', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Precio (€)', 'Base (€)', '% IVA', 'Cuota IVA (€)', 'Recargo (€)', 'Total (€)'],
+    ...d.L.map(l => [l.albaran || '', l.codigo || '', l.descripcion, Number(l.cantidad), l.unidad || '', Number(l.precio), Number(l.base), Number(l.tipo_iva), Number(l.cuota_iva), Number(l.cuota_re) || 0, Number(l.total)]),
+    [], ...d.I.map(i => ['', '', 'IVA ' + num(i.tipo_iva) + ' %', '', '', '', Number(i.base), Number(i.tipo_iva), Number(i.cuota_iva), Number(i.cuota_re) || 0]),
+    ['', '', 'TOTAL', '', '', '', Number(f.base), '', Number(f.cuota_iva), Number(f.cuota_re) || 0, Number(f.total)]], 8);
+}
 /* Ver una factura emitida */
 async function sifVer(id, alCambiar) {
   let d; try { d = await sifCargar(id); } catch (e) { toast(sifErr(e), 'err'); return; }
@@ -4954,6 +4982,7 @@ async function sifVer(id, alCambiar) {
     f.rectifica_id ? h('button', { class: 'ghost small', style: 'margin-bottom:8px', onclick: () => { cerrar(); sifVer(f.rectifica_id, alCambiar); } }, '← Ver la factura ' + f.rectifica_codigo) : null,
     h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px' },
       h('button', { class: 'guardar', onclick: () => sifBajarPdf(d) }, '📄 Descargar PDF'),
+      h('button', { class: 'ghost', onclick: () => sifBajarXlsx(d) }, '📊 Excel'),
       h('button', { class: 'ghost', onclick: () => imprimir(sifHtml(d)) }, '🖨 Imprimir'),
       f.tipo === 'ordinaria' && !anulada ? h('button', { class: 'ghost', onclick: () => { cerrar(); sifRectificar(d, alCambiar); } }, '✏️ Rectificar') : null),
     h('div', { style: 'overflow-x:auto;border:1px solid #e5e7eb;border-radius:8px' }, caja),
@@ -5048,6 +5077,16 @@ function vistaFacturasApp() {
   const iMes = h('input', { type: 'month', value: mes, onchange: () => { mes = iMes.value || mes; LS.set('fj_sif_mes', mes); cargar(); } });
   const bus = h('input', { placeholder: 'Buscar cliente o nº de factura…', oninput: debounce(() => { texto = sinTilde(limpiaBusqueda(bus.value)); cargar(true); }, 200) });
   let datos = null, emitidas = null;
+  // Emitidas (Jorge, 19/11/2026): buscar por fechas y por producto y bajar la lista en Excel o PDF, como el registro de Verifactu
+  let desde = '', hasta = '', prodSet = null, ultLista = [];
+  const iDesde = h('input', { type: 'date', onchange: () => { desde = iDesde.value; cargar(true); } }), iHasta = h('input', { type: 'date', onchange: () => { hasta = iHasta.value; cargar(true); } });
+  const iProd = h('input', { placeholder: 'Producto (ej. tomate pera)…', oninput: debounce(async () => { const t = limpiaBusqueda(iProd.value).trim(); if (t.length < 3) { prodSet = null; cargar(true); return; }
+    try { const q = await sb.from('sif_factura_lineas').select('factura_id').ilike('descripcion', '%' + t + '%').limit(20000); if (q.error) throw q.error; prodSet = new Set((q.data || []).map(x => x.factura_id)); } catch (e) { toast(sifErr(e), 'err'); prodSet = null; } cargar(true); }, 400) });
+  const filtrosEmit = h('div', {}, h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px' }, h('label', { class: 'campo' }, 'Desde', iDesde), h('label', { class: 'campo' }, 'Hasta', iHasta)), iProd);
+  const exportar = formato => { if (!ultLista.length) { toast('No hay facturas con este filtro.', 'err'); return; }
+    const filtro = [desde || hasta ? 'Fechas: ' + (desde ? fechaES(desde) : 'inicio') + ' – ' + (hasta ? fechaES(hasta) : 'hoy') : 'Todas', texto ? 'Cliente o nº: «' + bus.value.trim() + '»' : '', prodSet ? 'Producto: «' + iProd.value.trim() + '»' : ''].filter(Boolean).join(' · ');
+    listadoFacturas('Facturas_app_' + hoy(), 'Facturas emitidas', [filtro, ultLista.some(f => f.prueba) ? 'PRUEBA · SIN VALOR FISCAL' : 'Registro de facturas emitidas desde la app.'], ['Nº factura', 'Tipo', 'Fecha', 'Cliente', 'NIF', 'Base (€)', 'IVA (€)', 'Recargo (€)', 'Total (€)', 'Forma de pago', 'Rectifica a'],
+      ultLista.map(f => [f.codigo, f.tipo === 'rectificativa' ? 'Rectificativa' + (f.anula ? ' (anula)' : '') : 'Ordinaria', f.fecha, (f.cliente || {}).nombre || '', (f.cliente || {}).nif || '', Number(f.base), Number(f.cuota_iva), Number(f.cuota_re) || 0, Number(f.total), SIF_FORMA_TXT[f.forma_pago] || f.forma_pago, f.rectifica_codigo || '']), formato); };
   const pintaChips = () => chips.replaceChildren(...[['pend', '📥 Por facturar'], ['emit', '🧾 Emitidas']].map(([k, t]) => h('button', { class: 'chip' + (tab === k ? ' on' : ''), onclick: () => { tab = k; LS.set('fj_sif_tab', k); pintaChips(); cargar(); } }, t)));
   async function cargar(soloPintar) {
     if (!soloPintar) cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…'));
@@ -5068,10 +5107,11 @@ function vistaFacturasApp() {
         cont.replaceChildren(h('p', { class: 'sub' }, nEnt + ' albarán(es) entregados sin facturar en ' + mes.split('-').reverse().join('/') + '. Una factura junta albaranes del mismo cliente y del mismo mes.'),
           ...(gs.length ? gs.map(tarjeta) : [h('p', { class: 'vacio' }, 'No hay albaranes sin facturar en este mes.')]));
       } else {
-        if (!soloPintar || !emitidas) { const r = await sb.from('sif_facturas').select('id,codigo,tipo,fecha,cliente,total,forma_pago,rectifica_id,rectifica_codigo,anula,prueba').order('emitida_at', { ascending: false }).limit(500); if (r.error) throw r.error; emitidas = r.data || []; }
+        if (!soloPintar || !emitidas) { const r = await sb.from('sif_facturas').select('id,codigo,tipo,fecha,cliente,base,cuota_iva,cuota_re,total,forma_pago,rectifica_id,rectifica_codigo,anula,prueba').order('emitida_at', { ascending: false }).limit(500); if (r.error) throw r.error; emitidas = r.data || []; }
         const rects = {}; emitidas.forEach(f => { if (f.rectifica_id) (rects[f.rectifica_id] = rects[f.rectifica_id] || []).push(f); });
-        const lista = emitidas.filter(f => !texto || sinTilde(((f.cliente || {}).nombre || '') + ' ' + ((f.cliente || {}).nombre_comercial || '') + ' ' + f.codigo).toLowerCase().includes(texto.toLowerCase()));
-        cont.replaceChildren(h('p', { class: 'sub' }, lista.length + ' factura(s). Las emitidas no se pueden cambiar ni borrar.'), sifBotonCadena(), sifBotonXml(), ...(lista.length ? lista.map(f => { const rs = rects[f.id] || [], anul = rs.some(x => x.anula);
+        const lista = ultLista = emitidas.filter(f => (!desde || f.fecha >= desde) && (!hasta || f.fecha <= hasta) && (!prodSet || prodSet.has(f.id))).filter(f => !texto || sinTilde(((f.cliente || {}).nombre || '') + ' ' + ((f.cliente || {}).nombre_comercial || '') + ' ' + f.codigo).toLowerCase().includes(texto.toLowerCase()));
+        cont.replaceChildren(filtrosEmit, h('div', { style: 'display:flex;gap:6px;margin:4px 0 8px' }, h('button', { class: 'ghost small', onclick: () => exportar('xlsx') }, '📊 Bajar la lista en Excel'), h('button', { class: 'ghost small', onclick: () => exportar('pdf') }, '📄 En PDF')),
+          h('p', { class: 'sub' }, lista.length + ' factura(s). Las emitidas no se pueden cambiar ni borrar.'), sifBotonCadena(), sifBotonXml(), ...(lista.length ? lista.map(f => { const rs = rects[f.id] || [], anul = rs.some(x => x.anula);
           return h('div', { class: 'card tap', onclick: () => sifVer(f.id, () => { emitidas = null; cargar(); }) }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, f.codigo + ' · ' + ((f.cliente || {}).nombre_comercial || (f.cliente || {}).nombre || '')), h('div', { class: 'sub' }, fechaES(f.fecha) + ' · ' + (SIF_FORMA_TXT[f.forma_pago] || f.forma_pago)),
             f.tipo === 'rectificativa' ? h('span', { class: 'badge', style: 'background:#fef3c7;color:#92400e' }, 'Rectificativa de ' + f.rectifica_codigo + (f.anula ? ' (anula)' : '')) : null, anul ? h('span', { class: 'badge', style: 'background:#fee2e2;color:#991b1b' }, 'ANULADA') : rs.length ? h('span', { class: 'badge' }, 'Rectificada (' + rs.length + ')') : null),
             h('b', { style: Number(f.total) < 0 ? 'color:#b91c1c' : '' }, eur(f.total) + '\u00a0€'))); }) : [h('p', { class: 'vacio' }, 'Todavía no hay facturas emitidas.')]));
@@ -14756,6 +14796,66 @@ function ljArchivo(l, formato, periodo, clave) {
   return new File([formato === 'xlsx' ? ljXlsx(l, l.tipo === 'ventas' ? 'Ventas ' + clave : 'Compras ' + clave) : ljPdf(l, periodo)], nombre, { type: LJ_MIME[formato] });
 }
 function ljBajar(f) { const u = URL.createObjectURL(f), a = h('a', { href: u, download: f.name }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); }
+/* Excel y PDF de una tabla (Jorge, 19/11/2026: «cada factura en PDF y en Excel»). filas[cab] = cabecera (negrita); lo de antes, datos sueltos arriba.
+   Número → número (en PDF, con 2 decimales si la cabecera lleva «€»); 'AAAA-MM-DD' → fecha; lo demás, texto. */
+function tablaXlsx(hoja, filas, cab) {
+  cab = cab || 0;
+  const esc = v => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '');
+  const col = i => (i >= 26 ? String.fromCharCode(64 + Math.floor(i / 26)) : '') + String.fromCharCode(65 + i % 26);
+  const serie = iso => { const [y, m, d] = iso.split('-').map(Number); return (Date.UTC(y, m - 1, d) - Date.UTC(1899, 11, 30)) / 86400000; };
+  const dinero = (filas[cab] || []).map(t => /€/.test(t));
+  const celda = (v, r, i, neg) => { const ref = col(i) + r; if (v == null || v === '') return '';
+    if (typeof v === 'number') return isFinite(v) ? '<c r="' + ref + '"' + (dinero[i] ? ' s="2"' : '') + '><v>' + v + '</v></c>' : '';
+    if (!neg && /^\d{4}-\d{2}-\d{2}$/.test(v)) return '<c r="' + ref + '" s="3"><v>' + serie(v) + '</v></c>';
+    return '<c r="' + ref + '" t="inlineStr"' + (neg ? ' s="1"' : '') + '><is><t xml:space="preserve">' + esc(v) + '</t></is></c>'; };
+  const n = Math.max(...filas.map(f => f.length)), anchos = Array.from({ length: n }, (_, i) => Math.min(50, Math.max(9, ...filas.slice(cab).map(f => String(f[i] == null ? '' : f[i]).length + 2))));
+  const ns = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+  const sheet = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet ' + ns + '><cols>' + anchos.map((w, i) => '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>').join('') + '</cols><sheetData>'
+    + filas.map((f, k) => '<row r="' + (k + 1) + '">' + f.map((v, i) => celda(v, k + 1, i, k <= cab && (k === cab || i === 0))).join('') + '</row>').join('') + '</sheetData><pageSetup orientation="landscape" paperSize="9" fitToHeight="0"/></worksheet>';
+  const estilos = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="dd/mm/yyyy"/></numFmts><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="4" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+  const R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/', X = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n', T = 'application/vnd.openxmlformats-officedocument.spreadsheetml.';
+  return ljZip([
+    ['[Content_Types].xml', X + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="' + T + 'sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="' + T + 'worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="' + T + 'styles+xml"/></Types>'],
+    ['_rels/.rels', X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="' + R + 'officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+    ['xl/workbook.xml', X + '<workbook ' + ns + '><sheets><sheet name="' + esc(String(hoja).replace(/[\\\/?*\[\]:]/g, '-').slice(0, 31)) + '" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+    ['xl/_rels/workbook.xml.rels', X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="' + R + 'worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="' + R + 'styles" Target="styles.xml"/></Relationships>'],
+    ['xl/worksheets/sheet1.xml', sheet], ['xl/styles.xml', estilos]]);
+}
+function tablaPdf(titulo, info, filas, anchos) {
+  const doc = pdfNuevo(841.89, 595.28), M = 28, ANCHO = doc.W - 2 * M, FIN = doc.H - 36, LH = 13;
+  const tw = anchos.reduce((a, b) => a + b, 0), ws = anchos.map(w => w * ANCHO / tw), xs = []; ws.reduce((x, w) => { xs.push(x); return x + w; }, M);
+  const cab = filas[0], dinero = cab.map(t => /€/.test(t));
+  const corta = (t, w, sz, neg) => { if (pdfAncho(t, sz, neg) <= w - 4) return t; while (t.length > 1 && pdfAncho(t + '…', sz, neg) > w - 4) t = t.slice(0, -1); return t + '…'; };
+  const fila = (f, y, sz, neg) => f.forEach((v, i) => { if (i >= ws.length) return; const n = typeof v === 'number';
+    const t = corta(n ? (dinero[i] ? eur(v) : num(v)) : /^\d{4}-\d{2}-\d{2}$/.test(v || '') ? fechaES(v) : String(v == null ? '' : v), ws[i], sz, neg);
+    if (n) doc.texto(t, xs[i] + ws[i] - 2, y, sz, { neg, align: 'right' }); else doc.texto(t, xs[i] + 2, y, sz, { neg }); });
+  const arriba = primera => { let y = 34; doc.texto('FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. · NIF B87446670', M, y, 9, { color: '#4b5563' }); y += 20; doc.texto(titulo, M, y, 14, { neg: true }); y += 6;
+    if (primera) info.forEach(t => { y += 14; doc.texto(corta(String(t), ANCHO, 9.5), M, y, 9.5); });
+    y += 10; doc.rect(M, y, ANCHO, 18, '#e5e7eb'); fila(cab, y + 12, 8, true); return y + 30; };
+  let y = arriba(true);
+  filas.slice(1).forEach((f, k) => { if (y > FIN) { doc.pagina(); y = arriba(false); } if (k % 2) doc.rect(M, y - 9.5, ANCHO, LH, '#f9fafb'); fila(f, y, 8, !f[0] && f.some(v => typeof v === 'string' && /^TOTAL|^Base|^IVA/.test(v))); y += LH; });
+  const np = doc.numPaginas(); for (let i = 0; i < np; i++) doc.enPagina(i, () => doc.texto('Página ' + (i + 1) + ' de ' + np + ' · hecho el ' + fechaES(hoy()), doc.W - M, doc.H - 18, 8, { align: 'right', color: '#6b7280' }));
+  return doc.bytes();
+}
+const nomArchivo = t => String(t).replace(/[\\\/:*?"<>|\s]+/g, '_');
+const bajarXlsx = (nombre, hoja, filas, cab) => ljBajar(new File([tablaXlsx(hoja, filas, cab)], nomArchivo(nombre) + '.xlsx', { type: LJ_MIME.xlsx }));
+const bajarPdfTabla = (nombre, titulo, info, filas, anchos) => ljBajar(new File([tablaPdf(titulo, info, filas, anchos)], nomArchivo(nombre) + '.pdf', { type: 'application/pdf' }));
+/* Una factura de Golden: líneas en tabla (el importe de Golden ya lleva el IVA) */
+function goldenFacturaTabla(f, L) {
+  const r2 = x => Math.round(x * 100) / 100, base = Number(f.base) || 0, total = Number(f.total) || 0;
+  return { info: [fechaES(f.fecha) + ' · ' + (f.cliente_nombre || '') + (f.cliente_codigo ? ' (' + f.cliente_codigo + ')' : '') + (f.borrador ? ' · BORRADOR de Golden' : ''), 'Copia de consulta sacada del histórico de Golden.'],
+    filas: [['Albarán', 'Código', 'Producto', 'Cantidad', 'Precio (€)', 'Base (€)', '% IVA', 'Importe con IVA (€)'],
+      ...L.map(l => [l.albaran || '', l.producto_codigo || '', l.descripcion || '', Number(l.cantidad) || 0, Number(l.precio) || 0, r2((Number(l.cantidad) || 0) * (Number(l.precio) || 0)), Number(l.iva) || 0, Number(l.importe) || 0]),
+      [], ['', '', 'Base imponible', '', '', base], ['', '', 'IVA', '', '', r2(total - base)], ['', '', 'TOTAL', '', '', '', '', total]] };
+}
+/* Listado de facturas en Excel o PDF, columnas como el registro de Verifactu (nº, fecha, cliente, NIF, base, cuota, total) */
+function listadoFacturas(nombre, titulo, info, cab, filas, formato) {
+  const r2 = x => Math.round(x * 100) / 100, sum = i => r2(filas.reduce((a, f) => a + (Number(f[i]) || 0), 0));
+  const tot = cab.map((c, i) => i === 0 ? 'TOTAL (' + filas.length + ')' : /€/.test(c) ? sum(i) : '');
+  const todo = [cab, ...filas, tot];
+  if (formato === 'xlsx') bajarXlsx(nombre, titulo, [[titulo], ...info.map(t => [t]), [], ...todo], info.length + 2);
+  else bajarPdfTabla(nombre, titulo, info, todo, cab.map(c => /Cliente/.test(c) ? 30 : /Nº|Fecha|NIF|Tipo/.test(c) ? 11 : 10));
+}
 const CAJA_APP = !PRACTICA;   // Caja (fase 5): publicada en la normal («Autorizo publicar», 13/11/2026). En el Modo prácticas no sale
 const BANCO_APP = !PRACTICA;   // Banco (fase 6): publicado en la normal («Autorizo publicar», 13/11/2026). En el Modo prácticas no sale
 const GES_INFORMES = [
