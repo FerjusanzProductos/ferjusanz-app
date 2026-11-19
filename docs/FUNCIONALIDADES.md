@@ -25,7 +25,7 @@ _Sacadas del historial de GitLab y de los documentos (📝). Versión normal v18
 ## Albaranes y clientes
 - Albarán con el nombre comercial para el cliente («Patata esp. freír») y **copia ROSA** en pantalla con el nombre interno y el código para Golden.
 - **Envío al entregar**: correo automático desde el Gmail de la empresa y botón de WhatsApp desde el móvil del repartidor. Si no hay móvil, el repartidor lo escribe y queda apuntado.
-- **Clientes sin IVA en azul** y con IVA en dorado (solo en las pantallas internas). Desde la v514: albarán con IVA como todos; al cobrar, casilla «🔵 ¿cuánto le rebajas?» (como mucho el IVA) que se apunta como cobro «Descuento sin IVA» y sale aparte en la caja. Cambio desde Preparar, la ficha o al confirmar previstos.
+- **Clientes sin IVA en azul** y con IVA en dorado (solo en las pantallas internas). Desde la v514: albarán con IVA como todos; al cobrar, casilla «🔵 ¿cuánto le rebajas?» (como mucho el IVA) que se apunta como cobro «Descuento sin IVA» y sale aparte en la caja. Desde la v516, bajo el total sale «A COBRAR» con lo que paga de verdad. Cambio desde Preparar, la ficha o al confirmar previstos.
 - **Portal de clientes privado**: albaranes con el descuento restado, «Guardarlo en mi WhatsApp» y recuadro para dejar móvil y correo (la oficina lo revisa y lo pasa a la ficha). QR.
 - «Móviles y correos de clientes».
 
