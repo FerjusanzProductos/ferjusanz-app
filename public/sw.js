@@ -1,7 +1,7 @@
 // Service worker de Ferjusanz: permite abrir la app sin conexión.
 // Guarda la propia app y la librería de Supabase. Los datos NUNCA se guardan aquí
 // (las llamadas a supabase.co siempre van a la red).
-const CACHE = 'ferjusanz-v513';
+const CACHE = 'ferjusanz-v517';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png?v=sol', 'icon-512.png?v=sol', 'pres/logo.png', 'pres/logo.jpg', 'pres/etiqueta.jpg'];
 // Librería de Supabase (la misma dirección que usa index.html): se guarda en la instalación
 // para que la app arranque aunque no haya conexión.

@@ -36,7 +36,7 @@ Cristian,Daniel, Fernando Sanz padre y Fermando Sanz hijo reparten y preparan pe
 ## 5. Administración
 - El **90-95 % de los albaranes se envía**, no se imprime. La copia ROSA (con el código de Golden) se ve en pantalla. 📝
 - **Se factura siempre en Golden Soft**, no en la app. La secretaria teclea en Golden con el código de la copia rosa. 📝
-- Clientes **sin IVA (azul)**: pagan el total sin IVA con la línea «Descuento por productos»; el IVA sigue constando en el albarán. Es privado y no va a la gestoría. 📝
+- Clientes **sin IVA (azul)** (desde 19/11/2026): albarán con IVA como todos; el repartidor les rebaja a mano al cobrar y queda apuntado como «🔵 Descuento sin IVA» (lo pierde la empresa). ✅
 - Numeración de albaranes: al empezar de verdad, sigue la de Golden (serie F). 📝
 - Portal de clientes privado con sus albaranes; QR para dejar móvil y correo. 📝
 - Cobros y deudas: la app muestra las deudas (aviso a los 30 días en «Lo de hoy»). 

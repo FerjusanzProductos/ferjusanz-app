@@ -112,7 +112,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Clientes **sin IVA = azul**, con IVA = dorado (solo en pantallas internas; el cliente nunca lo ve).
 - Clientes en azul (sin IVA) a 10/11/2026: **Bar Camarero (BACAM)**, **Bar La Torre (PVP)**, **Bar Andorra (BAAND)**, **Bar Delfín** y **Frutas Pedro** (fichas provisionales). Pendiente: que Fernando confirme el resto de la lista.
 - **«Bar Delfín» y «Bar Delfines» (DEFINES) NO son el mismo cliente** (Fernando, 16/11/2026). Son dos fichas distintas: Bar Delfín es sin IVA (azul); Bar Delfines (DEFINES) va con IVA. No juntarlas ni confundirlas.
-- A los azules se les aplica la línea **«Descuento por productos»** (igual al IVA): pagan el total sin IVA; el IVA sigue en el albarán.
+- **Desde el 19/11/2026 (Tito): a los azules se les trata igual que al resto**: albarán y factura con su IVA, sin la línea «Descuento por productos». El IVA se declara entero. Al cobrar, el repartidor les rebaja a mano unos euros (como mucho el IVA del albarán) y queda apuntado como cobro «🔵 Descuento sin IVA» (no es dinero; esa diferencia la pierde la empresa). Sale aparte en la caja del día, en «Por repartidor», en el resumen del día y en el Excel de cobros. Nada se esconde: no se lleva ninguna venta fuera de la facturación.
 - **Hasta el 31/12/2026 se factura en Golden Soft**, no desde la app. **Desde el 1/1/2027 se factura en la app** (plan en `docs/PLAN_FACTURACION.md`). La copia ROSA del albarán muestra el nombre interno y el código para teclearlo bien.
 
 ## Envío del albarán al cliente (desde 10/11/2026)
