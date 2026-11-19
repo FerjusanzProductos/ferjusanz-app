@@ -4236,6 +4236,14 @@ function repetirTutorial() { try { LS.set(tourClave(), 0); LS.set('fj_tip_' + (s
 /*GOLDEN_INICIO*/
 /* ---------- Histórico de Golden (solo consulta): facturas ya emitidas en Golden .Net ---------- */
 let _golden = null;
+/* Compras de Golden con la misma forma que las ventas (Jorge, 19/11/2026: «ventas y compras juntas») */
+let _goldenC = null;
+async function cargarGoldenCompras() {
+  if (_goldenC) return _goldenC; const todo = [];
+  for (let d = 0; d < 50000; d += 1000) { const r = await sb.from('golden_compras').select('*').order('fecha', { ascending: false }).range(d, d + 999); if (r.error) throw r.error;
+    todo.push(...(r.data || []).map(c => ({ numero: c.numero, fecha: c.fecha, cliente_codigo: c.proveedor_codigo, cliente_nombre: c.proveedor_nombre, base: c.base, total: c.total, su_numero: c.su_numero, compra: true, borrador: false, tipo: 'Compra' }))); if ((r.data || []).length < 1000) break; }
+  _goldenC = todo; return todo;
+}
 async function cargarGolden() {
   if (_golden) return _golden; const todo = [];
   for (let d = 0; d < 20000; d += 1000) { const r = await sb.from('golden_facturas').select('*').order('fecha', { ascending: false }).range(d, d + 999); if (r.error) throw r.error; todo.push(...(r.data || [])); if ((r.data || []).length < 1000) break; }
@@ -4243,20 +4251,21 @@ async function cargarGolden() {
 }
 async function abrirFacturaGolden(f) {
   const cuerpo = h('div', {}, h('p', { class: 'vacio' }, 'Cargando líneas…'));
-  hoja('Factura ' + f.numero, h('div', {}, h('div', { class: 'sub' }, fechaES(f.fecha) + ' · ' + (f.cliente_nombre || '') + ' · ' + (f.tipo || '')), f.borrador ? h('div', { class: 'aviso-card' }, 'Es un BORRADOR de Golden: no es una factura emitida.') : null, cuerpo,
+  hoja((f.compra ? 'Compra ' : 'Factura ') + f.numero, h('div', {}, h('div', { class: 'sub' }, fechaES(f.fecha) + ' · ' + (f.su_numero ? 'su nº ' + f.su_numero + ' · ' : '') + (f.cliente_nombre || '') + ' · ' + (f.tipo || '')), f.borrador ? h('div', { class: 'aviso-card' }, 'Es un BORRADOR de Golden: no es una factura emitida.') : null, cuerpo,
     h('div', { class: 'card', style: 'margin-top:8px' }, h('div', { class: 'fila' }, h('span', {}, 'Base imponible'), h('b', {}, eur(f.base) + '\u00a0€')), h('div', { class: 'fila' }, h('span', {}, 'Total con IVA'), h('b', {}, eur(f.total) + '\u00a0€')))));
   try {
-    const r = await sb.from('golden_lineas').select('*').eq('factura_numero', f.numero).order('orden', { ascending: true }); if (r.error) throw r.error;
-    const t = () => goldenFacturaTabla(f, r.data || []), nom = 'Factura_' + f.numero;
+    const r = f.compra ? await sb.from('golden_compras_lineas').select('*').eq('compra_numero', f.numero).order('orden', { ascending: true }) : await sb.from('golden_lineas').select('*').eq('factura_numero', f.numero).order('orden', { ascending: true }); if (r.error) throw r.error;
+    if (f.compra) r.data = (r.data || []).map(l => Object.assign({}, l, { albaran: '', importe: Math.round((Number(l.neto) || 0) * (1 + (Number(l.iva) || 0) / 100) * 100) / 100 }));
+    const t = () => goldenFacturaTabla(f, r.data || []), tit = (f.compra ? 'Compra ' : 'Factura ') + f.numero, nom = tit.replace(' ', '_');
     const kids = [h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px' },
-      h('button', { class: 'guardar', onclick: () => { const x = t(); bajarPdfTabla(nom, 'Factura ' + f.numero, x.info, x.filas, [16, 9, 34, 9, 9, 10, 7, 13]); } }, '📄 PDF'),
-      h('button', { class: 'ghost', onclick: () => { const x = t(); bajarXlsx(nom, 'Factura ' + f.numero, [['Factura ' + f.numero], ...x.info.map(i => [i]), [], ...x.filas], x.info.length + 2); } }, '📊 Excel'))]; let alb = null;
+      h('button', { class: 'guardar', onclick: () => { const x = t(); bajarPdfTabla(nom, tit, x.info, x.filas, [16, 9, 34, 9, 9, 10, 7, 13]); } }, '📄 PDF'),
+      h('button', { class: 'ghost', onclick: () => { const x = t(); bajarXlsx(nom, tit, [[tit], ...x.info.map(i => [i]), [], ...x.filas], x.info.length + 2); } }, '📊 Excel'))]; let alb = null;
     (r.data || []).forEach(l => { if (l.albaran !== alb) { alb = l.albaran; if (alb) kids.push(h('div', { class: 'letra' }, alb)); }
       kids.push(h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:15px' }, l.descripcion), h('div', { class: 'sub' }, num(l.cantidad) + ' × ' + eur(l.precio) + '\u00a0€' + (l.iva ? ' · IVA ' + num(l.iva) + ' %' : ''))), h('b', {}, eur(l.importe) + '\u00a0€'))); });
     cuerpo.replaceChildren(...(kids.length ? kids : [h('p', { class: 'vacio' }, 'Sin líneas.')]));
   } catch (e) { cuerpo.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
 }
-const filaFacturaGolden = (f, sinCobrar) => h('div', { class: 'card tap', onclick: () => abrirFacturaGolden(f) }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, 'Factura ' + f.numero), h('div', { class: 'sub' }, fechaES(f.fecha) + (f.cliente_nombre ? ' · ' + f.cliente_nombre : ''))), h('div', { style: 'text-align:right' }, h('b', {}, eur(f.total) + '\u00a0€'), f.borrador ? h('div', {}, h('span', { class: 'badge' }, 'Borrador')) : null, sinCobrar ? h('div', {}, h('span', { class: 'badge', style: 'background:var(--rojo);color:#fff' }, 'Sin cobrar')) : null)));
+const filaFacturaGolden = (f, sinCobrar) => h('div', { class: 'card tap', onclick: () => abrirFacturaGolden(f) }, h('div', { class: 'fila' }, h('div', {}, h('div', { class: 'nombre' }, (f.compra ? 'Compra ' : 'Factura ') + f.numero + (f.su_numero ? ' · su nº ' + f.su_numero : '')), h('div', { class: 'sub' }, fechaES(f.fecha) + (f.cliente_nombre ? ' · ' + f.cliente_nombre : ''))), h('div', { style: 'text-align:right' }, h('b', {}, eur(f.total) + '\u00a0€'), f.borrador ? h('div', {}, h('span', { class: 'badge' }, 'Borrador')) : null, sinCobrar ? h('div', {}, h('span', { class: 'badge', style: 'background:var(--rojo);color:#fff' }, 'Sin cobrar')) : null)));
 /* Para la ficha del cliente */
 function panelGoldenCliente(c) {
   const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando historial de Golden…'));
@@ -4272,6 +4281,8 @@ function panelGoldenCliente(c) {
 function vistaGolden() {
   state.view = 'golden'; let modo = LS.get('fj_gold_modo', 'facturas'), borr = LS.get('fj_gold_borr', false), mes = '', texto = '', tope = 60, datos = null; const textoIni = (state.params && state.params.texto) || ''; if (textoIni) { modo = 'facturas'; texto = sinTilde(limpiaBusqueda(textoIni)); }
   const cont = h('div', {}), chips = h('div', { class: 'chips' }), info = h('p', { class: 'sub' }), filtros = h('div', {});
+  let tipo = textoIni ? 'ventas' : LS.get('fj_gold_tipo', 'ventas'); const tipos = h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px' });
+  const pintaTipos = () => tipos.replaceChildren(...[['ventas', '📗 Ventas'], ['compras', '📕 Compras']].map(([k, t]) => h('button', { class: tipo === k ? 'guardar' : 'ghost', style: 'min-height:48px;font-size:17px', onclick: () => { if (tipo === k) return; tipo = k; LS.set('fj_gold_tipo', k); prodSet = null; iProd.value = ''; tope = 60; pintaTipos(); cargarTipo(); } }, t)));
   const bus = h('input', { placeholder: 'Buscar cliente o nº de factura…', value: textoIni, oninput: debounce(() => { texto = sinTilde(limpiaBusqueda(bus.value)); tope = 60; pintar(); }, 250) });
   const selMes = h('select', { onchange: () => { mes = selMes.value; tope = 60; pintar(); } }, h('option', { value: '' }, 'Todo 2026'), ...['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'].map(m => h('option', { value: '2026-' + m }, ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][+m])));
   const cb = h('input', { type: 'checkbox', style: 'width:24px;height:24px;min-height:0;flex:none;padding:0', checked: borr, onchange: () => { borr = cb.checked; LS.set('fj_gold_borr', borr); tope = 60; pintar(); } });
@@ -4279,21 +4290,22 @@ function vistaGolden() {
   let desde = '', hasta = '', prodSet = null, ultLista = [];
   const iDesde = h('input', { type: 'date', onchange: () => { desde = iDesde.value; tope = 60; pintar(); } }), iHasta = h('input', { type: 'date', onchange: () => { hasta = iHasta.value; tope = 60; pintar(); } });
   const iProd = h('input', { placeholder: 'Producto (ej. tomate pera)…', oninput: debounce(async () => { const t = limpiaBusqueda(iProd.value).trim(); if (t.length < 3) { prodSet = null; pintar(); return; }
-    try { const q = await sb.from('golden_lineas').select('factura_numero').ilike('descripcion', '%' + t + '%').limit(20000); if (q.error) throw q.error; prodSet = new Set((q.data || []).map(x => x.factura_numero)); } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); prodSet = null; } tope = 60; pintar(); }, 400) });
+    try { const q = tipo === 'compras' ? await sb.from('golden_compras_lineas').select('compra_numero').ilike('descripcion', '%' + t + '%').limit(20000) : await sb.from('golden_lineas').select('factura_numero').ilike('descripcion', '%' + t + '%').limit(20000); if (q.error) throw q.error; prodSet = new Set((q.data || []).map(x => x.factura_numero || x.compra_numero)); } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); prodSet = null; } tope = 60; pintar(); }, 400) });
   async function exportar(formato) {
     if (!ultLista.length) { toast('No hay facturas con este filtro.', 'err'); return; }
-    let nif = {}; try { const q = await sb.from('clientes').select('codigo,nif').range(0, 9999); if (!q.error) (q.data || []).forEach(c => { if (c.codigo) nif[String(c.codigo).toUpperCase()] = c.nif || ''; }); } catch (e) { }
+    const C = tipo === 'compras'; let nif = {}; try { const q = await sb.from(C ? 'proveedores' : 'clientes').select('codigo,nif').range(0, 9999); if (!q.error) (q.data || []).forEach(c => { if (c.codigo) nif[String(c.codigo).toUpperCase()] = c.nif || ''; }); } catch (e) { }
     const r2 = x => Math.round(x * 100) / 100;
     const filtro = [desde || hasta ? 'Fechas: ' + (desde ? fechaES(desde) : 'inicio') + ' – ' + (hasta ? fechaES(hasta) : 'hoy') : mes ? 'Mes: ' + mes.split('-').reverse().join('/') : 'Todo 2026', texto ? 'Cliente o nº: «' + bus.value.trim() + '»' : '', prodSet ? 'Producto: «' + iProd.value.trim() + '»' : '', borr ? 'Con borradores' : ''].filter(Boolean).join(' · ');
-    listadoFacturas('Facturas_Golden_' + hoy(), 'Facturas de Golden', [filtro, 'Sacado del histórico de Golden (solo consulta).'], ['Nº factura', 'Fecha', 'Código cliente', 'Cliente', 'NIF', 'Base (€)', 'IVA (€)', 'Total (€)'],
-      ultLista.map(f => [f.numero, f.fecha, f.cliente_codigo || '', f.cliente_nombre || '', nif[String(f.cliente_codigo || '').toUpperCase()] || '', Number(f.base) || 0, r2((Number(f.total) || 0) - (Number(f.base) || 0)), Number(f.total) || 0]), formato);
+    listadoFacturas((C ? 'Compras_Golden_' : 'Facturas_Golden_') + hoy(), C ? 'Compras de Golden' : 'Facturas de Golden', [filtro, 'Sacado del histórico de Golden (solo consulta).'], C ? ['Nº en Golden', 'Fecha', 'Nº del proveedor', 'Código proveedor', 'Proveedor', 'NIF', 'Base (€)', 'IVA (€)', 'Total (€)'] : ['Nº factura', 'Fecha', 'Código cliente', 'Cliente', 'NIF', 'Base (€)', 'IVA (€)', 'Total (€)'],
+      ultLista.map(f => [f.numero, f.fecha, ...(C ? [f.su_numero || ''] : []), f.cliente_codigo || '', f.cliente_nombre || '', nif[String(f.cliente_codigo || '').toUpperCase()] || '', Number(f.base) || 0, r2((Number(f.total) || 0) - (Number(f.base) || 0)), Number(f.total) || 0]), formato);
   }
   const enFechas = x => (!desde || x >= desde) && (!hasta || x <= hasta);
   function base() { return (datos || []).filter(f => (borr || !f.borrador) && (!mes || f.fecha.startsWith(mes)) && enFechas(f.fecha)); }
   function pintar() {
+    if (tipo === 'compras') modo = 'facturas'; chips.style.display = tipo === 'compras' ? 'none' : '';
     chips.replaceChildren(...[['facturas', 'Facturas'], ['clientes', 'Por cliente'], ['productos', 'Por producto']].map(([m, n]) => h('button', { class: 'chip' + (modo === m ? ' on' : ''), onclick: () => { modo = m; LS.set('fj_gold_modo', m); tope = 60; pintar(); } }, n)));
     iProd.style.display = modo === 'facturas' ? '' : 'none';
-    bus.placeholder = modo === 'productos' ? 'Escribe un producto (ej. tomate pera)…' : 'Buscar cliente o nº de factura…'; if (!datos) return;
+    bus.placeholder = modo === 'productos' ? 'Escribe un producto (ej. tomate pera)…' : tipo === 'compras' ? 'Buscar proveedor o nº…' : 'Buscar cliente o nº de factura…'; if (!datos) return;
     const b = base(); const tot = b.reduce((a, f) => a + Number(f.total || 0), 0);
     if (modo === 'productos') { info.textContent = ''; return; }
     if (modo === 'clientes') {
@@ -4322,10 +4334,12 @@ function vistaGolden() {
   filtros.replaceChildren(h('div', { style: 'display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end' }, h('label', { class: 'campo' }, 'Periodo', selMes), h('label', { style: 'display:flex;gap:8px;align-items:center;font-size:14px;padding-bottom:12px' }, cb, h('span', {}, 'Con borradores'))),
     h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px' }, h('label', { class: 'campo' }, 'Desde', iDesde), h('label', { class: 'campo' }, 'Hasta', iHasta)), iProd);
   iProd.title = 'Solo las facturas que llevan ese producto';
-  $app.replaceChildren(shell('Histórico de Golden', h('div', {}, h('div', { class: 'aviso-card' }, 'Solo consulta: son las facturas que ya están hechas en Golden (2026). Aquí no se puede cambiar nada.'), chips, filtros, bus, info, cont), { volver: volverIni })); renderBanner(); pintar();
-  cont.replaceChildren(h('p', { class: 'vacio' }, 'Cargando facturas de Golden…'));
-  cargarGolden().then(d => { datos = d; if (!d.length) { cont.replaceChildren(h('p', { class: 'vacio' }, 'Todavía no hay datos de Golden cargados. Hay que ejecutar la Parte 35 y subir los dos archivos CSV.')); return; } pintar(); if (modo === 'productos') cont.replaceChildren(h('p', { class: 'vacio' }, 'Escribe un producto arriba para ver cuánto se ha vendido.')); })
+  $app.replaceChildren(shell('Histórico de Golden', h('div', {}, h('div', { class: 'aviso-card' }, 'Solo consulta: son las facturas de venta y de compra que ya están en Golden. Aquí no se puede cambiar nada.'), tipos, chips, filtros, bus, info, cont), { volver: volverIni })); renderBanner(); pintaTipos(); cargarTipo();
+  function cargarTipo() {
+  datos = null; pintar(); cont.replaceChildren(h('p', { class: 'vacio' }, tipo === 'compras' ? 'Cargando compras de Golden…' : 'Cargando facturas de Golden…'));
+  (tipo === 'compras' ? cargarGoldenCompras() : cargarGolden()).then(d => { datos = d; if (!d.length) { cont.replaceChildren(h('p', { class: 'vacio' }, tipo === 'compras' ? 'No hay compras que puedas ver: solo las ve quien tiene permiso para ver márgenes (lo da un administrador).' : 'Todavía no hay datos de Golden cargados. Hay que ejecutar la Parte 35 y subir los dos archivos CSV.')); return; } pintar(); if (modo === 'productos') cont.replaceChildren(h('p', { class: 'vacio' }, 'Escribe un producto arriba para ver cuánto se ha vendido.')); })
     .catch(e => cont.replaceChildren(h('p', { class: 'err' }, /golden_|relation|schema cache/i.test((e && e.message) || '') ? 'Falta la Parte 35 de Supabase (tablas del histórico).' : (isNetErr(e) ? 'Necesitas conexión para ver el histórico.' : msgErr(e)))));
+  }
 }
 /*GOLDEN_FIN*/
 
