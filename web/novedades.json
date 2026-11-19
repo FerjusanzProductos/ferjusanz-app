@@ -239,5 +239,12 @@
   "titulo": "Temporada de calabaza",
   "texto": "En pleno otoño: para cremas, guisos y asados en la carta de noviembre.",
   "alt": "Temporada de calabaza"
+ },
+ {
+  "fecha": "2026-11-19",
+  "foto": "/wp-content/uploads/2020/09/verduras-de-temporada-de-invierno.jpg",
+  "titulo": "Temporada de brócoli",
+  "texto": "Ya entra el brócoli de invierno: para cremas, salteados y guarnición al vapor en el menú de diario.",
+  "alt": "Temporada de brócoli"
  }
 ]
