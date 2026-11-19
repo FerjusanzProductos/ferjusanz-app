@@ -246,5 +246,20 @@
   "titulo": "Temporada de brócoli",
   "texto": "Ya entra el brócoli de invierno: para cremas, salteados y guarnición al vapor en el menú de diario.",
   "alt": "Temporada de brócoli"
+ },
+ {
+  "fecha": "2026-11-19",
+  "foto": "/fotos/2026/11/novedad-2026-11-19-aguacates-recien-llegados.jpg",
+  "titulo": "Aguacates recién llegados",
+  "texto": "Palés de aguacate en la cámara, caja a caja. Dinos si los quieres para usar ya o para dentro de unos días.",
+  "alt": "Aguacates recién llegados",
+  "driveId": "1lrVTL6wX_9hx_KMJzWDeu-IrChtwrov-"
+ },
+ {
+  "fecha": "2026-11-19",
+  "foto": "/fotos/2026/11/novedad-2026-11-19-mangos.jpg",
+  "titulo": "Mangos",
+  "texto": "Palés de mango recién entrados, en su caja con papel. Para postres, zumos y bufé.",
+  "alt": "Mangos"
  }
 ]
