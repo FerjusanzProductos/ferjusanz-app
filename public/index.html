@@ -7825,8 +7825,15 @@ async function entregaPasoAPaso(id, alTerminar, opts) {
   const sinEfec = () => total != null && total >= 1000;
   /* Cliente sin IVA (azul): el repartidor le rebaja a mano al cobrar (como mucho, el IVA). Se apunta como cobro «descuento»: no es dinero, lo pierde la empresa. */
   let ivaAlb = null; const desc = h('input', { class: 'ent-input', type: 'text', inputmode: 'decimal', placeholder: '0' });
+  /* Azul: debajo del TOTAL (que siempre se ve), lo que se cobra de verdad tras la rebaja; lo ven el repartidor y el cliente */
+  const aCobrar = h('div', {});
+  const pintaACobrar = tot => { if (!cli().sin_iva || tot == null || tot <= 0.009) { aCobrar.replaceChildren(); return; } const x = Math.max(0, parseNum(desc.value) || 0);
+    aCobrar.replaceChildren(h('div', { style: 'margin-top:8px;padding:10px;border:3px solid #1d4ed8;border-radius:12px;background:#eff6ff;text-align:center' },
+      h('div', { style: 'font-size:15px;font-weight:700;color:#1d4ed8' }, x > 0.009 ? '🔵 Descuento sin IVA: −' + eur(x) + '\u00a0€' : '🔵 Descuento sin IVA: escríbelo abajo'),
+      h('div', { style: 'font-size:15px;font-weight:700;color:#1d4ed8;margin-top:4px' }, 'A COBRAR'),
+      h('div', { style: 'font-size:34px;font-weight:900;color:#1d4ed8;line-height:1.1' }, eur(Math.max(0, Math.round((tot - x) * 100) / 100)) + '\u00a0€'))); };
   const cajaDesc = (imp, tot) => { if (!cli().sin_iva || tot == null) return null;
-    desc.oninput = () => { const x = parseNum(desc.value) || 0; imp.value = String(Math.max(0, Math.round((tot - x) * 100) / 100)).replace('.', ','); };
+    desc.oninput = () => { const x = parseNum(desc.value) || 0; imp.value = String(Math.max(0, Math.round((tot - x) * 100) / 100)).replace('.', ','); pintaACobrar(tot); };
     return h('div', { class: 'ent-caja', style: 'border:2px solid #1d4ed8;background:#eff6ff' }, h('label', { class: 'campo' }, '🔵 Cliente sin IVA: ¿cuánto le rebajas? (€)', desc),
       ivaAlb > 0 ? h('div', { class: 'ent-fila' }, B('ghost', 'Todo el IVA (' + eur(ivaAlb) + '\u00a0€)', () => { desc.value = String(ivaAlb).replace('.', ','); desc.oninput(); })) : null,
       h('div', { class: 'sub' }, 'Se resta de lo que paga y sale en la caja como «Descuento sin IVA». Como mucho, el IVA del albarán.')); };
@@ -7900,13 +7907,13 @@ async function entregaPasoAPaso(id, alTerminar, opts) {
         botones.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === pago));
       };
       const botones = h('div', { class: 'ent-pagos' }, ...PAGOS_ENTREGA.map(([v, ico, txt]) => botPago(B('ent-pago', ico + ' ' + txt, () => { pago = v; pintaImp(); }), v)));
-      if (!pago) pago = tot != null && tot <= 0.009 && !faltanPr.length ? null : (contado() && !sinEfec() ? 'efectivo' : 'transferencia');
+      if (!pago) pago = tot != null && tot <= 0.009 && !faltanPr.length ? null : ((contado() || cli().sin_iva) && !sinEfec() ? 'efectivo' : 'transferencia');
       pon(cuerpo,
         avisoPrecios(),
-        h('div', { class: 'ent-total' }, h('div', { class: 'sub' }, tot != null && tot <= 0.009 && !faltanPr.length ? 'Este albarán ya está cobrado' : faltanPr.length ? 'Total con los precios que hay (IVA incluido)' : 'Total a pagar (IVA incluido)'), h('div', { class: 'ent-num' }, tot == null ? '—' : eur(tot <= 0.009 ? total : tot) + '\u00a0€'),
-          h('div', { class: 'sub' }, 'Este cliente ' + (contado() ? 'suele pagar al contado.' : 'suele pagar por transferencia o a cuenta.'))),
+        h('div', { class: 'ent-total' }, h('div', { class: 'sub' }, tot != null && tot <= 0.009 && !faltanPr.length ? 'Este albarán ya está cobrado' : faltanPr.length ? 'Total con los precios que hay (IVA incluido)' : (cli().sin_iva ? 'Total del albarán (IVA incluido)' : 'Total a pagar (IVA incluido)')), h('div', { class: 'ent-num' }, tot == null ? '—' : eur(tot <= 0.009 ? total : tot) + '\u00a0€'),
+          h('div', { class: 'sub' }, 'Este cliente ' + (contado() ? 'suele pagar al contado.' : 'suele pagar por transferencia o a cuenta.')), aCobrar),
         tot != null && tot <= 0.009 && !faltanPr.length ? null : avisoEfec(), tot != null && tot <= 0.009 && !faltanPr.length ? null : botones, zonaImp);
-      pintaImp();
+      pintaImp(); pintaACobrar(tot);
       pie.append(B('guardar', '✔ Anotado · Siguiente: enviar el albarán', () => terminar(imp, tot)), B('ghost', '← Volver', () => { paso = 1; pintar(); }));
     } else {
       titulo.textContent = 'Paso 3 de 3 · Enviarle el albarán';
@@ -7954,13 +7961,13 @@ async function entregaPasoAPaso(id, alTerminar, opts) {
       else if (p || cobrado) k.push(h('details', { class: 'ent-caja' }, h('summary', { style: 'font-weight:800;font-size:17px;cursor:pointer;padding:6px 0' }, '✍ Que firme también (si quiere)'), F.zona));
       zona.replaceChildren(...k);
     }
-    if (!pago && !cobrado) pago = contado() && !sinEfec() ? 'efectivo' : 'transferencia';
+    if (!pago && !cobrado) pago = (contado() || cli().sin_iva) && !sinEfec() ? 'efectivo' : 'transferencia';
     pon(cuerpo,
       avisoPrecios(),
-      h('div', { class: 'ent-total' }, h('div', { class: 'sub' }, cobrado ? 'Este albarán ya está cobrado' : faltanPr.length ? 'Total con los precios que hay (IVA incluido)' : 'Total a pagar (IVA incluido)'), h('div', { class: 'ent-num' }, tot == null ? '—' : eur(cobrado ? total : tot) + '\u00a0€'),
-        h('div', { class: 'sub' }, 'Este cliente ' + (contado() ? 'suele pagar al contado.' : 'suele pagar por transferencia o a cuenta.')), avisoIvaReparto(cli())),
+      h('div', { class: 'ent-total' }, h('div', { class: 'sub' }, cobrado ? 'Este albarán ya está cobrado' : faltanPr.length ? 'Total con los precios que hay (IVA incluido)' : (cli().sin_iva ? 'Total del albarán (IVA incluido)' : 'Total a pagar (IVA incluido)')), h('div', { class: 'ent-num' }, tot == null ? '—' : eur(cobrado ? total : tot) + '\u00a0€'),
+        h('div', { class: 'sub' }, 'Este cliente ' + (contado() ? 'suele pagar al contado.' : 'suele pagar por transferencia o a cuenta.')), avisoIvaReparto(cli()), aCobrar),
       cobrado ? null : avisoEfec(), cobrado ? null : grupo, zona);
-    pinta();
+    pinta(); pintaACobrar(tot);
     pie.append(B('guardar', '✔ Terminar la entrega', async () => {
         const p = PAGOS_ENTREGA.find(x => x[0] === pago);
         if (p && !p[3] && !F.hay() && !F.ya()) { F.zona.scrollIntoView({ behavior: 'smooth', block: 'start' }); if (!await confirmar('No ha firmado.\n\n¿Terminar la entrega SIN firma?')) return; }
