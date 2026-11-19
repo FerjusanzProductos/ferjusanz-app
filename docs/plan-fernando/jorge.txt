@@ -1,18 +1,5 @@
-1. CERTIFICADO DE LA EMPRESA: está en los navegadores, caduca en abril de 2028; Jorge lo manda a ferjusanzfacturas@gmail.com (19/11). Falta: ¿a nombre de quién? Contraseña en persona o por teléfono, nunca en el mismo correo.
+1. CLIENTES QUE NO QUIEREN FACTURA (antes del 30/11): la app no puede llevar ventas sin factura ni en otra app aparte (ilegal). Preguntarle por la factura simplificada (ticket) sin datos del cliente.
 
-3. CLIENTES «SIN IVA» (antes del 30/11): todo facturado; propuesta: bajarles el precio. Repasar la lista.
+2. CAJA: el saldo de partida se mira con Carmen.
 
-4. FALTA RELLENAR O DECIDIR:
-• Factura por entrega o una al mes.
-• Series 2027-0001 y R2027-0001; rectificativas como R1.
-• Saldo inicial de caja (hojas de Carmen a 16/11: CAJA1 2.749,87 €, CAJA2 24,12 €). ¿Comidas, propinas y lotería de caja: empresa o personal?
-• Golden intentó mandar 120 facturas a Hacienda el 06/02/2026: fallaron todas y salían a nombre de la C.B.
-• Furgonetas y orden SEPA siguen a nombre de la C.B.: ¿se pasan a la S.L.?
-• Domicilio fiscal: Hacienda pone 1º Izq., los papeles 3º Dcha. ¿Cuál vale?
-• Ayto. de Becerril: pide factura electrónica (FACe). ¿Cómo en 2027?
-• Factura de Ibérica FV-B-26-032668 a nombre de C.B.
-• Declaración responsable del programa: la firma Fernando o Julián (FERJUSANZ es la productora). Que confirme que Anthropic, Cloudflare y Supabase no firman (son herramientas).
-
-5. DECIRLE: ya tiene usuario en la app («He olvidado la contraseña» con abogadoonetti@hotmail.com; pruébalo tú antes). Los informes le llegan por correo del 1 al 10.
-
-YA CONTESTADO (19/11): empezar con la app el 1/1/2027; certificado hasta 04/2028. (16/11): diciembre en Golden con fecha 31/12 y Golden hasta empezar con la app; facturas guardadas 6 años; leyó el correo del trimestre; Verifactu bien como se le contó.
+YA CONTESTADO (19/11, en persona): empezar con la app el 1/1/2027; la app no manda nada a Hacienda (lo hace Jorge); no hace falta declaración responsable; factura semanal; domicilio Carare 2, 1º Izq.; comidas, propinas y lotería = gasto de empresa; SEPA a la S.L., furgonetas siguen C.B.; Golden no debía mandar a Hacienda; Becerril por FACe. Pide: PDF y Excel de cada factura y buscador por cliente, producto y fecha.

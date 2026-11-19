@@ -168,6 +168,16 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Listados para Jorge (ventas y compras): fecha, nº, nombre, NIF, CP, concepto, base, % IVA, cuota, total; una fila por tipo de IVA.
 - **El tipo de IVA siempre tiene que estar bien** (Fernando, 13/11/2026): solo tipos legales (0, 2, 4, 5, 10, 21 %) y la cuota de cada fila = base × tipo. La app lo comprueba en los listados y avisa en rojo (⛔) antes de mandar nada a Jorge.
 
+## Decidido con Jorge en persona (19/11/2026, de palabra)
+- **Se empieza a facturar con la app el 1/1/2027.** Verifactu se retrasa: la app **no manda nada a Hacienda**. Jorge ve las facturas en la app (PDF y Excel, buscador por cliente, producto y fecha), las pasa a su programa y las presenta él.
+- **Declaración responsable: no hace falta firmarla** mientras Verifactu no sea obligatorio. Claude, Cloudflare y Supabase no firman nada.
+- **Una factura por semana** por cliente (antes se dijo al mes). Al enviarla al cliente queda en **negro = entregada**; si la pide otra vez, se le reenvía.
+- **Domicilio en las facturas: C/ Carare, 2, 1º Izq., 28033 Madrid** hasta que se cambie el domicilio fiscal (se quiere en enero).
+- Comidas, propinas y lotería pagadas de caja: **gasto de la empresa**.
+- Furgonetas: siguen a nombre de la C.B. La orden SEPA se pasa a la S.L.
+- Ayuntamiento de Becerril: factura electrónica por FACe con el certificado digital.
+- **No se hace**: llevar ventas sin factura en otra app o a escondidas de Jorge (pedido el 19/11). Es ilegal (art. 29.2.j y 201 bis de la Ley General Tributaria).
+
 ## Programa de facturación propio (Verifactu) — desde el 12/11/2026
 - FERJUSANZ es la **productora** del programa de facturación de la app. Claude programa y prueba, pero **nunca firma** la declaración responsable ni dice que el programa cumple sin pruebas.
 - La app **no emite facturas reales** hasta que estén ✅ todas las pruebas de `docs/SIF_PRODUCTOR/PRUEBAS_TECNICAS.md` y haya declaración firmada de esa versión.

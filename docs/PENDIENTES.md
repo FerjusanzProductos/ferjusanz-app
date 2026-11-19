@@ -40,7 +40,7 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 ### 👤 Fernando
 - 🟡 Hablar con **Carmen** y con **Jorge** (o la gestoría) de sus funciones desde enero: oficina + clientes, objetivos y premio por escrito (https://claude.ai/artifact/R8Zor6BHenQdEi3FMbJJSn).
 - 🔴 Avisar **2-3 días antes** del día en que se empieza a usar la app de verdad.
-- 🔴 Antes del 30/11: decidir con Jorge los **clientes «sin IVA»** (todo tiene que ir facturado; si se quiere, se baja el precio). Sin esto no se puede firmar la declaración ni facturar desde la app. Y confirmar la lista.
+- 🔴 Antes del 30/11: **clientes que no quieren factura**. Tito (19/11) pidió llevarlos en otra app aparte, sin facturas: **no se hace** (ilegal, ver «No se hace» abajo). Lo legal que se puede mirar con Jorge: factura simplificada (ticket) sin datos del cliente.
 - 🟡 **Ordenador que se queda encendido (EQUIPO-2)**: es la sesión de Windows **de Carmen** (carmensegu@hotmail.com). Hecho el 18/11: Drive para ordenador solo con la cuenta de facturas (H:). Falta: (1) **Fernando**: cerrar en Chrome su sesión (Claude, Gmail, Drive, Supabase, GitHub) y salir de su perfil «F»; (2) la cuenta de facturas también deja ver en H: **CAJAS, LISTADOS JORGE, DOCUMENTACION DANIEL, ConsultasCorregidas (contraseña de Golden), DNI y certificados**: propuesta, una **cuenta de Google nueva solo para Golden** (vacía) en ese Drive (Claude le guía desde el móvil).
 - 🔴 **Pedir los datos fiscales** (nombre fiscal, NIF, dirección, CP) a los clientes que **no están en Golden** (muchos son nuevos o «sin IVA»): **LOLO** (factura del 05/11 sin datos), **La Pezuña Ibérica**, **Club Cuenda** (NIF), **Restaurante Santa Cruz / COSAN** (CP), **Papi Chicken**, **Las 3 C**, **Carnicero Santa Virginia**, **Paco Coslada**, **Bar Ángel** (NIF, CP), **Bar La Parada** (CP), **Donde Valentín**, **Bar Delfín** y **Frutas Pedro** (sin IVA), y a **ARROZ** y **CARDENAL** (lo de internet es del colegio, no del bar). Se ven en Clientes › «🧾 Faltan datos para facturar».
 - 🟡 Dejar **EQUIPO-2 encendido** (suspensión ya en «Nunca») y con la sesión de Windows abierta; Google Drive para ordenador abierto. Si quiere, quitar la sincronización del **Escritorio** (Drive › ⚙️ › Preferencias): ya no hace falta.
@@ -55,11 +55,11 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 
 ### 📂 De los papeles subidos a Drive el 18/11/2026
 - 🔴 **ITV de la furgoneta 4741 MCV: 15/12/2026.** De la **8907 MRR** (válida hasta 28/05/2026) y la **5425 KSW** (hasta 23/11/2025; falta el certificado de frío) no hay ITV en vigor en Drive: mirar las pegatinas. Las tres siguen a nombre de la **C.B.**
-- 🟡 **Orden SEPA** a nombre de la C.B. y con la cuenta en «identificador del acreedor»: rehacerla para la S.L. con el identificador que da el banco.
+- 🟡 **Orden SEPA**: pasarla a la S.L. (Jorge, 19/11), con el identificador de acreedor que da el banco. Las furgonetas se quedan a nombre de la C.B.
 - 🟡 **Certificado para contratistas** (para AF Canary Islands Studios): era de la C.B. y caducó el 13/11/2026. Sacar uno de la S.L. si lo siguen pidiendo.
 - 🟡 **Cambiar la contraseña del servidor de Golden**: está sin proteger dentro de «ConsultasCorregidas.zip» (Drive). No compartir ese archivo.
-- 🟡 **Domicilio fiscal**: Hacienda tiene «Carare 2, **1º Izq.**» y los papeles internos «3º Dcha.». Confirmar el bueno antes de facturar en 2027.
-- 🟡 **Ayuntamiento de Becerril de la Sierra** recibe factura electrónica (FACe): decidir cómo se le factura en 2027 (la app no hace ese formato).
+- 🟡 **Domicilio en las facturas: «C/ Carare, 2, 1º Izq.»** (Jorge, 19/11). **Claude**: ponerlo en «🏢 Datos de la empresa» (ahora pone solo «C/ Carare, 2»). En enero se quiere cambiar el domicilio fiscal a la oficina: entonces se cambia.
+- 🟡 **Ayuntamiento de Becerril** (FACe): en 2027 igual, factura electrónica por internet con el certificado digital (Jorge, 19/11). **Claude**: mirar cómo subirla a FACe desde el móvil (la app no hace ese formato).
 - 🟡 **Carmen**: confirmar deudas con proveedores de 2025 (Lubrimatic 16.005,84 € a 31/12/2025; Félix Catalán 5.857,28 €) y el NIF de **COSAMA** y **CONDE** (distinto en Golden y en la app).
 - 🟡 **Caja de Carmen (julio 2025–16/11/2026)**: falta la hoja **CAJA2 nº 17** (Navidad 2025; +727,36 € sin explicar entre la 16 y la 18); unos **6.547 €** de retiradas del sobre sin destino apuntado; **pagos en efectivo de más de 1.000 € a proveedores** (Madremía, Pataleta, Fernández López…). Saldos a 16/11: CAJA1 2.749,87 €, CAJA2 24,12 €. Informe en el chat del 18/11/2026.
 - 🟡 Captar clientes: revisar y enviar los **correos a los 8 prospectos** (https://claude.ai/artifact/Voa8zmukh1GScZ81XYJDaH); **Coffee, Books and Vibes**: llamar el lunes 16/11; probar la **tarjeta virtual** con un cliente; revisar `/nuevos-clientes` y grabar el **vídeo de 1 minuto**.
@@ -84,13 +84,11 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 
 ### 🧮 Jorge (contable)
 _Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/artifact/5qQe3mrM3E9wHwrQACgkmG (`docs/PREGUNTAS_JORGE.md`). Lo que conteste se quita de aquí y de esa hoja._
-- 🔴 **Verifactu: Jorge dice empezar con la app el 1/1/2027** (19/11). El 22/12 se comprueba que esté todo listo (si no, Plan B: Golden en enero). Ver `docs/FACTURACION_2027.md`.
-- 🔴 **Certificado de la empresa** (caduca 04/2028): Jorge lo manda a ferjusanzfacturas@gmail.com (19/11). Tito lo instala en Chrome del Samsung. Para la app: pasarlo de forma segura a los secretos de Supabase (Claude explica cómo; contraseña nunca por chat ni en el mismo correo) y hacer la fase 8d. **Nada real a Hacienda sin el permiso de Tito.**
-- 🟡 Saldo inicial de caja (las hojas de Carmen dan a 16/11: CAJA1 2.749,87 € y CAJA2 24,12 €). Y si **comidas, propinas y lotería** pagadas de caja son gasto de la empresa o personal.
-- 🟡 **Golden y VERI\*FACTU**: el 06/02/2026 Golden intentó mandar 120 facturas (P/19451–P/19569) a Hacienda; fallaron todas (sin certificado) y el emisor salía como **FERJUSANZ C.B.**
-- 🟡 Furgonetas a nombre de la C.B.: ¿se pasan a la S.L.?
-- 🟡 Factura por entrega o mensual.
-- 🟡 Avisarle (e Ibérica) de la factura FV-B-26-032668 a nombre de FERJUSANZ C.B.
+- 🔴 **Empezar a facturar con la app el 1/1/2027** (Jorge, 19/11). La app **no manda nada a Hacienda**: Jorge ve las facturas, las pasa a su programa y las presenta él. Si el retraso de Verifactu **no** saliera en el BOE antes del 1/1, avisar a Jorge (la tarea de los lunes lo mira).
+- 🔴 **Claude — app para Jorge (pedido 19/11)**: (1) al abrir una factura, **PDF y Excel**; (2) buscador de facturas por **cliente, producto y fecha**, lo más parecido al registro de Verifactu; (3) **una factura por semana** por cliente (ahora es al mes); (4) al enviar una factura al cliente, que salga en **negro = entregada**, y botón para **reenviar** la anterior si la pide.
+- 🟡 **Certificado de la empresa** (caduca 04/2028): Jorge lo mandó a ferjusanzfacturas@gmail.com. Tito lo instala en Chrome del Samsung. La app **no lo necesita** (no manda nada a Hacienda): no subirlo a la app ni al chat.
+- 🟡 **Saldo inicial de caja**: mirarlo con **Carmen** (sus hojas dan a 16/11: CAJA1 2.749,87 € y CAJA2 24,12 €). Comidas, propinas y lotería de caja: gasto de la empresa (19/11).
+- 🟡 **Golden y VERI\*FACTU**: el 06/02/2026 Golden intentó mandar 120 facturas a Hacienda (fallaron, emisor C.B.). Jorge: está mal hecho, **no hay que mandar nada a Hacienda**. **Fernando**: decírselo a Carmen y que no se vuelva a activar el envío en Golden.
 
 ### 🤖 Claude (sin esperar a nadie)
 - 🟡 Revisar cada lunes si sale en el BOE el aplazamiento de Verifactu: **lo hace sola** la tarea automática «Verifactu en el BOE (lunes)» (`trig_01Q2osxJtGHJMTo3oksNiXG7`, lunes 9:47 hora de Madrid, avisa al móvil). Se quita cuando salga o pase el 22/12.
