@@ -39,7 +39,7 @@
         '<sf:IDFactura>' + t('IDEmisorFactura', r.nif_emisor) + t('NumSerieFactura', r.num_serie) + t('FechaExpedicionFactura', r.fecha_expedicion) + '</sf:IDFactura>' +
         t('NombreRazonEmisor', corta(e.razon_social, 120)) + t('TipoFactura', r.tipo_factura) + rect +
         t('DescripcionOperacion', corta(f.concepto, 500)) +
-        '<sf:Destinatarios><sf:IDDestinatario>' + t('NombreRazon', corta(c.nombre, 120)) + t('NIF', nifCli) + '</sf:IDDestinatario></sf:Destinatarios>' +
+        (r.tipo_factura === 'F2' ? '' : '<sf:Destinatarios><sf:IDDestinatario>' + t('NombreRazon', corta(c.nombre, 120)) + t('NIF', nifCli) + '</sf:IDDestinatario></sf:Destinatarios>') +   // F2 (ticket): sin destinatario
         '<sf:Desglose>' + desglose + '</sf:Desglose>' + t('CuotaTotal', r.cuota_total) + t('ImporteTotal', r.importe_total) +
         '<sf:Encadenamiento>' + enc + '</sf:Encadenamiento>' +
         '<sf:SistemaInformatico>' + t('NombreRazon', corta(e.razon_social, 120)) + t('NIF', r.nif_emisor) + t('NombreSistemaInformatico', 'FERJUSANZ APP') +
