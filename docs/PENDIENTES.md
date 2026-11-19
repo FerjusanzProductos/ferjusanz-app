@@ -104,7 +104,7 @@ _Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/arti
 - Activar el **seguimiento comercial** (rama `seguimiento-app`, SQL `20261111c_seguimiento_diario.sql`) y quitar la tarea `trig_016V26ajMMcPLQ3Zvg1C2dw2`.
 
 ### ⏸ Aparcado (hasta que Fernando lo diga)
-- Facturar de verdad desde la app (tras el 22/12): encender la emisión, declaración firmada (**la firma un administrador, nunca Claude**), envío VERI\*FACTU. Plan: `docs/PLAN_FACTURACION.md`, `docs/SIF_PRODUCTOR/LEEME.md`.
+- Encender las facturas de la app en la normal el 1/1/2027 (Jorge, 19/11: la app no manda nada a Hacienda ni hace falta declaración; las presenta Jorge con su programa). Plan: `docs/PLAN_FACTURACION.md`.
 - Harvey v2 en la normal (`harvey-v2` «investiga y prepara la oferta») tras probarlo en pruebas; preparar pedido desde WhatsApp y recordatorios de cobro.
 - **WhatsApp automático** (`docs/PLAN_WHATSAPP.md`) · **Tienda online** (`docs/PLAN_TIENDA.md`) · anuncios de Meta y seguimiento automático por correo a contactos.
 - Agentes: ofertas semanales, cobros, buscador de clientes con cocina propia.
