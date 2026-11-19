@@ -46,7 +46,7 @@ const filasDeuda = deudores.map(d => `<li><b>${esc(d.nombre.trim())}</b> · ${eu
 const ahora = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
 const tarjeta = (cifra, texto, aviso) => `<div class="t${aviso ? ' aviso' : ''}"><b>${cifra}</b><span>${texto}</span></div>`;
 
-writeFileSync(new URL('../docs/panel.html', import.meta.url), `<title>Panel Ferjusanz</title>
+const html = `<title>Panel Ferjusanz</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* Una columna para el móvil: cifras clave arriba y bloques por tema debajo. */
@@ -112,5 +112,13 @@ ${filasVentas}
 <li><a href="https://claude.ai/artifact/5qQe3mrM3E9wHwrQACgkmG">Reunión con Jorge</a></li></ul></section>
 <p class="pie">Margen, compras y cobros: solo para Fernando, su padre y Jorge. Se actualiza solo cada mañana.</p>
 </main>
-`);
+`;
+writeFileSync(new URL('../docs/panel.html', import.meta.url), html);
+// También dentro de la app (📊 Panel, solo oficina y admin), en la real y en pruebas: así Jorge lo consulta sin Claude.
+const dia = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Madrid' });
+for (const ref of ['hvydnjaswdexttogsyen', 'pbeuxbwbpmlanbhhnpgy']) {
+  const r = await fetch('https://api.supabase.com/v1/projects/' + ref + '/database/query', { method: 'POST', headers: { Authorization: 'Bearer proxy-injected', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: `insert into public.panel_empresa (fecha, html) values ('${dia}', $p$${html.replaceAll('$p$', '')}$p$) on conflict (fecha) do update set html = excluded.html, creado = now()` }) });
+  console.log('app', ref, r.ok ? 'guardado' : 'ERROR ' + r.status + ' ' + (await r.text()).slice(0, 150));
+}
 console.log('docs/panel.html: Golden hasta', g.hasta, '· meses', ventas.length, '· deudores', deudores.length);
