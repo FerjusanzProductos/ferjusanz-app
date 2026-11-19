@@ -1329,7 +1329,9 @@ window.addEventListener('popstate', e => {
 });
 const VISTAS_HUB = ['lista', 'semana', 'carga', 'entregas', 'albaranes', 'calendario', 'ruta', 'nuevo', 'importar'];
 const VISTAS_PEDIDOS = VISTAS_HUB.concat(['pedido', 'albaran', 'rapido']);
-function tabsRol() { return [['inicio', 'Inicio', '🏠'], ['lista', 'Preparar', '📋'], ['carga', 'Carga', '🚚'], ['preciosp', 'Precios', '💶'], ['cobros', 'Cobros', '💰']]; }
+/* Menú de Jorge (contable): solo facturas, análisis y lo del equipo (Tito, 19/11/2026: «que él lo vea todo claro»). Solo cambia lo que ve, no los permisos. */
+function vistaJorge() { return esOficina() && LS.get('fj_vista', /jorge/i.test((state.perfil || {}).nombre || '') ? 'jorge' : 'todo') === 'jorge'; }
+function tabsRol() { return vistaJorge() ? [['inicio', 'Inicio', '🏠'], ['golden', 'Histórico', '🗂️'], [FACTURAR_APP ? 'facturasapp' : 'facturascli', 'Facturas', '📄'], ['chat', 'Chat', '💬'], ['ayuda', 'Ayuda', '❓']] : [['inicio', 'Inicio', '🏠'], ['lista', 'Preparar', '📋'], ['carga', 'Carga', '🚚'], ['preciosp', 'Precios', '💶'], ['cobros', 'Cobros', '💰']]; }
 /* Solo se marca la pestaña de la pantalla en la que estás (antes «Apuntar pedido» marcaba «Preparar») */
 function tabActiva(tabs) {
   const v = state.view; if (tabs.some(t => t[0] === v)) return v;
@@ -6018,9 +6020,9 @@ function vistaMas() {
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('❓', 'Ayuda y guía', () => go('ayuda'), T), c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
   /* «Ver arriba»: cada uno elige qué círculo quiere primero (se recuerda en este móvil). Los círculos se MUEVEN, no se duplican. */
   const ESPECIAL = { reparto: ['Preparar y repartir', ['Preparar', 'Camino de los pedidos', 'Hoja de carga', 'Reparto', 'Entregas', 'Albaranes', 'Ruta', 'Cobros']], compra: ['Compra en Mercamadrid', ['Hoja de compra para hoy', 'A quién compramos hoy', 'Compras', 'Facturas de proveedores', 'Precios de compra del día', 'Hoja de carga']] };
-  const modoV = LS.get('fj_vista', state.perfil.rol === 'compras' ? 'compra' : state.perfil.rol === 'preparador' ? 'reparto' : 'todo');
+  const modoV = vistaJorge() ? 'jorge' : LS.get('fj_vista', state.perfil.rol === 'compras' ? 'compra' : state.perfil.rol === 'preparador' ? 'reparto' : 'todo');
   const lab = n => { const l = n.querySelector('.l'); return l ? (n.title || l.textContent) : ''; };
-  let lista = defs; const esp = ESPECIAL[modoV];
+  let lista = modoV === 'jorge' ? defs.filter(([t]) => t === 'Facturas y análisis' || t === 'Equipo y avisos') : defs; const esp = ESPECIAL[modoV];
   if (esp) {
     const pool = {}; defs.forEach(([, it]) => it.forEach(n => { pool[lab(n)] = n; })); const sacados = esp[1].filter(x => pool[x]);
     lista = [[esp[0], sacados.map(x => pool[x])]].concat(defs.map(([t, it]) => [t, it.filter(n => !sacados.includes(lab(n)))]));
@@ -6030,7 +6032,7 @@ function vistaMas() {
   const enCirculos = LS.get('fj_menu_circ', false);
   const cambiaMenu = h('button', { class: 'ghost', style: 'width:100%;min-height:48px;margin-top:14px', onclick: () => { LS.set('fj_menu_circ', !enCirculos); vistaMas(); } }, enCirculos ? '▦ Ver el menú nuevo, más corto' : '◯ Ver el menú en círculos, como antes');
   /* Elegir qué va arriba en grande: en UNA línea (antes «Compra» se quedaba sola abajo) */
-  const filtro = h('div', { class: 'ini-filtro' }, h('span', { class: 'sub' }, 'Arriba:'), ...[['todo', 'Todo'], ['reparto', '🧑‍✈️ Reparto'], ['compra', '🛒 Compra']].map(([m, n]) => h('button', { class: 'chip' + (modoV === m ? ' on' : ''), title: m === 'reparto' ? 'Preparar y repartir' : m === 'compra' ? 'Compra en Mercamadrid' : 'Todo', onclick: () => { LS.set('fj_vista', m); vistaMas(); } }, n)));
+  const filtro = h('div', { class: 'ini-filtro' }, h('span', { class: 'sub' }, 'Arriba:'), ...[['todo', 'Todo'], ['reparto', '🧑‍✈️ Reparto'], ['compra', '🛒 Compra']].concat(esOficina() ? [['jorge', '🧾 Jorge']] : []).map(([m, n]) => h('button', { class: 'chip' + (modoV === m ? ' on' : ''), title: m === 'jorge' ? 'Solo facturas, análisis y equipo (el menú de Jorge)' : m === 'reparto' ? 'Preparar y repartir' : m === 'compra' ? 'Compra en Mercamadrid' : 'Todo', onclick: () => { LS.set('fj_vista', m); vistaMas(); } }, n)));
   const [saludo, ...banners] = k; const resto = []; let bloqueGrande = null;
   if (enCirculos) lista.forEach(([t, it]) => resto.push(...rosco(t, ...it)));
   else {
@@ -6038,7 +6040,8 @@ function vistaMas() {
        debajo, todo lo demás en grupos que se abren con un toque (se recuerda cuáles dejas abiertos). Nada se quita: los botones se MUEVEN. */
     const pool = {}; lista.forEach(([, it]) => it.forEach(n => { pool[lab(n)] = n; }));
     pool['Calendario'] = c('📅', 'Calendario', () => go('calendario'), '#ea580c');
-    const PRINC = modoV === 'reparto' ? ['Preparar', 'Hoja de carga', 'Reparto', 'Ruta', 'Entregas', 'Sobrante', 'Poner precios', 'Cobros', 'Camino de los pedidos', 'Albaranes', 'Calendario']
+    const PRINC = modoV === 'jorge' ? (lista.find(([t]) => t === 'Facturas y análisis') || [, []])[1].map(lab).concat(['Chat', 'Ayuda y guía'])
+      : modoV === 'reparto' ? ['Preparar', 'Hoja de carga', 'Reparto', 'Ruta', 'Entregas', 'Sobrante', 'Poner precios', 'Cobros', 'Camino de los pedidos', 'Albaranes', 'Calendario']
       : modoV === 'compra' ? ['Hoja de compra para hoy', 'Precios de compra del día', 'A quién compramos hoy', 'Sobrante', 'Facturas de proveedores', 'Compras', 'Calendario']
       : ['Apuntar pedido', 'Preparar', 'Hoja de carga', 'Reparto', 'Ruta', 'Hoja de compra para hoy', 'Precios de compra del día', 'Sobrante', 'Poner precios', 'Cobros', 'Calendario'];
     const GRANDE_TXT = { 'Hoja de compra para hoy': 'Compra de hoy', 'Precios de compra del día': 'Precios de compra', 'Camino de los pedidos': 'Camino pedidos', 'Facturas de proveedores': 'Facturas proveedor', 'A quién compramos hoy': 'A quién compramos' };
@@ -6053,7 +6056,7 @@ function vistaMas() {
       h('summary', {}, ({ 'Trabajo diario': '🧺 ', 'Entregas y pedidos': '🚚 ', 'Compras y mercancía': '🛒 ', 'Clientes y productos': '👥 ', 'Facturas y análisis': '🧾 ', 'Cobros y deudas': '💰 ', 'Equipo y avisos': '💬 ' }[t] || '') + t, h('span', { class: 'pend', style: 'display:none' }), h('span', { class: 'n' }, r.length + (r.length === 1 ? ' opción' : ' opciones'))), h('div', { class: 'rej' }, ...r))));
   }
   /* Harvey (lo usa solo quien hace de comercial): abajo, con lo comercial, no entre el trabajo de cada día */
-  { const i = banners.findIndex(x => x && x.classList && x.classList.contains('h2ban')); if (i >= 0) resto.push(h('div', { class: 'grupo' }, 'Comercial'), banners.splice(i, 1)[0]); }
+  { const i = modoV === 'jorge' ? -1 : banners.findIndex(x => x && x.classList && x.classList.contains('h2ban')); if (i >= 0) resto.push(h('div', { class: 'grupo' }, 'Comercial'), banners.splice(i, 1)[0]); }
   /* Acceso directo: imprimir la hoja de carga o la de compra sin entrar en menús */
   const tarj = h('div', { class: 'card', style: 'padding:10px;margin:10px 0 6px' });
   { const pintaT = () => { const dd = LS.get('fj_imp_dia', 'hoy'); tarj.replaceChildren(h('div', { class: 'fila' }, h('div', { class: 'nombre' }, '🖨 Imprimir ahora'), h('div', { class: 'chips', style: 'margin:0' }, [['hoy', 'Hoy'], ['manana', 'Mañana']].map(([v, t]) => h('button', { class: 'chip' + (dd === v ? ' on' : ''), onclick: () => { LS.set('fj_imp_dia', v); pintaT(); } }, t)))),
@@ -6062,8 +6065,10 @@ function vistaMas() {
   /* Paneles de control (páginas fijadas de Claude, se actualizan solas cada mañana): solo oficina, llevan cifras de la empresa */
   const paneles = esOficina() ? h('div', { style: 'display:flex;gap:8px;margin:8px 0' },
     h('button', { class: 'ghost', style: 'flex:1;min-height:54px;font-size:15px', onclick: () => window.open('https://claude.ai/artifact/4k7wxTzvttkdBF6xU7AWak', '_blank') }, '📊 Panel Ferjusanz'),
-    h('button', { class: 'ghost', style: 'flex:1;min-height:54px;font-size:15px', onclick: () => window.open('https://claude.ai/artifact/WomsAtCVCe1cqaQCwqd9Wh', '_blank') }, '🤝 Panel comercial')) : null;
-  k.length = 0; k.push(saludo, bmr, panelHoy(), paneles, h('div', { class: 'ini-tit' }, enCirculos ? 'Menú' : 'Lo de cada día'), filtro, bloqueGrande, tarj, ...banners, ...resto, cambiaMenu);
+    vistaJorge() ? null : h('button', { class: 'ghost', style: 'flex:1;min-height:54px;font-size:15px', onclick: () => window.open('https://claude.ai/artifact/WomsAtCVCe1cqaQCwqd9Wh', '_blank') }, '🤝 Panel comercial')) : null;
+  k.length = 0;
+  if (modoV === 'jorge') k.push(saludo, paneles, h('div', { class: 'ini-tit' }, '🧾 Facturas y análisis'), filtro, bloqueGrande, ...resto, cambiaMenu);
+  else k.push(saludo, bmr, panelHoy(), paneles, h('div', { class: 'ini-tit' }, enCirculos ? 'Menú' : 'Lo de cada día'), filtro, bloqueGrande, tarj, ...banners, ...resto, cambiaMenu);
   { const ver = h('div', { class: 'sub', style: 'text-align:center;margin-top:18px' }, 'Versión de la app: ' + APP_VERSION.replace('ferjusanz-', ''));
     const bVer = h('button', { class: 'ghost', style: 'width:100%;min-height:48px;margin-top:6px', onclick: async () => { if (await confirmar('Se cargará la última versión de la app. No se pierde ningún dato. ¿Seguir?')) actualizarApp(); } }, '🔄 Buscar versión nueva');
     k.push(ver, bVer);
