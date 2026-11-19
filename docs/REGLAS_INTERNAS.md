@@ -173,6 +173,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - **Declaración responsable: no hace falta firmarla** mientras Verifactu no sea obligatorio. Claude, Cloudflare y Supabase no firman nada.
 - **Una factura por semana** por cliente (antes se dijo al mes). Al enviarla al cliente queda en **negro = entregada**; si la pide otra vez, se le reenvía.
 - **Ticket (factura simplificada)** para el cliente que no quiere dar sus datos (Jorge dijo que sí, 19/11/2026): **sin nombre ni NIF**, con su IVA y **se declara igual** (sale en los listados de Jorge). Serie propia **T** (T2027-0001…), tope **400 € con IVA** por ticket, pago en efectivo, tarjeta, Bizum o transferencia. Un ticket no se rectifica: si está mal, se anula y se hace otro. **Nunca** se esconden ventas a Jorge ni a Hacienda.
+- **Jorge hasta el 1/1/2027** (Tito, 19/11/2026): solo **mira la app** para familiarizarse, con **datos reales** (Golden, clientes, proveedores, productos). **No se le mandan correos, avisos ni tareas** y no se le apuntan encargos: no es su labor todavía. La tarea «Panel Ferjusanz a Jorge (lunes)» sigue apagada hasta entonces.
 - **Domicilio en las facturas: C/ Carare, 2, 1º Izq., 28033 Madrid** hasta que se cambie el domicilio fiscal (se quiere en enero).
 - Comidas, propinas y lotería pagadas de caja: **gasto de la empresa**.
 - Furgonetas: siguen a nombre de la C.B. La orden SEPA se pasa a la S.L.
