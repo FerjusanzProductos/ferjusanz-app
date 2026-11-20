@@ -3,7 +3,7 @@ Copia SIEMPRE el bloque «Contexto» y debajo el de la tarea. Una tarea por conv
 
 ## Contexto (pegar siempre primero)
 Hola Claude. Háblame en español, paso a paso y pensando que trabajo desde el MÓVIL (Android, Chrome). Consúltame antes de borrar o cambiar algo importante y no publiques nada sin enseñármelo.
-Proyecto: app de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. (mayorista de fruta, verdura, patatas, huevos, setas, champiñones y legumbres en Mercamadrid). Usa el entorno «ferjusanz-app».
+Proyecto: app de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. (mayorista de patatas, frutas, verduras, huevos, setas, champiñones y legumbres en Mercamadrid). Usa el entorno «ferjusanz-app».
 1. Clona https://gitlab.com/ferjusanz-productos/ferjusanz-app.git (rama main).
 2. Antes de nada lee: LEEME.md, docs/REGLAS_INTERNAS.md, supabase/functions/harvey/LEEME.md y supabase/migrations/.
 3. Publicar la app: CLOUDFLARE_API_TOKEN=proxy-injected CLOUDFLARE_ACCOUNT_ID=9a4f085c6f3a0c2671fa344c288b3e46 npx -y wrangler@4 deploy (subiendo antes la versión de public/sw.js). Prueba antes en local (npx wrangler dev) y en Modo prácticas.

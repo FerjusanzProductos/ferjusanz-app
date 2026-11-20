@@ -16,7 +16,7 @@ const svg = (w, h, body) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 
 const L = {
  // 1 · Sello de mercado: redondo, granate, letras crema. Sirve de logo, de pegatina y de foto de perfil.
  '1-sello': svg(440, 440, `<circle cx="220" cy="220" r="210" fill="url(#gra)"/><circle cx="220" cy="220" r="188" fill="none" stroke="url(#oro)" stroke-width="2.5"/><circle cx="220" cy="220" r="128" fill="none" stroke="url(#oro)" stroke-width="1.2" opacity=".7"/>
-  <text class="t" font-size="17" letter-spacing="2.6" fill="#f3e6cf"><textPath href="#arcoA" startOffset="50%" text-anchor="middle">FRUTA · VERDURA · PATATA · HUEVOS</textPath></text>
+  <text class="t" font-size="17" letter-spacing="2.6" fill="#f3e6cf"><textPath href="#arcoA" startOffset="50%" text-anchor="middle">PATATAS · FRUTAS · VERDURAS · HUEVOS</textPath></text>
   <text class="t" font-size="19" letter-spacing="6" fill="#f3e6cf" dy="14"><textPath href="#arcoB" startOffset="50%" text-anchor="middle">AL POR MAYOR</textPath></text>
   <text x="58" y="227" class="t" font-size="16" fill="url(#oro)" text-anchor="middle">★</text><text x="382" y="227" class="t" font-size="16" fill="url(#oro)" text-anchor="middle">★</text>
   ${hoja(204, 132, .8, 'url(#verde)')}<text x="220" y="246" class="c" font-size="64" letter-spacing="1" fill="#fbf3e4" text-anchor="middle">FERJUSANZ</text>
@@ -34,10 +34,10 @@ const L = {
   <text x="241" y="172" class="t" font-size="19.5" letter-spacing="9.4" fill="#6b1216">FRESCOS AL POR MAYOR</text>`),
  // 4 · Etiqueta premium: granate y oro, como una caja de fruta de primera.
  '4-etiqueta': svg(760, 240, `<rect width="760" height="240" rx="6" fill="url(#gra)"/><rect x="12" y="12" width="736" height="216" rx="3" fill="none" stroke="url(#oro)" stroke-width="1.5"/>
-  <text x="380" y="58" class="t" font-size="15" letter-spacing="7" fill="#e9c77d" text-anchor="middle">MAYORISTA EN MADRID</text>
+  <text x="380" y="58" class="t" font-size="15" letter-spacing="7" fill="#e9c77d" text-anchor="middle">MAYORISTA EN MADRID Y ALREDEDORES · REPARTO EN SEGOVIA</text>
   <text x="380" y="160" class="c" font-size="112" letter-spacing="6" fill="url(#oro)" text-anchor="middle">FERJUSANZ</text>
   <path d="M120 186h200M440 186h200" stroke="url(#oro)" stroke-width="1.5"/>${hoja(366, 170, .7, 'url(#oro)', '#6b121688')}
-  <text x="380" y="214" class="t" font-size="14" letter-spacing="5" fill="#e9c77d" text-anchor="middle">FRUTA · VERDURA · PATATA · HUEVOS</text>`),
+  <text x="380" y="214" class="t" font-size="14" letter-spacing="5" fill="#e9c77d" text-anchor="middle">PATATAS · FRUTAS · VERDURAS · HUEVOS</text>`),
 };
 fs.mkdirSync(D + '/salida', { recursive: true });
 const b = await chromium.launch(); const p = await b.newPage({ deviceScaleFactor: 2 });
@@ -54,7 +54,7 @@ Object.assign(L, {
  '5-amanecer': svg(760, 240, `<g transform="translate(0 6)">${sol(140, 160, 100)}</g>${nombre(280, 128, 'FRUTA · VERDURA · PATATA · HUEVOS', 92)}`),
  '6-naranja': svg(760, 240, `${naranja(130, 120, 92)}${nombre(256, 128, 'FRESCOS AL POR MAYOR', 96)}`),
  '7-monograma': svg(760, 240, `${fj(40, 30, 180)}${nombre(250, 128, 'FRESCOS AL POR MAYOR', 96)}`),
- '8-caja': svg(760, 240, `${caja(30, 20, 700, 200)}<text x="380" y="150" class="c" font-size="104" letter-spacing="10" fill="#161210" text-anchor="middle">FERJUSANZ</text><text x="380" y="198" class="t" font-size="16" letter-spacing="5" fill="#6b1216" text-anchor="middle">FRUTA · VERDURA · PATATA · HUEVOS</text>`),
+ '8-caja': svg(760, 240, `${caja(30, 20, 700, 200)}<text x="380" y="150" class="c" font-size="104" letter-spacing="10" fill="#161210" text-anchor="middle">FERJUSANZ</text><text x="380" y="198" class="t" font-size="16" letter-spacing="5" fill="#6b1216" text-anchor="middle">PATATAS · FRUTAS · VERDURAS · HUEVOS</text>`),
  // Iconos redondos (foto de perfil): se recortan en círculo, así que todo va dentro del círculo.
  'i1': svg(240, 240, `<g transform="scale(.545)">${L['1-sello'].replace(/^.*?<\/style>|<\/svg>$/gs, '')}</g>`),
  'i2': svg(240, 240, `<circle cx="120" cy="120" r="120" fill="#f5f2ec"/><text x="120" y="172" class="c" font-size="150" fill="url(#sol)" text-anchor="middle">FJ</text>${hoja(132, 22, 1, 'url(#verde)')}`),

@@ -6,7 +6,7 @@ Lo leen todas las skills `li-*` (pack linkedin-agent, `.claude/skills/li-*`). He
 
 ## Quién soy
 - **Quién publica:** la página de empresa FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. (habla Fernando Sanz, tercera generación).
-- **Qué hacemos, en una frase:** mayorista de fruta, verdura, patatas, huevos, setas, champiñones y legumbres que compra en Mercamadrid y reparte a cocinas profesionales de Madrid.
+- **Qué hacemos, en una frase:** mayorista de patatas, frutas, verduras, huevos, setas, champiñones y legumbres que compra en Mercamadrid y reparte a cocinas profesionales de Madrid.
 - **Para quién escribo:** el responsable de compras o el jefe de cocina de colegios, residencias de mayores, catering, comedores de empresa, hospitales, restaurantes y hoteles de Madrid. Nunca el que compra para casa.
 - **Qué vendo:** el pedido semanal de fruta y verdura que llega bien, a tiempo y al precio previsto.
 

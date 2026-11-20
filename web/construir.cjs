@@ -287,7 +287,7 @@ ${datos.map(d => `<script type="application/ld+json">${JSON.stringify(d)}</scrip
 <div class="aviso"><span>Género fresco cada día</span><span>Reparto en Madrid y Segovia</span><span class="solo-ancho">${HORARIO}</span><span class="aviso-contacto"><a href="tel:+34917632186">${TEL}</a>${WHATSAPP.map(w => `<a href="tel:+${w.num}">${w.ver}</a>`).join('')}<a href="tel:+34609100690">609 100 690</a><a href="mailto:${EMAIL}">${EMAIL}</a></span></div>
 <header class="cabecera">
   <div class="cabecera-in">
-    <a href="/" class="logo" aria-label="Ferjusanz, inicio"><img src="/marca/logo-oscuro.png" alt="Ferjusanz · fruta, verdura, patata, huevos, setas, champiñones y legumbres" width="600" height="134"></a>
+    <a href="/" class="logo" aria-label="Ferjusanz, inicio"><img src="/marca/logo-oscuro.png" alt="Ferjusanz · patatas, frutas, verduras, huevos, setas, champiñones y legumbres" width="600" height="134"></a>
     <nav class="menu-ancho" aria-label="Principal">${nav}</nav>
     <a class="btn btn-wa btn-cab" href="#pedir-precio">${I.wa}<span>Pedir precio</span></a>
     <details class="menu"><summary aria-label="Abrir menú"><span></span><span></span><span></span></summary><nav aria-label="Menú">${nav}<a href="#pedir-precio" class="btn btn-wa">${I.wa}<span>Pedir precio por WhatsApp</span></a></nav></details>
@@ -320,7 +320,7 @@ ${cuerpo}
 <footer class="pie">
   <div class="envoltura pie-col">
     <div>
-      <img class="etiqueta" src="/marca/etiqueta.png" alt="Ferjusanz, mayorista en Madrid" width="760" height="240" loading="lazy">
+      <img class="etiqueta" src="/marca/etiqueta.png" alt="Ferjusanz, mayorista en Madrid y alrededores, reparto en Segovia" width="760" height="240" loading="lazy">
       <p>Tercera generación de mayoristas de patatas, frutas, verduras, huevos, setas, champiñones y legumbres. ${ANIOS[0].toUpperCase() + ANIOS.slice(1)} alegrando la mesa de Madrid.</p>
       <p><a href="tel:+34917632186">${TEL}</a><br><a href="mailto:${EMAIL}">${EMAIL}</a><br>WhatsApp ${WHATSAPP.map(w => `<a href="${wa(w.num, 'Hola')}" rel="nofollow">${w.ver}</a>`).join(' · ')}<br>${DIRECCION}<br>${HORARIO}</p>
     </div>
@@ -398,7 +398,7 @@ function inicio(p) {
 <section class="heroe" style="--foto:url(/fotos/verduras-gourmet-hosteleria.jpg)">
   <div class="envoltura heroe-in">
     <p class="antetitulo">Mayorista hortofrutícola · Mercamadrid</p>
-    <h1><span class="h1-pre">Proveedor mayorista de</span> <span class="h1-main">patatas, fruta y verdura</span> <span class="h1-post">para hostelería y colectividades en Madrid y Segovia</span></h1>
+    <h1><span class="h1-pre">Proveedor mayorista de</span> <span class="h1-main">patatas, frutas y verduras</span> <span class="h1-post">para hostelería y colectividades en Madrid y Segovia</span></h1>
     <p class="heroe-tambien">Y también <strong>huevos, setas, champiñones y legumbres</strong></p>
     <p class="entradilla">Abastecemos a restaurantes, hoteles, colegios, residencias y empresas de restauración colectiva con producto fresco seleccionado cada mañana. Tercera generación y ${ANIOS} de oficio.</p>
     <div class="heroe-acciones">
@@ -447,7 +447,7 @@ ${(a => `<section class="guia-portada" aria-label="Última guía">
 
 <section class="bloque bloque-crema" id="catalogo">
   <div class="envoltura">
-    <div class="bloque-cabeza"><div><p class="antetitulo">Catálogo</p><h2>Catálogo profesional de fruta, verdura, patata, huevos, setas, champiñones y legumbres</h2></div><a class="enlace" href="/productos/">Ver catálogo completo ${I.flecha}</a></div>
+    <div class="bloque-cabeza"><div><p class="antetitulo">Catálogo</p><h2>Catálogo profesional de patatas, frutas, verduras, huevos, setas, champiñones y legumbres</h2></div><a class="enlace" href="/productos/">Ver catálogo completo ${I.flecha}</a></div>
     <div class="productos">${FAMILIAS.slice(0, 8).map(tarjetaFamilia).join('\n')}</div>
   </div>
 </section>
@@ -772,7 +772,7 @@ function super9() {
   const qr = (txt, url) => `<p><a class="btn btn-borde" href="${url}" rel="nofollow"><span>${txt}</span>${I.flecha}</a></p>`;
   const cuerpo = `<section class="bloque"><div class="envoltura lectura">
   <h1>Ferjusanz y Super 9 Carnicerías: dos proveedores de confianza para su negocio</h1>
-  <p class="entradilla">Nos recomendamos el uno al otro: fruta, verdura, patatas, huevos, setas, champiñones y legumbres de Ferjusanz y la carne de Super 9. Hable con cada uno directamente por WhatsApp.</p>
+  <p class="entradilla">Nos recomendamos el uno al otro: patatas, frutas, verduras, huevos, setas, champiñones y legumbres de Ferjusanz y la carne de Super 9. Hable con cada uno directamente por WhatsApp.</p>
   <div style="display:flex;gap:14px;align-items:center;margin-top:24px"><img src="/marca/super9.png" alt="Super 9 Carnicerías" width="96" height="96"><h2 style="margin:0">Super 9 Carnicerías · Carlos Zúñiga</h2></div>
   <p>Más de 10 años sirviendo, empresa en crecimiento y muchísima variedad de género, con buena relación calidad-precio. <strong>100 % recomendado.</strong></p>
   <h3>Nuestras 3 ubicaciones</h3><ul>${SUPER9.tiendas.map(t => `<li>${t}</li>`).join('')}</ul>
@@ -802,7 +802,7 @@ const NUEVAS = [
 <ul><li><strong>Un solo proveedor</strong>: menos llamadas, menos albaranes y una sola entrega.</li><li><strong>Reparto refrigerado</strong> en nuestros camiones y furgonetas.</li><li><strong>Precio de mayorista</strong>, según cantidad y frecuencia.</li></ul>
 <p>Indíquenos cuántas docenas necesita a la semana y le pasamos precio.</p>` },
   { path: '/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', foto: F + '2023/03/Tipos-de-guarniciones-de-verduras.jpg', title: 'Proveedor de fruta y verdura para restaurantes en Madrid | Ferjusanz',
-    description: 'Proveedor de fruta, verdura, patata pelada, huevos, setas, champiñones y legumbres para restaurantes, bares y catering en Madrid. Reparto refrigerado diario y precio de mercado.',
+    description: 'Proveedor de patatas (también peladas), frutas, verduras, huevos, setas, champiñones y legumbres para restaurantes, bares y catering en Madrid. Reparto refrigerado diario y precio de mercado.',
     html: `<h1>Proveedor de frutas y verduras para hostelería en Madrid</h1>
 <p>Un restaurante vive de su género. Por eso llevamos ${ANIOS} sirviendo a <strong>restaurantes, bares, hoteles y empresas de catering</strong> de Madrid con patatas, frutas, verduras, huevos, setas, champiñones y legumbres de agricultores de confianza y seleccionados cada mañana en Mercamadrid.</p>
 <h2>Todo lo que necesita una cocina, en un solo pedido</h2>
@@ -885,7 +885,7 @@ const rutaZona = z => `/fruta-y-verdura-al-por-mayor-${z.slug}/`;
 for (const z of PAGINAS_ZONA) NUEVAS.push({
   path: rutaZona(z), foto: z.foto,
   title: `Fruta y verdura al por mayor en ${z.tit || z.corto} | Ferjusanz`, // tit: corto para que Google no lo corte (~60 letras)
-  description: `Patatas, fruta, verdura, huevos, setas, champiñones y legumbres para hostelería y colectividades de ${z.corto}. Sin pedido mínimo, reparto refrigerado.`,
+  description: `Patatas, frutas, verduras, huevos, setas, champiñones y legumbres para hostelería y colectividades de ${z.corto}. Sin pedido mínimo, reparto refrigerado.`,
   html: `<h1>Fruta y verdura al por mayor en ${z.corto}</h1>
 <p>${z.intro}</p>
 <h2>Dónde repartimos</h2>

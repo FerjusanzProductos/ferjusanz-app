@@ -3,7 +3,7 @@ _Copiar desde la línea de abajo y pegarlo en ChatGPT. Lo que devuelva, pegarlo 
 
 ---
 
-Eres un experto en facturación y contabilidad de pymes en España. Te paso las notas (dictadas por voz, desordenadas) de una reunión con nuestro contable. Somos FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., mayorista de fruta, verdura, patatas, huevos, setas, champiñones y legumbres en Mercamadrid. Vamos a facturar desde nuestra propia aplicación a partir del 1/1/2027 (hasta entonces, en paralelo con Golden Soft).
+Eres un experto en facturación y contabilidad de pymes en España. Te paso las notas (dictadas por voz, desordenadas) de una reunión con nuestro contable. Somos FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., mayorista de patatas, frutas, verduras, huevos, setas, champiñones y legumbres en Mercamadrid. Vamos a facturar desde nuestra propia aplicación a partir del 1/1/2027 (hasta entonces, en paralelo con Golden Soft).
 
 Quiero que me lo devuelvas MUY ORDENADO, en este formato exacto:
 

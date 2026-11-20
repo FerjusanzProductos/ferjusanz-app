@@ -153,7 +153,7 @@ Sign-off:      "Un saludo,\nFernando Sanz\nFerjusanz · Mercamadrid\n609 567 354
 Sentences:     Cortas y claras, sin rodeos.
 Exclamations:  No.
 Ask timing:    Al final, una sola pregunta: con quién hablo de las compras de la cocina.
-Calls it:      «género», «fruta, verdura, patata, huevos, setas, champiñones y legumbres», «el puesto» (en Mercamadrid)
+Calls it:      «género», «patatas, frutas, verduras, huevos, setas, champiñones y legumbres», «el puesto» (en Mercamadrid)
 
 Characteristic phrases:
   "Somos la tercera generación en el sector."
