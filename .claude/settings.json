@@ -54,6 +54,12 @@
         "source": "directory",
         "path": "./plugins"
       }
+    },
+    "agricidaniel-claude-seo": {
+      "source": {
+        "source": "github",
+        "repo": "AgriciDaniel/claude-seo"
+      }
     }
   },
   "enabledPlugins": {
@@ -65,7 +71,8 @@
     "impeccable@impeccable": true,
     "taste-skill@taste-skill": true,
     "ui-ux-pro-max@ui-ux-pro-max-skill": true,
-    "becario-mods@ferjusanz-local": true
+    "becario-mods@ferjusanz-local": true,
+    "claude-seo@agricidaniel-claude-seo": true
   },
   "enabledMcpjsonServers": [
     "playwright",

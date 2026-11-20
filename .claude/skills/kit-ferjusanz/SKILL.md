@@ -102,12 +102,14 @@ Reglas de elección rápidas:
 ## 4. Comprobar el kit (`/kit-ferjusanz check`)
 
 Si el usuario pide comprobar el kit, haz esto y responde con una tabla ✅/❌:
-1. `/plugin` → que `ponytail`, `agent-skills`, `watch`, `codex`, `superpowers`, `impeccable`, `taste-skill` y `ui-ux-pro-max` estén instalados y activos.
+1. `/plugin` → que `ponytail`, `agent-skills`, `watch`, `codex`, `superpowers`, `impeccable`, `taste-skill`, `ui-ux-pro-max` y `claude-seo` estén instalados y activos.
 2. `/mcp` → que `playwright`, `firecrawl`, `perplexity` y `posthog` estén conectados. Si uno falla por clave, di cuál falta (sección 2), sin pedir que la pegue en el chat.
 3. Que existan `.claude/skills/graphify/SKILL.md` y `.claude/skills/security-audit/SKILL.md`.
 4. Para watch: `python3 "<dir de la skill watch>/scripts/setup.py" --check --json` y mira `engine` y `gemini_key_present`.
 
 ## 5. Notas
+
+- **claude-seo** (AgriciDaniel/claude-seo, 20/11/2026): análisis SEO de la web con `/seo` (`/seo audit <url>`, `/seo local`, `/seo geo`, `/seo schema`…). Su hook solo valida el schema de los archivos que se editan. Las extensiones que piden claves (DataForSEO, Google, etc.) no están activadas.
 
 - **OmniRoute**: ver sección 6. Nunca pongas `ANTHROPIC_BASE_URL` en el `settings.json` del repo: rompería Claude Code en la nube y en cualquier equipo sin OmniRoute.
 - graphify instala su CLI (`graphifyy` en PyPI) la primera vez que se usa; añade `graphify-out/` al `.gitignore` si no quieres subir el grafo.
