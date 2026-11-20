@@ -34,7 +34,7 @@
   --sol-2: #ff8a3d;
   --sol-3: #f0452b;
   --sobre-sol: #1c0a02;
-  --estrella: rgb(255 255 255 / .55);
+  --estrella: rgb(255 255 255 / .32);
   --nebulosa: rgb(255 138 61 / .14);
   --nebulosa-2: rgb(70 120 255 / .10);
   --vidrio-1: rgb(255 255 255 / .06);
@@ -656,3 +656,5 @@ body {
     radial-gradient(80% 70% at 22% 105%, color-mix(in srgb, var(--sol-1) 85%, transparent) 0%, color-mix(in srgb, var(--sol-2) 70%, transparent) 20%, color-mix(in srgb, var(--sol-3) 32%, transparent) 42%, transparent 70%),
     linear-gradient(90deg, var(--negro) 0, var(--negro) 46%, color-mix(in srgb, var(--negro) 0%, transparent) 56%); }
 }
+.saltar { background: var(--sol-1); color: var(--sobre-sol); }
+:root { color-scheme: dark; accent-color: var(--sol-2); }
