@@ -9,7 +9,7 @@ $out= if($sc){$sc}elseif($mu){"$mu\Claude Golden\golden_sql"}else{"$([Environmen
 md $out -Force | Out-Null
 $c=New-Object System.Data.SqlClient.SqlConnection "Server=192.168.1.30,1434;Database=NET_FJS;Integrated Security=true;Connect Timeout=30"
 # Si no conecta (servidor de Golden apagado, sin red…), lo apunta en _error.txt y NO toca _actualizado.txt, para que se note.
-try { $c.Open() } catch { "$(Get-Date -Format 'yyyy-MM-dd HH:mm') ERROR: $($_.Exception.Message)" | Out-File "$out\_error.txt" -Encoding utf8; exit 1 }
+try { $c.Open() } catch { "$(Get-Date -Format 'yyyy-MM-dd HH:mm') ERROR: $($_.Exception.Message)" | Out-File "$out\_error.txt" -Encoding utf8; "FALLO: $($_.Exception.Message)"; exit 1 }
 Remove-Item "$out\_error.txt" -EA 0
 function Sacar($sql,$nombre){ $dt=New-Object System.Data.DataTable; (New-Object System.Data.SqlClient.SqlDataAdapter($sql,$c)).Fill($dt)|Out-Null; $rows=$dt.Rows.Count; if($rows -eq 0){return}; $sel=@($dt | select * -ExcludeProperty RowError,RowState,Table,ItemArray,HasErrors); Get-ChildItem "$out\$nombre.parte*.csv" -EA 0 | Remove-Item; if($rows -le 4000){ $sel | Export-Csv "$out\$nombre.csv" -NoTypeInformation -Encoding UTF8 -Delimiter ';' } else { Remove-Item "$out\$nombre.csv" -EA 0; $i=0; for($p=0; $p -lt $rows; $p+=4000){ $i++; $sel[$p..([Math]::Min($p+3999,$rows-1))] | Export-Csv ("{0}\{1}.parte{2:D2}.csv" -f $out,$nombre,$i) -NoTypeInformation -Encoding UTF8 -Delimiter ';' } } }
 $rd=(New-Object System.Data.SqlClient.SqlCommand("select name from sys.tables where name not like 'Auditoria%' and name not like 'tmp%'",$c)).ExecuteReader(); $n=@(); while($rd.Read()){$n+=$rd[0]}; $rd.Close()
@@ -19,3 +19,4 @@ Sacar "select * from [Cabecera Facturacion] where Tipo='F' and Fecha>=dateadd(da
 Sacar "select l.* from [Lineas Facturacion] l join [Cabecera Facturacion] h on h.Tipo=l.Tipo and h.Serie=l.Serie and h.Numero=l.Numero where h.Tipo='F' and h.Fecha>=dateadd(day,-45,getdate())" "Reciente Lineas Facturacion"
 $c.Close()
 "Actualizado: $(Get-Date -Format 'yyyy-MM-dd HH:mm')" | Out-File "$out\_actualizado.txt" -Encoding utf8
+"BIEN: datos sacados en $out"
