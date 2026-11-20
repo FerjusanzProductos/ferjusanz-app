@@ -1,4 +1,4 @@
-/* Hallmark · v2.0.0 · redesign: restyle · theme: custom, by request («que se parezca al diseño de Apple») · genre editorial · copy: verbatim */
+/* Hallmark · v2.0.0 · redesign: restyle · theme: custom, by request («que parezca que estás pidiendo en el espacio», «algún degradado», sin fondo blanco) · genre atmospheric · copy: verbatim */
 /* Hallmark · pre-emit critique: P4 H5 E4 S4 R4 V4 · weakest: E, the layout is kept for Google; the change is the system, the surfaces and the hero */
 /* Ferjusanz · web pública, propuesta «Claro» (20/11/2026, Tito: «más profesional, que se parezca al diseño de Apple»):
    blanco y gris perla, tinta casi negra, un solo verde (el del logo) para comprar, letra Inter con titulares grandes y apretados,
@@ -9,27 +9,37 @@
 @font-face { font-family: "Inter"; font-weight: 700; font-display: swap; src: url(/fuentes/inter-latin-700-normal.woff2) format("woff2"); }
 
 :root {
-  --papel: #ffffff;
-  --papel-2: #f5f5f7;
-  --blanco: #f5f5f7;
-  --tinta: #1d1d1f;
-  --tinta-2: #6e6e73;
-  --linea: #d2d2d7;
-  --granate: #1a7f37;
-  --granate-osc: #146c2e;
-  --negro: #000000;
-  --sobre-tinta: #f5f5f7;
-  --sobre-tinta-2: #a1a1a6;
+  --papel: #070b1a;
+  --papel-2: #0f1630;
+  --blanco: #0f1630;
+  --tinta: #eef1f8;
+  --tinta-2: #a9b2ca;
+  --linea: #26304f;
+  --granate: #ff8a3d;
+  --granate-osc: #ffa766;
+  --negro: #04060f;
+  --sobre-tinta: #eef1f8;
+  --sobre-tinta-2: #a9b2ca;
   --claro: #ffffff;
-  --linea-osc: #424245;
-  --linea-osc-2: #424245;
-  --borde-osc: #6e6e73;
-  --verde: #1a7f37;
-  --verde-claro: #eaf6ec;
-  --cristal: rgb(255 255 255 / .78);
-  --sombra: rgb(0 0 0 / .08);
+  --linea-osc: #26304f;
+  --linea-osc-2: #26304f;
+  --borde-osc: #4a5578;
+  --verde: #3ccf6e;
+  --verde-claro: #0f2a1c;
+  --cristal: rgb(7 11 26 / .72);
+  --sombra: rgb(255 255 255 / .08);
   --titular: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --texto: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --sol-1: #ffd36b;
+  --sol-2: #ff8a3d;
+  --sol-3: #f0452b;
+  --sobre-sol: #1c0a02;
+  --estrella: rgb(255 255 255 / .32);
+  --nebulosa: rgb(255 138 61 / .14);
+  --nebulosa-2: rgb(70 120 255 / .10);
+  --vidrio-1: rgb(255 255 255 / .06);
+  --vidrio-2: rgb(255 255 255 / .02);
+  --vidrio-3: rgb(255 255 255 / .09);
   --ancho: 1120px;
   --radio: 18px;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -593,3 +603,58 @@ h3 { letter-spacing: -.02em; }
   .heroe .entradilla { font-size: 1.1rem; }
   .heroe-in { padding-top: 72px; padding-bottom: 56px; }
 }
+
+/* ── Órbita: noche estrellada, amanecer naranja (el sol del logo) y botones de fuego ── */
+body {
+  background-color: var(--papel);
+  background-image:
+    radial-gradient(1px 1px at 23px 41px, var(--estrella) 50%, transparent 51%),
+    radial-gradient(1px 1px at 141px 87px, var(--estrella) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 211px 173px, var(--estrella) 50%, transparent 51%),
+    radial-gradient(1px 1px at 77px 229px, var(--estrella) 50%, transparent 51%),
+    radial-gradient(1px 1px at 263px 19px, var(--estrella) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 37px 151px, var(--estrella) 50%, transparent 51%),
+    radial-gradient(60% 40% at 85% 12%, var(--nebulosa-2), transparent 70%),
+    radial-gradient(50% 35% at 10% 55%, var(--nebulosa), transparent 70%);
+  background-size: 290px 260px, 290px 260px, 290px 260px, 290px 260px, 290px 260px, 290px 260px, 100% 100%, 100% 100%;
+}
+.bloque-crema, .titular, .ficha, .cifras { background: transparent; }
+.bloque { background: transparent; }
+.cifras { border-block: 1px solid var(--linea); }
+.cifras strong { background: linear-gradient(180deg, var(--sol-1), var(--sol-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* Botón de comprar: degradado de fuego con brillo */
+.btn-wa { background: linear-gradient(135deg, var(--sol-1) 0%, var(--sol-2) 52%, var(--sol-3) 100%); color: var(--sobre-sol); border: 0; box-shadow: 0 8px 28px -6px color-mix(in srgb, var(--sol-2) 70%, transparent); }
+@media (hover: hover) and (pointer: fine) { .btn-wa:hover { background: linear-gradient(135deg, var(--sol-1) 0%, var(--sol-2) 40%, var(--sol-3) 100%); box-shadow: 0 10px 36px -4px color-mix(in srgb, var(--sol-2) 85%, transparent); } }
+.barra-movil summary, .barra-movil .wa-directo { background: linear-gradient(135deg, var(--sol-1), var(--sol-2) 52%, var(--sol-3)); color: var(--sobre-sol); }
+.btn-borde, .btn-claro, .btn-transparente { color: var(--tinta); border-color: var(--borde-osc); }
+/* Portada: la fruta sobre el horizonte, con el resplandor del amanecer */
+.heroe::after { background:
+  radial-gradient(130% 55% at 30% 112%, color-mix(in srgb, var(--sol-2) 55%, transparent) 0%, color-mix(in srgb, var(--sol-3) 22%, transparent) 38%, transparent 70%),
+  linear-gradient(180deg, color-mix(in srgb, var(--negro) 0%, transparent) 0, color-mix(in srgb, var(--negro) 0%, transparent) 200px, var(--negro) 300px); }
+@media (min-width: 900px) {
+  .heroe::after { background:
+    radial-gradient(90% 70% at 18% 115%, color-mix(in srgb, var(--sol-2) 50%, transparent) 0%, color-mix(in srgb, var(--sol-3) 18%, transparent) 40%, transparent 72%),
+    linear-gradient(90deg, var(--negro) 0, var(--negro) 46%, color-mix(in srgb, var(--negro) 0%, transparent) 56%); }
+}
+/* Tarjetas de cristal oscuro con borde de luz */
+.producto, .ventana { background: linear-gradient(180deg, var(--vidrio-1), var(--vidrio-2)); border: 1px solid var(--sombra); }
+@media (hover: hover) and (pointer: fine) { .producto:hover { background: linear-gradient(180deg, var(--vidrio-3), var(--vidrio-2)); box-shadow: 0 12px 40px -12px color-mix(in srgb, var(--sol-2) 45%, transparent); } }
+.aviso { background: var(--negro); }
+.pie { background: var(--negro); }
+.pedir { background: radial-gradient(80% 90% at 50% 120%, color-mix(in srgb, var(--sol-2) 30%, transparent), transparent 70%), var(--negro); }
+.bloque-granate { background: radial-gradient(70% 80% at 100% 0%, var(--nebulosa-2), transparent 70%), var(--negro); }
+.formulario input, .formulario textarea, .formulario select, .tarifa input, .tarifa select { background: var(--papel-2); color: var(--tinta); border-color: var(--linea); }
+.menu nav { background: var(--papel); }
+.barra-movil .llamar { background: var(--vidrio-3); color: var(--tinta); }
+/* Amanecer más visible: arco de luz en el horizonte de la portada */
+.heroe::after { background:
+  radial-gradient(120% 34% at 50% 290px, color-mix(in srgb, var(--sol-2) 55%, transparent) 0%, color-mix(in srgb, var(--sol-3) 18%, transparent) 40%, transparent 70%),
+  radial-gradient(150% 38% at 50% 100%, color-mix(in srgb, var(--sol-1) 70%, transparent) 0%, color-mix(in srgb, var(--sol-2) 60%, transparent) 22%, color-mix(in srgb, var(--sol-3) 20%, transparent) 45%, transparent 68%),
+  linear-gradient(180deg, color-mix(in srgb, var(--negro) 0%, transparent) 0, color-mix(in srgb, var(--negro) 0%, transparent) 200px, var(--negro) 300px); }
+@media (min-width: 900px) {
+  .heroe::after { background:
+    radial-gradient(80% 70% at 22% 105%, color-mix(in srgb, var(--sol-1) 85%, transparent) 0%, color-mix(in srgb, var(--sol-2) 70%, transparent) 20%, color-mix(in srgb, var(--sol-3) 32%, transparent) 42%, transparent 70%),
+    linear-gradient(90deg, var(--negro) 0, var(--negro) 46%, color-mix(in srgb, var(--negro) 0%, transparent) 56%); }
+}
+.saltar { background: var(--sol-1); color: var(--sobre-sol); }
+:root { color-scheme: dark; accent-color: var(--sol-2); }

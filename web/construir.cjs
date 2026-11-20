@@ -275,7 +275,7 @@ function plantilla({ ruta, titulo, descripcion, imagen, cuerpo, datos = [], tipo
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/marca/icono-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="/marca/icono-180.png">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#070b1a">
 <link rel="preload" href="/fuentes/inter-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fuentes/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 ${precarga ? `<link rel="preload" href="${precarga}" as="image" fetchpriority="high">` : ''}
@@ -287,7 +287,7 @@ ${datos.map(d => `<script type="application/ld+json">${JSON.stringify(d)}</scrip
 <div class="aviso"><span>Género fresco cada día</span><span>Reparto en Madrid y Segovia</span><span class="solo-ancho">${HORARIO}</span><span class="aviso-contacto"><a href="tel:+34917632186">${TEL}</a>${WHATSAPP.map(w => `<a href="tel:+${w.num}">${w.ver}</a>`).join('')}<a href="tel:+34609100690">609 100 690</a><a href="mailto:${EMAIL}">${EMAIL}</a></span></div>
 <header class="cabecera">
   <div class="cabecera-in">
-    <a href="/" class="logo" aria-label="Ferjusanz, inicio"><img src="/marca/logo.png" alt="Ferjusanz · fruta, verdura, patata y huevos" width="900" height="175"></a>
+    <a href="/" class="logo" aria-label="Ferjusanz, inicio"><img src="/marca/logo-oscuro.png" alt="Ferjusanz · fruta, verdura, patata y huevos" width="600" height="116"></a>
     <nav class="menu-ancho" aria-label="Principal">${nav}</nav>
     <a class="btn btn-wa btn-cab" href="#pedir-precio">${I.wa}<span>Pedir precio</span></a>
     <details class="menu"><summary aria-label="Abrir menú"><span></span><span></span><span></span></summary><nav aria-label="Menú">${nav}<a href="#pedir-precio" class="btn btn-wa">${I.wa}<span>Pedir precio por WhatsApp</span></a></nav></details>
