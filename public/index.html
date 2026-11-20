@@ -6880,16 +6880,16 @@ function vistaAlbaranes() {
     const G = {}; const g = id => G[id || 'nadie'] = G[id || 'nadie'] || { id, albs: [], total: 0, anul: 0, sinFirma: 0, inc: 0, pend: 0, efec: 0, otros: 0 };
     datos.forEach(x => { const e = ext[x.pedido_id] || { cobros: [], inc: [] }, t = traza[x.pedido_id] || {}, G1 = g(quien(x)); G1.albs.push(x); if (t.estado === 'anulado') { G1.anul++; return; } G1.total += Number(x.total) || 0; G1.pend += Math.max(0, Number(x.pendiente) || 0); if (!e.firma) G1.sinFirma++; G1.inc += e.inc.length; });
     Object.keys(ext).forEach(k => { (ext[k].cobros || []).forEach(c => { const G2 = g(c.cobrado_por); if (c.forma === 'efectivo') G2.efec += Number(c.importe) || 0; else if (c.forma === 'descuento') G2.desc = (G2.desc || 0) + (Number(c.importe) || 0); else G2.otros += Number(c.importe) || 0; }); });
-    const orden = Object.values(G).sort((a, b) => (a.id ? 0 : 1) - (b.id ? 0 : 1) || nomG(a.id).localeCompare(nomG(b.id), 'es')); let T = { n: 0, total: 0, efec: 0, otros: 0, pend: 0, inc: 0 };
+    const orden = Object.values(G).sort((a, b) => (a.id ? 0 : 1) - (b.id ? 0 : 1) || nomG(a.id).localeCompare(nomG(b.id), 'es')); let T = { n: 0, total: 0, efec: 0, otros: 0, desc: 0, pend: 0, inc: 0 };
     if (!orden.length) kids.push(h('p', { class: 'vacio' }, 'No hay albaranes en este periodo.'));
-    orden.forEach(r => { T.n += r.albs.length; T.total += r.total; T.efec += r.efec; T.otros += r.otros; T.pend += r.pend; T.inc += r.inc;
+    orden.forEach(r => { T.n += r.albs.length; T.total += r.total; T.efec += r.efec; T.desc += r.desc || 0; T.otros += r.otros; T.pend += r.pend; T.inc += r.inc;
       kids.push(h('div', { class: 'card' }, h('div', { class: 'nombre', style: 'font-size:18px' }, r.id ? '🚚 ' + nomG(r.id) : '🚚 Sin repartidor asignado'),
         h('div', { class: 'sub' }, r.albs.length + ' albaranes · importe ' + eur(r.total) + '\u00a0€' + (r.anul ? ' · ' + r.anul + ' anulado(s)' : '')),
         h('div', { style: 'display:flex;gap:10px;flex-wrap:wrap;margin:6px 0;font-weight:800' }, h('span', { style: 'color:#166534' }, '💶 Efectivo en mano: ' + eur(r.efec) + '\u00a0€'), r.otros ? h('span', {}, 'Otros cobros: ' + eur(r.otros) + '\u00a0€') : null, r.desc ? h('span', { class: 'cli-siniva' }, '🔵 Rebajas sin IVA: ' + eur(r.desc) + '\u00a0€') : null, h('span', { style: r.pend > 0.009 ? 'color:#b45309' : '' }, 'Pendiente: ' + eur(r.pend) + '\u00a0€')),
         h('div', { class: 'sub' }, [(r.albs.length - r.anul) < 1 ? 'sin albaranes activos' : r.sinFirma ? '✍ ' + r.sinFirma + ' sin firma' : '✍ todos firmados', r.inc ? '⚠ ' + r.inc + ' incidencia(s)' : 'sin incidencias'].join(' · ')),
         h('button', { class: 'ghost small', style: 'margin-top:6px', onclick: () => { repF = r.id || 'nadie'; LS.set('fj_alb_rep', repF); tab = 'listos'; LS.set('fj_alb_tab', 'listos'); pintar(); } }, 'Ver sus albaranes')));
     });
-    if (orden.length) kids.push(h('div', { class: 'card', style: 'border-left:6px solid #166534' }, h('div', { class: 'nombre' }, 'TOTAL · ' + T.n + ' albaranes · ' + eur(T.total) + '\u00a0€'), h('div', { class: 'sub' }, 'Efectivo ' + eur(T.efec) + '\u00a0€ · otros cobros ' + eur(T.otros) + '\u00a0€ · pendiente ' + eur(T.pend) + '\u00a0€ · ' + T.inc + ' incidencia(s)')));
+    if (orden.length) kids.push(h('div', { class: 'card', style: 'border-left:6px solid #166534' }, h('div', { class: 'nombre' }, 'TOTAL · ' + T.n + ' albaranes · ' + eur(T.total) + '\u00a0€'), h('div', { class: 'sub' }, 'Efectivo ' + eur(T.efec) + '\u00a0€ · otros cobros ' + eur(T.otros) + '\u00a0€' + (T.desc ? ' · 🔵 rebajas sin IVA ' + eur(T.desc) + '\u00a0€' : '') + ' · pendiente ' + eur(T.pend) + '\u00a0€ · ' + T.inc + ' incidencia(s)')));
     return kids;
   }
   function pintarPend() {
