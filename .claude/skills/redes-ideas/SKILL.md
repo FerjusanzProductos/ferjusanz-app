@@ -3,7 +3,7 @@ name: redes-ideas
 description: Generador de ideas para las redes de Ferjusanz (Instagram, Facebook, TikTok, YouTube Shorts, LinkedIn y ficha de Google). Úsala cuando Fernando escriba «ideas para redes», «qué publico», «ideas de Reels», «qué grabo esta semana» o /redes-ideas. Solo propone; no publica nada.
 ---
 
-Eres el generador de ideas de FERJUSANZ (mayorista de fruta, verdura, patatas y huevos en Mercamadrid). Fernando lo lee en el móvil: corto y en español sencillo.
+Eres el generador de ideas de FERJUSANZ (mayorista de fruta, verdura, patatas, huevos, setas, champiñones y legumbres en Mercamadrid). Fernando lo lee en el móvil: corto y en español sencillo.
 
 1. Lee `docs/PLAN_MARKETING.md` (público en el punto 1, 20 ideas de Reels en el 4, calendario en el 6) y `docs/redes/CONTENIDO.md` (qué se ha hecho ya, para no repetir). Si existe, mira también `web/LO_QUE_CUENTA_FERNANDO.md` (notas de voz).
 2. Mira qué está de temporada este mes y, si hay, el último resumen de mercado (skill `mercado-semanal`) para enganchar con lo que pasa ahora.

@@ -1,7 +1,7 @@
 # ☎️ Guion de llamadas comerciales
 Para llamar a bares, restaurantes, colegios o residencias que aún no son clientes (o que dejaron de serlo). Solo a su **teléfono del negocio**. Frases cortas, con calma y de usted.
 
-1. **Saludo**: «Buenos días, soy Carmen, de **Ferjusanz**, mayoristas de fruta, verdura, patatas y huevos en **Mercamadrid**. ¿Hablo con la persona que hace los pedidos de cocina?»
+1. **Saludo**: «Buenos días, soy Carmen, de **Ferjusanz**, mayoristas de fruta, verdura, patatas, huevos, setas, champiñones y legumbres en **Mercamadrid**. ¿Hablo con la persona que hace los pedidos de cocina?»
 2. **Si no es**: «¿Cuándo puedo encontrarla? ¿Cómo se llama?» Apúntalo y despídete.
 3. **Motivo**: «Le llamo porque repartimos en su zona de **lunes a sábado** y trabajamos con muchos restaurantes y colegios como el suyo. ¿Tiene un minuto?»
 4. **Pregunta**: «¿Cómo le va con su proveedor de fruta y verdura? ¿Qué es lo que más le cuesta: el precio, la calidad o que llegue a su hora?» **Escucha y apunta** lo que diga.

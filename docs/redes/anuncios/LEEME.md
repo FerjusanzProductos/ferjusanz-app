@@ -26,7 +26,7 @@ Para volver a mirarlo uno mismo en el móvil (Chrome): https://www.facebook.com/
 
 ## Huecos que nadie cubre (nuestra ventaja)
 - Nadie dice **«sin pedido mínimo»**.
-- Nadie junta **patatas, frutas, verduras y huevos** en un solo proveedor.
+- Nadie junta **patatas, frutas, verduras, huevos, setas, champiñones y legumbres** en un solo proveedor.
 - Nadie habla a **colegios y residencias** (fruta por piezas, calibre).
 - Nadie presume de años: nosotros, **más de seis décadas**.
 - Tu Cosecha Online es genérico («selección cuidada»): sin fotos reales ni nada que lo distinga.
@@ -40,7 +40,7 @@ Público propuesto: personas con negocio de hostelería en Madrid capital, norte
 - Título: «Patata pelada para hostelería» · Botón: WhatsApp.
 
 **2 · Un solo proveedor** (hueco: nadie lo junta todo)
-- Texto: «Patatas, frutas, verduras y huevos en un solo pedido. Agricultores de confianza y producto elegido cada mañana en Mercamadrid, con más de seis décadas en el mercado. Sin pedido mínimo. Te pasamos la lista de la semana por WhatsApp.»
+- Texto: «Patatas, frutas, verduras, huevos, setas, champiñones y legumbres en un solo pedido. Agricultores de confianza y producto elegido cada mañana en Mercamadrid, con más de seis décadas en el mercado. Sin pedido mínimo. Te pasamos la lista de la semana por WhatsApp.»
 - Título: «Tu proveedor de Mercamadrid» · Botón: WhatsApp.
 
 **3 · Colegios y residencias** (hueco: nadie les habla; mismo tema que el post de LinkedIn)
@@ -48,7 +48,7 @@ Público propuesto: personas con negocio de hostelería en Madrid capital, norte
 - Título: «Fruta por piezas para comedores» · Botón: WhatsApp (o «Más información» a la guía del menú escolar de la web).
 
 **4 · De Mercamadrid a tu cocina** (confianza: furgonetas reales)
-- Texto: «Lo elegimos cada mañana en Mercamadrid y te lo llevamos en furgoneta refrigerada. Patatas, frutas, verduras y huevos para bares, restaurantes y fruterías. Escríbenos y te pasamos la lista de la semana.»
+- Texto: «Lo elegimos cada mañana en Mercamadrid y te lo llevamos en furgoneta refrigerada. Patatas, frutas, verduras, huevos, setas, champiñones y legumbres para bares, restaurantes y fruterías. Escríbenos y te pasamos la lista de la semana.»
 - Título: «De Mercamadrid a tu cocina» · Botón: WhatsApp.
 - Ojo: la foto de las furgonetas tiene poca calidad; mejor una nueva (furgoneta cargando en el mercado).
 

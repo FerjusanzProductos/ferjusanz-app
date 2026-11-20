@@ -1,6 +1,6 @@
 # FERJUSANZ — instrucciones permanentes para Claude
 
-Proyecto: app de **FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L.** (mayorista de fruta, verdura, patatas y huevos en Mercamadrid).
+Proyecto: app de **FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L.** (mayorista de fruta, verdura, patatas, huevos, setas, champiñones y legumbres en Mercamadrid).
 Dueño y quien decide: **Fernando Sanz**.
 
 ## Cómo hablar con Fernando

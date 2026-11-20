@@ -2,7 +2,7 @@
 // Uso: node marca/logo/codigo/usos.mjs   (desde la raíz del proyecto)
 import fs from 'node:fs'; import { createRequire } from 'node:module'; const { chromium } = createRequire(import.meta.url)('playwright');
 const L = n => fs.readFileSync('marca/logo/' + n + '.svg', 'utf8');
-const ajustado = s => s.replace(/viewBox="0 0 718 240" width="718" height="240"/, 'viewBox="18 56 670 130" width="670" height="130"'); // sin el margen blanco
+const ajustado = s => s.replace(/viewBox="0 0 718 240" width="718" height="240"/, 'viewBox="18 56 670 150" width="670" height="150"'); // sin el margen blanco
 const perfil = L('perfil-whatsapp-google').replace(/<text[^]*?<\/text>/, '');
 const icono = perfil.replace('translate(-20 -6)', 'translate(-20 5)');
 const iconoPruebas = perfil.replace('translate(-20 -6)', 'translate(-20 -16)').replace('</svg>', '<rect y="190" width="240" height="50" fill="#ea580c"/><text x="120" y="224" class="t" font-size="26" letter-spacing="3" fill="#fff" text-anchor="middle">PRUEBAS</text></svg>');

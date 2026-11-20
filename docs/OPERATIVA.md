@@ -3,7 +3,7 @@ _Leyenda: 📝 sacado de los documentos y del historial · ⚠️ por confirmar 
 _Las reglas de productos están en `docs/REGLAS_INTERNAS.md`: este documento explica el día a día._
 
 ## La empresa
-- FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., mayorista de fruta, verdura, patatas y huevos en **Mercamadrid**. 📝
+- FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., mayorista de fruta, verdura, patatas, huevos, setas, champiñones y legumbres en **Mercamadrid**. 📝
 - Clientes: **hostelería** (restaurantes y bares) y **colectividades** (colegios, residencias, escuelas infantiles, caterings) de Madrid norte y noroeste y algo de Segovia. 📝
 - Equipo: Fernando (dirección), oficina y secretaría, comerciales, compras, preparadores y repartidores. Nombres citados: Cristian, Carmen y Juli; Jorge lleva la contabilidad.  
 

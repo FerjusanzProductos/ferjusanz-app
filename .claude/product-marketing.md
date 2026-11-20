@@ -5,7 +5,7 @@ Antes de preguntar nada a Fernando, lee lo que ya está escrito:
 - Plan de Google, web y redes: `docs/PLAN_MARKETING.md`, `docs/PLAN_WEB.md`, `docs/PLAN_CONTENIDOS_WEB.md`.
 - Calendario de redes: `docs/redes/CONTENIDO.md`. Web nueva: `web/LEEME.md`.
 
-Resumen: FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., mayorista de fruta, verdura, patatas y huevos en Mercamadrid.
+Resumen: FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., mayorista de fruta, verdura, patatas, huevos, setas, champiñones y legumbres en Mercamadrid.
 Vende a profesionales (hostelería, colegios, residencias, fruterías) de Madrid y alrededores. Piden por WhatsApp y teléfono.
 
 Reglas para estas skills (en inglés, pensadas para software): adaptar todo a un negocio local B2B en español.

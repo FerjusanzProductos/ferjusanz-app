@@ -15,4 +15,4 @@
   <text x="380" y="160" class="c" font-size="112" letter-spacing="6" fill="url(#oro)" text-anchor="middle">FERJUSANZ</text>
   <path d="M120 186h200M440 186h200" stroke="url(#oro)" stroke-width="1.5"/><g transform="translate(380 197) scale(.26) translate(-140 -160)"><mask id="mk140160"><rect x="0" y="0" width="760" height="760" fill="#fff"/><rect x="40" y="126" width="200" height="7.000000000000001" fill="#000"/><rect x="40" y="143" width="200" height="6" fill="#000"/></mask>
   <path d="M40 160A100 100 0 0 1 240 160Z" fill="url(#oro)" mask="url(#mk140160)"/><path d="M26 170H254" stroke="#d9a441" stroke-width="7" stroke-linecap="round"/></g>
-  <text x="380" y="219" class="t" font-size="14" letter-spacing="5" fill="#e9c77d" text-anchor="middle">FRUTA · VERDURA · PATATA · HUEVOS</text></svg>
+  <text x="380" y="219" class="t" font-size="13" letter-spacing="2.4" fill="#e9c77d" text-anchor="middle">FRUTA · VERDURA · PATATA · HUEVOS · SETAS · CHAMPIÑONES · LEGUMBRES</text></svg>

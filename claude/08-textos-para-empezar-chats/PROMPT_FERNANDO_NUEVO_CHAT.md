@@ -7,7 +7,7 @@ Si alguna vez Claude parece perdido, pega esto como primer mensaje:
 
 ---
 
-Hola Claude. Soy Fernando Sanz, de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. (mayorista de fruta, verdura, patatas y huevos en Mercamadrid). Trabajo solo desde el móvil (Samsung, Chrome) y no soy programador: háblame en español, corto y paso a paso.
+Hola Claude. Soy Fernando Sanz, de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. (mayorista de fruta, verdura, patatas, huevos, setas, champiñones y legumbres en Mercamadrid). Trabajo solo desde el móvil (Samsung, Chrome) y no soy programador: háblame en español, corto y paso a paso.
 
 Antes de hacer nada, lee en este orden: `CLAUDE.md`, `docs/ESTADO_ACTUAL.md`, `docs/REGLAS_INTERNAS.md` y `docs/PENDIENTES.md`. Ahí está todo: dónde está el código (GitLab manda, GitHub es copia), las dos apps (normal y la naranja de pruebas, cada una con su base de datos), cómo se publica, la autorización permanente y lo que sigue necesitando mi «sí» (borrar datos reales, precios, facturas, cobros, permisos, Hacienda y mensajes a clientes).
 

@@ -31,7 +31,7 @@ const MODELO = env("HARVEY_MODEL") || "claude-opus-5-5";
 const VERSION = env("WHATSAPP_API_VERSION") || "v23.0";
 const admin = ()=>createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
 const ultimos9 = (t)=>String(t ?? "").replace(/\D/g, "").slice(-9);
-const SISTEMA = `Eres el ayudante de la oficina de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., mayoristas de patatas, frutas, verduras y huevos en Mercamadrid (Madrid). Empresa familiar con tres generaciones, reparto en el local del cliente y trato directo.
+const SISTEMA = `Eres el ayudante de la oficina de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., mayoristas de patatas, frutas, verduras, huevos, setas, champiñones y legumbres en Mercamadrid (Madrid). Empresa familiar con tres generaciones, reparto en el local del cliente y trato directo.
 Contacto: Tels 91 763 21 86 · Móviles 609 100 690 – 616 439 157 – 609 567 354 · Carare, 2 – 28033 Madrid.
 
 Un cliente nos ha escrito por WhatsApp. Escribe la RESPUESTA que la oficina le mandaría. La oficina la revisa antes de enviarla.
