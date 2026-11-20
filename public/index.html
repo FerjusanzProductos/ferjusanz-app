@@ -12946,7 +12946,7 @@ async function presExpandir(slides, conLista) {
   const out = []; let recs = null;
   for (const d of slides) {
     if (d.t === 'precios' && !conLista && d.soloEnvio) continue;
-    if (d.t === 'productos') { const it = (d.items || []).filter(Boolean), conFoto = it.some(x => d.fotos && d.fotos[x]), N = conFoto ? 6 : 18; if (!it.length) continue;
+    if (d.t === 'productos') { const it = (d.items || []).filter(Boolean), conFoto = it.some(x => d.fotos && d.fotos[x] && !d.fotos[x].dib), N = conFoto ? 6 : 18; if (!it.length) continue;
       for (let i = 0; i < it.length; i += N) out.push(Object.assign({}, d, { items: it.slice(i, i + N), conFoto })); continue; }
     if (d.t === 'ofertas') {
       if (!recs) { try { const dia = hoy(); const r = await sb.from('recomendaciones').select('*').order('orden').order('created_at'); recs = (r.data || []).filter(x => x.activa !== false && (!x.desde || x.desde <= dia) && (!x.hasta || x.hasta >= dia)); } catch (e) { recs = []; } }
@@ -12995,20 +12995,19 @@ async function presLienzos(laminas) {
     const foto = (im, x, y, w, h, r) => { if (!im) return; c.save(); if (r) { rr(x, y, w, h, r); c.clip(); } const k = Math.max(w / im.width, h / im.height), iw = im.width * k, ih = im.height * k; c.drawImage(im, x + (w - iw) / 2, y + (h - ih) / 2, iw, ih); c.restore(); };
     const sombra = (f) => { c.save(); c.shadowColor = 'rgba(0,0,0,.18)'; c.shadowBlur = 30; c.shadowOffsetY = 12; f(); c.restore(); };
     const texto = (t, x, y, fuente, color, o) => { o = o || {}; c.font = fuente; c.fillStyle = color; c.textAlign = o.al || 'left'; c.textBaseline = 'alphabetic'; try { c.letterSpacing = o.esp || '0px'; } catch (e) { } c.fillText(t, x, y); try { c.letterSpacing = '0px'; } catch (e) { } };
-    const pie = (claro, x0) => { x0 = x0 || M; c.fillStyle = claro ? 'rgba(255,255,255,.25)' : '#ddd6c8'; c.fillRect(x0, H - 74, W - M - x0, 2); texto(x0 > M ? 'FERJUSANZ' : 'FERJUSANZ · PATATAS, FRUTAS, VERDURAS, HUEVOS, SETAS, CHAMPIÑONES Y LEGUMBRES', x0, H - 36, FB(18), claro ? 'rgba(255,255,255,.75)' : GR, { esp: '3px' }); texto(String(i + 1).padStart(2, '0') + ' / ' + String(laminas.length).padStart(2, '0'), W - M, H - 36, FT(26), claro ? AM : V, { al: 'right', esp: '2px' }); };
-    const kicker = (t, x, y, color) => { c.fillStyle = AM; c.fillRect(x, y - 20, 56, 6); texto(t, x + 72, y - 10, FB(20), color || V, { esp: '4px' }); };
-    const titulo = (t, x, y, ancho, color, max, lineas) => { const a = ajusta(String(t || '').toUpperCase(), FT, max || 92, 48, ancho, lineas || 2); a.L.forEach((l, k) => texto(l, x, y + a.z * 0.95 * k, FT(a.z), color || VO)); return y + a.z * 0.95 * (a.L.length - 1) + 20; };
+    const pie = (claro, x0) => { x0 = x0 || M; c.fillStyle = claro ? 'rgba(255,255,255,.25)' : '#ddd6c8'; c.fillRect(x0, H - 74, W - M - x0, 2); texto('Ferjusanz', x0, H - 36, FB(22), claro ? 'rgba(255,255,255,.8)' : GR); texto((i + 1) + ' de ' + laminas.length, W - M, H - 36, FB(22), claro ? AM : V, { al: 'right' }); };
+    const titulo = (t, x, y, ancho, color, max, lineas) => { const a = ajusta(String(t || ''), FT, max || 96, 48, ancho, lineas || 2); a.L.forEach((l, k) => texto(l, x, y + a.z * 1.02 * k, FT(a.z), color || VO)); return y + a.z * 1.02 * (a.L.length - 1) + 20; };
     const lateral = (ladoX, ladoW) => { const im = lados.length ? lados.shift() : null; if (im) sombra(() => foto(im, ladoX, M, ladoW, H - 2 * M - 40, 28)); return !!im; };
     if (d.t === 'portada' || d.t === 'contacto') {
       const fondo = d.t === 'portada' ? R.portada : R.contacto;
       c.fillStyle = VO; c.fillRect(0, 0, W, H); foto(fondo, 0, 0, W, H, 0);
       const g = c.createLinearGradient(0, 0, W, 0); g.addColorStop(0, 'rgba(9,38,22,.96)'); g.addColorStop(0.48, 'rgba(9,38,22,.86)'); g.addColorStop(1, 'rgba(9,38,22,.12)'); c.fillStyle = g; c.fillRect(0, 0, W, H);
-      if (R.logo) c.drawImage(R.logo, M + 14, 100, 440, 440 * R.logo.height / R.logo.width); else kicker('FERJUSANZ', M + 14, 190, AM);
+      if (R.logo) c.drawImage(R.logo, M + 14, 100, 440, 440 * R.logo.height / R.logo.width); else texto('Ferjusanz', M + 14, 190, FT(64), AM);
       if (d.t === 'portada') {
         let y = titulo(d.titulo, M + 14, 330, 820, '#ffffff', 118, 4);
         c.fillStyle = AM; c.fillRect(M + 14, y + 8, 140, 8); y += 80;
         c.font = FR(32); parte(d.sub || '', 760).slice(0, 3).forEach(l => { texto(l, M + 14, y, FR(32), '#e8f1ea'); y += 46; });
-        if (d.pie) texto(String(d.pie).toUpperCase(), M + 14, H - 110, FB(22), AM, { esp: '3px' });
+        if (d.pie) texto(String(d.pie), M + 14, H - 110, FB(28), AM);
       } else {
         let y = titulo(d.titulo, M + 14, 300, 820, '#ffffff', 96, 2) + 60;
         (d.lineas || []).filter(Boolean).forEach((l, k) => {
@@ -13021,47 +13020,47 @@ async function presLienzos(laminas) {
     }
     if (d.t === 'lista' && d.enlace) {
       c.fillStyle = VO; c.fillRect(0, 0, W, H); const g = c.createRadialGradient(W * 0.85, H * 0.1, 50, W * 0.85, H * 0.1, W * 0.8); g.addColorStop(0, 'rgba(242,183,5,.18)'); g.addColorStop(1, 'rgba(242,183,5,0)'); c.fillStyle = g; c.fillRect(0, 0, W, H);
-      kicker('SIN COMPROMISO', M, 150, AM); let y = titulo(d.titulo, M, 250, W - 2 * M, '#ffffff', 88, 2) + 70;
+      let y = titulo(d.titulo, M, 230, W - 2 * M, '#ffffff', 88, 2) + 70;
       (d.puntos || []).filter(Boolean).slice(0, 5).forEach(p => { c.beginPath(); c.arc(M + 22, y - 12, 20, 0, 7); c.fillStyle = AM; c.fill(); texto('✓', M + 22, y - 2, FB(26), VO, { al: 'center' }); c.font = FR(32); parte(p, W - 2 * M - 80).slice(0, 2).forEach((t, q) => texto(t, M + 66, y + q * 42, FR(32), '#f1f6f2')); y += 72; });
       const by = Math.min(y + 20, H - 230), bw = W - 2 * M; sombra(() => { rr(M, by, bw, 116, 58); c.fillStyle = AM; c.fill(); });
-      texto(String(d.enlace.texto || '').toUpperCase() + '  →', W / 2, by + 76, FT(52), VO, { al: 'center', esp: '1px' });
+      texto(String(d.enlace.texto || ''), W / 2, by + 76, FT(56), VO, { al: 'center' });
       enlace = { x: M, y: by, w: bw, h: 116, url: d.enlace.url }; pie(true); out.push({ cv, enlace }); continue;
     }
     c.fillStyle = CR; c.fillRect(0, 0, W, H);
     if (d.t === 'texto') {
       foto(R.quienes, 0, 0, 560, H, 0); c.fillStyle = AM; c.fillRect(560, 0, 10, H);
-      const x0 = 650, aw = W - x0 - M; kicker('EMPRESA FAMILIAR', x0, 150); let y = titulo(d.titulo, x0, 250, aw, VO, 92, 2) + 50;
+      const x0 = 650, aw = W - x0 - M; let y = titulo(d.titulo, x0, 230, aw, VO, 92, 2) + 50;
       c.font = FR(29); parte(d.texto || '', aw).slice(0, 8).forEach(l => { texto(l, x0, y, FR(29), TX); y += 44; });
       const cf = (d.cifras || []).filter(x => x && (x[0] || x[1])).slice(0, 4), cw = aw / Math.max(cf.length, 1), cy = H - 230;
       cf.forEach((x, k) => { const xx = x0 + k * cw; if (k) { c.fillStyle = '#d9d1c1'; c.fillRect(xx - 10, cy - 70, 2, 110); } const a = ajusta(String(x[0] || ''), FT, 64, 30, cw - 24, 1); texto(a.L[0] || '', xx, cy, FT(a.z), V); c.font = FR(20); parte(x[1] || '', cw - 24).slice(0, 2).forEach((l, q) => texto(l, xx, cy + 36 + q * 26, FR(20), GR)); });
     }
     else if (d.t === 'lista' || (d.t === 'ofertas' && !(d.items || []).length)) {
       const pts = d.t === 'lista' ? (d.puntos || []).filter(Boolean).slice(0, 7) : [], ladoW = 470, hay = pts.length <= 6 && lateral(W - M - ladoW, ladoW), aw = W - 2 * M - (hay ? ladoW + 80 : 0);
-      kicker(d.t === 'ofertas' ? 'CADA SEMANA' : 'FERJUSANZ', M, 150); let y = titulo(d.titulo, M, 250, aw, VO, 86, 2) + 70;
+      let y = titulo(d.titulo, M, 230, aw, VO, 86, 2) + 100;
       if (d.t === 'ofertas') { c.font = FR(34); parte(d.texto || '', aw).slice(0, 5).forEach(l => { texto(l, M, y, FR(34), TX); y += 50; }); }
       const paso = pts.length > 5 ? 92 : 112;
-      pts.forEach((p, k) => { texto(String(k + 1).padStart(2, '0'), M, y + 8, FT(58), AM); c.font = FB(30); const L = parte(p, aw - 110).slice(0, 2); L.forEach((t, q) => texto(t, M + 104, y - (L.length > 1 ? 14 : 0) + q * 38, FB(30), TX)); c.fillStyle = '#e4ddcf'; if (k < pts.length - 1) c.fillRect(M + 104, y + 36, aw - 104, 2); y += paso; });
+      pts.forEach((p, k) => { texto(String(k + 1).padStart(2, '0'), M, y + 8, FT(58), AM); const fz = parte(p, aw - 110).length > 2 ? 26 : 30; c.font = FB(fz); const L = parte(p, aw - 110).slice(0, 3); L.forEach((t, q) => texto(t, M + 104, y - (L.length - 1) * 16 + q * (fz + 6), FB(fz), TX)); c.fillStyle = '#e4ddcf'; const ex = L.length > 2 ? 16 : 0; if (k < pts.length - 1) c.fillRect(M + 104, y + 36 + ex, aw - 104, 2); y += paso + ex; });
     }
     else if (d.t === 'ofertas') {
-      kicker('ESTA SEMANA', M, 150); let y = titulo(d.titulo, M, 250, W - 2 * M, VO, 86, 1) + 60;
-      d.items.slice(0, 5).forEach(x => { sombra(() => { rr(M, y, W - 2 * M, 118, 22); c.fillStyle = '#ffffff'; c.fill(); }); c.fillStyle = AM; c.fillRect(M, y + 20, 8, 78); texto(String(x.n || '').toUpperCase(), M + 40, y + 52, FT(40), VO); c.font = FR(24); const L = parte(x.t || '', W - 2 * M - 80); texto((L[0] || '') + (L.length > 1 ? '…' : ''), M + 40, y + 92, FR(24), GR); y += 132; });
+      let y = titulo(d.titulo, M, 230, W - 2 * M, VO, 86, 1) + 60;
+      d.items.slice(0, 5).forEach(x => { sombra(() => { rr(M, y, W - 2 * M, 118, 22); c.fillStyle = '#ffffff'; c.fill(); }); c.fillStyle = AM; c.fillRect(M, y + 20, 8, 78); texto(String(x.n || ''), M + 40, y + 52, FT(42), VO); c.font = FR(24); const L = parte(x.t || '', W - 2 * M - 80); texto((L[0] || '') + (L.length > 1 ? '…' : ''), M + 40, y + 92, FR(24), GR); y += 132; });
     }
     else if (d.t === 'productos' && d.conFoto) {
-      kicker('PRODUCTO', M, 150); titulo(d.titulo, M, 250, W - 2 * M, VO, 86, 1);
+      titulo(d.titulo, M, 230, W - 2 * M, VO, 86, 1);
       const it = (d.items || []).filter(Boolean).slice(0, 6), cw = (W - 2 * M - 2 * 40) / 3, ch = 300;
       for (let k = 0; k < it.length; k++) { const x = it[k], xx = M + (k % 3) * (cw + 40), yy = 330 + Math.floor(k / 3) * (ch + 40), ft = (d.fotos || {})[x], im = ft && ft.u ? await presImgDe(ft.u) : null;
-        sombra(() => { rr(xx, yy, cw, ch, 22); c.fillStyle = '#ffffff'; c.fill(); }); if (im) foto(im, xx, yy, cw, ch - 70, 22); texto(String(x).toUpperCase(), xx + 24, yy + ch - 26, FT(34), VO); }
+        sombra(() => { rr(xx, yy, cw, ch, 22); c.fillStyle = '#ffffff'; c.fill(); }); if (im) foto(im, xx, yy, cw, ch - 70, 22); texto(String(x), xx + 24, yy + ch - 26, FT(36), VO); }
     }
     else if (d.t === 'productos') {
       const it = (d.items || []).filter(Boolean).slice(0, 18), conCol = !usada.collage && R.collage && it.length > 6, conAncha = !conCol && !usada.ancha && R.ancha && it.length <= 6, colW = 470, aw = W - 2 * M - (conCol ? colW + 70 : 0);
       if (conCol) { usada.collage = true; sombra(() => foto(R.collage, W - M - colW, M, colW, H - 2 * M - 40, 28)); }
-      kicker(conCol ? 'MÁS DE 200 REFERENCIAS' : 'NUESTRO DÍA A DÍA', M, 150); titulo(d.titulo, M, 250, aw, VO, 86, 1);
+      titulo(d.titulo, M, 230, aw, VO, 86, 1);
       const cols = 2, gx = 22, pw = (aw - gx) / cols, ph = it.length > 12 ? 58 : 66, gy = it.length > 12 ? 14 : 18;
-      it.forEach((x, k) => { const xx = M + (k % cols) * (pw + gx), yy = 320 + Math.floor(k / cols) * (ph + gy); rr(xx, yy, pw, ph, ph / 2); c.fillStyle = '#ffffff'; c.fill(); c.strokeStyle = '#e2dacb'; c.lineWidth = 2; c.stroke(); c.beginPath(); c.arc(xx + 34, yy + ph / 2, 8, 0, 7); c.fillStyle = V; c.fill(); const a = ajusta(x, FB, 26, 18, pw - 70, 1); texto(a.L[0] || '', xx + 58, yy + ph / 2 + a.z * 0.36, FB(a.z), TX); });
+      it.forEach((x, k) => { const xx = M + (k % cols) * (pw + gx), yy = 320 + Math.floor(k / cols) * (ph + gy); rr(xx, yy, pw, ph, ph / 2); c.fillStyle = '#ffffff'; c.fill(); c.strokeStyle = '#e2dacb'; c.lineWidth = 2; c.stroke(); const a = ajusta(x, FB, 26, 18, pw - 56, 1); texto(a.L[0] || '', xx + 28, yy + ph / 2 + a.z * 0.36, FB(a.z), TX); });
       if (conAncha) { usada.ancha = true; const fy = 320 + Math.ceil(it.length / cols) * (ph + gy) + 30; sombra(() => foto(R.ancha, M, fy, W - 2 * M, Math.max(200, H - 120 - fy), 28)); }
     }
     else if (d.t === 'precios') {
-      kicker('TARIFA', M, 150); titulo((d.titulo || 'Lista de precios') + (d.partes > 1 ? ' (' + d.parte + '/' + d.partes + ')' : ''), M, 250, W - 2 * M, VO, 76, 1);
+      titulo((d.titulo || 'Lista de precios') + (d.partes > 1 ? ' (' + d.parte + '/' + d.partes + ')' : ''), M, 250, W - 2 * M, VO, 76, 1);
       if (d.aviso) texto(d.aviso, M, 360, FR(28), '#b45309'); else { let y = 350; (d.items || []).forEach((x, k) => { if (k % 2 === 0) { rr(M - 16, y - 46, W - 2 * M + 32, 64, 14); c.fillStyle = '#ffffff'; c.fill(); } c.font = FR(28); texto(parte(x.nombre || '', W - 2 * M - 360)[0] || '', M, y, FR(28), TX); texto(presPrecio(x.precio, x.unidad), W - M, y, FT(36), V, { al: 'right' }); y += 66; }); if (d.nota) texto(d.nota, M, H - 110, FR(20), GR); }
     }
     pie(false, d.t === 'texto' ? 650 : M); out.push({ cv, enlace });
