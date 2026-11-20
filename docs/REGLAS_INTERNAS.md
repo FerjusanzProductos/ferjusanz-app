@@ -124,7 +124,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 ## Lo que se puede decir de la empresa (Fernando, 15/11/2026)
 - **No decir «cosecha propia»** (no la hay) en web, presentaciones ni mensajes: «agricultores de confianza» y «elegido en Mercamadrid».
 - **Años**: «**más de seis décadas**» en las frases («impacta más», Fernando, 16/11/2026) y «**+60 años**» en las cifras; antes se ponía 40, mal.
-- **Qué somos** (Fernando, 16/11/2026): «Ferjusanz: **patatas, frutas, verduras, huevos, setas, champiñones y legumbres**» (en ese orden), nunca solo «frutas y verduras».
+- **Qué somos** (Fernando, 16/11/2026; Tito añadió setas, champiñones y legumbres el 20/11/2026: «mucha gente no sabe que lo vendemos»): «Ferjusanz: **patatas, frutas, verduras, huevos, setas, champiñones y legumbres**» (en ese orden), nunca solo «frutas y verduras». Siempre «setas **y champiñones**» (el champiñón no se ve como seta). En logos y franjas cortas, dos renglones: «FRUTA · VERDURA · PATATA · HUEVOS» / «SETAS · CHAMPIÑONES · LEGUMBRES». En títulos grandes, si no cabe: «Patatas, frutas y verduras…» y debajo «También huevos, setas, champiñones y legumbres».
 - **Orden** (Fernando, 16/11/2026): primero «agricultores de confianza» y después «Mercamadrid». Con posibles clientes: «destacamos por la relación calidad-precio» y la tarifa se calcula con lo que gastan.
 - Agricultura ecológica: «colaboramos con productores ecológicos siempre que tienen producto disponible».
 - Camiones y furgonetas refrigerados: sí.

@@ -23,7 +23,7 @@ Cada logo viene en tres formatos:
 - Foto de perfil siempre sobre **negro** (sobre granate el sol se apaga).
 
 ## Rehacerlos
-`codigo/hacer.mjs` dibuja todas las propuestas y `codigo/final.mjs` saca estos archivos. Necesitan un `fuentes.css` con las letras de `web/public/fuentes/` en base64 (ver HISTORIAL, 16/11/2026).
+`codigo/hacer.mjs` dibuja todas las propuestas y `codigo/final.mjs` saca estos archivos. Desde el 20/11/2026 el lema lleva dos renglones (con setas, champiñones y legumbres) cambiado a mano en los `.svg`: para sacar otra vez PNG y PDF, `node marca/logo/codigo/pngpdf.mjs` (desde la raíz) y después `usos.mjs`. Necesitan un `fuentes.css` con las letras de `web/public/fuentes/` en base64 (ver HISTORIAL, 16/11/2026).
 
 ## Dónde está puesto (16/11/2026)
 - **App**: icono, albaranes, facturas, tarifa (etiqueta), presentación. Archivos en `public/pres/` (`logo.png`, `logo.jpg`, `logo-oscuro.png`, `etiqueta.jpg`) e iconos `public/icon*.png`.
