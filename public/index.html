@@ -12675,11 +12675,11 @@ const ppBase = clave => clave.replace(/^ex-/, '');
 /* Exclientes (Fernando, 16/11/2026): seguimos trabajando y con la mayor disposición; frases para que vuelvan a confiar; el formulario al final, pero no hace falta. */
 function ppPlantilla(clave) {
   const lam = presPlantilla(ppBase(clave)), ex = clave.startsWith('ex-'), ic = () => { const i = lam.findIndex(x => x.t === 'contacto'); return i < 0 ? lam.length : i; };
-  if (!ex) { lam.splice(ic(), 0, { t: 'lista', titulo: 'Imagine su primer pedido y le calculamos su tarifa', puntos: ['Sirve para calcular los precios que le haríamos', 'Marque en un minuto qué productos usa y, si quiere, cuánto a la semana', 'Le enviamos su tarifa según lo que gasta: destacamos por la calidad-precio', 'Sin compromiso y sin pedido mínimo · Madrid y Segovia'], enlace: { texto: '', url: '' } }); return lam; }
-  lam[0] = Object.assign({}, lam[0], { titulo: 'Seguimos aquí, a su disposición', sub: 'Patatas, frutas, verduras, huevos, setas, champiñones y legumbres · De agricultores de confianza y Mercamadrid', pie: 'Empresa familiar · Tercera generación' });
-  const ip = lam.findIndex(x => x.t === 'lista'); if (ip >= 0) lam[ip] = { t: 'lista', titulo: 'Vuelva a confiar en nosotros', puntos: ['Seguimos trabajando, con las mismas ganas del primer día', 'Le serviremos con la mayor disposición, como siempre', 'Calidad homogénea, pedido tras pedido', 'La mejor relación calidad-precio para que salga beneficiado', 'Trato directo: nos llama y le atendemos, sin centralitas', 'Queremos saber qué podemos hacer mejor por usted'] };
-  lam.splice(ic(), 0, { t: 'lista', titulo: 'Díganos qué gasta ahora (no es necesario)', puntos: ['Como ya hemos trabajado juntos, nos hacemos una idea de lo que necesita', 'No hace falta que rellene nada', 'Si quiere afinar el precio, marque en un minuto lo que usa ahora', 'Sin compromiso y sin pedido mínimo'], enlace: { texto: '', url: '' } });
-  const c = lam[ic()]; if (c) lam[ic()] = Object.assign({}, c, { lineas: ['Cualquier consulta, estamos a su disposición.'].concat(c.lineas || []) });
+  if (!ex) { lam.splice(ic(), 0, { t: 'lista', titulo: 'Imagine su primer pedido', puntos: PRES_ESQUEMA.primer.slice(), enlace: { texto: '', url: '' } }); return lam; }
+  lam[0] = Object.assign({}, lam[0], { titulo: 'Seguimos aquí, a su disposición', sub: 'Patatas, frutas, verduras, huevos, setas, champiñones y legumbres', pie: 'Empresa familiar, tercera generación' });
+  const ip = lam.findIndex(x => x.t === 'lista'); if (ip >= 0) lam[ip] = { t: 'lista', titulo: 'Vuelva a confiar en nosotros', puntos: PRES_ESQUEMA.confiar.slice() };
+  lam.splice(ic(), 0, { t: 'lista', titulo: 'Díganos qué usa ahora', puntos: PRES_ESQUEMA.ex.slice(), enlace: { texto: '', url: '' } });
+  const c = lam[ic()]; if (c) lam[ic()] = Object.assign({}, c, { lineas: c.lineas || [] });
   return lam;
 }
 async function ppPresentacion(clave) {
@@ -12948,28 +12948,37 @@ async function comVer(lista, soloRecs) {
 /* =====================  PRESENTACIONES A CLIENTES (dentro de Comercial, en página aparte)  ===================== */
 const PRES_TIPOS = { portada: ['🎬', 'Portada'], texto: ['📝', 'Quiénes somos / texto'], lista: ['✅', 'Puntos (cómo trabajamos)'], productos: ['🥬', 'Productos (con fotos)'], ofertas: ['🏷️', 'Ofertas de la semana'], precios: ['💶', 'Lista de precios'], contacto: ['📞', 'Contacto'] };
 const PRES_MODELOS = { hosteleria: 'Hostelería (bares y restaurantes)', colectivos: 'Colectividades (colegios, residencias, escuelas infantiles)' };
-const PRES_CONTACTO = ['Debe saber que no tenemos pedido mínimo.', 'Habla directamente con tu comercial: sin intermediarios, sin centralitas.', EMPRESA.tels, EMPRESA.dir, EMPRESA.email];
+const PRES_CONTACTO = ['Sin pedido mínimo', 'Trato directo, sin centralitas', EMPRESA.tels, EMPRESA.dir, EMPRESA.email];
+/* Modo esquema (Tito, 20/11/2026: «Menos texto y más modo esquema. Pesa mucho sobre el lector»): frases de 3-6 palabras. */
+const PRES_INTRO = 'Mayoristas en Mercamadrid, con agricultores de confianza.';
+const PRES_PRODUCTOS = ['Patatas y patata pelada', 'Fruta de temporada y tropical', 'Verduras y hortalizas', 'Cebollas, ajos y puerros', 'Huevos', 'Setas y champiñones', 'Legumbres', 'Hierbas aromáticas'];
+const PRES_ESQUEMA = {
+  porque: { hosteleria: ['Tres generaciones en el oficio', 'Fresco cada mañana de Mercamadrid', 'Agricultores de confianza', 'Reparto puntual en tu local', 'Un comercial directo'], colectivos: ['Tres generaciones en el oficio', 'Volumen y continuidad para centros grandes', 'Fresco de temporada de Mercamadrid', 'Reparto regular y puntual', 'Un contacto directo para todo el centro'] },
+  como: { hosteleria: ['Pides por WhatsApp o teléfono', 'Lo preparamos con el producto del día', 'Te lo llevamos al local', 'Albarán con pesos reales', 'Calidades y formatos a tu medida'], colectivos: ['Días y horas de entrega acordados', 'Patata pelada en varios cortes', 'Albarán con pesos reales', 'Tarifa revisada cada 7-10 días', 'Atención directa ante incidencias'] },
+  confiar: ['Las mismas ganas del primer día', 'Calidad homogénea, pedido tras pedido', 'La mejor calidad-precio', 'Trato directo, sin centralitas', 'Díganos qué podemos mejorar'],
+  primer: ['Marque en un minuto lo que usa', 'Le enviamos su tarifa', 'Sin compromiso ni pedido mínimo', 'Madrid y Segovia'],
+  ex: ['Es opcional: ya le conocemos', 'Un minuto, si quiere afinar el precio', 'Sin compromiso ni pedido mínimo'] };
 const PRES_CIFRAS = [['3ª', 'generación familiar'], ['Mercamadrid', 'nuestro puesto'], ['+60', 'años en el sector'], ['+200', 'productos frescos']];
 const presPlantilla = (tipo) => {
   const hos = tipo !== 'colectivos';
   return hos ? [
-    { t: 'portada', titulo: 'Patatas, frutas y verduras para hostelería', sub: 'También huevos, setas, champiñones y legumbres · De agricultores de confianza y directos desde Mercamadrid', pie: 'Empresa familiar · Tercera generación' },
-    { t: 'texto', titulo: 'Quiénes somos', texto: COM_INTRO, cifras: PRES_CIFRAS },
-    { t: 'lista', titulo: 'Por qué elegirnos', puntos: ['Tres generaciones dedicadas a las patatas, las frutas, las verduras, los huevos, las setas, los champiñones y las legumbres', 'Mercancía fresca elegida cada mañana en Mercamadrid', 'Agricultores de confianza con los que llevamos años: continuidad y calidad', 'Reparto puntual en tu local, con nuestros repartidores', 'Un comercial de contacto directo, siempre localizable'] },
-    { t: 'lista', titulo: 'Cómo trabajamos', puntos: ['Pides por WhatsApp o por teléfono, cuando te venga bien', 'Preparamos tu pedido con el producto del día', 'Te lo llevamos nosotros a tu local', 'Albarán con los pesos reales de cada entrega', 'Ajustamos calidades y formatos a tu cocina'] },
+    { t: 'portada', titulo: 'Patatas, frutas y verduras para hostelería', sub: 'También huevos, setas, champiñones y legumbres', pie: 'Empresa familiar, tercera generación' },
+    { t: 'texto', titulo: 'Quiénes somos', texto: PRES_INTRO, cifras: PRES_CIFRAS },
+    { t: 'lista', titulo: 'Por qué elegirnos', puntos: PRES_ESQUEMA.porque.hosteleria.slice() },
+    { t: 'lista', titulo: 'Cómo trabajamos', puntos: PRES_ESQUEMA.como.hosteleria.slice() },
     { t: 'productos', titulo: 'Así trabajamos cada día', items: ['Agricultores de confianza', 'Mercamadrid', 'Reparto a tu puerta', 'Lista de precios'], fotos: {} },
-    { t: 'productos', titulo: 'Nuestros productos: más de 200', items: ['Patatas', 'Patata pelada y cortada', 'Cebollas, ajos y puerros', 'Huevos (gallina y codorniz)', 'Tomates', 'Pimientos y picantes', 'Verduras y hortalizas', 'Lechugas, brotes y ensaladas', 'Fruta de temporada', 'Naranjas, limones y limas', 'Fruta tropical', 'Setas y champiñón', 'Legumbres', 'Hierbas aromáticas', 'Y mucho más: pregúntenos'], fotos: {} },
-    { t: 'ofertas', titulo: 'Ofertas de la semana', texto: 'Cada semana tenemos productos en oferta. Pregúntale a tu comercial.' },
+    { t: 'productos', titulo: 'Nuestros productos: más de 200', items: PRES_PRODUCTOS.slice(), fotos: {} },
+    { t: 'ofertas', titulo: 'Ofertas de la semana', texto: 'Pregunte por las ofertas de esta semana.' },
     { t: 'contacto', titulo: 'Tu comercial directo', lineas: PRES_CONTACTO },
     { t: 'precios', titulo: 'Lista de precios · Hostelería', lista_id: '', soloEnvio: true, nota: 'Precios sujetos a variaciones de mercado y disponibilidad. Precios sin IVA salvo que se indique.', _tipo: 'hosteleria' }
   ] : [
-    { t: 'portada', titulo: 'Patatas, frutas y verduras para colegios y residencias', sub: 'También huevos, setas, champiñones y legumbres · Colegios, residencias y escuelas infantiles', pie: 'Empresa familiar · Tercera generación · Mercamadrid' },
-    { t: 'texto', titulo: 'Quiénes somos', texto: COM_INTRO, cifras: PRES_CIFRAS },
-    { t: 'lista', titulo: 'Por qué elegirnos', puntos: ['Tres generaciones de experiencia en patatas, frutas, verduras, huevos, setas, champiñones y legumbres', 'Volumen y continuidad para centros grandes, con agricultores de confianza', 'Producto fresco de temporada desde Mercamadrid', 'Reparto regular y puntual en tu centro', 'Una persona de contacto directo para todo el centro'] },
-    { t: 'lista', titulo: 'Cómo trabajamos', puntos: ['Acordamos contigo días y horarios de entrega', 'Formatos y calidades adaptados al centro (patata pelada en varios cortes)', 'Albarán con los pesos reales de cada entrega', 'Revisión de la tarifa cada 7-10 días', 'Atención directa ante cualquier incidencia'] },
+    { t: 'portada', titulo: 'Patatas, frutas y verduras para colegios y residencias', sub: 'Colegios, residencias, catering y escuelas infantiles', pie: 'Empresa familiar, tercera generación' },
+    { t: 'texto', titulo: 'Quiénes somos', texto: PRES_INTRO, cifras: PRES_CIFRAS },
+    { t: 'lista', titulo: 'Por qué elegirnos', puntos: PRES_ESQUEMA.porque.colectivos.slice() },
+    { t: 'lista', titulo: 'Cómo trabajamos', puntos: PRES_ESQUEMA.como.colectivos.slice() },
     { t: 'productos', titulo: 'Así trabajamos cada día', items: ['Agricultores de confianza', 'Mercamadrid', 'Reparto a tu puerta', 'Lista de precios'], fotos: {} },
-    { t: 'productos', titulo: 'Nuestros productos: más de 200', items: ['Patatas', 'Patata pelada y cortada', 'Cebollas, ajos y puerros', 'Huevos (gallina y codorniz)', 'Tomates', 'Pimientos y picantes', 'Verduras y hortalizas', 'Lechugas, brotes y ensaladas', 'Fruta de temporada', 'Naranjas, limones y limas', 'Fruta tropical', 'Setas y champiñón', 'Legumbres', 'Hierbas aromáticas', 'Y mucho más: pregúntenos'], fotos: {} },
-    { t: 'ofertas', titulo: 'Ofertas de la semana', texto: 'Cada semana tenemos productos en oferta. Pregúntale a tu comercial.' },
+    { t: 'productos', titulo: 'Nuestros productos: más de 200', items: PRES_PRODUCTOS.slice(), fotos: {} },
+    { t: 'ofertas', titulo: 'Ofertas de la semana', texto: 'Pregunte por las ofertas de esta semana.' },
     { t: 'contacto', titulo: 'Tu comercial directo', lineas: PRES_CONTACTO },
     { t: 'precios', titulo: 'Tarifa · Colegios, residencias y escuelas infantiles', lista_id: '', soloEnvio: true, nota: 'Precios sujetos a mercado y disponibilidad. Precios sin IVA salvo que se indique.', _tipo: 'colectivos' }
   ];
@@ -13082,20 +13091,21 @@ async function presLienzos(laminas) {
     if (d.t === 'texto') {
       foto(R.quienes, 0, 0, 560, H, 0); c.fillStyle = AM; c.fillRect(560, 0, 10, H);
       const x0 = 650, aw = W - x0 - M; let y = titulo(d.titulo, x0, 230, aw, VO, 92, 2) + 50;
-      c.font = FR(29); parte(d.texto || '', aw).slice(0, 8).forEach(l => { texto(l, x0, y, FR(29), TX); y += 44; });
-      const cf = (d.cifras || []).filter(x => x && (x[0] || x[1])).slice(0, 4), cw = aw / Math.max(cf.length, 1), cy = H - 230;
-      cf.forEach((x, k) => { const xx = x0 + k * cw; if (k) { c.fillStyle = '#d9d1c1'; c.fillRect(xx - 10, cy - 70, 2, 110); } const a = ajusta(String(x[0] || ''), FT, 64, 30, cw - 24, 1); texto(a.L[0] || '', xx, cy, FT(a.z), V); c.font = FR(20); parte(x[1] || '', cw - 24).slice(0, 2).forEach((l, q) => texto(l, xx, cy + 36 + q * 26, FR(20), GR)); });
+      c.font = FR(32); parte(d.texto || '', aw).slice(0, 4).forEach(l => { texto(l, x0, y, FR(32), TX); y += 46; });
+      // Las cifras mandan (modo esquema): rejilla de 2 × 2 con el dato grande
+      const cf = (d.cifras || []).filter(x => x && (x[0] || x[1])).slice(0, 4), cw = aw / 2, top = Math.max(y + 40, 520), rh = (H - 140 - top) / Math.ceil(cf.length / 2);
+      cf.forEach((x, k) => { const xx = x0 + (k % 2) * cw, yy = top + Math.floor(k / 2) * rh; c.fillStyle = '#d9d1c1'; c.fillRect(xx, yy, cw - 40, 2); const a = ajusta(String(x[0] || ''), FT, 96, 40, cw - 40, 1); texto(a.L[0] || '', xx, yy + 20 + a.z * 0.9, FT(a.z), V); c.font = FR(26); parte(x[1] || '', cw - 40).slice(0, 1).forEach(l => texto(l, xx, yy + 20 + a.z * 0.9 + 40, FR(26), GR)); });
     }
     else if (d.t === 'lista' || (d.t === 'ofertas' && !(d.items || []).length)) {
       const pts = d.t === 'lista' ? (d.puntos || []).filter(Boolean).slice(0, 7) : [], ladoW = 470, hay = pts.length <= 6 && lateral(W - M - ladoW, ladoW), aw = W - 2 * M - (hay ? ladoW + 80 : 0);
       let y = titulo(d.titulo, M, 230, aw, VO, 86, 2) + 100;
       if (d.t === 'ofertas') { c.font = FR(34); parte(d.texto || '', aw).slice(0, 5).forEach(l => { texto(l, M, y, FR(34), TX); y += 50; }); }
       const paso = pts.length > 5 ? 92 : 112;
-      pts.forEach((p, k) => { texto(String(k + 1).padStart(2, '0'), M, y + 8, FT(58), AM); const fz = parte(p, aw - 110).length > 2 ? 26 : 30; c.font = FB(fz); const L = parte(p, aw - 110).slice(0, 3); L.forEach((t, q) => texto(t, M + 104, y - (L.length - 1) * 16 + q * (fz + 6), FB(fz), TX)); c.fillStyle = '#e4ddcf'; const ex = L.length > 2 ? 16 : 0; if (k < pts.length - 1) c.fillRect(M + 104, y + 36 + ex, aw - 104, 2); y += paso + ex; });
+      pts.forEach((p, k) => { texto(String(k + 1).padStart(2, '0'), M, y + 8, FT(58), AM); c.font = FB(34); const fz = parte(p, aw - 110).length > 2 ? 26 : parte(p, aw - 110).length > 1 ? 30 : 34; c.font = FB(fz); const L = parte(p, aw - 110).slice(0, 3); L.forEach((t, q) => texto(t, M + 104, y - (L.length - 1) * 16 + q * (fz + 6), FB(fz), TX)); c.fillStyle = '#e4ddcf'; const ex = L.length > 2 ? 16 : 0; if (k < pts.length - 1) c.fillRect(M + 104, y + 36 + ex, aw - 104, 2); y += paso + ex; });
     }
     else if (d.t === 'ofertas') {
       let y = titulo(d.titulo, M, 230, W - 2 * M, VO, 86, 1) + 60;
-      d.items.slice(0, 5).forEach(x => { sombra(() => { rr(M, y, W - 2 * M, 118, 22); c.fillStyle = '#ffffff'; c.fill(); }); c.fillStyle = AM; c.fillRect(M, y + 20, 8, 78); texto(String(x.n || ''), M + 40, y + 52, FT(42), VO); c.font = FR(24); const L = parte(x.t || '', W - 2 * M - 80); texto((L[0] || '') + (L.length > 1 ? '…' : ''), M + 40, y + 92, FR(24), GR); y += 132; });
+      d.items.slice(0, 5).forEach(x => { sombra(() => { rr(M, y, W - 2 * M, 118, 22); c.fillStyle = '#ffffff'; c.fill(); }); c.fillStyle = AM; c.fillRect(M, y + 20, 8, 78); texto(String(x.n || ''), M + 40, y + 52, FT(42), VO); c.font = FR(24); const L = /^oferta de la semana\.?$/i.test(String(x.t || '').trim()) ? [] : parte(x.t || '', W - 2 * M - 80); texto((L[0] || '') + (L.length > 1 ? '…' : ''), M + 40, y + 92, FR(24), GR); y += 132; });
     }
     else if (d.t === 'productos' && d.conFoto) {
       titulo(d.titulo, M, 230, W - 2 * M, VO, 86, 1);
@@ -13107,8 +13117,8 @@ async function presLienzos(laminas) {
       const it = (d.items || []).filter(Boolean).slice(0, 18), conCol = !usada.collage && R.collage && it.length > 6, conAncha = !conCol && !usada.ancha && R.ancha && it.length <= 6, colW = 470, aw = W - 2 * M - (conCol ? colW + 70 : 0);
       if (conCol) { usada.collage = true; sombra(() => foto(R.collage, W - M - colW, M, colW, H - 2 * M - 40, 28)); }
       titulo(d.titulo, M, 230, aw, VO, 86, 1);
-      const cols = 2, gx = 22, pw = (aw - gx) / cols, ph = it.length > 12 ? 58 : 66, gy = it.length > 12 ? 14 : 18;
-      it.forEach((x, k) => { const xx = M + (k % cols) * (pw + gx), yy = 320 + Math.floor(k / cols) * (ph + gy); rr(xx, yy, pw, ph, ph / 2); c.fillStyle = '#ffffff'; c.fill(); c.strokeStyle = '#e2dacb'; c.lineWidth = 2; c.stroke(); const a = ajusta(x, FB, 26, 18, pw - 56, 1); texto(a.L[0] || '', xx + 28, yy + ph / 2 + a.z * 0.36, FB(a.z), TX); });
+      const cols = 2, gx = 22, pw = (aw - gx) / cols, ph = it.length > 12 ? 58 : it.length > 8 ? 66 : 84, gy = it.length > 12 ? 14 : it.length > 8 ? 18 : 24;
+      it.forEach((x, k) => { const xx = M + (k % cols) * (pw + gx), yy = 320 + Math.floor(k / cols) * (ph + gy); rr(xx, yy, pw, ph, ph / 2); c.fillStyle = '#ffffff'; c.fill(); c.strokeStyle = '#e2dacb'; c.lineWidth = 2; c.stroke(); const a = ajusta(x, FB, ph > 70 ? 30 : 26, 18, pw - 56, 1); texto(a.L[0] || '', xx + 28, yy + ph / 2 + a.z * 0.36, FB(a.z), TX); });
       if (conAncha) { usada.ancha = true; const fy = 320 + Math.ceil(it.length / cols) * (ph + gy) + 30; sombra(() => foto(R.ancha, M, fy, W - 2 * M, Math.max(200, H - 120 - fy), 28)); }
     }
     else if (d.t === 'precios') {
