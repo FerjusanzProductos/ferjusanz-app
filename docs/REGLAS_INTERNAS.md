@@ -216,3 +216,8 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 ## Vídeos de Super 9 (Tito, 18/11/2026)
 - El vídeo con la **voz de Carlos** va **solo en la app** (para mandárselo a él). En la **web** va el de **Tito hablando de Carlos**.
 - Siempre **«Super 9 Carnicerías»** (en plural), nunca «Carnicería Super 9».
+
+## Fotos para clientes: solo propias (Tito, 21/11/2026)
+- Catálogo de WhatsApp Business, tarjetas y todo lo que vea el cliente como «nuestro género»: **solo fotos propias** (las del puesto y el almacén que sube Tito al Drive y están en la web nueva) **o las que parecían propias en la web antigua** (las furgonetas y el camión). Nada de fotos de banco de imágenes ni hechas con IA.
+- Cada foto **una sola vez** y un artículo por producto.
+- Sin precios (cambian cada día): «Precio según mercado: pídenos tarifa».
