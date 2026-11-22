@@ -47,11 +47,6 @@
       "Huevos",
       2.35,
       "docena"
-    ],
-    [
-      "Patata especial freír",
-      0.6,
-      "kg"
     ]
   ],
   "ejemplo": "El IVA (4 %) se suma al final, sobre el total del pedido. Ejemplo: si tus productos suman 100 €, el IVA son 4 € y pagas 104 €."
