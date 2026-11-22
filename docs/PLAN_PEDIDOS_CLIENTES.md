@@ -48,6 +48,12 @@ La app ya hace media parte: **pedidos fijos → previstos** 2 semanas por delant
 - Lo que entra tarde lo ve la oficina, no el repartidor en ruta.
 - Cada mes, en el Panel: clientes que más urgencias han pedido y los que más cajas enteras. Con los primeros habla Carmen; a los segundos, un detalle.
 
+## Idea sacada de Vinco (enlaces de Instagram de Tito, 22/11/2026)
+- Vinco Team es una aplicación para **comerciales que visitan clientes** (sobre todo distribución de alimentación y bebidas): catálogo con fotos en tableta, ficha del cliente con lo que compra, visitas planificadas, pedidos y cobros, objetivos. Se pone **encima** del programa de gestión, no lo sustituye.
+- **No hace falta comprarla**: casi todo ya está en nuestra app (clientes, pedidos, cobros, Comercial, Harvey, productos dejados). Lo que **sí nos falta** y se copia:
+  1. **«Modo visita» para Carmen** en el móvil: al llegar a un cliente, en una pantalla, lo que compra, lo que ha dejado de comprar, sus urgencias del mes, cómo va de cajas para el descuento y la ficha de temporada, y desde ahí apuntar el pedido.
+  2. **Catálogo con fotos** (las 52 propias del catálogo de WhatsApp) para que el cocinero elija **señalando**, también en la pantalla del pedido propuesto.
+
 ## Orden recomendado (de menos a más trabajo)
 1. **Apuntar cuánto trae la caja** de los productos más vendidos (Claude puede proponerlo con las compras de Golden y Fernando lo revisa).
 2. **Hora de cierre** y mensaje fijo para clientes (Fernando aprueba el texto; los mensajes a clientes los manda él).
