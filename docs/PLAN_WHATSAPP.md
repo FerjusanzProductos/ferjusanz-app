@@ -1,5 +1,7 @@
 # Plan: WhatsApp automático (Harvey contesta solo)
-_Preparado el 12/11/2026 a partir del vídeo «Construye un agente de IA para WhatsApp en 30 minutos con Claude Code» (revolutia). **Solo es un plan: no se ha montado nada.** Sigue aparcado hasta que Fernando lo diga._
+_Preparado el 12/11/2026 a partir del vídeo «Construye un agente de IA para WhatsApp en 30 minutos con Claude Code» (revolutia). **Solo es un plan: no se ha montado nada.**_
+
+**22/11/2026: en marcha** (Tito: «quiero automatizarlo… me da igual lo que haya que pagar»). Novedad comprobada: para seguir usando el 609 en la app del móvil a la vez que la API («coexistencia»), Meta solo deja conectarlo a través de un **proveedor oficial** (Solution Partner o Tech Provider) con su «Embedded Signup»; hace falta WhatsApp Business 2.24.17 o más nuevo. Los mensajes desde la app siguen gratis; los de la API, a precio de Meta. Fuente: https://developers.facebook.com/documentation/business-messaging/whatsapp/embedded-signup/onboarding-business-app-users . Sin confirmar: si el catálogo de Meta obliga a poner precio a cada artículo. Pasos en `docs/PENDIENTES.md`.
 
 ## Qué sería
 Que el WhatsApp de la empresa (609 567 354) lo conteste un agente con IA (Harvey), que:

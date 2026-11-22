@@ -32,6 +32,14 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 ## 🤖 IDEAS DEL TIKTOK DE LOS 5 AYUDANTES (Fernando, 18/11/2026; panel y buscador ya hechos)
 - 🟡 **Fernando**: probar en el móvil Comercial › «🔎 Buscar clientes» (p. ej. Colegios en Boadilla) y decir si el mapa contesta y si sirve. Si se queda «Buscando…» mucho rato, avisar: el plan B es sacar los negocios de Google Maps.
 - 🟡 **Radar de ideas**: cada mañana, 3 problemas o novedades reales del sector (quejas de hosteleros, precios, competencia) con una idea de qué hacer.
+- 🔴 **WhatsApp automático con el 609 567 354** (Tito, 22/11/2026: «quiero automatizarlo y que según me entre un pedido se ponga en la aplicación… me da igual lo que haya que pagar»). Plan: `docs/PLAN_WHATSAPP.md`. Pasos:
+  1. **Tito**: cuenta de empresa en Meta (business.facebook.com) y **verificar FERJUSANZ** (CIF y un papel de la empresa). Claude le guía desde el móvil.
+  2. **Claude**: elegir un proveedor oficial de Meta que deje seguir usando el 609 en la app del móvil a la vez («coexistencia»). Comprobar precio y que lo permita antes de contratar.
+  3. **Tito**: conectar el 609 con el proveedor (escanea un QR con el móvil) y guardar la clave con el formulario seguro.
+  4. **Claude**: cargar el catálogo (52 fotos) por la API de Meta. Comprobar si Meta obliga a poner precio.
+  5. **Claude, en PRUEBAS**: función que recibe los WhatsApp, Harvey lee el pedido y lo deja en la app para confirmar, y pantalla «💬 WhatsApp» (conversaciones y «Lo cojo yo»).
+  6. **Tito marca a qué clientes** se les puede contestar y mandar precios solos. Al principio Harvey **propone** y Tito pulsa «Enviar»; después, solo lo sencillo.
+  7. Ojo: es empezar a usar la app de verdad para pedidos (hoy siguen en Golden).
 - 🟡 **Respondedor automático**: que Harvey deje preparadas las respuestas a WhatsApp y correo de clientes; nunca se envía nada sin Fernando.
 - ⚪ **Equipo de agentes**: juntar las tareas automáticas que ya hay (comercial, mercado, leads, web, Golden, panel) en un solo sitio para verlas y encenderlas o apagarlas.
 - ⚪ **Tito**: si quiere usar **21st** (catálogo de componentes de pantalla), sacar la clave gratuita en https://21st.dev/mcp (entrar con Google o GitHub, «Sitio para ordenador» si no se ve bien) y pegarla en el formulario seguro que abre Claude (secreto de red `21st.dev`, cabecera `x-api-key`). Luego empezar una sesión nueva. Ojo (19/11/2026): primero hay que **crear la cuenta** («Get 21st free», con Google); sin entrar, el botón solo copia las instrucciones de instalación (`npm i -g @21st-dev/cli…`), que es lo que quedó guardado y 21st rechaza. El inicio de sesión del programa (`21st login`) no vale en la nube.
@@ -108,7 +116,7 @@ _Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/arti
 ### ⏸ Aparcado (hasta que Fernando lo diga)
 - Encender las facturas de la app en la normal el 1/1/2027 (Jorge, 19/11: la app no manda nada a Hacienda ni hace falta declaración; las presenta Jorge con su programa). Plan: `docs/PLAN_FACTURACION.md`.
 - Harvey v2 en la normal (`harvey-v2` «investiga y prepara la oferta») tras probarlo en pruebas; preparar pedido desde WhatsApp y recordatorios de cobro.
-- **WhatsApp automático** (`docs/PLAN_WHATSAPP.md`) · **Tienda online** (`docs/PLAN_TIENDA.md`) · anuncios de Meta y seguimiento automático por correo a contactos.
+- **Tienda online** (`docs/PLAN_TIENDA.md`) · anuncios de Meta y seguimiento automático por correo a contactos.
 - Agentes: ofertas semanales, cobros, buscador de clientes con cocina propia.
 - Resumen de correo automático cada mañana (las tareas programadas no ven Gmail; mientras, **/resumen-correo** en un chat).
 - Cambio de temporada de patata (09-F → 01-F) cuando diga «cambio de temporada patata».

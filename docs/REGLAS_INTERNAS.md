@@ -118,7 +118,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 ## Envío del albarán al cliente (desde 10/11/2026)
 - **Correo:** automático al marcar la entrega, desde fernandosanzalba@gmail.com, al correo de la ficha o al que dejó el cliente con el QR **solo después de que la oficina lo acepte** («✅ Guardar en su ficha»). Fernando, 16/11/2026 (auditoría de seguridad): así nadie con un enlace suelto se apunta solo.
 - **WhatsApp:** hasta nueva orden lo manda **cada repartidor desde su propio WhatsApp** (botón que sale al marcar «Entregado»). Si el cliente no tiene móvil, el repartidor lo escribe y queda apuntado en «Móviles y correos de clientes».
-- **Aparcado:** envío automático por WhatsApp desde el 609 567 354 (coexistencia de WhatsApp Business con la API de Meta). Retomar cuando Fernando lo diga.
+- **En marcha (Tito, 22/11/2026):** envío automático por WhatsApp desde el 609 567 354 (coexistencia de WhatsApp Business con la API de Meta). Ver `docs/PENDIENTES.md` y `docs/PLAN_WHATSAPP.md`. Mandar mensajes o precios solos: **solo a los clientes que marque Tito**.
 
 
 ## Lo que se puede decir de la empresa (Fernando, 15/11/2026)
