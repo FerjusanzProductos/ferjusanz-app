@@ -91,6 +91,13 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 ## Aviso de margen (Fernando, 11/11/2026)
 - **No hay un margen mínimo fijo.** Se compara cada producto con **su propia media de compra de los últimos días** (14 días) y se avisa **cuando sube**, con lo que se pierde de margen frente al precio de venta de Golden. Pantalla «📈 Suben» en Precios de compra.
 
+## Tarifa de colectividades: compra + 0,20 € (Tito, 22/11/2026)
+- La lista **«Colegios, residencias y escuelas infantiles»** = **última compra + 0,20 €** por producto, siempre. Se recalcula sola al apuntar una compra (factura leída en la app o compras de Golden): función `recalcular_listas_auto()` y columna `margen_auto` de `listas_precios` (migración `20261208a`).
+- **Precios fijos** (no los toca el cálculo): patata especial freír (09-F) **0,57 €/kg** y patata agria (01) **0,64 €/kg**.
+- «Última compra» = la más reciente entre `tarifas_compra` y `golden_compras_lineas`. Si la unidad de compra no es la de la lista (kg frente a manojo, caja o pieza), **no se pone precio**: queda en «para contrastar».
+- Cada día, en el correo de «Comercial del día» (punto 4, `scripts/tarifa-colectivos.mjs`): cambios, lo que hay que contrastar y la lista completa. Lleva precios de compra: solo para Tito, no en `resumen_comercial`.
+- Las **limas** se venden **por caja** en todas las listas.
+
 ## Pedidos
 - Los pedidos fijos generan **previstos** (2 semanas por delante, cada madrugada). Se confirman el día antes (✅) o se quitan (❌).
   Los previstos ya cuentan en la hoja de compra. Más allá de 2 semanas, el calendario los calcula al momento.
