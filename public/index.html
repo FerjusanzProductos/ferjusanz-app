@@ -5947,6 +5947,57 @@ function marcaGrupo(b) {
 /* ===== SECRETARÍA HOY (fase 1): una pantalla con las tareas de oficina; cada una abre la pantalla de siempre y "← Volver" regresa aquí ===== */
 function volverIni() { go(state.desdeSec ? 'secretaria' : 'inicio'); }
 /* 📲 Móviles y correos que dejan los clientes desde su albarán o su página. La oficina los pasa a la ficha y les manda su página (WhatsApp o correo, con un toque). */
+/* 💬 WhatsApp · pedidos: lo que apunta el asistente del 609 100 690 (función «whatsapp», modo silencioso: no contesta a nadie).
+   Son PROPUESTAS: no crean pedidos. La oficina elige el cliente si falta y las marca como revisadas o descartadas. */
+async function vistaWhatsapp() {
+  state.view = 'whatsapp';
+  const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
+  $app.replaceChildren(shell('💬 WhatsApp · pedidos', cont, { volver: volverIni })); renderBanner();
+  if (!esOficina()) { cont.replaceChildren(h('p', { class: 'vacio' }, 'Solo la oficina puede ver esto.')); return; }
+  let verTodos = false;
+  const telES = t => { const d = String(t || '').replace(/\D/g, '').replace(/^34(?=\d{9}$)/, ''); return d.replace(/^(\d{3})(\d{3})(\d{3})$/, '$1 $2 $3'); };
+  const guardar = async (x, cambios) => { const r = await sb.from('whatsapp_pedidos').update(cambios).eq('id', x.id); if (r.error) throw r.error; };
+  async function cargar() {
+    try {
+      let q = sb.from('whatsapp_pedidos').select('*,clientes(id,codigo,nombre,nombre_comercial)').order('created_at', { ascending: false }).limit(100);
+      if (!verTodos) q = q.eq('estado', 'nuevo');
+      const r = await q; if (r.error) throw r.error; pintar(r.data || []);
+    } catch (e) { cont.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+  }
+  async function elegirCliente(x) {
+    if (!clientesCache) { try { const { data } = await sb.from('clientes').select('id,codigo,nombre,nombre_comercial,activo').range(0, 4999); clientesCache = data || []; } catch (e) { clientesCache = []; } }
+    let cerrar; const res = h('div', {});
+    const inp = h('input', { placeholder: 'Buscar cliente…', oninput: debounce(() => busca(), 200) });
+    const busca = () => { const r = buscarCliLocal(clientesCache, inp.value); res.replaceChildren(r.length ? h('div', { class: 'res' }, r.map(c => h('button', { onclick: async () => { try { await guardar(x, { cliente_id: c.id }); cerrar(); toast('Cliente puesto', 'ok'); cargar(); } catch (e) { toast(msgErr(e), 'err'); } } }, nombreCli(c) + '  ·  ' + c.codigo))) : h('p', { class: 'sub' }, 'Sin resultados.')); };
+    cerrar = hoja('¿De qué cliente es?', h('div', {}, inp, res));
+  }
+  function pintar(filas) {
+    const kids = [h('div', { class: 'aviso-card' }, 'Pedidos que el asistente ha leído en el WhatsApp de Fernando (609 100 690). No contesta a nadie y no crea pedidos: revisa cada uno. Los mensajes personales no se guardan.'),
+      h('div', { class: 'chips' }, [[false, 'Por revisar'], [true, 'Todos']].map(([v, n]) => h('button', { class: 'chip' + (verTodos === v ? ' on' : ''), onclick: () => { verTodos = v; cargar(); } }, n)))];
+    if (!filas.length) kids.push(h('p', { class: 'vacio' }, verTodos ? 'Todavía no ha llegado ningún pedido por WhatsApp.' : 'No hay nada por revisar. 👌'));
+    filas.forEach(x => {
+      const c = uno(x.clientes); const lineas = Array.isArray(x.lineas) ? x.lineas : [];
+      const est = { nuevo: 'Por revisar', revisado: '✔ Revisado', pasado: '📝 Pasado a pedido', descartado: 'Descartado' }[x.estado] || x.estado;
+      const accion = (txt, cls, cambios) => h('button', { class: cls + ' small', onclick: async () => { try { await guardar(x, Object.assign({ revisado_por: state.user.id, revisado_en: new Date().toISOString() }, cambios)); cargar(); } catch (e) { toast(msgErr(e), 'err'); } } }, txt);
+      kids.push(h('div', { class: 'card', style: 'border-left:6px solid ' + (c ? '#16a34a' : '#d97706') },
+        h('div', { class: 'fila' }, h('div', { class: 'nombre' }, c ? nombreCli(c) : '⚠️ Sin cliente' + (x.cliente_texto ? ' («' + x.cliente_texto + '»)' : '')), h('span', { class: 'badge' }, est)),
+        h('div', { class: 'sub' }, fechaES(String(x.created_at).slice(0, 10)) + ' ' + fmtHora(x.created_at) + ' · ' + ({ audio: '🎤 audio', image: '📷 foto' }[x.tipo] || '✍️ texto') + ' · de ' + telES(x.telefono) + (x.nombre_contacto ? ' (' + x.nombre_contacto + ')' : '') + (x.reenviado ? ' · ↪️ reenviado por la casa' : '')),
+        x.fecha_entrega ? h('div', { style: 'margin-top:6px;font-weight:700' }, '📅 Para el ' + fechaES(x.fecha_entrega)) : null,
+        lineas.length ? h('ul', { style: 'margin:6px 0 0 18px;padding:0;font-size:17px;line-height:1.5' }, lineas.map(l => h('li', {}, (l.cantidad != null ? l.cantidad + ' ' : '¿? ') + (l.unidad ? l.unidad + ' ' : '') + l.producto + (l.producto_id ? '' : ' ❓')))) : h('div', { class: 'sub', style: 'margin-top:6px' }, 'Sin productos leídos.'),
+        x.nota ? h('div', { class: 'aviso-card', style: 'margin-top:8px;white-space:pre-wrap' }, '📝 ' + x.nota) : null,
+        x.error ? h('div', { class: 'sub', style: 'color:#b45309;margin-top:4px' }, '⚠️ ' + x.error) : null,
+        (x.texto_original || x.transcripcion) ? h('details', { style: 'margin-top:6px' }, h('summary', { class: 'sub', style: 'cursor:pointer' }, 'Ver el mensaje original'),
+          x.texto_original ? h('div', { style: 'white-space:pre-wrap;margin-top:4px' }, '💬 ' + x.texto_original) : null,
+          x.transcripcion ? h('div', { style: 'white-space:pre-wrap;margin-top:4px' }, (x.tipo === 'audio' ? '🎤 Dice: ' : x.tipo === 'image' ? '📷 Pone: ' : '') + x.transcripcion) : null) : null,
+        h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' },
+          h('button', { class: 'ghost small', onclick: () => elegirCliente(x) }, c ? 'Cambiar cliente' : '👤 Elegir cliente'),
+          x.estado === 'nuevo' ? accion('✔ Revisado', 'guardar', { estado: 'revisado' }) : accion('↩️ Por revisar', 'ghost', { estado: 'nuevo' }),
+          x.estado === 'nuevo' ? accion('✖ Descartar', 'ghost', { estado: 'descartado' }) : null)));
+    });
+    cont.replaceChildren(...kids);
+  }
+  cargar();
+}
 async function vistaContactosPortal() {
   state.view = 'contactosportal';
   const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
@@ -6070,7 +6121,7 @@ function vistaMas() {
     ...g('Trabajo diario', c('✍️', 'Apuntar pedido', () => go('rapido'), V), c('📋', 'Preparar', () => go('lista'), V), c('🚚', 'Hoja de carga', () => go('carga'), V), c('🧑‍✈️', 'Reparto', () => go('reparto'), V), c('💶', 'Poner precios', () => go('preciosp'), V),
       c('🧺', 'Hoja de compra para hoy', () => go('hojacompra'), V),
       puedeCompras() ? c('💲', 'Precios de compra del día', () => { LS.set('fj_precios_modo', 'hoy'); go('precios'); }, V) : null, c('♻️', 'Sobrante', () => go('sobrante'), V)),
-    ...g('Entregas y pedidos', c('🚦', 'Camino de los pedidos', () => go('camino'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a')),
+    ...g('Entregas y pedidos', c('🚦', 'Camino de los pedidos', () => go('camino'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), esOficina() ? c('💬', 'WhatsApp · pedidos', () => go('whatsapp'), '#2f7d4a') : null, c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a')),
     ...g('Compras y mercancía', puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Clientes y productos', c('👥', 'Clientes', () => { window.__cliFiscal = false; go('clientes'); }, Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z), c('📇', 'Tarjetas', () => go('comercial', { tab: 'tarjetas' }), Z)),
     ...g('Facturas y análisis', esOficina() ? c('📊', 'Panel de la empresa', () => go('panel'), Z) : null, esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() && FACTURAR_APP ? c('🧾', 'Facturas (desde la app)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('facturasapp'), Z) : null, esOficina() ? c('🏢', 'Datos de la empresa', () => go('empresa'), Z) : null, esOficina() ? c('🧾', 'Clientes sin datos para facturar', () => { window.__cliFiscal = true; go('clientes'); }, Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen y correo', () => go('resumen'), Z) : null, veMargenes() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, veCobros() ? c('💶', veMargenes() ? 'Margen y cobros (Golden)' : 'Cobros y pagos (Golden)', () => go('goldenmargen'), Z) : null, esOficina() && CAJA_APP ? c('💵', 'Caja (efectivo)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('caja'), Z) : null, esOficina() ? c('⛽', 'Gastos de reparto', () => go('gastosreparto'), Z) : null, esOficina() && BANCO_APP ? c('🏦', 'Banco' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('banco'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
@@ -15959,6 +16010,7 @@ const BUSCA_PANTALLAS = [
   
   ['🧾', 'Clientes sin datos para facturar', 'clientes faltan datos nif cif codigo postal direccion facturar fiscales', () => { window.__cliFiscal = true; go('clientes'); }, 'o'],
   ['🗂️', 'Histórico de Golden', 'historico golden ventas antiguas', () => go('golden'), 'o'],
+  ['💬', 'WhatsApp · pedidos', 'whatsapp wasap pedidos mensajes audios fotos 609', () => go('whatsapp'), 'o'],
   ['📊', 'Resumen del día y correo', 'resumen ventas totales numeros informe correo email gmail manana visitas web', () => go('resumen'), 'o'],
   ['📈', 'Mercado (precios de los Mercas y noticias)', 'mercado mercas mercamadrid noticias semanal precios mercado', () => go('resumen'), 'o'],
   ['📈', 'Rentabilidad', 'rentabilidad ganancia beneficio margen ganamos perdemos', () => go('rentabilidad'), 'm'],
@@ -16392,7 +16444,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { proveedores: vistaProveedores, programasif: vistaProgramaSif, facturasapp: vistaFacturasApp, caja: vistaCaja, banco: vistaBanco, empresa: vistaEmpresa, modoreparto: vistaModoReparto, tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, panel: vistaPanel, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, camino: vistaCamino, rentabilidad: vistaRentabilidad, goldenmargen: vistaGoldenMargen, gastosreparto: vistaGastosReparto, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { proveedores: vistaProveedores, programasif: vistaProgramaSif, facturasapp: vistaFacturasApp, caja: vistaCaja, banco: vistaBanco, empresa: vistaEmpresa, modoreparto: vistaModoReparto, tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, whatsapp: vistaWhatsapp, ayudas: vistaAyudas, gestoria: vistaGestoria, panel: vistaPanel, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, camino: vistaCamino, rentabilidad: vistaRentabilidad, goldenmargen: vistaGoldenMargen, gastosreparto: vistaGastosReparto, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   if (MR.dentro() && state.view === 'inicio' && !state.mrMirado) { state.mrMirado = true; return vistaModoReparto(); }   /* vuelve al modo reparto si se cerró la app */
   v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); if (state.view === 'inicio') setTimeout(mrAuto, 300); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
