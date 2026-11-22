@@ -1,16 +1,16 @@
 {
-  "desde": "2026-11-17",
-  "hasta": "2026-11-23",
+  "desde": "2026-11-22",
+  "hasta": "2026-11-30",
   "nota": "+ 4 % de IVA",
   "items": [
     [
       "Tomate ensalada",
-      2.0,
+      1.85,
       "kg"
     ],
     [
       "Tomate pera gordo",
-      2.4,
+      2.0,
       "kg"
     ],
     [
@@ -20,17 +20,17 @@
     ],
     [
       "Limón nuevo",
-      1.75,
+      1.5,
       "kg"
     ],
     [
       "Naranja de mesa",
-      1.4,
+      1.3,
       "kg"
     ],
     [
       "Clementinas",
-      1.9,
+      1.45,
       "kg"
     ],
     [
@@ -47,6 +47,11 @@
       "Huevos",
       2.35,
       "docena"
+    ],
+    [
+      "Patata especial freír",
+      0.6,
+      "kg"
     ]
   ],
   "ejemplo": "El IVA (4 %) se suma al final, sobre el total del pedido. Ejemplo: si tus productos suman 100 €, el IVA son 4 € y pagas 104 €."
