@@ -96,8 +96,6 @@ _Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/arti
 - 🟡 Revisar cada lunes si sale en el BOE el aplazamiento de Verifactu: **lo hace sola** la tarea automática «Verifactu en el BOE (lunes)» (`trig_01Q2osxJtGHJMTo3oksNiXG7`, lunes 9:47 hora de Madrid, avisa al móvil). Se quita cuando salga o pase el 22/12.
 - ⚪ Hacer más pequeño `public/index.html`.
 - 🟡 **Propuesta (con el «sí» de Fernando)**: en la caja de la app, **no dejar guardar un apunte que deje el saldo por debajo de 0**.
-- 🟡 **Claude**: añadir a la tarea «Golden a la app (diaria)» el paso de `iva-sql.py` (IVA exacto de las facturas nuevas; ver `scripts/golden/LEEME.md`). Hasta entonces, las facturas nuevas salen en el listado repartidas con las líneas, como antes.
-- 🔴 **Sesión de la tarea «Golden a la app (diaria)»** (`trig_01TRG7iYGETjn6Yt9GSJtyTw`): añadir el paso nuevo de `scripts/golden/LEEME.md` (bajar también `Cabecera/Lineas Facturacion Compras*` y `Tesoreria*` y ejecutar `compras-sql.py`). Hasta entonces, el coste de las ventas nuevas ya entra solo (va en `facturas-sql.py`), pero compras y cobros/pagos se quedan como el 18/11.
 - 🟡 **Propuesta «punto de partida» (espera el «sí» de Fernando, 18/11/2026)**: el día del arranque se guarda una **foto de Golden** (lo que nos deben, lo que debemos, ventas y margen del año hasta ese día). Desde ahí, la app cuenta **desde cero** lo suyo y en «💶 Margen y cobros» sale una pestaña **«Golden ↔ app»** que compara, día a día, lo vendido y cobrado en la app con lo de Golden y marca las diferencias (mientras las facturas sigan en Golden, hasta el 1/1/2027).
 
 ### 🚀 El día del arranque
