@@ -33,7 +33,7 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - 🟡 **Fernando**: probar en el móvil Comercial › «🔎 Buscar clientes» (p. ej. Colegios en Boadilla) y decir si el mapa contesta y si sirve. Si se queda «Buscando…» mucho rato, avisar: el plan B es sacar los negocios de Google Maps.
 - 🟡 **Radar de ideas**: cada mañana, 3 problemas o novedades reales del sector (quejas de hosteleros, precios, competencia) con una idea de qué hacer.
 - 🔴 **WhatsApp automático con el 609 567 354** (Tito, 22/11/2026: «quiero automatizarlo y que según me entre un pedido se ponga en la aplicación… me da igual lo que haya que pagar»). Plan: `docs/PLAN_WHATSAPP.md`. Pasos:
-  1. **Tito**: cuenta de empresa en Meta (business.facebook.com) y **verificar FERJUSANZ** (CIF y un papel de la empresa). Claude le guía desde el móvil.
+  1. ✔ Cartera de Meta creada (22/11): «Ferjusanz Productos Hortofrutícolas S.L.», id `1034977426309371`, administrador Tito (su Facebook). Meta dice que **aún no hace falta verificar**: saldrá al conectar WhatsApp. Falta: **Tito** rellena «Información del negocio» (nombre legal, dirección, teléfono, web, CIF).
   2. **Claude**: elegir un proveedor oficial de Meta que deje seguir usando el 609 en la app del móvil a la vez («coexistencia»). Comprobar precio y que lo permita antes de contratar.
   3. **Tito**: conectar el 609 con el proveedor (escanea un QR con el móvil) y guardar la clave con el formulario seguro.
   4. **Claude**: cargar el catálogo (52 fotos) por la API de Meta. Comprobar si Meta obliga a poner precio.
