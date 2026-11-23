@@ -1,4 +1,10 @@
 # Web de PRUEBAS: que Google no la lea (la de verdad sigue siendo la antigua).
 # Al pasar al dominio: cambiar por «Allow: /» y «Sitemap: https://www.ferjusanz-frutas-verduras.es/sitemap.xml».
+# Tito 23/11/2026: el robot de Meta sí puede bajar las fotos del catálogo de WhatsApp (solo esa carpeta).
+User-agent: facebookexternalhit
+User-agent: Facebot
+Allow: /fotos/catalogo/
+Disallow: /
+
 User-agent: *
 Disallow: /
