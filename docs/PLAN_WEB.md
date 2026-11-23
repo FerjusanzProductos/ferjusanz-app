@@ -61,6 +61,7 @@ Ahorro: lo que se paga hoy a Creativate (Fernando lo mira en las facturas).
 - Sección de productos de temporada alimentada desde la app.
 
 ## Dominio: pasarlo a una cuenta de FERJUSANZ y conectarlo con Cloudflare (16/11/2026)
+> **Actualizado 23/11/2026: paso 1 HECHO por Red.es.** Titular FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. (`1BF3CEE-ESNIC-F5`), PCA el padre (`F36AA3-ESNIC-F5`), gestor «Usuario Final» en Red.es (ya no DonDominio/SCIP). Donde abajo dice «en DonDominio» (cambiar DNS, renovar), ahora es en **nic.es** (https://www.nic.es/sgnd/login.action). Lo de DonDominio y el Push queda solo como historia.
 _Solo preparado. **No se ha cambiado nada**: ni DNS, ni alojamiento, ni configuración (ni en DonDominio, ni en Webempresa, ni en Cloudflare)._
 
 ### Lo que sabemos

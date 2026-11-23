@@ -1,6 +1,8 @@
 # Historial de FERJUSANZ
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
+- **✅ Dominio ya es de la S.L. (sin app ni SQL)** (23/11/2026 11:39). Red.es confirma la transmisión TN-33517880-F5: ferjusanz-frutas-verduras.es pasa de FERJUSANZ C.B. (`5A5C04-ESNIC-F5`) a FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. (`1BF3CEE-ESNIC-F5`), gestor «Usuario Final» (deja de estar en SCIP/Creativate), DNS mantenidos. Hecho por Tito desde el móvil en una mañana, sin DonDominio ni Alberto.
+
 - **Dominio: pedido el cambio de titular a la S.L. en Red.es (sin app ni SQL)** (23/11/2026). Tito, con el visto bueno de su padre y su DNI: alta del contacto de la S.L. (`1BF3CEE-ESNIC-F5`) y solicitud de transmisión TN-33517880-F5 desde la cuenta del padre (`F36AA3`). Red.es solo admite imágenes de 600 px de ancho: Claude preparó la del DNI en la carpeta temporal (no en el repositorio). Aceptada a las 11:33 desde el Hotmail con gestor «Usuario Final» y DNS mantenidos; queda la revisión de Red.es. La imagen del DNI se borró de la carpeta temporal.
 
 - **Dominio: entrada a Red.es recuperada (sin app ni SQL)** (23/11/2026). Tito renovó la contraseña del contacto `F36AA3-ESNIC-F5` en nic.es (el correo llegó al Hotmail) y entró: titular sigue **FERJUSANZ C.B.**, gestor SCIP, DNS de Webempresa. Con esa entrada se puede pedir el cambio de titular sin DonDominio.
