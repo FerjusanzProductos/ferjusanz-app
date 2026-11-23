@@ -1,6 +1,8 @@
 # Historial de FERJUSANZ
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
+- **Dominio: pedido el cambio de titular a la S.L. en Red.es (sin app ni SQL)** (23/11/2026). Tito, con el visto bueno de su padre y su DNI: alta del contacto de la S.L. (`1BF3CEE-ESNIC-F5`) y solicitud de transmisión TN-33517880-F5 desde la cuenta del padre (`F36AA3`). Red.es solo admite imágenes de 600 px de ancho: Claude preparó la del DNI en la carpeta temporal (no en el repositorio). Falta que el padre acepte desde el Hotmail y elegir gestor «Usuario Final».
+
 - **Dominio: entrada a Red.es recuperada (sin app ni SQL)** (23/11/2026). Tito renovó la contraseña del contacto `F36AA3-ESNIC-F5` en nic.es (el correo llegó al Hotmail) y entró: titular sigue **FERJUSANZ C.B.**, gestor SCIP, DNS de Webempresa. Con esa entrada se puede pedir el cambio de titular sin DonDominio.
 
 - **Dominio: Alberto manda el código de transferencia (sin app ni SQL)** (23/11/2026). Código de transferencia interna de DonDominio (Push desde la cuenta del receptor, válido 7 días; no se guarda en el repositorio). Red.es confirma: titular **FERJUSANZ C.B.**, contacto administrativo Fernando Sanz `F36AA3-ESNIC-F5`, agente SCIP, caduca 26/05/2027. Pasos para Tito en Pendientes.
