@@ -95,7 +95,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - La lista **«Colegios, residencias y escuelas infantiles»** = **última compra + 0,20 €** por producto, siempre. Se recalcula sola al apuntar una compra (factura leída en la app o compras de Golden): función `recalcular_listas_auto()` y columna `margen_auto` de `listas_precios` (migración `20261208a`).
 - **Precios fijos** (no los toca el cálculo): patata especial freír (09-F) **0,57 €/kg** y patata agria (01) **0,64 €/kg** y **perejil a 0 €** (se regala).
 - En la lista solo van productos que **se compran**: fuera los que no tienen ninguna compra apuntada, la Ciruela Claudia y la patata repetida (Tito, 22/11/2026).
-- «Última compra» = la más reciente entre `tarifas_compra` y `golden_compras_lineas`. Si la unidad de compra no es la de la lista (kg frente a manojo, caja o pieza), **no se pone precio**: queda en «para contrastar».
+- «Última compra» = la más reciente entre `tarifas_compra` y `golden_compras_lineas`. Si la unidad de compra no es la de la lista (kg frente a manojo, caja o pieza), **no se pone precio**: queda en «para contrastar», salvo que «📦 Formatos» (`formatos_producto`) diga cuántos kilos trae la caja o pieza: entonces precio del kilo × kilos (sacado de las facturas, neto ÷ bultos; Tito, 23/11/2026). Champiñón 2,5 kg/caja · melón 4 kg/pieza · tomate raf 7,35 kg/caja · yuca 18 kg/caja · manzana 7 kg/caja.
 - Cada día, en el correo de «Comercial del día» (punto 4, `scripts/tarifa-colectivos.mjs`): cambios, lo que hay que contrastar y la lista completa. Lleva precios de compra: solo para Tito, no en `resumen_comercial`.
 - Las **limas** se venden **por caja** en todas las listas.
 
