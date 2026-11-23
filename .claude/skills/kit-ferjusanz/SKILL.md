@@ -64,7 +64,7 @@ Reglas de elección rápidas:
   Las otras tres, NO instaladas: **chief-of-staff** (dirige un equipo de agentes): lo mismo que superpowers/agent-skills, se pisarían. **anatomy** (explica con máquinas interactivas) y **teach** (profe particular con chuletas): útiles para aprender, no para la empresa; repos poco conocidos. **marketing-psychology** (70 principios de psicología de ventas): ya cubierto por `outreach-composer` y `lead-finder`; si Fernando lo quiere para la web nueva, revisar antes el repo (hay varias copias pequeñas). **last30days** (mvanhorn/last30days-skill, muy conocido): busca qué se dice de un tema en Reddit, X y YouTube en el último mes; en la nube la red bloquea esas webs (como Agent Reach). Solo en el ordenador de Fernando si lo pide.
 - Web: dato puntual → perplexity; leer/extraer una página o sitio → firecrawl; interactuar con una web/app → playwright.
 - Código: entender estructura → graphify; implementar → agent-skills + ponytail; antes de mergear algo sensible → security-audit.
-- Vídeo o reel → watch.
+- Vídeo o reel → watch. **En la nube** (23/11/2026): lanzar siempre con `GEMINI_API_KEY=proxy-injected WATCH_GEMINI_MODEL=gemini-3.6-flash ... --engine gemini` (la clave la pone el entorno; así Gemini oye el audio). Si da 503 (saturado), probar `gemini-3.5-flash` o `gemini-flash-latest`; la 3.7 y la 3.8 suelen ir saturadas y la 2.5 ya no existe. Ver modelos: `curl -sS "https://generativelanguage.googleapis.com/v1beta/models?pageSize=100" -H "x-goog-api-key: proxy-injected"`.
 
 ## 2. Claves (nunca en el repo ni en el chat)
 
