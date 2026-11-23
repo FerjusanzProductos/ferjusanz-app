@@ -124,7 +124,8 @@ Reglas:
 - es_pedido = true solo si pide género (aunque sea «lo de siempre» o una sola cosa). Saludos, charlas, fotos de familia, preguntas de precio o quejas: false (pon la duda en la nota si es de un cliente).
 - No inventes cantidades ni productos. Si algo no está claro, cantidad null y explícalo en la nota.
 - producto_id: elige de la lista solo si es claramente ese producto; si dudas, null.
-- «mañana», «el lunes»…: calcula la fecha a partir de hoy. Si no dice fecha, null.`;
+- «mañana», «el lunes»…: calcula la fecha a partir de hoy. Si no dice fecha, null.
+- Si te digo que ya hay un pedido apuntado y el mensaje lo amplía o lo corrige («ponme también…», «quita…», «mejor 3 cajas»), es_pedido = true, "cambia_pedido": true y en "lineas" el pedido COMPLETO ya corregido (lo de antes más lo nuevo). Si es otro pedido distinto, "cambia_pedido": false.`;
 
 type Parte = { texto?: string; medio?: { mime: string; data: string } };
 // deno-lint-ignore no-explicit-any
@@ -138,7 +139,7 @@ async function conGemini(partes: Parte[]) {
   let fallo = "";
   // Gemini a veces dice «mucha demanda»: se reintenta y, si sigue, se prueba otro modelo.
   for (const modelo of [env("GEMINI_MODEL") || "gemini-flash-latest", "gemini-flash-lite-latest"]) for (let i = 0; i < 2; i++) {
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`, { method: "POST", headers: { "x-goog-api-key": env("GEMINI_API_KEY"), "Content-Type": "application/json" }, body: cuerpo });
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`, { method: "POST", headers: { "x-goog-api-key": env("GEMINI_API_KEY"), "Content-Type": "application/json" }, body: cuerpo, signal: AbortSignal.timeout(25000) }).catch((e) => new Response(JSON.stringify({ error: { message: String(e?.message || e) } }), { status: 503 }));
     const d = await r.json().catch(() => ({}));
     if (r.ok) return sacarJSON((d.candidates?.[0]?.content?.parts || []).map((p: { text?: string }) => p.text || "").join(""));
     fallo = "Gemini: " + String(d?.error?.message || r.status).slice(0, 200);
@@ -148,7 +149,7 @@ async function conGemini(partes: Parte[]) {
   throw new Error(fallo);
 }
 async function conClaude(partes: Parte[]) {
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
+  const r = await fetch("https://api.anthropic.com/v1/messages", { signal: AbortSignal.timeout(90000),
     method: "POST", headers: { "x-api-key": env("ANTHROPIC_API_KEY"), "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
     body: JSON.stringify({ model: env("HARVEY_MODEL") || "claude-opus-5-5", max_tokens: 2000,
       messages: [{ role: "user", content: partes.map((p) => p.medio ? { type: "image", source: { type: "base64", media_type: p.medio.mime, data: p.medio.data } } : { type: "text", text: p.texto }) }] }),
@@ -196,13 +197,17 @@ async function procesar(sb: SB, m: any, nombre: string) {
     if (tipo !== "text" || !texto || !(await pareceProducto(sb, texto))) return "personal";
   }
   // Si ya está (360dialog reintenta), no se repite.
-  const { data: ya } = await sb.from("whatsapp_pedidos").select("id").eq("wa_id", m.id).maybeSingle();
+  const { data: ya } = await sb.from("whatsapp_mensajes").select("id").eq("wa_id", m.id).maybeSingle();
   if (ya) return "repetido";
+  // ¿Ya hay un pedido suyo de las últimas 12 horas? Lo que mande ahora puede ser un añadido o un cambio.
+  const abierto = async (clienteId: string) => (await sb.from("whatsapp_pedidos").select("id,estado,lineas,fecha_entrega,texto_original,transcripcion,nota").eq("cliente_id", clienteId).in("estado", ["nuevo", "revisado"]).gte("created_at", new Date(Date.now() - 12 * 3600000).toISOString()).order("created_at", { ascending: false }).limit(1).maybeSingle()).data;
+  const previo = cli ? await abierto(cli.id) : null;
 
   let medio = null, error: string | null = null;
   if (tipo !== "text") { try { medio = await bajarMedio(m[m.type]?.id); } catch (e) { error = String((e as Error).message || e); } if (!medio && !error) error = "Falta la clave de 360dialog para bajar " + (tipo === "audio" ? "el audio" : "la foto"); }
-  const contexto = casa ? "Este mensaje lo ha REENVIADO alguien de la casa: es el pedido de un cliente. El nombre del cliente puede venir en el texto."
-    : cli ? `Lo manda el cliente ${cli.nombre_comercial || cli.nombre} (código ${cli.codigo}).` : `Lo manda un número que no está en nuestra lista de clientes (nombre en WhatsApp: ${nombre || "sin nombre"}).`;
+  const contexto = (casa ? "Este mensaje lo ha REENVIADO alguien de la casa: es el pedido de un cliente. El nombre del cliente puede venir en el texto."
+    : cli ? `Lo manda el cliente ${cli.nombre_comercial || cli.nombre} (código ${cli.codigo}).` : `Lo manda un número que no está en nuestra lista de clientes (nombre en WhatsApp: ${nombre || "sin nombre"}).`)
+    + (previo ? `\nYa hay un pedido suyo apuntado hace poco${previo.fecha_entrega ? " para el " + previo.fecha_entrega : ""}: ${JSON.stringify(previo.lineas)}` : "");
   // deno-lint-ignore no-explicit-any
   let ia: any = null;
   try { ia = await interpretar(sb, contexto, texto, medio); } catch (e) { error = [error, String((e as Error).message || e)].filter(Boolean).join(" · "); }
@@ -229,6 +234,21 @@ async function procesar(sb: SB, m: any, nombre: string) {
   }));
   const fecha = /^\d{4}-\d{2}-\d{2}$/.test(String(ia?.fecha_entrega || "")) ? ia.fecha_entrega : null;
   await sb.from("whatsapp_mensajes").insert({ telefono: tel, nombre_contacto: nombre || null, cliente_id: cliente?.id || null, direccion: "entra", texto: (texto || ia?.transcripcion || null)?.slice(0, 4000), tipo, wa_id: m.id });
+  // Añadido o cambio de un pedido que ya estaba: se junta en la misma tarjeta y vuelve a «Por revisar».
+  // Del cliente: la IA devuelve el pedido completo corregido. Reenviado por la casa: se suman las líneas.
+  const anterior = previo ? (ia?.cambia_pedido ? previo : null) : casa && cliente ? await abierto(cliente.id) : null;
+  if (anterior) {
+    const hora = new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" });
+    const junta = (a: unknown, b: unknown) => [a, b ? `— ${hora}: ${b}` : null].filter(Boolean).join("\n").slice(0, 4000) || null;
+    const { error: e3 } = await sb.from("whatsapp_pedidos").update({
+      lineas: previo ? (lineas.length ? lineas : anterior.lineas) : [...(anterior.lineas || []), ...lineas],
+      fecha_entrega: fecha || anterior.fecha_entrega, estado: "nuevo",
+      texto_original: junta(anterior.texto_original, texto), transcripcion: junta(anterior.transcripcion, ia?.transcripcion),
+      nota: [anterior.nota, `🔄 ${previo ? "Cambiado" : "Añadido"} a las ${hora}${anterior.estado === "revisado" ? " (después de revisarlo)" : ""}`, ia?.nota].filter(Boolean).join("\n").slice(0, 2000),
+    }).eq("id", anterior.id);
+    if (e3) throw e3;
+    return "añadido";
+  }
   const { error: e2 } = await sb.from("whatsapp_pedidos").insert({
     wa_id: m.id, telefono: tel, nombre_contacto: nombre || null, reenviado: casa, cliente_id: cliente?.id || null, cliente_texto: cliTexto,
     fecha_entrega: fecha, lineas, tipo, texto_original: texto ? texto.slice(0, 4000) : null, transcripcion: ia?.transcripcion ? String(ia.transcripcion).slice(0, 4000) : null,
