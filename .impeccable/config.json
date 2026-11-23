@@ -17,6 +17,15 @@
         ],
         "createdAt": "2026-11-16T10:25:45.691Z",
         "reason": "Claude: falso positivo; mezcla los colores del modo oscuro con el fondo blanco del modo claro (cada modo tiene su fondo propio en :root)"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "docs/asistente.html"
+        ],
+        "createdAt": "2026-11-23T11:52:13.167Z",
+        "reason": "Claude: falso positivo, el escáner mezcla colores del tema oscuro con el fondo claro; cada tema tiene su par"
       }
     ]
   }
