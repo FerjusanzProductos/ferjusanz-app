@@ -115,11 +115,11 @@ export default {
       return new Response("Método no permitido", { status: 405, headers: { Allow: "GET, HEAD" } });
     }
     const url = new URL(request.url), ruta = url.pathname.replace(/\/+$/, "") || "/";
-    // Tarjeta virtual para posibles clientes (QR y WhatsApp): vive en la web. Al pasar al dominio, cambiar solo esta dirección.
+    // Tarjeta virtual para posibles clientes (QR y WhatsApp): vive en la web. Desde el 23/11/2026 en el dominio; los QR antiguos con la dirección de la app siguen valiendo.
     // ?p= = enlace personal de un contacto (formulario «primer pedido»); se pasa tal cual.
-    if (ruta === "/tarjeta") return Response.redirect("https://ferjusanz-web.fernandosanzalba.workers.dev/tarjeta/" + url.search, 302);
-    if (ruta === "/super9") return Response.redirect("https://ferjusanz-web.fernandosanzalba.workers.dev/super9/", 302); // tarjeta de socios (Ferjusanz + Super 9)
-    if (ruta === "/web") return Response.redirect("https://ferjusanz-web.fernandosanzalba.workers.dev/", 302);
+    if (ruta === "/tarjeta") return Response.redirect("https://www.ferjusanz-frutas-verduras.es/tarjeta/" + url.search, 302);
+    if (ruta === "/super9") return Response.redirect("https://www.ferjusanz-frutas-verduras.es/super9/", 302); // tarjeta de socios (Ferjusanz + Super 9)
+    if (ruta === "/web") return Response.redirect("https://www.ferjusanz-frutas-verduras.es/", 302);
     const archivo = (url.hostname.includes("pruebas") && PRUEBAS[ruta]) || ARCHIVOS[ruta];
     if (!archivo) return new Response("No encontrado", { status: 404 });
     const [contenido, tipo] = archivo;
