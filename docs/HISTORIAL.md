@@ -1,6 +1,8 @@
 # Historial de FERJUSANZ
 _Lo más nuevo arriba. El detalle de cada cambio está en el historial de GitLab (`git log`). Aquí van los cambios importantes, las decisiones y los errores corregidos._
 
+- **🏷️ Ofertas de la semana: + lechuga iceberg 1,00 €/pieza (web y app; sin cambiar versión; SQL: 1 fila nueva en `recomendaciones` detrás de la lechuga en bandeja, producto «Lechuga iceberg Piezas», y las siguientes corridas un puesto; base real y pruebas)** (23/11/2026, Tito: «Pon también lechuga iceberg a €1 la pieza»). Web `ferjusanz-web` publicada (versión Cloudflare 1f1cffb2).
+
 - **🏷️ Ofertas de la semana: tomates nuevos precios (web y app; sin cambiar versión; SQL en `recomendaciones`, base real y pruebas)** (23/11/2026, Tito: «Ponme el tomate ensalada a 1,40, el tomate pera normal sin ser gordo ponlo a 1,45, el tomate pera gordo a 1,85»). Tomate ensalada 1,85 → 1,40 €/kg; tomate pera gordo 2,00 → 1,85 €/kg; nueva fila «Tomate pera» 1,45 €/kg entre los dos (mismo producto `Tomate pera`; las siguientes corridas un puesto). Web `ferjusanz-web` publicada (versión Cloudflare 45adf4a7).
 
 - **🧰 Guía «Mis 10 no negociables con Claude» (solo herramientas de Claude; sin app ni SQL)** (23/11/2026, Tito: «Instala lo que no tengo»). De las 10, ya se tenían 7 (CLAUDE.md, skills, MCP, /model, /compact, modo plan, /loop). Instalado lo que faltaba: subagente `revisor-ferjusanz` (`.claude/agents/`, revisa un cambio antes de publicar: reglas, IVA, versión de `sw.js`, nada de datos reales) y hook `.claude/hooks/comprobar-sintaxis.sh` (en `.claude/settings.json`: tras editar un `.js`/`.mjs`/`.json`, si queda roto avisa a Claude). OpenRouter + claude-code-router NO: pide cuenta y clave de pago y es de la comunidad; ya está OmniRoute para eso (solo ordenador).
