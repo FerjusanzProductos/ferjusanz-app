@@ -12320,7 +12320,7 @@ async function comDatosPdf(lista, soloRecs) {
   return {
     titulo: soloRecs ? 'Recomendaciones de la semana' : (lista.titulo || lista.nombre), subtitulo: soloRecs ? 'Lo mejor de temporada, seleccionado para ti' : lista.subtitulo,
     validez: soloRecs ? (hasta ? 'Válido hasta el ' + fechaES(hasta) : 'Actualizado el ' + fechaES(dia)) : 'Lista actualizada el ' + fechaES(dia),
-    pie: lista.pie, presentacion: soloRecs ? '' : (lista.presentacion || ''), contacto: LS.get('fj_com_contacto', ''), soloRecs: !!soloRecs,
+    pie: lista.pie, presentacion: soloRecs ? '' : (lista.presentacion || ''), contacto: LS.get('fj_com_contacto', '') || 'WhatsApp 609 100 690 · 609 567 354 · Oficina 91 763 21 86', /* Tito 23/11/2026: en las listas, los dos móviles */ soloRecs: !!soloRecs,
     recs: (soloRecs || lista.incluir_recomendaciones !== false) ? recs : [], items
   };
 }
@@ -13083,7 +13083,7 @@ const SUPER9_SOCIAL = 'TikTok e Instagram: @super9carnicerias · @super9_carnice
 const SUPER9_TIENDAS = ['C/ Costa del Sol, 9', 'C/ Mantuano, 2', 'C/ López de Hoyos, 359']; // Tito, 18/11/2026: «Nuestras 3 ubicaciones»
 const SOCIOS = {
   ferjusanz: { fondo: '#f6f2ea', tinta: '#1c1c1a', acento: '#0d3a22', logo: 'pres/logo.png', ancho: true, nombre: 'FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L.', titulo: 'Patatas, frutas, verduras, huevos, setas, champiñones y legumbres',
-    lineas: ['Empresa familiar · tercera generación · más de 60 años', 'Agricultores de confianza y Mercamadrid', 'Reparto de lunes a sábado · sin pedido mínimo', 'Destacamos por la relación calidad-precio'], cortas: ['3.ª generación · más de 60 años', 'Agricultores de confianza', 'Lunes a sábado · sin pedido mínimo'], qr: () => URL_TARJETA, qrTxt: 'Escanee: quiénes somos y su tarifa', contacto: 'WhatsApp 609 567 354 · Oficina 91 763 21 86', corto: 'WhatsApp 609 567 354', enlace: () => URL_TARJETA },
+    lineas: ['Empresa familiar · tercera generación · más de 60 años', 'Agricultores de confianza y Mercamadrid', 'Reparto de lunes a sábado · sin pedido mínimo', 'Destacamos por la relación calidad-precio'], cortas: ['3.ª generación · más de 60 años', 'Agricultores de confianza', 'Lunes a sábado · sin pedido mínimo'], qr: () => URL_TARJETA, qrTxt: 'Escanee: quiénes somos y su tarifa', contacto: 'WhatsApp 609 100 690 · 609 567 354 · Oficina 91 763 21 86', corto: 'WhatsApp 609 100 690 · 609 567 354', enlace: () => URL_TARJETA },
   super9: { fondo: '#141414', tinta: '#f3ead2', acento: '#d9b44a', logo: 'pres/super9.png', nombre: 'SUPER 9 CARNICERÍAS S.L. · CARLOS ZÚÑIGA', titulo: 'SUPER 9 CARNICERÍAS',
     lineas: ['Más de 10 años sirviendo', 'Empresa en ascenso, muchísima variedad de género', 'Calidad-precio · 100 % recomendado'], ubicaciones: SUPER9_TIENDAS, social: SUPER9_SOCIAL,
     cortas: ['Más de 10 años sirviendo · 100 % recomendado', 'Muchísima variedad de género y calidad-precio', '3 tiendas: Costa del Sol 9 · Mantuano 2 · López de Hoyos 359'], qr: () => SUPER9_QR, qrTxt: 'Escanee: WhatsApp de Carlos', contacto: 'WhatsApp 680 27 20 28', wa: () => SUPER9_WA } };
