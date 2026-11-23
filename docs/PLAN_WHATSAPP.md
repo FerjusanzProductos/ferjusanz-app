@@ -1,8 +1,27 @@
-# Plan: WhatsApp automático (Harvey contesta solo)
-_Preparado el 12/11/2026 a partir del vídeo «Construye un agente de IA para WhatsApp en 30 minutos con Claude Code» (revolutia). **Solo es un plan: no se ha montado nada.**_
+# Plan: asistente de WhatsApp (apunta pedidos en la app)
+_Primer plan del 12/11/2026 (vídeo de revolutia). **Actualizado el 22/11/2026**: lo de abajo de «Plan antiguo» queda solo como referencia._
 
-**22/11/2026: en marcha** (Tito: «quiero automatizarlo… me da igual lo que haya que pagar»). Novedad comprobada: para seguir usando el 609 en la app del móvil a la vez que la API («coexistencia»), Meta solo deja conectarlo a través de un **proveedor oficial** (Solution Partner o Tech Provider) con su «Embedded Signup»; hace falta WhatsApp Business 2.24.17 o más nuevo. Los mensajes desde la app siguen gratis; los de la API, a precio de Meta. Fuente: https://developers.facebook.com/documentation/business-messaging/whatsapp/embedded-signup/onboarding-business-app-users . Sin confirmar: si el catálogo de Meta obliga a poner precio a cada artículo. Pasos en `docs/PENDIENTES.md`.
+## Lo decidido (22/11/2026, Tito)
+- **Número: 609 100 690** (WhatsApp Business del padre, «Ferjusanz Productos»), conectado por **360dialog** en modo **Coexistence**: el padre sigue usando la app del móvil y los mensajes llegan también a la API. **El 609 567 354 (Tito) NO se conecta** (motivos personales y legales; no insistir).
+- Meta: portfolio «Ferjusanz Productos» creado con el Facebook del padre. ⚠️ Posible duplicado con la cartera `1034977426309371` (de Tito). No tocar nada en Meta por ahora.
+- 360dialog: cuenta Direct Client a nombre de la SL. **Canal aún sin crear** (el alta se atascó; Tito escribió al soporte). **Sin API key todavía.** Chats antiguos: «No compartir».
 
+## Cómo funciona (montado en PRUEBAS, 22/11/2026)
+- **Silencioso**: no contesta ni envía nada a nadie. Solo lee y apunta. (Más adelante, quizá «Pedido recibido ✅» solo a clientes.)
+- **Qué guarda**: mensajes de **clientes conocidos** (su teléfono está en la ficha) y **pedidos reenviados por la casa** (Tito reenvía al 609 100 690 lo que le llega; el cliente se saca del texto o de una nota que mande justo después, «es del bar X»; si no está claro, queda «sin cliente»). De números desconocidos, solo un **texto que nombre un producto y una cantidad** y que la IA vea como pedido. **No guarda nada personal**: familia, amigos, sus fotos y audios, grupos y lo que manda el propio padre.
+- **Audios**: los transcribe **Gemini** (Claude no oye audios). **Fotos de listas** y texto: los lee **Claude** (o Gemini si no hay clave de Claude).
+- El pedido queda como **propuesta** en la tabla `whatsapp_pedidos` y en la pantalla **«💬 WhatsApp · pedidos»** (Entregas y pedidos, solo oficina). **No crea pedidos** (el trabajo real sigue en Golden).
+- Piezas: `supabase/functions/whatsapp/index.ts` y `supabase/migrations/20261209a_whatsapp_pedidos.sql`.
+
+## Conectar el webhook (cuando haya API key)
+1. **Tito** guarda la API key de 360dialog: con el formulario seguro que abre Claude (para `waba-v2.360dialog.io`) y en los secretos de Supabase de la base real como `D360_API_KEY` (https://supabase.com/dashboard/project/hvydnjaswdexttogsyen/functions/secrets, «Sitio para ordenador»). Nunca por el chat.
+2. **Claude** (autorización permanente): lanzar `20261209a_whatsapp_pedidos.sql` en la real; crear un secreto nuevo `WHATSAPP_WEBHOOK_SECRET` (al azar, sin escribirlo en ningún sitio); subir la función `whatsapp` a la real **sin comprobar JWT**.
+3. **Claude** da de alta el webhook: `POST https://waba-v2.360dialog.io/v1/configs/webhook` con cabecera `D360-API-KEY` y cuerpo `{"url": "https://hvydnjaswdexttogsyen.supabase.co/functions/v1/whatsapp", "headers": {"x-ferjusanz-secreto": "<el secreto>"}}`.
+4. Comprobar con un WhatsApp de verdad de Tito reenviado al 609 100 690 y publicar la pantalla en la app normal.
+5. Audios: si Tito quiere, clave de Gemini (https://aistudio.google.com/apikey desde Chrome) como secreto `GEMINI_API_KEY`.
+- ⚠️ Sin comprobar (la web de documentación de 360dialog no se abre desde el entorno de Claude): la dirección del webhook, que acepte `headers`, y cómo se bajan los audios y fotos (`GET /{media_id}` → `url`, cambiando `lookaside.fbsbx.com` por `waba-v2.360dialog.io`).
+
+# Plan antiguo (12/11/2026, solo referencia)
 ## Qué sería
 Que el WhatsApp de la empresa (609 567 354) lo conteste un agente con IA (Harvey), que:
 - responda a clientes sobre productos, precios, horarios de reparto y pedidos;
