@@ -100,6 +100,11 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Cada día, en el correo de «Comercial del día» (punto 4, `scripts/tarifa-colectivos.mjs`): cambios, lo que hay que contrastar y la lista completa. Lleva precios de compra: solo para Tito, no en `resumen_comercial`.
 - Las **limas** se venden **por caja** en todas las listas.
 
+## Tarifa de hostelería: compra + 0,40 € (Tito, 23/11/2026: «0,40. Con las excepciones que ya había»)
+- Igual que la de colectividades (mismo cálculo automático), con **+ 0,40 €** y **las cajas + 0,30 € por kilo** con su peso en el nombre.
+- Fijos: patata agria **0,66**, patata nueva esp. freír **0,60**, perejil **0**, lechuga iceberg **por pieza 1,00**.
+- Fuera lo que no se compra (ciruela, mix de frutos del bosque, aguacate repetido, canónigos, brote de lechuga, cebolla pequeña, naranjas de mesa, tomate bola).
+
 ## Pedidos
 - Los pedidos fijos generan **previstos** (2 semanas por delante, cada madrugada). Se confirman el día antes (✅) o se quitan (❌).
   Los previstos ya cuentan en la hoja de compra. Más allá de 2 semanas, el calendario los calcula al momento.
