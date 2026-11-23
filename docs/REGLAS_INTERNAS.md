@@ -142,6 +142,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - **Orden** (Fernando, 16/11/2026): primero «agricultores de confianza» y después «Mercamadrid». Con posibles clientes: «destacamos por la relación calidad-precio» y la tarifa se calcula con lo que gastan.
 - Agricultura ecológica: «colaboramos con productores ecológicos siempre que tienen producto disponible».
 - Camiones y furgonetas refrigerados: sí.
+- **También vendemos** (Tito, 23/11/2026): frutos secos (almendras, anacardos, avellanas, cacahuetes, dátiles…), aceite de oliva y de girasol, miel, mermeladas y compotas.
 
 ## Condiciones comerciales (confirmadas por Fernando el 12/11/2026)
 - **Sin pedido mínimo.**
