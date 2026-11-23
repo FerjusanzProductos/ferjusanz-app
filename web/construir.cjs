@@ -25,9 +25,9 @@ const EMAIL = 'ferjusanz@hotmail.com';
 const DIRECCION = 'C/ Carare, 2 · 28033 Madrid';
 const HORARIO = 'Lunes a viernes, de 8:00 a 18:00';
 const WHATSAPP = [ // los dos móviles de la familia
-  // Fernando 16/11/2026: solo su número en la web; el otro móvil lo abre como «dispositivo vinculado».
+  // Tito 23/11/2026: la cara pública es el WhatsApp del padre (609 100 690, el conectado a 360dialog); el 609 567 354 no sale en la web.
   // Si se vuelve a añadir otro número, el botón flotante enseña otra vez «¿Con quién desea hablar?».
-  { num: '34609567354', ver: '609 567 354', nombre: 'Fernando' },
+  { num: '34609100690', ver: '609 100 690', nombre: 'Fernando' },
 ];
 const ANIOS = 'más de seis décadas'; // Fernando 16/11/2026: «más de 60 años» e «impacta más decir décadas»
 
@@ -124,7 +124,7 @@ const ZONAS = [
 ];
 
 const PREGUNTAS = [
-  ['¿Cómo solicito precio o tarifa?', 'Escríbanos por WhatsApp al 609 567 354, o llame al 91 763 21 86. Los precios de la fruta y la verdura cambian cada día según el mercado, por eso le pasamos el del día y una tarifa ajustada a su volumen de consumo.'],
+  ['¿Cómo solicito precio o tarifa?', 'Escríbanos por WhatsApp al 609 100 690, o llame al 91 763 21 86. Los precios de la fruta y la verdura cambian cada día según el mercado, por eso le pasamos el del día y una tarifa ajustada a su volumen de consumo.'],
   ['¿Dónde reparten?', 'En Madrid capital, la zona norte (Alcobendas, San Sebastián de los Reyes, Tres Cantos), el noroeste (Aravaca, Pozuelo, Majadahonda, Las Rozas) y Segovia, con nuestros propios camiones y furgonetas refrigerados. ¿No ve su localidad? Llámenos y le decimos si pasamos cerca.'],
   ['¿Exportan fuera de España?', 'Hay posibilidad de exportar al extranjero. Llámenos o escríbanos por WhatsApp y lo vemos según el producto y el destino.'],
   ['¿Hay pedido mínimo?', 'No. Pida lo que necesite, aunque sea poco.'],
@@ -284,7 +284,7 @@ ${datos.map(d => `<script type="application/ld+json">${JSON.stringify(d)}</scrip
 </head>
 <body>
 <a class="saltar" href="#contenido">Saltar al contenido</a>
-<div class="aviso"><span>Género fresco cada día</span><span>Reparto en Madrid y Segovia</span><span class="solo-ancho">${HORARIO}</span><span class="aviso-contacto"><a href="tel:+34917632186">${TEL}</a>${WHATSAPP.map(w => `<a href="tel:+${w.num}">${w.ver}</a>`).join('')}<a href="tel:+34609100690">609 100 690</a><a href="mailto:${EMAIL}">${EMAIL}</a></span></div>
+<div class="aviso"><span>Género fresco cada día</span><span>Reparto en Madrid y Segovia</span><span class="solo-ancho">${HORARIO}</span><span class="aviso-contacto"><a href="tel:+34917632186">${TEL}</a>${WHATSAPP.map(w => `<a href="tel:+${w.num}">${w.ver}</a>`).join('')}<a href="mailto:${EMAIL}">${EMAIL}</a></span></div>
 <header class="cabecera">
   <div class="cabecera-in">
     <a href="/" class="logo" aria-label="Ferjusanz, inicio"><img src="/marca/logo-oscuro.png" alt="Ferjusanz · patatas, frutas, verduras, huevos, setas, champiñones y legumbres" width="600" height="134"></a>
@@ -692,11 +692,11 @@ function paginaLegal(ruta, titulo, html) {
   return plantilla({ ruta, titulo: `${titulo} | Ferjusanz`, descripcion: `${titulo} de la web de ${EMPRESA}.`, cuerpo, datos: [m.datos] });
 }
 
-// Tarjeta virtual (14/11/2026): lo que Fernando manda por WhatsApp o enseña en QR a quien pregunta quiénes somos.
+// Tarjeta virtual (14/11/2026). Tito 23/11/2026: aquí (la abre el QR de la app) sí sale también su 609 567 354.: lo que Fernando manda por WhatsApp o enseña en QR a quien pregunta quiénes somos.
 // Sin precios: el precio se lo pasa Fernando después por WhatsApp. La app la abre en /tarjeta (redirige aquí).
 function tarjeta() {
   const m = miga('/tarjeta/', 'Tarjeta');
-  const vcf = ['BEGIN:VCARD', 'VERSION:3.0', 'FN:Fernando Sanz · Ferjusanz', 'ORG:' + EMPRESA, 'TEL;TYPE=CELL:+34609567354', 'TEL;TYPE=WORK:+34917632186',
+  const vcf = ['BEGIN:VCARD', 'VERSION:3.0', 'FN:Fernando Sanz · Ferjusanz', 'ORG:' + EMPRESA, 'TEL;TYPE=CELL:+34609100690', 'TEL;TYPE=CELL:+34609567354', 'TEL;TYPE=WORK:+34917632186',
     'EMAIL:' + EMAIL, 'ADR;TYPE=WORK:;;C/ Carare, 2;Madrid;;28033;España', 'URL:' + DOMINIO + '/', 'END:VCARD'].join('\r\n');
   const fer = WHATSAPP.find(w => w.nombre === 'Fernando');
   const cuerpo = `<section class="bloque"><div class="envoltura lectura">${m.html}
@@ -738,6 +738,7 @@ function tarjeta() {
   <script>(function(){var q=location.search;document.querySelectorAll('[data-si]').forEach(function(e){if(q.indexOf(e.dataset.si+'=')>-1)e.hidden=false});var b=document.getElementById('pp-buscar');if(b)b.addEventListener('input',function(){var t=b.value.toLowerCase();document.querySelectorAll('.pp-fila').forEach(function(f){f.hidden=t&&f.textContent.toLowerCase().indexOf(t)<0});document.querySelectorAll('.pp-familia').forEach(function(d){d.open=!!t&&!!d.querySelector('.pp-fila:not([hidden])')});var td=document.getElementById('pp-todos');if(td)td.open=!!t});document.querySelectorAll('.pp-fila input[type=text]').forEach(function(c){c.addEventListener('input',function(){if(c.value.trim())c.parentNode.querySelector('input[type=checkbox]').checked=true})});var g=document.getElementById('pp-grabar'),es=document.getElementById('pp-estado'),oir=document.getElementById('pp-oir'),fi=document.querySelector('.pp-audio input[type=file]');if(g&&window.MediaRecorder&&navigator.mediaDevices&&window.DataTransfer){g.hidden=false;var rec=null,tr=[];g.addEventListener('click',function(){if(rec){rec.stop();return}navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){tr=[];rec=new MediaRecorder(st);rec.ondataavailable=function(e){if(e.data.size)tr.push(e.data)};rec.onstop=function(){st.getTracks().forEach(function(k){k.stop()});var ty=(rec.mimeType||'audio/webm').split(';')[0],b=new Blob(tr,{type:ty}),dt=new DataTransfer();dt.items.add(new File([b],'audio.'+(/mp4/.test(ty)?'m4a':/ogg/.test(ty)?'ogg':'webm'),{type:ty}));fi.files=dt.files;oir.src=URL.createObjectURL(b);oir.hidden=false;es.textContent='✔ Audio listo. Se enviará con el formulario.';g.textContent='🎙️ Grabar otra vez';rec=null};rec.start();g.textContent='⏹ Parar y guardar';es.textContent='🔴 Grabando…'}).catch(function(){es.textContent='No se pudo usar el micrófono. Elija un audio del móvil o escríbalo abajo.'})})}})()</script>
   <h2 class="pp-separa">Quiénes somos y cómo trabajamos</h2>
   <div class="acciones apiladas"><a class="btn btn-wa" href="${wa(fer.num, 'Hola Fernando, he visto la tarjeta de Ferjusanz y quería información de: ')}" rel="nofollow">${I.wa}<span>Escribir a Fernando por WhatsApp <small>(${fer.ver})</small></span></a>
+    <a class="btn btn-wa" href="${wa('34609567354', 'Hola, he visto la tarjeta de Ferjusanz y quería información de: ')}" rel="nofollow">${I.wa}<span>O a Fernando hijo <small>(609 567 354)</small></span></a>
   <a class="btn btn-borde" href="tel:+34917632186">${I.tel}<span>Llamar a la oficina: ${TEL}</span></a>
   <a class="btn btn-borde" href="data:text/vcard;charset=utf-8,${encodeURIComponent(vcf)}" download="Ferjusanz.vcf"><span>📇 Guardar el contacto en el móvil</span></a></div>
   <div class="texto">
