@@ -2,8 +2,7 @@
 import ARCHIVOS from "./archivos.generado.js";
 import REDIRECCIONES from "./redirecciones.json";
 
-// Mientras sea la web de PRUEBAS, que Google no la guarde. Poner a false al pasar al dominio.
-const PRUEBAS = true;
+// La copia de pruebas (*.workers.dev) no la guarda Google; en el dominio sí (desde el 23/11/2026).
 
 // Formulario de contacto: el Worker lo pasa a la función de Supabase que manda el correo a la empresa.
 const FUNCION_CONTACTO = "https://hvydnjaswdexttogsyen.supabase.co/functions/v1/web-contacto";
@@ -33,6 +32,7 @@ const REDIRIGIR = [
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const PRUEBAS = url.hostname.endsWith(".workers.dev");
     // Siempre con www (el día del traslado, el dominio sin www también apunta aquí).
     if (url.hostname === DOMINIO_SIN_WWW) return Response.redirect("https://www." + DOMINIO_SIN_WWW + url.pathname + url.search, 301);
     let ruta = decodeURI(url.pathname);
