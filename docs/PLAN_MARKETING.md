@@ -107,6 +107,8 @@ Públicos: 🏫 colegios · 👵 residencias · 🍽️ restaurantes y hoteles �
 | 44 | 09/02 | 🏢 | Cocinas de hospital y centros de día: fruta y verdura que piden | fruta para hospitales Madrid |
 | 45 | 11/02 | 🗓️ | Primavera en la carta: primeras fresas, espárragos y habas | fruta de temporada primavera restaurante |
 
+**Ya publicados o en la cola `web/cola/` (23/11/2026), saltarlos**: 1, 3, 5, 6, 7, 8, 10, 11, 12 y 14. Cuando se vacíe la cola, seguir por el 2, 4, 9, 13, 15…
+
 Después del 45: Claude añade la siguiente tanda aquí (temporada del mes y lo que cuente Fernando en sus notas de voz).
 **Lo que más ayuda**: una **nota de voz a la semana** de Fernando con algo del mercado (qué ha subido, un error de un cliente, qué piden los colegios). Se apunta en `web/LO_QUE_CUENTA_FERNANDO.md` y hace que los artículos no se parezcan a ningún otro.
 
@@ -144,7 +146,7 @@ Después del 45: Claude añade la siguiente tanda aquí (temporada del mes y lo 
 | Opción | Para qué | ¿Pagar? | Recomendación |
 |---|---|---|---|
 | **Ficha de Google (Perfil de Empresa)** | Es lo que más pesa en las búsquedas de Madrid: fotos, publicaciones semanales y reseñas | Gratis | **Lo primero.** En cuanto sea nuestra: 1 publicación y 3-5 fotos por semana, y pedir reseñas a 20-30 clientes |
-| **Web + artículos cada 2 días** | Salir en búsquedas largas («fruta para residencias Madrid») | Gratis (ya funciona sola) | Seguir. Falta poner el dominio bueno |
+| **Web + artículos cada 2 días** | Salir en búsquedas largas («fruta para residencias Madrid») | Gratis (ya funciona sola) | Seguir. Dominio bueno puesto el 23/11/2026 |
 | **Meta Business Suite** (app de Android, de Meta) | Programar Instagram y Facebook a la vez, Reels incluidos, desde el móvil | **Gratis** | **Sí, para programar.** No hace falta pagar a Meta para publicar |
 | **Meta Verified** (insignia de pago) | Verificación y soporte | De pago mensual | **No**, no aporta clientes |
 | **Anuncios de Meta** | Llegar a hostelería y colectividades de Madrid que aún no nos conocen | Lo que se quiera (5-10 €/día) | **Más adelante**, cuando haya 20-30 publicaciones y el dominio puesto. Una prueba de 2 semanas que lleve a la página de nuevos clientes |
@@ -167,12 +169,63 @@ Después del 45: Claude añade la siguiente tanda aquí (temporada del mes y lo 
 
 ## 7. Lo que falta para arrancar
 - 🔴 **Fernando**: primera tanda de fotos (listas A y B).
-- 🔴 **Fernando**: recuperar la entrada a Webempresa (dominio) y la ficha de Google (ya pedida).
+- 🔴 **Fernando**: verificar la ficha de Google por SMS al 609 100 690 (el dominio ya es nuestro).
   - ✅ Textos de la ficha **listos para pegar** (nombre, categoría, descripción, servicios y mensaje para pedir reseñas): `docs/FICHA_GOOGLE.md` (16/11/2026). Dirección oculta y solo zona de reparto (los clientes no van a la oficina, Fernando 16/11/2026).
 - 🟡 **Fernando**: crear el Instagram de empresa y la página de Facebook (Claude le guía paso a paso desde el móvil cuando quiera).
 - 🟡 **Fernando**: grabar el primer Reel («Esta semana en Mercamadrid») y mandarlo.
 - 🟡 **Fernando**: una nota de voz a la semana.
 - ⚪ Decidir si se usa Metricool para que Claude programe las publicaciones.
+
+## 8. Noticias, reseñas, IA, vídeos y costes (Tito, 23/11/2026: «ponte manos a la obra… dime costes»)
+
+### Salir en «Noticias» de Google
+Google Noticias solo enseña lo que publican **medios** (periódicos y revistas del sector), no la web de la empresa. La forma de salir: que un medio hable de Ferjusanz.
+- **Nota de prensa ya escrita**: `docs/redes/nota-prensa-01.md` (tercera generación en Mercamadrid, web nueva y guías para cocinas profesionales).
+- A quién mandarla: revistas del sector hortofrutícola (FreshPlaza España, Fructidor, Valencia Fruits, Agronews), medios de hostelería de Madrid y la comunicación de Mercamadrid. **Solo con el «sí» de Fernando** (habla en nombre de la empresa). Coste: 0 €.
+- Sin pagar: un medio publica si hay **noticia** (un aniversario, un cliente grande, algo nuevo como el reparto de patata pelada o la app de pedidos). Una al trimestre.
+
+### Reseñas y valoración (lo que más sube en el mapa de Google)
+1. **Primero la ficha** (pendiente: SMS al 609 100 690). Sin ficha nuestra no se piden reseñas: irían a la de la C.B.
+2. Con la ficha: Claude saca el enlace «Escribir reseña», crea `…/resena` y lo pone en el QR (`marca/resenas/`, ya diseñado), en la tarjeta y en un botón de la app al entregar.
+3. **Pedirlas a todos los clientes de verdad**, no solo a los contentos (Google lo prohíbe y castiga): 5 a la semana, a la entrega o por WhatsApp con el texto de `docs/FICHA_GOOGLE.md`. Meta: **30 reseñas en 3 meses**.
+4. Contestar **todas** en 1-2 días (Claude prepara la respuesta; la pega Fernando o Tito).
+5. Nunca: comprar reseñas, ofrecer descuentos a cambio ni ponerlas desde el móvil de la empresa o de la familia.
+
+### ChatGPT, Gemini y otros asistentes
+- ✅ 23/11/2026: la web lleva `/llms.txt` (resumen de la empresa, zona, servicios y guías) y datos de empresa para Google.
+- ChatGPT busca con **Bing**: **Tito**, dar de alta la web en Bing Webmaster Tools importando desde Search Console (https://www.bing.com/webmasters, entrar con la cuenta de Google, «Importar»; gratis, 2 minutos; si no se ve bien, «Sitio para ordenador»).
+- **Tito**: en Cloudflare, activar **Crawler Hints** (avisa solo a Bing y otros cuando cambia la página): https://dash.cloudflare.com → ferjusanz-frutas-verduras.es → Caching → Configuration → Crawler Hints → On. La llave de Claude no deja hacerlo.
+- Lo que más pesa para que ChatGPT y Gemini nos recomienden: **reseñas**, salir en **directorios** (proveedores.com, Páginas Amarillas, QDQ) y que **otros hablen de nosotros** (prensa). Cada mes, Claude pregunta a Gemini «mayorista de fruta para restaurantes en Madrid» y apunta si salimos (el 23/11 Gemini estaba saturado; se prueba en el siguiente informe).
+- **No hace falta pagar ChatGPT** para esto. Gemini ya tiene clave puesta en el entorno.
+
+### Vídeos: los 5 primeros que hay que grabar (vertical, 20-40 s, sin música, hablando normal)
+1. **«Esta semana en Mercamadrid»**: Fernando en el puesto con 3 productos en la mano: qué está bueno y para qué plato (cada lunes).
+2. **«Por qué al colegio le mandamos la manzana pequeña»**: una caja calibre 24-26 al lado de una de frutería.
+3. **«El plátano no va a la cámara»**: el error que más vemos en las cocinas.
+4. **«Patata pelada: de la bolsa a la freidora»**: la bolsa al vacío y lo que ahorra a una cocina.
+5. **«Así sale un pedido de restaurante»**: cargando la furgoneta de madrugada (sin matrículas ni nombres de clientes).
+Fernando o Tito graban en bruto y lo mandan por el chat; Claude corta, subtitula y escribe el texto. Cada vídeo va a Instagram, Facebook, YouTube Shorts, TikTok y la ficha de Google.
+
+### Instagram y Facebook para hostelería y colectividades
+- Cuentas de **empresa**, categoría «Mayorista» (pendiente: las crea Fernando con Claude guiando desde el móvil, con el WhatsApp de la empresa).
+- Seguir y comentar (con cabeza, no en masa) a restaurantes, hoteles, cafeterías, colegios, residencias y catering de la zona de reparto: es como se nos ve sin pagar.
+- Texto de cada publicación con lo que busca una cocina («proveedor de fruta para restaurantes en Madrid») y el enlace a la guía que toca.
+- **Anuncios**: 2 semanas de prueba a **5 €/día** (≈ 70 € en total) con los borradores ya elegidos («Patata pelada» y «Un solo proveedor»), solo a dueños y cocineros de hostelería y colectividades de la zona de reparto. Con el «sí» de Fernando.
+
+### Costes
+| Qué | Coste | ¿Hace falta? |
+|---|---|---|
+| Web, artículos cada 2 días, llms.txt, Search Console, Bing | 0 € (ya funciona) | Sí |
+| Ficha de Google, reseñas, publicaciones en la ficha | 0 € | Sí, lo primero |
+| Directorios (proveedores.com, Páginas Amarillas, QDQ) en versión gratis | 0 € | Sí. Las versiones de pago, no |
+| Nota de prensa a medios del sector | 0 € | Sí, con el «sí» de Fernando |
+| Instagram, Facebook, Meta Business Suite (programar) | 0 € | Sí |
+| Anuncios de Meta (prueba) | ≈ 70 € (5 €/día, 14 días) | Cuando haya página de Facebook y 20-30 publicaciones |
+| Meta Verified | de pago mensual | No |
+| ChatGPT de pago | de pago mensual | No hace falta |
+| Gemini (clave ya puesta) | gratis con límite | Ya está |
+| Metricool | plan gratis; de pago si se quiere más | Opcional |
+| Pegatinas NFC para reseñas | poco | Opcional, cuando haya ficha |
 
 ## Cómo se mantiene (para Claude)
 - Este archivo es el plan. Al hacer algo: actualizarlo; regenerar la página (`node scripts/plan-html.mjs docs/PLAN_MARKETING.md docs/plan-marketing.html "Plan Google y redes"`) y publicarla con el Artifact en **la misma** página fijada, `url: https://claude.ai/artifact/VSPKY1BfUkgc5CVJkm53hi` (leerla antes); cambiar el resumen corto de la app en `docs/plan-fernando/marketing.txt` y subirlo a las dos bases con `NODE_USE_ENV_PROXY=1 node scripts/plan-fernando-subir.mjs <ref>` (tabla `plan_fernando`, solo la ve Fernando).
