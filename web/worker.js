@@ -52,6 +52,8 @@ export default {
         if (ini > fin || ini >= total) return new Response(null, { status: 416, headers: { "content-range": `bytes */${total}` } });
         return new Response(foto.slice(ini, fin + 1), { status: 206, headers: { ...h, "content-range": `bytes ${ini}-${fin}/${total}` } });
       }
+      // El archivo del catálogo de Meta (Tito 23/11/2026) también va en el KV: sin caché larga, para poder rehacerlo.
+      if (foto && ruta.endsWith(".csv")) return new Response(foto, { headers: { "content-type": "text/csv; charset=utf-8", "cache-control": "no-cache" } });
       if (foto) return new Response(foto, { headers: { "content-type": "image/jpeg", "cache-control": "public, max-age=2592000, immutable" } });
     }
     const nueva = REDIRECCIONES[ruta] || REDIRECCIONES[ruta + "/"];
