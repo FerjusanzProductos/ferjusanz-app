@@ -2815,7 +2815,7 @@ function qrDataUrl(texto, escala) { const R = qrMatriz(texto), q = 4, e = escala
 
 /* 📇 Tarjeta virtual para posibles clientes: QR y mensaje con el enlace a quiénes somos (sin precios; el precio va después por WhatsApp).
    Siempre la dirección de la app normal (también desde la naranja), para que el QR impreso no caduque. */
-const URL_TARJETA = 'https://ferjusanz-productos.fernandosanzalba.workers.dev/tarjeta';
+const URL_WEB = 'https://www.ferjusanz-frutas-verduras.es/', URL_TARJETA = URL_WEB + 'tarjeta/';
 /* pkg: 'com.whatsapp' (normal) o 'com.whatsapp.w4b' (Business). En Android se abre ESA app (wa.me abre la que el móvil tenga por defecto). */
 function abrirWhatsApp(telefono, texto, pkg) {
   let t = String(telefono || '').replace(/\D/g, ''); if (t.length === 9) t = '34' + t;
@@ -2848,7 +2848,7 @@ function hojaTarjeta() {
 }
 /* 🤝 Socio recomendado (18/11/2026, Tito): Super 9 Carnicerías (Carlos Zúñiga). Se recomiendan el uno al otro.
    La tarjeta de los dos vive en la web (/super9/); lista de precios de Super 9: cuando la pase Carlos. */
-const SUPER9_TEL = '680272028', URL_SUPER9 = URL_TARJETA.replace(/tarjeta$/, 'super9');
+const SUPER9_TEL = '680272028', URL_SUPER9 = URL_WEB + 'super9/';
 const SUPER9_WA = 'https://wa.me/34' + SUPER9_TEL + '?text=' + encodeURIComponent('Hola Carlos, vengo de parte de Ferjusanz y quería información de la carne: ');
 /* QR de Carlos solo con el número (Tito, 18/11/2026: «no lo reconoce otro móvil»): con el mensaje salía muy denso (49×49) y costaba leerlo en pequeño o en pantalla. */
 const SUPER9_QR = 'https://wa.me/34' + SUPER9_TEL;
@@ -12496,7 +12496,6 @@ const comEnlace = (txt, url, cls) => h('a', { href: url, target: '_blank', rel: 
    Llega a la tabla primer_pedido; aquí se calcula con la tarifa general y los precios no salen hasta que Fernando los aprueba. */
 const ppEnlace = p => URL_TARJETA + (p && p.id ? '?p=' + p.id : '') + '#primer-pedido';
 /* La web, por la app (como la tarjeta): al pasar al dominio solo cambia la redirección de src/worker.js. */
-const URL_WEB = URL_TARJETA.replace(/tarjeta$/, 'web');
 function hojaPrimerPedido(p, ex) {
   p = p || {}; const yo = state.perfil ? state.perfil.nombre.split(' ')[0] : '', url = ppEnlace(p);
   /* Corto para que en WhatsApp se lea entero, sin «Leer más» (Fernando, 16/11/2026: «simplifica para que se vea entero»). */
