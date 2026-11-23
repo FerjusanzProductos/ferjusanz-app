@@ -26,6 +26,15 @@
         ],
         "createdAt": "2026-11-23T11:52:13.167Z",
         "reason": "Claude: falso positivo, el escáner mezcla colores del tema oscuro con el fondo claro; cada tema tiene su par"
+      },
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "docs/asistente.html"
+        ],
+        "createdAt": "2026-11-23T11:53:56.482Z",
+        "reason": "Claude: mismo estilo que las páginas fijadas que ya existen (comercial.html, panel.html)"
       }
     ]
   }
