@@ -5,18 +5,28 @@
   "items": [
     [
       "Tomate ensalada",
-      1.85,
+      1.4,
+      "kg"
+    ],
+    [
+      "Tomate pera",
+      1.45,
       "kg"
     ],
     [
       "Tomate pera gordo",
-      2.0,
+      1.85,
       "kg"
     ],
     [
       "Lechuga en bandeja",
       1.95,
       "bandeja"
+    ],
+    [
+      "Lechuga iceberg",
+      1.0,
+      "pieza"
     ],
     [
       "Limón nuevo",

@@ -4,6 +4,7 @@ Función de Supabase `harvey-v2`. Es Harvey (ver `../harvey/LEEME.md`) **más ac
 siempre con confirmación. La app normal usa `harvey-v2`; la de PRUEBAS usa `harvey-v2-pruebas` (mismo código).
 **Cómo trabajar:** cambiar `index.ts`, subirlo SOLO como `harvey-v2-pruebas`; con «Autorizo publicar», subir el mismo archivo como `harvey-v2`.
 `harvey` (la antigua) ya no se usa.
+**Ojo (23/11/2026):** la `harvey-v2` de la normal (v5) **no** es este `index.ts`: es el código del 12/11 sin «investigar empresa / crear oferta» (aparcado), solo con el lema nuevo. Para cambiarle algo antes de publicar lo nuevo, bajar lo publicado (API `functions/harvey-v2/body`) y tocar eso.
 
 ## Cómo se confirma (igual en la app y, más adelante, en WhatsApp)
 1. Harvey resume exactamente lo que va a guardar y termina con la línea `[CONFIRMAR]`.

@@ -1,0 +1,60 @@
+<title>Asistente de Tito</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Una columna para el móvil: lo urgente arriba, luego correo, pendientes y llamadas. La rellena cada mañana la tarea «Asistente de Tito». */
+:root{--bg:#f4f6f8;--fg:#1b2430;--muted:#5a6676;--line:#d9dfe6;--card:#fff;--rojo:#c62828;--ambar:#8a5200;--azul:#1f5fa8;--verde:#2e7d32}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11161c;--fg:#e4e9ef;--muted:#9aa6b4;--line:#28313b;--card:#18202a;--rojo:#ff8a80;--ambar:#ffc266;--azul:#8ab8f0;--verde:#81c784;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#11161c;--fg:#e4e9ef;--muted:#9aa6b4;--line:#28313b;--card:#18202a;--rojo:#ff8a80;--ambar:#ffc266;--azul:#8ab8f0;--verde:#81c784;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,sans-serif;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+main{max-width:720px;margin:0 auto}
+h1{font-size:1.5rem;margin:0;text-wrap:balance}
+.sub{color:var(--muted);font-size:.9rem;margin:.25rem 0 1rem}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px 16px 14px;margin-bottom:16px;border-top:5px solid var(--c)}
+#urgente{--c:var(--rojo)}#correo{--c:var(--azul)}#pendientes{--c:var(--ambar)}#llamar{--c:var(--verde)}
+h2{font-size:1.15rem;color:var(--c);margin:12px 0 6px}
+p{margin:6px 0;overflow-wrap:anywhere}
+ul{padding-left:20px;margin:4px 0}
+li{margin:6px 0;overflow-wrap:anywhere}
+.chip{display:inline-block;font-size:.75rem;font-weight:600;letter-spacing:.03em;padding:1px 8px;border-radius:999px;border:1px solid currentColor;color:var(--c);margin-right:4px}
+a{color:var(--azul)}
+a:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
+.pie{color:var(--muted);font-size:.85rem}
+</style>
+<main>
+<h1>Asistente de Tito</h1>
+<p class="sub">Lunes 23/11/2026, 13:10. Correo leído: el Gmail de facturas, desde el viernes. Nada se envía sin ti: los borradores están en Gmail › Borradores.</p>
+
+<section id="urgente">
+<h2>🔴 Lo de hoy</h2>
+<ul>
+<li><b>Dominio</b>: ✅ ya es de la S.L. (Red.es lo confirmó a las 11:39) y los DNS ya apuntan a Cloudflare.</li>
+<li><b>Código de traslado de Alberto</b> (Creativate): vale <b>7 días, hasta el 30/11</b>. Hay que usarlo en DonDominio antes de esa fecha (está en su correo de las 9:16; no lo copio aquí). Tienes un <b>borrador de respuesta</b> dándole las gracias.</li>
+</ul>
+</section>
+
+<section id="correo">
+<h2>📬 Correo</h2>
+<ul>
+<li><span class="chip">Proveedores</span><b>25 facturas</b> reenviadas desde el Hotmail (Palacios Roca, talonarios, facturas de salida…). Entran solas en la app (Compras › 🧾 NIF e IVA).</li>
+<li><span class="chip">WhatsApp</span><b>360dialog</b>: te cobrarán el <b>19 % de IVA alemán</b> porque el NIF-IVA de la empresa no sale en el registro europeo (VIES). Si Jorge da de alta la empresa en ese registro, se quita. Del canal de WhatsApp todavía no hay respuesta del soporte.</li>
+<li><span class="chip">Personal</span>Hay correos tuyos personales; no los resumo aquí.</li>
+<li><span class="chip">Otros</span>Avisos automáticos de Red.es (código y activación de usuario) y de Google (acceso de Cloudflare): no hay que hacer nada.</li>
+</ul>
+</section>
+
+<section id="pendientes">
+<h2>📌 Lo que vence pronto</h2>
+<ul>
+<li><b>15/12</b> · ITV de la furgoneta <b>4741 MCV</b> (quedan 22 días). Mirar también las pegatinas de la 8907 MRR y la 5425 KSW.</li>
+<li><b>Antes del 1/1/2027</b> · completar los clientes sin NIF, dirección o CP (Clientes › «🧾 Faltan datos para facturar»).</li>
+<li><b>WhatsApp</b> · en cuanto 360dialog dé la clave, guardarla con el formulario seguro y yo lo publico.</li>
+</ul>
+</section>
+
+<section id="llamar">
+<h2>📞 A quién llamar</h2>
+<p>La lista del día con el motivo y qué decir está en <a href="https://claude.ai/artifact/WomsAtCVCe1cqaQCwqd9Wh">Comercial Ferjusanz</a>.</p>
+</section>
+
+<p class="pie">Se actualiza sola de lunes a sábado a las 7:47. Para cambiar la hora o lo que sale aquí, díselo a Claude.</p>
+</main>
