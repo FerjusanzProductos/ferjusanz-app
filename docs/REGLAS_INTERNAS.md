@@ -101,7 +101,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Las **limas** se venden **por caja** en todas las listas.
 
 ## Tarifa de hostelería: compra + 0,40 € (Tito, 23/11/2026: «0,40. Con las excepciones que ya había»)
-- Igual que la de colectividades (mismo cálculo automático), con **+ 0,40 €** y **las cajas + 0,30 € por kilo** con su peso en el nombre.
+- Igual que la de colectividades (mismo cálculo automático), con **+ 0,40 €** y **las cajas + 0,40 € por kilo** (Tito, 23/11/2026: «Si. Cambia») con su peso en el nombre.
 - Fijos: patata agria **0,66**, patata nueva esp. freír **0,60**, perejil **0**, lechuga iceberg **por pieza 1,00**.
 - Fuera lo que no se compra (ciruela, mix de frutos del bosque, aguacate repetido, canónigos, brote de lechuga, cebolla pequeña, naranjas de mesa, tomate bola).
 
