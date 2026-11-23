@@ -14,4 +14,9 @@ HERRAMIENTAS: escribe a Claude «ideas para redes», «escríbeme el texto», «
 
 ¿PAGAR? No hace falta pagar a Meta para empezar. Programar con Meta Business Suite (app gratis). Meta Verified: no. Anuncios (5-10 €/día): más adelante, con 20-30 publicaciones y el dominio puesto. Opcional: Metricool, para que Claude deje programadas las publicaciones.
 
-LO SIGUIENTE (tú): primera tanda de fotos · recuperar Webempresa y la ficha de Google (los textos para pegar ya están listos) · crear Instagram y Facebook de empresa · primer Reel · nota de voz semanal.
+RESEÑAS: con la ficha de Google nuestra, pedirlas a todos los clientes (5 a la semana) con el QR ya diseñado; meta 30 en 3 meses; contestar todas. Nunca comprarlas.
+NOTICIAS: Google Noticias solo saca medios; nota de prensa ya escrita (docs/redes/nota-prensa-01.md), se manda a revistas del sector con tu «sí».
+CHATGPT Y GEMINI: la web ya lleva su resumen (llms.txt). Falta: dar de alta la web en Bing (ChatGPT busca ahí) y activar Crawler Hints en Cloudflare.
+COSTES: todo gratis salvo la prueba de anuncios (≈ 70 €: 5 €/día, 14 días) cuando haya página de Facebook.
+
+LO SIGUIENTE (tú): verificar la ficha de Google por SMS al 609 100 690 · Bing Webmaster Tools · fichas en proveedores.com, Páginas Amarillas y QDQ · crear Instagram y Facebook de empresa · grabar los 5 primeros vídeos · fotos y nota de voz semanal.

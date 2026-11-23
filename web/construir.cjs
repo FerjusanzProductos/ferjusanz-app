@@ -964,6 +964,24 @@ ${sitemap.map(([r, d]) => `<url><loc>${DOMINIO}${r}</loc><lastmod>${r === '/' ? 
 </urlset>
 `);
 
+// Resumen para ChatGPT, Gemini y otros asistentes (estándar llms.txt). Solo datos de web/LEEME.md.
+const enlace = p => `- [${(p.h1 || p.title || '').replace(/ [|-] Ferjusanz.*$/, '')}](${DOMINIO}${p.path})`;
+fs.writeFileSync(path.join(OUT, 'llms.txt'), `# Ferjusanz
+
+> ${EMPRESA}: mayorista de patatas, frutas, verduras, huevos, setas, champiñones y legumbres en Mercamadrid. Suministra a hostelería (restaurantes, bares, hoteles, cafeterías), colectividades (colegios, residencias, comedores, catering) y fruterías de Madrid y Segovia. Empresa familiar, tercera generación, más de 60 años en el sector.
+
+- Más de 200 productos, también patata pelada y cortada y cuarta gama. Sin pedido mínimo; pedidos hasta la tarde anterior; reparto propio con camiones y furgonetas refrigerados.
+- Zona de reparto: Madrid capital, zona norte (Alcobendas, San Sebastián de los Reyes, Tres Cantos), noroeste (Aravaca, Pozuelo, Majadahonda, Las Rozas) y Segovia.
+- Precio: cambia cada día según el mercado; se pide por WhatsApp al 609 100 690 o al 91 763 21 86. Lunes a viernes, de 8:00 a 18:00.
+- Dirección: C/ Carare, 2, 28033 Madrid. NIF B87446670. Correo: ferjusanz@hotmail.com.
+
+## Servicios y productos
+${[...paginas, ...NUEVAS].filter(p => !p.isPost && /^\/(productos\/|proveedor-|distribu|reparto|mayorista|empresa-|contacto)/.test(p.path)).map(enlace).join('\n')}
+
+## Guías para cocinas profesionales
+${paginas.filter(p => p.isPost && (p.nuevo || (p.date || '') >= '2026-11')).map(enlace).join('\n')}
+`);
+
 // Lista de archivos que el Worker lleva dentro (Cloudflare no deja subir «assets» por el proxy del entorno).
 const TIPOS = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.txt': 'text/plain; charset=utf-8',
   '.xml': 'application/xml; charset=utf-8', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.woff2': 'font/woff2' };
