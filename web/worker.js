@@ -36,6 +36,7 @@ export default {
     // Siempre con www (el día del traslado, el dominio sin www también apunta aquí).
     if (url.hostname === DOMINIO_SIN_WWW) return Response.redirect("https://www." + DOMINIO_SIN_WWW + url.pathname + url.search, 301);
     let ruta = decodeURI(url.pathname);
+    if (ruta === "/favicon.ico") return Response.redirect(url.origin + "/marca/icono-32.png", 301); // el móvil lo pide aunque haya <link rel=icon>
     if (ruta === "/enviar-contacto") return enviarContacto(request, url, env);
     if (ruta === "/enviar-primer-pedido") return enviarPrimerPedido(request, url, env);
     // Fotos nuevas (novedades y artículos): en el almacén KV, no dentro del Worker.

@@ -256,7 +256,7 @@ const galeria = ruta => GALERIAS[ruta] ? `<section class="bloque bloque-crema"><
 // ───────── Plantilla ─────────
 function plantilla({ ruta, titulo, descripcion, imagen, cuerpo, datos = [], tipo = 'website', precarga = '' }) {
   const nav = MENU.map(([h, t]) => `<a href="${h}"${ruta === h || (h !== '/' && ruta.startsWith(h)) ? ' aria-current="page"' : ''}>${t}</a>`).join('');
-  const og = imagen || F + '2019/10/proveedores-distribucion_crs2.jpg';
+  const og = imagen || '/marca/compartir.png';
   return `<!doctype html>
 <html lang="es">
 <head>
@@ -274,6 +274,7 @@ function plantilla({ ruta, titulo, descripcion, imagen, cuerpo, datos = [], tipo
 <meta property="og:image" content="${DOMINIO}${og}">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/marca/icono-32.png" sizes="32x32">
+<link rel="icon" href="/marca/icono-512.png" sizes="512x512">
 <link rel="apple-touch-icon" href="/marca/icono-180.png">
 <meta name="theme-color" content="#070b1a">
 <link rel="preload" href="/fuentes/inter-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
