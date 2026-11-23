@@ -40,5 +40,5 @@ for (const i of revisar) out.push(`• ${i.nombre} (${i.unidad}): ${i.auto_aviso
 for (const i of sinKilos) out.push(`• ${i.nombre}: no sé cuántos kilos trae la caja; lleva + ${eur(lista.margen_auto)}. Dime los kilos.`);
 out.push('', 'LISTA COMPLETA (precio · compra · fecha · de dónde)');
 for (const i of items.filter(x => x.precio != null))
-  out.push(`• ${i.nombre}: ${eur(i.precio)}/${i.unidad}` + (i.precio_fijo ? ' (fijo, puesto por ti)' : (i.kg_caja && i.unidad === 'caja' ? ` (caja de ${String(Number(i.kg_caja)).replace('.', ',')} kg)` : '') + ` · ${eur(i.coste)} · ${dm(i.compra_fecha)} · ${i.compra_origen}`));
+  out.push(`• ${i.nombre}: ${eur(i.precio)}/${i.unidad}` + (i.precio_fijo ? ' (fijo, puesto por ti)' : ` · ${eur(i.coste)} · ${dm(i.compra_fecha)} · ${i.compra_origen}`));
 console.log(out.join('\n'));
