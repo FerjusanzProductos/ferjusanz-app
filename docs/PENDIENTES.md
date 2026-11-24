@@ -116,6 +116,7 @@ _Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/arti
 
 ### 🤖 Claude (sin esperar a nadie)
 - 🟡 Revisar cada lunes si sale en el BOE el aplazamiento de Verifactu: **lo hace sola** la tarea automática «Verifactu en el BOE (lunes)» (`trig_01Q2osxJtGHJMTo3oksNiXG7`, lunes 9:47 hora de Madrid, avisa al móvil). Se quita cuando salga o pase el 22/12.
+- 🟡 **Informe mensual de resultados con los datos de Golden** (Tito, 24/11/2026, idea del reel de @marcosdiaz.es sobre «Claude Finance Agents»): qué clientes y productos suben o bajan, por qué, y «cinco cosas que hacer, ordenadas por impacto». Solo datos reales (`golden_*`), nada de la app. Añadirlo al «Panel Ferjusanz» (`scripts/panel-html.mjs`) para que salga solo cada mes. Sin coste nuevo.
 - ⚪ Hacer más pequeño `public/index.html`.
 - 🟡 **Propuesta (con el «sí» de Fernando)**: en la caja de la app, **no dejar guardar un apunte que deje el saldo por debajo de 0**.
 - 🟡 **Propuesta «punto de partida» (espera el «sí» de Fernando, 18/11/2026)**: el día del arranque se guarda una **foto de Golden** (lo que nos deben, lo que debemos, ventas y margen del año hasta ese día). Desde ahí, la app cuenta **desde cero** lo suyo y en «💶 Margen y cobros» sale una pestaña **«Golden ↔ app»** que compara, día a día, lo vendido y cobrado en la app con lo de Golden y marca las diferencias (mientras las facturas sigan en Golden, hasta el 1/1/2027).
