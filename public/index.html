@@ -14598,7 +14598,9 @@ function vistaImportar() {
       const pal = t => new Set(waPalabras(t || '').filter(w => /[a-z]/.test(w))); /* sin números: «2 melones» no se parece a «2 berenjenas» */
       const sim = (a, b) => { const A = pal(a), B = pal(b); if (!A.size || !B.size) return 0; let c = 0; B.forEach(w => { if (A.has(w)) c++; }); return c / Math.min(A.size, B.size); };
       for (const x of (r.data && r.data.lineas) || []) {
-        const p = x.producto_id && S.prods.find(q => q.id === x.producto_id); if (!p || S.lineas.some(l => l.producto && l.producto.id === p.id)) continue;
+        const p = x.producto_id && S.prods.find(q => q.id === x.producto_id); if (!p) continue;
+        const ya = S.lineas.find(l => l.producto && l.producto.id === p.id);
+        if (ya) { if (dudosa(ya)) { ya.estado = 'ia'; ya.manual = true; n++; } continue; } /* la IA confirma lo que la app proponía */
         let best = null, bs = 0; S.lineas.forEach(l => { const v = sim(l.raw, x.texto); if (v > bs) { bs = v; best = l; } });
         const cant = x.cantidad != null ? String(x.cantidad).replace('.', ',') : '';
         if (best && bs >= 0.5) {
