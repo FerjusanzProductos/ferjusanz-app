@@ -10570,7 +10570,7 @@ function waPrecioSuelto(tr) {
 }
 const WA_NUM1 = { un: 1, uno: 1, una: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10, once: 11, doce: 12, trece: 13, catorce: 14, quince: 15, dieciseis: 16, diecisiete: 17, dieciocho: 18, diecinueve: 19, veinte: 20, veintiuno: 21, veintiun: 21, veintiuna: 21, veintidos: 22, veintitres: 23, veinticuatro: 24, veinticinco: 25, veintiseis: 26, veintisiete: 27, veintiocho: 28, veintinueve: 29, treinta: 30, cuarenta: 40, cincuenta: 50, sesenta: 60, setenta: 70, ochenta: 80, noventa: 90, cien: 100, ciento: 100, doscientos: 200, trescientos: 300, cuatrocientos: 400, quinientos: 500, medio: 0.5, media: 0.5 };
 const WA_DECENAS = new Set([30, 40, 50, 60, 70, 80, 90]);
-const WA_RUIDO = new Set('de del la el los las lo unos unas por favor hola buenas buenos dias tardes noches gracias ponme ponedme pon necesito necesitamos necesitaria necesita necesitan quiero queremos quiere quieren quisiera pide piden encarga encargan lleva llevan mandame mandar manda mandadme enviame traeme dame ademas tambien para con en y e o mas que si me nos se puedes podeis podrias algo saludos ok vale pedido pedir otro otra al a es esta estan hay apunta apuntame anota anotame pedidos'.split(' '));
+const WA_RUIDO = new Set('de del la el los las lo unos unas por favor hola buenas buenos dias tardes noches gracias ponme ponedme pon necesito necesitamos necesitaria necesita necesitan quiero queremos quiere quieren quisiera pide piden encarga encargan lleva llevan mandame mandar manda mandadme enviame traeme dame ademas tambien para con en y e o mas que si me nos se puedes podeis podrias algo saludos ok vale pedido pedir otro otra al a es esta estan hay apunta apuntame anota anotame pedidos pones pone ponga pongas poned ponemos pongais traes trae traiga traigas traed mandas mande mandes mandais envia envias envie envies enviad enviais puede pueda pudiera ser hoy porfa porfi porfavor muchas tu te le les usted ustedes rapido urgente posible cuando sea fer fernando tito buen'.split(' '));
 const WA_CORR = new Set(['perdon', 'perdona', 'perdone', 'digo', 'corrijo', 'rectifico', 'mejor']);
 const WA_DIAS = { domingo: 0, lunes: 1, martes: 2, miercoles: 3, jueves: 4, viernes: 5, sabado: 6 };
 const WA_MESES = { enero: 0, febrero: 1, marzo: 2, abril: 3, mayo: 4, junio: 5, julio: 6, agosto: 7, septiembre: 8, setiembre: 8, octubre: 9, noviembre: 10, diciembre: 11 };
@@ -14472,7 +14472,7 @@ function vistaImportar() {
     S.iaLeyendo = true; pintarIA();
     try {
       if (!S.prods) S.prods = await waProductos();
-      const r = await sb.functions.invoke('leer-pedido', { body: { texto } });
+      const r = await sb.functions.invoke('leer-pedido', { body: { texto, cliente_id: S.cliente ? S.cliente.id : null } });
       if (r.error) { let m = r.error.message || ''; try { const j = await r.error.context.json(); if (j && j.error) m = j.error; } catch (e) { } throw new Error(m); }
       if (ta.value.trim() !== texto) return; /* lo han cambiado mientras: no tocar */
       iaHecha = texto; let n = 0;
