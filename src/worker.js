@@ -27,6 +27,19 @@ import pres_super9_carlos from "../public/pres/super9-carlos.mp4";
 import pres_logo_jpg from "../public/pres/logo.jpg";
 import pres_logo_oscuro from "../public/pres/logo-oscuro.png";
 import pres_etiqueta from "../public/pres/etiqueta.jpg";
+// Folletos, tarjetas y publicaciones (Comercial › 🎨 Folletos y tarjetas; salen de marca/disenos/hacer.mjs)
+import marca_folleto_A5_1_jpg from "../public/marca/folleto-A5-1.jpg";
+import marca_folleto_A5_2_jpg from "../public/marca/folleto-A5-2.jpg";
+import marca_folleto_A5_pdf from "../public/marca/folleto-A5.pdf";
+import marca_google_ofertas_jpg from "../public/marca/google-ofertas.jpg";
+import marca_ofertas_A4_pdf from "../public/marca/ofertas-A4.pdf";
+import marca_ofertas_whatsapp_jpg from "../public/marca/ofertas-whatsapp.jpg";
+import marca_post_manzana_colegio_jpg from "../public/marca/post-manzana-colegio.jpg";
+import marca_post_patata_pelada_jpg from "../public/marca/post-patata-pelada.jpg";
+import marca_post_un_proveedor_jpg from "../public/marca/post-un-proveedor.jpg";
+import marca_tarjeta_visita_1_jpg from "../public/marca/tarjeta-visita-1.jpg";
+import marca_tarjeta_visita_2_jpg from "../public/marca/tarjeta-visita-2.jpg";
+import marca_tarjeta_visita_pdf from "../public/marca/tarjeta-visita.pdf";
 import paso2 from "../public/guia-img/paso2.jpg";
 import paso3 from "../public/guia-img/paso3.jpg";
 import paso4 from "../public/guia-img/paso4.jpg";
@@ -78,6 +91,18 @@ const ARCHIVOS = {
   "/pres/logo.jpg": [pres_logo_jpg, "image/jpeg"],
   "/pres/logo-oscuro.png": [pres_logo_oscuro, "image/png"],
   "/pres/etiqueta.jpg": [pres_etiqueta, "image/jpeg"],
+  "/marca/folleto-A5-1.jpg": [marca_folleto_A5_1_jpg, "image/jpeg"],
+  "/marca/folleto-A5-2.jpg": [marca_folleto_A5_2_jpg, "image/jpeg"],
+  "/marca/folleto-A5.pdf": [marca_folleto_A5_pdf, "application/pdf"],
+  "/marca/google-ofertas.jpg": [marca_google_ofertas_jpg, "image/jpeg"],
+  "/marca/ofertas-A4.pdf": [marca_ofertas_A4_pdf, "application/pdf"],
+  "/marca/ofertas-whatsapp.jpg": [marca_ofertas_whatsapp_jpg, "image/jpeg"],
+  "/marca/post-manzana-colegio.jpg": [marca_post_manzana_colegio_jpg, "image/jpeg"],
+  "/marca/post-patata-pelada.jpg": [marca_post_patata_pelada_jpg, "image/jpeg"],
+  "/marca/post-un-proveedor.jpg": [marca_post_un_proveedor_jpg, "image/jpeg"],
+  "/marca/tarjeta-visita-1.jpg": [marca_tarjeta_visita_1_jpg, "image/jpeg"],
+  "/marca/tarjeta-visita-2.jpg": [marca_tarjeta_visita_2_jpg, "image/jpeg"],
+  "/marca/tarjeta-visita.pdf": [marca_tarjeta_visita_pdf, "application/pdf"],
   "/guia-img/paso2.jpg": [paso2, "image/jpeg"],
   "/guia-img/paso3.jpg": [paso3, "image/jpeg"],
   "/guia-img/paso4.jpg": [paso4, "image/jpeg"],
