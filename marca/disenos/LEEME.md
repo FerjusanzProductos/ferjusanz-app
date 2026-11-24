@@ -4,7 +4,7 @@ Hechos con el logo, las letras (Barlow) y fotos reales de `public/pres/`. Se reh
 
 | Archivo | Para qué |
 |---|---|
-| `tarjeta-visita.pdf` | Imprenta: 85 × 55 mm con 3 mm de sangrado. Anverso: la etiqueta granate y oro. Reverso: datos, el móvil de Tito (609 567 354) y un QR que lo llama (Tito, 25/11/2026) |
+| `tarjeta-visita.pdf` | Imprenta: 85 × 55 mm con 3 mm de sangrado. Anverso: la etiqueta granate y oro. Reverso: datos, «609 567 354 · Fernando Sanz» (el móvil de Tito; en la tarjeta nunca «Tito») y un QR que lo llama (25/11/2026) |
 | `folleto-A5.pdf` | Imprenta: A5 a dos caras, para repartir a cocinas |
 | `ofertas-A4.pdf` | Cartel de ofertas para imprimir. **Sale de `web/ofertas.json`**: al cambiar las ofertas de la web, volver a lanzar el script |
 | `ofertas-whatsapp.png` | Las mismas ofertas en 1080 × 1350 (WhatsApp, Instagram, estados) |
