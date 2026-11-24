@@ -31,6 +31,10 @@ const D = {
   nombre: 'FERJUSANZ', tel: '609 100 690', web: 'www.ferjusanz-frutas-verduras.es',
   correo: 'ferjusanz@hotmail.com', horario: 'Lunes a viernes, de 8:00 a 18:00', zona: 'Madrid y Segovia',
 };
+// QR de la tarjeta: llama al móvil de Tito (Tito, 25/11/2026: «el QR con mi número de teléfono»). Librería qrcode-generator (MIT) guardada al lado.
+const qrcode = createRequire(import.meta.url)('./qrcode-generator.min.js');
+const TITO = '609 567 354';
+const qrTito = (() => { const q = qrcode(0, 'M'); q.addData('tel:+34' + TITO.replace(/ /g, '')); q.make(); return q.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); })();
 const of = JSON.parse(readFileSync(raiz + 'web/ofertas.json', 'utf8'));
 const precio = (n) => n.toFixed(2).replace('.', ',') + ' €';
 const fecha = (s) => { const [, m, d] = s.split('-').map(Number); return `${d} de ${['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][m - 1]}`; };
@@ -62,8 +66,13 @@ const tarjeta = pag('91mm', '61mm', `
   <div class="sol" style="position:absolute;left:0;right:0;top:0;height:3mm"></div>
   <img src="${img.logo}" style="height:12.5mm">
   <p style="font-size:7.4pt;color:#4b423c;margin-top:2mm;line-height:1.3">Mayorista de frutas y verduras para hostelería y colectividades · ${D.zona}</p>
-  <div style="position:absolute;left:8mm;right:8mm;bottom:6.5mm;font-size:7.6pt;line-height:1.45">
+  <div style="position:absolute;right:8mm;bottom:6.5mm;width:17mm;text-align:center">
+    <div style="width:17mm;height:17mm">${qrTito.replace('<svg ', '<svg style="width:100%;height:100%" ')}</div>
+    <p style="font-size:5.6pt;color:#4b423c;margin-top:.8mm;line-height:1.15">Escanea y<br>llama a Tito</p>
+  </div>
+  <div style="position:absolute;left:8mm;right:27mm;bottom:6.5mm;font-size:7.6pt;line-height:1.45">
     <p><b class="bc" style="font-size:13pt;color:var(--granate);letter-spacing:.02em">${D.tel}</b> <span style="color:#4b423c">· pedidos y WhatsApp</span></p>
+    <p><b class="bc" style="font-size:11pt;color:var(--granate);letter-spacing:.02em">${TITO}</b> <span style="color:#4b423c">· Tito</span></p>
     <p style="font-weight:600">${D.web}</p>
     <p>${D.correo}</p>
     <p style="color:#6b5f57">${D.horario}</p>

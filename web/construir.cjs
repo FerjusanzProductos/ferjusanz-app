@@ -78,7 +78,7 @@ const SECTORES = [
     texto: 'Producto del día, gama gourmet y patata, cebolla y ajo pelados para agilizar la cocina.' },
   { nombre: 'Hoteles', ruta: '/proveedor-de-frutas-y-verduras-para-hoteles-madrid/', foto: '/fotos/mango-y-papaya.jpg',
     texto: 'Fruta para desayunos y bufé, verdura para cocina y eventos, con reparto los días que marque el hotel.' },
-  { nombre: 'Colegios', ruta: '/proveedor-de-frutas-y-verduras-para-colegios-madrid/', foto: '/fotos/2026/11/fruta-comedor-colegio-platano.jpg',
+  { nombre: 'Colegios', ruta: '/proveedor-de-frutas-y-verduras-para-colegios-madrid/', foto: '/fotos/2026/11/comedor-colegio.jpg',
     texto: 'Fruta y verdura para menús escolares, con calibres y cantidades constantes durante todo el curso.' },
   { nombre: 'Residencias', ruta: '/proveedor-de-frutas-y-verduras-para-residencias-madrid/', foto: F + '2020/09/verduras-residencias-ancianos.jpg',
     texto: 'Producto de temporada, fácil de preparar y servido con la regularidad que exige una residencia.' },
@@ -824,7 +824,7 @@ const NUEVAS = [
 <p>Ajustamos el pedido a la ocupación de cada semana y repartimos con camiones y furgonetas refrigerados los días que necesite. Su responsable de compras o su jefe de cocina hablan siempre con las mismas personas, por WhatsApp o por teléfono.</p>
 <h2>Tarifa según su consumo</h2>
 <p>No publicamos precios porque cambian con el mercado. Indíquenos el volumen aproximado y la frecuencia y le enviamos una tarifa ajustada, sin compromiso.</p>` },
-  { path: '/proveedor-de-frutas-y-verduras-para-colegios-madrid/', foto: '/fotos/2026/11/fruta-comedor-colegio-platano.jpg', title: 'Fruta y verdura para comedores escolares en Madrid | Ferjusanz',
+  { path: '/proveedor-de-frutas-y-verduras-para-colegios-madrid/', foto: '/fotos/2026/11/comedor-colegio.jpg', title: 'Fruta y verdura para comedores escolares en Madrid | Ferjusanz',
     description: 'Fruta y verdura al por mayor para colegios y comedores escolares de Madrid. Calibres constantes, producto de temporada y reparto puntual.',
     html: `<h1>Proveedor de fruta y verdura para colegios en Madrid</h1>
 <p>Un comedor escolar necesita lo mismo cada día: <strong>producto fresco, cantidades exactas y que llegue a su hora</strong>. Ferjusanz sirve patatas, frutas, verduras, huevos, setas, champiñones y legumbres a colegios, escuelas infantiles y empresas que gestionan comedores escolares en Madrid.</p>
@@ -871,7 +871,7 @@ const PAGINAS_ZONA = [
     sitios: ['Moratalaz', 'Vicálvaro', 'Valdebernardo', 'Coslada', 'San Fernando de Henares'],
     intro: 'Llevamos patatas, frutas, verduras, huevos, setas, champiñones y legumbres a hostelería y colectividades de Moratalaz, Vicálvaro, Coslada y los polígonos de San Fernando de Henares.',
     extra: 'En los polígonos hay comedores de empresa y caterings que necesitan volumen y regularidad. Ajustamos el pedido a sus servicios de la semana.' },
-  { slug: 'pozuelo-boadilla-las-rozas', tit: 'Pozuelo y Las Rozas', corto: 'Pozuelo, Boadilla y Las Rozas', foto: '/fotos/2026/11/fruta-comedor-colegio-platano.jpg',
+  { slug: 'pozuelo-boadilla-las-rozas', tit: 'Pozuelo y Las Rozas', corto: 'Pozuelo, Boadilla y Las Rozas', foto: '/fotos/2026/11/comedor-colegio.jpg',
     sitios: ['Pozuelo de Alarcón', 'Aravaca', 'Boadilla del Monte', 'Las Rozas'],
     intro: 'En la zona oeste servimos a restaurantes, colegios y residencias de Pozuelo de Alarcón, Aravaca, Boadilla del Monte y Las Rozas.',
     extra: 'Aquí trabajamos mucho con colegios y residencias: fruta de postre en calibres constantes, verdura para cremas y purés y patata pelada para ahorrar tiempo de cocina.' },
