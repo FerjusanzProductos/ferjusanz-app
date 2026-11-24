@@ -2,6 +2,12 @@
 _Solo lo que **falta**. Regla de Fernando (14/11/2026): «Cada vez que hagamos algo, quítalo». Al terminar algo: **borrarlo de aquí** (no tacharlo), apuntarlo en `docs/HISTORIAL.md` y volver a publicar la página fijada (ver `CLAUDE.md`). Lo ya hecho hasta el 14/11/2026 está en `docs/HISTORIAL.md`._
 _Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda · ⏸ en espera._
 
+## 🤝 CLIENTES (Tito, 24/11/2026, dictado conduciendo)
+- 🔴 **Ir detrás de**: **Restaurante Duarte** y **Florencio** (que salgan en «Comercial del día» hasta que se cierre algo).
+- 🔴 **Recuperar varios clientes perdidos**, entre ellos las **facultades de Informática y de Documentación** (perdidas). Tito dirá cuáles más.
+- 🔴 **El Águila**: que se ponga al día con los pagos (ver su deuda en Golden y llamarle).
+- 🟡 **La Rueda** ha vuelto como cliente, con precio bajo para recuperarlo. **Tito**: decir qué precio o tarifa se le pone (no se cambian precios sin que lo diga).
+
 ## 🌐 LA WEB (nueva, de prueba: https://ferjusanz-web.fernandosanzalba.workers.dev)
 Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lista para mandar por WhatsApp).
 - 🔴 **Fernando**: revisarla en el móvil y decir qué cambiar.
