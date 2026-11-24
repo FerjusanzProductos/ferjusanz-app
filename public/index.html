@@ -4257,11 +4257,11 @@ const filaFacturaGolden = (f, sinCobrar) => h('div', { class: 'card tap', onclic
 /* Para la ficha del cliente */
 function panelGoldenCliente(c) {
   const cont = h('div', {}, h('p', { class: 'vacio' }, 'Cargando historial de Golden…'));
-  (async () => { try { const [r, tq] = await Promise.all([sb.from('golden_facturas').select('*').ilike('cliente_codigo', c.codigo).order('fecha', { ascending: false }).limit(500), sb.from('golden_tesoreria').select('vencimiento,total,serie,numero').eq('tipo', 'C').eq('estado', 'PEN').ilike('codigo', c.codigo).order('vencimiento')]); if (r.error) throw r.error; const fs = (r.data || []).filter(f => !f.borrador); const tot = fs.reduce((a, f) => a + Number(f.total || 0), 0);
+  (async () => { try { const [r, tq] = await Promise.all([sb.from('golden_facturas').select('*').ilike('cliente_codigo', c.codigo).order('fecha', { ascending: false }).limit(500), sb.from('golden_tesoreria').select(TES_SEL).eq('tipo', 'C').eq('estado', 'PEN').ilike('codigo', c.codigo).order('vencimiento')]); if (r.error) throw r.error; const fs = (r.data || []).filter(f => !f.borrador); const tot = fs.reduce((a, f) => a + Number(f.total || 0), 0);
     // Lo que nos debe según Golden (Fernando, 18/11/2026: «cuando busco la definitiva no sé cuánto debe»). Sin permiso de tesorería, no sale.
     const ts = tq.error ? [] : (tq.data || []), debe = ts.reduce((a, t) => a + Number(t.total || 0), 0), hoyS = hoy(), pend = new Set(ts.map(t => numGolden(t.serie, t.numero)));
     const deuda = ts.length ? h('div', { class: 'card', style: 'border-left:5px solid var(--rojo)' }, h('div', { class: 'fila' }, h('div', { class: 'nombre', style: 'color:var(--rojo)' }, 'Debe'), h('div', { class: 'tot-num', style: 'color:var(--rojo)' }, eur(debe) + '\u00a0€')), h('div', { class: 'sub' }, ts.length + (ts.length === 1 ? ' factura sin cobrar' : ' facturas sin cobrar') + ' en Golden · toca una para verla'),
-      ...ts.map(t => h('div', { class: 'card fila tap', onclick: () => verFacturaPendiente(t) }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:15px' }, 'Fra. ' + numGolden(t.serie, t.numero)), h('div', { class: 'sub' }, 'Vence el ' + fechaES(t.vencimiento))), h('b', { style: t.vencimiento < hoyS ? 'color:var(--rojo)' : '' }, eur(t.total) + '\u00a0€')))) : null;
+      ...ts.map(t => conNota(t, h('div', { class: 'card fila tap', onclick: () => verFacturaPendiente(t) }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:15px' }, 'Fra. ' + numGolden(t.serie, t.numero)), h('div', { class: 'sub' }, 'Vence el ' + fechaES(t.vencimiento))), h('b', { style: t.vencimiento < hoyS ? 'color:var(--rojo)' : '' }, eur(t.total) + '\u00a0€'))))) : null;
     cont.replaceChildren(h('div', { class: 'letra' }, 'Historial de Golden (2026)'), deuda, fs.length ? h('div', { class: 'sub', style: 'margin-bottom:6px' }, fs.length + ' facturas · ' + eur(tot) + '\u00a0€ en total') : null, ...(fs.length ? fs.map(f => filaFacturaGolden(f, pend.has(f.numero))) : [h('p', { class: 'vacio' }, 'No hay facturas de Golden de este cliente en 2026.')]));
   } catch (e) { cont.replaceChildren(h('p', { class: 'sub' }, /golden_|relation|schema cache/i.test((e && e.message) || '') ? 'Historial de Golden aún sin cargar (Parte 35).' : (isNetErr(e) ? 'Necesitas conexión.' : msgErr(e)))); } })();
   return cont;
@@ -10117,6 +10117,42 @@ function vistaGastosReparto() {
 
 // Cobro pendiente → su factura del histórico (Fernando, 18/11/2026: «pinchar y ver esa factura para enseñarla»). Golden guarda «F1/8.467».
 const numGolden = (serie, n) => (serie ? serie + '/' : '') + String(n || '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+/* Nota de Golden › Cobros (Tito, 24/11/2026): la «Observación» que apunta la oficina (albaranes «a cuenta» o «pagado»), ya separada al cargar Golden
+   (scripts/golden/nota_golden.py). Lo que quedaría pendiente es SEGÚN LA NOTA, por confirmar, hasta que Tito diga qué significa «a cuenta». */
+const TES_SEL = 'codigo,nombre,vencimiento,total,serie,numero,observacion,observacion_partes,observacion_aviso';
+function conNota(t, el) { const n = notaGolden(t); if (!n) return el; el.style.cssText += ';border:0;box-shadow:none;margin:0;padding:0;background:transparent'; return h('div', { class: 'card' }, el, n); }  /* la fila sigue siendo .card.tap (efecto al pulsar y buscador) */
+function notaGolden(t) {
+  if (!t || !t.observacion) return null;
+  const ps = Array.isArray(t.observacion_partes) ? t.observacion_partes : [], r2 = n => Math.round(n * 100) / 100;
+  const anot = r2(ps.reduce((a, p) => a + Number(p.importe || 0), 0)), queda = r2(Number(t.total || 0) - anot), btns = [];
+  const caja = h('div', { class: 'nota-golden', style: 'margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--gris);font-size:15px', onclick: e => e.stopPropagation() },
+    h('div', { style: 'font-weight:700;margin-bottom:2px' }, '📝 Nota de Golden'),
+    ...ps.map(p => h('div', { class: 'fila', style: 'gap:8px;align-items:center;min-height:40px;border-bottom:1px solid var(--borde)' },
+      h('div', { style: 'display:flex;flex-wrap:wrap;gap:4px;align-items:center' }, ...(p.albaranes && p.albaranes.length ? p.albaranes.map(n => { const b = h('button', { class: 'ghost', style: 'min-height:36px;padding:2px 10px;font-size:15px', onclick: e => { e.stopPropagation(); abrirAlbaranGolden(t, n, p); } }, 'Alb. ' + n + ' ›'); btns.push([n, b]); return b; }) : [h('span', {}, 'Sin albarán')]),
+        h('span', { class: 'sub' }, (p.fecha ? fechaES(p.fecha) + ' · ' : '') + (p.tipo === 'pagado' ? 'pagado' : 'a cuenta'))),
+      h('b', { style: 'white-space:nowrap' }, p.importe == null ? '—' : eur(p.importe) + ' €'))),
+    ps.length ? h('div', { style: 'margin-top:4px' }, h('div', { class: 'fila' }, h('span', {}, 'Total anotado'), h('b', {}, eur(anot) + ' €')),
+      h('div', { class: 'fila' }, h('span', {}, 'Quedaría pendiente'), h('b', { style: 'color:' + (queda > 0.009 ? 'var(--rojo)' : 'var(--verde-osc)') }, eur(queda) + ' €')),
+      h('div', { class: 'sub', style: 'font-style:italic' }, 'Según nota de Golden, por confirmar.')) : null,
+    t.observacion_aviso || !ps.length ? h('div', { style: 'color:#b45309;font-weight:700;margin-top:6px' }, '⚠️ ' + (t.observacion_aviso || 'No se ha entendido la nota.') + ' Mira el texto original:') : null,
+    h('div', { class: 'sub', style: 'margin-top:4px;overflow-wrap:anywhere' }, 'Texto de Golden: «' + t.observacion + '»'));
+  /* Solo se puede pulsar el albarán que está en el historial de Golden de la app */
+  if (btns.length) (async () => { try { const r = await sb.from('golden_lineas').select('albaran').or(btns.map(([n]) => 'albaran.ilike."Alb. %/' + n + ' de %"').join(',')).limit(1000); if (r.error) return;
+    const hay = new Set((r.data || []).map(l => (String(l.albaran).match(/\/\s*(\d+)\s+de/) || [])[1]));
+    btns.forEach(([n, b]) => { if (!hay.has(n)) b.replaceWith(h('span', { title: 'No está en el historial de Golden de la app' }, 'Alb. ' + n)); }); } catch (e) { } })();
+  return caja;
+}
+async function abrirAlbaranGolden(t, n, p) {
+  const cuerpo = h('div', {}, h('p', { class: 'vacio' }, 'Buscando el albarán ' + n + '…')); hoja('Albarán ' + n, cuerpo);
+  try { const r = await sb.from('golden_lineas').select('factura_numero,albaran,orden,descripcion,cantidad,precio,iva,importe,repetida').ilike('albaran', 'Alb. %/' + n + ' de %').order('orden'); if (r.error) throw r.error;
+    const fra = numGolden(t.serie, t.numero), G = {}; (r.data || []).filter(l => !l.repetida).forEach(l => { const k = l.albaran + '|' + l.factura_numero; (G[k] = G[k] || { alb: l.albaran, fra: l.factura_numero, ls: [] }).ls.push(l); });
+    const gs = Object.values(G).sort((a, b) => (b.fra === fra) - (a.fra === fra)); if (!gs.length) { cuerpo.replaceChildren(h('p', { class: 'vacio' }, 'El albarán ' + n + ' no está en el historial de Golden de la app.')); return; }
+    cuerpo.replaceChildren(...gs.flatMap(g => { const tot = Math.round(g.ls.reduce((a, l) => a + Number(l.importe || 0), 0) * 100) / 100;
+      return [h('div', { class: 'letra' }, g.alb.replace(/^Alb\.\s*/, 'Albarán ') + ' · factura ' + g.fra),
+        ...g.ls.map(l => h('div', { class: 'card fila' }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:15px' }, l.descripcion), h('div', { class: 'sub' }, num(l.cantidad) + ' × ' + eur(l.precio) + ' €' + (l.iva ? ' · IVA ' + num(l.iva) + ' %' : ''))), h('b', {}, eur(l.importe) + ' €'))),
+        h('div', { class: 'card' }, h('div', { class: 'fila' }, h('span', {}, 'Total del albarán'), h('b', {}, eur(tot) + ' €')), p && p.importe != null && g.fra === fra ? h('div', { class: 'fila' }, h('span', {}, 'Según la nota (' + (p.tipo === 'pagado' ? 'pagado' : 'a cuenta') + ')'), h('b', {}, eur(p.importe) + ' €')) : null)]; }));
+  } catch (e) { cuerpo.replaceChildren(h('p', { class: 'err' }, isNetErr(e) ? 'Necesitas conexión.' : msgErr(e))); }
+}
 async function verFacturaPendiente(t) {
   try { const r = await sb.from('golden_facturas').select('*').eq('numero', numGolden(t.serie, t.numero)).maybeSingle(); if (r.error) throw r.error;
     if (r.data) abrirFacturaGolden(r.data); else toast('La factura ' + numGolden(t.serie, t.numero) + ' no está en el histórico de Golden de la app.', 'err');
@@ -10228,7 +10264,7 @@ function vistaGoldenMargen() {
     const yo = ++pide; res.replaceChildren(h('p', { class: 'vacio' }, 'Calculando…')); tot.replaceChildren();
     try {
       if (modo === 'cobros' || modo === 'pagos') {
-        const ts = await gesTodas(() => sb.from('golden_tesoreria').select('codigo,nombre,vencimiento,total,serie,numero').eq('tipo', modo === 'cobros' ? 'C' : 'P').eq('estado', 'PEN').order('vencimiento'));
+        const ts = await gesTodas(() => sb.from('golden_tesoreria').select(TES_SEL).eq('tipo', modo === 'cobros' ? 'C' : 'P').eq('estado', 'PEN').order('vencimiento'));
         if (yo !== pide) return; const por = {}, hoyS = hoy(); let suma = 0, vencido = 0; const comerc = {};
         if (modo === 'cobros') { const cs = await sb.from('clientes').select('codigo,nombre_comercial').in('codigo', [...new Set(ts.map(t => t.codigo))]); (cs.data || []).forEach(c => { if (c.nombre_comercial) comerc[c.codigo] = c.nombre_comercial; }); if (yo !== pide) return; }  // nombre normal, no el de la empresa (Fernando, 18/11/2026)
         ts.forEach(t => { const x = por[t.codigo] = por[t.codigo] || { n: comerc[t.codigo] || nomProvG(t.codigo, t.nombre), t: 0, v: 0, ls: [] }; const im = Number(t.total || 0); x.t += im; x.ls.push(t); suma += im; if (t.vencimiento && t.vencimiento < hoyS) { x.v += im; vencido += im; } });
@@ -10236,7 +10272,7 @@ function vistaGoldenMargen() {
           h('div', { class: 'sub' }, ts.length + ' vencimientos · ya vencido ' + eur(vencido) + ' € · todo lo pendiente en Golden, sin mirar las fechas de arriba')));
         const o = Object.values(por).sort((a, b) => b.t - a.t);
         res.replaceChildren(...(o.length ? o.map(x => tarjeta(x.n, eur(x.t) + ' €', x.v > 0 ? 'var(--rojo)' : 'var(--verde-osc)', x.ls.length + (x.ls.length === 1 ? ' vencimiento' : ' vencimientos') + (x.v > 0 ? ' · vencido ' + eur(x.v) + ' €' : '') + ' · primero el ' + fechaES(x.ls[0].vencimiento),
-          () => hoja(x.n, h('div', {}, ...x.ls.map(t => h('div', { class: 'card fila' + (modo === 'cobros' ? ' tap' : ''), onclick: modo === 'cobros' ? () => verFacturaPendiente(t) : null }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:15px' }, 'Fra. ' + (t.serie || '') + '/' + (t.numero || '')), h('div', { class: 'sub' }, 'Vence el ' + fechaES(t.vencimiento) + (modo === 'cobros' ? ' · toca para verla' : ''))), h('b', { style: t.vencimiento < hoyS ? 'color:var(--rojo)' : '' }, eur(t.total) + ' €'))))))) : [h('p', { class: 'vacio' }, 'No hay nada pendiente. 👍')]));
+          () => hoja(x.n, h('div', {}, ...x.ls.map(t => conNota(t, h('div', { class: 'card fila' + (modo === 'cobros' ? ' tap' : ''), onclick: modo === 'cobros' ? () => verFacturaPendiente(t) : null }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:15px' }, 'Fra. ' + (t.serie || '') + '/' + (t.numero || '')), h('div', { class: 'sub' }, 'Vence el ' + fechaES(t.vencimiento) + (modo === 'cobros' ? ' · toca para verla' : ''))), h('b', { style: t.vencimiento < hoyS ? 'color:var(--rojo)' : '' }, eur(t.total) + ' €')))))))) : [h('p', { class: 'vacio' }, 'No hay nada pendiente. 👍')]));
         return;
       }
       if (modo === 'proveedor') {
@@ -10357,7 +10393,7 @@ function vistaDeudas() {
       try { dias = {}; const idc = Array.from(new Set(filas.map(f => f.cliente_id))); for (let i = 0; i < idc.length; i += 80) { const q = await sb.from('clientes').select('id,dias_pago').in('id', idc.slice(i, i + 80)); if (q.error) throw q.error; q.data.forEach(c => { dias[c.id] = c.dias_pago; }); } LS.set('fj_cobros_dias', dias); } catch (e2) { dias = LS.get('fj_cobros_dias', {}); }
       const fa = !puedeCompras() ? { error: 1 } : await sb.from('documentos_compra').select('id,fecha,tipo,importe,nota,pagada,ruta,proveedores(nombre)').neq('pagada', true).neq('archivado', true).order('fecha').range(0, 2000); facturas = fa.error ? [] : fa.data;
       /* Lo real: facturas sin cobrar en Golden (Fernando, 18/11/2026: «¿A qué esperas?»). Solo quien puede leer la tesorería de Golden. */
-      try { gold = await gesTodas(() => sb.from('golden_tesoreria').select('codigo,nombre,vencimiento,total,serie,numero').eq('tipo', 'C').eq('estado', 'PEN').order('vencimiento')); gcli = {};
+      try { gold = await gesTodas(() => sb.from('golden_tesoreria').select(TES_SEL).eq('tipo', 'C').eq('estado', 'PEN').order('vencimiento')); gcli = {};
         if (gold.length) { const cs = await sb.from('clientes').select('codigo,nombre_comercial').in('codigo', [...new Set(gold.map(x => x.codigo))]); (cs.data || []).forEach(c => { if (c.nombre_comercial) gcli[c.codigo] = c.nombre_comercial; }); }
         LS.set('fj_deudas_gold', [gold, gcli]); } catch (e3) { if (!isNetErr(e3)) gold = []; else [gold, gcli] = LS.get('fj_deudas_gold', [[], {}]); }
     } catch (e) { if (!isNetErr(e)) { cont.replaceChildren(h('p', { class: 'err' }, msgErr(e))); return; } filas = LS.get('fj_cobros_pend', []); dias = LS.get('fj_cobros_dias', {}); [gold, gcli] = LS.get('fj_deudas_gold', [[], {}]); cache = true; }
@@ -10384,7 +10420,7 @@ function vistaDeudas() {
       const gs = gold.map(x => Object.assign({}, x, { n: gcli[x.codigo] || x.nombre || x.codigo, venc: !!x.vencimiento && x.vencimiento < hoyS })).filter(x => !t || sinTilde(x.n + ' ' + x.nombre + ' ' + x.codigo).includes(t));
       const gT = r2(gs.reduce((a, x) => a + Number(x.total || 0), 0)), gV = r2(gs.filter(x => x.venc).reduce((a, x) => a + Number(x.total || 0), 0));
       const resG = h('div', { class: 'card', style: 'border-left:5px solid var(--rojo)' }, h('div', { class: 'fila' }, h('div', { class: 'nombre' }, 'Nos deben (Golden)'), h('div', { class: 'tot-num', style: 'color:var(--rojo)' }, eur(gT) + '\u00a0€')), h('div', { class: 'sub' }, gs.length + (gs.length === 1 ? ' factura sin cobrar' : ' facturas sin cobrar') + (gV ? ' · vencido ' + eur(gV) + '\u00a0€' : '') + ' · lo real, de Golden'));
-      const filaG = x => h('div', { class: 'card fila tap', onclick: () => verFacturaPendiente(x) }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:16px' }, x.n), h('div', { class: 'sub' }, 'Fra. ' + numGolden(x.serie, x.numero) + (tipoDe[String(x.codigo).toUpperCase()] ? ' · paga: ' + tipoDe[String(x.codigo).toUpperCase()].toLowerCase() : '')), h('div', { class: 'sub', style: x.venc ? 'color:var(--rojo);font-weight:700' : '' }, (x.venc ? 'Vencida el ' : 'Vence el ') + fechaES(x.vencimiento))), h('b', { style: 'font-size:18px' + (x.venc ? ';color:var(--rojo)' : '') }, eur(x.total) + '\u00a0€'));
+      const filaG = x => conNota(x, h('div', { class: 'card fila tap', onclick: () => verFacturaPendiente(x) }, h('div', {}, h('div', { class: 'nombre', style: 'font-size:16px' }, x.n), h('div', { class: 'sub' }, 'Fra. ' + numGolden(x.serie, x.numero) + (tipoDe[String(x.codigo).toUpperCase()] ? ' · paga: ' + tipoDe[String(x.codigo).toUpperCase()].toLowerCase() : '')), h('div', { class: 'sub', style: x.venc ? 'color:var(--rojo);font-weight:700' : '' }, (x.venc ? 'Vencida el ' : 'Vence el ') + fechaES(x.vencimiento))), h('b', { style: 'font-size:18px' + (x.venc ? ';color:var(--rojo)' : '') }, eur(x.total) + '\u00a0€')));
       const gp = {}; gs.forEach(x => { const c = gp[x.codigo] || (gp[x.codigo] = { n: x.n, ls: [], t: 0, v: 0 }); c.ls.push(x); c.t += Number(x.total || 0); if (x.venc) c.v += Number(x.total || 0); });
       const gc = Object.values(gp).sort((a, b) => b.t - a.t);
       if (!ps.length) pa.replaceChildren(); /* sin «No hay albaranes…» si Golden sí tiene deudas */
