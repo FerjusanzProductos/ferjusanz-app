@@ -71,3 +71,15 @@ Las plataformas intermedias (Twilio, respond.io, ManyChat…) cobran además una
 ## Fuentes
 - Precios España 2026: https://whautomate.com/whatsapp-business-api-pricing-spain · https://www.manycontacts.com/en/blog/whatsapp-business-api-pricing/ · https://engrana.es/en/blog/whatsapp-message-charges-october-2026
 - Normas sobre chatbots: https://respond.io/blog/whatsapp-chatbot-policy-2026 · https://techcrunch.com/2025/10/18/whatssapp-changes-its-terms-to-bar-general-purpose-chatbots-from-its-platform
+
+## Mensaje de bienvenida del 609 100 690 (propuesto el 25/11/2026)
+Para que cada cliente nuevo diga quién es y la app lo reconozca. Lo pone **el padre (o Tito) en su WhatsApp Business**, no la app (la app no manda nada a nadie). Se envía solo la **primera vez** que alguien escribe o tras 14 días sin hablar; no en cada pedido (a los de siempre les molestaría).
+Dónde (sin comprobar en su móvil): WhatsApp Business › ⋮ › **Herramientas para la empresa** › **Mensaje de bienvenida** › activar › editar.
+
+> Hola, gracias por escribir a Ferjusanz 🥔🍅. Para apuntar bien tu pedido, dinos la primera vez:
+> 1️⃣ Nombre de tu negocio
+> 2️⃣ Dirección de entrega
+> 3️⃣ Para qué día lo quieres
+> Y lo que necesitas (por ejemplo: 3 kg de tomate, 2 sacos de patata). Si luego quieres añadir algo, escríbelo aquí mismo y lo juntamos. ¡Gracias!
+
+Después, en la app: cuando llegue de un número desconocido, elegir el cliente en «📥 Pedidos entrantes» y pulsar «📱 Guardar este número en su ficha». Los **motes** se escriben en la ficha del cliente («Motes u otros nombres»).
