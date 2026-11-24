@@ -33,7 +33,7 @@ Para Ferjusanz, lo normal sería **200–400 €/mes** (2.400–4.800 €/año).
 | # | Qué | Coste | Quién |
 |---|---|---|---|
 | 1 ✔ (24/11: bandeja pruebas v561; Excel, audio y foto con IA también en normal v556) | Bandeja única en PRUEBAS: pegar texto, foto, audio, PDF/Excel → propuesta con emparejado al catálogo | 0 € (Gemini gratis / Claude céntimos) | Claude |
-| 2 | Memoria por cliente (Golden) + alias que aprende de las correcciones | 0 € | Claude |
+| 2 ✔ (24/11: normal v558, pruebas v565) | Memoria por cliente (Golden) + alias que aprende de las correcciones | 0 € | Claude |
 | 3 | Correo: `pedidos@ferjusanz-frutas-verduras.es` → Cloudflare Email Routing → bandeja | 0 € | Claude + Tito (activar Email Routing) |
 | 4 | WhatsApp automático (609 100 690) | 360dialog 49 €/mes | Tito (API key) + Claude |
 | 5 | Pasar a Golden (cuando se decida cómo: exportar o teclear) | por ver | más adelante |
