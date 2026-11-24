@@ -14,6 +14,9 @@ const eur = n => Math.round(Number(n) || 0).toLocaleString('es-ES') + ' €';
 const fecha = f => f ? new Date(f + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '—';
 const mes = f => new Date(f + 'T12:00:00').toLocaleDateString('es-ES', { month: 'short', year: '2-digit' });
 
+// «A cuenta» en la nota de Golden = ya pagado (Tito, 24/11/2026): «total» pasa a ser lo que de verdad queda por cobrar; «factura», el total de la factura.
+const COBROS = `(select tipo, estado, vencimiento, serie, numero, fecha_factura, nombre, total factura,
+  greatest(0, total - coalesce((select sum((p->>'importe')::numeric) from jsonb_array_elements(t.observacion_partes) p), 0)) total from golden_tesoreria t) c`;
 const [[g], ventas, deudores, recibos, [cob], [pag], [prov], [cli], tareas] = await Promise.all([
   sql(`select max(fecha)::text hasta from golden_facturas where not borrador`),
   sql(`select date_trunc('month', fecha)::date::text m, sum(base) base,
@@ -23,18 +26,18 @@ const [[g], ventas, deudores, recibos, [cob], [pag], [prov], [cli], tareas] = aw
   // Lo del mes en curso no es deuda: los de pago mensual pagan la 1.ª semana del mes siguiente (REGLAS_INTERNAS, Golden pendientes/pagadas).
   sql(`select nombre, sum(total) total, min(vencimiento)::text desde, count(*) n,
          sum(total) filter (where vencimiento < date_trunc('month', current_date) - interval '1 month') antigua
-       from golden_tesoreria where tipo = 'C' and estado = 'PEN' and vencimiento < date_trunc('month', current_date)
+       from ${COBROS} where tipo = 'C' and estado = 'PEN' and total > 0.009 and vencimiento < date_trunc('month', current_date)
        group by nombre order by 2 desc`),
-  sql(`select nombre, serie, numero, fecha_factura::text ff, vencimiento::text v, total,
+  sql(`select nombre, serie, numero, fecha_factura::text ff, vencimiento::text v, total, factura,
          vencimiento < date_trunc('month', current_date) - interval '1 month' antigua
-       from golden_tesoreria where tipo = 'C' and estado = 'PEN' and vencimiento < date_trunc('month', current_date)
+       from ${COBROS} where tipo = 'C' and estado = 'PEN' and total > 0.009 and vencimiento < date_trunc('month', current_date)
        order by vencimiento`),
   sql(`select sum(total) pend,
          sum(total) filter (where vencimiento < date_trunc('month', current_date)) vencido,
          count(*) filter (where vencimiento < date_trunc('month', current_date)) n_venc,
          sum(total) filter (where vencimiento < date_trunc('month', current_date) - interval '1 month') antigua,
          sum(total) filter (where vencimiento >= date_trunc('month', current_date)) este_mes
-       from golden_tesoreria where tipo = 'C' and estado = 'PEN'`),
+       from ${COBROS} where tipo = 'C' and estado = 'PEN' and total > 0.009`),
   sql(`select sum(total) pend, sum(total) filter (where vencimiento < current_date) vencido,
          sum(total) filter (where vencimiento between current_date and current_date + 7) semana
        from golden_tesoreria where tipo = 'P' and estado = 'PEN'`),
@@ -55,7 +58,7 @@ const filasVentas = ventas.map((v, i) => {
 const hoy = new Date(), mesNombre = d => d.toLocaleDateString('es-ES', { month: 'long' });
 const mesPasado = mesNombre(new Date(hoy.getFullYear(), hoy.getMonth() - 1, 15)), mesActual = mesNombre(hoy);
 const filasDeuda = deudores.map(d => {
-  const rs = recibos.filter(r => r.nombre === d.nombre).map(r => `<li${r.antigua ? ' class="antigua"' : ''}>Factura ${esc(r.serie)}/${esc(r.numero)} del ${fecha(r.ff || r.v)} · <b>${eur(r.total)}</b>${r.antigua ? ' · antigua' : ''}</li>`).join('');
+  const rs = recibos.filter(r => r.nombre === d.nombre).map(r => `<li${r.antigua ? ' class="antigua"' : ''}>Factura ${esc(r.serie)}/${esc(r.numero)} del ${fecha(r.ff || r.v)} · <b>${eur(r.total)}</b>${Number(r.factura) - Number(r.total) > 0.009 ? ` <small>(de ${eur(r.factura)}; ${eur(r.factura - r.total)} pagado a cuenta)</small>` : ''}${r.antigua ? ' · antigua' : ''}</li>`).join('');
   return `<details><summary><b>${esc(d.nombre.trim())}</b> · ${eur(d.total)}${Number(d.antigua) > 0 ? ` <span class="antigua">(${eur(d.antigua)} de antes de ${mesPasado})</span>` : ''}</summary><ul>${rs}</ul></details>`;
 }).join('');
 const ahora = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
