@@ -216,6 +216,12 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - **Patatas del Olmo** (proveedor): no está en Golden; se le compra de verdad, normalmente **huevos** (es primo de Fernando).
 - Bulevar: el cliente bueno es **BULEVAR** (C/ López de Hoyos 401); BULE (Gran Vía de Hortaleza 62) ya no. Handyman: **HANDYMAN** (Made For You Iris Taberna SL); la ficha antigua HATA se borró (18/11/2026, Fernando).
 
+## Golden: facturas pendientes y pagadas (Tito, 24/11/2026)
+- Cada albarán se marca en Golden **pendiente** o **pagado**. Si un pendiente se paga antes de facturar, se cambia a pagado.
+- Al facturar el mes, Golden hace **dos facturas** por cliente si hay de los dos tipos: una con los albaranes pendientes y otra con los pagados (si todo es de un tipo, una sola).
+- Cuando llega el cobro de una factura pendiente, se marca pagada en **Tesorería** (no en albaranes).
+- Por eso, al ver lo que debe un cliente en Golden, **lo del mes en curso no es deuda**: los que pagan al mes lo pagan la 1.ª semana del mes siguiente. Deuda de verdad: **lo de meses ya cerrados** (estando en noviembre, hasta octubre), según cómo pague cada cliente.
+
 ## Clientes que no se contactan (Fernando, 18/11/2026)
 - Las tareas comerciales (Comercial del día, Plan de la semana, Leads) **solo proponen clientes con `activo = true`**. Los inactivos no salen en «a quién llamo», «clientes a recuperar» ni «clientes que se enfrían».
 - **LA DEFINITIVA** (Nadamalu SLU, Alcobendas, código `DEFINITIVA`): **no contactar nunca**. Ya no se llama así y el nuevo dueño es **mal pagador**: dejó deuda, devolvió 2 recibos y hubo que cobrarle con datáfono. No volver a proponerla.
