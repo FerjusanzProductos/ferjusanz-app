@@ -20,10 +20,16 @@ const [[g], ventas, deudores, [cob], [pag], [prov], [cli], tareas] = await Promi
          sum(base) filter (where coste > 0) base_c, sum(coste) filter (where coste > 0) coste
        from golden_facturas where not borrador and fecha >= date_trunc('month', current_date) - interval '5 months'
        group by 1 order by 1`),
-  sql(`select nombre, sum(total) total, min(vencimiento)::text desde, count(*) n
-       from golden_tesoreria where tipo = 'C' and estado = 'PEN' and vencimiento < current_date
+  // Lo del mes en curso no es deuda: los de pago mensual pagan la 1.ª semana del mes siguiente (REGLAS_INTERNAS, Golden pendientes/pagadas).
+  sql(`select nombre, sum(total) total, min(vencimiento)::text desde, count(*) n,
+         sum(total) filter (where vencimiento < date_trunc('month', current_date) - interval '1 month') antigua
+       from golden_tesoreria where tipo = 'C' and estado = 'PEN' and vencimiento < date_trunc('month', current_date)
        group by nombre order by 2 desc limit 6`),
-  sql(`select sum(total) pend, sum(total) filter (where vencimiento < current_date) vencido, count(*) filter (where vencimiento < current_date) n_venc
+  sql(`select sum(total) pend,
+         sum(total) filter (where vencimiento < date_trunc('month', current_date)) vencido,
+         count(*) filter (where vencimiento < date_trunc('month', current_date)) n_venc,
+         sum(total) filter (where vencimiento < date_trunc('month', current_date) - interval '1 month') antigua,
+         sum(total) filter (where vencimiento >= date_trunc('month', current_date)) este_mes
        from golden_tesoreria where tipo = 'C' and estado = 'PEN'`),
   sql(`select sum(total) pend, sum(total) filter (where vencimiento < current_date) vencido,
          sum(total) filter (where vencimiento between current_date and current_date + 7) semana
@@ -42,7 +48,9 @@ const filasVentas = ventas.map((v, i) => {
   return `<tr><th scope="row">${mes(v.m)}${ultimo ? '*' : ''}</th>
 <td class="barra"><span style="width:${Math.round(Number(v.base) / maxBase * 100)}%"></span></td><td>${eur(v.base)}</td><td>${margen}</td></tr>`;
 }).join('\n');
-const filasDeuda = deudores.map(d => `<li><b>${esc(d.nombre.trim())}</b> · ${eur(d.total)} <small>(${d.n} recibo${d.n > 1 ? 's' : ''}, desde el ${fecha(d.desde)})</small></li>`).join('');
+const hoy = new Date(), mesNombre = d => d.toLocaleDateString('es-ES', { month: 'long' });
+const mesPasado = mesNombre(new Date(hoy.getFullYear(), hoy.getMonth() - 1, 15)), mesActual = mesNombre(hoy);
+const filasDeuda = deudores.map(d => `<li><b>${esc(d.nombre.trim())}</b> · ${eur(d.total)} <small>(${d.n} recibo${d.n > 1 ? 's' : ''}, desde el ${fecha(d.desde)}${Number(d.antigua) > 0 ? `; ${eur(d.antigua)} de antes de ${mesPasado}` : ''})</small></li>`).join('');
 const ahora = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
 const tarjeta = (cifra, texto, aviso) => `<div class="t${aviso ? ' aviso' : ''}"><b>${cifra}</b><span>${texto}</span></div>`;
 
@@ -79,7 +87,7 @@ a{color:var(--acc)}
 <p class="sub">Actualizado el ${ahora}. Datos de Golden hasta el ${fecha(g.hasta)}. Solo datos reales: los pedidos y cobros de la app aún son de prueba.</p>
 
 <div class="tarjetas">
-${tarjeta(eur(cob.vencido), `por cobrar ya vencido (${cob.n_venc} recibos)`, true)}
+${tarjeta(eur(cob.vencido), `deuda hasta ${mesPasado} (${cob.n_venc} recibos)`, true)}
 ${tarjeta(eur(ventas.at(-2)?.base), `ventas de ${ventas.at(-2) ? mes(ventas.at(-2).m) : 'el mes pasado'} (sin IVA)`)}
 ${tarjeta(prov.por_revisar, 'facturas de proveedor por revisar', prov.por_revisar > 0)}
 ${tarjeta(cli.activos, 'clientes activos')}
@@ -92,7 +100,9 @@ ${filasVentas}
 <p class="pie">* Mes en curso. Las facturas mensuales (serie P) salen a final de mes: el mes en curso parece bajo hasta entonces.</p></section>
 
 <section><h2>📥 Cobros (Golden)</h2>
-<p>Sin cobrar según Golden: <b>${eur(cob.pend)}</b>, de ello <b>${eur(cob.vencido)}</b> ya vencido. Los que más deben (vencido):</p>
+<p>Deuda (hasta ${mesPasado}): <b>${eur(cob.vencido)}</b>. De ella, <b>${eur(Number(cob.vencido) - Number(cob.antigua || 0))}</b> es de ${mesPasado} y <b>${eur(cob.antigua)}</b> de antes (deuda antigua).</p>
+<p class="pie">Lo de ${mesActual} (${eur(cob.este_mes)}) no cuenta como deuda: los que pagan al mes lo pagan la primera semana del mes siguiente. Las facturas mensuales de ${mesActual} aún no están hechas.</p>
+<p>Los que más deben:</p>
 <ul>${filasDeuda || '<li>Nada vencido.</li>'}</ul></section>
 
 <section><h2>📤 Pagos a proveedores (Golden)</h2>
