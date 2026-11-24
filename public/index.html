@@ -14370,7 +14370,7 @@ function vistaImportar() {
   const ta = h('textarea', { rows: 6, placeholder: 'Escribe o pega el pedido como lo dirías:\n«Pedido para Florencio, para mañana. Dos sacos de patatas, cinco kilos de tomate pera y una caja de calabacines. Entregar antes de las 9.»\nTambién vale con # copiado de WhatsApp.' }); ta.value = (state.params && state.params.texto) || '';
   try { if (!ta.value) { const b = LS.get('fj_borr_importar', null); if (b && b.texto && Date.now() - b.t < 86400000) { ta.value = b.texto; setTimeout(() => toast('Recuperado el texto que tenías escrito', 'ok'), 400); } } } catch (e) { }
   ta.addEventListener('input', () => { try { LS.set('fj_borr_importar', { t: Date.now(), texto: ta.value }); } catch (e) { } });
-  const cliBox = h('div', {}), fechaBox = h('div', {}), horaBox = h('div', {}), avisoBox = h('div', {}), lineasBox = h('div', {}), ignBox = h('div', {}), pie = h('div', {});
+  const cliBox = h('div', {}), fechaBox = h('div', {}), horaBox = h('div', {}), avisoBox = h('div', {}), lineasBox = h('div', {}), olvBox = h('div', {}), ignBox = h('div', {}), pie = h('div', {});
   const diaSem = f => ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'][new Date(f + 'T12:00:00').getDay()];
   const manana = () => { const d = new Date(); d.setDate(d.getDate() + 1); return hoy(d); };
   const aprendidos = k => LS.get(k, {});
@@ -14425,7 +14425,26 @@ function vistaImportar() {
     const pr = await preciosPara(S.cliente.id, Array.from(new Set(ls.map(l => l.producto.id))));
     ls.forEach(l => { if (pr[l.producto.id] != null) l.precio = String(pr[l.producto.id]).replace('.', ','); }); pintarLineas();
   }
+  /* 🧠 Lo que el cliente suele pedir (historial real de Golden, 90 días) y no está en este pedido: se añade con un toque. */
+  async function cargarGolden() {
+    const cid = S.cliente && S.cliente.id; S.golden = null; pintarOlvidos(); if (!cid || S.anadir) return;
+    try { const r = await sb.rpc('golden_habituales', { p_cliente: cid, p_dias: 90 }); if (!r.error && S.cliente && S.cliente.id === cid) { S.golden = r.data || []; pintarOlvidos(); } } catch (e) { }
+  }
+  function pintarOlvidos() {
+    const g = S.golden || []; const n = g.length ? g[0].entregas : 0; const ya = new Set(S.lineas.map(l => l.producto && l.producto.id));
+    const faltan = g.filter(x => n >= 3 && x.veces >= Math.max(2, n * 0.35) && !ya.has(x.producto_id)).slice(0, 8);
+    if (!S.interpretado || !faltan.length) { olvBox.replaceChildren(); return; }
+    olvBox.replaceChildren(h('div', { class: 'card', style: 'background:#eff6ff;border-color:#93c5fd' },
+      h('div', { style: 'font-weight:700' }, '🧠 ¿Se le ha olvidado algo? ' + nombreCli(S.cliente) + ' suele pedir:'),
+      h('div', { class: 'sub' }, 'Según Golden, en sus últimas ' + n + ' entregas (90 días). Toca para añadirlo y pon la cantidad.'),
+      h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px' }, faltan.map(x => h('button', { class: 'chip', onclick: () => {
+        const p = (S.prods || []).find(q => q.id === x.producto_id); if (!p) { toast('Ese producto no está activo en la app', 'err'); return; }
+        const l = { id: uuid(), raw: 'Lo suele pedir (Golden: ' + x.veces + ' de ' + n + ' entregas, unas ' + String(x.cantidad_media).replace('.', ',') + ' cada vez)', nombre: p.nombre, estado: 'ok', producto: p, cand: [], cantidad: '', unidad: p.unidad_venta || 'pieza', unidad_precio: p.unidad_precio || 'kg', precio: '' };
+        S.lineas.push(l); aplicaFormato(l); ponPrecios(); pintarLineas(); pintarPie(); setTimeout(() => { const e = document.querySelector('#lin-' + l.id + ' input'); if (e) { e.scrollIntoView({ block: 'center' }); e.focus(); } }, 50);
+      } }, '+ ' + x.nombre + ' (' + x.veces + '/' + n + ')')))));
+  }
   async function cargarHist() {
+    cargarGolden();
     S.hist = {}; if (!S.cliente) return;
     try { const r = await sb.from('pedidos').select('id,lineas_pedido(producto_id)').eq('cliente_id', S.cliente.id).neq('estado', 'anulado').order('fecha_entrega', { ascending: false }).limit(60); if (r.error) return; r.data.forEach(p => (p.lineas_pedido || []).forEach(l => { S.hist[l.producto_id] = (S.hist[l.producto_id] || 0) + 1; })); } catch (e) { }
     pintarLineas();
@@ -14566,6 +14585,7 @@ function vistaImportar() {
       if (l.unidad_precio === 'kg' && l.precio) kids.push(h('div', { class: 'sub', style: 'font-size:11px' }, 'Facturación: ' + l.precio + ' €/kg × peso real preparado.'));
       return h('div', { class: 'card', id: 'lin-' + l.id }, ...kids);
     }));
+    pintarOlvidos();
   }
   function problemas() {
     const p = []; const L = x => () => irA(document.getElementById('lin-' + x.id));
@@ -14811,7 +14831,7 @@ function vistaImportar() {
   const btnInt = h('button', { style: 'width:100%;margin-top:8px', onclick: interpretar }, 'Interpretar pedido');
   const fijoBox = h('div', {}); waMemCargar().then(async () => { try { if (!S.prods) S.prods = await waProductos(); } catch (e) { } });
   $app.replaceChildren(shell(S.anadir ? 'Añadir al pedido' : modo === 'voz' ? 'Dictar pedido' : modo === 'escanear' ? 'Escanear pedido' : 'Escribir pedido', h('div', {}, h('p', { class: 'sub' }, S.anadir ? 'Escribe, dicta o escanea los productos que faltan. Se añadirán a este pedido; no se crea otro.' : 'Escribe, dicta o escanea el pedido. Reviso cliente, fecha, productos y cantidades y tú confirmas. Nada se guarda solo.'), barra, archBox, ta, btnInt,
-    fijoBox, h('div', { style: 'margin-top:12px' }, cliBox), fechaBox, horaBox, avisoBox, lineasBox, ignBox, pie), { volver: () => S.anadir ? go('pedido', { id: S.anadir }) : S.desdeWa ? go('whatsapp') : go('inicio') })); renderBanner();
+    fijoBox, h('div', { style: 'margin-top:12px' }, cliBox), fechaBox, horaBox, avisoBox, lineasBox, olvBox, ignBox, pie), { volver: () => S.anadir ? go('pedido', { id: S.anadir }) : S.desdeWa ? go('whatsapp') : go('inicio') })); renderBanner();
   pintarCliente(); pintarFecha(); pintarHora();
   if (S.anadir) {
     cliBox.style.display = 'none'; fechaBox.style.display = 'none'; horaBox.style.display = 'none';
