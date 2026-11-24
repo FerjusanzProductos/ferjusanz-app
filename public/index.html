@@ -11136,11 +11136,31 @@ function waPrepara(canvas) {
   } catch (e) { return canvas; }
 }
 async function waLeerArchivo(file, progreso, porFilas) {
+  if (/\.(xlsx|csv)$/i.test(file.name || '') || /spreadsheetml|text\/csv/.test(file.type)) { progreso && progreso('Leyendo el Excel…'); return { texto: await waLeerExcel(file), conf: null, nitidez: null }; }
   if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) { const r = await waLeerPdf(file, progreso, porFilas); r.nitidez = null; return r; }
   const c = await waImagenACanvas(file, 2200); const nit = waNitidez(c);
   let o = await waOCR(waPrepara(c), progreso);
   if ((o.conf == null || o.conf < 72) && !window.__waSinReintento) { progreso && progreso('Probando otra forma de leerla…'); try { const o2 = await waOCR(c, progreso); if ((o2.conf || 0) > (o.conf || 0)) o = o2; } catch (e) { } }
   o.nitidez = nit; o.texto = waLimpiaChat(o.texto); return o;
+}
+
+/* Excel (.xlsx) o CSV → una línea de texto por fila («3 kg Tomate pera»), para el intérprete de pedidos.
+   shortcut: solo lee la primera hoja y no entiende el .xls antiguo; si llegan muchos, usar una librería. */
+async function waLeerExcel(file) {
+  const b = new Uint8Array(await file.arrayBuffer()); const dec = new TextDecoder();
+  if (/\.csv$/i.test(file.name || '') || /text\/csv/.test(file.type)) return dec.decode(b).split(/\r?\n/).map(l => l.split(/[;,\t]/).map(x => x.replace(/^"|"$/g, '').trim()).filter(Boolean).join(' ')).filter(Boolean).join('\n');
+  const dv = new DataView(b.buffer, b.byteOffset, b.byteLength); let e = b.length - 22; while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new Error('No parece un Excel (.xlsx). Si es un .xls antiguo, ábrelo y guárdalo como .xlsx');
+  const zip = {}; let p = dv.getUint32(e + 16, true);
+  for (let n = dv.getUint16(e + 10, true); n > 0; n--) { const nl = dv.getUint16(p + 28, true); zip[dec.decode(b.subarray(p + 46, p + 46 + nl))] = { met: dv.getUint16(p + 10, true), tam: dv.getUint32(p + 20, true), off: dv.getUint32(p + 42, true) }; p += 46 + nl + dv.getUint16(p + 30, true) + dv.getUint16(p + 32, true); }
+  const leer = async nom => { const f = zip[nom]; if (!f) return ''; const ini = f.off + 30 + dv.getUint16(f.off + 26, true) + dv.getUint16(f.off + 28, true); const raw = b.subarray(ini, ini + f.tam);
+    return dec.decode(f.met === 0 ? raw : new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer())); };
+  const xml = t => new DOMParser().parseFromString(t || '<x/>', 'application/xml');
+  const ss = Array.from(xml(await leer('xl/sharedStrings.xml')).getElementsByTagName('si')).map(si => Array.from(si.getElementsByTagName('t')).map(t => t.textContent).join(''));
+  const hoja = Object.keys(zip).filter(n => /^xl\/worksheets\/sheet\d+\.xml$/.test(n)).sort((x, y) => parseInt(x.replace(/\D/g, '')) - parseInt(y.replace(/\D/g, '')))[0];
+  if (!hoja) throw new Error('El Excel no tiene hojas');
+  return Array.from(xml(await leer(hoja)).getElementsByTagName('row')).map(r => Array.from(r.getElementsByTagName('c')).map(c => { const t = c.getAttribute('t'), v = c.getElementsByTagName('v')[0];
+    return String(t === 's' ? (ss[Number(v && v.textContent)] || '') : t === 'inlineStr' ? c.textContent : v ? v.textContent : '').trim(); }).filter(Boolean).join(' ')).filter(Boolean).join('\n');
 }
 
 /* ---------- Lector de facturas de proveedores (gratis, dentro del móvil) ---------- */
@@ -14345,7 +14365,7 @@ function vozArregla(t, voc) {
 }
 function vistaImportar() {
   state.view = 'importar';
-  const S = { cliente: null, clienteEstado: null, clienteCand: [], clienteFrase: '', clienteManual: false, detectado: false, fecha: hoy(), fechaOk: false, fraseFecha: '', hora: { limite: '', desde: '', hasta: '' }, lineas: [], ignorado: [], avisos: [], interpretado: false, notas: '', repetir: null, guardando: false, prods: null, clis: null, hist: {}, aviso: '', archivos: [], origen: 'texto', anadir: (state.params && state.params.anadir) || null, anadirFecha: null, anadirPed: null };
+  const S = { cliente: null, clienteEstado: null, clienteCand: [], clienteFrase: '', clienteManual: false, detectado: false, fecha: hoy(), fechaOk: false, fraseFecha: '', hora: { limite: '', desde: '', hasta: '' }, lineas: [], ignorado: [], avisos: [], interpretado: false, notas: '', repetir: null, guardando: false, prods: null, clis: null, hist: {}, aviso: '', archivos: [], origen: 'texto', anadir: (state.params && state.params.anadir) || null, anadirFecha: null, anadirPed: null, desdeWa: (state.params && state.params.desdeWa) || null };
   const modo = (state.params && state.params.modo) || 'texto';
   const ta = h('textarea', { rows: 6, placeholder: 'Escribe o pega el pedido como lo dirías:\n«Pedido para Florencio, para mañana. Dos sacos de patatas, cinco kilos de tomate pera y una caja de calabacines. Entregar antes de las 9.»\nTambién vale con # copiado de WhatsApp.' }); ta.value = (state.params && state.params.texto) || '';
   try { if (!ta.value) { const b = LS.get('fj_borr_importar', null); if (b && b.texto && Date.now() - b.t < 86400000) { ta.value = b.texto; setTimeout(() => toast('Recuperado el texto que tenías escrito', 'ok'), 400); } } } catch (e) { }
@@ -14607,6 +14627,7 @@ function vistaImportar() {
       if (li.error) { await sb.from('pedidos').delete().eq('id', ped.data.id); if (rutas.length) await sb.storage.from('pedidos-originales').remove(rutas.map(r => r.ruta)); S.guardando = false; pintarPie(); toast(msgErr(li.error), 'err'); return; }
       await aprenderFormatos();
       await recordarAlias();
+      if (S.desdeWa) { const w = await sb.from('whatsapp_pedidos').update({ estado: 'pasado', pedido_id: ped.data.id, revisado_por: state.user.id, revisado_en: new Date().toISOString() }).eq('id', S.desdeWa); if (w.error) toast('Pedido guardado, pero no se pudo marcar en la bandeja: ' + msgErr(w.error), 'err'); }
       try { LS.set('fj_borr_importar', null); } catch (e) { } toast((sinColumnas ? 'Pedido guardado (falta ejecutar la parte 15 del SQL: el texto original se guardó en las notas)' : 'Pedido guardado') + avisoArch, avisoArch ? 'err' : 'ok'); state.fecha = S.fecha; go('pedido', { id: ped.data.id });
     } catch (e) { S.guardando = false; pintarPie(); toast(msgErr(e), 'err'); }
   }
@@ -14677,7 +14698,7 @@ function vistaImportar() {
   const archBox = h('div', {});
   const inFoto = h('input', { type: 'file', accept: 'image/*', capture: 'environment', style: 'display:none' });
   const inGal = h('input', { type: 'file', accept: 'image/*', multiple: true, style: 'display:none' });
-  const inDoc = h('input', { type: 'file', accept: 'application/pdf,image/*', multiple: true, style: 'display:none' });
+  const inDoc = h('input', { type: 'file', accept: 'application/pdf,image/*,.xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv', multiple: true, style: 'display:none' });
   [inFoto, inGal, inDoc].forEach(i => i.onchange = async () => { const fs = Array.from(i.files || []); i.value = ''; await tomarArchivos(fs); });
   const esPdf = f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name || '');
   async function leerConIA(a) {
@@ -14741,7 +14762,7 @@ function vistaImportar() {
     h('button', { style: 'width:100%;min-height:52px;font-size:17px', onclick: pegarPortapapeles }, '📋 Pegar lo copiado (WhatsApp, correo…)'), btnVoz,
     h('button', { class: modo === 'escanear' ? '' : 'ghost', style: 'flex:1', onclick: () => inFoto.click() }, '📷 Hacer foto'),
     h('button', { class: 'ghost', style: 'flex:1', onclick: () => inGal.click() }, '🖼️ Galería / captura'),
-    h('button', { class: 'ghost', style: 'flex:1', onclick: () => inDoc.click() }, '📄 PDF / documento'),
+    h('button', { class: 'ghost', style: 'flex:1', onclick: () => inDoc.click() }, '📄 PDF / Excel'),
     S.anadir ? null : h('button', { class: 'ghost', style: 'width:100%', onclick: () => go('rapido') }, '⚡ Pedido rápido (elegir cliente: me acuerdo de lo que suele pedir)'),
     esOficina() ? h('button', { class: 'ghost small', style: 'width:100%', onclick: abrirPanelAbrev }, '⚙️ Formatos y abreviaturas') : null, inFoto, inGal, inDoc);
   async function recordarAlias() {
@@ -14770,7 +14791,7 @@ function vistaImportar() {
   const btnInt = h('button', { style: 'width:100%;margin-top:8px', onclick: interpretar }, 'Interpretar pedido');
   const fijoBox = h('div', {}); waMemCargar().then(async () => { try { if (!S.prods) S.prods = await waProductos(); } catch (e) { } });
   $app.replaceChildren(shell(S.anadir ? 'Añadir al pedido' : modo === 'voz' ? 'Dictar pedido' : modo === 'escanear' ? 'Escanear pedido' : 'Escribir pedido', h('div', {}, h('p', { class: 'sub' }, S.anadir ? 'Escribe, dicta o escanea los productos que faltan. Se añadirán a este pedido; no se crea otro.' : 'Escribe, dicta o escanea el pedido. Reviso cliente, fecha, productos y cantidades y tú confirmas. Nada se guarda solo.'), barra, archBox, ta, btnInt,
-    fijoBox, h('div', { style: 'margin-top:12px' }, cliBox), fechaBox, horaBox, avisoBox, lineasBox, ignBox, pie), { volver: () => S.anadir ? go('pedido', { id: S.anadir }) : go('inicio') })); renderBanner();
+    fijoBox, h('div', { style: 'margin-top:12px' }, cliBox), fechaBox, horaBox, avisoBox, lineasBox, ignBox, pie), { volver: () => S.anadir ? go('pedido', { id: S.anadir }) : S.desdeWa ? go('whatsapp') : go('inicio') })); renderBanner();
   pintarCliente(); pintarFecha(); pintarHora();
   if (S.anadir) {
     cliBox.style.display = 'none'; fechaBox.style.display = 'none'; horaBox.style.display = 'none';
