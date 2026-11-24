@@ -38,6 +38,10 @@
 </header>
 <main id="contenido">
 <section class="bloque"><div class="envoltura lectura"><nav class="miga" aria-label="Estás en"><a href="/">Inicio</a><span aria-hidden="true">/</span><span aria-current="page">Tarjeta</span></nav>
+  <figure class="tarjeta-virtual" style="margin:0 0 16px"><img src="/fotos/2026/11/tarjeta-visita.jpg" alt="Tarjeta de visita de Ferjusanz: pedidos y WhatsApp 609 100 690, Fernando Sanz 609 567 354, www.ferjusanz-frutas-verduras.es" width="1100" height="740" style="width:100%;height:auto;border-radius:14px;box-shadow:0 8px 30px rgb(0 0 0/.35)"></figure>
+  <div class="acciones apiladas" style="margin-top:0"><button type="button" class="btn btn-wa" id="enviar-tarjeta">📤 <span>Enviar esta tarjeta a otra persona</span></button>
+    <a class="btn btn-borde" href="https://www.ferjusanz-frutas-verduras.es/">🌐 <span>Ver la web de Ferjusanz</span></a></div>
+  <script>(function(){var b=document.getElementById('enviar-tarjeta');if(!b)return;var u=location.origin+'/tarjeta/',t='Ferjusanz: patatas, frutas, verduras, huevos, setas y legumbres para hostelería y colectividades. Tarjeta y contacto: ';b.addEventListener('click',function(){if(navigator.share){navigator.share({title:'Ferjusanz',text:t,url:u}).catch(function(){});}else{location.href='https://wa.me/?text='+encodeURIComponent(t+u);}});})();</script>
   <h1>Ferjusanz: patatas, frutas, verduras, huevos, setas, champiñones y legumbres para su negocio</h1>
   <p class="entradilla">FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L.: empresa familiar, tercera generación, más de seis décadas sirviendo a restaurantes, bares, hoteles, colegios, residencias y fruterías de Madrid y Segovia.</p>
   <form id="primer-pedido" class="formulario primer-pedido" method="post" action="/enviar-primer-pedido" enctype="multipart/form-data">
