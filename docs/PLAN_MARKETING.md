@@ -140,6 +140,8 @@ Después del 45: Claude añade la siguiente tanda aquí (temporada del mes y lo 
 19. **Preguntas de clientes** («¿a qué hora llega el reparto?»), contestadas.
 20. **Cuarta gama**: qué hay y cuándo compensa.
 
+**Serie de historias** (24/11/2026): «Mercamadrid, de noche», 6 capítulos con reloj en pantalla (mientras duermes, sigue a la caja, el camión, el mensaje de las 5, padre e hijo, un solo proveedor). Guiones plano a plano: `docs/redes/reels/GUIONES_MERCAMADRID.md`.
+
 **Textos de cada publicación**: los escribe Claude con palabras que buscan los clientes («proveedor de fruta para colegios en Madrid», «fruta para residencias») y con el enlace al artículo de la web que toca. Cada artículo nuevo se comparte en Instagram, Facebook y en la ficha de Google.
 
 ## 5. Opciones: qué usar y si hay que pagar
