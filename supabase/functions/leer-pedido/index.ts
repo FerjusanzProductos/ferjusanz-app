@@ -22,7 +22,8 @@ Devuelve SOLO un JSON: {"lineas":[{"texto":"el trozo del mensaje tal cual","prod
 - Una línea por cada producto pedido, en el orden del mensaje. Saludos, fechas y charla fuera.
 - Habla como en una frutería: «champis» = champiñón, «fresas» = fresón, «patatas» sin más = la patata de uso general, «medio kilo» = 0,5 kg.
 - producto_id: el del catálogo que de verdad sea; si dudas entre varios, el más normal para hostelería; si no está, null. No inventes ids.
-- No inventes cantidades: si no la dice, null.`;
+- Si te digo lo que ESTE CLIENTE suele comprar, ante varias opciones elige la suya.
+- No inventes cantidades: si no la dice, null. Unidad: la que diga el mensaje; si solo cuenta piezas («2 limas», «3 calabacines»), "pieza"; nunca pongas kg si no lo dice.`;
 
 async function conGemini(mime: string, data: string, texto?: string) {
   const cuerpo = JSON.stringify(texto
@@ -65,9 +66,15 @@ Deno.serve(async (req) => {
     if (!env("GEMINI_API_KEY")) return json({ error: "Falta la clave de Gemini" }, 503);
     const { data: prods, error } = await sb.from("productos").select("id,nombre,unidad_venta,alias").eq("activo", true).order("nombre").limit(2000);
     if (error) return json({ error: error.message }, 500);
+    // Lo que suele comprar este cliente (Golden), para elegir bien entre varias opciones parecidas.
+    let habitual = "";
+    if (typeof b?.cliente_id === "string" && /^[0-9a-f-]{36}$/.test(b.cliente_id)) {
+      const h = await sb.rpc("golden_habituales", { p_cliente: b.cliente_id, p_dias: 180 });
+      if (!h.error && h.data?.length) habitual = "\n\nESTE CLIENTE SUELE COMPRAR (id|nombre|veces):\n" + h.data.slice(0, 60).map((x: { producto_id: string; nombre: string; veces: number }) => `${x.producto_id}|${x.nombre}|${x.veces}`).join("\n");
+    }
     const cat = (prods || []).map((p) => [p.id, p.nombre, p.unidad_venta || "", (p.alias || []).join(", ")].join("|")).join("\n");
     try {
-      const t = await conGemini("", "", `${EMPAREJAR}\n\nCATÁLOGO:\n${cat}\n\nMENSAJE:\n${msg}`);
+      const t = await conGemini("", "", `${EMPAREJAR}\n\nCATÁLOGO:\n${cat}${habitual}\n\nMENSAJE:\n${msg}`);
       const i = t.indexOf("{"), j = t.lastIndexOf("}"); const r = JSON.parse(t.slice(i, j + 1));
       const ids = new Set((prods || []).map((p) => p.id));
       // deno-lint-ignore no-explicit-any
