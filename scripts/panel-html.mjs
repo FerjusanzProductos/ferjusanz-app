@@ -14,7 +14,7 @@ const eur = n => Math.round(Number(n) || 0).toLocaleString('es-ES') + ' €';
 const fecha = f => f ? new Date(f + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '—';
 const mes = f => new Date(f + 'T12:00:00').toLocaleDateString('es-ES', { month: 'short', year: '2-digit' });
 
-const [[g], ventas, deudores, [cob], [pag], [prov], [cli], tareas] = await Promise.all([
+const [[g], ventas, deudores, recibos, [cob], [pag], [prov], [cli], tareas] = await Promise.all([
   sql(`select max(fecha)::text hasta from golden_facturas where not borrador`),
   sql(`select date_trunc('month', fecha)::date::text m, sum(base) base,
          sum(base) filter (where coste > 0) base_c, sum(coste) filter (where coste > 0) coste
@@ -24,7 +24,11 @@ const [[g], ventas, deudores, [cob], [pag], [prov], [cli], tareas] = await Promi
   sql(`select nombre, sum(total) total, min(vencimiento)::text desde, count(*) n,
          sum(total) filter (where vencimiento < date_trunc('month', current_date) - interval '1 month') antigua
        from golden_tesoreria where tipo = 'C' and estado = 'PEN' and vencimiento < date_trunc('month', current_date)
-       group by nombre order by 2 desc limit 6`),
+       group by nombre order by 2 desc`),
+  sql(`select nombre, serie, numero, fecha_factura::text ff, vencimiento::text v, total,
+         vencimiento < date_trunc('month', current_date) - interval '1 month' antigua
+       from golden_tesoreria where tipo = 'C' and estado = 'PEN' and vencimiento < date_trunc('month', current_date)
+       order by vencimiento`),
   sql(`select sum(total) pend,
          sum(total) filter (where vencimiento < date_trunc('month', current_date)) vencido,
          count(*) filter (where vencimiento < date_trunc('month', current_date)) n_venc,
@@ -50,7 +54,10 @@ const filasVentas = ventas.map((v, i) => {
 }).join('\n');
 const hoy = new Date(), mesNombre = d => d.toLocaleDateString('es-ES', { month: 'long' });
 const mesPasado = mesNombre(new Date(hoy.getFullYear(), hoy.getMonth() - 1, 15)), mesActual = mesNombre(hoy);
-const filasDeuda = deudores.map(d => `<li><b>${esc(d.nombre.trim())}</b> · ${eur(d.total)} <small>(${d.n} recibo${d.n > 1 ? 's' : ''}, desde el ${fecha(d.desde)}${Number(d.antigua) > 0 ? `; ${eur(d.antigua)} de antes de ${mesPasado}` : ''})</small></li>`).join('');
+const filasDeuda = deudores.map(d => {
+  const rs = recibos.filter(r => r.nombre === d.nombre).map(r => `<li${r.antigua ? ' class="antigua"' : ''}>Factura ${esc(r.serie)}/${esc(r.numero)} del ${fecha(r.ff || r.v)} · <b>${eur(r.total)}</b>${r.antigua ? ' · antigua' : ''}</li>`).join('');
+  return `<details><summary><b>${esc(d.nombre.trim())}</b> · ${eur(d.total)}${Number(d.antigua) > 0 ? ` <span class="antigua">(${eur(d.antigua)} de antes de ${mesPasado})</span>` : ''}</summary><ul>${rs}</ul></details>`;
+}).join('');
 const ahora = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
 const tarjeta = (cifra, texto, aviso) => `<div class="t${aviso ? ' aviso' : ''}"><b>${cifra}</b><span>${texto}</span></div>`;
 
@@ -81,13 +88,16 @@ th,td{font-size:.95rem}
 td.barra span{display:block;height:12px;background:var(--bar);border-radius:3px}
 ul{padding-left:20px;margin:4px 0}li{margin:5px 0;overflow-wrap:anywhere}
 a{color:var(--acc)}
+a.tl{text-decoration:none;color:inherit;display:block}a.tl .t{height:100%;box-sizing:border-box}
+details{border-top:1px solid var(--line);padding:8px 0}summary{cursor:pointer;min-height:24px;overflow-wrap:anywhere}.antigua{color:var(--warn)}
+html{scroll-behavior:smooth}#cobros{scroll-margin-top:12px}
 </style>
 <main>
 <h1>Panel Ferjusanz</h1>
 <p class="sub">Actualizado el ${ahora}. Datos de Golden hasta el ${fecha(g.hasta)}. Solo datos reales: los pedidos y cobros de la app aún son de prueba.</p>
 
 <div class="tarjetas">
-${tarjeta(eur(cob.vencido), `deuda hasta ${mesPasado} (${cob.n_venc} recibos)`, true)}
+<a class="tl" href="#cobros">${tarjeta(eur(cob.vencido), `deuda hasta ${mesPasado} (${cob.n_venc} recibos) · ver quién ›`, true)}</a>
 ${tarjeta(eur(ventas.at(-2)?.base), `ventas de ${ventas.at(-2) ? mes(ventas.at(-2).m) : 'el mes pasado'} (sin IVA)`)}
 ${tarjeta(prov.por_revisar, 'facturas de proveedor por revisar', prov.por_revisar > 0)}
 ${tarjeta(cli.activos, 'clientes activos')}
@@ -99,11 +109,11 @@ ${filasVentas}
 </tbody></table>
 <p class="pie">* Mes en curso. Las facturas mensuales (serie P) salen a final de mes: el mes en curso parece bajo hasta entonces.</p></section>
 
-<section><h2>📥 Cobros (Golden)</h2>
+<section id="cobros"><h2>📥 Cobros (Golden)</h2>
 <p>Deuda (hasta ${mesPasado}): <b>${eur(cob.vencido)}</b>. De ella, <b>${eur(Number(cob.vencido) - Number(cob.antigua || 0))}</b> es de ${mesPasado} y <b>${eur(cob.antigua)}</b> de antes (deuda antigua).</p>
 <p class="pie">Lo de ${mesActual} (${eur(cob.este_mes)}) no cuenta como deuda: los que pagan al mes lo pagan la primera semana del mes siguiente. Las facturas mensuales de ${mesActual} aún no están hechas.</p>
-<p>Los que más deben:</p>
-<ul>${filasDeuda || '<li>Nada vencido.</li>'}</ul></section>
+<p>Todos los que deben (${deudores.length}), del que más al que menos. Pulsa un cliente para ver sus facturas; en naranja, la deuda antigua:</p>
+${filasDeuda || '<p>Nada vencido.</p>'}</section>
 
 <section><h2>📤 Pagos a proveedores (Golden)</h2>
 <p>Sin marcar como pagado en Golden: <b>${eur(pag.pend)}</b> (vence esta semana: ${eur(pag.semana)}). Si es mucho, puede que en Golden falte marcar pagos ya hechos.</p>

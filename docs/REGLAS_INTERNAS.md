@@ -221,6 +221,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Al facturar el mes, Golden hace **dos facturas** por cliente si hay de los dos tipos: una con los albaranes pendientes y otra con los pagados (si todo es de un tipo, una sola).
 - Cuando llega el cobro de una factura pendiente, se marca pagada en **Tesorería** (no en albaranes).
 - Por eso, al ver lo que debe un cliente en Golden, **lo del mes en curso no es deuda**: los que pagan al mes lo pagan la 1.ª semana del mes siguiente. Deuda de verdad: **lo de meses ya cerrados** (estando en noviembre, hasta octubre), según cómo pague cada cliente.
+- **En la app (Tito, 24/11/2026)**: una sola factura con todos los albaranes; los que ya se han cobrado salen marcados «PAGADO» (o «pagado a cuenta») y debajo del total: «Ya pagado: −X €» y «PENDIENTE DE PAGO: Y €» (o «FACTURA PAGADA»). La base, el IVA y el total de la factura no cambian. Se calcula al abrir o descargar la factura con los cobros apuntados (la rebaja de los «sin IVA» no cuenta como pagado). Si la factura está rectificada o anulada, no sale.
 
 ## Clientes que no se contactan (Fernando, 18/11/2026)
 - Las tareas comerciales (Comercial del día, Plan de la semana, Leads) **solo proponen clientes con `activo = true`**. Los inactivos no salen en «a quién llamo», «clientes a recuperar» ni «clientes que se enfrían».
