@@ -4842,8 +4842,23 @@ async function sifCargar(id) {
   /* Trazabilidad: lote y origen de cada línea (los mismos del albarán) */
   const T = {}; const lp = (l.data || []).map(x => x.linea_pedido_id).filter(Boolean);
   if (lp.length) { try { const tr = await sb.from('asignaciones_lote').select('linea_id,cantidad,lotes(codigo_lote,origen)').in('linea_id', lp); if (!tr.error) tr.data.forEach(a => (T[a.linea_id] = T[a.linea_id] || []).push({ cant: a.cantidad, lote: uno(a.lotes) || {} })); } catch (e) { } }
-  return { f: f.data, L: l.data || [], I: i.data || [], R: r.data || [], T, qr: await sifQR(f.data) };
+  /* Albaranes ya cobrados (Tito, 24/11/2026): la factura dice qué se ha pagado y qué queda; se recalcula al abrirla */
+  const C = {}; const ap = [...new Set((l.data || []).map(x => x.albaran_id).filter(Boolean))];
+  if (ap.length) { try { const al = await sb.from('albaranes').select('id,pedido_id').in('id', ap); if (al.error) throw al.error; const P = {}; al.data.forEach(x => P[x.pedido_id] = x.id);
+    const co = await sb.from('cobros').select('pedido_id,importe').in('pedido_id', Object.keys(P)).neq('forma', 'descuento'); /* la rebaja «sin IVA» no es dinero cobrado */ if (!co.error) co.data.forEach(c => C[P[c.pedido_id]] = (C[P[c.pedido_id]] || 0) + Number(c.importe || 0)); } catch (e) { } }
+  return { f: f.data, L: l.data || [], I: i.data || [], R: r.data || [], T, C, qr: await sifQR(f.data) };
 }
+/* Pagado y pendiente por albarán. No cambia la factura (base, IVA y total son los mismos): solo dice lo cobrado. */
+function sifPagos(d) {
+  if (!d.C || d.f.tipo !== 'ordinaria' || d.anul || (d.R || []).length) return null; /* rectificada: lo pendiente ya no es el total de esta */
+  const A = {}; d.L.forEach(l => { if (!l.albaran_id) return; const a = A[l.albaran_id] = A[l.albaran_id] || { alb: l.albaran, total: 0 }; a.total += Number(l.total || 0); });
+  const L = Object.entries(A).map(([id, a]) => ({ ...a, pagado: Math.min(Math.round((d.C[id] || 0) * 100) / 100, Math.round(a.total * 100) / 100) }));
+  const pagado = Math.round(L.reduce((t, a) => t + a.pagado, 0) * 100) / 100;
+  if (!(pagado > 0)) return null;
+  const todo = L.every(a => a.pagado >= Math.round(a.total * 100) / 100); /* IVA por línea vs por tipo: céntimos sueltos */
+  return { L, pagado, pendiente: todo ? 0 : Math.max(0, Math.round((Number(d.f.total) - pagado) * 100) / 100), A: Object.fromEntries(L.map(a => [a.alb, a])) };
+}
+const sifPagTxt = a => a.pagado >= a.total - 0.005 ? ' · PAGADO' : ' · pagado a cuenta ' + eur(a.pagado) + '\u00a0€';
 /* QR tributario (Orden HAC/1177/2024, art. 21; cotejado con la guía QR de la AEAT v0.5.0 el 13/11/2026): 35 mm, corrección M, arriba en la factura.
    Aún no se envían los registros a la AEAT → modo «No VERI*FACTU» (otra dirección y sin la frase). Las facturas PRUEBA van al entorno de pruebas de la AEAT. */
 const SIF_VERIFACTU = false;
@@ -4867,7 +4882,7 @@ function sifLote(d, l) { const tz = ((d.T || {})[l.linea_pedido_id]) || []; if (
 function sifHtml(d) {
   const f = d.f, e = f.emisor || {}, c = f.cliente || {}, rect = f.tipo === 'rectificativa', tk = f.tipo === 'simplificada', re = f.recargo_equivalencia;
   const td = 'padding:3px 4px;border-bottom:1px solid #e5e7eb', R = td + ';text-align:right;white-space:nowrap';
-  let alb = null; const filas = d.L.map(l => { let cab = ''; if (l.albaran && l.albaran !== alb) { alb = l.albaran; cab = '<tr><td colspan="7" style="padding:6px 4px 2px;font-weight:700;color:#374151">Albarán ' + esc(l.albaran) + '</td></tr>'; }
+  const pg = sifPagos(d); let alb = null; const filas = d.L.map(l => { let cab = ''; if (l.albaran && l.albaran !== alb) { alb = l.albaran; cab = '<tr><td colspan="7" style="padding:6px 4px 2px;font-weight:700;color:#374151">Albarán ' + esc(l.albaran) + (pg && pg.A[l.albaran] && pg.A[l.albaran].pagado > 0 ? '<span style="color:#166534">' + esc(sifPagTxt(pg.A[l.albaran])) + '</span>' : '') + '</td></tr>'; }
     const lt = sifLote(d, l); return cab + '<tr><td style="' + td + '">' + esc(sifDesc(l)) + (lt ? '<div style="font-size:10.5px;color:#6b7280">' + esc(lt) + '</div>' : '') + '</td><td style="' + R + '">' + (l.producto_id ? esc(num(l.cantidad) + ' ' + (l.unidad || '')) : '') + '</td><td style="' + R + '">' + (l.producto_id ? esc(eur(l.precio)) : '') + '</td><td style="' + R + '">' + eur(l.base) + '</td><td style="' + R + '">' + num(l.tipo_iva) + ' %</td><td style="' + R + '">' + eur(l.cuota_iva) + '</td><td style="' + R + '">' + eur(l.total) + '</td></tr>'; }).join('');
   return '<div style="font-family:Arial,Helvetica,sans-serif;font-size:12.5px;color:#111;background:#fff;padding:6px">' +
     /* AEAT: QR lo primero, arriba y centrado; «QR tributario:» con letra no menor que la del resto; ≥ 2 mm en blanco (6 mm recomendados) */
@@ -4884,6 +4899,7 @@ function sifHtml(d) {
     d.I.map(i => '<tr><td style="padding:2px 6px">' + num(i.tipo_iva) + ' %</td><td style="text-align:right;padding:2px 6px">' + eur(i.base) + '</td><td style="text-align:right;padding:2px 6px">' + eur(i.cuota_iva) + '</td>' + (re ? '<td style="text-align:right;padding:2px 6px">' + num(i.tipo_re) + ' %: ' + eur(i.cuota_re) + '</td>' : '') + '<td style="text-align:right;padding:2px 6px">' + eur(i.total) + '</td></tr>').join('') +
     '<tr style="border-top:1.5px solid #111"><td style="padding:3px 6px"><b>Totales</b></td><td style="text-align:right;padding:3px 6px"><b>' + eur(f.base) + '</b></td><td style="text-align:right;padding:3px 6px"><b>' + eur(f.cuota_iva) + '</b></td>' + (re ? '<td style="text-align:right;padding:3px 6px"><b>' + eur(f.cuota_re) + '</b></td>' : '') + '<td></td></tr></tbody></table>' +
     '<div style="text-align:right;font-size:18px;font-weight:900;margin-top:6px">TOTAL FACTURA: ' + eur(f.total) + '\u00a0€</div>' +
+    (pg ? '<div style="text-align:right;margin-top:4px">Ya pagado (albaranes ' + esc(pg.L.filter(a => a.pagado > 0).map(a => a.alb).join(', ')) + '): <b>−' + eur(pg.pagado) + '\u00a0€</b></div><div style="text-align:right;font-size:17px;font-weight:900;color:' + (pg.pendiente > 0 ? '#b45309' : '#166534') + '">' + (pg.pendiente > 0 ? 'PENDIENTE DE PAGO: ' + eur(pg.pendiente) + '\u00a0€' : 'FACTURA PAGADA') + '</div>' : '') +
     '<div style="margin-top:8px"><b>Forma de pago:</b> ' + esc(SIF_FORMA_TXT[f.forma_pago] || f.forma_pago) + (rect || tk ? '' : ' · <b>Vencimiento:</b> ' + esc(sifVence(f))) + '</div>' +
     (sifIbanTxt(f, e) ? '<div style="margin-top:4px;font-size:13.5px"><b>' + esc(sifIbanTxt(f, e)) + '</b> (' + esc(e.razon_social) + ')</div>' : '') +
     (f.notas ? '<div><b>Observaciones:</b> ' + esc(f.notas) + '</div>' : '') +
@@ -4926,10 +4942,10 @@ function sifPdf(d) {
   if (rect) { const lm = parte('Motivo: ' + (f.motivo || ''), W - 2 * M - 16, 9.5); doc.caja(M, y, W - 2 * M, 22 + lm.length * 12, '#fffbeb', '#b45309'); doc.texto('Rectifica la factura Nº ' + f.rectifica_codigo + (f.anula ? ' (la deja sin efecto, a cero)' : ' (por diferencias)'), M + 8, y + 14, 10, { neg: true }); lm.forEach((t, k) => doc.texto(t, M + 8, y + 27 + k * 12, 9.5)); y += 42 + lm.length * 12; }
   doc.texto('Concepto: ' + f.concepto, M, y, 10, { neg: true }); y += 18;
   cabTabla();
-  let alb = null;
+  const pg = sifPagos(d); let alb = null;
   d.L.forEach(l => {
     if (y > 790) nuevaPag();
-    if (l.albaran && l.albaran !== alb) { alb = l.albaran; doc.texto('Albarán ' + l.albaran, M, y, 8.5, { neg: true, color: '#374151' }); y += 12; }
+    if (l.albaran && l.albaran !== alb) { alb = l.albaran; const pa = pg && pg.A[l.albaran]; doc.texto('Albarán ' + l.albaran + (pa && pa.pagado > 0 ? sifPagTxt(pa) : ''), M, y, 8.5, { neg: true, color: pa && pa.pagado > 0 ? '#166534' : '#374151' }); y += 12; }
     const ls = parte(sifDesc(l), COL.cant - M - 50, 9), lt = sifLote(d, l), lts = lt ? parte(lt, COL.cant - M - 50, 7.5) : [];
     ls.forEach((t, k) => doc.texto(t, M + 6, y + k * 11, 9));
     lts.forEach((t, k) => doc.texto(t, M + 6, y + ls.length * 11 + k * 9, 7.5, { color: '#6b7280' }));
@@ -4947,6 +4963,8 @@ function sifPdf(d) {
   const tot = re ? ['Totales', eur(f.base), eur(f.cuota_iva), eur(f.cuota_re), ''] : ['Totales', eur(f.base), eur(f.cuota_iva), ''];
   tot.forEach((t, k) => doc.texto(t, X[k], y, 9.5, { neg: true, align: k ? 'right' : 'left' })); y += 22;
   doc.rect(X[0] - 8, y - 15, W - M - X[0] + 8, 24, '#166534'); doc.texto('TOTAL FACTURA: ' + eur(f.total) + '\u00a0€', W - M - 6, y + 2, 13, { neg: true, color: '#ffffff', align: 'right' }); y += 28;
+  if (pg) { doc.texto(corta('Ya pagado (albaranes ' + pg.L.filter(a => a.pagado > 0).map(a => a.alb).join(', ') + '): -' + eur(pg.pagado) + '\u00a0€', W - 2 * M, 10), W - M - 6, y, 10, { align: 'right' }); y += 16;
+    doc.texto(pg.pendiente > 0 ? 'PENDIENTE DE PAGO: ' + eur(pg.pendiente) + '\u00a0€' : 'FACTURA PAGADA', W - M - 6, y, 13, { neg: true, color: pg.pendiente > 0 ? '#b45309' : '#166534', align: 'right' }); y += 22; }
   doc.texto('Forma de pago: ' + (SIF_FORMA_TXT[f.forma_pago] || f.forma_pago) + (rect || tk ? '' : ' · Vencimiento: ' + sifVence(f)), M, y, 10, { neg: true }); y += 14;
   if (sifIbanTxt(f, e)) { doc.texto(sifIbanTxt(f, e), M, y, 10.5, { neg: true }); doc.texto('Titular: ' + rs, M, y + 12, 8.5, { color: '#374151' }); y += 26; }
   if (f.notas) parte('Observaciones: ' + f.notas, W - 2 * M, 9).forEach(t => { doc.texto(t, M, y, 9); y += 11; });
