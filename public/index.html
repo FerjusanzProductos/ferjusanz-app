@@ -14399,7 +14399,7 @@ function vistaImportar() {
   const ta = h('textarea', { rows: 6, placeholder: 'Escribe o pega el pedido como lo dirías:\n«Pedido para Florencio, para mañana. Dos sacos de patatas, cinco kilos de tomate pera y una caja de calabacines. Entregar antes de las 9.»\nTambién vale con # copiado de WhatsApp.' }); ta.value = (state.params && state.params.texto) || '';
   try { if (!ta.value) { const b = LS.get('fj_borr_importar', null); if (b && b.texto && Date.now() - b.t < 86400000) { ta.value = b.texto; setTimeout(() => toast('Recuperado el texto que tenías escrito', 'ok'), 400); } } } catch (e) { }
   ta.addEventListener('input', () => { try { LS.set('fj_borr_importar', { t: Date.now(), texto: ta.value }); } catch (e) { } });
-  const cliBox = h('div', {}), fechaBox = h('div', {}), horaBox = h('div', {}), avisoBox = h('div', {}), lineasBox = h('div', {}), olvBox = h('div', {}), ignBox = h('div', {}), pie = h('div', {});
+  const cliBox = h('div', {}), fechaBox = h('div', {}), horaBox = h('div', {}), avisoBox = h('div', {}), lineasBox = h('div', {}), olvBox = h('div', {}), iaBox = h('div', {}), ignBox = h('div', {}), pie = h('div', {});
   const diaSem = f => ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'][new Date(f + 'T12:00:00').getDay()];
   const manana = () => { const d = new Date(); d.setDate(d.getDate() + 1); return hoy(d); };
   const aprendidos = k => LS.get(k, {});
@@ -14455,6 +14455,50 @@ function vistaImportar() {
     ls.forEach(l => { if (pr[l.producto.id] != null) l.precio = String(pr[l.producto.id]).replace('.', ','); }); pintarLineas();
   }
   /* 🧠 Lo que el cliente suele pedir (historial real de Golden, 90 días) y no está en este pedido: se añade con un toque. */
+  /* 🤖 Si queda algo dudoso o sin reconocer, la IA (función leer-pedido, Gemini) lee el pedido entero con el catálogo y
+     resuelve esas líneas (en morado, para revisar). Al confirmar, la palabra se aprende como alias (recordarAlias). */
+  let iaHecha = '';
+  const dudosa = l => !l.producto || l.estado === 'dudoso' || l.estado === 'noenc' || l.estado === 'ambiguo';
+  const necesitaIA = () => S.interpretado && !S.anadir && (S.lineas.some(dudosa) || (S.ignorado || []).some(t => /\d/.test(t) && /[a-záéíóúñ]{4,}/i.test(t)));
+  function pintarIA() {
+    const pend = necesitaIA() && iaHecha !== ta.value.trim();
+    iaBox.replaceChildren(S.iaLeyendo ? h('div', { class: 'card', style: 'background:#f5f3ff;border-color:#c4b5fd' }, '🤖 La IA está revisando lo que no reconozco…')
+      : pend ? h('button', { class: 'ghost', style: 'width:100%;margin:6px 0;border-color:#7c3aed;color:#6d28d9', onclick: () => revisarConIA(true) }, '🤖 Que la IA revise lo que no reconozco') : '');
+  }
+  async function revisarConIA(manual) {
+    const texto = ta.value.trim(); if (!texto || S.iaLeyendo || !necesitaIA() || (!manual && iaHecha === texto)) { pintarIA(); return; }
+    if (!navigator.onLine) { if (manual) toast('Sin conexión: la IA necesita internet', 'err'); return; }
+    if (!LS.get('fj_ia_ok', false)) { if (!manual) { pintarIA(); return; } if (!await confirmar('La app enviará el texto del pedido a un servicio externo de IA (Google Gemini) para entender lo que no reconoce. Puede contener nombres de clientes. ¿Lo aceptas?')) return; LS.set('fj_ia_ok', true); }
+    S.iaLeyendo = true; pintarIA();
+    try {
+      if (!S.prods) S.prods = await waProductos();
+      const r = await sb.functions.invoke('leer-pedido', { body: { texto } });
+      if (r.error) { let m = r.error.message || ''; try { const j = await r.error.context.json(); if (j && j.error) m = j.error; } catch (e) { } throw new Error(m); }
+      if (ta.value.trim() !== texto) return; /* lo han cambiado mientras: no tocar */
+      iaHecha = texto; let n = 0;
+      const pal = t => new Set(waPalabras(t || '').filter(w => /[a-z]/.test(w))); /* sin números: «2 melones» no se parece a «2 berenjenas» */
+      const sim = (a, b) => { const A = pal(a), B = pal(b); if (!A.size || !B.size) return 0; let c = 0; B.forEach(w => { if (A.has(w)) c++; }); return c / Math.min(A.size, B.size); };
+      for (const x of (r.data && r.data.lineas) || []) {
+        const p = x.producto_id && S.prods.find(q => q.id === x.producto_id); if (!p) continue;
+        const ya = S.lineas.find(l => l.producto && l.producto.id === p.id);
+        if (ya) { if (dudosa(ya)) { ya.estado = 'ia'; ya.manual = true; n++; } continue; } /* la IA confirma lo que la app proponía */
+        let best = null, bs = 0; S.lineas.forEach(l => { const v = sim(l.raw, x.texto); if (v > bs) { bs = v; best = l; } });
+        const cant = x.cantidad != null ? String(x.cantidad).replace('.', ',') : '';
+        if (best && bs >= 0.5) {
+          if (!dudosa(best)) continue; /* esa parte ya la reconocía la app: se respeta */
+          asigna(best, p, true); best.estado = 'ia'; if (!(parseNum(best.cantidad) > 0) && cant) best.cantidad = cant;
+          if (x.unidad && UNIDADES.includes(x.unidad) && (best.sinUnidad || !best.unidad)) { best.unidad = x.unidad; best.sinUnidad = false; aplicaFormato(best); }
+        } else {
+          const l = { id: uuid(), raw: x.texto, nombre: x.texto, estado: 'ia', estadoOrigen: 'noenc', producto: p, cand: [], cantidad: cant, unidad: UNIDADES.includes(x.unidad) ? x.unidad : (p.unidad_venta || 'pieza'), unidad_precio: p.unidad_precio, precio: '' };
+          S.lineas.push(l); aplicaFormato(l);
+        }
+        n++;
+      }
+      await ponPrecios(); pintarLineas(); pintarPie();
+      toast(n ? '🤖 La IA ha resuelto ' + n + (n === 1 ? ' línea' : ' líneas') + ' (en morado): revísalas' : 'La IA tampoco ha sabido resolver lo dudoso', n ? 'ok' : 'err');
+    } catch (e) { if (manual) toast('La IA no ha podido revisarlo: ' + (e && e.message ? e.message : e), 'err'); }
+    finally { S.iaLeyendo = false; pintarIA(); }
+  }
   async function cargarGolden() {
     const cid = S.cliente && S.cliente.id; S.golden = null; pintarOlvidos(); if (!cid || S.anadir) return;
     try { const r = await sb.rpc('golden_habituales', { p_cliente: cid, p_dias: 90 }); if (!r.error && S.cliente && S.cliente.id === cid) { S.golden = r.data || []; pintarOlvidos(); } } catch (e) { }
@@ -14577,13 +14621,14 @@ function vistaImportar() {
     if (it.repetir && !S.cliente) S.aviso = 'El mensaje pide repetir un pedido anterior: elige primero el cliente para copiarlo.';
     pintarAviso(); pintarLineas(); pintarIgn(); if (S.cliente) cargarHist(); await ponPrecios(); if (S.cliente && S.repetir) await cargarRepetir(); pintarPie();
     if (!S.lineas.length && !S.repetir) toast('No he encontrado productos en el mensaje.', 'err');
+    revisarConIA(false);
   }
   function pintarAviso() {
     const a = S.avisos.concat(S.aviso ? [S.aviso] : []);
     avisoBox.replaceChildren(...(a.length ? [h('div', { class: 'card', style: 'background:#fef9c3;border-color:#eab308' }, a.map(x => h('div', {}, '⚠ ' + x)))] : []));
   }
   function pintarIgn() { ignBox.replaceChildren(...(S.ignorado.length ? [h('details', { class: 'card' }, h('summary', {}, 'Texto no usado (' + S.ignorado.length + ')'), ...S.ignorado.map(t => h('div', { class: 'sub' }, '· ' + t)))] : [])); }
-  const ETQ = { ok: ['✔ Reconocido', 'color:#15803d'], dudoso: ['⚠ Revisa si es este', 'color:#b45309'], ambiguo: ['⚠ Elige cuál es', 'color:#b45309'], noenc: ['✖ No lo reconozco', 'color:#b91c1c'] };
+  const ETQ = { ok: ['✔ Reconocido', 'color:#15803d'], dudoso: ['⚠ Revisa si es este', 'color:#b45309'], ambiguo: ['⚠ Elige cuál es', 'color:#b45309'], noenc: ['✖ No lo reconozco', 'color:#b91c1c'], ia: ['🤖 Elegido por la IA: revisa que sea este', 'color:#7c3aed'] };
   function pintarLineas() {
     lineasBox.replaceChildren(...S.lineas.map((l, i) => {
       const et = ETQ[l.estado] || ETQ.noenc;
@@ -14614,7 +14659,7 @@ function vistaImportar() {
       if (l.unidad_precio === 'kg' && l.precio) kids.push(h('div', { class: 'sub', style: 'font-size:11px' }, 'Facturación: ' + l.precio + ' €/kg × peso real preparado.'));
       return h('div', { class: 'card', id: 'lin-' + l.id }, ...kids);
     }));
-    pintarOlvidos();
+    pintarOlvidos(); pintarIA();
   }
   function problemas() {
     const p = []; const L = x => () => irA(document.getElementById('lin-' + x.id));
@@ -14860,7 +14905,7 @@ function vistaImportar() {
   const btnInt = h('button', { style: 'width:100%;margin-top:8px', onclick: interpretar }, 'Interpretar pedido');
   const fijoBox = h('div', {}); waMemCargar().then(async () => { try { if (!S.prods) S.prods = await waProductos(); } catch (e) { } });
   $app.replaceChildren(shell(S.anadir ? 'Añadir al pedido' : modo === 'voz' ? 'Dictar pedido' : modo === 'escanear' ? 'Escanear pedido' : 'Escribir pedido', h('div', {}, h('p', { class: 'sub' }, S.anadir ? 'Escribe, dicta o escanea los productos que faltan. Se añadirán a este pedido; no se crea otro.' : 'Escribe, dicta o escanea el pedido. Reviso cliente, fecha, productos y cantidades y tú confirmas. Nada se guarda solo.'), barra, archBox, ta, btnInt,
-    fijoBox, h('div', { style: 'margin-top:12px' }, cliBox), fechaBox, horaBox, avisoBox, lineasBox, olvBox, ignBox, pie), { volver: () => S.anadir ? go('pedido', { id: S.anadir }) : S.desdeWa ? go('whatsapp') : go('inicio') })); renderBanner();
+    fijoBox, h('div', { style: 'margin-top:12px' }, cliBox), fechaBox, horaBox, avisoBox, iaBox, lineasBox, olvBox, ignBox, pie), { volver: () => S.anadir ? go('pedido', { id: S.anadir }) : S.desdeWa ? go('whatsapp') : go('inicio') })); renderBanner();
   pintarCliente(); pintarFecha(); pintarHora();
   if (S.anadir) {
     cliBox.style.display = 'none'; fechaBox.style.display = 'none'; horaBox.style.display = 'none';
