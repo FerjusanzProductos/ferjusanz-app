@@ -13660,11 +13660,40 @@ function vistaComercial() {
   state.view = 'comercial';
   if (!esOficina()) { $app.replaceChildren(shell('Comercial', h('p', { class: 'vacio' }, 'Solo la oficina puede entrar aquí.'), { volver: volverIni })); return; }
   let tab = (state.params && state.params.tab) || LS.get('fj_com_tab', 'listas'); const cont = h('div', {}); const cuerpo = h('div', {});
-  const TABS = [['harvey', '🤵 Harvey'], ['tarjetas', '📇 Tarjetas'], ['listas', '📄 Listas'], ['recs', '⭐ Recomendaciones'], ['avisos', '🔔 Avisos'], ['buscar', '🔎 Buscar clientes'], ['calc', '🧮 Calculadora'], ['pres', '🎬 Presentaciones'], ['guion', '🗣️ Guiones'], ['web', '🌐 Web y SEO']];
+  const TABS = [['harvey', '🤵 Harvey'], ['tarjetas', '📇 Tarjetas'], ['listas', '📄 Listas'], ['recs', '⭐ Recomendaciones'], ['avisos', '🔔 Avisos'], ['buscar', '🔎 Buscar clientes'], ['calc', '🧮 Calculadora'], ['marca', '🎨 Folletos y tarjetas'], ['pres', '🎬 Presentaciones'], ['guion', '🗣️ Guiones'], ['web', '🌐 Web y SEO']];
   const pintarTabs = () => chips.replaceChildren(...TABS.map(([k, t]) => h('button', { class: 'chip' + (tab === k ? ' on' : ''), onclick: () => { if (k === 'pres') { go('presentaciones'); return; } tab = k; LS.set('fj_com_tab', k); pintarTabs(); pintar(); } }, t)));
   const chips = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px' });
-  const pintar = () => { cuerpo.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); ({ harvey: tabHarvey, tarjetas: tabTarjetas, listas: tabListas, recs: tabRecs, avisos: tabAvisos, buscar: tabBuscar, calc: tabCalc, guion: tabGuion, web: tabWeb })[tab](cuerpo); };
+  const pintar = () => { cuerpo.replaceChildren(h('p', { class: 'vacio' }, 'Cargando…')); ({ harvey: tabHarvey, tarjetas: tabTarjetas, listas: tabListas, recs: tabRecs, avisos: tabAvisos, buscar: tabBuscar, calc: tabCalc, marca: tabMarca, guion: tabGuion, web: tabWeb })[tab](cuerpo); };
   cont.append(chips, cuerpo); $app.replaceChildren(shell('Comercial', cont, { volver: volverIni })); renderBanner(); pintarTabs(); pintar();
+}
+/* 🎨 Folletos, tarjetas y publicaciones de la marca (Tito, 24/11/2026). Archivos en public/marca/ (salen de marca/disenos/hacer.mjs).
+   Mismos datos que la ficha de Google y la web: no cambiar teléfono, web ni horario aquí. */
+const MARCA = [
+  ['🪪 Tarjeta de visita', 'Para dar a clientes nuevos. El PDF va listo para imprenta (85 × 55 mm con sangrado).', ['tarjeta-visita-1.jpg', 'tarjeta-visita-2.jpg'], 'tarjeta-visita.pdf'],
+  ['📰 Folleto A5', 'Para dejar en restaurantes, colegios y residencias, o mandar la imagen por WhatsApp a un posible cliente.', ['folleto-A5-1.jpg', 'folleto-A5-2.jpg'], 'folleto-A5.pdf'],
+  ['⭐ Ofertas de la semana', 'Para el estado de WhatsApp o mandar a clientes (imagen) e imprimir en el almacén (PDF). Precios del 22 al 30 de noviembre, de las ofertas de la web.', ['ofertas-whatsapp.jpg'], 'ofertas-A4.pdf'],
+  ['📍 Ofertas para la ficha de Google', 'Se pega en «Publicaciones» de la ficha cuando esté verificada.', ['google-ofertas.jpg'], null],
+  ['📱 Publicaciones de Instagram', 'Una por semana en @ferjusanz.', ['post-un-proveedor.jpg', 'post-patata-pelada.jpg', 'post-manzana-colegio.jpg'], null],
+];
+async function marcaCompartir(nombre) {
+  try {
+    toast('Preparando…');
+    const r = await fetch('marca/' + nombre); if (!r.ok) throw new Error('No se encuentra el archivo.');
+    const blob = await r.blob(); const file = new File([blob], 'Ferjusanz-' + nombre, { type: blob.type || (nombre.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg') });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return; }
+    const u = URL.createObjectURL(blob); const lk = h('a', { href: u, download: file.name }); document.body.append(lk); lk.click(); lk.remove();
+  } catch (e) { if (e && e.name === 'AbortError') return; toast(isNetErr(e) ? 'Necesitas conexión.' : msgErr(e), 'err'); }
+}
+function tabMarca(el) {
+  el.replaceChildren(
+    h('p', { class: 'sub' }, 'Diseños con el logo y fotos de Ferjusanz, listos para compartir o imprimir. «📤 Compartir» abre WhatsApp, Gmail, Drive… del móvil.'),
+    ...MARCA.map(([t, d, imgs, pdf]) => h('div', { class: 'card' },
+      h('div', { class: 'nombre' }, t), h('div', { class: 'sub', style: 'margin:2px 0 8px' }, d),
+      h('div', { style: 'display:flex;gap:8px;overflow-x:auto;padding-bottom:4px' }, ...imgs.map(f => h('img', { src: 'marca/' + f, alt: t, loading: 'lazy', style: 'height:150px;max-width:none;border-radius:8px;border:1px solid #e5e7eb;cursor:pointer', onclick: () => window.open('marca/' + f, '_blank') }))),
+      h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' },
+        ...imgs.map((f, i) => h('button', { class: 'small', onclick: () => marcaCompartir(f) }, '📤 ' + (imgs.length > 1 ? 'Imagen ' + (i + 1) : 'Compartir imagen'))),
+        ...(pdf ? [h('button', { class: 'small', onclick: () => marcaCompartir(pdf) }, '📄 PDF imprenta')] : [])))),
+    h('p', { class: 'sub', style: 'margin-top:6px' }, 'Para pedir la impresión (VistaPrint u otra imprenta), díselo a Claude: deja el pedido preparado y el pago lo haces tú.'));
 }
 async function tabListas(el) {
   try {
