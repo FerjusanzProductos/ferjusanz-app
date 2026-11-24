@@ -14819,10 +14819,29 @@ function vistaImportar() {
   const inGal = h('input', { type: 'file', accept: 'image/*', multiple: true, style: 'display:none' });
   const inDoc = h('input', { type: 'file', accept: 'application/pdf,image/*,.xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv', multiple: true, style: 'display:none' });
   [inFoto, inGal, inDoc].forEach(i => i.onchange = async () => { const fs = Array.from(i.files || []); i.value = ''; await tomarArchivos(fs); });
+  /* 🎧 Nota de voz (guardada desde WhatsApp con «Compartir» › Archivos, o elegida en el móvil): la IA la pasa a texto. */
+  const inAudio = h('input', { type: 'file', accept: 'audio/*,.opus,.ogg,.m4a,.mp3,.aac,.wav', style: 'display:none' });
+  inAudio.onchange = async () => {
+    const f = (inAudio.files || [])[0]; inAudio.value = ''; if (!f) return;
+    if (!navigator.onLine) { toast('Sin conexión: la IA necesita internet', 'err'); return; }
+    if (f.size > 15e6) { toast('El audio es demasiado largo (máximo 15 MB)', 'err'); return; }
+    if (!LS.get('fj_ia_ok', false)) { if (!await confirmar('Para entender el audio, la app lo envía a un servicio externo de IA (Google Gemini). Puede contener nombres de clientes. ¿Lo aceptas?')) return; LS.set('fj_ia_ok', true); }
+    const t = toast('🎧 Escuchando el audio…', 'ok');
+    try {
+      const b64 = await new Promise((ok, ko) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = ko; r.readAsDataURL(f); });
+      const tipo = f.type || (/\.(opus|ogg)$/i.test(f.name) ? 'audio/ogg' : /\.m4a$/i.test(f.name) ? 'audio/mp4' : 'audio/mpeg');
+      const r = await sb.functions.invoke('leer-pedido', { body: { archivo: b64, tipo } });
+      if (r.error) { let m = r.error.message || ''; try { const j = await r.error.context.json(); if (j && j.error) m = j.error; } catch (e) { } throw new Error(m); }
+      const txt = String((r.data && r.data.texto) || '').trim();
+      if (!txt || /^SIN PEDIDO/i.test(txt)) { toast('En el audio no he oído ningún pedido', 'err'); return; }
+      ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + txt; S.origen = 'voz'; await interpretar();
+      if (/\[\?\]/.test(txt)) toast('Hay partes que no se entendían bien, marcadas con [?]: revísalas', 'err');
+    } catch (e) { toast('No se pudo leer el audio: ' + (e && e.message ? e.message : e), 'err'); }
+  };
   const esPdf = f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name || '');
   async function leerConIA(a) {
     if (!navigator.onLine) { toast('Sin conexión: la IA necesita internet', 'err'); return; }
-    if (!LS.get('fj_ia_ok', false)) { if (!await confirmar('«Leer con IA» envía ESTA foto a un servicio externo (Anthropic) para transcribirla. Tiene un coste pequeño por foto. La foto puede contener nombres de clientes. ¿Lo aceptas?')) return; LS.set('fj_ia_ok', true); }
+    if (!LS.get('fj_ia_ok', false)) { if (!await confirmar('«Leer con IA» envía ESTA foto a un servicio externo de IA (Google Gemini) para transcribirla. Tiene un coste pequeño por foto. La foto puede contener nombres de clientes. ¿Lo aceptas?')) return; LS.set('fj_ia_ok', true); }
     a.estado = 'leyendo'; a.msg = 'Leyendo con IA…'; a.aviso = ''; pintarArch();
     try {
       const c = await waImagenACanvas(a.file, 1600); const b64 = c.toDataURL('image/jpeg', 0.85).split(',')[1];
@@ -14882,8 +14901,9 @@ function vistaImportar() {
     h('button', { class: modo === 'escanear' ? '' : 'ghost', style: 'flex:1', onclick: () => inFoto.click() }, '📷 Hacer foto'),
     h('button', { class: 'ghost', style: 'flex:1', onclick: () => inGal.click() }, '🖼️ Galería / captura'),
     h('button', { class: 'ghost', style: 'flex:1', onclick: () => inDoc.click() }, '📄 PDF / Excel'),
+    h('button', { class: 'ghost', style: 'flex:1', onclick: () => inAudio.click() }, '🎧 Audio de WhatsApp'),
     S.anadir ? null : h('button', { class: 'ghost', style: 'width:100%', onclick: () => go('rapido') }, '⚡ Pedido rápido (elegir cliente: me acuerdo de lo que suele pedir)'),
-    esOficina() ? h('button', { class: 'ghost small', style: 'width:100%', onclick: abrirPanelAbrev }, '⚙️ Formatos y abreviaturas') : null, inFoto, inGal, inDoc);
+    esOficina() ? h('button', { class: 'ghost small', style: 'width:100%', onclick: abrirPanelAbrev }, '⚙️ Formatos y abreviaturas') : null, inFoto, inGal, inDoc, inAudio);
   async function recordarAlias() {
     try {
       const ap = aprendidos('fj_wa_alias');
