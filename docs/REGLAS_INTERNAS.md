@@ -224,6 +224,12 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - **Notas de la oficina en Golden › Cobros** (Tito, 24/11/2026): en la «Observación» de cada factura se apunta lo que el cliente ya ha pagado: «A cuenta ALB/5097 (259,31 €)…», «Paga ALB/…» o solo «A cuenta 300 €» (una transferencia sin decir de qué albarán). **«A cuenta» = dinero ya pagado de esa factura: se resta de lo que debe.** La app y el panel lo leen de Golden (columna «Descripcion Corta» de Tesorería) y enseñan «Factura · Ya pagado (a cuenta) · Queda por pagar»; la deuda que sale es lo que queda. Si lo anotado cubre toda la factura, deja de contar como deuda.
 - **En la app (Tito, 24/11/2026)**: una sola factura con todos los albaranes; los que ya se han cobrado salen marcados «PAGADO» (o «pagado a cuenta») y debajo del total: «Ya pagado: −X €» y «PENDIENTE DE PAGO: Y €» (o «FACTURA PAGADA»). La base, el IVA y el total de la factura no cambian. Se calcula al abrir o descargar la factura con los cobros apuntados (la rebaja de los «sin IVA» no cuenta como pagado). Si la factura está rectificada o anulada, no sale.
 
+## Cuándo paga cada cliente (Tito, 24/11/2026)
+- Se apunta en la ficha del cliente › «📅 Cuándo paga»: al contado, cada semana (qué día), cada 15 días o al mes (qué día del mes siguiente), y una nota (transferencia, efectivo, quién lo trae…).
+- Con eso la app avisa en Cobros › Deudas › «📅 Avisos de cobro» (y el Panel Ferjusanz cada mañana): **le toca pagar en 7 días**, **se ha pasado su fecha** y **han pagado esta semana** (lo marcado como cobrado en Golden).
+- Si no está apuntado, la fecha es **supuesta**: factura de fin de mes = al mes, **día 7 del mes siguiente** («la primera semana»).
+- Las fechas de cobro de Golden **no sirven** para saber el día real de pago: las facturas de albaranes ya pagados salen cobradas el mismo día de la factura, y el resto el día en que se marcó. El día real lo da el **banco** (Más › «🏦 Banco», subiendo el fichero de movimientos).
+
 ## Clientes que no se contactan (Fernando, 18/11/2026)
 - Las tareas comerciales (Comercial del día, Plan de la semana, Leads) **solo proponen clientes con `activo = true`**. Los inactivos no salen en «a quién llamo», «clientes a recuperar» ni «clientes que se enfrían».
 - **LA DEFINITIVA** (Nadamalu SLU, Alcobendas, código `DEFINITIVA`): **no contactar nunca**. Ya no se llama así y el nuevo dueño es **mal pagador**: dejó deuda, devolvió 2 recibos y hubo que cobrarle con datáfono. No volver a proponerla.

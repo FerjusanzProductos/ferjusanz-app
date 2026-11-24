@@ -30,7 +30,7 @@ const [[g], pend] = await Promise.all([
 const cods = [...new Set(pend.map(t => String(t.codigo || '').toUpperCase()))];
 const nums = pend.map(t => numGolden(t.serie, t.numero));
 const [clis, lineas, cobros, fact] = await Promise.all([
-  sql(`select upper(codigo) cod, nombre, nombre_comercial, forma_pago, dias_pago, telefono, email from clientes where upper(codigo) in (${lit(cods)})`),
+  sql(`select upper(codigo) cod, nombre, nombre_comercial, forma_pago, dias_pago, telefono, email, pago_frecuencia, pago_dia, pago_nota from clientes where upper(codigo) in (${lit(cods)})`),
   sql(`select factura_numero f, albaran a, sum(importe) t, count(*) n from golden_lineas where factura_numero in (${lit(nums)}) and not coalesce(repetida, false) group by 1, 2`),
   sql(`select upper(codigo) cod, fecha_factura::text ff, fecha_cobro_pago::text fc, total from golden_tesoreria
        where tipo = 'C' and estado = 'CO' and upper(codigo) in (${lit(cods)}) and fecha_factura >= current_date - 365 order by fecha_cobro_pago desc`),
@@ -45,6 +45,12 @@ const tipoPago = cod => {
   if (P.length >= F.length) { const x = gap(P); return x == null || x > 20 ? 'Al mes (factura a fin de mes)' : x > 10 ? 'Cada 15 días' : 'Cada semana'; }
   const x = gap(F); return x == null || x <= 5 || x > 20 ? 'Al contado' : x <= 10 ? 'Cada semana' : 'Cada 15 días';
 };
+/* Fecha en que le toca pagar: la apuntada en su ficha (📅 Cuándo paga) o supuesta (al mes = día 7 del mes siguiente). Misma regla que la app. */
+const sumaD = (f, n) => { const d = new Date(f + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toLocaleDateString('sv-SE'); };
+const prevista = (ff, frec, dia) => { if (frec === 'contado') return ff; if (frec === 'quincenal') return sumaD(ff, 15);
+  if (frec === 'semanal') { if (!(dia >= 1 && dia <= 7)) return sumaD(ff, 7); let f = ff; do f = sumaD(f, 1); while (((new Date(f + 'T12:00:00').getDay() + 6) % 7) + 1 !== dia); return f; }
+  const d = new Date(ff + 'T12:00:00'), fin = new Date(d.getFullYear(), d.getMonth() + 2, 0).getDate(); d.setDate(1); d.setMonth(d.getMonth() + 1); d.setDate(Math.min(dia || 7, fin)); return d.toLocaleDateString('sv-SE'); };
+const FREC = { contado: 'Al contado', semanal: 'Cada semana', quincenal: 'Cada 15 días', mensual: 'Al mes' }, DSEM = ['', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 const pagadoNota = t => r2((Array.isArray(t.partes) ? t.partes : []).reduce((a, p) => a + Number(p.importe || 0), 0));
 const albPagados = t => new Set((Array.isArray(t.partes) ? t.partes : []).flatMap(p => p.albaranes || []));
 
@@ -62,8 +68,11 @@ const lista = Object.values(C).filter(x => x.fs.length).sort((a, b) => b.queda -
 for (const x of lista) {
   const cs = cobros.filter(c => c.cod === x.cod && c.fc), ds = cs.map(c => dias(c.ff, c.fc)).filter(d => d >= 0).sort((a, b) => a - b);
   x.pago = tipoPago(x.cod); x.nCobros = cs.length; x.ultCobro = cs[0] ? cs[0].fc : null; x.medDias = ds.length ? ds[Math.floor(ds.length / 2)] : null;
+  const frec = x.cl.pago_frecuencia || (/Al mes/.test(x.pago) ? 'mensual' : /semana/.test(x.pago) ? 'semanal' : /15/.test(x.pago) ? 'quincenal' : /contado/.test(x.pago) ? 'contado' : 'mensual');
+  x.prev = x.fs.map(f => prevista(f.ff, frec, x.cl.pago_frecuencia ? x.cl.pago_dia : null)).sort()[0];
+  x.cuando = x.cl.pago_frecuencia ? FREC[frec] + (frec === 'mensual' && x.cl.pago_dia ? ', día ' + x.cl.pago_dia + ' del mes siguiente' : frec === 'semanal' && x.cl.pago_dia ? ', los ' + DSEM[x.cl.pago_dia] : '') + (x.cl.pago_nota ? ' · ' + x.cl.pago_nota : '') : 'Sin apuntar (supuesto: ' + FREC[frec].toLowerCase() + ')';
   x.faltas = [];
-  if (x.cl.dias_pago == null) x.faltas.push('En su ficha no están apuntados los días de plazo de pago.');
+  if (!x.cl.pago_frecuencia) x.faltas.push('Falta apuntar cuándo paga (ficha del cliente › «📅 Cuándo paga»).');
   if (!x.cl.telefono) x.faltas.push('Falta su teléfono en la ficha.');
   const viejasSinNota = x.fs.filter(f => f.edad > 60 && !f.pag);
   if (viejasSinNota.length) x.faltas.push(viejasSinNota.length + (viejasSinNota.length === 1 ? ' factura' : ' facturas') + ' de hace más de 2 meses sin ninguna nota de pago: ¿se cobró y no se marcó en Golden?');
@@ -93,6 +102,8 @@ const filaCli = x => {
   <div><dt>Cómo paga (según Golden)</dt><dd>${esc(x.pago)}</dd></div>
   <div><dt>Ficha de la app</dt><dd>${x.cl.forma_pago === 'contado' ? 'Contado' : 'Crédito'}${x.cl.dias_pago != null ? ', ' + x.cl.dias_pago + ' días' : ', sin días de plazo'}</dd></div>
   <div><dt>Último cobro en Golden</dt><dd>${x.ultCobro ? fecha(x.ultCobro) + (x.medDias != null ? ` · suele tardar ${x.medDias} días` : '') : 'ninguno en un año'}</dd></div>
+  <div><dt>Cuándo paga (ficha)</dt><dd>${esc(x.cuando)}</dd></div>
+  <div><dt>Le tocaba pagar</dt><dd>${x.prev < hoyS ? `<span class="r">el ${fecha(x.prev)} (hace ${dias(x.prev, hoyS)} días)</span>` : 'el ' + fecha(x.prev)}</dd></div>
   <div><dt>Reparto de lo que debe</dt><dd>${[x.antigua > 0.009 ? `<span class="r">${eur(x.antigua)} antiguo</span>` : '', x.pasado > 0.009 ? `<span class="a">${eur(x.pasado)} de ${mesPasado}</span>` : '', x.actual > 0.009 ? `${eur(x.actual)} de ${mesActual}` : ''].filter(Boolean).join(' · ')}</dd></div>
 </dl>
 ${x.faltas.length ? `<ul class="faltas">${x.faltas.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
@@ -156,14 +167,14 @@ ${tarjeta(eur(actual), `de ${mesActual}: aún no toca pagarlo`, '')}
 <li><b>${nViejas} facturas</b> de hace más de 2 meses (${eur(sViejas)}) no tienen ninguna nota de pago en Golden. Hay que confirmar una por una si están cobradas y sin marcar.</li>
 <li>Solo 3 clientes suman <b>${eur(sTop3)}</b> (${Math.round(sTop3 / total * 100)} % de todo): ${top3.map(x => esc(x.nom) + ' ' + eur(x.queda)).join(', ')}.</li>
 <li>Ya se ha restado <b>${eur(aCuenta)}</b> que la oficina tiene apuntado «a cuenta» en las notas de Golden.</li>
-<li>En las fichas de la app <b>no está apuntado el plazo de pago de ningún cliente</b>: por eso nadie sabía quién iba con retraso.${ejemplos.length ? ' Por ejemplo, ' + ejemplos.map(x => `${esc(x.nom)} debe ${eur(x.queda)}`).join(' y ') + '.' : ''}</li>
+<li>En las fichas de la app <b>no está apuntado cuándo paga ningún cliente</b>: por eso nadie sabía quién iba con retraso.${ejemplos.length ? ' Por ejemplo, ' + ejemplos.map(x => `${esc(x.nom)} debe ${eur(x.queda)}`).join(' y ') + '.' : ''}</li>
 </ul></section>
 
 <section class="bloque"><h2>Para preguntar a Carmen</h2><ul>
 <li>¿Hay cobros hechos (transferencias, efectivo) que no estén marcados en Golden › Tesorería? Marcarlos el mismo día y con la fecha real.</li>
 <li>De las facturas de más de 2 meses sin nota (marcadas abajo en naranja): ¿cuáles están cobradas y cuáles se deben de verdad?</li>
 <li>Cuando un cliente paga una parte sin decir de qué albarán, apuntarlo en la nota como «A cuenta 300 €»: la app ya lo resta.</li>
-<li>Plazo de pago de cada cliente (al contado, semanal, 15 días, al mes): decirlo para apuntarlo en su ficha.</li>
+<li>Cuándo paga cada cliente (al contado, semanal, cada 15 días o al mes y qué día): apuntarlo en su ficha › «📅 Cuándo paga». Con eso la app avisa cuándo le toca y si se ha pasado.</li>
 </ul></section>
 
 <section class="bloque"><h2>Clientes que deben (${lista.length})</h2>

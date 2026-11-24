@@ -15,7 +15,7 @@ const fecha = f => f ? new Date(f + 'T12:00:00').toLocaleDateString('es-ES', { d
 const mes = f => new Date(f + 'T12:00:00').toLocaleDateString('es-ES', { month: 'short', year: '2-digit' });
 
 // «A cuenta» en la nota de Golden = ya pagado (Tito, 24/11/2026): «total» pasa a ser lo que de verdad queda por cobrar; «factura», el total de la factura.
-const COBROS = `(select tipo, estado, vencimiento, serie, numero, fecha_factura, nombre, total factura,
+const COBROS = `(select tipo, estado, vencimiento, serie, numero, fecha_factura, nombre, codigo, total factura,
   greatest(0, total - coalesce((select sum((p->>'importe')::numeric) from jsonb_array_elements(t.observacion_partes) p), 0)) total from golden_tesoreria t) c`;
 const [[g], ventas, deudores, recibos, [cob], [pag], [prov], [cli], tareas] = await Promise.all([
   sql(`select max(fecha)::text hasta from golden_facturas where not borrador`),
@@ -48,6 +48,22 @@ const [[g], ventas, deudores, recibos, [cob], [pag], [prov], [cli], tareas] = aw
        union all select 'Posibles clientes', max(fecha)::text from resumen_leads union all select 'Plan de la semana', max(fecha)::text from resumen_semana`),
 ]);
 
+/* 📅 Avisos de cobro (Tito, 24/11/2026): cuándo le toca pagar a cada cliente según su ficha (pago_frecuencia/pago_dia) o, si no está apuntado, supuesto
+   (factura P de fin de mes = al mes, día 7 del mes siguiente; otra = al contado). Misma regla que la app (fechaPrevista en public/index.html). */
+const [pendAv, pagaron] = await Promise.all([
+  sql(`select c2.nombre_comercial nc, c.nombre, c.serie, c.fecha_factura::text ff, c.total, c2.pago_frecuencia frec, c2.pago_dia dia, c2.pago_nota nota
+       from ${COBROS} left join clientes c2 on upper(c2.codigo) = upper(c.codigo) where c.tipo = 'C' and c.estado = 'PEN' and c.total > 0.009`),
+  sql(`select nombre, serie, numero, total, fecha_cobro_pago::text fc from golden_tesoreria where tipo = 'C' and estado = 'CO' and fecha_cobro_pago >= current_date - 7 and fecha_cobro_pago > fecha_factura order by fecha_cobro_pago desc`),
+]);
+const hoyS = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Madrid' }), sumaD = (f, n) => { const d = new Date(f + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toLocaleDateString('sv-SE'); };
+const prevista = (ff, frec, dia) => { if (frec === 'contado') return ff; if (frec === 'quincenal') return sumaD(ff, 15);
+  if (frec === 'semanal') { if (!(dia >= 1 && dia <= 7)) return sumaD(ff, 7); let f = ff; do f = sumaD(f, 1); while (((new Date(f + 'T12:00:00').getDay() + 6) % 7) + 1 !== dia); return f; }
+  const d = new Date(ff + 'T12:00:00'), fin = new Date(d.getFullYear(), d.getMonth() + 2, 0).getDate(); d.setDate(1); d.setMonth(d.getMonth() + 1); d.setDate(Math.min(dia || 7, fin)); return d.toLocaleDateString('sv-SE'); };
+const AV = {}; pendAv.forEach(t => { const n = (t.nc || t.nombre || '').trim(), frec = t.frec || (t.serie === 'P' ? 'mensual' : 'contado'), p = prevista(t.ff, frec, t.frec ? t.dia : null);
+  const a = AV[n] || (AV[n] = { n, p, t: 0, ap: !!t.frec, nota: t.nota }); a.t += Number(t.total); if (p < a.p) a.p = p; });
+const avL = Object.values(AV), tarde = avL.filter(a => a.p < hoyS).sort((a, b) => a.p.localeCompare(b.p)), proximos = avL.filter(a => a.p >= hoyS && a.p <= sumaD(hoyS, 7)).sort((a, b) => a.p.localeCompare(b.p));
+const liAv = a => `<li><b>${esc(a.n)}</b> · ${eur(a.t)} <small>(${a.p === hoyS ? 'HOY' : fecha(a.p)}${a.ap ? '' : ', fecha supuesta'}${a.nota ? ' · ' + esc(a.nota) : ''})</small></li>`;
+const nApuntados = avL.filter(a => a.ap).length;
 const maxBase = Math.max(...ventas.map(v => Number(v.base) || 0), 1);
 const filasVentas = ventas.map((v, i) => {
   const margen = v.base_c > 0 ? Math.round((v.base_c - v.coste) / v.base_c * 100) + ' %' : '—';
@@ -92,7 +108,7 @@ td.barra span{display:block;height:12px;background:var(--bar);border-radius:3px}
 ul{padding-left:20px;margin:4px 0}li{margin:5px 0;overflow-wrap:anywhere}
 a{color:var(--acc)}
 button.tl{all:unset;display:block;cursor:pointer;text-align:left}button.tl:focus-visible{outline:2px solid var(--acc);border-radius:10px}button.tl .t{height:100%;box-sizing:border-box}
-details{border-top:1px solid var(--line);padding:8px 0}summary{cursor:pointer;min-height:24px;overflow-wrap:anywhere}.antigua{color:var(--warn)}
+details{border-top:1px solid var(--line);padding:8px 0}summary{cursor:pointer;min-height:24px;overflow-wrap:anywhere}.r{color:var(--warn)}.antigua{color:var(--warn)}
 html{scroll-behavior:smooth}#cobros{scroll-margin-top:12px}
 </style>
 <main>
@@ -111,6 +127,12 @@ ${tarjeta(cli.activos, 'clientes activos')}
 ${filasVentas}
 </tbody></table>
 <p class="pie">* Mes en curso. Las facturas mensuales (serie P) salen a final de mes: el mes en curso parece bajo hasta entonces.</p></section>
+
+<section><h2>📅 Avisos de cobro</h2>
+<p class="pie">Según cuándo paga cada cliente. ${nApuntados ? nApuntados + ' con la fecha apuntada en su ficha; el resto, supuesta (al mes = día 7 del mes siguiente).' : 'Aún no hay ningún cliente con su fecha de pago apuntada en la ficha: las fechas son supuestas (al mes = día 7 del mes siguiente). Se apunta en la app › ficha del cliente › «📅 Cuándo paga».'}</p>
+<details${proximos.length ? ' open' : ''}><summary><b>Le toca pagar en 7 días (${proximos.length})</b></summary><ul>${proximos.map(liAv).join('') || '<li>Nadie.</li>'}</ul></details>
+<details><summary><b class="r">Se ha pasado su fecha (${tarde.length})</b></summary><ul>${tarde.map(liAv).join('')}</ul></details>
+<details open><summary><b>Han pagado esta semana (${pagaron.length})</b></summary><ul>${pagaron.map(x => `<li><b>${esc((x.nombre || '').trim())}</b> · ${eur(x.total)} <small>(factura ${esc(x.serie)}/${esc(x.numero)}, marcada cobrada el ${fecha(x.fc)})</small></li>`).join('') || '<li>Nadie marcado como cobrado en Golden.</li>'}</ul></details></section>
 
 <section id="cobros"><h2>📥 Cobros (Golden)</h2>
 <p>Deuda (hasta ${mesPasado}): <b>${eur(cob.vencido)}</b>. De ella, <b>${eur(Number(cob.vencido) - Number(cob.antigua || 0))}</b> es de ${mesPasado} y <b>${eur(cob.antigua)}</b> de antes (deuda antigua).</p>
