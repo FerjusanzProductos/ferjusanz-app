@@ -1311,6 +1311,13 @@ function go(view, params, opts) {
 }
 /* Formularios con cambios sin guardar (Tito, 24/11/2026: «lo relleno, salgo y creo que está guardado»): window.__sinGuardar() → true si hay algo sin guardar */
 addEventListener('beforeunload', e => { if (window.__sinGuardar && window.__sinGuardar()) { e.preventDefault(); e.returnValue = ''; } });  /* cerrar la pestaña con cambios sin guardar */
+function compartirPantalla(titulo) {
+  const u = new URL(location.origin + location.pathname); u.searchParams.set('ver', state.view);
+  const p = Object.assign({}, state.params || {}); if (Object.keys(p).length) u.searchParams.set('p', JSON.stringify(p));
+  const texto = 'Mira esto en la app de Ferjusanz' + (titulo ? ' (' + titulo + ')' : '') + ':';
+  if (navigator.share) { navigator.share({ title: 'Ferjusanz' + (titulo ? ' · ' + titulo : ''), text: texto, url: u.href }).catch(() => { }); return; }
+  (navigator.clipboard ? navigator.clipboard.writeText(u.href) : Promise.reject()).then(() => toast('🔗 Enlace copiado. Pégalo en WhatsApp.', 'ok')).catch(() => prompt('Copia este enlace:', u.href));
+}
 function puedeSalir() { if (!(window.__sinGuardar && window.__sinGuardar())) { window.__sinGuardar = null; return true; } if (!confirm('Has cambiado datos y NO están guardados.\n\nAceptar = salir sin guardar · Cancelar = quedarme para pulsar «Guardar»')) return false; window.__sinGuardar = null; return true; }
 function atras(fallback) { if (NAV.d > 0) history.back(); else if (fallback) fallback(); else go('inicio', {}, { replace: true }); }
 window.addEventListener('popstate', e => {
@@ -1357,6 +1364,7 @@ function shell(titulo, contenido, opts) {
       state.view !== 'inicio' ? h('button', { class: 'back', title: 'Menú principal', onclick: () => go('inicio') }, '🏠') : null,
       state.view !== 'inicio' && titulo ? h('span', { class: 'tit' }, titulo) : null,
       h('button', { class: 'chatbtn portalbtn' + (window.__PORTAL_PEND > 0 ? ' nuevo' : ''), title: window.__PORTAL_PEND > 0 ? 'Portal de clientes: hay albaranes nuevos por publicar' : 'Portal de clientes', onclick: () => go('paginasclientes') }, '🌐'),
+      state.view !== 'inicio' ? h('button', { class: 'chatbtn', title: 'Compartir el enlace de esta pantalla', 'aria-label': 'Compartir enlace', onclick: () => compartirPantalla(titulo) }, '🔗') : null,
       h('button', { class: 'chatbtn', title: 'Buscar', onclick: () => go('buscar') }, '🔍'),
       h('button', { class: 'chatbtn', title: 'Ayuda', onclick: () => go('ayuda', { desde: state.view }) }, '❓'),
       h('button', { class: 'chatbtn', title: 'Chat del equipo', onclick: () => go('chat') }, '💬', h('span', { id: 'chatBadge', class: 'insig' }, state.chatNoLeidos ? String(state.chatNoLeidos) : '')),
@@ -6114,6 +6122,7 @@ function vistaMas() {
   sifMirarActiva();
   { const ay = LS.get('fj_ir_ayuda', null); if (ay) { LS.set('fj_ir_ayuda', null); setTimeout(() => abrirAyuda(ay), 0); } }
   if (LS.get('fj_ir', null) === 'recib') { LS.set('fj_ir', null); LS.set('fj_compras_modo', 'recib'); setTimeout(() => go('compras'), 0); return; }
+  { const iv = LS.get('fj_ir_ver', null); if (iv && iv.v) { LS.set('fj_ir_ver', null); setTimeout(() => go(iv.v, iv.p || {}), 0); return; } }
   const c = (ico, t, f, color, badge) => h('button', { class: 'circ', onclick: f }, h('span', { class: 'c', style: '--c:' + color }, ico, badge ? h('span', { class: 'insig' }, badge) : null), h('span', { class: 'l' }, t));
   const CORTO = { 'Hoja de compra para hoy': 'Hoja compra hoy', 'Precios de compra del día': 'Precios compra del día', 'A quién compramos hoy': 'A quién compramos', 'Facturas de proveedores': 'Facturas proveed.', 'Facturas de clientes': 'Facturas clientes', 'Histórico de Golden': 'Histórico Golden', 'Registro de cambios': 'Registro cambios', 'Copia de seguridad': 'Copia seguridad', 'Lista de pedidos': 'Lista pedidos', 'Escanear pedido': 'Escanear pedido', 'Hoja de carga': 'Hoja de carga', 'Hoja de compra': 'Hoja compra', 'Avisos y ofertas': 'Avisos y ofertas' };
   /* Cada grupo es UN rosco: círculos alrededor de un centro. Si hay muchos, un segundo anillo por dentro. Todo visible y pulsable. */
@@ -14849,6 +14858,8 @@ async function waMostrarOrigen(cont, pedidoId) {
 }
 
 /* Compartir desde WhatsApp (Web Share Target): el texto llega en la dirección y se guarda hasta entrar */
+/* Enlace a una pantalla (Tito, 24/11/2026: «en cada pestaña se pueda compartir enlace»): ?ver=deudas[&p={…}] → al entrar (con su usuario) se abre esa pantalla */
+(function () { try { const p = new URLSearchParams(location.search), v = p.get('ver'); if (v && /^[a-z]{2,30}$/.test(v)) { let pa = {}; try { pa = JSON.parse(p.get('p') || '{}') || {}; } catch (e) { } LS.set('fj_ir_ver', { v, p: pa }); history.replaceState(null, '', location.pathname); } } catch (e) { } })();
 (function () { try { const p = new URLSearchParams(location.search); if (p.get('ir') === 'recib') { LS.set('fj_ir', 'recib'); history.replaceState(null, '', location.pathname); } } catch (e) { } })();
 (function () { try { const p = new URLSearchParams(location.search); if (p.has('text') || p.has('title')) { const t = (p.get('text') || '') || (p.get('title') || ''); if (t.trim()) localStorage.setItem('fj_wa_pend_raw', t); history.replaceState(null, '', location.pathname); } } catch (e) { } })();
 
