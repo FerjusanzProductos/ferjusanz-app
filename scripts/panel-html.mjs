@@ -88,7 +88,7 @@ th,td{font-size:.95rem}
 td.barra span{display:block;height:12px;background:var(--bar);border-radius:3px}
 ul{padding-left:20px;margin:4px 0}li{margin:5px 0;overflow-wrap:anywhere}
 a{color:var(--acc)}
-a.tl{text-decoration:none;color:inherit;display:block}a.tl .t{height:100%;box-sizing:border-box}
+button.tl{all:unset;display:block;cursor:pointer;text-align:left}button.tl:focus-visible{outline:2px solid var(--acc);border-radius:10px}button.tl .t{height:100%;box-sizing:border-box}
 details{border-top:1px solid var(--line);padding:8px 0}summary{cursor:pointer;min-height:24px;overflow-wrap:anywhere}.antigua{color:var(--warn)}
 html{scroll-behavior:smooth}#cobros{scroll-margin-top:12px}
 </style>
@@ -97,7 +97,7 @@ html{scroll-behavior:smooth}#cobros{scroll-margin-top:12px}
 <p class="sub">Actualizado el ${ahora}. Datos de Golden hasta el ${fecha(g.hasta)}. Solo datos reales: los pedidos y cobros de la app aún son de prueba.</p>
 
 <div class="tarjetas">
-<a class="tl" href="#cobros">${tarjeta(eur(cob.vencido), `deuda hasta ${mesPasado} (${cob.n_venc} recibos) · ver quién ›`, true)}</a>
+<button type="button" class="tl" onclick="document.getElementById('cobros').scrollIntoView({behavior:'smooth'})">${tarjeta(eur(cob.vencido), `deuda hasta ${mesPasado} (${cob.n_venc} recibos) · ver quién ›`, true)}</button>
 ${tarjeta(eur(ventas.at(-2)?.base), `ventas de ${ventas.at(-2) ? mes(ventas.at(-2).m) : 'el mes pasado'} (sin IVA)`)}
 ${tarjeta(prov.por_revisar, 'facturas de proveedor por revisar', prov.por_revisar > 0)}
 ${tarjeta(cli.activos, 'clientes activos')}
