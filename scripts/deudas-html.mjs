@@ -12,6 +12,7 @@ const sql = async q => {
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const r2 = n => Math.round((Number(n) || 0) * 100) / 100;
 const eur = n => r2(n).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+const num = (n, d) => (Number(n) || 0).toLocaleString('es-ES', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 3 });
 const fecha = f => f ? new Date(f + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: '2-digit' }) : '—';
 const numGolden = (s, n) => (s ? s + '/' : '') + String(n || '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 const dias = (a, b) => Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 864e5);
@@ -31,7 +32,7 @@ const cods = [...new Set(pend.map(t => String(t.codigo || '').toUpperCase()))];
 const nums = pend.map(t => numGolden(t.serie, t.numero));
 const [clis, lineas, cobros, fact] = await Promise.all([
   sql(`select upper(codigo) cod, nombre, nombre_comercial, forma_pago, dias_pago, telefono, email, pago_frecuencia, pago_dia, pago_nota from clientes where upper(codigo) in (${lit(cods)})`),
-  sql(`select factura_numero f, albaran a, sum(importe) t, count(*) n from golden_lineas where factura_numero in (${lit(nums)}) and not coalesce(repetida, false) group by 1, 2`),
+  sql(`select factura_numero f, albaran a, orden, descripcion d, cantidad c, precio p, iva, importe i from golden_lineas where factura_numero in (${lit(nums)}) and not coalesce(repetida, false) order by orden`),
   sql(`select upper(codigo) cod, fecha_factura::text ff, fecha_cobro_pago::text fc, total from golden_tesoreria
        where tipo = 'C' and estado = 'CO' and upper(codigo) in (${lit(cods)}) and fecha_factura >= current_date - 365 order by fecha_cobro_pago desc`),
   sql(`select upper(cliente_codigo) cod, serie, fecha::text f from golden_facturas where not borrador and fecha >= current_date - 150 and upper(cliente_codigo) in (${lit(cods)})`),
@@ -60,7 +61,9 @@ for (const t of pend) {
   const x = C[cod] || (C[cod] = { cod, nom: cl.nombre_comercial || (t.nombre || '').trim(), fiscal: (t.nombre || '').trim(), cl, fs: [], queda: 0, total: 0, antigua: 0, pasado: 0, actual: 0 });
   const pag = pagadoNota(t), queda = Math.max(0, r2(Number(t.total) - pag)); if (queda <= 0.009) continue;
   const ff = t.ff || t.v, num = numGolden(t.serie, t.numero), pagados = albPagados(t);
-  const albs = lineas.filter(l => l.f === num).map(l => { const n = (String(l.a).match(/\/\s*(\d+)\s+de/) || [])[1]; return { txt: l.a ? String(l.a).replace(/^Alb\.\s*/, 'Albarán ') : 'Ticket (venta sin albarán)', n, t: r2(l.t), pagado: n && pagados.has(n) }; }).sort((a, b) => a.txt.localeCompare(b.txt));
+  const grupos = {}; for (const l of lineas.filter(l => l.f === num)) (grupos[l.a] = grupos[l.a] || { a: l.a, t: 0, prods: [] }).prods.push(l);
+  for (const g of Object.values(grupos)) g.t = g.prods.reduce((s, l) => s + Number(l.i || 0), 0);
+  const albs = Object.values(grupos).map(l => { const n = (String(l.a).match(/\/\s*(\d+)\s+de/) || [])[1]; return { txt: l.a ? String(l.a).replace(/^Alb\.\s*/, 'Albarán ') : 'Ticket (venta sin albarán)', n, t: r2(l.t), pagado: n && pagados.has(n), prods: l.prods }; }).sort((a, b) => a.txt.localeCompare(b.txt));
   x.fs.push({ t, num, ff, pag, queda, albs, edad: dias(ff, hoyS) }); x.queda += queda; x.total += Number(t.total);
   if (ff >= ini) x.actual += queda; else if (ff >= iniPasado) x.pasado += queda; else x.antigua += queda;
 }
@@ -93,10 +96,10 @@ const mensualesPasado = r2(lista.filter(x => /Al mes/.test(x.pago)).reduce((a, x
 const nombra = (re) => lista.find(x => re.test(x.nom + ' ' + x.fiscal));
 const ejemplos = [nombra(/florencio/i), nombra(/tejas/i)].filter(Boolean);
 
-const filasXls = lista.flatMap(x => x.fs.flatMap(f => (f.albs.length ? f.albs : [{ txt: 'Ticket (venta sin albarán)', t: f.queda, pagado: false }]).map(al => ({
+const filasXls = lista.flatMap(x => x.fs.flatMap(f => (f.albs.length ? f.albs : [{ txt: 'Ticket (venta sin albarán)', t: f.queda, pagado: false, prods: [{}] }]).flatMap(al => al.prods.map(l => ({
   Cliente: x.nom, 'Razón social': x.fiscal, Código: x.cod, Factura: f.num, 'Fecha factura': f.ff, 'Días': f.edad, Albarán: al.txt, 'Importe albarán': al.t,
   'Estado albarán': al.pagado ? 'pagado a cuenta' : 'sin pagar', 'Total factura': r2(f.t.total), 'Pagado a cuenta (factura)': f.pag, 'Queda (factura)': f.queda,
-  'Nota de Golden': f.t.observacion || '', 'Cómo paga (Golden)': x.pago, 'Cuándo paga (ficha)': x.cuando, 'Puede que esté pagada': x.sospechosas.includes(f) ? 'SÍ, revisar' : '' }))));
+  'Nota de Golden': f.t.observacion || '', 'Cómo paga (Golden)': x.pago, 'Cuándo paga (ficha)': x.cuando, 'Puede que esté pagada': x.sospechosas.includes(f) ? 'SÍ, revisar' : '', Producto: l.d || '', Cantidad: Number(l.c) || null, Precio: Number(l.p) || null, 'IVA %': Number(l.iva) || null, 'Importe producto': Number(l.i) || null })))));
 const filasCli = lista.map(x => ({ Cliente: x.nom, Código: x.cod, 'Queda por cobrar': r2(x.queda), Antiguo: r2(x.antigua), [mesPasado]: r2(x.pasado), [mesActual]: r2(x.actual),
   'Cómo paga (Golden)': x.pago, 'Cuándo paga (ficha)': x.cuando, 'Último cobro': x.ultCobro || '', Teléfono: x.cl.telefono || '', 'Falta apuntar': x.faltas.join(' | ') }));
 const tarjeta = (cifra, txt, cls) => `<div class="t ${cls || ''}"><b>${cifra}</b><span>${txt}</span></div>`;
@@ -106,7 +109,8 @@ const filaCli = x => {
   <div class="fra-c"><div><b>Factura ${esc(f.num)}</b> <small>del ${fecha(f.ff)} · hace ${f.edad} días</small></div><div class="imp"><b>${eur(f.queda)}</b>${f.pag ? `<small>de ${eur(f.t.total)}</small>` : ''}</div></div>
   ${f.pag ? `<div class="acta">Pagado a cuenta: <b>${eur(f.pag)}</b> · según la nota de Golden: «${esc(f.t.observacion)}»</div>` : ''}
   ${f.t.aviso ? `<div class="avi">⚠️ ${esc(f.t.aviso)}</div>` : ''}
-  ${f.albs.length ? `<details open><summary>${f.albs.length} ${f.albs.length === 1 ? 'albarán' : 'albaranes'}</summary><table><tbody>${f.albs.map(a => `<tr${a.pagado ? ' class="pg"' : ''}><td>${esc(a.txt)}</td><td>${a.pagado ? 'pagado a cuenta' : 'sin pagar'}</td><td class="n">${eur(a.t)}</td></tr>`).join('')}</tbody></table></details>` : `<div class="sub">Ticket de venta directa: sin albaranes en Golden.</div>`}
+  ${f.albs.length ? `<details open><summary>${f.albs.length} ${f.albs.length === 1 ? 'albarán' : 'albaranes'}</summary>${f.albs.map(a => `<details class="alb${a.pagado ? ' pg' : ''}"><summary><span>${esc(a.txt)}</span><span class="est">${a.pagado ? 'pagado a cuenta' : 'sin pagar'}</span><b class="n">${eur(a.t)}</b></summary>
+<table class="ped"><thead><tr><th>Producto</th><th class="n">Cant.</th><th class="n">Precio</th><th class="n">Importe</th></tr></thead><tbody>${a.prods.map(l => `<tr><td>${esc(l.d)}</td><td class="n">${num(l.c)}</td><td class="n">${num(l.p, 2)} €</td><td class="n">${eur(l.i)}</td></tr>`).join('')}</tbody></table></details>`).join('')}</details>` : `<div class="sub">Ticket de venta directa: sin albaranes en Golden.</div>`}
 </div>`).join('');
   return `<article class="cli ${est}" id="c-${esc(x.cod.replace(/[^A-Z0-9]/g, ''))}">
 <header><div><h3>${esc(x.nom)}</h3><small>${esc(x.fiscal)} · código ${esc(x.cod)}</small></div><div class="imp"><b>${eur(x.queda)}</b><small>${x.fs.length} ${x.fs.length === 1 ? 'factura' : 'facturas'}</small></div></header>
@@ -164,6 +168,9 @@ td{padding:4px 2px;border-top:1px solid var(--line)}td.n{text-align:right;white-
 .bajar button:disabled{opacity:.5}.bajar button:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 table.cuando th{text-align:left;font-size:.78rem;color:var(--muted);padding:4px 2px}.hueco{color:var(--muted)}
 .tabla-cuando{overflow-x:auto}.cuando td{vertical-align:top}.cuando select,.cuando input{font:inherit;font-size:.9rem;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);min-height:34px;max-width:9.5rem}
+details.alb{border-top:1px solid var(--line);padding:2px 0}details.alb>summary{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;font-weight:400;color:var(--fg);font-size:.88rem;padding:5px 0}
+details.alb>summary .est{color:var(--muted);font-size:.8rem}details.alb.pg>summary .est{color:var(--acc)}details.alb.pg>summary{color:var(--muted)}
+details.alb>summary::marker{content:''}details.alb>summary>span:first-child::before{content:'▸ ';color:var(--acc)}details.alb[open]>summary>span:first-child::before{content:'▾ '}table.ped{margin:2px 0 8px;background:var(--bg);border-radius:6px}table.ped th{font-size:.75rem;color:var(--muted);font-weight:600;text-align:left;padding:4px}table.ped th.n,table.ped td.n{text-align:right}table.ped td{padding:3px 4px}
 .pasos{margin:0 0 8px;padding-left:22px;display:grid;gap:4px}
 @media (max-width:600px){table.cuando thead{display:none}table.cuando,table.cuando tbody{display:block}
 table.cuando tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px 8px;padding:10px 0;border-top:1px solid var(--line)}
@@ -217,7 +224,7 @@ ${lista.map(x => `<tr data-cod="${esc(x.cod)}" data-nom="${esc(x.nom)}" data-gol
 </ul></section>
 
 <section class="bloque"><h2>Clientes que deben (${lista.length})</h2>
-<p class="sub">Del que más debe al que menos. Borde rojo: tiene deuda antigua. Ámbar: solo de ${mesPasado}. Cada factura lleva todos sus albaranes desglosados.</p>
+<p class="sub">Del que más debe al que menos. Borde rojo: tiene deuda antigua. Ámbar: solo de ${mesPasado}. Cada factura lleva todos sus albaranes; pulsa un albarán para ver el pedido (productos, cantidades y precios).</p>
 <div class="indice">${lista.map(x => `<button type="button" data-ir="c-${esc(x.cod.replace(/[^A-Z0-9]/g, ''))}">${esc(x.nom)} · ${eur(x.queda)}</button>`).join('')}</div></section>
 
 ${lista.map(filaCli).join('\n')}
@@ -246,6 +253,7 @@ async function hojas() {
   const W = 794, H = 1123, M = 28, ancho = W - 2 * M, out = []; let c = null, y = 0;
   const nueva = () => { c = document.createElement('canvas'); c.width = W * 2; c.height = H * 2; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); out.push(c); y = M; };
   document.documentElement.dataset.theme = 'light';
+  const cerrados = [...document.querySelectorAll('details:not([open])')]; cerrados.forEach(d => d.open = true);
   const bloques = [...document.querySelectorAll('main > *')].filter(el => !el.classList.contains('bajar'));
   nueva();
   for (const [i, el] of bloques.entries()) {
@@ -262,6 +270,7 @@ async function hojas() {
     }
   }
   delete document.documentElement.dataset.theme;
+  cerrados.forEach(d => d.open = false);
   return out;
 }
 const accion = {
