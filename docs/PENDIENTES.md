@@ -109,6 +109,7 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - 🟡 Prueba completa de facturas en la naranja el **15–18/12** con Fernando (`docs/GUION_PRUEBA_DICIEMBRE.md`).
 
 ### 🧮 Jorge (contable)
+- 🟡 **Alta de la S.L. en el ROI (operaciones dentro de la UE, modelo 036)**: 360dialog no pudo validar el NIF-IVA ESB87446670 en VIES y cobra **19 % de IVA alemán** en cada cuota (aviso del 22/11/2026). **Tito**: preguntarle a Jorge si conviene darla de alta; con el ROI, sus facturas irían sin ese IVA.
 _Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/artifact/5qQe3mrM3E9wHwrQACgkmG (`docs/PREGUNTAS_JORGE.md`). Lo que conteste se quita de aquí y de esa hoja._
 - 🔴 **Empezar a facturar con la app el 1/1/2027** (Jorge, 19/11). La app **no manda nada a Hacienda**: Jorge ve las facturas, las pasa a su programa y las presenta él. Si el retraso de Verifactu **no** saliera en el BOE antes del 1/1, avisar a Jorge (la tarea de los lunes lo mira).
 - ⏸ **Desde el 1/1/2027** (Tito, 19/11: «hasta entonces no le molestes»): decirle a Jorge que el panel está en la app (Inicio › «📊 Panel Ferjusanz»). La tarea del PDF por correo (`trig_01VdFykjdQdDrj3rtDFBuifF`, apagada) ya no hace falta: borrarla si nadie la echa de menos.
