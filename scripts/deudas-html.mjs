@@ -163,6 +163,12 @@ td{padding:4px 2px;border-top:1px solid var(--line)}td.n{text-align:right;white-
 .bajar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.bajar button{font:600 .95rem var(--sans);background:var(--acc);color:#fff;border:0;border-radius:999px;padding:8px 14px;min-height:40px;cursor:pointer}
 .bajar button:disabled{opacity:.5}.bajar button:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 table.cuando th{text-align:left;font-size:.78rem;color:var(--muted);padding:4px 2px}.hueco{color:var(--muted)}
+.tabla-cuando{overflow-x:auto}.cuando td{vertical-align:top}.cuando select,.cuando input{font:inherit;font-size:.9rem;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);min-height:34px;max-width:9.5rem}
+.pasos{margin:0 0 8px;padding-left:22px;display:grid;gap:4px}
+@media (max-width:600px){table.cuando thead{display:none}table.cuando,table.cuando tbody{display:block}
+table.cuando tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px 8px;padding:10px 0;border-top:1px solid var(--line)}
+table.cuando td{border:0;padding:0}table.cuando td:nth-child(1){font-weight:600}table.cuando td:nth-child(2){font-size:.85rem;color:var(--muted)}
+table.cuando td:nth-child(5){grid-column:1/-1}.cuando select,.cuando input{width:100%;max-width:none;box-sizing:border-box}}
 @media (max-width:480px){.pago{grid-template-columns:minmax(0,1fr)}}
 </style>
 <main>
@@ -192,10 +198,16 @@ ${sosp.map(x => `<li><b>${esc(x.nom)}</b>: pagó la del ${fecha(x.ultFfCobrada)}
 </ul></section>` : ''}
 
 <section class="bloque"><h2>Carmen: apuntar cuándo paga cada cliente</h2>
-<p class="sub">Ningún cliente lo tiene apuntado. Que Carmen confirme o corrija lo que dice Golden y lo apunte en la app: ficha del cliente › «📅 Cuándo paga» (al contado, cada semana y qué día, cada 15 días o al mes y qué día). Con eso la app avisa cuándo le toca y si se retrasa.</p>
-<table class="cuando"><thead><tr><th>Cliente</th><th>Según Golden</th><th>Suele tardar</th><th>Día que paga</th></tr></thead><tbody>
-${lista.map(x => `<tr><td>${esc(x.nom)}</td><td>${esc(x.pago)}</td><td>${x.medDias != null ? x.medDias + ' días' : '—'}</td><td>${x.cl.pago_frecuencia ? esc(x.cuando) : '<span class="hueco">…………</span>'}</td></tr>`).join('')}
-</tbody></table></section>
+<ol class="pasos"><li><b>Aquí mismo:</b> en cada cliente, elige cómo paga y pon el día (aproximado vale: «día 10», «sobre el 5», «los lunes»). Se queda guardado en este móvil u ordenador.</li>
+<li>Al terminar, pulsa <b>«💾 Guardar lo apuntado»</b> y manda a Tito el Excel que sale.</li>
+<li><b>En Golden:</b> en la ficha de cada cliente que paga al mes, rellena <b>«Día de Pago 1»</b> con el día aproximado (y «Día de Pago 2» si paga dos veces al mes). Golden ya tiene esos huecos, vacíos en todos los clientes.</li></ol>
+<p class="sub">«Según Golden» es lo que se deduce de sus facturas; «suele tardar» son días entre la factura y el cobro marcado. Corrígelo si no es así.</p>
+<div class="tabla-cuando"><table class="cuando"><thead><tr><th>Cliente</th><th>Según Golden</th><th>Cómo paga</th><th>Día aprox.</th><th>Nota</th></tr></thead><tbody>
+${lista.map(x => `<tr data-cod="${esc(x.cod)}" data-nom="${esc(x.nom)}" data-golden="${esc(x.pago)}"><td>${esc(x.nom)}</td><td>${esc(x.pago)}${x.medDias != null ? `<br><small>suele tardar ${x.medDias} días</small>` : ''}</td>
+<td><select aria-label="Cómo paga ${esc(x.nom)}" data-c="frec"><option value="">Cómo paga…</option><option>Al contado</option><option>Cada semana</option><option>Cada 15 días</option><option>Al mes</option></select></td>
+<td><input aria-label="Día que paga ${esc(x.nom)}" data-c="dia" size="8" placeholder="día 10"></td><td><input aria-label="Nota ${esc(x.nom)}" data-c="nota" size="12" placeholder="Nota (opcional)"></td></tr>`).join('')}
+</tbody></table></div>
+<div class="bajar"><button type="button" data-bajar="carmen">💾 Guardar lo apuntado</button><span id="estado2" class="sub" role="status"></span></div></section>
 
 <section class="bloque"><h2>Para preguntar a Carmen</h2><ul>
 <li>¿Hay cobros hechos (transferencias, efectivo) que no estén marcados en Golden › Tesorería? Marcarlos el mismo día y con la fecha real.</li>
@@ -218,11 +230,15 @@ ${lista.map(filaCli).join('\n')}
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
 // Descargas (Tito, 25/11/2026: «que se pueda ver en jpg, pdf y Excel»). Cada bloque se dibuja aparte y se reparte en hojas A4 (una página entera no cabe en un solo dibujo).
-const est = document.getElementById('estado'), botones = [...document.querySelectorAll('[data-bajar]')];
+const est = { set textContent(v) { for (const id of ['estado', 'estado2']) document.getElementById(id).textContent = v; } }, botones = [...document.querySelectorAll('[data-bajar]')];
 const nombre = 'Deudas de clientes ' + new Date().toLocaleDateString('sv-SE');
-let dl = null; (window.claude && claude.use ? claude.use('downloads') : Promise.resolve(null)).then(d => { dl = d; if (!d) document.querySelector('.bajar').hidden = true; });
+let dl = null; if (window.claude && claude.use) claude.use('downloads').then(d => { dl = d; });
 async function guardar(filename, data) {
-  if (!dl) return;
+  if (!dl) { // abierto como archivo suelto (WhatsApp, Chrome): descarga normal del navegador
+    const f = new File([data instanceof Blob ? data : new Blob([data])], filename);
+    if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f], title: filename }); est.textContent = 'Enviado: ' + filename; return; } catch (e) { if (e.name === 'AbortError') return; } }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(data instanceof Blob ? data : new Blob([data])); a.download = filename; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+    est.textContent = 'Descargado: ' + filename; return; }
   try { await dl.save({ filename, data }); est.textContent = 'Listo: ' + filename; }
   catch (e) { est.textContent = e && e.code === 'declined' ? '' : e && e.code === 'host_unavailable' ? 'Esta app no deja guardar: ábrelo en Chrome.' : 'No se pudo guardar (' + ((e && e.code) || 'error') + ').'; }
 }
@@ -258,9 +274,20 @@ const accion = {
     await guardar(nombre + ' (JPG).zip', await z.generateAsync({ type: 'blob' })); },
   async xlsx() { const d = JSON.parse(document.getElementById('datos').textContent), wb = XLSX.utils.book_new();
     const hoja = (rows, nom) => { const ws = XLSX.utils.json_to_sheet(rows); ws['!cols'] = Object.keys(rows[0] || {}).map(k => ({ wch: Math.min(45, Math.max(10, k.length + 2, ...rows.map(r => String(r[k] ?? '').length))) })); ws['!autofilter'] = { ref: ws['!ref'] }; XLSX.utils.book_append_sheet(wb, ws, nom); };
-    hoja(d.clientes, 'Clientes'); hoja(d.filas, 'Albaranes');
+    hoja(d.clientes, 'Clientes'); hoja(d.filas, 'Albaranes'); hoja(respuestas(), 'Cuándo paga');
     await guardar(nombre + '.xlsx', new Blob([XLSX.write(wb, { bookType: 'xlsx', type: 'array' })])); },
 };
+const filasCarmen = [...document.querySelectorAll('tr[data-cod]')];
+const CLAVE = 'deudas-cuando-paga';
+let guardado = {}; try { guardado = JSON.parse(localStorage.getItem(CLAVE) || '{}'); } catch (e) {}
+filasCarmen.forEach(tr => { const g = guardado[tr.dataset.cod] || {}; tr.querySelectorAll('[data-c]').forEach(el => { el.value = g[el.dataset.c] || ''; el.addEventListener('input', () => {
+  const r = guardado[tr.dataset.cod] = guardado[tr.dataset.cod] || {}; r[el.dataset.c] = el.value; try { localStorage.setItem(CLAVE, JSON.stringify(guardado)); } catch (e) {} }); }); });
+const respuestas = () => filasCarmen.map(tr => { const v = c => tr.querySelector('[data-c=' + c + ']').value.trim(); return { Cliente: tr.dataset.nom, Código: tr.dataset.cod, 'Según Golden': tr.dataset.golden, 'Cómo paga (Carmen)': v('frec'), 'Día aprox.': v('dia'), Nota: v('nota') }; });
+accion.carmen = async () => { const r = respuestas(), n = r.filter(x => x['Cómo paga (Carmen)'] || x['Día aprox.'] || x.Nota).length;
+  if (!n) { est.textContent = 'No hay nada apuntado todavía.'; return; }
+  const wb = XLSX.utils.book_new(), ws = XLSX.utils.json_to_sheet(r); ws['!cols'] = [{ wch: 34 }, { wch: 12 }, { wch: 28 }, { wch: 18 }, { wch: 14 }, { wch: 30 }]; XLSX.utils.book_append_sheet(wb, ws, 'Cuándo paga');
+  await guardar('Cuándo paga cada cliente - Carmen ' + new Date().toLocaleDateString('sv-SE') + '.xlsx', new Blob([XLSX.write(wb, { bookType: 'xlsx', type: 'array' })])); };
+botones.push(...document.querySelectorAll('[data-bajar=carmen]'));
 botones.forEach(b => b.addEventListener('click', async () => { botones.forEach(x => x.disabled = true); est.textContent = 'Preparando…';
   try { await accion[b.dataset.bajar](); } catch (e) { est.textContent = 'Error al preparar el archivo.'; console.error(e); } finally { botones.forEach(x => x.disabled = false); } }));
 document.querySelectorAll('[data-ir]').forEach(b => b.addEventListener('click', () => { const el = document.getElementById(b.dataset.ir); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }));

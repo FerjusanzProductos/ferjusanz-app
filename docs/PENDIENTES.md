@@ -140,3 +140,4 @@ _Hoja para la reunión (todo lo que hay que preguntarle): https://claude.ai/arti
 - Resumen de correo automático cada mañana (las tareas programadas no ven Gmail; mientras, **/resumen-correo** en un chat).
 - Cambio de temporada de patata (09-F → 01-F) cuando diga «cambio de temporada patata».
 - No se hace: ocultar las ventas «sin IVA» (ilegal, art. 29.2.j y 201 bis LGT).
+- **Cuándo paga cada cliente (Claude)**: cuando Tito mande el Excel «Cuándo paga cada cliente - Carmen», pasarlo a las fichas (`pago_frecuencia`/`pago_dia`/`pago_nota`). Y leer «Dia de Pago 1/2» de `Clientes.csv` de Golden en `fichas-sql.py` cuando Carmen los rellene.
