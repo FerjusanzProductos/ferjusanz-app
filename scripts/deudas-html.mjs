@@ -60,7 +60,7 @@ for (const t of pend) {
   const x = C[cod] || (C[cod] = { cod, nom: cl.nombre_comercial || (t.nombre || '').trim(), fiscal: (t.nombre || '').trim(), cl, fs: [], queda: 0, total: 0, antigua: 0, pasado: 0, actual: 0 });
   const pag = pagadoNota(t), queda = Math.max(0, r2(Number(t.total) - pag)); if (queda <= 0.009) continue;
   const ff = t.ff || t.v, num = numGolden(t.serie, t.numero), pagados = albPagados(t);
-  const albs = lineas.filter(l => l.f === num).map(l => { const n = (String(l.a).match(/\/\s*(\d+)\s+de/) || [])[1]; return { txt: String(l.a).replace(/^Alb\.\s*/, 'Albarán '), n, t: r2(l.t), pagado: n && pagados.has(n) }; }).sort((a, b) => a.txt.localeCompare(b.txt));
+  const albs = lineas.filter(l => l.f === num).map(l => { const n = (String(l.a).match(/\/\s*(\d+)\s+de/) || [])[1]; return { txt: l.a ? String(l.a).replace(/^Alb\.\s*/, 'Albarán ') : 'Ticket (venta sin albarán)', n, t: r2(l.t), pagado: n && pagados.has(n) }; }).sort((a, b) => a.txt.localeCompare(b.txt));
   x.fs.push({ t, num, ff, pag, queda, albs, edad: dias(ff, hoyS) }); x.queda += queda; x.total += Number(t.total);
   if (ff >= ini) x.actual += queda; else if (ff >= iniPasado) x.pasado += queda; else x.antigua += queda;
 }
@@ -93,6 +93,12 @@ const mensualesPasado = r2(lista.filter(x => /Al mes/.test(x.pago)).reduce((a, x
 const nombra = (re) => lista.find(x => re.test(x.nom + ' ' + x.fiscal));
 const ejemplos = [nombra(/florencio/i), nombra(/tejas/i)].filter(Boolean);
 
+const filasXls = lista.flatMap(x => x.fs.flatMap(f => (f.albs.length ? f.albs : [{ txt: 'Ticket (venta sin albarán)', t: f.queda, pagado: false }]).map(al => ({
+  Cliente: x.nom, 'Razón social': x.fiscal, Código: x.cod, Factura: f.num, 'Fecha factura': f.ff, 'Días': f.edad, Albarán: al.txt, 'Importe albarán': al.t,
+  'Estado albarán': al.pagado ? 'pagado a cuenta' : 'sin pagar', 'Total factura': r2(f.t.total), 'Pagado a cuenta (factura)': f.pag, 'Queda (factura)': f.queda,
+  'Nota de Golden': f.t.observacion || '', 'Cómo paga (Golden)': x.pago, 'Cuándo paga (ficha)': x.cuando, 'Puede que esté pagada': x.sospechosas.includes(f) ? 'SÍ, revisar' : '' }))));
+const filasCli = lista.map(x => ({ Cliente: x.nom, Código: x.cod, 'Queda por cobrar': r2(x.queda), Antiguo: r2(x.antigua), [mesPasado]: r2(x.pasado), [mesActual]: r2(x.actual),
+  'Cómo paga (Golden)': x.pago, 'Cuándo paga (ficha)': x.cuando, 'Último cobro': x.ultCobro || '', Teléfono: x.cl.telefono || '', 'Falta apuntar': x.faltas.join(' | ') }));
 const tarjeta = (cifra, txt, cls) => `<div class="t ${cls || ''}"><b>${cifra}</b><span>${txt}</span></div>`;
 const filaCli = x => {
   const est = x.antigua > 0.009 ? 'roja' : x.pasado > 0.009 ? 'ambar' : 'gris';
@@ -100,7 +106,7 @@ const filaCli = x => {
   <div class="fra-c"><div><b>Factura ${esc(f.num)}</b> <small>del ${fecha(f.ff)} · hace ${f.edad} días</small></div><div class="imp"><b>${eur(f.queda)}</b>${f.pag ? `<small>de ${eur(f.t.total)}</small>` : ''}</div></div>
   ${f.pag ? `<div class="acta">Pagado a cuenta: <b>${eur(f.pag)}</b> · según la nota de Golden: «${esc(f.t.observacion)}»</div>` : ''}
   ${f.t.aviso ? `<div class="avi">⚠️ ${esc(f.t.aviso)}</div>` : ''}
-  ${f.albs.length ? `<details><summary>${f.albs.length} ${f.albs.length === 1 ? 'albarán' : 'albaranes'}</summary><table><tbody>${f.albs.map(a => `<tr${a.pagado ? ' class="pg"' : ''}><td>${esc(a.txt)}</td><td>${a.pagado ? 'pagado a cuenta' : 'sin pagar'}</td><td class="n">${eur(a.t)}</td></tr>`).join('')}</tbody></table></details>` : ''}
+  ${f.albs.length ? `<details open><summary>${f.albs.length} ${f.albs.length === 1 ? 'albarán' : 'albaranes'}</summary><table><tbody>${f.albs.map(a => `<tr${a.pagado ? ' class="pg"' : ''}><td>${esc(a.txt)}</td><td>${a.pagado ? 'pagado a cuenta' : 'sin pagar'}</td><td class="n">${eur(a.t)}</td></tr>`).join('')}</tbody></table></details>` : `<div class="sub">Ticket de venta directa: sin albaranes en Golden.</div>`}
 </div>`).join('');
   return `<article class="cli ${est}" id="c-${esc(x.cod.replace(/[^A-Z0-9]/g, ''))}">
 <header><div><h3>${esc(x.nom)}</h3><small>${esc(x.fiscal)} · código ${esc(x.cod)}</small></div><div class="imp"><b>${eur(x.queda)}</b><small>${x.fs.length} ${x.fs.length === 1 ? 'factura' : 'facturas'}</small></div></header>
@@ -154,9 +160,13 @@ table{width:100%;border-collapse:collapse;font-size:.88rem;font-variant-numeric:
 td{padding:4px 2px;border-top:1px solid var(--line)}td.n{text-align:right;white-space:nowrap}tr.pg td{color:var(--muted)}tr.pg td:nth-child(2){color:var(--acc)}
 .indice{display:flex;flex-wrap:wrap;gap:6px}.indice button{all:unset;cursor:pointer;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:.85rem}
 .indice button:focus-visible,details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.bajar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.bajar button{font:600 .95rem var(--sans);background:var(--acc);color:#fff;border:0;border-radius:999px;padding:8px 14px;min-height:40px;cursor:pointer}
+.bajar button:disabled{opacity:.5}.bajar button:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+table.cuando th{text-align:left;font-size:.78rem;color:var(--muted);padding:4px 2px}.hueco{color:var(--muted)}
 @media (max-width:480px){.pago{grid-template-columns:minmax(0,1fr)}}
 </style>
 <main>
+<div class="bajar" aria-label="Descargar"><button type="button" data-bajar="pdf">📄 PDF</button><button type="button" data-bajar="jpg">🖼️ JPG</button><button type="button" data-bajar="xlsx">📊 Excel</button><span id="estado" class="sub" role="status"></span></div>
 <div><h1>Deudas de clientes</h1>
 <p class="sub">Para revisar con Carmen. Datos de Golden hasta el ${fecha(g.hasta)} (Cobros y facturas), sacados el ${new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}. Lo apuntado «a cuenta» en Golden ya está restado.</p></div>
 
@@ -181,6 +191,12 @@ ${sosp.length ? `<section class="bloque"><h2>Puede que no deban: comprobar con C
 ${sosp.map(x => `<li><b>${esc(x.nom)}</b>: pagó la del ${fecha(x.ultFfCobrada)}; pendientes ${x.sospechosas.map(f => `${esc(f.num)} del ${fecha(f.ff)} (${eur(f.queda)})`).join(', ')}.</li>`).join('')}
 </ul></section>` : ''}
 
+<section class="bloque"><h2>Carmen: apuntar cuándo paga cada cliente</h2>
+<p class="sub">Ningún cliente lo tiene apuntado. Que Carmen confirme o corrija lo que dice Golden y lo apunte en la app: ficha del cliente › «📅 Cuándo paga» (al contado, cada semana y qué día, cada 15 días o al mes y qué día). Con eso la app avisa cuándo le toca y si se retrasa.</p>
+<table class="cuando"><thead><tr><th>Cliente</th><th>Según Golden</th><th>Suele tardar</th><th>Día que paga</th></tr></thead><tbody>
+${lista.map(x => `<tr><td>${esc(x.nom)}</td><td>${esc(x.pago)}</td><td>${x.medDias != null ? x.medDias + ' días' : '—'}</td><td>${x.cl.pago_frecuencia ? esc(x.cuando) : '<span class="hueco">…………</span>'}</td></tr>`).join('')}
+</tbody></table></section>
+
 <section class="bloque"><h2>Para preguntar a Carmen</h2><ul>
 <li>¿Hay cobros hechos (transferencias, efectivo) que no estén marcados en Golden › Tesorería? Marcarlos el mismo día y con la fecha real.</li>
 <li>De las facturas de más de 2 meses sin nota (marcadas abajo en naranja): ¿cuáles están cobradas y cuáles se deben de verdad?</li>
@@ -189,13 +205,64 @@ ${sosp.map(x => `<li><b>${esc(x.nom)}</b>: pagó la del ${fecha(x.ultFfCobrada)}
 </ul></section>
 
 <section class="bloque"><h2>Clientes que deben (${lista.length})</h2>
-<p class="sub">Del que más debe al que menos. Borde rojo: tiene deuda antigua. Ámbar: solo de ${mesPasado}. Pulsa «albaranes» para ver el desglose.</p>
+<p class="sub">Del que más debe al que menos. Borde rojo: tiene deuda antigua. Ámbar: solo de ${mesPasado}. Cada factura lleva todos sus albaranes desglosados.</p>
 <div class="indice">${lista.map(x => `<button type="button" data-ir="c-${esc(x.cod.replace(/[^A-Z0-9]/g, ''))}">${esc(x.nom)} · ${eur(x.queda)}</button>`).join('')}</div></section>
 
 ${lista.map(filaCli).join('\n')}
 <p class="sub">Fuente: Golden (Tesorería › Cobros pendientes, facturas y albaranes) y las fichas de clientes de la app. «Cómo paga» se deduce de sus facturas de los últimos 5 meses. «Suele tardar» son días entre la factura y el cobro marcado en Golden (si se marca tarde, sale más alto).</p>
 </main>
+<script id="datos" type="application/json">${JSON.stringify({ filas: filasXls, clientes: filasCli }).replace(/</g, '\\u003c')}</script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
+// Descargas (Tito, 25/11/2026: «que se pueda ver en jpg, pdf y Excel»). Cada bloque se dibuja aparte y se reparte en hojas A4 (una página entera no cabe en un solo dibujo).
+const est = document.getElementById('estado'), botones = [...document.querySelectorAll('[data-bajar]')];
+const nombre = 'Deudas de clientes ' + new Date().toLocaleDateString('sv-SE');
+let dl = null; (window.claude && claude.use ? claude.use('downloads') : Promise.resolve(null)).then(d => { dl = d; if (!d) document.querySelector('.bajar').hidden = true; });
+async function guardar(filename, data) {
+  if (!dl) return;
+  try { await dl.save({ filename, data }); est.textContent = 'Listo: ' + filename; }
+  catch (e) { est.textContent = e && e.code === 'declined' ? '' : e && e.code === 'host_unavailable' ? 'Esta app no deja guardar: ábrelo en Chrome.' : 'No se pudo guardar (' + ((e && e.code) || 'error') + ').'; }
+}
+async function hojas() {
+  const W = 794, H = 1123, M = 28, ancho = W - 2 * M, out = []; let c = null, y = 0;
+  const nueva = () => { c = document.createElement('canvas'); c.width = W * 2; c.height = H * 2; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); out.push(c); y = M; };
+  document.documentElement.dataset.theme = 'light';
+  const bloques = [...document.querySelectorAll('main > *')].filter(el => !el.classList.contains('bajar'));
+  nueva();
+  for (const [i, el] of bloques.entries()) {
+    est.textContent = 'Preparando… ' + Math.round(i / bloques.length * 100) + ' %';
+    const img = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff', windowWidth: 760 });
+    const k = ancho / (img.width / 2), alto = img.height / 2 * k;
+    let src = 0;
+    while (src < img.height) {
+      if (y + 40 > H - M) nueva();
+      const cabe = (H - M - y) / k * 2, trozo = Math.min(img.height - src, cabe);
+      if (trozo < img.height - src && y > M && alto < H - 2 * M) { nueva(); continue; }
+      c.getContext('2d').drawImage(img, 0, src, img.width, trozo, M * 2, y * 2, ancho * 2, trozo / 2 * k * 2);
+      y += trozo / 2 * k + 10; src += trozo;
+    }
+  }
+  delete document.documentElement.dataset.theme;
+  return out;
+}
+const accion = {
+  async pdf() { const hs = await hojas(); const pdf = new jspdf.jsPDF({ unit: 'px', format: [794, 1123], hotfixes: ['px_scaling'] });
+    hs.forEach((h, i) => { if (i) pdf.addPage([794, 1123]); pdf.addImage(h.toDataURL('image/jpeg', .85), 'JPEG', 0, 0, 794, 1123); });
+    await guardar(nombre + '.pdf', pdf.output('blob')); },
+  async jpg() { const hs = await hojas(); const blobs = await Promise.all(hs.map(h => new Promise(r => h.toBlob(r, 'image/jpeg', .9))));
+    if (blobs.length === 1) return guardar(nombre + '.jpg', blobs[0]);
+    const z = new JSZip(); blobs.forEach((b, i) => z.file(nombre + ' - hoja ' + String(i + 1).padStart(2, '0') + '.jpg', b));
+    await guardar(nombre + ' (JPG).zip', await z.generateAsync({ type: 'blob' })); },
+  async xlsx() { const d = JSON.parse(document.getElementById('datos').textContent), wb = XLSX.utils.book_new();
+    const hoja = (rows, nom) => { const ws = XLSX.utils.json_to_sheet(rows); ws['!cols'] = Object.keys(rows[0] || {}).map(k => ({ wch: Math.min(45, Math.max(10, k.length + 2, ...rows.map(r => String(r[k] ?? '').length))) })); ws['!autofilter'] = { ref: ws['!ref'] }; XLSX.utils.book_append_sheet(wb, ws, nom); };
+    hoja(d.clientes, 'Clientes'); hoja(d.filas, 'Albaranes');
+    await guardar(nombre + '.xlsx', new Blob([XLSX.write(wb, { bookType: 'xlsx', type: 'array' })])); },
+};
+botones.forEach(b => b.addEventListener('click', async () => { botones.forEach(x => x.disabled = true); est.textContent = 'Preparando…';
+  try { await accion[b.dataset.bajar](); } catch (e) { est.textContent = 'Error al preparar el archivo.'; console.error(e); } finally { botones.forEach(x => x.disabled = false); } }));
 document.querySelectorAll('[data-ir]').forEach(b => b.addEventListener('click', () => { const el = document.getElementById(b.dataset.ir); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
 </script>`;
 writeFileSync('docs/deudas.html', html);
