@@ -78,7 +78,13 @@ for (const x of lista) {
   if (viejasSinNota.length) x.faltas.push(viejasSinNota.length + (viejasSinNota.length === 1 ? ' factura' : ' facturas') + ' de hace más de 2 meses sin ninguna nota de pago: ¿se cobró y no se marcó en Golden?');
   if (x.fs.some(f => f.t.aviso)) x.faltas.push('Hay una nota de Golden que no se entiende del todo (ver abajo).');
   if (!x.nCobros) x.faltas.push('No consta ningún cobro suyo en Golden en el último año.');
+  // Pagó facturas más nuevas y esta sigue pendiente: lo normal es que esté cobrada y sin marcar (Tito, 25/11/2026)
+  const ultFfCobrada = cs.map(c => c.ff).filter(Boolean).sort().pop();
+  x.sospechosas = ultFfCobrada ? x.fs.filter(f => dias(f.ff, ultFfCobrada) > 20) : [];
+  x.ultFfCobrada = ultFfCobrada;
+  if (x.sospechosas.length) x.faltas.unshift(`Ya pagó la factura del ${fecha(ultFfCobrada)}, pero siguen pendientes ${x.sospechosas.map(f => f.num).join(', ')} (más antiguas): ¿están pagadas y sin marcar?`);
 }
+const sosp = lista.filter(x => x.sospechosas.length), sSosp = r2(sosp.reduce((a, x) => a + x.sospechosas.reduce((s, f) => s + f.queda, 0), 0));
 const T = k => r2(lista.reduce((a, x) => a + x[k], 0));
 const total = T('queda'), actual = T('actual'), pasado = T('pasado'), antigua = T('antigua'), realDeuda = r2(pasado + antigua), aCuenta = r2(pend.reduce((a, t) => a + Math.min(pagadoNota(t), Number(t.total)), 0));
 const nViejas = lista.reduce((a, x) => a + x.fs.filter(f => f.edad > 60 && !f.pag).length, 0), sViejas = r2(lista.reduce((a, x) => a + x.fs.filter(f => f.edad > 60 && !f.pag).reduce((s, f) => s + f.queda, 0), 0));
@@ -169,6 +175,11 @@ ${tarjeta(eur(actual), `de ${mesActual}: aún no toca pagarlo`, '')}
 <li>Ya se ha restado <b>${eur(aCuenta)}</b> que la oficina tiene apuntado «a cuenta» en las notas de Golden.</li>
 <li>En las fichas de la app <b>no está apuntado cuándo paga ningún cliente</b>: por eso nadie sabía quién iba con retraso.${ejemplos.length ? ' Por ejemplo, ' + ejemplos.map(x => `${esc(x.nom)} debe ${eur(x.queda)}`).join(' y ') + '.' : ''}</li>
 </ul></section>
+
+${sosp.length ? `<section class="bloque"><h2>Puede que no deban: comprobar con Carmen (${eur(sSosp)})</h2>
+<p class="sub">Estos clientes han pagado facturas más nuevas, pero en Golden siguen pendientes otras más antiguas. Lo normal es que estén pagadas y no se marcaran.</p><ul>
+${sosp.map(x => `<li><b>${esc(x.nom)}</b>: pagó la del ${fecha(x.ultFfCobrada)}; pendientes ${x.sospechosas.map(f => `${esc(f.num)} del ${fecha(f.ff)} (${eur(f.queda)})`).join(', ')}.</li>`).join('')}
+</ul></section>` : ''}
 
 <section class="bloque"><h2>Para preguntar a Carmen</h2><ul>
 <li>¿Hay cobros hechos (transferencias, efectivo) que no estén marcados en Golden › Tesorería? Marcarlos el mismo día y con la fecha real.</li>
