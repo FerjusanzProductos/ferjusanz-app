@@ -39,7 +39,7 @@ const MENU = [
   ['/empresa-de-venta-y-distribucion-de-fruta-y-verdura/', 'Quiénes somos'],
   ['/contacto/', 'Contacto'],
 ];
-// Novedades sale en el pie y en la portada; la patata pelada va destacada a la derecha del menú (Tito 26/11/2026).
+// Novedades sale en el menú de las 3 rayas (móvil), en el pie y en la portada; la patata pelada va destacada a la derecha del menú (Tito 26/11/2026).
 
 const F = '/wp-content/uploads/';
 // Familias del catálogo (sacadas de los productos activos de la app, sin precios).
@@ -315,7 +315,7 @@ ${datos.map(d => `<script type="application/ld+json">${JSON.stringify(d)}</scrip
     <a href="/" class="logo" aria-label="Ferjusanz, inicio"><img src="/marca/logo-oscuro.png" alt="Ferjusanz · patatas, frutas, verduras, huevos, setas, champiñones y legumbres" width="600" height="134"></a>
     <nav class="menu-ancho" aria-label="Principal">${nav}</nav>
     <a class="btn btn-wa btn-cab" href="#pedir-precio">${I.wa}<span>Pedir precio</span></a>
-    <details class="menu"><summary aria-label="Abrir menú"><span></span><span></span><span></span></summary><nav aria-label="Menú">${nav}<p class="menu-sub">Productos</p>${familiasMenu}<a href="#pedir-precio" class="btn btn-wa">${I.wa}<span>Pedir precio por WhatsApp</span></a></nav></details>
+    <details class="menu"><summary aria-label="Abrir menú"><span></span><span></span><span></span></summary><nav aria-label="Menú">${nav}<a href="/novedades/"${actual('/novedades/') ? ' aria-current="page"' : ''}>Novedades</a><p class="menu-sub">Productos</p>${familiasMenu}<a href="#pedir-precio" class="btn btn-wa">${I.wa}<span>Pedir precio por WhatsApp</span></a></nav></details>
   </div>
   <div class="buscar-fila"><form class="buscar" action="/buscar/" method="get" role="search"><input type="search" name="q" placeholder="Buscar producto o página" aria-label="Buscar producto o página" enterkeyhint="search"><button type="submit" aria-label="Buscar">${I.lupa}</button></form></div>
 </header>
@@ -447,9 +447,10 @@ function inicio(p) {
 
 ${OFERTAS && OFERTAS.items.length ? `<section class="bloque" id="ofertas">
   <div class="envoltura">
-    <div class="bloque-cabeza"><div><h2>Ofertas de la semana</h2><p>Del ${diaMes(OFERTAS.desde)} al ${diaMes(OFERTAS.hasta)} · ${esc(OFERTAS.nota)}</p></div><a class="enlace" href="${wa(WHATSAPP[0].num, 'Hola, quería pedir de las ofertas de esta semana.')}" rel="nofollow">Pedir por WhatsApp ${I.flecha}</a></div>
+    <div class="bloque-cabeza"><div><h2>Ofertas de la semana</h2><p>Del ${diaMes(OFERTAS.desde)} al ${diaMes(OFERTAS.hasta)} · ${esc(OFERTAS.nota).replace(/ /g, "\u00a0")}</p></div><a class="enlace" href="${wa(WHATSAPP[0].num, 'Hola, quería pedir de las ofertas de esta semana.')}" rel="nofollow">Pedir por WhatsApp ${I.flecha}</a></div>
     <ul class="ofertas">${OFERTAS.items.map(([n, p, u]) => `<li><strong>${esc(n)}</strong><span>${p.toFixed(2).replace('.', ',')} €/${esc(u)}</span></li>`).join('')}</ul>
     ${OFERTAS.ejemplo ? `<p class="ofertas-iva">${esc(OFERTAS.ejemplo)}</p>` : ''}
+    <p class="ofertas-caja">Precios por caja entera · consultar formato</p>
   </div>
 </section>` : ''}
 
