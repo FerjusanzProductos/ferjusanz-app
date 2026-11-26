@@ -18,9 +18,9 @@ table{width:100%;border-collapse:collapse}td{padding:1mm 3mm;border-bottom:1px s
 td.p{text-align:right;font-weight:bold;font-size:15px;white-space:nowrap;color:#7a1f1f}td.u{color:#777;width:22mm}
 .nota{font-size:11.5px;color:#666}.pat{display:flex;flex-wrap:wrap;align-items:baseline;gap:2mm 6mm;background:#fff6ee;border:2px solid #e8742b;border-radius:3mm;padding:4mm 6mm;margin:3mm 0 2mm}.pat b{font-size:20px;color:#7a1f1f}.pat span{font-size:26px;font-weight:bold;color:#7a1f1f}.pat small{color:#555;font-size:13px}.pie{margin-top:4mm;padding-top:3mm;border-top:2px solid #e8742b;font-size:11.5px;color:#555}</style>
 <div class=top><h1>FERJUSANZ</h1><p>Patatas, frutas, verduras, huevos, setas, champiñones y legumbres · Mercamadrid · Más de seis décadas</p>
-<div class=para>Para Restaurante Duarte · 26 de noviembre de 2026</div></div>
+<div class=para>Para José Aníbal · Restaurante Duarte · 26 de noviembre de 2026</div></div>
 <div class=pg>
-<p>Hola, buenos días:</p>
+<p>Hola, José Aníbal, buenos días:</p>
 <p>Muchas gracias otra vez por recibirme las dos veces. Espero que te esté yendo bien con la patata barata que me comentaste. De todas formas, <b>nosotros la tenemos</b>, y a un precio que te lo pone fácil:</p>
 <div class=pat><b>Patata agria</b><span>${e(lista[0][1])} / kg</span><small>Saco de 25 kg: ${e(lista[0][1] * 25)}</small></div>
 <h2>Y el resto, también muy ajustado</h2>
