@@ -48,3 +48,10 @@ Contestar todas las reseñas con nombre y algo concreto; a una queja, pedir perd
 - Crear una ficha por cada pueblo o barrio (Google las borra).
 - Comprar reseñas o pedirlas solo a los contentos.
 - Poner promociones o enlaces en la descripción (van en «Publicaciones»).
+
+## Claude publica en la ficha con Zapier (26/11/2026)
+Tito conectó Zapier (conector de claude.ai) y la ficha («Google Business Profile» en Zapier) con **su cuenta de Google, la de la «F»**, no la de facturas (esa no gestiona la ficha). Datos para las llamadas: conexión `021a8d7e-410f-8f1c-a8d8-8f5c8d729871` (la principal), cuenta `accounts/104932642392955165782`, ficha `locations/10599973791966588010`.
+- **Publicaciones** (acción `create_post`): Claude las hace sola cuando sale una guía nueva (Tito: «eso hazlo tú») y se lo cuenta después.
+- **Respuestas a reseñas** (`create_reply`): hablan en nombre de la empresa → Claude las prepara y **solo las publica con el «sí» de Tito**. Firma: «Fernando».
+- Leer reseñas y publicaciones: petición GET a `https://mybusiness.googleapis.com/v4/accounts/104932642392955165782/locations/10599973791966588010/reviews` (o `/localPosts`).
+- 26/11: publicadas por Tito las de restaurantes y residencias que abren; contestada por Claude la reseña de Ainhoa (5★).
