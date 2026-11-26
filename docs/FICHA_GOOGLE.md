@@ -1,7 +1,7 @@
 # Ficha de Google (Perfil de Empresa): textos listos para pegar
 
 Preparado el 16/11/2026 con las skills `seo-audit` (SEO local) y `copywriting`, con los datos comprobados de `web/LEEME.md`.
-Se usa **cuando Fernando recupere la ficha** (ver `docs/PLAN_MARKETING.md`, punto 7). Nada de esto está publicado.
+La ficha está **verificada desde el 26/11/2026**. Estos textos los pega Tito desde el móvil (ver PENDIENTES).
 
 ## Nombre
 **Ferjusanz** (o «Ferjusanz Productos Hortofrutícolas»). Solo el nombre real: Google penaliza meter palabras como «fruta Madrid» en el nombre.
@@ -16,7 +16,7 @@ Se usa **cuando Fernando recupere la ficha** (ver `docs/PLAN_MARKETING.md`, punt
 
 ## Contacto y horario
 - Teléfono: 609 100 690 (el de los botones «Llamar» de la web). Web: la nueva cuando tenga el dominio.
-- Horario: lunes a viernes, de 8:00 a 18:00.
+- Horario (Tito, 26/11/2026: el de Mercamadrid): lunes a viernes, de 4:30 a 14:00; sábados, de 4:30 a 13:00. La web dice lo mismo.
 
 ## Descripción (708 caracteres; máximo 750)
 > Ferjusanz es una empresa familiar de Madrid, en su tercera generación, con más de 60 años en el sector de la fruta y la verdura. Servimos a restaurantes, bares, hoteles, colegios, residencias, comedores y fruterías de Madrid y Segovia. Trabajamos más de 200 productos: fruta, verdura y hortaliza, patatas (también peladas y cortadas), cebollas y ajos, setas, legumbres, hierbas y huevos de gallina y codorniz. Seleccionamos el género cada día en Mercamadrid y con agricultores de confianza, y lo llevamos en camiones y furgonetas refrigerados. Sin pedido mínimo; los pedidos se hacen hasta la tarde anterior. El precio cambia con el mercado: pídalo por WhatsApp o por teléfono y se lo pasamos sin compromiso.

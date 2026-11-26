@@ -23,7 +23,7 @@ const NIF = 'B87446670';
 const TEL = '91 763 21 86';
 const EMAIL = 'ferjusanz@hotmail.com';
 const DIRECCION = 'C/ Carare, 2 · 28033 Madrid';
-const HORARIO = 'Lunes a viernes, de 8:00 a 18:00';
+const HORARIO = 'Lunes a viernes, de 4:30 a 14:00; sábados, de 4:30 a 13:00'; // horario real de Mercamadrid, igual que la ficha de Google (Tito, 26/11/2026)
 const WHATSAPP = [ // los dos móviles de la familia
   // Tito 23/11/2026: la cara pública es el WhatsApp del padre (609 100 690, el conectado a 360dialog); el 609 567 354 no sale en la web.
   // Si se vuelve a añadir otro número, el botón flotante enseña otra vez «¿Con quién desea hablar?».
@@ -218,7 +218,7 @@ const NEGOCIO = {
   areaServed: [{ '@type': 'City', name: 'Madrid' }, { '@type': 'AdministrativeArea', name: 'Comunidad de Madrid' }, { '@type': 'AdministrativeArea', name: 'Provincia de Segovia' }],
   hasMap: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('Ferjusanz, Calle Carare 2, 28033 Madrid'),
   knowsAbout: ['Fruta al por mayor', 'Verdura al por mayor', 'Patata pelada', 'Huevos', 'Productos de cuarta gama', 'Suministro a hostelería', 'Suministro a colectividades'],
-  openingHoursSpecification: [{ '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '08:00', closes: '18:00' }],
+  openingHoursSpecification: [{ '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '04:30', closes: '14:00' }, { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Saturday'], opens: '04:30', closes: '13:00' }],
   contactPoint: WHATSAPP.map(w => ({ '@type': 'ContactPoint', telephone: '+' + w.num, contactType: 'sales', availableLanguage: 'es' })),
 };
 
@@ -978,7 +978,7 @@ fs.writeFileSync(path.join(OUT, 'llms.txt'), `# Ferjusanz
 
 - Más de 200 productos, también patata pelada y cortada y cuarta gama. Sin pedido mínimo; pedidos hasta la tarde anterior; reparto propio con camiones y furgonetas refrigerados.
 - Zona de reparto: Madrid capital, zona norte (Alcobendas, San Sebastián de los Reyes, Tres Cantos), noroeste (Aravaca, Pozuelo, Majadahonda, Las Rozas) y Segovia.
-- Precio: cambia cada día según el mercado; se pide por WhatsApp al 609 100 690 o al 91 763 21 86. Lunes a viernes, de 8:00 a 18:00.
+- Precio: cambia cada día según el mercado; se pide por WhatsApp al 609 100 690 o al 91 763 21 86. Lunes a viernes, de 4:30 a 14:00; sábados, de 4:30 a 13:00.
 - Dirección: C/ Carare, 2, 28033 Madrid. NIF B87446670. Correo: ferjusanz@hotmail.com.
 
 ## Servicios y productos
