@@ -61,9 +61,13 @@ Deno.serve(async (req)=>{
       const { data: p1 } = await supa.from('proveedores').select('id').ilike('email', rem);
       if (p1 && p1.length === 1) proveedor_id = p1[0].id;
       else if (rem.includes('@')) {
-        const dom = rem.split('@')[1];
+        let dom = rem.split('@')[1];
+        // Gmail, Hotmail… los usa cualquiera: por el dominio no se sabe de quién es (26/11/2026: todo lo de gmail caía en Herederos de Carlos Gómez).
+        if (/^(gmail|googlemail|hotmail|outlook|live|msn|yahoo|ymail|icloud|me|aol|gmx|protonmail|telefonica|movistar)\./.test(dom)) dom = '';
+        if (dom) {
         const { data: p2 } = await supa.from('proveedores').select('id').ilike('email', '%@' + dom);
         if (p2 && p2.length === 1) proveedor_id = p2[0].id;
+        }
       }
     }
     const d = new Date();

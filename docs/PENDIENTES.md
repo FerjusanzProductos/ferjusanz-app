@@ -2,6 +2,9 @@
 _Solo lo que **falta**. Regla de Fernando (14/11/2026): «Cada vez que hagamos algo, quítalo». Al terminar algo: **borrarlo de aquí** (no tacharlo), apuntarlo en `docs/HISTORIAL.md` y volver a publicar la página fijada (ver `CLAUDE.md`). Lo ya hecho hasta el 14/11/2026 está en `docs/HISTORIAL.md`._
 _Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda · ⏸ en espera._
 
+## 🧾 FACTURAS DE PROVEEDOR
+- 🔴 **Tito: ¿se borran de «Facturas recibidas» los 17 archivos que no son facturas?** (26/11/2026: correos comerciales de Ferjusanz con sus PDF, 4 fotos de patatas de Verduyn, 2 papeles del despido de Evolution y un PDF de Tito). Ya no salen a nombre de Carlos Gómez; quedan «sin proveedor». Borrar necesita su «sí». Además, el Gmail de facturas no debería mandar a la bandeja los correos que envía la propia empresa ni las fotos sin factura (el filtro está en el Gmail, no en el repositorio).
+
 ## 🤝 CLIENTES (Tito, 24/11/2026, dictado conduciendo)
 - 🔴 **Lista semanal automática de precios para Los Barriletes y Florencio** (Tito, 26/11/2026: se les ha prometido que cada semana les llega su lista actualizada). Falta decidir por dónde sale (WhatsApp o correo) y que Tito dé el visto bueno para mandar a clientes.
 - 🔴 **Ir detrás de**: **Restaurante Duarte** y **Florencio** (que salgan en «Comercial del día» hasta que se cierre algo).
