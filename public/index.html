@@ -10351,7 +10351,18 @@ function vistaPyG() {
     try {
       const r = await sb.from('panel_pyg').select('fecha,html').order('fecha', { ascending: false }).limit(1); if (r.error) throw r.error;
       const x = (r.data || [])[0]; if (!x) { box.replaceChildren(h('div', { class: 'card sub' }, 'Todavía no está. La prepara Claude cada mañana.')); return; }
-      box.replaceChildren(h('iframe', { title: 'Cuenta de resultados', sandbox: 'allow-scripts allow-popups allow-popups-to-escape-sandbox', style: 'width:100%;border:0;height:calc(100vh - 150px);display:block', srcdoc: '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base target="_blank">' + x.html }));
+      // Descargar PDF o Excel (Tito, 26/11/2026): dentro del recuadro no se puede bajar nada, por eso los botones van fuera
+      const bajar = async (col, ext, tipo) => {
+        try { const q = await sb.from('panel_pyg').select(col).eq('fecha', x.fecha).maybeSingle(); if (q.error) throw q.error; if (!q.data || !q.data[col]) { toast('Todavía no está preparado. Lo prepara Claude cada mañana.', 'err'); return; }
+          const bin = atob(q.data[col]), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+          const nom = 'Ferjusanz-cuenta-de-resultados-' + x.fecha + '.' + ext, blob = new Blob([u8], { type: tipo });
+          try { const file = new File([blob], nom, { type: tipo }); if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Cuenta de resultados' }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+          const url = URL.createObjectURL(blob); const lk = h('a', { href: url, download: nom }); document.body.append(lk); lk.click(); lk.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); toast('Descargado: ' + nom, 'ok');
+        } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión para descargarlo.' : 'No se ha podido descargar.', 'err'); } };
+      box.replaceChildren(h('div', { style: 'display:flex;gap:8px;margin:0 0 8px' },
+          h('button', { class: 'ghost', style: 'flex:1;min-height:48px', onclick: () => bajar('pdf', 'pdf', 'application/pdf') }, '⬇️ PDF (con gráficos)'),
+          h('button', { class: 'ghost', style: 'flex:1;min-height:48px', onclick: () => bajar('xlsx', 'xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') }, '⬇️ Excel')),
+        h('iframe', { title: 'Cuenta de resultados', sandbox: 'allow-scripts allow-popups allow-popups-to-escape-sandbox', style: 'width:100%;border:0;height:calc(100vh - 200px);display:block', srcdoc: '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base target="_blank">' + x.html }));
     } catch (e) { box.replaceChildren(h('div', { class: 'card sub' }, isNetErr(e) ? 'Necesitas conexión para verla.' : 'Todavía no está disponible.')); }
   })();
 }

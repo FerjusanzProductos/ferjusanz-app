@@ -137,6 +137,7 @@ th{font-weight:600;color:var(--muted);font-size:.75rem;text-transform:uppercase;
 .sim input{font:600 1rem var(--f-num);padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);width:100%}
 .pie{font-size:.8rem;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{body{padding-block:0}.chips,.ver,.flecha{display:none}.caja,.kpi{break-inside:avoid}.fila{break-inside:avoid}}
 </style>
 <main>
 <header>
@@ -343,6 +344,8 @@ function todo() {
   $('#fuente').textContent = 'Datos reales de Golden y nóminas · ' + NM(D.meses[0]) + '–' + NM(D.meses[N - 1]) + ' 2026';
 }
 todo();
+// Para el PDF (scripts/pyg-pdf.cjs): todas las pestañas seguidas, sin el simulador
+window.paraImprimir = () => { const r = calc(periodo()); $('#tabs').replaceChildren(); $('#panel').replaceChildren(...TABS.filter(t => t[0] !== 'simulador').flatMap(([k, t, f]) => [h('h2', { style: 'margin-top:18px' }, t), ...f(r)])); };
 let anchoAnt = innerWidth; addEventListener('resize', () => { if (Math.abs(innerWidth - anchoAnt) > 40) { anchoAnt = innerWidth; cascada(calc(periodo())); } });
 </script>`;
 

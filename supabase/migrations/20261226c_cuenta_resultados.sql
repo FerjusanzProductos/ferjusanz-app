@@ -31,3 +31,6 @@ create policy leer on public.panel_pyg for select to authenticated using (puede_
 
 -- Pagos del banco que no son gasto del año (deudas de 2025, pagos a socios, Hacienda…): se enseñan aparte, sin restar del resultado.
 alter table public.gastos_fijos add column if not exists en_resultado boolean not null default true;
+
+-- PDF y Excel de la cuenta de resultados para descargarlos desde la app (Tito, 26/11/2026). En base64; los escribe scripts/pyg-archivos.mjs.
+alter table public.panel_pyg add column if not exists pdf text, add column if not exists xlsx text;
