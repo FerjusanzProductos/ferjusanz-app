@@ -3,6 +3,7 @@ _Solo lo que **falta**. Regla de Fernando (14/11/2026): «Cada vez que hagamos a
 _Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda · ⏸ en espera._
 
 ## 🤝 CLIENTES (Tito, 24/11/2026, dictado conduciendo)
+- 🔴 **Lista semanal automática de precios para Los Barriletes y Florencio** (Tito, 26/11/2026: se les ha prometido que cada semana les llega su lista actualizada). Falta decidir por dónde sale (WhatsApp o correo) y que Tito dé el visto bueno para mandar a clientes.
 - 🔴 **Ir detrás de**: **Restaurante Duarte** y **Florencio** (que salgan en «Comercial del día» hasta que se cierre algo).
 - 🔴 **Recuperar varios clientes perdidos**, entre ellos las **facultades de Informática y de Documentación** (SALNAYA SL, perdidas; ver su punto en «👤 Fernando»). Tito dirá cuáles más.
 - 🔴 **El Águila**: que se ponga al día con los pagos (ver su deuda en Golden y llamarle).
