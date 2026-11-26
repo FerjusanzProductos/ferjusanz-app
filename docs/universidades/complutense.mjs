@@ -8,15 +8,15 @@ const { chromium } = createRequire('/home/user/ferjusanz-app/')('playwright');
 const D = process.argv[2] || '.', F = '/home/user/ferjusanz-app/web/fotos/2026/11/', W = 'https://www.ferjusanz-frutas-verduras.es';
 const e = n => n.toFixed(2).replace('.', ',') + ' €';
 const lista = [ // [producto, precio, unidad, coste de compra (Golden, 24/11 salvo nota)]
-  ['Patata en saco pequeño', 0.40, 'kg', 0.33], ['Patata agria', 0.50, 'kg', 0.42], ['Huevos', 2.15, 'docena', 2.00],
-  ['Tomate ensalada', 1.10, 'kg', 1.00], ['Tomate pera', 1.10, 'kg', 1.00], ['Naranja de zumo', 0.85, 'kg', 0.70],
+  ['Patata en saco pequeño', 0.40, 'kg', 0.33], ['Patata agria', 0.50, 'kg', 0.42], ['Huevos', 2.20, 'docena', 2.00],
+  ['Tomate ensalada', 1.10, 'kg', 1.00], ['Tomate pera', 1.10, 'kg', 1.00], ['Naranja de zumo', 0.90, 'kg', 0.70],
   ['Melón piel de sapo', 1.65, 'kg', 1.50], ['Piña', 1.65, 'kg', 1.50], ['Lechuga iceberg (caja)', 5.90, 'caja', 5.75],
-  ['Lechuga iceberg', 0.70, 'pieza', 0.55], ['Cebolla gorda', 0.60, 'kg', 0.45], ['Pimiento rojo', 1.25, 'kg', 1.10],
-  ['Pimiento verde', 1.15, 'kg', 1.00], ['Pimiento italiano', 1.95, 'kg', 1.80], ['Aguacate', 1.95, 'kg', 1.80],
-  ['Pepino', 0.90, 'kg', 0.75], ['Ajo pelado', 3.45, 'kg', 3.30], ['Manzana golden', 1.00, 'kg', 0.85],
-  ['Pera conferencia', 1.75, 'kg', 1.60], ['Plátano', 1.85, 'kg', 1.70], ['Limones', 1.15, 'kg', 1.00], ['Zanahoria', 0.75, 'kg', 0.60],
+  ['Lechuga iceberg', 0.70, 'pieza', 0.55], ['Cebolla gorda', 0.70, 'kg', 0.45], ['Cebolla calibre pequeño', 0.62, 'kg', null], ['Pimiento rojo', 1.25, 'kg', 1.10],
+  ['Pimiento verde', 1.20, 'kg', 1.00], ['Pimiento italiano', 1.95, 'kg', 1.80], ['Aguacate', 1.95, 'kg', 1.80],
+  ['Pepino', 0.90, 'kg', 0.75], ['Ajo pelado', 3.60, 'kg', 3.30], ['Manzana golden', 1.00, 'kg', 0.85],
+  ['Pera conferencia', 1.75, 'kg', 1.60], ['Plátano', 1.85, 'kg', 1.70], ['Limones', 1.35, 'kg', 1.00], ['Zanahoria', 0.75, 'kg', 0.60],
 ];
-console.assert(lista.every(([, p, , c]) => p > c && p - c <= 0.151), 'precios: siempre por encima de la compra y como mucho +0,15');
+console.assert(lista.every(([, p, , c]) => c == null || p > c), 'precios: siempre por encima de la compra'); // ajustes de Tito 26/11: huevos 2,20, ajo 3,60, limones 1,35…
 
 // ---------- Hoja para enviar (PDF + JPG) ----------
 const foto = f => 'data:image/jpeg;base64,' + fs.readFileSync(F + f).toString('base64');
@@ -35,6 +35,7 @@ td.p{text-align:right;font-weight:bold;white-space:nowrap;color:#7a1f1f}td.u{col
 <div class=pg>
 <p>Hola, Juanjo:</p>
 <p>Llevo toda la semana negociando con mis proveedores para sacaros estos precios. Me lo tomo muy en serio: <b>os voy a cuidar como si fuera mi empresa</b>, y si algo no viene como debe, se cambia en el momento.</p>
+<p><b>Os colocamos todo el género</b> y llegamos <b>puntuales</b>. Y no tenéis que preocuparos por subidas: <b>con cada pedido os llega lo que os va a salir</b>, sin sorpresas.</p>
 <div class=saco><img src="${foto('novedad-2026-11-21-patata-en-saco.jpg')}"><div><b>Patata en saco pequeño</b><b class=p>0,40 € / kg</b>
 <span class=nota>Si con los meses esta patata os da problemas, os paso a otra que no sube más de 0,10 €: en torno a <b>0,50 € / kg</b>. Siempre hablándolo antes con vosotros.</span></div></div>
 <h2>Vuestros precios</h2>
@@ -51,19 +52,21 @@ fs.unlinkSync(`${D}/Ferjusanz-Complutense.png`);
 // ---------- Lista de precios y presentación en la app (Comercial › Presentaciones) ----------
 const L = s => "'" + String(s).replace(/'/g, "''") + "'";
 const LISTA = 'Universidades Complutense', PRES = 'Visita · Universidad Complutense (Juanjo)';
-const items = lista.map(([n, p, u, c], i) => `(${L(n)},${p},${L(u)},${c},${i})`).join(',');
-fs.writeFileSync(`${D}/sql-lista.json`, JSON.stringify({ query: `with l as (insert into listas_precios (nombre, tipo, titulo, subtitulo, pie, incluir_recomendaciones)
+const items = lista.map(([n, p, u, c], i) => `(${L(n)},${p},${L(u)},${c ?? 'null::numeric'},${i})`).join(',');
+fs.writeFileSync(`${D}/sql-lista.json`, JSON.stringify({ query: `insert into listas_precios (nombre, tipo, titulo, subtitulo, pie, incluir_recomendaciones)
   select ${L(LISTA)}, 'colectivos', 'Precios · Universidad Complutense', 'Informática y Documentación', 'Precios + IVA (4 %). Semana del 26/11/2026; el resto, a precio de mercado.', false
-  where not exists (select 1 from listas_precios where nombre=${L(LISTA)}) returning id),
-it as (insert into listas_precios_items (lista_id, nombre, precio, unidad, coste, orden, precio_fijo)
-  select (select id from l), v.n, v.p, v.u, v.c, v.o, true from (values ${items}) v(n,p,u,c,o) where exists (select 1 from l) returning 1)
-select (select id from listas_precios where nombre=${L(LISTA)} union all select id from l limit 1) lista, (select count(*) from it) items;` }));
+  where not exists (select 1 from listas_precios where nombre=${L(LISTA)});
+delete from listas_precios_items where lista_id=(select id from listas_precios where nombre=${L(LISTA)});
+insert into listas_precios_items (lista_id, nombre, precio, unidad, coste, orden, precio_fijo)
+  select (select id from listas_precios where nombre=${L(LISTA)}), v.n, v.p, v.u, v.c, v.o, true from (values ${items}) v(n,p,u,c,o);
+select (select id from listas_precios where nombre=${L(LISTA)}) lista, (select count(*) from listas_precios_items i join listas_precios l on l.id=i.lista_id where l.nombre=${L(LISTA)}) items;` }));
 const mini = f => JSON.parse(execSync(`python3 -c "import base64,io,json;from PIL import Image,ImageOps;i=ImageOps.fit(Image.open('${F + f}').convert('RGB'),(480,360));b=io.BytesIO();i.save(b,'JPEG',quality=72);print(json.dumps({'u':'data:image/jpeg;base64,'+base64.b64encode(b.getvalue()).decode(),'w':480,'h':360}))"`).toString());
-const fotos = { 'Patata · 0,40 €/kg': mini('novedad-2026-11-21-patata-en-saco.jpg'), 'Huevos · 2,15 €/doc.': mini('huevos-gallina-caja.jpg'),
-  'Naranja zumo · 0,85 €': mini('novedad-2026-11-17-naranja-zumo-v2.jpg'), 'Tomate · 1,10 €/kg': mini('novedad-2026-11-26-tomate-de-temporada-en-caja-de-madera.jpg') };
+const fotos = { 'Patata · 0,40 €/kg': mini('novedad-2026-11-21-patata-en-saco.jpg'), 'Huevos · 2,20 €/doc.': mini('huevos-gallina-caja.jpg'),
+  'Naranja zumo · 0,90 €': mini('novedad-2026-11-17-naranja-zumo-v2.jpg'), 'Tomate · 1,10 €/kg': mini('novedad-2026-11-26-tomate-en-rama.jpg') };
 const diapos = lid => [
   { t: 'portada', titulo: 'Vuestra fruta y verdura, cuidada como si fuera nuestra', sub: 'Para Juanjo · Informática y Documentación · Universidad Complutense', pie: 'Ferjusanz · Mercamadrid · tercera generación' },
   { t: 'lista', titulo: 'Me lo tomo muy en serio', puntos: ['Toda la semana negociando con proveedores', 'Precios ajustados al máximo para vosotros', 'Os cuido como si fuera mi empresa', 'Trato directo conmigo, sin intermediarios', 'Si algo viene mal, se cambia en el momento'] },
+  { t: 'lista', titulo: 'Os lo ponemos fácil', puntos: ['Os colocamos todo el género', 'Puntuales en cada entrega', 'Con cada pedido, os llega lo que os va a salir', 'Sin preocuparos por subidas de precio', 'Sin sorpresas en la factura', 'Un solo contacto: yo', 'Sin pedido mínimo'] }, // 7 puntos: sin foto lateral
   { t: 'productos', titulo: 'Lo que más usáis, a este precio', items: Object.keys(fotos), fotos },
   { t: 'lista', titulo: 'La patata a 0,40, sin sorpresas', puntos: ['Patata de saco pequeño a 0,40 €/kg', 'Si con los meses os da problemas…', '…os paso a otra, como mucho 0,10 € más', 'En torno a 0,50 €/kg', 'Siempre hablándolo antes con vosotros', 'Calidad homogénea, pedido tras pedido', 'Sin pedido mínimo'] }, // 7 puntos: sin foto lateral (la de turno es patata pelada)
   { t: 'precios', titulo: 'Vuestros precios', lista_id: lid, soloEnvio: false, nota: 'Precios + IVA (4 %). Semana del 26/11/2026; el resto, a precio de mercado.', _tipo: 'colectivos' },
