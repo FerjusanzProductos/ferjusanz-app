@@ -682,3 +682,12 @@ body {
 .cortes span { font-size: .9rem; opacity: .8; flex: 1; }
 .cortes em { font-style: normal; font-weight: 700; color: var(--granate); font-size: .9rem; }
 @media (hover: hover) and (pointer: fine) { .cortes a:hover { border-color: var(--granate); } }
+
+/* ── Menú: patata pelada destacada a la derecha y familias en el menú del móvil (26/11/2026) ── */
+.menu-ancho a.destacado { border: 1px solid var(--granate); border-radius: 980px; padding: 6px 14px; margin-left: 6px; color: var(--tinta); opacity: 1; }
+.menu nav a.destacado { color: var(--granate); }
+.menu-sub { margin: 20px 0 8px; font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; opacity: .7; }
+.menu-familias { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.menu nav .menu-familias a { display: inline-flex; min-height: 40px; align-items: center; padding: 0 14px; border: 1px solid var(--linea); border-radius: 980px; font-size: .95rem; font-weight: 500; line-height: 1; color: var(--tinta); text-decoration: none; }
+@media (min-width: 900px) and (max-width: 1199px) { .logo { flex-shrink: 0; } .logo img { height: 44px; } .menu-ancho { gap: 0; margin-left: 0; } .menu-ancho a { padding: 10px 7px; font-size: .86rem; } .menu-ancho a.destacado { padding: 6px 10px; } }
+.menu nav { overflow-y: auto; overscroll-behavior: contain; max-height: calc(100dvh - 170px); min-height: 0; }

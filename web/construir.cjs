@@ -35,11 +35,11 @@ const MENU = [
   ['/productos/', 'Productos'],
   ['/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', 'Hostelería'],
   ['/mayorista-de-frutas-y-verduras-para-colectividades-madrid/', 'Colectividades'],
-  ['/empresa-de-venta-y-distribucion-de-fruta-y-verdura/', 'Quiénes somos'],
   ['/blog/', 'Guías'],
-  ['/novedades/', 'Novedades'],
+  ['/empresa-de-venta-y-distribucion-de-fruta-y-verdura/', 'Quiénes somos'],
   ['/contacto/', 'Contacto'],
 ];
+// Novedades sale en el pie y en la portada; la patata pelada va destacada a la derecha del menú (Tito 26/11/2026).
 
 const F = '/wp-content/uploads/';
 // Familias del catálogo (sacadas de los productos activos de la app, sin precios).
@@ -276,7 +276,10 @@ const galeria = ruta => GALERIAS[ruta] ? `<section class="bloque bloque-crema"><
 
 // ───────── Plantilla ─────────
 function plantilla({ ruta, titulo, descripcion, imagen, cuerpo, datos = [], tipo = 'website', precarga = '' }) {
-  const nav = MENU.map(([h, t]) => `<a href="${h}"${ruta === h || (h !== '/' && ruta.startsWith(h)) ? ' aria-current="page"' : ''}>${t}</a>`).join('');
+  const actual = h => ruta === h || (h === '/productos/' ? ruta.startsWith(h) && ruta !== PELADA : h !== '/' && ruta.startsWith(h));
+  const nav = MENU.map(([h, t]) => `<a href="${h}"${actual(h) ? ' aria-current="page"' : ''}>${t}</a>`).join('')
+    + `<a class="destacado" href="${PELADA}"${ruta === PELADA ? ' aria-current="page"' : ''}>Patata pelada</a>`;
+  const familiasMenu = `<ul class="menu-familias">${FAMILIAS.filter(f => f.ruta).map(f => `<li><a href="${f.ruta}">${f.nombre}</a></li>`).join('')}</ul>`;
   const og = imagen || '/marca/compartir.png';
   return `<!doctype html>
 <html lang="es">
@@ -312,7 +315,7 @@ ${datos.map(d => `<script type="application/ld+json">${JSON.stringify(d)}</scrip
     <a href="/" class="logo" aria-label="Ferjusanz, inicio"><img src="/marca/logo-oscuro.png" alt="Ferjusanz · patatas, frutas, verduras, huevos, setas, champiñones y legumbres" width="600" height="134"></a>
     <nav class="menu-ancho" aria-label="Principal">${nav}</nav>
     <a class="btn btn-wa btn-cab" href="#pedir-precio">${I.wa}<span>Pedir precio</span></a>
-    <details class="menu"><summary aria-label="Abrir menú"><span></span><span></span><span></span></summary><nav aria-label="Menú">${nav}<a href="#pedir-precio" class="btn btn-wa">${I.wa}<span>Pedir precio por WhatsApp</span></a></nav></details>
+    <details class="menu"><summary aria-label="Abrir menú"><span></span><span></span><span></span></summary><nav aria-label="Menú">${nav}<p class="menu-sub">Productos</p>${familiasMenu}<a href="#pedir-precio" class="btn btn-wa">${I.wa}<span>Pedir precio por WhatsApp</span></a></nav></details>
   </div>
   <div class="buscar-fila"><form class="buscar" action="/buscar/" method="get" role="search"><input type="search" name="q" placeholder="Buscar producto o página" aria-label="Buscar producto o página" enterkeyhint="search"><button type="submit" aria-label="Buscar">${I.lupa}</button></form></div>
 </header>
@@ -441,8 +444,6 @@ function inicio(p) {
     <div><strong>1</strong><span>solo pedido para todo</span></div>
   </div>
 </section>
-
-${bloquePeladas()}
 
 ${OFERTAS && OFERTAS.items.length ? `<section class="bloque" id="ofertas">
   <div class="envoltura">
