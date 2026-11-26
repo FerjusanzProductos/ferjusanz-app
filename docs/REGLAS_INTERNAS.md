@@ -216,6 +216,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Excepción: **Bar Delfín** y **Frutas Pedro** no están en Golden porque son clientes «sin IVA»; no se unen con «Bar Delfines» ni con «Frutas Pedro S.L.». **Mesón Jesús** («Falta poner 13») se factura en Golden a **LALI** (LALI ATM SL) pero se reparte en otra dirección: conserva su ficha.
 - Golden se lee solo cada día (`scripts/golden/LEEME.md`): rellena huecos, nunca borra.
 - **Patatas del Olmo** (proveedor): no está en Golden; se le compra de verdad, normalmente **huevos** (es primo de Fernando).
+- **Mercasol Logística Norte SLU** (Tito, 26/11/2026): es del **primo del padre**. **No ir a por sus clientes** ni ofrecerles precios para quitárselos (p. ej. Taberna El Silo, que se dejó). Si un posible cliente compra a Mercasol, avisar a Tito antes de seguir.
 - Bulevar: el cliente bueno es **BULEVAR** (C/ López de Hoyos 401); BULE (Gran Vía de Hortaleza 62) ya no. Handyman: **HANDYMAN** (Made For You Iris Taberna SL); la ficha antigua HATA se borró (18/11/2026, Fernando).
 
 ## Golden: facturas pendientes y pagadas (Tito, 24/11/2026)
