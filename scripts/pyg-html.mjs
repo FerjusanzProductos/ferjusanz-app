@@ -250,10 +250,9 @@ const nomPro = p => D.pro[p][1], nomCli = c => D.cli[c];
 const margen = x => x.vk - x.k;
 function desglose(r, campo, id, n = 12) {
   const xs = Object.values(r.cp).filter(x => x[campo] == id).sort((a, b) => margen(b) - margen(a)), out = [];
-  const mejores = xs.slice(0, n), peores = xs.filter(x => margen(x) < 0).slice(-5).reverse();
+  const mejores = xs.slice(0, n);
   out.push(h('span', { class: 'eti' }, campo === 'c' ? 'Productos que más le dejan' : 'Clientes a los que más deja'));
   for (const x of mejores) out.push(l((campo === 'c' ? nomPro(x.p) : nomCli(x.c)) + ' · vendido ' + eur(x.v), (margen(x) >= 0 ? '+' : '') + eur(margen(x)), margen(x) >= 0 ? 'g' : 'p'));
-  if (peores.length) { out.push(h('span', { class: 'eti', style: 'margin-top:6px' }, 'Donde pierde')); for (const x of peores) out.push(l((campo === 'c' ? nomPro(x.p) : nomCli(x.c)) + ' · vendido ' + eur(x.v), eur(margen(x)), 'p')); }
   if (xs.length > n) out.push(h('span', { class: 'sub' }, 'y ' + (xs.length - n) + ' más'));
   return out;
 }
@@ -269,19 +268,12 @@ function tabGana(r) {
 
 function tabPierde(r) {
   const out = [];
-  const bajo = Object.entries(r.pro).filter(([, x]) => x.pe < 0).map(([p, x]) => ({ p, pe: x.pe })).sort((a, b) => a.pe - b.pe);
-  const bajoC = Object.entries(r.cli).filter(([, x]) => x.pe < 0).map(([c, x]) => ({ c, pe: x.pe })).sort((a, b) => a.pe - b.pe);
-  const totBajo = bajo.reduce((a, x) => a + x.pe, 0);
   const flojos = Object.entries(r.cli).map(([c, x]) => ({ c, ...x, m: margen(x) })).filter(x => x.vk >= 300 * r.n).sort((a, b) => a.m / a.vk - b.m / b.vk).slice(0, 10);
   const deBaja = Object.entries(r.persL).filter(([t]) => /baja/i.test(t));
   const totDeuda = D.de.reduce((a, x) => a + x[1], 0);
-  out.push(h('div', { class: 'aviso' }, 'Aquí está todo lo que resta. Lo que más pesa son las nóminas (' + eur(r.pers) + ') y los gastos fijos (' + eur(r.fij) + '). Vender por debajo de lo que costó la mercancía ha costado ' + eur(-totBajo) + '.'));
-  const maxB = -(bajo[0]?.pe || 1), maxBC = -(bajoC[0]?.pe || 1);
+  out.push(h('div', { class: 'aviso' }, 'Aquí está todo lo que resta. Lo que más pesa son las nóminas (' + eur(r.pers) + ') y los gastos fijos (' + eur(r.fij) + ').'));
   out.push(h('div', { class: 'dos' },
-    h('div', {}, h('h3', {}, 'Vendido por debajo de lo que costó'), h('span', { class: 'sub' }, 'Por producto. Pincha para ver a quién.'), h('div', { class: 'lista' }, ...bajo.slice(0, 12).map(x => fila(nomPro(x.p), eur(x.pe), null, () => Object.values(r.cp).filter(y => y.p == x.p && y.pe < 0).sort((a, b) => a.pe - b.pe).slice(0, 10).map(y => l(nomCli(y.c), eur(y.pe), 'p')), mini(x.pe, maxB, 'pierde'))))),
-    h('div', {}, h('h3', {}, 'Clientes a los que se vende por debajo de coste'), h('span', { class: 'sub' }, 'Pincha para ver qué productos.'), h('div', { class: 'lista' }, ...bajoC.slice(0, 12).map(x => fila(nomCli(x.c), eur(x.pe), null, () => Object.values(r.cp).filter(y => y.c == x.c && y.pe < 0).sort((a, b) => a.pe - b.pe).slice(0, 10).map(y => l(nomPro(y.p), eur(y.pe), 'p')), mini(x.pe, maxBC, 'pierde')))))));
-  out.push(h('div', { class: 'dos' },
-    h('div', {}, h('h3', {}, 'Clientes con el margen más bajo'), h('span', { class: 'sub' }, 'Se les vende mucho pero dejan poco por cada euro.'), h('div', { class: 'lista' }, ...flojos.map(x => fila(nomCli(x.c), pct(x.m, x.vk), 'Vende ' + eur(x.v) + ' · deja ' + eur(x.m), () => desglose(r, 'c', x.c, 8))))),
+    h('div', {}, h('h3', {}, 'Clientes con el margen más bajo'), h('span', { class: 'sub' }, 'Orientativo: el coste de cada línea de Golden no siempre es el de la compra de ese día. Sirve para ver a quién mirar, no como cifra exacta.'), h('div', { class: 'lista' }, ...flojos.map(x => fila(nomCli(x.c), pct(x.m, x.vk), 'Vende ' + eur(x.v) + ' · deja ' + eur(x.m), () => desglose(r, 'c', x.c, 8))))),
     h('div', {}, h('h3', {}, 'Otras fugas'), h('div', { class: 'lista' },
       ...deBaja.map(([t, x]) => fila(t, '−' + eur(x.b + x.ss), 'Coste para la empresa estando de baja (complemento y Seguridad Social)', () => x.meses.map(([m, v, est]) => l(NML(D.meses[m]) + (est ? ' (estimado)' : ''), '−' + eur(v), 'p')))),
       r.ab ? fila('Abonos a clientes (rectificativas)', eur(r.ab), r.abL.length + ' facturas', () => r.abL.map(([c, num, v, m]) => l(c + ' · ' + num + ' · ' + NM(D.meses[m]), eur(v), 'p'))) : null,
