@@ -167,7 +167,7 @@ td{padding:4px 2px;border-top:1px solid var(--line)}td.n{text-align:right;white-
 .bajar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.bajar button{font:600 .95rem var(--sans);background:var(--acc);color:#fff;border:0;border-radius:999px;padding:8px 14px;min-height:40px;cursor:pointer}
 .bajar button:disabled{opacity:.5}.bajar button:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 table.cuando th{text-align:left;font-size:.78rem;color:var(--muted);padding:4px 2px}.hueco{color:var(--muted)}
-.tabla-cuando{overflow-x:auto}.cuando td{vertical-align:top}.cuando select,.cuando input{font:inherit;font-size:.9rem;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);min-height:34px;max-width:9.5rem}
+.tabla-cuando{overflow-x:auto}.cuando td{overflow-wrap:anywhere}.cuando td{vertical-align:top}.cuando select,.cuando input{font:inherit;font-size:.9rem;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);min-height:34px;max-width:9.5rem}
 details.alb{border-top:1px solid var(--line);padding:2px 0}details.alb>summary{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;font-weight:400;color:var(--fg);font-size:.88rem;padding:5px 0}
 details.alb>summary .est{color:var(--muted);font-size:.8rem}details.alb.pg>summary .est{color:var(--acc)}details.alb.pg>summary{color:var(--muted)}
 details.alb>summary::marker{content:''}details.alb>summary>span:first-child::before{content:'▸ ';color:var(--acc)}details.alb[open]>summary>span:first-child::before{content:'▾ '}table.ped{margin:2px 0 8px;background:var(--bg);border-radius:6px}table.ped th{font-size:.75rem;color:var(--muted);font-weight:600;text-align:left;padding:4px}table.ped th.n,table.ped td.n{text-align:right}table.ped td{padding:3px 4px}
@@ -199,10 +199,14 @@ ${tarjeta(eur(actual), `de ${mesActual}: aún no toca pagarlo`, '')}
 <li>En las fichas de la app <b>no está apuntado cuándo paga ningún cliente</b>: por eso nadie sabía quién iba con retraso.${ejemplos.length ? ' Por ejemplo, ' + ejemplos.map(x => `${esc(x.nom)} debe ${eur(x.queda)}`).join(' y ') + '.' : ''}</li>
 </ul></section>
 
-${sosp.length ? `<section class="bloque"><h2>Puede que no deban: comprobar con Carmen (${eur(sSosp)})</h2>
-<p class="sub">Estos clientes han pagado facturas más nuevas, pero en Golden siguen pendientes otras más antiguas. Lo normal es que estén pagadas y no se marcaran.</p><ul>
-${sosp.map(x => `<li><b>${esc(x.nom)}</b>: pagó la del ${fecha(x.ultFfCobrada)}; pendientes ${x.sospechosas.map(f => `${esc(f.num)} del ${fecha(f.ff)} (${eur(f.queda)})`).join(', ')}.</li>`).join('')}
-</ul></section>` : ''}
+${sosp.length ? `<section class="bloque"><h2>Carmen: puede que no deban (${eur(sSosp)})</h2>
+<p class="sub">Estos clientes han pagado facturas más nuevas, pero en Golden siguen pendientes otras más antiguas. Lo normal es que estén pagadas y no se marcaran. Mira cada una en el banco o en Golden y marca qué pasa. Se queda guardado en este móvil u ordenador; al terminar, pulsa «💾 Guardar lo apuntado» y manda a Tito el Excel.</p>
+<div class="tabla-cuando"><table class="cuando"><thead><tr><th>Cliente</th><th>Factura pendiente</th><th>¿Qué pasa?</th><th>Fecha del cobro</th><th>Nota</th></tr></thead><tbody>
+${sosp.flatMap(x => x.sospechosas.map(f => `<tr data-fra="${esc(f.num)}" data-nom="${esc(x.nom)}" data-cod2="${esc(x.cod)}" data-ff="${f.ff}" data-imp="${f.queda}" data-ult="${x.ultFfCobrada}"><td>${esc(x.nom)}<br><small>${esc(x.cl.telefono || '')}</small></td><td>${esc(f.num)} del ${fecha(f.ff)} · <b>${eur(f.queda)}</b><br><small>ya pagó la del ${fecha(x.ultFfCobrada)}${f.t.observacion ? ' · nota: ' + esc(f.t.observacion) : ''}</small></td>
+<td><select aria-label="Qué pasa con ${esc(f.num)}" data-c="que"><option value="">¿Qué pasa?…</option><option>Cobrada, sin marcar en Golden</option><option>Se debe de verdad</option><option>Pagada en parte</option><option>Anulada / rectificada</option><option>No lo sé</option></select></td>
+<td><input aria-label="Fecha del cobro de ${esc(f.num)}" data-c="cuando" size="10" placeholder="p. ej. 10/03"></td><td><input aria-label="Nota ${esc(f.num)}" data-c="nota" size="12" placeholder="Nota (opcional)"></td></tr>`)).join('')}
+</tbody></table></div>
+<div class="bajar"><button type="button" data-bajar="carmen">💾 Guardar lo apuntado</button></div></section>` : ''}
 
 <section class="bloque"><h2>Carmen: apuntar cuándo paga cada cliente</h2>
 <ol class="pasos"><li><b>Aquí mismo:</b> en cada cliente, elige cómo paga y pon el día (aproximado vale: «día 10», «sobre el 5», «los lunes»). Se queda guardado en este móvil u ordenador.</li>
@@ -283,7 +287,7 @@ const accion = {
     await guardar(nombre + ' (JPG).zip', await z.generateAsync({ type: 'blob' })); },
   async xlsx() { const d = JSON.parse(document.getElementById('datos').textContent), wb = XLSX.utils.book_new();
     const hoja = (rows, nom) => { const ws = XLSX.utils.json_to_sheet(rows); ws['!cols'] = Object.keys(rows[0] || {}).map(k => ({ wch: Math.min(45, Math.max(10, k.length + 2, ...rows.map(r => String(r[k] ?? '').length))) })); ws['!autofilter'] = { ref: ws['!ref'] }; XLSX.utils.book_append_sheet(wb, ws, nom); };
-    hoja(d.clientes, 'Clientes'); hoja(d.filas, 'Albaranes'); hoja(respuestas(), 'Cuándo paga');
+    hoja(d.clientes, 'Clientes'); hoja(d.filas, 'Albaranes'); hoja(respuestas(), 'Cuándo paga'); if (revisiones().length) hoja(revisiones(), 'Puede que no deban');
     await guardar(nombre + '.xlsx', new Blob([XLSX.write(wb, { bookType: 'xlsx', type: 'array' })])); },
 };
 const filasCarmen = [...document.querySelectorAll('tr[data-cod]')];
@@ -292,10 +296,17 @@ let guardado = {}; try { guardado = JSON.parse(localStorage.getItem(CLAVE) || '{
 filasCarmen.forEach(tr => { const g = guardado[tr.dataset.cod] || {}; tr.querySelectorAll('[data-c]').forEach(el => { el.value = g[el.dataset.c] || ''; el.addEventListener('input', () => {
   const r = guardado[tr.dataset.cod] = guardado[tr.dataset.cod] || {}; r[el.dataset.c] = el.value; try { localStorage.setItem(CLAVE, JSON.stringify(guardado)); } catch (e) {} }); }); });
 const respuestas = () => filasCarmen.map(tr => { const v = c => tr.querySelector('[data-c=' + c + ']').value.trim(); return { Cliente: tr.dataset.nom, Código: tr.dataset.cod, 'Según Golden': tr.dataset.golden, 'Cómo paga (Carmen)': v('frec'), 'Día aprox.': v('dia'), Nota: v('nota') }; });
-accion.carmen = async () => { const r = respuestas(), n = r.filter(x => x['Cómo paga (Carmen)'] || x['Día aprox.'] || x.Nota).length;
+// «Puede que no deban» (Tito, 26/11/2026): Carmen marca factura por factura qué pasa; va en el mismo Excel de lo apuntado.
+const filasRev = [...document.querySelectorAll('tr[data-fra]')], CLAVE2 = 'deudas-puede-que-no';
+let guardado2 = {}; try { guardado2 = JSON.parse(localStorage.getItem(CLAVE2) || '{}'); } catch (e) {}
+filasRev.forEach(tr => { const g = guardado2[tr.dataset.fra] || {}; tr.querySelectorAll('[data-c]').forEach(el => { el.value = g[el.dataset.c] || ''; el.addEventListener('input', () => {
+  const r = guardado2[tr.dataset.fra] = guardado2[tr.dataset.fra] || {}; r[el.dataset.c] = el.value; try { localStorage.setItem(CLAVE2, JSON.stringify(guardado2)); } catch (e) {} }); }); });
+const revisiones = () => filasRev.map(tr => { const v = c => tr.querySelector('[data-c=' + c + ']').value.trim(); return { Cliente: tr.dataset.nom, Código: tr.dataset.cod2, Factura: tr.dataset.fra, 'Fecha factura': tr.dataset.ff, Importe: Number(tr.dataset.imp), 'Ya pagó la del': tr.dataset.ult, 'Qué pasa (Carmen)': v('que'), 'Fecha del cobro': v('cuando'), Nota: v('nota') }; });
+accion.carmen = async () => { const r = respuestas(), rv = revisiones(), n = r.filter(x => x['Cómo paga (Carmen)'] || x['Día aprox.'] || x.Nota).length + rv.filter(x => x['Qué pasa (Carmen)'] || x['Fecha del cobro'] || x.Nota).length;
   if (!n) { est.textContent = 'No hay nada apuntado todavía.'; return; }
   const wb = XLSX.utils.book_new(), ws = XLSX.utils.json_to_sheet(r); ws['!cols'] = [{ wch: 34 }, { wch: 12 }, { wch: 28 }, { wch: 18 }, { wch: 14 }, { wch: 30 }]; XLSX.utils.book_append_sheet(wb, ws, 'Cuándo paga');
-  await guardar('Cuándo paga cada cliente - Carmen ' + new Date().toLocaleDateString('sv-SE') + '.xlsx', new Blob([XLSX.write(wb, { bookType: 'xlsx', type: 'array' })])); };
+  if (rv.length) { const w2 = XLSX.utils.json_to_sheet(rv); w2['!cols'] = [{ wch: 30 }, { wch: 11 }, { wch: 11 }, { wch: 12 }, { wch: 10 }, { wch: 13 }, { wch: 30 }, { wch: 14 }, { wch: 30 }]; XLSX.utils.book_append_sheet(wb, w2, 'Puede que no deban'); }
+  await guardar('Lo apuntado por Carmen ' + new Date().toLocaleDateString('sv-SE') + '.xlsx', new Blob([XLSX.write(wb, { bookType: 'xlsx', type: 'array' })])); };
 botones.push(...document.querySelectorAll('[data-bajar=carmen]'));
 botones.forEach(b => b.addEventListener('click', async () => { botones.forEach(x => x.disabled = true); est.textContent = 'Preparando…';
   try { await accion[b.dataset.bajar](); } catch (e) { est.textContent = 'Error al preparar el archivo.'; console.error(e); } finally { botones.forEach(x => x.disabled = false); } }));
