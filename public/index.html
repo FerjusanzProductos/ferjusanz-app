@@ -6075,7 +6075,7 @@ async function vistaWhatsapp() {
     go('importar', { texto, desdeWa: x.id });
   }
   function pintar(filas) {
-    const kids = [h('div', { class: 'aviso-card' }, 'Todos los pedidos que llegan, en un sitio. Los del WhatsApp de Fernando (609 100 690) los apunta solo el asistente: no contesta a nadie y no crea pedidos. Revisa cada uno y pulsa «📝 Pasar a pedido». Los mensajes personales no se guardan.'),
+    const kids = [h('div', { class: 'aviso-card' }, 'Todos los pedidos que llegan, en un sitio. Los del WhatsApp de Fernando (609 100 690) los apunta solo el asistente: no crea pedidos y solo contesta a números que no son de ningún cliente, para pedirles negocio, dirección y día. ' + (ES_PRUEBAS ? 'Revisa cada uno y pulsa «📝 Pasar a pedido».' : 'Revisa cada uno, apúntalo en Golden y márcalo «✔ Revisado».') + ' Los mensajes personales no se guardan.'),
       h('button', { class: 'guardar', style: 'width:100%;position:static;box-shadow:none;margin:6px 0', onclick: () => go('importar') }, '✍️ Apuntar uno que llega por otro sitio (texto, voz, foto, PDF o Excel)'),
       h('div', { class: 'chips' }, [[false, 'Por revisar'], [true, 'Todos']].map(([v, n]) => h('button', { class: 'chip' + (verTodos === v ? ' on' : ''), onclick: () => { verTodos = v; cargar(); } }, n)))];
     if (!filas.length) kids.push(h('p', { class: 'vacio' }, verTodos ? 'Todavía no ha llegado ningún pedido por WhatsApp.' : 'No hay nada por revisar. 👌'));
@@ -6100,7 +6100,7 @@ async function vistaWhatsapp() {
             const n = telES(x.telefono); if (!await confirmar('¿Guardar el ' + n + ' en la ficha de ' + nombreCli(c) + '? Así sus próximos mensajes se reconocen solos.')) return;
             const r = await sb.from('clientes').update({ telefono: c.telefono ? c.telefono + ' / ' + n : n }).eq('id', c.id); if (r.error) { toast(msgErr(r.error), 'err'); return; } toast('Número guardado en la ficha', 'ok'); cargar();
           } }, '📱 Guardar este número en su ficha') : null,
-          x.estado === 'pasado' && x.pedido_id ? h('button', { class: 'small', onclick: () => go('pedido', { id: x.pedido_id }) }, '📋 Abrir el pedido') : x.estado !== 'descartado' ? h('button', { class: 'guardar small', onclick: () => pasarAPedido(x, c) }, '📝 Pasar a pedido') : null,
+          x.estado === 'pasado' && x.pedido_id ? h('button', { class: 'small', onclick: () => go('pedido', { id: x.pedido_id }) }, '📋 Abrir el pedido') : x.estado !== 'descartado' && ES_PRUEBAS ? h('button', { class: 'guardar small', onclick: () => pasarAPedido(x, c) }, '📝 Pasar a pedido') : null, /* en la normal, no hasta que la app se use de verdad */
           x.estado === 'nuevo' ? accion('✔ Revisado', 'ghost', { estado: 'revisado' }) : x.estado !== 'pasado' ? accion('↩️ Por revisar', 'ghost', { estado: 'nuevo' }) : null,
           x.estado === 'nuevo' ? accion('✖ Descartar', 'ghost', { estado: 'descartado' }) : null)));
     });
@@ -6151,6 +6151,7 @@ async function vistaContactosPortal() {
   cargar();
 }
 const movil9 = t => { const d = String(t || '').replace(/\D/g, ''); return d.length === 11 && d.startsWith('34') ? d.slice(2) : d; };
+
 function vistaSecretaria() {
   state.view = 'secretaria'; state.desdeSec = true;
   const tareas = [
