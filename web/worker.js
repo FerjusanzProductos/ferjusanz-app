@@ -39,7 +39,7 @@ async function avisarIndexNow(env) {
   const desde = new Date(Date.now() - 3 * 864e5).toISOString().slice(0, 10);
   const urls = [...xml.matchAll(/<loc>([^<]+)<\/loc>(?:<lastmod>([^<]*)<\/lastmod>)?/g)].filter(m => todo || (m[2] || "") >= desde).map(m => m[1]);
   if (!urls.length) return;
-  const r = await fetch("https://api.indexnow.org/indexnow", { method: "POST", headers: { "content-type": "application/json; charset=utf-8" },
+  const r = await fetch("https://www.bing.com/indexnow", { method: "POST", headers: { "content-type": "application/json; charset=utf-8" },
     body: JSON.stringify({ host: "www." + DOMINIO_SIN_WWW, key: INDEXNOW_CLAVE, keyLocation: `https://www.${DOMINIO_SIN_WWW}/${INDEXNOW_CLAVE}.txt`, urlList: urls }) });
   console.log("indexnow", r.status, urls.length);
   await env.FOTOS.put("indexnow-ultimo", `${new Date().toISOString()} ${r.status} ${urls.length} ${(await r.text()).slice(0, 200)}`);
