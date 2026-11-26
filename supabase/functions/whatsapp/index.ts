@@ -125,7 +125,7 @@ Reglas:
 - es_pedido = true solo si pide género (aunque sea «lo de siempre» o una sola cosa). Saludos, charlas, fotos de familia, preguntas de precio o quejas: false (pon la duda en la nota si es de un cliente).
 - No inventes cantidades ni productos. Si algo no está claro, cantidad null y explícalo en la nota.
 - producto_id: elige de la lista solo si es claramente ese producto; si dudas, null.
-- «mañana», «el lunes»…: calcula la fecha a partir de hoy. Si no dice fecha, null.
+- «mañana», «el lunes»…: calcula la fecha a partir de hoy. Si no dice fecha, null (se pone sola el siguiente día de reparto).
 - Si te digo que ya hay un pedido apuntado y el mensaje lo amplía o lo corrige («ponme también…», «quita…», «mejor 3 cajas»), es_pedido = true, "cambia_pedido": true y en "lineas" el pedido COMPLETO ya corregido (lo de antes más lo nuevo). Si es otro pedido distinto, "cambia_pedido": false.`;
 
 type Parte = { texto?: string; medio?: { mime: string; data: string } };
@@ -230,6 +230,13 @@ Reglas:
   return { lineas: out, nota };
 }
 
+// Siguiente día de reparto: mañana; si cae en domingo, el lunes.
+function siguienteReparto() {
+  const d = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Madrid" }));
+  d.setDate(d.getDate() + (d.getDay() === 6 ? 2 : 1));
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 // ---------- Un mensaje ----------
 // deno-lint-ignore no-explicit-any
 async function procesar(sb: SB, m: any, nombre: string) {
@@ -298,6 +305,7 @@ async function procesar(sb: SB, m: any, nombre: string) {
     try { const af = await afinar(sb, cliente, lineas, texto || ia?.transcripcion || null, ids); if (af) { lineas = af.lineas; nota = [nota, af.nota].filter(Boolean).join("\n"); if (ia) ia.nota = [ia.nota, af.nota].filter(Boolean).join("\n"); } }
     catch (e) { console.error("afinar", e); }
   }
+  // Sin fecha: es para el siguiente día de reparto (Tito, 26/11/2026: «normalmente es para el día siguiente»).
   const fecha = /^\d{4}-\d{2}-\d{2}$/.test(String(ia?.fecha_entrega || "")) ? ia.fecha_entrega : null;
   await sb.from("whatsapp_mensajes").insert({ telefono: tel, nombre_contacto: nombre || null, cliente_id: cliente?.id || null, direccion: "entra", texto: (texto || ia?.transcripcion || null)?.slice(0, 4000), tipo, wa_id: m.id });
   // Añadido o cambio de un pedido que ya estaba: se junta en la misma tarjeta y vuelve a «Por revisar».
@@ -317,7 +325,7 @@ async function procesar(sb: SB, m: any, nombre: string) {
   }
   const { error: e2 } = await sb.from("whatsapp_pedidos").insert({
     wa_id: m.id, telefono: tel, nombre_contacto: nombre || null, reenviado: casa, cliente_id: cliente?.id || null, cliente_texto: cliTexto,
-    fecha_entrega: fecha, lineas, tipo, texto_original: texto ? texto.slice(0, 4000) : null, transcripcion: ia?.transcripcion ? String(ia.transcripcion).slice(0, 4000) : null,
+    fecha_entrega: fecha || (ia?.es_pedido ? siguienteReparto() : null), lineas, tipo, texto_original: texto ? texto.slice(0, 4000) : null, transcripcion: ia?.transcripcion ? String(ia.transcripcion).slice(0, 4000) : null,
     nota: nota ? String(nota).slice(0, 2000) : (ia ? null : "Sin leer: mira el mensaje original."), error: error ? error.slice(0, 500) : null,
   });
   if (e2 && !/duplicate/i.test(e2.message)) throw e2;
