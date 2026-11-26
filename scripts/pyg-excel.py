@@ -89,5 +89,11 @@ hoja('Cliente y producto', ['Cliente', 'Producto', 'Ventas', 'Coste', 'Margen'],
 comp = collections.defaultdict(float)
 for m, p, val in D['co']: comp[p] += val
 hoja('Compras a proveedores', ['Proveedor', 'Compras (Golden)'], sorted([[p, x] for p, x in comp.items()], key=lambda f: -f[1]), [44, 16], {2: EUR})
+ws = hoja('Nos deben (todo)', ['Cliente', 'Debe en total', 'De hace más de 2 meses', 'Lo reciente (último mes)', 'Factura más antigua', 'Facturas'],
+     [[c, t, v or 0, t - (v or 0), d, k] for c, t, v, d, k in D.get('dt', [])], [44, 14, 16, 16, 14, 10], {2: EUR, 3: EUR, 4: EUR})
+ws.append([]); ws.append(['Total', sum(x[1] for x in D.get('dt', [])), sum(x[2] or 0 for x in D.get('dt', []))])
+for c in ws[ws.max_row]: c.font = Font(bold=True)
+ws.cell(ws.max_row, 2).number_format = EUR; ws.cell(ws.max_row, 3).number_format = EUR
+ws.append(['Lo del último mes es normal: los clientes de pago mensual pagan la 1.ª semana del mes siguiente. Las notas «a cuenta» de Golden ya están restadas.'])
 hoja('Nos deben (más de 2 meses)', ['Cliente', 'Pendiente', 'Desde'], [[c, x, d] for c, x, d in D['de']], [44, 14, 12], {2: EUR})
 wb.save(os.path.join(raiz, 'docs/pyg.xlsx')); print('docs/pyg.xlsx', len(wb.sheetnames), 'hojas')

@@ -16,7 +16,7 @@ const MES = `to_char(case when f.serie = 'P' and extract(day from f.fecha) <= 7 
 // Solo meses cerrados: las facturas P del mes en curso aún no están hechas.
 const CERRADO = `(case when f.serie = 'P' and extract(day from f.fecha) <= 7 then f.fecha - interval '1 month' else f.fecha end) < date_trunc('month', current_date)`;
 
-const [[g], lineas, abonos, extra, compras, personal, fijos, deudas, nombresPro] = await Promise.all([
+const [[g], lineas, abonos, extra, compras, personal, fijos, deudas, deudasTodo, nombresPro] = await Promise.all([
   sql(`select max(fecha)::text hasta from golden_facturas where not borrador`),
   sql(`select ${MES} m, upper(trim(f.cliente_nombre)) c, coalesce(l.producto_codigo, '') p,
          round(sum(l.neto), 2) v, round(sum(l.coste) filter (where l.coste > 0), 2) k, round(sum(l.neto) filter (where l.coste > 0), 2) vk,
@@ -35,6 +35,11 @@ const [[g], lineas, abonos, extra, compras, personal, fijos, deudas, nombresPro]
          select nombre, vencimiento, greatest(0, total - coalesce((select sum((p->>'importe')::numeric) from jsonb_array_elements(t.observacion_partes) p), 0)) total
          from golden_tesoreria t where tipo = 'C' and estado = 'PEN') c
        where total > 0.009 and vencimiento < date_trunc('month', current_date) - interval '1 month' group by nombre order by 2 desc`),
+  // Todo lo que deben (Tito, 26/11/2026: «¿El Águila solo debe eso?»): lo viejo y lo del último mes
+  sql(`select nombre, round(sum(total), 2) total, round(sum(total) filter (where vencimiento < date_trunc('month', current_date) - interval '1 month'), 2) viejo, min(vencimiento)::text desde, count(*) n from (
+         select nombre, vencimiento, greatest(0, total - coalesce((select sum((p->>'importe')::numeric) from jsonb_array_elements(t.observacion_partes) p), 0)) total
+         from golden_tesoreria t where tipo = 'C' and estado = 'PEN') c
+       where total > 0.009 group by nombre order by 2 desc`),
   sql(`select producto_codigo p, mode() within group (order by descripcion) d from golden_lineas where producto_codigo is not null group by 1`),
 ]);
 
@@ -65,6 +70,7 @@ const D = {
   co: compras.filter(x => mi[x.m] != null).map(x => [mi[x.m], x.p, n(x.v)]),
   pe: pers, fi: fij, fu: fuera,
   de: deudas.map(x => [x.nombre, n(x.total), x.desde]),
+  dt: deudasTodo.map(x => [x.nombre, n(x.total), n(x.viejo), x.desde, Number(x.n)]),
 };
 const datos = JSON.stringify(D).replace(/</g, '\\u003c');
 
