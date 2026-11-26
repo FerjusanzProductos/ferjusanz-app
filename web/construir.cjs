@@ -79,7 +79,6 @@ const CORTES = [
   ['Panadera', 'En rodajas, para horno y guarnición'],
   ['Brava', 'En tacos irregulares, para bravas'],
   ['Bastón', 'Para freír, la de toda la vida'],
-  ['Saladilla', 'Pequeña y entera, para saladilla y guarnición'],
   ['Dados', 'Para guisos, tortilla y salteados'],
   ['Gajo', 'Con forma de cuña, para horno o freidora'],
   ['Paja', 'Muy fina, para freír crujiente'],
@@ -902,7 +901,7 @@ const NUEVAS = [
 <h2>Tarifa sin compromiso</h2>
 <p>Indíquenos el número de plazas y el consumo aproximado y le enviamos precio según el mercado del día.</p>` },
   { path: '/productos/patata-pelada-para-hosteleria/', foto: F + '2020/09/distribuidor-patatas-beneficios.jpg', title: 'Patata pelada y cortada para hostelería en Madrid | Ferjusanz',
-    description: 'Patata pelada al por mayor para hostelería y colectividades de Madrid: panadera, brava, bastón, saladilla, dados, gajo y más cortes. Precio a consultar.',
+    description: 'Patata pelada al por mayor para hostelería y colectividades de Madrid: panadera, brava, bastón, dados, gajo y más cortes. Precio a consultar.',
     html: `<h1>Patata pelada y cortada para hostelería en Madrid</h1>
 <p>La patata es nuestra especialidad desde el primer día. Además de patata entera para todos los usos, servimos <strong>patata pelada y cortada</strong> lista para la cocina a restaurantes, hoteles, colegios, residencias y empresas de colectividades de Madrid.</p>
 <h2>Formatos de patata pelada</h2>
