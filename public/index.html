@@ -1296,7 +1296,18 @@ function navSnap(d) { let p = {}; try { p = JSON.parse(JSON.stringify(state.para
 const navClave = (v, p) => { try { return v + JSON.stringify(p || {}); } catch (e) { return v; } };
 /* Ir a una pantalla que ya está más atrás (Inicio, la lista de la que vienes…) VUELVE a ella en vez de abrirla otra vez encima:
    así el «atrás» del móvil no te devuelve a la pantalla que acabas de dejar ni se forman bucles entre pantallas. */
+/* Capas a pantalla completa (QR grande, tabla, recorrido, firma, grabar vídeo): llevan su paso en el historial y el «atrás» del móvil
+   las cierra, en vez de cambiar la pantalla de debajo o salirse de la app (Tito, 26/11/2026). Cerrarlas con su botón (el.remove()) gasta ese paso.
+   alCerrar: limpiar (micrófono, pantalla encendida…). siSale(): false = el «atrás» no la cierra (p. ej. se perdería la firma). */
+function capaAtras(el, alCerrar, siSale) {
+  const quitar = HTMLElement.prototype.remove.bind(el);
+  el.classList.add('capa-atras'); el.__siSale = siSale;
+  el.__quitar = () => { quitar(); if (alCerrar) alCerrar(); };
+  el.remove = () => { if (!el.isConnected) return; el.__quitar(); NAV.saltaPop = (NAV.saltaPop || 0) + 1; history.back(); };
+  try { history.pushState(navSnap(NAV.d), ''); } catch (e) { }
+}
 function go(view, params, opts) {
+  if (NAV.saltaPop && !(opts && opts.trasCapa)) { setTimeout(() => { NAV.saltaPop = 0; go(view, params, Object.assign({}, opts, { trasCapa: 1 })); }, 150); return; }   /* se acaba de cerrar una capa: esperar a que su «atrás» termine */
   if (!puedeSalir()) return;
   const mismo = view === state.view && JSON.stringify(params || {}) === JSON.stringify(state.params || {});
   const clave = navClave(view, params);
@@ -1323,12 +1334,15 @@ function compartirPantalla(titulo) {
 function puedeSalir() { if (!(window.__sinGuardar && window.__sinGuardar())) { window.__sinGuardar = null; return true; } if (!confirm('Has cambiado datos y NO están guardados.\n\nAceptar = salir sin guardar · Cancelar = quedarme para pulsar «Guardar»')) return false; window.__sinGuardar = null; return true; }
 function atras(fallback) { if (NAV.d > 0) history.back(); else if (fallback) fallback(); else go('inicio', {}, { replace: true }); }
 window.addEventListener('popstate', e => {
+  if (NAV.saltaPop) { NAV.saltaPop--; return; }   /* el «atrás» de cerrar una capa con su botón */
   if (window.__PUBLICA) { const f = PUB_ATRAS.pop(); if (f) f(); return; }   /* páginas del cliente: «atrás» cierra lo abierto */
   if (NAV.salto != null) { const dd = (e.state && e.state.d) || 0;   /* go() ya pintó la pantalla: solo terminar de retroceder */
     if (e.state && dd > NAV.salto) { try { history.go(NAV.salto - dd); } catch (x) { } return; }
     NAV.salto = null; NAV.d = dd; return; }
   const vd = document.querySelector('.visordoc, .pres-ov');   // el visor de facturas o de la presentación va por encima: «atrás» solo lo cierra a él
   if (vd) { vd.remove(); if (document.fullscreenElement) document.exitFullscreen().catch(() => { }); return; }   /* el visor tenía su propio paso en el historial: ya se ha gastado */
+  const ca = [...document.querySelectorAll('.capa-atras')].pop();
+  if (ca) { if (ca.__siSale && !ca.__siSale()) { try { history.pushState(navSnap(NAV.d), ''); } catch (x) { } return; } ca.__quitar(); return; }
   /* con una ventana encima de otra (editar presentación › editar lámina), «atrás» cierra SOLO la de arriba; antes cerraba la de debajo y se perdían los cambios */
   const ov = [...document.querySelectorAll('.overlay')].reduce((a, o) => !a || (+getComputedStyle(o).zIndex || 0) >= (+getComputedStyle(a).zIndex || 0) ? o : a, null);
   if (ov) { ov.remove(); state.sheetAbierta = !!document.querySelector('.overlay'); try { history.pushState(navSnap(NAV.d), ''); } catch (x) { } return; }
@@ -2664,7 +2678,7 @@ function abrirFirma(d) {
       h('button', { class: 'ghost', style: 'flex:1', onclick: () => { ctx.clearRect(0, 0, cv.width, cv.height); trazos = 0; } }, 'Borrar'),
       h('button', { class: 'ghost', style: 'flex:1', onclick: () => ov.remove() }, 'Cancelar'),
       h('button', { class: 'guardar', style: 'flex:2', onclick: () => { if (!trazos) { toast('Falta la firma', 'err'); return; } const png = cv.toDataURL('image/png'); ov.remove(); guardarFirma(d, png, nombre.value.trim()); } }, 'Guardar firma'))));
-  document.body.append(ov);
+  document.body.append(ov); capaAtras(ov, null, () => !trazos || confirm('¿Salir sin guardar la firma?'));
 }
 function cajaTraza(d) {
   const te = d.trazaEstado; if (te === undefined) return h('div', {});
@@ -2859,7 +2873,7 @@ async function qrPantalla(i) {
   let src; try { src = await qrGrandeUrl(dato); } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión para este QR.' : msgErr(e), 'err'); return; }
   const lado = Math.floor(Math.min(innerWidth - 32, innerHeight - 230));
   let wl = null; try { navigator.wakeLock && navigator.wakeLock.request('screen').then(x => { wl = x; }).catch(() => { }); } catch (e) { }
-  const cerrar = () => { try { wl && wl.release(); } catch (e) { } capa.remove(); document.removeEventListener('keydown', esc); };
+  const cerrar = () => capa.remove();
   const esc = e => { if (e.key === 'Escape') cerrar(); };
   const otros = QR_GRANDES.map((q, j) => j === i ? null : h('button', { class: 'ghost', style: 'flex:1;min-height:48px;color:#111;border-color:#111', onclick: () => { cerrar(); qrPantalla(j); } }, q[0] + ' ' + q[1])).filter(Boolean);
   const capa = h('div', { role: 'dialog', 'aria-label': t, style: 'position:fixed;inset:0;z-index:99999;background:#fff;color:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px calc(env(safe-area-inset-bottom,0px) + 12px)' },
@@ -2869,7 +2883,7 @@ async function qrPantalla(i) {
     h('div', { style: 'display:flex;gap:8px;width:100%;max-width:520px' }, ...otros),
     h('button', { class: 'guardar', style: 'width:100%;max-width:520px;min-height:52px', onclick: cerrar }, '✕ Cerrar'));
   document.addEventListener('keydown', esc);
-  document.body.append(capa);
+  document.body.append(capa); capaAtras(capa, () => { try { wl && wl.release(); } catch (e) { } document.removeEventListener('keydown', esc); });
 }
 const botonesQR = () => h('div', { style: 'display:flex;flex-direction:column;gap:8px;margin:10px 0' },
   ...QR_GRANDES.map((q, i) => h('button', { style: 'width:100%;min-height:56px;font-size:17px;position:static', onclick: () => qrPantalla(i) }, q[0] + ' ' + q[1])));
@@ -4218,7 +4232,7 @@ const tourClave = () => 'fj_tour_v1_' + (state.user ? state.user.id : 'x');
 const sinTours = () => navigator.webdriver && !LS.get('fj_forzar_tour', false);
 function mostrarTour(forzar) {
   if (document.getElementById('tour')) return; const S = tourSlides(); let i = 0, x0 = null;
-  const cerrar = (guiaFin) => { try { LS.set(tourClave(), 1); } catch (e) { } ov.remove(); document.removeEventListener('keydown', tecla); if (guiaFin) go('ayuda'); };
+  const cerrar = (guiaFin) => { ov.remove(); if (guiaFin) go('ayuda'); };
   const tecla = e => { if (e.key === 'ArrowRight') ir(1); else if (e.key === 'ArrowLeft') ir(-1); };
   const card = h('div', { class: 'tour-card' }), dots = h('div', { class: 'tour-dots' });
   function ir(d) { const n = i + d; if (n < 0) return; if (n >= S.length) { cerrar(false); return; } i = n; pinta(d); }
@@ -4236,7 +4250,7 @@ function mostrarTour(forzar) {
     card, dots, h('div', { class: 'tour-nav' }, atr, sig));
   ov.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
   ov.addEventListener('touchend', e => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 50) ir(dx < 0 ? 1 : -1); }, { passive: true });
-  document.addEventListener('keydown', tecla); document.body.append(ov); pinta(0);
+  document.addEventListener('keydown', tecla); document.body.append(ov); capaAtras(ov, () => { try { LS.set(tourClave(), 1); } catch (e) { } document.removeEventListener('keydown', tecla); }); pinta(0);
 }
 /* Consejos de la primera vez en cada pantalla */
 const TIPS = {
@@ -6579,7 +6593,7 @@ function vistaCompras() {
           const w2 = h('div', { class: 'tabla-wrap fs' }, crearTb()); aplicaFs(w2);
           const ov = h('div', { class: 'mxfull' }, h('div', { class: 'mxfull-b' }, h('b', {}, 'Tabla · ' + fechaES(fecha)), barraZoom([w2, wrap]), h('button', { class: 'guardar small', onclick: () => ov.remove() }, 'Cerrar')),
             h('div', { class: 'sub', style: 'padding:0 10px 4px' }, 'Gira el móvil en horizontal para ver más. Toca una casilla para marcar su fila y su columna.'), w2);
-          document.body.append(ov);
+          document.body.append(ov); capaAtras(ov);
         };
         const nomCol = c => c.producto + (multi[c.producto] > 1 ? ' (' + c.unidad + ')' : '');
         const csv = () => descargarCSV('tabla_compra_' + fecha + '.csv', [['Cliente'].concat(colsL.map(c => nomCol(c) + ' [' + c.unidad + ']')), ...cliL.map(cl => [cl.nombre].concat(colsL.map(c => cl.cel.get(c.k) || ''))), ...rowsTot.map(([nom, fn]) => [nom].concat(colsL.map(c => fn(c))))]);
@@ -13131,7 +13145,8 @@ async function grabarVideoPres(tipo, alGuardar, opts) {
   cv.style.cssText = 'width:100%;height:auto;max-height:70vh;object-fit:contain;background:#fff;border-radius:6px';
   const decir = h('div', { style: 'background:#facc15;color:#14532d;font-weight:700;font-size:20px;line-height:1.35;padding:10px 12px;border-radius:8px' }, '');
   tapa.append(info, cv, decir, botones); document.body.append(tapa);
-  const fuera = () => { try { stream && stream.getTracks().forEach(t => t.stop()); mic && mic.getTracks().forEach(t => t.stop()); } catch (e) { } clearInterval(tic); tapa.remove(); };
+  capaAtras(tapa, () => { try { stream && stream.getTracks().forEach(t => t.stop()); mic && mic.getTracks().forEach(t => t.stop()); } catch (e) { } clearInterval(tic); }, () => !(rec && rec.state === 'recording') || confirm('¿Dejar de grabar? El vídeo se pierde.'));
+  const fuera = () => tapa.remove();
   let lamX = [], hojas = [], n = 0, rec = null, stream = null, mic = null, tic = null, trozos = [];
   const BT = (t, f, cls) => h('button', { class: cls || 'ghost', style: 'flex:1;min-height:56px;font-size:17px', onclick: f }, t);
   let frases = null; const pinta = () => { decir.textContent = '🗣️ ' + (frases ? frases[n] || '' : pvGuion(lamX[n] || {}, tipo)); cx.fillStyle = '#ffffff'; cx.fillRect(0, 0, cv.width, cv.height); const im = hojas[n]; if (im) cx.drawImage(im, 0, 0, cv.width, cv.height); };
@@ -13818,7 +13833,7 @@ function tabMarca(el) {
     h('p', { class: 'sub' }, 'Imágenes con el logo y fotos de Ferjusanz para mandar. «📤» abre WhatsApp, Gmail, Drive… del móvil.'),
     ...MARCA.map(([t, d, imgs, pdf]) => h('div', { class: 'card' },
       h('div', { class: 'nombre' }, t), h('div', { class: 'sub', style: 'margin:2px 0 8px' }, d),
-      h('div', { style: 'display:flex;gap:8px;overflow-x:auto;padding-bottom:4px' }, ...imgs.map(f => h('img', { src: 'marca/' + f, alt: t, loading: 'lazy', style: 'height:150px;max-width:none;border-radius:8px;border:1px solid #e5e7eb;cursor:pointer', onclick: () => window.open('marca/' + f, '_blank') }))),
+      h('div', { style: 'display:flex;gap:8px;overflow-x:auto;padding-bottom:4px' }, ...imgs.map(f => h('img', { src: 'marca/' + f, alt: t, loading: 'lazy', style: 'height:150px;max-width:none;border-radius:8px;border:1px solid #e5e7eb;cursor:pointer', onclick: () => visorDoc('marca/' + f, false, t) }))),
       h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' },
         ...imgs.map((f, i) => h('button', { class: 'small', onclick: () => marcaCompartir(f) }, '📤 ' + (imgs.length > 1 ? 'Imagen ' + (i + 1) : 'Compartir imagen'))),
         ...(pdf ? [h('button', { class: 'small', onclick: () => marcaCompartir(pdf) }, '📄 PDF imprenta')] : [])))),
@@ -15102,7 +15117,7 @@ function vistaImportar() {
   }
   function quitarArch(a) { S.archivos = S.archivos.filter(x => x !== a); pintarArch(); }
   function verArch(a) {
-    if (!a.url) { const u = URL.createObjectURL(a.file); window.open(u, '_blank'); return; }
+    if (!a.url) { verArchivoLocal(a.file, a.nombre); return; }
     hoja(a.nombre, h('div', { style: 'overflow:auto;max-height:70vh' }, h('img', { src: a.url, style: 'width:100%;min-width:100%' })));
   }
   function pintarArch() {
