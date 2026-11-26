@@ -7,13 +7,13 @@ _Primer plan del 12/11/2026 (vídeo de revolutia). **Actualizado el 22/11/2026**
 - 360dialog: cuenta Direct Client a nombre de la SL. **Canal aún sin crear** (el alta se atascó; Tito escribió al soporte). **Sin API key todavía.** Chats antiguos: «No compartir».
 
 ## Cómo funciona (montado en PRUEBAS, 22/11/2026)
-- **Silencioso**: no contesta ni envía nada a nadie. Solo lee y apunta. (Más adelante, quizá «Pedido recibido ✅» solo a clientes.)
+- **Silencioso**: solo lee y apunta. **Única respuesta** (Tito, 26/11/2026): a un número que no es de ningún cliente y manda un pedido, una vez al día: «Gracias, hemos recibido tu pedido. Para que vaya todo bien anotado, es importante que nos digas: nombre del negocio, dirección de entrega y día que lo quieres. — Ferjusanz Productos». Necesita `D360_API_KEY` en Supabase. (Más adelante, quizá «Pedido recibido ✅» solo a clientes.)
 - **Qué guarda**: mensajes de **clientes conocidos** (su teléfono está en la ficha) y **pedidos reenviados por la casa** (Tito reenvía al 609 100 690 lo que le llega; el cliente se saca del texto o de una nota que mande justo después, «es del bar X»; si no está claro, queda «sin cliente»). De números desconocidos, solo un **texto que nombre un producto y una cantidad** y que la IA vea como pedido. **No guarda nada personal**: familia, amigos, sus fotos y audios, grupos y lo que manda el propio padre.
 - **Audios**: los transcribe **Gemini** (Claude no oye audios). **Fotos de listas** y texto: los lee **Claude** (o Gemini si no hay clave de Claude).
 - El pedido queda como **propuesta** en la tabla `whatsapp_pedidos` y en la pantalla **«💬 WhatsApp · pedidos»** (Entregas y pedidos, solo oficina). **No crea pedidos** (el trabajo real sigue en Golden).
 - Piezas: `supabase/functions/whatsapp/index.ts` y `supabase/migrations/20261209a_whatsapp_pedidos.sql`.
 
-## Conectar el webhook (cuando haya API key)
+## Conectar el webhook (✅ hecho el 26/11/2026 en la real; falta `D360_API_KEY` en Supabase)
 1. **Tito** guarda la API key de 360dialog: con el formulario seguro que abre Claude (para `waba-v2.360dialog.io`) y en los secretos de Supabase de la base real como `D360_API_KEY` (https://supabase.com/dashboard/project/hvydnjaswdexttogsyen/functions/secrets, «Sitio para ordenador»). Nunca por el chat.
 2. **Claude** (autorización permanente): lanzar `20261209a_whatsapp_pedidos.sql` en la real; crear un secreto nuevo `WHATSAPP_WEBHOOK_SECRET` (al azar, sin escribirlo en ningún sitio); subir la función `whatsapp` a la real **sin comprobar JWT**.
 3. **Claude** da de alta el webhook: `POST https://waba-v2.360dialog.io/v1/configs/webhook` con cabecera `D360-API-KEY` y cuerpo `{"url": "https://hvydnjaswdexttogsyen.supabase.co/functions/v1/whatsapp", "headers": {"x-ferjusanz-secreto": "<el secreto>"}}`.

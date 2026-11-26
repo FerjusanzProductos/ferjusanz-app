@@ -1,5 +1,6 @@
 // 💬 Asistente de WhatsApp de Ferjusanz (función de Supabase «whatsapp»), conectado a 360dialog (22/11/2026).
-// MODO SILENCIOSO: no contesta ni envía nada a nadie. Solo lee los mensajes que llegan al 609 100 690
+// MODO SILENCIOSO: no contesta a nadie, salvo una cosa: a un número desconocido que manda un pedido le pide
+// negocio, dirección y día (pedirDatos, una vez al día). Solo lee los mensajes que llegan al 609 100 690
 // (WhatsApp Business del padre, en «Coexistence») y apunta los PEDIDOS como propuesta en whatsapp_pedidos.
 // - Cliente conocido (su teléfono está en «clientes»): se guarda el mensaje y, si es pedido, la propuesta.
 // - Reenviado desde un número de la casa (Tito): es el pedido de un cliente; el cliente sale del texto.
@@ -256,7 +257,25 @@ async function procesar(sb: SB, m: any, nombre: string) {
     nota: nota ? String(nota).slice(0, 2000) : (ia ? null : "Sin leer: mira el mensaje original."), error: error ? error.slice(0, 500) : null,
   });
   if (e2 && !/duplicate/i.test(e2.message)) throw e2;
+  if (!casa && !cli && ia?.es_pedido) return "pedido · " + await pedirDatos(sb, m.from, tel);
   return "pedido";
+}
+
+// Única respuesta automática (Tito, 26/11/2026: «Sí. Ese mismo mensaje»): a un número que no es de ningún cliente
+// y manda un pedido, se le piden negocio, dirección y día. Como mucho una vez cada 24 h por número.
+const PIDE_DATOS = "Gracias, hemos recibido tu pedido. Para que vaya todo bien anotado, es importante que nos digas: nombre del negocio, dirección de entrega y día que lo quieres. — Ferjusanz Productos";
+async function pedirDatos(sb: SB, para: string, tel: string) {
+  const key = env("D360_API_KEY");
+  if (!key) return "sin clave para contestar";
+  const { data: ya } = await sb.from("whatsapp_mensajes").select("id").eq("telefono", tel).eq("direccion", "sale").gte("created_at", new Date(Date.now() - 24 * 3600000).toISOString()).limit(1).maybeSingle();
+  if (ya) return "ya se le pidió hoy";
+  const r = await fetch(`${D360}/messages`, {
+    method: "POST", headers: { "D360-API-KEY": key, "Content-Type": "application/json" },
+    body: JSON.stringify({ messaging_product: "whatsapp", recipient_type: "individual", to: String(para).replace(/\D/g, ""), type: "text", text: { body: PIDE_DATOS } }),
+  }).catch((e) => new Response(String(e?.message || e), { status: 599 }));
+  const error = r.ok ? null : `360dialog ${r.status}: ${(await r.text()).slice(0, 300)}`;
+  await sb.from("whatsapp_mensajes").insert({ telefono: tel, direccion: "sale", texto: PIDE_DATOS, tipo: "text", estado: error ? "error" : "enviado", error });
+  return error ? "error al pedir datos" : "datos pedidos";
 }
 
 function iguales(a: string, b: string) {
