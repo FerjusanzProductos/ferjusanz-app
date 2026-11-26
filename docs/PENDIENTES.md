@@ -7,6 +7,7 @@ _Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda · ⏸ en espera._
 - 🔴 **Recuperar varios clientes perdidos**, entre ellos las **facultades de Informática y de Documentación** (SALNAYA SL, perdidas; ver su punto en «👤 Fernando»). Tito dirá cuáles más.
 - 🔴 **El Águila**: que se ponga al día con los pagos (ver su deuda en Golden y llamarle).
 - 🔴 **Colegios privados** (26/11/2026): llamar a los 14 de Comercial › Contactos (3 al día desde el 27/11) y preguntar si cocinan dentro y quién compra. Mirar si contestan Agora, Kensington y Liceo Europeo al correo del 26/11 (llega a ferjusanzfacturas@gmail.com).
+- 🔴 **Correo masivo del 26/11** (~170 colegios, institutos y residencias): **Claude**, cada día, mirar en ferjusanzfacturas@gmail.com las respuestas (avisar a Tito al momento de las buenas; las de «baja», apuntarlas en la ficha y no volver a escribirles) y los rebotes. Llamadas de seguimiento: 9 al día desde el 01/12 en «A quién llamar». Con la urgencia de Tito, buscar más correos de los que quedaron sin él (Collado Villalba, Galapagar, Pinto, concertados de Alcalá, residencias AMAS) cuando haya búsquedas.
 - 🟡 **La Rueda** ha vuelto como cliente, con precio bajo para recuperarlo. **Tito**: decir qué precio o tarifa se le pone (no se cambian precios sin que lo diga).
 
 ## 🌐 LA WEB (nueva, de prueba: https://ferjusanz-web.fernandosanzalba.workers.dev)
