@@ -55,6 +55,8 @@ export default {
     if (url.hostname === DOMINIO_SIN_WWW) return Response.redirect("https://www." + DOMINIO_SIN_WWW + url.pathname + url.search, 301);
     let ruta = decodeURI(url.pathname);
     if (ruta === "/favicon.ico") return Response.redirect(url.origin + "/marca/icono-32.png", 301); // el móvil lo pide aunque haya <link rel=icon>
+    // Enlace fijo de reseñas (para la web y para un QR que no cambie): «Escribir una reseña» de la ficha de Google.
+    if (ruta === "/resena" || ruta === "/resena/") return Response.redirect("https://search.google.com/local/writereview?placeid=ChIJveByT-wuQg0R0N-q6Xi6yjA", 302);
     if (ruta === "/enviar-contacto") return enviarContacto(request, url, env);
     if (ruta === "/enviar-primer-pedido") return enviarPrimerPedido(request, url, env);
     // Fotos nuevas (novedades y artículos): en el almacén KV, no dentro del Worker.

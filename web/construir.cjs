@@ -32,6 +32,12 @@ const WHATSAPP = [ // los dos móviles de la familia
 const ANIOS = 'más de seis décadas'; // Fernando 16/11/2026: «más de 60 años» e «impacta más decir décadas»
 
 const TARIFA = '/calcular-tarifa/';
+// Reseñas en Google (Tito 26/11/2026): enlace oficial «Escribir una reseña» de la ficha (newReviewUri). /resena/ redirige ahí (Worker).
+const RESENA = '/resena/';
+const bandaResena = () => `<section class="resena-banda" aria-label="Reseñas"><div class="envoltura resena-in">
+  <div><p class="resena-estrellas" aria-hidden="true">★★★★★</p><h2>¿Ya es cliente? Cuéntenos qué tal en Google</h2><p>Su opinión ayuda a otros cocineros a conocernos, y la leemos toda: la buena y la que nos ayuda a mejorar.</p></div>
+  <a class="btn btn-borde" href="${RESENA}" rel="nofollow" target="_blank">★ <span>Dejar una reseña</span>${I.flecha}</a>
+</div></section>`;
 const MENU = [
   ['/productos/', 'Productos'],
   ['/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', 'Hostelería'],
@@ -316,7 +322,7 @@ ${datos.map(d => `<script type="application/ld+json">${JSON.stringify(d)}</scrip
     <a href="/" class="logo" aria-label="Ferjusanz, inicio"><img src="/marca/logo-oscuro.png" alt="Ferjusanz · patatas, frutas, verduras, huevos, setas, champiñones y legumbres" width="600" height="134"></a>
     <nav class="menu-ancho" aria-label="Principal">${nav}</nav>
     <a class="btn btn-wa btn-cab" href="#pedir-precio">${I.wa}<span>Pedir precio</span></a>
-    <details class="menu"><summary aria-label="Abrir menú"><span></span><span></span><span></span></summary><nav aria-label="Menú">${nav}<a href="/novedades/"${actual('/novedades/') ? ' aria-current="page"' : ''}>Novedades</a><a href="${TARIFA}"${actual(TARIFA) ? ' aria-current="page"' : ''}>Calcule su tarifa</a><p class="menu-sub">Productos</p>${familiasMenu}<a href="#pedir-precio" class="btn btn-wa">${I.wa}<span>Pedir precio por WhatsApp</span></a></nav></details>
+    <details class="menu"><summary aria-label="Abrir menú"><span></span><span></span><span></span></summary><nav aria-label="Menú">${nav}<a href="/novedades/"${actual('/novedades/') ? ' aria-current="page"' : ''}>Novedades</a><a href="${TARIFA}"${actual(TARIFA) ? ' aria-current="page"' : ''}>Calcule su tarifa</a><a href="${RESENA}" rel="nofollow" target="_blank">★ Déjenos una reseña</a><p class="menu-sub">Productos</p>${familiasMenu}<a href="#pedir-precio" class="btn btn-wa">${I.wa}<span>Pedir precio por WhatsApp</span></a></nav></details>
   </div>
   <div class="buscar-fila"><form class="buscar" action="/buscar/" method="get" role="search"><input type="search" name="q" placeholder="Buscar producto o página" aria-label="Buscar producto o página" enterkeyhint="search"><button type="submit" aria-label="Buscar">${I.lupa}</button></form></div>
 </header>
@@ -361,7 +367,7 @@ ${cuerpo}
     </div>
     <div>
       <h2>Ferjusanz</h2>
-      <ul><li><a href="/empresa-de-venta-y-distribucion-de-fruta-y-verdura/">Quiénes somos</a></li><li><a href="/zonas-de-reparto/">Zonas de reparto</a></li><li><a href="/novedades/">Novedades del almacén</a></li><li><a href="/blog/">Guías para profesionales</a></li><li><a href="/contacto/">Contacto</a></li><li><a href="/aviso-legal/">Aviso legal</a></li><li><a href="/politica-de-privacidad/">Privacidad</a></li><li><a href="/politica-de-cookies/">Cookies</a></li></ul>
+      <ul><li><a href="/empresa-de-venta-y-distribucion-de-fruta-y-verdura/">Quiénes somos</a></li><li><a href="/zonas-de-reparto/">Zonas de reparto</a></li><li><a href="/novedades/">Novedades del almacén</a></li><li><a href="${RESENA}" rel="nofollow" target="_blank">★ Déjenos una reseña en Google</a></li><li><a href="/blog/">Guías para profesionales</a></li><li><a href="/contacto/">Contacto</a></li><li><a href="/aviso-legal/">Aviso legal</a></li><li><a href="/politica-de-privacidad/">Privacidad</a></li><li><a href="/politica-de-cookies/">Cookies</a></li></ul>
     </div>
   </div>
   <div class="envoltura" style="margin-top:24px"><div id="proveedores-sello" style="width:180px; height:90px;"><a title="Empresa colaboradora de Proveedores.com" href="https://www.proveedores.com/proveedores/ferjusanz/" target="_blank" rel="noopener"><img src="https://www.proveedores.com/stamp.xpng?com=2338" alt="Ferjusanz en Proveedores.com" width="180" height="90" style="display:block; width:180px; height:90px; max-height:none; max-width:none;"></a></div></div>
@@ -549,6 +555,8 @@ c.querySelectorAll('button').forEach(b=>b.onclick=()=>{parado=true;paso(+b.datas
 ['pointerdown','focusin','mouseenter'].forEach(e=>c.addEventListener(e,()=>parado=true));
 setInterval(()=>{if(!parado&&!document.hidden)paso(1)},4500)})();</script>
 
+${bandaResena()}
+
 <section class="bloque">
   <div class="envoltura preguntas-in">
     <div><p class="antetitulo">Preguntas frecuentes</p><h2>Lo que nos preguntan antes del primer pedido</h2><p class="entradilla">¿Tiene otra duda? Escríbanos y le contestamos personalmente.</p>
@@ -598,6 +606,7 @@ function paginaFamilia(p, f, textoHtml) {
 ${f.id === 'patatas' ? bloquePeladas() : ''}
 <section class="bloque"><div class="envoltura"><article class="texto">${resto}</article></div></section>
 ${galeria(p.path)}
+${bandaResena()}
 ${enlacesSectores()}
 ${relacionados(p.path)}`;
   return plantilla({ ruta: p.path, titulo: p.title, descripcion: p.description, imagen: f.foto, cuerpo, datos: [m.datos] });
@@ -632,6 +641,7 @@ function paginaTexto(p, opciones = {}) {
 </div></section>
 ${galeria(p.path)}
 ${opciones.despues || ''}
+${bandaResena()}
 ${articulosPara(p.path)}
 ${enlacesSectores(p.path)}
 ${relacionados('')}`;
@@ -666,6 +676,7 @@ function articulo(p) {
   <aside class="nota"><strong>¿Tiene un restaurante, un hotel, un colegio o una residencia?</strong><p>Le llevamos la fruta, la verdura, las patatas, los huevos, las setas, los champiñones y las legumbres cada día. Solicite su tarifa.</p>${botonesWA('Hola, he leído vuestro blog y quería información de precios.')}</aside>
 </div></article>
 ${galeria(p.path)}
+${bandaResena()}
 <section class="bloque"><div class="envoltura"><div class="bloque-cabeza"><div><h2>Más artículos</h2></div><a class="enlace" href="/blog/#${temaDe(p).id}">Más de ${temaDe(p).nombre.toLowerCase()} ${I.flecha}</a></div><div class="articulos">${otros.map(tarjetaArticulo).join('')}</div></div></section>`;
   return plantilla({ ruta: p.path, titulo: p.title, descripcion: p.description, imagen: p.ogImage, tipo: 'article', cuerpo, datos: [m.datos, {
     '@context': 'https://schema.org', '@type': 'BlogPosting', headline: titulo, datePublished: p.date, dateModified: p.modified || p.date,
