@@ -970,6 +970,13 @@ ${sitemap.map(([r, d]) => `<url><loc>${DOMINIO}${r}</loc><lastmod>${r === '/' ? 
 </urlset>
 `);
 
+// RSS de las guías: lo vigila Zapier para publicar cada guía nueva en la ficha de Google (docs/FICHA_GOOGLE.md).
+fs.writeFileSync(path.join(OUT, 'feed.xml'), `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel><title>Guías Ferjusanz</title><link>${DOMINIO}/blog/</link><description>Guías para cocinas profesionales de Madrid y Segovia</description><language>es</language>
+${articulos.slice(0, 10).map(a => `<item><title>${esc(tituloCorto(a.h1 || a.title))}</title><link>${DOMINIO}${a.path}</link><guid>${DOMINIO}${a.path}</guid><description>${esc(a.description || '')}</description><pubDate>${new Date(a.date).toUTCString()}</pubDate>${a.ogImage ? `<enclosure url="${DOMINIO}${a.ogImage}" type="image/${/\.png$/i.test(a.ogImage) ? 'png' : 'jpeg'}" length="0"/>` : ''}</item>`).join('\n')}
+</channel></rss>
+`);
+
 // Resumen para ChatGPT, Gemini y otros asistentes (estándar llms.txt). Solo datos de web/LEEME.md.
 const enlace = p => `- [${(p.h1 || p.title || '').replace(/ [|-] Ferjusanz.*$/, '')}](${DOMINIO}${p.path})`;
 fs.writeFileSync(path.join(OUT, 'llms.txt'), `# Ferjusanz
