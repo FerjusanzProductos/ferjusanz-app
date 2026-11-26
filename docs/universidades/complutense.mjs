@@ -61,7 +61,7 @@ insert into listas_precios_items (lista_id, nombre, precio, unidad, coste, orden
   select (select id from listas_precios where nombre=${L(LISTA)}), v.n, v.p, v.u, v.c, v.o, true from (values ${items}) v(n,p,u,c,o);
 select (select id from listas_precios where nombre=${L(LISTA)}) lista, (select count(*) from listas_precios_items i join listas_precios l on l.id=i.lista_id where l.nombre=${L(LISTA)}) items;` }));
 const mini = f => JSON.parse(execSync(`python3 -c "import base64,io,json;from PIL import Image,ImageOps;i=ImageOps.fit(Image.open('${F + f}').convert('RGB'),(480,360));b=io.BytesIO();i.save(b,'JPEG',quality=72);print(json.dumps({'u':'data:image/jpeg;base64,'+base64.b64encode(b.getvalue()).decode(),'w':480,'h':360}))"`).toString());
-const fotos = { 'Patata · 0,40 €/kg': mini('novedad-2026-11-21-patata-en-saco.jpg'), 'Huevos · 2,20 €/doc.': mini('huevos-gallina-caja.jpg'),
+const fotos = { 'Patata · 0,40 €/kg': mini('novedad-2026-11-21-patata-en-saco.jpg'), 'Huevos · 2,20 €/doc.': mini('huevos-ferjusanz.jpg'),
   'Naranja zumo · 0,90 €': mini('novedad-2026-11-17-naranja-zumo-v2.jpg'), 'Tomate · 1,10 €/kg': mini('novedad-2026-11-26-tomate-en-rama.jpg') };
 const diapos = lid => [
   { t: 'portada', titulo: 'Vuestra fruta y verdura, cuidada como si fuera nuestra', sub: 'Para Juanjo · Informática y Documentación · Universidad Complutense', pie: 'Ferjusanz · Mercamadrid · tercera generación' },
