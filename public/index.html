@@ -8061,20 +8061,32 @@ function correoAlbaranes(forzar) {
 }
 /* 💬 Después de entregar: el repartidor manda el albarán desde SU WhatsApp con un toque (hasta que haya envío automático).
    Móvil: ficha, Harvey o el que dejó el cliente al escanear el QR. Si no hay, lo escribe ahí y queda apuntado para la oficina. */
+/* Todos los móviles de una ficha («91… / 665 217 315 Lorenzo / 687… Martina») con el nombre que lleve al lado: para elegir a quién mandarlo */
+function movilesDeTexto(t) {
+  const out = [];
+  for (const p of String(t || '').split(/[\/,;]| y /)) { const m = p.replace(/[\s.\-()]/g, '').match(/(?:\+?34|0034)?([67]\d{8})(?!\d)/); if (!m || out.some(o => o.m === m[1])) continue;
+    out.push({ m: m[1], n: p.replace(/[\d+().\-]/g, ' ').replace(/\s+/g, ' ').trim() }); }
+  return out;
+}
+async function movilesCliente(clienteId, primero) {
+  let tel = ''; try { const r = await sb.from('clientes').select('telefono').eq('id', clienteId).maybeSingle(); tel = (r.data || {}).telefono || ''; } catch (e) { }
+  const l = movilesDeTexto(tel); if (/^[67]\d{8}$/.test(primero || '') && !l.some(o => o.m === primero)) l.unshift({ m: primero, n: '' });
+  return l;
+}
 async function ofrecerWhatsAppAlbaran(ids) {
   if (PRACTICA || !navigator.onLine) return;
   try {
     const r = await sb.rpc('moviles_para_albaran', { p_pedidos: ids }); if (r.error || !r.data || !r.data.length) return;
     const filas = [];
-    for (const x of r.data) { let tk = null; try { const e = await sb.rpc('crear_enlace_albaran', { p_pedido: x.pedido_id }); if (!e.error) tk = e.data && e.data.token; } catch (e) { } if (tk) filas.push(Object.assign({}, x, { u: albUrl(tk) })); }
+    for (const x of r.data) { let tk = null; try { const e = await sb.rpc('crear_enlace_albaran', { p_pedido: x.pedido_id }); if (!e.error) tk = e.data && e.data.token; } catch (e) { } if (tk) filas.push(Object.assign({}, x, { u: albUrl(tk), ops: await movilesCliente(x.cliente_id, x.movil) })); }
     if (!filas.length) return;
     const txt = x => 'Hola, somos ' + EMPRESA.nombre + '. Os acabamos de entregar el pedido. Aquí tenéis el albarán (se queda guardado en este chat): ' + x.u;
     const enviar = (x, m) => { try { Promise.resolve(sb.rpc('registrar_envio_albaran', { p_pedido: x.pedido_id, p_destino: 'WhatsApp ' + m + ' (repartidor)' })).catch(() => { }); } catch (e) { }
       window.open('https://wa.me/34' + m + '?text=' + encodeURIComponent(txt(x)), '_blank'); };
     const bonito = m => m.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
     hoja('💬 Mandar el albarán por WhatsApp', h('div', {}, h('p', { class: 'sub' }, 'Sale de tu WhatsApp. Toca y dale a enviar: el cliente lo tiene al momento y no lo pierde.'),
-      ...filas.map(x => /^[67]\d{8}$/.test(x.movil || '')
-        ? h('button', { class: 'guardar', style: 'width:100%;min-height:58px;margin-top:8px;font-size:17px', onclick: () => enviar(x, x.movil) }, '💬 ' + x.cliente + ' · ' + bonito(x.movil))
+      ...filas.map(x => x.ops.length
+        ? h('div', {}, ...x.ops.map((o, i) => h('button', { class: i ? 'ghost' : 'guardar', style: 'width:100%;min-height:58px;margin-top:8px;font-size:17px', onclick: () => enviar(x, o.m) }, '💬 ' + x.cliente + (o.n ? ' · ' + o.n : '') + ' · ' + bonito(o.m))))
         : (() => { const inp = h('input', { type: 'tel', inputmode: 'tel', placeholder: 'Móvil de ' + x.cliente, style: 'font-size:18px;min-height:52px;width:100%' });
             return h('div', { class: 'card', style: 'margin-top:8px' }, h('b', {}, x.cliente), h('div', { class: 'sub' }, 'No tenemos su móvil. Pídeselo y escríbelo: queda apuntado para la próxima vez.'), inp,
               h('button', { class: 'guardar', style: 'width:100%;min-height:52px;margin-top:6px', onclick: async () => { try { const a = await sb.rpc('apuntar_movil_cliente', { p_pedido: x.pedido_id, p_movil: inp.value }); if (a.error) throw a.error;
@@ -8220,7 +8232,9 @@ async function entregaPasoAPaso(id, alTerminar, opts) {
         let movil = ''; try { if (!PRACTICA && navigator.onLine) { const r = await sb.rpc('moviles_para_albaran', { p_pedidos: [id] }); if (!r.error && r.data && r.data[0]) movil = r.data[0].movil || ''; } } catch (e) { }
         if (!movil) { try { const r = await sb.from('clientes').select('telefono').eq('id', d.pedido.cliente_id).maybeSingle(); movil = String((r.data || {}).telefono || '').replace(/\D/g, '').replace(/^34(?=\d{9}$)/, ''); } catch (e) { } }
         tel.value = /^[67]\d{8}$/.test(movil) ? movil : '';
-        zonaWa.replaceChildren(h('label', { class: 'campo' }, tel.value ? 'Su WhatsApp (puedes cambiarlo)' : 'No tenemos su móvil: pídeselo y escríbelo', tel));
+        const ops = PRACTICA ? [] : await movilesCliente(d.pedido.cliente_id, tel.value);
+        zonaWa.replaceChildren(ops.length > 1 ? h('div', { class: 'sub' }, '¿A quién se lo mandas?') : '', ...(ops.length > 1 ? ops.map(o => h('button', { class: 'ghost', style: 'width:100%;min-height:52px;margin-top:6px;text-align:left', onclick: () => { tel.value = o.m; enviarWa(o.m); } }, '💬 ' + (o.n || 'Móvil') + ' · ' + o.m.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3'))) : []),
+          h('label', { class: 'campo' }, tel.value ? (ops.length > 1 ? 'U otro número' : 'Su WhatsApp (puedes cambiarlo)') : 'No tenemos su móvil: pídeselo y escríbelo', tel));
       })();
       pie.append(B('guardar', '💬 Enviar por WhatsApp', () => enviarWa(tel.value)),
         h('div', { class: 'ent-fila' }, B('ghost', '✉️ Otras formas', () => abrirEnvioAlbaran(d)), MRP ? null : B(envio ? 'guardar' : 'ghost', '✔ Terminar', () => { ov.remove(); if (alTerminar) alTerminar('En mano'); })),
