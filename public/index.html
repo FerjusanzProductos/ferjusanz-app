@@ -10300,12 +10300,16 @@ function vistaPersonal() {
       // Beneficio del mes con Golden (solo quien ve márgenes): margen bruto − personal; faltan los demás gastos fijos.
       const margenMes = (m, pers) => { const el = h('div', { class: 'sub', style: 'margin-top:8px' }, 'Calculando con Golden…');
         const fin = hoy(new Date(+m.slice(0, 4), +m.slice(5, 7), 0));
-        sb.from('golden_facturas').select('base,coste').gte('fecha', m).lte('fecha', fin).eq('borrador', false).limit(5000).then(r => {
+        Promise.all([sb.from('golden_facturas').select('base,coste').gte('fecha', m).lte('fecha', fin).eq('borrador', false).limit(5000),
+          sb.from('gastos_fijos').select('importe_mes').lte('desde', m).or('hasta.is.null,hasta.gte.' + m).eq('en_resultado', true)]).then(([r, gf]) => {
           if (r.error) { el.textContent = ''; return; }
+          const fij = gf.error ? 0 : gf.data.reduce((a, x) => a + n(x.importe_mes), 0);
           const c = r.data.filter(x => n(x.coste) > 0), v = r.data.reduce((a, x) => a + n(x.base), 0), mg = c.reduce((a, x) => a + n(x.base) - n(x.coste), 0);
           el.replaceChildren(h('div', { class: 'fila' }, h('span', {}, 'Ventas Golden (IVA aparte)'), h('span', {}, eur(v) + ' €')), h('div', { class: 'fila' }, h('span', {}, 'Margen bruto'), h('span', {}, eur(mg) + ' €')),
-            h('div', { class: 'fila' }, h('span', {}, 'Personal'), h('span', {}, '− ' + eur(pers) + ' €')), h('div', { class: 'fila' }, h('b', {}, 'Queda'), h('b', { style: 'color:var(--verde,#15803d)' }, eur(mg - pers) + ' €')),
-            h('div', {}, 'Falta restar: puesto, furgonetas, gasoil, seguros, gestoría, teléfono y autónomos.' + (fin >= hoy() ? ' Mes sin terminar.' : ''))); });
+            h('div', { class: 'fila' }, h('span', {}, 'Personal'), h('span', {}, '− ' + eur(pers) + ' €')),
+            h('div', { class: 'fila' }, h('span', {}, 'Gastos (furgonetas, gasoil, gestoría, seguros, oficina…)'), h('span', {}, '− ' + eur(fij) + ' €')),
+            h('div', { class: 'fila' }, h('b', {}, 'Queda'), h('b', { style: 'color:' + (mg - pers - fij < 0 ? 'var(--rojo,#b91c1c)' : 'var(--verde,#15803d)') }, eur(mg - pers - fij) + ' €')),
+            h('div', {}, 'Gastos sin IVA, del banco y las facturas (detalle en 📒 Cuenta de resultados). Falta: puesto de Mercamadrid y cuotas de autónomos.' + (fin >= hoy() ? ' Mes sin terminar.' : ''))); });
         return el; };
       box.replaceChildren(h('p', { class: 'sub' }, 'Solo lo ven Jorge, Fernando, Julián y Fernando hijo. Coste = sueldo bruto + Seguridad Social de la empresa.'),
         ...Object.keys(meses).map(m => { const xs = meses[m], tb = xs.reduce((a, x) => a + n(x.bruto), 0), ts = xs.reduce((a, x) => a + n(x.ss_empresa), 0);

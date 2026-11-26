@@ -104,7 +104,12 @@ svg{display:block;width:100%;height:auto;max-width:100%}
 svg text{font-family:var(--f-num);fill:var(--muted)}
 .bar{cursor:pointer;transition:opacity .15s}
 .bar:hover{opacity:.8}
-.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
+.kpi.ir{cursor:pointer;text-align:left;font:inherit;color:inherit}
+.kpi.ir:hover{border-color:var(--acento)}
+.kpi .ver{font-size:.78rem;font-weight:700;color:var(--acento)}
+.flecha{color:var(--acento);font-weight:700;margin-left:4px}
+.fila .fila{padding-left:8px}
 .tab{flex:none;border:0;background:none;color:var(--muted);font:700 .92rem var(--f-texto);padding:8px 12px;border-bottom:3px solid transparent;cursor:pointer}
 .tab[aria-selected="true"]{color:var(--ink);border-color:var(--acento)}
 .lista{display:grid}
@@ -178,7 +183,7 @@ function calc(ms) {
     const x = r.cp[c + '|' + p] ??= { c, p, v: 0, k: 0, vk: 0, pe: 0, q: 0 }; x.v += v; x.k += k; x.vk += vk; x.pe += pe; x.q += q;
   }
   for (const [m, t, b, ss, est, nota] of D.pe) if (S.has(m)) { const x = r.persL[t] ??= { b: 0, ss: 0, est: 0, nota, meses: [] }; x.b += b; x.ss += ss; x.est += est; x.meses.push([m, b + ss, est]); r.pers += b + ss; }
-  for (const [m, g, c, i, nota, una] of D.fi) if (S.has(m)) { const x = r.fijL[g] ??= { t: 0, l: {} }; x.t += i; const y = x.l[c] ??= { t: 0, nota, n: 0, una }; y.t += i; y.n++; r.fij += i; }
+  for (const [m, g, c, i, nota, una] of D.fi) if (S.has(m)) { const x = r.fijL[g] ??= { t: 0, l: {} }; x.t += i; const y = x.l[c] ??= { t: 0, nota, n: 0, una, meses: [] }; y.t += i; y.n++; y.meses.push([m, i, nota]); r.fij += i; }
   for (const [m, p, v] of D.co) if (S.has(m)) r.compras[p] = (r.compras[p] || 0) + v;
   for (const [m, c, num, v] of D.ab) if (S.has(m)) { r.ab += v; r.abL.push([c, num, v, m]); }
   for (const [m, f, num, v, d] of D.ex) if (S.has(m)) { r.ex += v; r.exL.push([f, num, v, d]); }
@@ -192,13 +197,14 @@ function pintarPeriodos() { $('#periodos').replaceChildren(...PERIODOS.map(([k, 
 
 function kpis(r) {
   const neg = r.resSim < 0, anual = r.resSim / r.n * 12;
-  const k = (t, v, s, cls = '') => h('div', { class: 'kpi ' + cls }, h('span', { class: 'eti' }, t), h('span', { class: 'valor' }, v), h('span', { class: 'sub' }, s));
+  const ir = dest => () => { if (dest === 'meses') { $('#meses').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; } tab = dest; ls.set('pyg_tab', tab); pintarTab(calc(periodo())); $('#tabs').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  const k = (t, v, s, cls = '', dest = null) => h('button', { class: 'kpi ir ' + cls, onclick: ir(dest) }, h('span', { class: 'eti' }, t), h('span', { class: 'valor' }, v), h('span', { class: 'sub' }, s), h('span', { class: 'ver' }, { clientes: 'Ver clientes ›', gana: 'Ver dónde se gana ›', gastos: 'Ver todos los gastos ›', pierde: 'Ver dónde se pierde ›', meses: 'Ver mes a mes ›' }[dest]));
   $('#kpis').replaceChildren(
-    k('Ventas', eur(r.v), r.n > 1 ? eur(r.v / r.n) + ' al mes' : NML(D.meses[periodo()[0]])),
-    k('Margen bruto', eur(r.mgTodo), pct(r.mg, r.vk) + ' de lo vendido'),
-    k('Gastos', eur(r.pers + r.fij + r.sim), 'Personal ' + eur(r.pers) + ' · fijos ' + eur(r.fij + r.sim)),
-    k(r.sim ? 'Queda (con lo que has puesto)' : 'Queda antes de impuestos', eur(r.resSim), (r.n > 1 ? eur(r.resSim / r.n) + ' al mes · ' : '') + pct(r.resSim, r.v) + ' de las ventas', 'res' + (neg ? ' neg' : '')),
-    k('A este ritmo, al año', eur(anual), 'Sin lo que falta por apuntar' + (r.sim ? ' (ya restado lo del simulador)' : ''), anual < 0 ? 'p' : ''));
+    k('Ventas', eur(r.v), r.n > 1 ? eur(r.v / r.n) + ' al mes' : NML(D.meses[periodo()[0]]), '', 'clientes'),
+    k('Margen bruto', eur(r.mgTodo), pct(r.mg, r.vk) + ' de lo vendido', '', 'gana'),
+    k('Gastos', eur(r.pers + r.fij + r.sim), 'Personal ' + eur(r.pers) + ' · fijos ' + eur(r.fij + r.sim), '', 'gastos'),
+    k(r.sim ? 'Queda (con lo que has puesto)' : 'Queda antes de impuestos', eur(r.resSim), (r.n > 1 ? eur(r.resSim / r.n) + ' al mes · ' : '') + pct(r.resSim, r.v) + ' de las ventas', 'res' + (neg ? ' neg' : ''), 'pierde'),
+    k('A este ritmo, al año', eur(anual), 'Sin lo que falta por apuntar' + (r.sim ? ' (ya restado lo del simulador)' : ''), anual < 0 ? 'p' : '', 'meses'));
 }
 
 function cascada(r) {
@@ -239,7 +245,7 @@ function mesAMes() {
 
 // Fila que se abre al pincharla
 function fila(nom, valor, det, abrir, barra) {
-  const f = h('div', { class: 'fila', tabindex: '0', role: 'button', 'aria-expanded': 'false' }, h('span', { class: 'nom' }, nom), h('span', { class: 'num' }, valor), det ? h('span', { class: 'det' }, det) : null, barra || null);
+  const f = h('div', { class: 'fila', tabindex: '0', role: 'button', 'aria-expanded': 'false' }, h('span', { class: 'nom' }, nom, abrir ? h('span', { class: 'flecha', 'aria-hidden': 'true' }, '›') : null), h('span', { class: 'num' }, valor), det ? h('span', { class: 'det' }, det) : null, barra || null);
   let ab = null; const t = e => { if (ab && ab.contains(e.target)) return; if (!abrir) return; if (ab) { ab.remove(); ab = null; f.setAttribute('aria-expanded', 'false'); } else { ab = h('div', { class: 'abre' }, ...abrir()); f.append(ab); f.setAttribute('aria-expanded', 'true'); } };
   f.addEventListener('click', t); f.addEventListener('keydown', e => { if (e.target === f && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); t(e); } });
   return f;
@@ -289,7 +295,7 @@ function tabGastos(r) {
     h('div', {}, h('h3', {}, 'Personal · ' + eur(r.pers)), h('span', { class: 'sub' }, 'Coste para la empresa: sueldo bruto + Seguridad Social.' + (est ? ' Los meses sin nómina se copian del más cercano.' : '')),
       h('div', { class: 'lista' }, ...pers.map(([t, x]) => fila(t, eur(x.b + x.ss), (r.n > 1 ? eur((x.b + x.ss) / x.meses.length) + ' al mes · ' : '') + 'bruto ' + eur(x.b) + ' + S. Social ' + eur(x.ss), () => [h('span', { class: 'sub' }, x.nota), ...x.meses.map(([m, v, e]) => l(NML(D.meses[m]) + (e ? ' (copiado)' : ''), eur(v)))], mini(x.b + x.ss, maxP, 'pierde'))))),
     h('div', {}, h('h3', {}, 'Gastos fijos · ' + eur(r.fij)), h('span', { class: 'sub' }, 'De las facturas y del banco (sin IVA). Pincha un grupo para ver cada gasto.'),
-      h('div', { class: 'lista' }, ...Object.entries(r.fijL).sort((a, b) => b[1].t - a[1].t).map(([g, x]) => fila(g, eur(x.t), Object.keys(x.l).length + ' conceptos', () => Object.entries(x.l).map(([c, y]) => h('div', {}, l(c + (y.una ? ' (una vez)' : ' · ' + y.n + ' meses'), eur(y.t)), h('div', { class: 'sub' }, y.nota)))))))));
+      h('div', { class: 'lista' }, ...Object.entries(r.fijL).sort((a, b) => b[1].t - a[1].t).map(([g, x]) => fila(g, eur(x.t), Object.keys(x.l).length + ' conceptos', () => Object.entries(x.l).sort((a, b) => b[1].t - a[1].t).map(([c, y]) => fila(c, eur(y.t), y.n === 1 ? '1 mes' : y.n + ' meses · ' + eur(y.t / y.n) + ' al mes', () => y.meses.map(([m, v, nota]) => h('div', {}, l(NML(D.meses[m]), eur(v)), h('div', { class: 'sub' }, nota)))))))))));
   const fu = {}; for (const [m, g, c, i] of D.fu) if (periodo().includes(m)) fu[c] = (fu[c] || 0) + i;
   const fuL = Object.entries(fu).sort((a, b) => b[1] - a[1]);
   if (fuL.length) out.push(h('div', {}, h('h3', {}, 'Pagos del banco que no son gasto del año'), h('span', { class: 'sub' }, 'Salen de la cuenta, pero no restan en el resultado: deudas de 2025, pagos a los socios fuera de nómina, IVA a Hacienda…'),
