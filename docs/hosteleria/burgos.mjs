@@ -20,11 +20,15 @@ console.assert(lista.every(([, p, , c, m]) => m == null || Math.abs(p - c - m) <
 
 // ---- Lo que le cuesta ir él a Mercamadrid (a la semana). Supuestos a la vista en la hoja. ----
 const SAC = 8, KG = SAC * 25, PAT = lista[0][1];
-const S = { viajes: 2, km: 40, eurKm: 0.26, horas: 2.5, eurHora: 15, patataAlli: 0.58 }; // 0,26 €/km: lo que Hacienda da por km en coche; 0,58: lo que nos cobran a nosotros por sacos sueltos (0,50-0,66)
+const S = { viajes: 2, km: 36, eurKm: 0.26, horas: 1.5, eurHora: 15, patataAlli: 0.58 }; // km: Hortaleza (C/ Mota del Cuervo) ↔ Mercamadrid por la M-40, ~18 km de ida (Tito 26/11: «no son 80 km»); 1,5 h: ~20 min ida, ~20 vuelta y ~50 min comprando y cargando. 0,26 €/km: lo que Hacienda da por km en coche; 0,58: lo que nos cobran a nosotros por sacos sueltos (0,50-0,66)
 const coche = S.viajes * S.km * S.eurKm, tiempo = S.viajes * S.horas * S.eurHora, patAlli = KG * S.patataAlli, patNos = KG * PAT;
 const tu = patAlli + coche + tiempo, nos = patNos, sem = tu - nos, mes = sem * 52 / 12;
 console.assert(Math.abs(sem - (KG * (S.patataAlli - PAT) + coche + tiempo)) < 1e-9 && sem > 0, 'ahorro semanal');
 
+const cesta = [['Patata especial freír', KG], ['Cebolla gorda', 25], ['Tomate pera', 15], ['Tomate RAF', 5], ['Lechuga iceberg', 12], ['Lechuga mezcluna', 2],
+  ['Pimiento verde', 5], ['Pimiento rojo de segunda', 5], ['Pimiento italiano', 3], ['Naranja de zumo', 15], ['Zanahoria', 5]] // aprox.: solo la patata (8 sacos) es dato de Tito
+  .map(([n, q]) => { const x = lista.find(l => l[0] === n); return [n, q, x[2], x[1] * q]; });
+const cestaTot = cesta.reduce((t, c) => t + c[3], 0);
 const tmp = fs.mkdtempSync('/tmp/claude-0/burgos-');
 const img = (f, l = 640) => { const o = `${tmp}/${f.replace(/\W/g, '_')}.jpg`; // fotos reducidas para que el PDF pese poco
   execSync(`python3 -c "from PIL import Image;i=Image.open('${F}${f}').convert('RGB');i.thumbnail((${l},${l}));i.save('${o}',quality=82)"`);
@@ -35,7 +39,7 @@ const FOTO = { pat: 'catalogo/01-patata-en-saco.jpg', rama: '2026/11/novedad-202
 
 // barras apiladas: [etiqueta, [[trozo, €, color]...]]
 const apiladas = (filas, w = 760) => { const max = Math.max(...filas.map(f => f[1].reduce((s, t) => s + t[1], 0))), x0 = 190, bw = w - x0 - 110, alto = 46, fila = 70;
-  return `<svg viewBox="0 0 ${w} ${filas.length * fila + 8}" width="100%">${filas.map(([n, ts], i) => { let x = x0; const y = i * fila + 6, tot = ts.reduce((s, t) => s + t[1], 0);
+  return `<svg viewBox="0 0 ${w} ${filas.length * fila + 8}" style="width:100%;height:30mm">${filas.map(([n, ts], i) => { let x = x0; const y = i * fila + 6, tot = ts.reduce((s, t) => s + t[1], 0);
     return `<text x="${x0 - 12}" y="${y + 30}" text-anchor="end" font-size="16" font-weight="bold" fill="#2a2320">${n}</text>` + ts.map(([t, v, col]) => { const ww = bw * v / max, r = `<rect x="${x}" y="${y}" width="${ww}" height="${alto}" fill="${col}"/>${ww > 70 ? `<text x="${x + ww / 2}" y="${y + 29}" text-anchor="middle" font-size="13" fill="#fff" font-weight="bold">${t} ${e0(v)}</text>` : ''}`; x += ww; return r; }).join('') +
       `<text x="${x + 8}" y="${y + 30}" font-size="19" font-weight="bold" fill="#7a1f1f">${e0(tot)}</text>`; }).join('')}</svg>`; };
 const C = { pat: '#c9a227', coche: '#8a7f76', hora: '#b0473a', nos: '#e8742b' };
@@ -47,14 +51,14 @@ const css = `@page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;font:1
 h2{font-size:17px;color:#7a1f1f;margin:4mm 0 1.5mm;border-bottom:2px solid #e8742b;padding-bottom:1mm}
 .kpis{display:flex;gap:4mm;margin:3mm 0}.k{flex:1;background:#fff6ee;border:2px solid #e8742b;border-radius:3mm;padding:3mm;text-align:center}.k b{display:block;font-size:25px;color:#7a1f1f}.k span{font-size:12px;color:#555}
 .ley{font-size:12px;color:#555;margin-bottom:1mm}.ley i{display:inline-block;width:11px;height:11px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
-.dos{display:flex;gap:6mm}.dos>div{flex:1}ul{margin:1mm 0;padding-left:5mm}li{margin:1mm 0}
+.dos{display:flex;gap:6mm}.dos>div{flex:1}ul{margin:1mm 0;padding-left:5mm}li{margin:.6mm 0}
 .sup{background:#f6f2ea;border-radius:3mm;padding:2.5mm 4mm;font-size:11.5px;color:#555;margin-top:3mm}
 table{width:100%;border-collapse:collapse}td{padding:1.1mm 2.5mm;border-bottom:1px solid #eee}tr:nth-child(odd) td{background:#fff6ee}
 td.p{text-align:right;font-weight:bold;font-size:14px;white-space:nowrap;color:#7a1f1f}td.u{color:#777;white-space:nowrap;width:16mm}
 .fotos{display:grid;grid-template-columns:repeat(3,1fr);gap:3mm;margin:2mm 0}.f{background:#fff;border:1px solid #eadfd4;border-radius:3mm;overflow:hidden}
 .f img{width:100%;height:33mm;object-fit:cover;display:block}.f b{display:block;padding:1.5mm 2.5mm 0;font-size:13px}.f span{display:block;padding:0 2.5mm 1.5mm;color:#7a1f1f;font-weight:bold;font-size:15px}
 .carta{display:flex;gap:4mm;align-items:center;background:#fff6ee;border:2px solid #e8742b;border-radius:3mm;padding:3mm;margin:2mm 0}.carta img{width:34mm;height:26mm;object-fit:cover;border-radius:2mm}
-.nota{font-size:11px;color:#666}.col{column-count:2;column-gap:6mm}.col td{font-size:12.5px}.pie{position:absolute;left:13mm;right:13mm;bottom:8mm;padding-top:2.5mm;border-top:2px solid #e8742b;font-size:11.5px;color:#555}`;
+.nota{font-size:11px;color:#666}.col{column-count:2;column-gap:6mm}.col td{font-size:12.5px}.cesta td{font-size:11.5px;padding:.5mm 2mm}.cesta td.p{font-size:12px}.pie{position:absolute;left:13mm;right:13mm;bottom:8mm;padding-top:2.5mm;border-top:2px solid #e8742b;font-size:11.5px;color:#555}`;
 const cab = sub => `<div class=top><h1>FERJUSANZ</h1><p>Patatas, frutas, verduras, huevos, setas, champiñones y legumbres · Mercamadrid · Más de seis décadas</p><div class=para>${sub}</div></div>`;
 const pie = `<div class=pie><b>Fernando Sanz</b> · FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. · Móvil y WhatsApp <b>${TEL}</b> · <a href="${W}">www.ferjusanz-frutas-verduras.es</a></div>`;
 const precio = n => { const r = lista.find(x => x[0] === n); return `${e(r[1])} / ${r[2]}`; };
@@ -62,23 +66,27 @@ const precio = n => { const r = lista.find(x => x[0] === n); return `${e(r[1])} 
 const hoja1 = `<div class=h>${cab('Para Emilio · Bar Burgos · Lo que te ahorras sin ir a Mercamadrid')}<div class=pg>
 <p>Hola, Emilio:</p>
 <p>Hace años ya os llevábamos el género, y me han dicho que ahora vas tú a Mercamadrid. Te he hecho la cuenta de lo que te cuesta <b>de verdad</b> cada semana, con tus <b>${SAC} sacos de patata de 25 kg</b>:</p>
-<div class=kpis><div class=k><b>${e0(sem)}</b><span>a la semana</span></div><div class=k><b>${e0(mes)}</b><span>al mes</span></div><div class=k><b>${e0(sem * 52)}</b><span>al año</span></div><div class=k><b>${S.viajes * S.horas} h</b><span>libres cada semana</span></div></div>
+<div class=kpis><div class=k><b>${e0(sem)}</b><span>a la semana</span></div><div class=k><b>${e0(mes)}</b><span>al mes</span></div><div class=k><b>${e0(sem * 52)}</b><span>al año</span></div><div class=k><b>${String(S.viajes * S.horas).replace('.', ',')} h</b><span>libres cada semana</span></div></div>
 <h2>Una semana, solo con la patata</h2>
 <div class=ley><i style="background:${C.pat}"></i>Patata<i style="background:${C.coche}"></i>Coche<i style="background:${C.hora}"></i>Tus horas<i style="background:${C.nos}"></i>Patata con Ferjusanz, en la puerta</div>
 ${apiladas([['Vas tú', [['Patata', patAlli, C.pat], ['Coche', coche, C.coche], ['Horas', tiempo, C.hora]]], ['Con Ferjusanz', [['Patata', patNos, C.nos]]]])}
 <div class=dos><div><h2>Lo que te cuesta ir tú</h2><ul>
 <li><b>Madrugar</b> ${S.viajes} días a la semana, antes de abrir el bar.</li>
-<li><b>Unos ${S.viajes * S.km} km de coche</b> a la semana: gasolina, desgaste y la entrada a Mercamadrid.</li>
-<li><b>${S.viajes * S.horas} horas</b> que no estás en el bar: ir, buscar, cargar y volver.</li>
+<li><b>Unos ${S.viajes * S.km} km de coche</b> a la semana (${S.km / 2} km de ida desde Hortaleza): gasolina, desgaste y la entrada a Mercamadrid.</li>
+<li><b>${String(S.viajes * S.horas).replace('.', ',')} horas</b> que no estás en el bar: ir, buscar, cargar y volver.</li>
 <li><b>Cargar ${KG} kg</b> de patata a pulso cada semana.</li>
-<li>Y la patata <b>más cara</b>: por sacos sueltos se paga más que comprando por camiones, como hacemos nosotros.</li></ul></div>
+<li>Y la patata <b>más cara</b>: por sacos sueltos se paga más que por camiones, como compramos nosotros.</li></ul></div>
 <div><h2>Con nosotros</h2><ul>
 <li>Patata especial freír a <b>${e(PAT)}/kg</b>: el saco de 25 kg, <b>${e(PAT * 25)}</b>.</li>
 <li>Te lo llevamos <b>al bar</b>, en camión refrigerado.</li>
 <li><b>Llevo yo el control</b>: te digo a cuánto va cada cosa antes de que pidas.</li>
 <li>Siempre <b>ofertas y novedades</b> en nuestra web.</li>
 <li>Y tú, descansado y en tu negocio.</li></ul></div></div>
-<div class=sup><b>Cómo está hecha la cuenta</b> (por lo bajo): ${S.viajes} viajes a la semana · ${S.km} km ida y vuelta · ${e(S.eurKm)} por km (lo que Hacienda considera que cuesta cada km en coche) · ${String(S.horas).replace('.', ',')} h por viaje · tu hora a ${e0(S.eurHora)} · la patata allí, por sacos sueltos, a ${e(S.patataAlli)}/kg. Si vas más veces o compras más cosas, te ahorras más. Precios + 4 % de IVA.</div>
+<div class=sup><b>Cómo está hecha la cuenta</b> (por lo bajo): ${S.viajes} viajes a la semana · ${S.km} km ida y vuelta (Hortaleza–Mercamadrid por la M-40) · ${e(S.eurKm)} por km (lo que Hacienda considera que cuesta cada km en coche) · ${String(S.horas).replace('.', ',')} h por viaje · tu hora a ${e0(S.eurHora)} · la patata allí, por sacos sueltos, a ${e(S.patataAlli)}/kg. Si vas más veces o compras más cosas, te ahorras más. Precios + 4 % de IVA.</div>
+<h2>Tu semana con nosotros (aproximada)</h2>
+<div class='col cesta'><table>${cesta.map(([n, q, u, t]) => `<tr><td>${n} <span class=nota>${q} ${u === 'pieza' ? 'piezas' : u}</span></td><td class=p>${e(t)}</td></tr>`).join('')}
+<tr><td><b>Total semana</b></td><td class=p>${e(cestaTot)}</td></tr></table></div>
+<p class=nota>Cantidades aproximadas de un bar como el tuyo (la patata, tus 8 sacos). Dime lo que gastas de verdad y te la hago exacta.</p>
 </div>${pie}</div>`;
 
 const hoja2 = `<div class=h>${cab('Para Emilio · Bar Burgos · Tus precios · 26 de noviembre de 2026')}<div class=pg>
@@ -99,7 +107,7 @@ await p.pdf({ path: `${D}/Ferjusanz-Burgos.pdf`, format: 'A4', printBackground: 
 await p.setViewportSize({ width: 794, height: 1123 });
 for (const [k, n] of [[0, '1-lo-que-te-ahorras'], [1, '2-precios']]) await p.locator('.h').nth(k).screenshot({ path: `${D}/Ferjusanz-Burgos-${n}.jpg`, type: 'jpeg', quality: 88 });
 await b.close();
-console.log({ semana: +sem.toFixed(2), mes: +mes.toFixed(2), año: +(sem * 52).toFixed(2), tu, nos, coche, tiempo });
+console.log({ cestaTot, semana: +sem.toFixed(2), mes: +mes.toFixed(2), año: +(sem * 52).toFixed(2), tu, nos, coche, tiempo });
 
 // ---------- Lista de precios y presentación en la app (Comercial › Presentaciones) ----------
 const L = s => "'" + String(s).replace(/'/g, "''") + "'";
@@ -119,8 +127,8 @@ if (process.argv[3]) {
   const diapos = [
     { t: 'portada', titulo: 'Deja de madrugar para ir a Mercamadrid', sub: 'Para Emilio · Bar Burgos', pie: 'Ferjusanz · Mercamadrid · tercera generación' },
     { t: 'texto', titulo: 'Lo que te ahorras', texto: `Con tus ${SAC} sacos de patata a la semana y ${S.viajes} viajes a Mercamadrid.`,
-      cifras: [[e0(sem), 'a la semana'], [e0(mes), 'al mes'], [e0(sem * 52), 'al año'], [`${S.viajes * S.horas} h`, 'libres cada semana']] },
-    { t: 'lista', titulo: 'Ir tú a Mercamadrid te cuesta', puntos: [`Madrugar ${S.viajes} días a la semana`, `Unos ${S.viajes * S.km} km de coche a la semana`, `${S.viajes * S.horas} horas fuera del bar`, `Cargar ${KG} kg de patata a pulso`, 'Y la patata, más cara por sacos sueltos', 'Cansado antes de abrir el bar', 'Y la entrada a Mercamadrid'] }, // 7 puntos: sin foto lateral al azar,
+      cifras: [[e0(sem), 'a la semana'], [e0(mes), 'al mes'], [e0(sem * 52), 'al año'], [`${String(S.viajes * S.horas).replace('.', ',')} h`, 'libres cada semana']] },
+    { t: 'lista', titulo: 'Ir tú a Mercamadrid te cuesta', puntos: [`Madrugar ${S.viajes} días a la semana`, `Unos ${S.viajes * S.km} km de coche a la semana`, `${String(S.viajes * S.horas).replace('.', ',')} horas fuera del bar`, `Cargar ${KG} kg de patata a pulso`, 'Y la patata, más cara por sacos sueltos', 'Cansado antes de abrir el bar', 'Y la entrada a Mercamadrid'] }, // 7 puntos: sin foto lateral al azar,
     { t: 'productos', titulo: 'Tus precios, con fotos', items: Object.keys(fotos), fotos },
     { t: 'lista', titulo: 'Un tomate bueno para tu carta', puntos: ['Tomate RAF a 2,00 €/kg', 'Tomate en rama a 1,70 €/kg', 'Elegido cada mañana en Mercamadrid', 'Para una ensalada o tosta que se note', 'Dime y te lo llevo con el pedido', 'Pídeme precio de otros tomates', 'Siempre te digo antes a cuánto va'] },
     { t: 'lista', titulo: 'Llevo yo el control', puntos: ['Te digo a cuánto va cada cosa antes de pedir', 'Siempre ofertas y novedades en la web', 'Te lo llevamos al bar, sin madrugar', 'En camión refrigerado', 'Sin pedido mínimo', 'Trato directo conmigo', `Escríbeme al ${TEL}`] },
