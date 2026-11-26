@@ -1,10 +1,10 @@
 // Lista de precios para Restaurante Duarte (DUARTE). Uso: node docs/hosteleria/duarte.mjs <carpeta de salida>
-// Tito 26/11/2026: patata a compra + ~0,10 €; el resto a compra + 0,20-0,30 €. Compra = Golden 14-24/11 (patata: media por kilos).
+// Tito 26/11/2026: patata a compra + 8-10 cts (lo que se le sirve es Jelly, especial freír, aunque en Golden y para él sea «agria»: compra 0,40-0,42); el resto a compra + 0,20-0,30 €. Compra = Golden 14-24/11 (patata: media por kilos).
 import { createRequire } from 'module'; const { chromium } = createRequire('/home/user/ferjusanz-app/')('playwright');
 const D = process.argv[2] || '.', W = 'https://www.ferjusanz-frutas-verduras.es';
 const e = n => n.toFixed(2).replace('.', ',') + ' €';
 const lista = [ // [producto, precio, unidad, lo que nos costó (compras 14-24/11)]
-  ['Patata agria', 0.55, 'kg', 0.45], ['Limones', 1.25, 'kg', 1.00], ['Cebolla gorda', 0.65, 'kg', 0.45], ['Ajos', 3.20, 'kg', 2.90],
+  ['Patata agria', 0.50, 'kg', 0.42], ['Limones', 1.25, 'kg', 1.00], ['Cebolla gorda', 0.65, 'kg', 0.45], ['Ajos', 3.20, 'kg', 2.90],
   ['Tomate pera', 1.25, 'kg', 1.00], ['Pimiento verde', 1.25, 'kg', 1.00], ['Pimiento rojo', 1.35, 'kg', 1.10], ['Calabacín', 0.95, 'kg', 0.70],
   ['Berenjena', 0.90, 'kg', 0.65], ['Zanahoria', 0.85, 'kg', 0.60], ['Ajo pelado', 3.60, 'kg', 3.30],
 ];
