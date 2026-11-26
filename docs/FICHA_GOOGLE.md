@@ -29,6 +29,14 @@ La ficha está **verificada desde el 26/11/2026**. Estos textos los pega Tito de
 - Fruta y verdura para colegios y comedores escolares
 - Fruta y verdura para residencias de mayores
 - Reparto refrigerado en Madrid y Segovia
+- Proveedor para restaurantes y residencias que abren (26/11/2026)
+
+## Publicaciones de la ficha («Añadir novedad», con botón «Más información» y el enlace)
+1. Restaurantes que abren (26/11/2026):
+> ¿Vas a abrir un restaurante en Madrid y buscas proveedor de fruta y verdura? Muchos de nuestros clientes empezaron igual. Te contamos qué preguntar y cómo cuadrar carta y menú con el género. https://www.ferjusanz-frutas-verduras.es/blog/proveedor-fruta-verdura-abrir-restaurante-madrid/
+
+2. Residencias que abren (26/11/2026):
+> ¿Abres una residencia en Madrid? Fruta y verdura sin pedido mínimo mientras se llenan las plazas, fruta en calibre pequeño y menús pensados ya para la norma de 2027. https://www.ferjusanz-frutas-verduras.es/blog/proveedor-fruta-verdura-residencia-nueva-madrid/
 
 ## Pedir reseñas (lo envía Fernando, a mano, a clientes de verdad)
 Pedirlo a **todos** los clientes con los que se trabaja, no solo a los más contentos, sin regalos a cambio y sin decirles qué poner (son las reglas de Google):
