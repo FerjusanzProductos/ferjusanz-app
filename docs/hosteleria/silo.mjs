@@ -22,7 +22,8 @@ const fotos = [
 const e = n => n.toFixed(2).replace('.', ',') + ' €';
 const kg = 0.65, saco = 25, total = Math.round(kg * saco * 100) / 100, conIva = Math.round(total * 1.04 * 100) / 100;
 console.assert(total === 16.25 && conIva === 16.9, 'cuenta del saco');
-const of = JSON.parse(fs.readFileSync('/home/user/ferjusanz-app/web/ofertas.json')).items.filter(i => i[0] !== 'Huevos');
+const of = JSON.parse(fs.readFileSync('/home/user/ferjusanz-app/web/ofertas.json')).items.filter(i => !['Huevos','Limón nuevo','Naranja de zumo','Pimiento de Padrón','Cebolla'].includes(i[0]));
+const tus = [['Patata agria (saco de 25 kg: ' + e(total) + ')', kg, 'kg'], ['Cebolla pequeña', 0.65, 'kg'], ['Limón de segunda', 1.10, 'kg'], ['Pimiento de Padrón', 2.00, 'kg'], ['Naranja de zumo', 0.80, 'kg'], ['Huevos tamaño L', 2.20, 'docena']];
 const grid = fotos.map(([f, t, s, u]) => `<a class=c href="${u || N}"><img src="${img(f)}"><b>${t}</b><span>${s}</span></a>`).join('');
 const html = `<!doctype html><meta charset=utf-8><style>
 @page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;font:12.5px/1.45 Arial,sans-serif;color:#2a2320}
@@ -51,10 +52,12 @@ table{width:100%;border-collapse:collapse}td{padding:1.6mm 2mm;border-bottom:1px
 <p>Sabemos que trabajáis con patata agria y que es muy importante en vuestra cocina. Nosotros trabajamos con <b>distintas variedades</b> y la agria os va a venir muy bien.</p>
 <p>Como ya os contó en su día el especialista en patata, <b>no conviene trabajar siempre con la misma patata</b>: va cambiando con el tiempo, con los cambios de temperatura y con la conservación. Por eso la elegimos cada mañana en Mercamadrid y os llevamos la que mejor responda en cada momento, para que la fritura salga siempre igual de buena.</p>
 <h2>Huevos</h2>
-<div class=box><img src="${img('huevos-ferjusanz')}"><div class=t><h3>Huevos morenos</h3><div class=pr>${e(2.35)} <small>la docena</small></div><p style="margin:1mm 0 0">Salen muy buenos: yema bonita y buen calibre.</p></div></div>
+<div class=box><img src="${img('huevos-ferjusanz')}"><div class=t><h3>Huevos morenos, tamaño L</h3><div class=pr>${e(2.20)} <small>la docena</small></div><p style="margin:1mm 0 0">Salen muy buenos: yema bonita y buen calibre.</p></div></div>
 <h2 class=brk>Novedades del puesto</h2>
 <div class=g>${grid}</div>
-<h2 class=brk>Ofertas de la semana (hasta el 30/11)</h2>
+<h2 class=brk>Tus precios, Claudia</h2>
+<table>${tus.map(([n, p, u]) => `<tr><td>${n}</td><td class=p>${e(p)} / ${u}</td></tr>`).join('')}<tr><td>Perejil</td><td class=p>de regalo con el pedido</td></tr></table>
+<h2>Más ofertas de la semana (hasta el 30/11)</h2>
 <div class=cols><table>${of.map(([n, p, u]) => `<tr><td>${n}</td><td class=p>${e(p)} / ${u}</td></tr>`).join('')}</table></div>
 <p style="font-size:11px;color:#666">Precios + 4 % de IVA. El resto, según mercado: pídenos precio de lo que necesites.</p>
 <h2>Quedo pendiente</h2>
