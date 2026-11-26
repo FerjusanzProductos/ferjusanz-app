@@ -12836,10 +12836,10 @@ function hojaPrimerPedido(p, ex) {
   const firma = () => '\n\n' + (state.perfil ? state.perfil.nombre : '') + '\nFERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. · Mercamadrid\n91 763 21 86 · WhatsApp 609 567 354';
   const B = (cls, t, f) => h('button', { class: cls, style: 'width:100%;min-height:50px;margin-top:8px', onclick: f }, t);
   /* Para quién es (Fernando: «puede ser colectivos también, como residencia o colegio»): se elige arriba; cambia presentación, vídeo y lista. */
-  let tipo = h2EsColectivo({ tipo: p.tipo, nombre: p.nombre }) ? 'colectivos' : 'hosteleria', clave = (ex ? 'ex-' : '') + tipo;
+  let tipo = /residen|mayores|centro de d[ií]a/i.test((p.tipo || '') + ' ' + (p.nombre || '')) ? 'residencias' : h2EsColectivo({ tipo: p.tipo, nombre: p.nombre }) ? 'colegios' : 'hosteleria', clave = (ex ? 'ex-' : '') + tipo;
   const lblLista = h('span', {}, '');
   const chipsTipo = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:4px 0' });
-  const pintaTipo = () => { chipsTipo.replaceChildren(...[['hosteleria', '🍽 Hostelería'], ['colectivos', '🏫 Colegios y residencias']].map(([k, t]) => h('button', { class: 'chip' + (tipo === k ? ' on' : ''), style: 'min-height:44px', onclick: () => { if (tipo === k) return; tipo = k; clave = (ex ? 'ex-' : '') + tipo; pintaTipo(); verVideo(); preparar(); } }, t))); lblLista.textContent = tipo === 'colectivos' ? '(colectividades)' : '(hostelería)'; };
+  const pintaTipo = () => { chipsTipo.replaceChildren(...[['hosteleria', '🍽 Hostelería'], ['colegios', '🏫 Colegios'], ['residencias', '🏡 Residencias']].map(([k, t]) => h('button', { class: 'chip' + (tipo === k ? ' on' : ''), style: 'min-height:44px', onclick: () => { if (tipo === k) return; tipo = k; clave = (ex ? 'ex-' : '') + tipo; pintaTipo(); verVideo(); preparar(); } }, t))); lblLista.textContent = tipo === 'residencias' ? '(residencias)' : tipo === 'colegios' ? '(colegios)' : '(hostelería)'; };
   /* Qué se envía: solo el mensaje, mensaje + presentación (en 2 pasos: WhatsApp tira el texto si va con un archivo) o solo la presentación. */
   let modo = 'msg';
   const MODOS = [['msg', '💬 Solo mensaje'], ['ambos', '💬📎 Mensaje + presentación'], ['pres', '📎 Solo presentación']];
@@ -12921,9 +12921,10 @@ const PV_BUCKET = 'presentacion-video';
 /* La presentación que se envía a posibles clientes es una presentación GUARDADA (se ve y se edita en Comercial › Presentaciones).
    Si no existe, se crea de la plantilla + la hoja «Imagine su primer pedido» (su botón lleva el enlace personal al enviarla). */
 /* «clave» = 'hosteleria' | 'colectivos' (posibles clientes) o 'ex-hosteleria' | 'ex-colectivos' (exclientes: ya no nos compran). */
-const PP_PRES = { hosteleria: 'Presentación para posibles clientes · Hostelería', colectivos: 'Presentación para posibles clientes · Colegios y residencias',
-  'ex-hosteleria': 'Presentación para exclientes · Hostelería', 'ex-colectivos': 'Presentación para exclientes · Colegios y residencias' };
-const ppBase = clave => clave.replace(/^ex-/, '');
+/* Colegios y residencias, separados (Tito, 26/11/2026: «Sí. Separa»): cada uno su presentación y su título de precios; por dentro siguen siendo «colectivos» (lista, frases, plantilla). */
+const PP_PRES = { hosteleria: 'Presentación para posibles clientes · Hostelería', colegios: 'Presentación para posibles clientes · Colegios', residencias: 'Presentación para posibles clientes · Residencias',
+  'ex-hosteleria': 'Presentación para exclientes · Hostelería', 'ex-colegios': 'Presentación para exclientes · Colegios', 'ex-residencias': 'Presentación para exclientes · Residencias' };
+const ppBase = clave => { const b = clave.replace(/^ex-/, ''); return b === 'colegios' || b === 'residencias' ? 'colectivos' : b; };
 /* Exclientes (Fernando, 16/11/2026): seguimos trabajando y con la mayor disposición; frases para que vuelvan a confiar; el formulario al final, pero no hace falta. */
 function ppPlantilla(clave) {
   const lam = presPlantilla(ppBase(clave)), ex = clave.startsWith('ex-'), ic = () => { const i = lam.findIndex(x => x.t === 'contacto'); return i < 0 ? lam.length : i; };
@@ -13057,7 +13058,7 @@ async function grabarVideoPres(tipo, alGuardar, opts) {
   } catch (e) { fuera(); toast('No se pudieron preparar las hojas: ' + msgErr(e), 'err'); return; }
   pinta();
   const tipoVideo = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp8,opus', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t)) || '';
-  const listo = () => { info.textContent = opts ? 'Vídeo con tu voz: ' + opts.nombre + ' (' + hojas.length + ' frases). Pulsa «Empezar», lee la frase amarilla y pulsa «Siguiente». Al acabar, «⏹ Terminar».' : 'Vídeo de la presentación (' + (tipo.startsWith('ex-') ? 'exclientes, ' : '') + (ppBase(tipo) === 'colectivos' ? 'colegios y residencias' : 'hostelería') + '): ' + hojas.length + ' hojas. Lo ideal, unos 30 segundos: frases cortas y pasa rápido las hojas (como mucho 1:20). Debajo de cada hoja sale en amarillo lo que puedes decir. Pulsa «Empezar», habla y pasa las hojas con «Siguiente».';
+  const listo = () => { info.textContent = opts ? 'Vídeo con tu voz: ' + opts.nombre + ' (' + hojas.length + ' frases). Pulsa «Empezar», lee la frase amarilla y pulsa «Siguiente». Al acabar, «⏹ Terminar».' : 'Vídeo de la presentación (' + (tipo.startsWith('ex-') ? 'exclientes, ' : '') + (ppBase(tipo) === 'colectivos' ? tipo.replace(/^ex-/, '') : 'hostelería') + '): ' + hojas.length + ' hojas. Lo ideal, unos 30 segundos: frases cortas y pasa rápido las hojas (como mucho 1:20). Debajo de cada hoja sale en amarillo lo que puedes decir. Pulsa «Empezar», habla y pasa las hojas con «Siguiente».';
     botones.replaceChildren(musica, BT('⏺ Empezar a grabar', empezar, 'guardar'), BT('Cancelar', fuera)); };
   /* 🎵 Con música (Tito, 18/11/2026: música de fondo desde otro móvil): sin quitar ruido ni eco, para que la música no se corte; y más calidad de sonido. */
   const conMusica = h('input', { type: 'checkbox', style: 'width:24px;height:24px;flex:none' });
