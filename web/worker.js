@@ -42,6 +42,7 @@ async function avisarIndexNow(env) {
   const r = await fetch("https://api.indexnow.org/indexnow", { method: "POST", headers: { "content-type": "application/json; charset=utf-8" },
     body: JSON.stringify({ host: "www." + DOMINIO_SIN_WWW, key: INDEXNOW_CLAVE, keyLocation: `https://www.${DOMINIO_SIN_WWW}/${INDEXNOW_CLAVE}.txt`, urlList: urls }) });
   console.log("indexnow", r.status, urls.length);
+  await env.FOTOS.put("indexnow-ultimo", `${new Date().toISOString()} ${r.status} ${urls.length} ${(await r.text()).slice(0, 200)}`);
   if (r.ok && todo) await env.FOTOS.put("indexnow-inicial", new Date().toISOString());
 }
 
