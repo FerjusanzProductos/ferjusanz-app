@@ -6,6 +6,7 @@ _Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda · ⏸ en espera._
 - 🔴 **Ir detrás de**: **Restaurante Duarte** y **Florencio** (que salgan en «Comercial del día» hasta que se cierre algo).
 - 🔴 **Recuperar varios clientes perdidos**, entre ellos las **facultades de Informática y de Documentación** (SALNAYA SL, perdidas; ver su punto en «👤 Fernando»). Tito dirá cuáles más.
 - 🔴 **El Águila**: que se ponga al día con los pagos (ver su deuda en Golden y llamarle).
+- 🔴 **Colegios privados** (26/11/2026): llamar a los 14 de Comercial › Contactos (3 al día desde el 27/11) y preguntar si cocinan dentro y quién compra. Mirar si contestan Agora, Kensington y Liceo Europeo al correo del 26/11 (llega a ferjusanzfacturas@gmail.com).
 - 🟡 **La Rueda** ha vuelto como cliente, con precio bajo para recuperarlo. **Tito**: decir qué precio o tarifa se le pone (no se cambian precios sin que lo diga).
 
 ## 🌐 LA WEB (nueva, de prueba: https://ferjusanz-web.fernandosanzalba.workers.dev)
