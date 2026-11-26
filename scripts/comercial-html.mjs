@@ -36,7 +36,7 @@ const [dia, semana, [c]] = await Promise.all([ultimo('resumen_comercial'), ultim
     (select count(*) from prospectos where proximo_contacto <= current_date) toca,
     (select count(*) from prospectos where created_at > now() - interval '7 days') nuevos7,
     (select count(*) from cliente_peticion_contacto where contestado_at is null) sin_contestar,
-    (select count(*) from web_visitas where creado > now() - interval '7 days') web7`)]);
+    (select count(*) from web_visitas where creado > now() - interval '7 days' and pais = 'ES') web7`)]);
 const tarjeta = (n, txt, aviso) => `<div class="t${aviso && n > 0 ? ' aviso' : ''}"><b>${n}</b><span>${txt}</span></div>`;
 const ahora = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
 
