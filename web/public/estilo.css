@@ -661,3 +661,24 @@ body {
 /* Lo que no se ve en «fruta y verdura» (Tito, 20/11/2026) */
 .heroe-tambien { color: var(--sobre-tinta); font-size: clamp(1.05rem, 2.4vw, 1.35rem); margin: 0 0 .9em; }
 .heroe-tambien strong { color: var(--sol-1); font-weight: 700; }
+
+/* ── Buscador en la cabecera y página /buscar/ (26/11/2026) ── */
+.buscar-fila { max-width: var(--ancho); margin: 0 auto; padding: 0 20px 12px; }
+.buscar { display: flex; border: 1px solid var(--linea); border-radius: 980px; background: var(--papel-2, var(--papel)); overflow: hidden; }
+.buscar input { flex: 1; min-width: 0; min-height: 42px; border: 0; background: none; color: var(--tinta); padding: 0 16px; font: inherit; font-size: 1rem; }
+.buscar input:focus { outline: none; }
+.buscar:focus-within { border-color: var(--granate); }
+.buscar button { border: 0; background: none; color: var(--tinta); width: 46px; display: grid; place-items: center; cursor: pointer; }
+.buscar svg { width: 20px; height: 20px; }
+.buscador input[type=search] { width: 100%; min-height: 52px; font: inherit; font-size: 1.1rem; padding: 0 18px; border: 1px solid var(--linea); border-radius: 980px; background: var(--papel-2, var(--papel)); color: var(--tinta); }
+.resultados { list-style: none; padding: 0; margin: 8px 0 24px; }
+.resultados a { display: flex; flex-direction: column; padding: 12px 4px; border-bottom: 1px solid var(--linea); color: var(--tinta); text-decoration: none; }
+.resultados span { font-size: .92rem; opacity: .75; }
+
+/* ── Patata pelada: todos los cortes, precio a consultar ── */
+.cortes { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.cortes a { display: flex; flex-direction: column; gap: 4px; height: 100%; padding: 16px; border: 1px solid var(--linea); border-radius: 16px; color: var(--tinta); text-decoration: none; background: var(--papel-2, transparent); }
+.cortes strong { font-size: 1.2rem; }
+.cortes span { font-size: .9rem; opacity: .8; flex: 1; }
+.cortes em { font-style: normal; font-weight: 700; color: var(--granate); font-size: .9rem; }
+@media (hover: hover) and (pointer: fine) { .cortes a:hover { border-color: var(--granate); } }

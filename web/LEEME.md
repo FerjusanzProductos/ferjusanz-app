@@ -20,6 +20,7 @@ Web de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., sin WordPress, en Cloudflare (
 - `paginas.json`: textos de cada página (los de la web antigua y los artículos nuevos). **Aquí se cambian los textos.**
 - `redirecciones.json`: artículos viejos juntados en otro (no se generan; el Worker los manda al nuevo con 301).
 - `ofertas.json`: **ofertas de la semana** (fechas, nota de IVA y lista producto · precio · unidad). Sale en la portada (sección «Ofertas de la semana») entre las cifras y la última guía. Si `items` está vacío, la sección no sale. Las mismas ofertas van en la app: Comercial › ⭐ Recomendaciones (tabla `recomendaciones`, base real y pruebas).
+- **Buscador** (26/11/2026): barra en la cabecera → `/buscar/` (función `paginaBuscar` en `construir.cjs`; busca en productos, cortes de patata pelada, páginas y menú). **Cortes de patata pelada**: lista `CORTES` en `construir.cjs` (bloque «Patata pelada en todos los cortes», siempre «Precio a consultar»).
 - `novedades.json`: fotos y avisos del almacén (página `/novedades/` y portada).
 - `construir.cjs`: diseño, catálogo (`FAMILIAS`), preguntas frecuentes, páginas nuevas y legales; genera `public/` y `archivos.generado.js`.
 - **Vídeos en Novedades** (16/11/2026): en `novedades.json`, `"video": "/fotos/AAAA/MM/x.mp4"` y `"foto"` con su portada (.jpg). Los dos se suben al KV como las fotos (copia en `fotos/`). MP4 ligero (720 px, ver `redes/videos/LEEME.md`).
