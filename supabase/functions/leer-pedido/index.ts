@@ -30,16 +30,17 @@ async function conGemini(mime: string, data: string, texto?: string) {
     ? { contents: [{ role: "user", parts: [{ text: texto }] }], generationConfig: { temperature: 0, responseMimeType: "application/json" } }
     : { contents: [{ role: "user", parts: [{ text: INSTRUCCIONES }, { inline_data: { mime_type: mime, data } }] }], generationConfig: { temperature: 0 } });
   let fallo = "";
-  // Gemini a veces dice «mucha demanda»: se reintenta y, si sigue, se prueba otro modelo.
-  // Texto: primero el modelo ligero (responde en 1-2 s; el grande va saturado y tarda hasta un minuto).
-  const modelos = texto ? ["gemini-flash-lite-latest", env("GEMINI_MODEL") || "gemini-flash-latest"] : [env("GEMINI_MODEL") || "gemini-flash-latest", "gemini-flash-lite-latest"];
+  // Cuota gratis (26/11/2026): siempre el ligero primero (más cupo y no va saturado); el grande solo si falla.
+  // 429 = cupo de ese modelo agotado: no se reintenta (gastaría más), se pasa al otro. 503/500: un reintento.
+  const modelos = ["gemini-flash-lite-latest", env("GEMINI_MODEL") || "gemini-flash-latest"];
   for (const modelo of modelos) for (let i = 0; i < 2; i++) {
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`, { method: "POST", headers: { "x-goog-api-key": env("GEMINI_API_KEY"), "Content-Type": "application/json" }, body: cuerpo, signal: AbortSignal.timeout(50000) }).catch((e) => new Response(JSON.stringify({ error: { message: String(e?.message || e) } }), { status: 503 }));
     const d = await r.json().catch(() => ({}));
     if (r.ok) return (d.candidates?.[0]?.content?.parts || []).map((p: { text?: string }) => p.text || "").join("").trim();
     fallo = "Gemini: " + String(d?.error?.message || r.status).slice(0, 200);
     if (![429, 500, 503].includes(r.status)) throw new Error(fallo);
-    await new Promise((ok) => setTimeout(ok, 1500));
+    if (r.status === 429) break;
+    await new Promise((ok) => setTimeout(ok, 2000));
   }
   throw new Error(fallo);
 }
@@ -89,8 +90,11 @@ Deno.serve(async (req) => {
   if (data.length > 20e6) return json({ error: "El archivo es demasiado grande (máximo unos 15 MB)" }, 413);
   const audio = mime.startsWith("audio/");
   try {
-    if (env("GEMINI_API_KEY")) return json({ texto: await conGemini(mime, data) });
-    if (!audio && env("ANTHROPIC_API_KEY")) return json({ texto: await conClaude(mime, data) });
+    const claude = !audio && env("ANTHROPIC_API_KEY");
+    if (env("GEMINI_API_KEY")) {
+      try { return json({ texto: await conGemini(mime, data) }); } catch (e) { if (!claude) throw e; } // foto: si Gemini no puede, Claude
+    }
+    if (claude) return json({ texto: await conClaude(mime, data) });
     return json({ error: audio ? "Falta la clave de Gemini para oír audios" : "Falta la clave de la IA" }, 503);
   } catch (e) { return json({ error: String((e as Error).message || e) }, 502); }
 });

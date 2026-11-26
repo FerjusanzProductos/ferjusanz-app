@@ -6,7 +6,7 @@ Vídeos cortos verticales (Reels, TikTok, Shorts y la web), hechos con HyperFram
 1. Copiar `naranja-zumo/` con otro nombre y cambiar textos, fotos (`img/`) y tiempos en `index.html`.
 2. Voz de Fernando: la graba con la Grabadora del Samsung y la guarda en su Google Drive; Claude la baja con el conector de Drive y la limpia con:
    `ffmpeg -i original.m4a -af "highpass=f=90,afftdn=nf=-25,loudnorm=I=-16:TP=-1.5" -ar 44100 -c:a aac -b:a 96k voz.m4a`
-   Para cuadrar cada pantalla con la voz, pasar la voz a texto con Gemini (`gemini-3.5-flash`, clave ya puesta).
+   Para cuadrar cada pantalla con la voz, pasar la voz a texto con Gemini (`gemini-flash-lite-latest`, clave ya puesta).
 3. Comprobar: `npx -y hyperframes@0.9.58 lint` y `npx -y hyperframes@0.9.58 snapshot --at 2,6,13` (mirar la hoja de capturas).
 4. Sacar el vídeo y aligerarlo:
    `npx -y hyperframes@0.9.58 render -o grande.mp4`
