@@ -172,6 +172,64 @@ async function interpretar(sb: SB, contexto: string, texto: string | null, medio
   return null; // sin clave de IA: se apunta tal cual, sin leer
 }
 
+// ---------- Memoria de Golden: lo que este cliente compra de verdad (variedad, calibre, cantidad) ----------
+// Tito, 26/11/2026: «que tenga memoria en función de lo que ya hay en Golden… las variedades, los calibres, todo».
+async function habitual(sb: SB, codigo: string) {
+  const desde = new Date(Date.now() - 365 * 864e5).toISOString().slice(0, 10);
+  const { data: fs } = await sb.from("golden_facturas").select("numero").eq("cliente_codigo", codigo).gte("fecha", desde).order("fecha", { ascending: false }).limit(100);
+  const nums = (fs || []).map((f: { numero: string }) => f.numero);
+  if (!nums.length) return [];
+  const { data: ls } = await sb.from("golden_lineas").select("producto_codigo,cantidad").in("factura_numero", nums).limit(10000);
+  const ag: Record<string, { veces: number; total: number }> = {};
+  for (const l of ls || []) { if (!l.producto_codigo) continue; const a = ag[l.producto_codigo] ||= { veces: 0, total: 0 }; a.veces++; a.total += Number(l.cantidad) || 0; }
+  const codigos = Object.keys(ag);
+  if (!codigos.length) return [];
+  const { data: ps } = await sb.from("productos").select("id,codigo,nombre,unidad_venta").in("codigo", codigos);
+  return (ps || []).map((p: { id: string; codigo: string; nombre: string; unidad_venta: string | null }) => ({ id: p.id, nombre: p.nombre.replace(/\s+/g, " "), unidad: p.unidad_venta || "", veces: ag[p.codigo].veces, media: Math.round(ag[p.codigo].total / ag[p.codigo].veces * 10) / 10 }))
+    .sort((a, b) => b.veces - a.veces).slice(0, 80);
+}
+type Linea = { producto_id: string | null; producto: string; cantidad: number | null; unidad: string | null; dijo?: string };
+// Con el pedido ya leído y el cliente sabido, la IA elige de lo que suele comprar en Golden. No cambia cantidades.
+async function afinar(sb: SB, cliente: { codigo: string; nombre: string; nombre_comercial?: string }, lineas: Linea[], texto: string | null, idsValidos: Set<string>) {
+  const hab = await habitual(sb, cliente.codigo);
+  if (!hab.length) return null;
+  const prompt = `Eres de la oficina de FERJUSANZ (mayorista de fruta y verdura). Un cliente ha pedido por WhatsApp y ya está leído. Ayúdame a apuntarlo con lo que este cliente compra de verdad.
+Cliente: ${cliente.nombre_comercial || cliente.nombre} (${cliente.codigo}).
+Lo que compra en Golden el último año (id|producto|unidad|veces|cantidad media):
+${hab.map((h) => `${h.id}|${h.nombre}|${h.unidad}|${h.veces}|${h.media}`).join("\n")}
+Mensaje: ${texto || "(sin texto)"}
+Pedido leído (i|producto como lo dijo|cantidad|unidad|producto_id actual):
+${lineas.map((l, i) => `${i}|${l.producto}|${l.cantidad ?? ""}|${l.unidad ?? ""}|${l.producto_id ?? ""}`).join("\n")}
+Devuelve SOLO un JSON: {"lineas": [{"i": número, "producto_id": "id de SU lista o null"}], "nuevas": [{"producto_id": "id de su lista", "cantidad": número, "unidad": "…"}], "nota": "aviso corto para la oficina o null"}
+Reglas:
+- Para cada línea, si lo que pide es uno de sus productos de siempre, pon ese id: así sale la variedad y el calibre que se lleva (p. ej. «patatas» → la patata que compra; «canónigos» → maché; «naranja» → la naranja que suele llevar).
+- Si pide claramente otra variedad que no está en su lista (p. ej. pide morada y él compra blanca), producto_id null y dilo en la nota.
+- Si hay varias de su lista que encajan, la que más veces compra, y dilo en la nota.
+- No cambies cantidades. Si una cantidad o unidad choca con lo de siempre (p. ej. pide 1 saco y suele llevar 35 kg), dilo en la nota.
+- Si dice «lo de siempre» o «lo mismo que la otra vez» sin decir productos, pon en "nuevas" sus productos más habituales con la cantidad media y avisa en la nota de que es una propuesta. Si no, "nuevas" vacío.`;
+  // deno-lint-ignore no-explicit-any
+  let r: any;
+  if (env("ANTHROPIC_API_KEY")) r = await conClaude([{ texto: prompt }]);
+  else if (env("GEMINI_API_KEY")) r = await conGemini([{ texto: prompt }]);
+  else return null;
+  const porId = new Map(hab.map((h) => [h.id, h]));
+  const cambios: string[] = [];
+  const out = lineas.map((l) => ({ ...l }));
+  for (const x of Array.isArray(r?.lineas) ? r.lineas : []) {
+    const l = out[Number(x?.i)]; const h = porId.get(x?.producto_id);
+    if (!l || !h || l.producto_id === h.id) continue;
+    if (h.nombre.toLowerCase() !== l.producto.toLowerCase()) cambios.push(`${l.producto} → ${h.nombre}`);
+    l.dijo = l.dijo || l.producto; l.producto = h.nombre; l.producto_id = h.id;
+  }
+  for (const x of Array.isArray(r?.nuevas) ? r.nuevas.slice(0, 40) : []) {
+    const h = porId.get(x?.producto_id); if (!h) continue;
+    out.push({ producto_id: h.id, producto: h.nombre, cantidad: Number.isFinite(Number(x?.cantidad)) ? Number(x.cantidad) : null, unidad: x?.unidad ? String(x.unidad).slice(0, 30) : (h.unidad || null), dijo: "lo de siempre" });
+  }
+  for (const l of out) if (l.producto_id && !idsValidos.has(l.producto_id) && !porId.has(l.producto_id)) l.producto_id = null;
+  const nota = ["🧠 Según lo que compra en Golden" + (cambios.length ? ": " + cambios.join("; ") : ": sin cambios"), r?.nota].filter(Boolean).join("\n");
+  return { lineas: out, nota };
+}
+
 // ---------- Un mensaje ----------
 // deno-lint-ignore no-explicit-any
 async function procesar(sb: SB, m: any, nombre: string) {
@@ -186,10 +244,12 @@ async function procesar(sb: SB, m: any, nombre: string) {
   if (casa && !reenviado) {
     // Nota de Tito justo después de reenviar («es de Donde Valentín»): completa la última propuesta suya.
     if (!texto) return "casa";
-    const { data: ult } = await sb.from("whatsapp_pedidos").select("id,cliente_id,nota").eq("telefono", tel).eq("estado", "nuevo").gte("created_at", new Date(Date.now() - 15 * 60000).toISOString()).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const { data: ult } = await sb.from("whatsapp_pedidos").select("id,cliente_id,nota,lineas,texto_original,transcripcion").eq("telefono", tel).eq("estado", "nuevo").gte("created_at", new Date(Date.now() - 15 * 60000).toISOString()).order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (!ult) return "casa";
     const cambios: Record<string, unknown> = { nota: [ult.nota, "Nota de la casa: " + texto].filter(Boolean).join("\n").slice(0, 2000) };
-    if (!ult.cliente_id) { const r = await clientePorNombre(sb, texto); if (r.cliente) { cambios.cliente_id = r.cliente.id; cambios.cliente_texto = texto.slice(0, 200); } }
+    if (!ult.cliente_id) { const r = await clientePorNombre(sb, texto); if (r.cliente) { cambios.cliente_id = r.cliente.id; cambios.cliente_texto = texto.slice(0, 200);
+      try { const af = await afinar(sb, r.cliente, Array.isArray(ult.lineas) ? ult.lineas : [], ult.texto_original || ult.transcripcion, new Set((await productos(sb)).map((p) => p.id)));
+        if (af) { cambios.lineas = af.lineas; cambios.nota = [cambios.nota, af.nota].join("\n").slice(0, 2000); } } catch (e) { console.error("afinar", e); } } }
     await sb.from("whatsapp_pedidos").update(cambios).eq("id", ult.id);
     return "nota";
   }
@@ -230,10 +290,14 @@ async function procesar(sb: SB, m: any, nombre: string) {
   }
   const ids = new Set((await productos(sb)).map((p) => p.id));
   // deno-lint-ignore no-explicit-any
-  const lineas = (Array.isArray(ia?.lineas) ? ia.lineas : []).slice(0, 80).map((l: any) => ({
+  let lineas: Linea[] = (Array.isArray(ia?.lineas) ? ia.lineas : []).slice(0, 80).map((l: any) => ({
     producto_id: ids.has(l?.producto_id) ? l.producto_id : null, producto: String(l?.producto || "").slice(0, 120),
     cantidad: Number.isFinite(Number(l?.cantidad)) && l?.cantidad !== null ? Number(l.cantidad) : null, unidad: l?.unidad ? String(l.unidad).slice(0, 30) : null,
   }));
+  if (cliente?.codigo && (lineas.length || ia?.es_pedido)) {
+    try { const af = await afinar(sb, cliente, lineas, texto || ia?.transcripcion || null, ids); if (af) { lineas = af.lineas; nota = [nota, af.nota].filter(Boolean).join("\n"); if (ia) ia.nota = [ia.nota, af.nota].filter(Boolean).join("\n"); } }
+    catch (e) { console.error("afinar", e); }
+  }
   const fecha = /^\d{4}-\d{2}-\d{2}$/.test(String(ia?.fecha_entrega || "")) ? ia.fecha_entrega : null;
   await sb.from("whatsapp_mensajes").insert({ telefono: tel, nombre_contacto: nombre || null, cliente_id: cliente?.id || null, direccion: "entra", texto: (texto || ia?.transcripcion || null)?.slice(0, 4000), tipo, wa_id: m.id });
   // Añadido o cambio de un pedido que ya estaba: se junta en la misma tarjeta y vuelve a «Por revisar».
