@@ -52,6 +52,8 @@ La sección se llama **«Guías»** (Fernando, 15/11/2026: que no se llame «blo
 - Foto: una nueva de Drive si la hay (la mejor), si no una de la web que pegue con el tema.
 - Guardar como JSON en el scratchpad y `node web/anadir.cjs articulo <archivo.json>`.
 
+Nota (26/11/2026): al publicar, la guía nueva sale sola en la ficha de Google (Zapier lee `/feed.xml`). No hay que hacer nada más.
+
 ## 4. Publicar y comprobar
 1. `cd web && node construir.cjs`
 2. Probar en local: `npx -y wrangler@4 dev --port 8799 --ip 127.0.0.1` (en segundo plano) y `curl --noproxy '*'` a la portada, a `/novedades/` y al artículo nuevo: los tres con 200.
