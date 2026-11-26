@@ -13,10 +13,11 @@ const lista = [ // [producto, compra 24/11 (null = precio de Tito), unidad, lo q
   ['Lechuga bandeja 900 g', 1.45, 'bandeja', 2.40, 14], ['Lechuga iceberg', 0.55, 'pieza', 1.10, 21], ['Zanahoria', 0.60, 'kg', 1.15, 20],
   ['Acelgas', 0.60, 'kg', 1.38, 16.9], ['Calabacín', 0.70, 'kg', 1.67, 11.4], ['Berenjena', 0.65, 'kg', 1.77, 7.5],
   ['Ajo pelado', 3.30, 'kg', 5.40, 2], ['Ajos', 2.90, 'kg', 4.00, 2.2],
+  ['Huevos', 2.00, 'docena', null, 0], // Tito 26/11: «y los huevos» (no los compraba; Patatas del Olmo, 2,00/docena)
 ].map(([n, c, u, a, q]) => [n, +(c + 0.40).toFixed(2), u, a, q]);
-console.assert(lista.every(([, p, , a]) => p < a), 'nunca más caro que lo que pagaba');
+console.assert(lista.every(([, p, , a]) => a == null || p < a), 'nunca más caro que lo que pagaba');
 const PAT = 0.60;
-const antes = lista.reduce((s, r) => s + r[3] * r[4], 0), ahora = lista.reduce((s, r) => s + r[1] * r[4], 0), meses = 5;
+const antes = lista.reduce((s, r) => s + (r[3] ?? 0) * r[4], 0), ahora = lista.reduce((s, r) => s + r[1] * r[4], 0), meses = 5;
 const html = `<!doctype html><meta charset=utf-8><style>
 @page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;font:13px/1.4 Arial,sans-serif;color:#2a2320}a{color:inherit;text-decoration:none}
 .top{background:#7a1f1f;color:#fff;padding:7mm 13mm 5mm}.top h1{margin:0;font-size:28px;letter-spacing:1px}.top p{margin:2px 0 0;color:#f6dcc8;font-size:12px}
@@ -35,7 +36,7 @@ td.a{text-align:right;color:#999;text-decoration:line-through;white-space:nowrap
 <p>He mirado lo que nos pedíais y os he bajado los precios al máximo, con muy poco margen sobre lo que nos cuesta a nosotros en Mercamadrid. Ahora lo llevo yo personalmente y los precios los pongo yo.</p>
 <div class=pat><b>Patata especial freír</b><span>${e(PAT)} / kg</span><small>Saco de 25 kg: ${e(PAT * 25)}</small></div>
 <h2>Vuestros precios</h2>
-<table><tr><th>Producto</th><th>Antes</th><th>Ahora</th><th></th></tr>${lista.map(([n, p, u, a]) => `<tr><td>${n}</td><td class=a>${e(a)}</td><td class=p>${e(p)}</td><td class=u>/ ${u}</td></tr>`).join('')}
+<table><tr><th>Producto</th><th>Antes</th><th>Ahora</th><th></th></tr>${lista.map(([n, p, u, a]) => `<tr><td>${n}</td><td class=a>${a == null ? '' : e(a)}</td><td class=p>${e(p)}</td><td class=u>/ ${u}</td></tr>`).join('')}
 <tr><td>Perejil</td><td></td><td class=p>de regalo</td><td class=u>con el pedido</td></tr></table>
 <div class=ah>Con lo que nos comprasteis de marzo a julio, habríais pagado <b>${e0(ahora)}</b> en vez de ${e0(antes)}: <b>unos ${e0((antes - ahora) / meses)} menos al mes</b>.</div>
 <p class=nota>«Antes»: lo que pagabais de media de marzo a julio. Precios + 4 % de IVA. El resto, según mercado: pedidme precio de lo que necesitéis.</p>
