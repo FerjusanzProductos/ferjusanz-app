@@ -13,6 +13,9 @@ const VISITAS = "https://hvydnjaswdexttogsyen.supabase.co/rest/v1/rpc/registrar_
 const CLAVE_PUBLICA = "sb_publishable_B6ZWPBp54OT62yXU3khygQ_eIm6UnVq";
 // Base para el formulario «primer pedido» de la tarjeta: la real; para probar en local, SUPABASE_URL y SUPABASE_CLAVE de la de pruebas.
 const BASE_REAL = "https://hvydnjaswdexttogsyen.supabase.co";
+// IndexNow: avisa a Bing (de donde saca ChatGPT/Copilot), Yandex y otros de las páginas nuevas o cambiadas, sin Cloudflare ni Bing Webmaster.
+// La clave es pública por diseño (se sirve en /<clave>.txt para demostrar que la web es nuestra).
+const INDEXNOW_CLAVE = "bdc31633139e3b652bedbffc71e05789";
 const ROBOT = /bot|crawl|spider|slurp|preview|headless|lighthouse|monitor|curl|wget|python|node|go-http|facebookexternalhit|whatsapp/i;
 
 function apuntarVisita(request, ruta) {
@@ -29,7 +32,22 @@ const REDIRIGIR = [
   [/^\/servicios-de-distribucion-y-exportacion\/entrega-a-domicilio-frutas-y-verduras-por-covid19\/?$/, "/"],
 ];
 
+// Cada mañana (cron en wrangler.jsonc): la primera vez manda todo el sitemap; después, solo lo cambiado en los últimos 3 días.
+async function avisarIndexNow(env) {
+  const xml = ARCHIVOS["/sitemap.xml"][0];
+  const todo = !(await env.FOTOS.get("indexnow-inicial"));
+  const desde = new Date(Date.now() - 3 * 864e5).toISOString().slice(0, 10);
+  const urls = [...xml.matchAll(/<loc>([^<]+)<\/loc>(?:<lastmod>([^<]*)<\/lastmod>)?/g)].filter(m => todo || (m[2] || "") >= desde).map(m => m[1]);
+  if (!urls.length) return;
+  const r = await fetch("https://api.indexnow.org/indexnow", { method: "POST", headers: { "content-type": "application/json; charset=utf-8" },
+    body: JSON.stringify({ host: "www." + DOMINIO_SIN_WWW, key: INDEXNOW_CLAVE, keyLocation: `https://www.${DOMINIO_SIN_WWW}/${INDEXNOW_CLAVE}.txt`, urlList: urls }) });
+  console.log("indexnow", r.status, urls.length);
+  await env.FOTOS.put("indexnow-ultimo", `${new Date().toISOString()} ${r.status} ${urls.length} ${(await r.text()).slice(0, 200)}`);
+  if (r.ok && todo) await env.FOTOS.put("indexnow-inicial", new Date().toISOString());
+}
+
 export default {
+  async scheduled(evento, env, ctx) { ctx.waitUntil(avisarIndexNow(env)); },
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const PRUEBAS = url.hostname.endsWith(".workers.dev");
@@ -62,6 +80,7 @@ export default {
     for (const [patron, destino] of REDIRIGIR) if (patron.test(ruta)) return Response.redirect(url.origin + destino, 301);
     // Las páginas van siempre con barra al final, como en la web antigua.
     if (!ARCHIVOS[ruta] && ARCHIVOS[ruta + "/"]) return Response.redirect(url.origin + ruta + "/" + url.search, 301);
+    if (ruta === "/" + INDEXNOW_CLAVE + ".txt") return new Response(INDEXNOW_CLAVE);
     if (ruta === "/robots.txt" && !PRUEBAS) return new Response("User-agent: *\nAllow: /\nSitemap: https://www.ferjusanz-frutas-verduras.es/sitemap.xml\n");
     const archivo = ARCHIVOS[ruta] || ARCHIVOS["/404.html"];
     const headers = { "content-type": archivo[1], "cache-control": ruta.startsWith("/wp-content/") || ruta.startsWith("/fuentes/") ? "public, max-age=2592000" : archivo[1].startsWith("text/html") ? "no-cache" : "public, max-age=300" };

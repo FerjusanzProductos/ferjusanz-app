@@ -100,6 +100,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Cada día, en el correo de «Comercial del día» (punto 4, `scripts/tarifa-colectivos.mjs`): cambios, lo que hay que contrastar y la lista completa. Lleva precios de compra: solo para Tito, no en `resumen_comercial`.
 - Las **limas** se venden **por caja** en todas las listas.
 - **Precios que se mandan a colegios nuevos** (Tito, 26/11/2026: «a ellos les bajes 20 céntimos… No te digo que bajes los que hay en la web»): los productos que estén en las **ofertas de la semana de la web** (`recomendaciones`) van al **más barato** entre la lista de colegios y la **oferta de la web − 0,20 €**, pero **nunca por debajo de compra + 0,10 €**. El resto, a precio de lista. La web no se toca. **Las patatas, siempre a precio de la lista de colectivos, sin descuento** («las patatas son igual que los colectivos… No lo confundas»).
+- **Un PDF de precios por tipo de cliente** (Tito, 26/11/2026: «¿cómo se te ocurre… precio para colegios y residencias?»): a un colegio, «Precios para colegios»; a una residencia, «Precios para residencias». **Nunca** un PDF con los dos nombres juntos. Generadores en `docs/colegios/`.
 
 ## Tarifa de hostelería: compra + 0,40 € (Tito, 23/11/2026: «0,40. Con las excepciones que ya había»)
 - Igual que la de colectividades (mismo cálculo automático), con **+ 0,40 €** y **las cajas + 0,40 € por kilo** (Tito, 23/11/2026: «Si. Cambia») con su peso en el nombre.

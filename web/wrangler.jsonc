@@ -6,6 +6,7 @@
   "compatibility_date": "2026-11-01",
   "workers_dev": true,
   "preview_urls": false,
+  "triggers": { "crons": ["17 7 * * *"] },
   "observability": { "enabled": true },
   "kv_namespaces": [{ "binding": "FOTOS", "id": "30a0903df04e4ea694b8b28f85f0781e" }],
   "rules": [

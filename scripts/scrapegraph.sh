@@ -13,7 +13,7 @@ import sys
 import scrapegraphai.utils.tokenizer as t
 t.num_tokens_openai = lambda s: len(s) // 4  # shortcut: aproximado, tiktoken no se puede descargar en la nube; quitar si hay red libre
 from scrapegraphai.graphs import SmartScraperGraph
-cfg = {"llm": {"model": "google_genai/gemini-3.5-flash", "api_key": "proxy-injected", "model_tokens": 100000},
+cfg = {"llm": {"model": "google_genai/gemini-flash-lite-latest", "api_key": "proxy-injected", "model_tokens": 100000},
        "loader_kwargs": {"executable_path": "/opt/pw-browsers/chromium"}, "headless": True, "verbose": False}
 print(SmartScraperGraph(prompt=sys.argv[2], source=sys.argv[1], config=cfg).run())
 EOF
