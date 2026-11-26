@@ -2,9 +2,6 @@
 _Solo lo que **falta**. Regla de Fernando (14/11/2026): «Cada vez que hagamos algo, quítalo». Al terminar algo: **borrarlo de aquí** (no tacharlo), apuntarlo en `docs/HISTORIAL.md` y volver a publicar la página fijada (ver `CLAUDE.md`). Lo ya hecho hasta el 14/11/2026 está en `docs/HISTORIAL.md`._
 _Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda · ⏸ en espera._
 
-## 🧾 FACTURAS DE PROVEEDOR
-- 🟡 **El Gmail de facturas no debería mandar a «Facturas recibidas» los correos que envía la propia empresa ni fotos sin factura** (26/11/2026). El filtro está en el Gmail (no en el repositorio).
-
 ## 🤝 CLIENTES (Tito, 24/11/2026, dictado conduciendo)
 - 🔴 **Lista semanal automática de precios para Los Barriletes y Florencio** (Tito, 26/11/2026: se les ha prometido que cada semana les llega su lista actualizada). Falta decidir por dónde sale (WhatsApp o correo) y que Tito dé el visto bueno para mandar a clientes.
 - 🔴 **Ir detrás de**: **Restaurante Duarte** y **Florencio** (que salgan en «Comercial del día» hasta que se cierre algo).
