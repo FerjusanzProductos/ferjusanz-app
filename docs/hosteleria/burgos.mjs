@@ -2,7 +2,7 @@
 // Uso: node docs/hosteleria/burgos.mjs <carpeta de salida> [id de la lista en la app]
 //   → Ferjusanz-Burgos.pdf (2 hojas), Ferjusanz-Burgos-1-lo-que-te-ahorras.jpg y -2-precios.jpg, sql-lista.json y (con id) sql-pres.json.
 // Precios de Tito sobre la compra de Golden 14-24/11: patata especial freír y cebolla gorda + 0,10; pimientos + 0,25; zanahoria + 0,20;
-// tomate pera como Duarte (1,25); mezcluna 2,45; iceberg 0,95 pieza; naranja 0,90. Tomates de carta (rama, RAF) como Padel Spirit (compra + 0,20).
+// tomate pera como Duarte (1,25); mezclum 2,45; iceberg 0,95 pieza; naranja 0,90. Tomates de carta (rama, RAF) como Padel Spirit (compra + 0,20).
 // En la hoja solo el móvil de Tito (609 567 354), nunca el 609 100 690.
 import fs from 'fs'; import { execSync } from 'child_process'; import { createRequire } from 'module';
 const { chromium } = createRequire('/home/user/ferjusanz-app/')('playwright');
@@ -12,7 +12,7 @@ const e0 = n => Math.round(n).toLocaleString('es-ES', { useGrouping: 'always' })
 const lista = [ // [producto, precio, unidad, compra Golden, margen pedido por Tito (null = precio dado por él)]
   ['Patata especial freír', 0.52, 'kg', 0.42, 0.10], ['Cebolla gorda', 0.55, 'kg', 0.45, 0.10],
   ['Tomate pera', 1.25, 'kg', 1.00, null], ['Tomate en rama', 1.70, 'kg', 1.50, 0.20], ['Tomate RAF', 2.00, 'kg', 1.80, 0.20],
-  ['Lechuga mezcluna', 2.45, 'kg', null, null], ['Lechuga iceberg', 0.95, 'pieza', 0.55, null], ['Naranja de zumo', 0.90, 'kg', 0.75, null],
+  ['Lechuga mezclum', 2.45, 'kg', null, null], ['Lechuga iceberg', 0.95, 'pieza', 0.55, null], ['Naranja de zumo', 0.90, 'kg', 0.75, null],
   ['Pimiento rojo de primera', 2.15, 'kg', 1.90, 0.25], ['Pimiento rojo de segunda', 1.35, 'kg', 1.10, 0.25], ['Pimiento verde', 1.25, 'kg', 1.00, 0.25],
   ['Pimiento italiano', 2.05, 'kg', 1.80, 0.25], ['Pimiento de Padrón', 1.75, 'kg', 1.50, 0.25], ['Zanahoria', 0.80, 'kg', 0.60, 0.20],
 ];
@@ -25,7 +25,7 @@ const coche = S.viajes * S.km * S.eurKm, tiempo = S.viajes * S.horas * S.eurHora
 const tu = patAlli + coche + tiempo, nos = patNos, sem = tu - nos, mes = sem * 52 / 12;
 console.assert(Math.abs(sem - (KG * (S.patataAlli - PAT) + coche + tiempo)) < 1e-9 && sem > 0, 'ahorro semanal');
 
-const cesta = [['Patata especial freír', KG], ['Cebolla gorda', 25], ['Tomate pera', 15], ['Tomate RAF', 5], ['Lechuga iceberg', 12], ['Lechuga mezcluna', 2],
+const cesta = [['Patata especial freír', KG], ['Cebolla gorda', 25], ['Tomate pera', 15], ['Tomate RAF', 5], ['Lechuga iceberg', 12], ['Lechuga mezclum', 2],
   ['Pimiento verde', 5], ['Pimiento rojo de segunda', 5], ['Pimiento italiano', 3], ['Naranja de zumo', 15], ['Zanahoria', 5]] // aprox.: solo la patata (8 sacos) es dato de Tito
   .map(([n, q]) => { const x = lista.find(l => l[0] === n); return [n, q, x[2], x[1] * q]; });
 const cestaTot = cesta.reduce((t, c) => t + c[3], 0);
