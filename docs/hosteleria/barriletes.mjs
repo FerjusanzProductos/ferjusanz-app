@@ -30,7 +30,7 @@ td.p{text-align:right;font-weight:bold;font-size:15px;white-space:nowrap;color:#
 <p class=nota>Precios + 4 % de IVA. El resto, según mercado: pedidme precio de lo que necesitéis.</p>
 <h2>Siempre al día</h2>
 <p>Cada semana tenemos <b>ofertas de la semana</b> en nuestra web: <a href="${W}/#ofertas"><b>ferjusanz-frutas-verduras.es</b></a>. Además, <b>cada semana os llegará vuestra lista actualizada</b>, para que siempre sepáis cómo están los precios sin tener que preguntar.</p>
-<p>Confiad en nosotros. Cualquier cosa, escribidme a este mismo WhatsApp.</p>
+<p>Y <b>ahora lo llevo yo personalmente</b>. Ha habido cambios que me quiero tomar muy en serio, y los precios los pongo yo, sin depender de nadie. Cualquier cosa, escribidme a este mismo WhatsApp.</p>
 <p>Un saludo,</p>
 <div class=pie><b>Fernando Sanz</b> · FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. · Mercamadrid · Pedidos por WhatsApp 609 100 690 · <a href="${W}">www.ferjusanz-frutas-verduras.es</a></div>
 </div>`;
