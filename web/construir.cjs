@@ -38,6 +38,16 @@ const bandaResena = () => `<section class="resena-banda" aria-label="Reseñas"><
   <div><p class="resena-estrellas" aria-hidden="true">★★★★★</p><h2>¿Ya es cliente? Cuéntenos qué tal en Google</h2><p>Su opinión ayuda a otros cocineros a conocernos, y la leemos toda: la buena y la que nos ayuda a mejorar.</p></div>
   <a class="btn btn-borde" href="${RESENA}" rel="nofollow" target="_blank">★ <span>Dejar una reseña</span>${I.flecha}</a>
 </div></section>`;
+// Franja «Confianza asegurada» (Tito, 26/11/2026): solo hechos comprobados de web/LEEME.md.
+const bandaConfianza = () => `<section class="bloque" aria-label="Confianza"><div class="envoltura">
+  <div class="bloque-cabeza"><div><p class="antetitulo">Confianza asegurada</p><h2>Confianza asegurada: por qué pueden fiarse de nosotros</h2></div></div>
+  <ul class="ventajas">
+    <li>${I.familia}<strong>Más de 60 años en Mercamadrid</strong><span>Empresa familiar, ya en la tercera generación. Elegimos el género cada madrugada: la calidad manda.</span></li>
+    <li>${I.hoja}<strong>Paga lo que recibe</strong><span>Cada albarán lleva el peso real, el precio y el IVA. Sin pedido mínimo.</span></li>
+    <li>${I.camion}<strong>Reparto en frío, de lunes a sábado</strong><span>Camiones y furgonetas refrigerados propios en Madrid y Segovia.</span></li>
+    <li>${I.wa}<strong>Trato directo con la familia</strong><span>Pedidos hasta la tarde anterior por WhatsApp o teléfono, y le contesta una persona.</span></li>
+  </ul>
+</div></section>`;
 const MENU = [
   ['/productos/', 'Productos'],
   ['/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', 'Hostelería'],
@@ -471,7 +481,7 @@ ${(a => `<section class="guia-portada" aria-label="Última guía">
 
 <section class="bloque">
   <div class="envoltura">
-    <div class="bloque-cabeza"><div><p class="antetitulo">Por qué Ferjusanz</p><h2>Un proveedor en el que su cocina puede confiar</h2></div><a class="enlace" href="#pedir-precio">Pedir presupuesto ${I.flecha}</a></div>
+    <div class="bloque-cabeza"><div><p class="antetitulo">Confianza asegurada</p><h2>Un proveedor en el que su cocina puede confiar</h2></div><a class="enlace" href="#pedir-precio">Pedir presupuesto ${I.flecha}</a></div>
     <ul class="ventajas">
       <li>${I.hoja}<strong>Calidad homogénea, pedido tras pedido</strong><span>Trabajamos con agricultores de confianza y seleccionamos caja a caja a primera hora en Mercamadrid.</span></li>
       <li>${I.camion}<strong>Reparto puntual con cadena de frío</strong><span>Flota propia de camiones y furgonetas refrigerados. Entregamos a la hora que marca su servicio.</span></li>
@@ -606,6 +616,7 @@ function paginaFamilia(p, f, textoHtml) {
 ${f.id === 'patatas' ? bloquePeladas() : ''}
 <section class="bloque"><div class="envoltura"><article class="texto">${resto}</article></div></section>
 ${galeria(p.path)}
+${bandaConfianza()}
 ${bandaResena()}
 ${enlacesSectores()}
 ${relacionados(p.path)}`;
@@ -641,6 +652,7 @@ function paginaTexto(p, opciones = {}) {
 </div></section>
 ${galeria(p.path)}
 ${opciones.despues || ''}
+${bandaConfianza()}
 ${bandaResena()}
 ${articulosPara(p.path)}
 ${enlacesSectores(p.path)}
@@ -676,6 +688,7 @@ function articulo(p) {
   <aside class="nota"><strong>¿Tiene un restaurante, un hotel, un colegio o una residencia?</strong><p>Le llevamos la fruta, la verdura, las patatas, los huevos, las setas, los champiñones y las legumbres cada día. Solicite su tarifa.</p>${botonesWA('Hola, he leído vuestro blog y quería información de precios.')}</aside>
 </div></article>
 ${galeria(p.path)}
+${bandaConfianza()}
 ${bandaResena()}
 <section class="bloque"><div class="envoltura"><div class="bloque-cabeza"><div><h2>Más artículos</h2></div><a class="enlace" href="/blog/#${temaDe(p).id}">Más de ${temaDe(p).nombre.toLowerCase()} ${I.flecha}</a></div><div class="articulos">${otros.map(tarjetaArticulo).join('')}</div></div></section>`;
   return plantilla({ ruta: p.path, titulo: p.title, descripcion: p.description, imagen: p.ogImage, tipo: 'article', cuerpo, datos: [m.datos, {
@@ -937,7 +950,7 @@ const NUEVAS = [
 <p>Repartimos con camiones y furgonetas refrigerados en los días y horarios que fije la residencia. Mantenemos la calidad estable pedido tras pedido y, si hay una incidencia, se resuelve directamente con la familia Ferjusanz.</p>
 <h2>Tarifa sin compromiso</h2>
 <p>Indíquenos el número de plazas y el consumo aproximado y le enviamos precio según el mercado del día.</p>` },
-  { path: '/productos/patata-pelada-para-hosteleria/', foto: F + '2020/09/distribuidor-patatas-beneficios.jpg', title: 'Patata pelada y cortada para hostelería en Madrid | Ferjusanz',
+  { path: '/productos/patata-pelada-para-hosteleria/', foto: '/fotos/catalogo/patata-pelada-collage.jpg', title: 'Patata pelada y cortada para hostelería en Madrid | Ferjusanz',
     description: 'Patata pelada al por mayor para hostelería y colectividades de Madrid: panadera, brava, bastón, dados, gajo y más cortes. Precio a consultar.',
     html: `<h1>Patata pelada y cortada para hostelería en Madrid</h1>
 <p>La patata es nuestra especialidad desde el primer día. Además de patata entera para todos los usos, servimos <strong>patata pelada y cortada</strong> lista para la cocina a restaurantes, hoteles, colegios, residencias y empresas de colectividades de Madrid.</p>
