@@ -10297,6 +10297,16 @@ function vistaPersonal() {
       if (!r.data.length) { box.replaceChildren(h('p', { class: 'vacio' }, 'Todavía no hay nóminas apuntadas.')); return; }
       const meses = {}; r.data.forEach(x => (meses[x.mes] = meses[x.mes] || []).push(x));
       const n = v => Number(v || 0);
+      // Beneficio del mes con Golden (solo quien ve márgenes): margen bruto − personal; faltan los demás gastos fijos.
+      const margenMes = (m, pers) => { const el = h('div', { class: 'sub', style: 'margin-top:8px' }, 'Calculando con Golden…');
+        const fin = hoy(new Date(+m.slice(0, 4), +m.slice(5, 7), 0));
+        sb.from('golden_facturas').select('base,coste').gte('fecha', m).lte('fecha', fin).eq('borrador', false).limit(5000).then(r => {
+          if (r.error) { el.textContent = ''; return; }
+          const c = r.data.filter(x => n(x.coste) > 0), v = r.data.reduce((a, x) => a + n(x.base), 0), mg = c.reduce((a, x) => a + n(x.base) - n(x.coste), 0);
+          el.replaceChildren(h('div', { class: 'fila' }, h('span', {}, 'Ventas Golden (IVA aparte)'), h('span', {}, eur(v) + ' €')), h('div', { class: 'fila' }, h('span', {}, 'Margen bruto'), h('span', {}, eur(mg) + ' €')),
+            h('div', { class: 'fila' }, h('span', {}, 'Personal'), h('span', {}, '− ' + eur(pers) + ' €')), h('div', { class: 'fila' }, h('b', {}, 'Queda'), h('b', { style: 'color:var(--verde,#15803d)' }, eur(mg - pers) + ' €')),
+            h('div', {}, 'Falta restar: puesto, furgonetas, gasoil, seguros, gestoría, teléfono y autónomos.' + (fin >= hoy() ? ' Mes sin terminar.' : ''))); });
+        return el; };
       box.replaceChildren(h('p', { class: 'sub' }, 'Solo lo ven Jorge, Fernando, Julián y Fernando hijo. Coste = sueldo bruto + Seguridad Social de la empresa.'),
         ...Object.keys(meses).map(m => { const xs = meses[m], tb = xs.reduce((a, x) => a + n(x.bruto), 0), ts = xs.reduce((a, x) => a + n(x.ss_empresa), 0);
           return h('div', { class: 'card' }, h('b', {}, new Date(m + 'T12:00').toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })),
@@ -10304,7 +10314,8 @@ function vistaPersonal() {
               h('div', { class: 'fila' }, h('span', {}, x.trabajador + (x.dias != null ? ' · ' + x.dias + ' días' : '')), h('b', {}, eur(n(x.bruto) + n(x.ss_empresa)) + ' €')),
               h('div', { class: 'sub' }, 'Bruto ' + eur(x.bruto) + ' € · S. Social empresa ' + eur(x.ss_empresa) + ' €' + (x.liquido != null ? ' · cobra ' + eur(x.liquido) + ' €' : '')),
               x.nota ? h('div', { class: 'sub' }, x.nota) : null)),
-            h('div', { class: 'fila', style: 'border-top:2px solid currentColor;padding-top:6px' }, h('span', {}, 'Total (bruto ' + eur(tb) + ' + S. Social ' + eur(ts) + ')'), h('b', {}, eur(tb + ts) + ' €'))); }));
+            h('div', { class: 'fila', style: 'border-top:2px solid currentColor;padding-top:6px' }, h('span', {}, 'Total personal'), h('b', {}, eur(tb + ts) + ' €')),
+            veMargenes() ? margenMes(m, tb + ts) : null); }));
     } catch (e) { box.replaceChildren(h('p', { class: 'vacio' }, isNetErr(e) ? 'Necesitas conexión para verlo.' : 'No se ha podido cargar.')); }
   })();
 }
