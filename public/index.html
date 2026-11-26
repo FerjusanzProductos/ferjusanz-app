@@ -22,7 +22,9 @@ button.peligro{background:#fff;color:var(--rojo);border:1px solid var(--rojo)}
 button.small{min-height:40px;padding:0 12px;font-size:15px}
 input,select,textarea{width:100%;min-height:52px;border:1px solid var(--borde);border-radius:12px;padding:8px 14px;background:#fff}
 input.big{font-size:36px;text-align:center;min-height:76px;font-weight:700}
-.shell{min-height:100vh;display:flex;flex-direction:column;padding-bottom:78px}
+.shell{min-height:100vh;display:flex;flex-direction:column;padding-bottom:136px}
+#fjatras{position:fixed;left:8px;bottom:calc(78px + env(safe-area-inset-bottom));z-index:7;min-height:50px;padding:0 18px;border-radius:999px;background:var(--verde);color:#fff;border:2px solid #fff;font-size:17px;font-weight:800;box-shadow:0 3px 10px rgba(0,0,0,.28)}
+body:has(input:focus,textarea:focus,select:focus) #fjatras{display:none!important}
 header{position:sticky;top:0;z-index:5;background:var(--verde);color:#fff;display:flex;align-items:center;gap:10px;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top))}
 header .logo{font-weight:800;letter-spacing:.3px;display:inline-flex;align-items:center;gap:8px}header .logo img{width:30px;height:30px;border-radius:7px;display:block}
 header .tit{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;opacity:.95;text-align:center}
@@ -1349,6 +1351,10 @@ window.addEventListener('popstate', e => {
   if (MR.dentro() && state.view === 'modoreparto' && !(e.state && e.state.v === 'pedido')) { try { history.pushState(navSnap(NAV.d), ''); } catch (x) { } return; }   /* modo reparto: «atrás» no saca de él */
   if (MR.dentro() && state.user && (!e.state || e.state.v !== 'modoreparto') && state.view === 'pedido') { state.view = 'modoreparto'; state.params = {}; render(); return; }
   if (!puedeSalir()) { try { history.pushState(navSnap(NAV.d), ''); } catch (x) { } return; }
+  if (e.state && e.state.guarda) {   /* el paso de reserva de debajo de Inicio: el primer «atrás» no cierra la app */
+    if (state.view === 'inicio') { toast('Pulsa otra vez «atrás» para salir de la app'); return; }
+    NAV.d = 0; state.view = 'inicio'; state.params = {}; state.ui = {}; NAV.pila = [navClave('inicio', {})]; try { history.pushState(navSnap(0), ''); } catch (x) { } render(); return;
+  }
   navGuarda();
   const s = e.state; if (!s || !s.v) { NAV.d = 0; state.view = 'inicio'; state.params = {}; } else { NAV.d = s.d || 0; state.view = s.v; state.params = s.p || {}; }
   const vuelta = NAV.mem[NAV.d] || null; state.ui = vuelta ? vuelta.u : {};
@@ -6554,7 +6560,8 @@ function vistaCompras() {
         const pantallaCompleta = () => {
           const w2 = h('div', { class: 'tabla-wrap fs' }, crearTb()); aplicaFs(w2);
           const ov = h('div', { class: 'mxfull' }, h('div', { class: 'mxfull-b' }, h('b', {}, 'Tabla · ' + fechaES(fecha)), barraZoom([w2, wrap]), h('button', { class: 'guardar small', onclick: () => ov.remove() }, 'Cerrar')),
-            h('div', { class: 'sub', style: 'padding:0 10px 4px' }, 'Gira el móvil en horizontal para ver más. Toca una casilla para marcar su fila y su columna.'), w2);
+            h('div', { class: 'sub', style: 'padding:0 10px 4px' }, 'Gira el móvil en horizontal para ver más. Toca una casilla para marcar su fila y su columna.'), w2,
+            h('button', { class: 'guardar', style: 'flex:none;margin:6px 10px calc(6px + env(safe-area-inset-bottom));min-height:52px', onclick: () => ov.remove() }, '✕ Cerrar'));
           document.body.append(ov); capaAtras(ov);
         };
         const nomCol = c => c.producto + (multi[c.producto] > 1 ? ' (' + c.unidad + ')' : '');
@@ -7898,7 +7905,7 @@ function hoja(titulo, contenido) {
   const pub = !!window.__PUBLICA && pubPaso(quitar);
   const cerrar = () => { if (pub && !fuera) pubVolver(quitar); else quitar(); };
   const ov = h('div', { class: 'overlay', onclick: e => { if (e.target === ov) cerrar(); } },
-    h('div', { class: 'sheet', style: 'max-height:88vh;overflow-y:auto' }, h('h2', {}, titulo), contenido, h('button', { class: 'ghost', style: pub ? 'width:100%;min-height:52px;font-size:17px' : '', onclick: cerrar }, pub ? '← Volver' : 'Cerrar')));
+    h('div', { class: 'sheet', style: 'max-height:88vh;overflow-y:auto' }, h('h2', {}, titulo), contenido, h('button', { class: 'ghost', style: (pub ? 'width:100%;min-height:52px;font-size:17px;' : 'min-height:48px;') + 'position:sticky;bottom:0;background:inherit;flex:none', onclick: cerrar }, pub ? '← Volver' : 'Cerrar')));   /* siempre a mano abajo, aunque la hoja sea larga */
   document.body.append(ov); return cerrar;
 }
 /* «👁 Ver como cliente» dentro de la app, con un botón grande para volver (antes se abría la página del cliente y no había forma de regresar) */
@@ -9607,7 +9614,8 @@ async function visorDoc(url, esPdf, titulo) {
   const cerrar = () => { if (v.isConnected) history.back(); };   /* «atrás» lo quita (popstate) y no deja un paso de más en el historial */
   const aplicaZoom = () => { cuerpo.querySelectorAll('canvas,img').forEach(c => { c.style.width = zoom + '%'; }); };
   const bz = (t, d) => h('button', { type: 'button', class: 'ghost', style: 'background:#374151;color:#fff;border:0', onclick: () => { zoom = Math.max(50, Math.min(400, zoom + d)); aplicaZoom(); } }, t);
-  const v = h('div', { class: 'visordoc' }, h('div', { class: 'vcab' }, h('b', {}, titulo || 'Factura'), bz('−', -25), bz('+', 25), h('button', { type: 'button', style: 'background:#dc2626;color:#fff;border:0', onclick: cerrar }, '✕')), cuerpo);
+  const v = h('div', { class: 'visordoc' }, h('div', { class: 'vcab' }, h('b', {}, titulo || 'Factura'), bz('−', -25), bz('+', 25), h('button', { type: 'button', style: 'background:#dc2626;color:#fff;border:0', onclick: cerrar }, '✕')), cuerpo,
+    h('button', { type: 'button', style: 'flex:none;margin:6px 10px calc(6px + env(safe-area-inset-bottom));min-height:52px;font-size:17px;background:#dc2626;color:#fff;border:0', onclick: cerrar }, '✕ Cerrar'));   /* también abajo, al alcance del pulgar */
   document.body.append(v);
   if (!habia) try { history.pushState(navSnap(NAV.d), ''); } catch (e) { }
   try {
@@ -16801,6 +16809,9 @@ function cambiaZoom() { const z = fjZoom(); const n = ZOOMS[(ZOOMS.indexOf(z) + 
 { let y0 = 0; addEventListener('scroll', () => { const y = scrollY, f = document.getElementById('fjflot'); if (f && Math.abs(y - y0) > 8) { f.classList.toggle('recogido', y > y0 && y > 80); y0 = y; } }, { passive: true }); }
 function pintaFlot() {
   let f = document.getElementById('fjflot'); if (!f) { f = document.createElement('div'); f.id = 'fjflot'; document.body.appendChild(f); }
+  /* «← Volver» abajo, al alcance del pulgar (Tito, 26/11/2026: «en el iPhone está únicamente arriba a la izquierda»): hace lo mismo que el de arriba */
+  let va = document.getElementById('fjatras'); if (!va) { va = h('button', { id: 'fjatras', 'aria-label': 'Volver', onclick: () => { const b = document.querySelector('header .back'); if (b) b.click(); } }, '← Volver'); document.body.appendChild(va); }
+  va.style.display = state.user && state.perfil && document.querySelector('header .back') ? '' : 'none';
   if (!state.user || !state.perfil) { f.style.display = 'none'; return; } f.style.display = '';
   const osc = document.documentElement.getAttribute('data-tema') === 'oscuro'; 
   const bt = h('button', { title: osc ? 'Modo claro' : 'Modo oscuro', 'aria-label': 'Cambiar tema', onclick: () => ponTema(osc ? 'claro' : 'oscuro') }, osc ? '☀️' : '🌙');
@@ -16867,7 +16878,13 @@ async function init() {
   if (ses) await cargarPerfil(ses.user);
   else if (!PRACTICA) { const sl = sesionLocal(), pl = LS.get('fj_perfil', null); if (sl && pl && pl.id === sl.user.id) { state.user = sl.user; state.perfil = pl; } }
   aplicarCompartido(); render(); cargarGente(); setTimeout(guardarCatalogoReal, 4000); setTimeout(guardarCompraReal, 9000);
-  try { history.replaceState(navSnap(0), ''); } catch (e) { } NAV.pila = [navClave(state.view, state.params)];
+  try { history.replaceState({ guarda: 1 }, ''); history.pushState(navSnap(0), ''); } catch (e) { } NAV.pila = [navClave(state.view, state.params)];
+  /* iPhone con la app instalada: no hay botón «atrás» ni deslizar desde el borde; deslizar el dedo desde el borde izquierdo hacia la derecha = volver */
+  if (navigator.standalone) { let sx = null, sy = 0;
+    addEventListener('touchstart', e => { const t = e.touches[0]; sx = t.clientX < 24 ? t.clientX : null; sy = t.clientY; }, { passive: true });
+    addEventListener('touchend', e => { if (sx == null) return; const t = e.changedTouches[0], dx = t.clientX - sx, dy = Math.abs(t.clientY - sy); sx = null;
+      if (dx < 80 || dy > 60) return;
+      if (document.querySelector('.visordoc, .pres-ov, .capa-atras, .overlay')) history.back(); else { const b = document.querySelector('header .back'); if (b) b.click(); } }, { passive: true }); }
   sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') { state.user = null; state.perfil = null; render(); } });
   window.addEventListener('online', () => { renderBanner(); sincronizar(); sincronizarCarga(); sincronizarFichaje(); sincronizarCobros(); sincronizarEntregas(); sincronizarFirmas(); sincronizarOrden(); sincronizarInc(); refrescarVista(); });
   window.addEventListener('offline', renderBanner);
