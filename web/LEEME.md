@@ -7,6 +7,7 @@ Web de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., sin WordPress, en Cloudflare (
 ## Datos que se pueden decir (comprobados con Fernando, 13/11/2026)
 - FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. · NIF B87446670 · C/ Carare, 2 · 28033 Madrid · ferjusanz@hotmail.com · 91 763 21 86.
 - WhatsApp y «Llamar» en la web: **el 609 100 690** (el del padre, conectado a 360dialog; Tito, 23/11/2026). El 609 567 354 de Tito solo sale en la tarjeta del QR (`/tarjeta/`). Horario: lunes a viernes, de 4:30 a 14:00, y sábados, de 4:30 a 13:00 (igual que la ficha de Google, Tito 26/11/2026).
+- **No prometer cambios ni devoluciones** («si algo llega mal, se lo cambiamos»): Tito dijo que no (26/11/2026).
 - **No decir «60 años en Mercamadrid»** (Tito, 26/11/2026: hace 60 años no se iba a Mercamadrid): «más de 60 años de experiencia» y «décadas en Mercamadrid».
 - Empresa familiar, **tercera generación**, **más de 60 años** (Fernando, 16/11/2026; antes ponía 40) en el sector («alegrando la vida / la mesa a mucha gente»).
 - Fruta, verdura, hortaliza, patatas (también peladas y cortadas), cebollas y ajos, setas, legumbres, hierbas y **huevos** (gallina y codorniz). Más de 200 productos activos.
