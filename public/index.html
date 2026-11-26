@@ -6248,6 +6248,25 @@ function vistaMas() {
     const pool = {}; defs.forEach(([, it]) => it.forEach(n => { pool[lab(n)] = n; })); const sacados = esp[1].filter(x => pool[x]);
     lista = [[esp[0], sacados.map(x => pool[x])]].concat(defs.map(([t, it]) => [t, it.filter(n => !sacados.includes(lab(n)))]));
   }
+  /* Menús ordenados por tema (Tito, 26/11/2026: «Mejora todos los menús»): «Facturas y análisis» tenía 18 cosas mezcladas y «Cobros y deudas» solo una.
+     Nada se quita: cada botón se MUEVE a su grupo. Lo que no está en la lista se queda donde estaba. Jorge tiene su propio menú. */
+  if (modoV !== 'jorge') {
+    const TEMAS = [
+      ['Pedidos y entregas', ['Camino de los pedidos', 'Entregas', 'Albaranes', 'Lista de pedidos', 'Pedidos entrantes']],
+      ['Compras', ['Facturas de proveedores', 'Compras', 'A quién compramos hoy', 'Trazabilidad']],
+      ['Clientes y ventas', ['Clientes', 'Productos', 'Comercial', 'Tarifas nuevas', 'Portal de clientes', 'Tarjetas', 'Clientes sin datos para facturar', 'Productos sin reconocer', 'Formatos']],
+      ['Facturas', ['Facturas de clientes', 'Facturas para Golden', 'Facturas (desde la app)', 'Histórico de Golden', 'Informes para Jorge', 'Datos de la empresa']],
+      ['Dinero: cobros, banco y caja', ['Cobros', 'Deudas', 'Margen y cobros (Golden)', 'Cobros y pagos (Golden)', 'Banco', 'Caja (efectivo)', 'Gastos de reparto']],
+      ['Cifras de la empresa', ['Panel de la empresa', 'Cuenta de resultados', 'Gastos de personal', 'Rentabilidad', 'Resumen y correo']],
+      ['Equipo y avisos', ['Chat', 'Avisos y ofertas', 'Incidencias', 'Fichajes', 'Mi perfil', 'Ayuda y guía']],
+      ['Copias y registros', ['Copia de seguridad', 'Registro de cambios', 'Archivo']]];
+    const base = n => lab(n).replace(/ · PRUEBAS$/, '');
+    const tema = {}; TEMAS.forEach(([t, xs]) => xs.forEach(x => { tema[x] = t; }));
+    const fijos = esp ? lista.slice(0, 1) : [], resto0 = esp ? lista.slice(1) : lista, nuevos = new Map(TEMAS.map(([t]) => [t, []])), otros = [];
+    resto0.forEach(([t, it]) => it.forEach(n => { const d = tema[base(n)]; if (d && t !== 'Trabajo diario') nuevos.get(d).push(n); else { let o = otros.find(x => x[0] === t); if (!o) otros.push(o = [t, []]); o[1].push(n); } }));
+    nuevos.forEach((it, t) => it.sort((x, y) => TEMAS.find(z => z[0] === t)[1].indexOf(base(x)) - TEMAS.find(z => z[0] === t)[1].indexOf(base(y))));
+    lista = fijos.concat(otros.filter(([t]) => t === 'Trabajo diario'), [...nuevos].filter(([, it]) => it.length), otros.filter(([t]) => t !== 'Trabajo diario'));
+  }
   /* Menú nuevo (por defecto): arriba, en grande, lo de cada día; debajo, todo lo demás en una rejilla compacta. Nada se quita: los botones se MUEVEN.
      Quien prefiera los círculos de antes puede volver a ellos (se recuerda en cada móvil). */
   const enCirculos = LS.get('fj_menu_circ', false);
@@ -6276,7 +6295,7 @@ function vistaMas() {
     const grupos = lista.map(([t, it]) => [t, it.filter(n => !grandes.includes(n))]).filter(([, r]) => r.length);
     if (grupos.length) resto.push(h('div', { class: 'ini-tit' }, 'Todo lo demás'), h('div', { class: 'sub', style: 'margin:0 2px 2px' }, 'Toca un grupo para abrirlo.'));
     grupos.forEach(([t, r]) => resto.push(h('details', { class: 'ini-grupo', open: !!abiertos[t], ontoggle: e => { const o = LS.get('fj_ini_abiertos', {}); o[t] = e.target.open; LS.set('fj_ini_abiertos', o); } },
-      h('summary', {}, ({ 'Trabajo diario': '🧺 ', 'Entregas y pedidos': '🚚 ', 'Compras y mercancía': '🛒 ', 'Clientes y productos': '👥 ', 'Facturas y análisis': '🧾 ', 'Cobros y deudas': '💰 ', 'Equipo y avisos': '💬 ' }[t] || '') + t, h('span', { class: 'pend', style: 'display:none' }), h('span', { class: 'n' }, r.length + (r.length === 1 ? ' opción' : ' opciones'))), h('div', { class: 'rej' }, ...r))));
+      h('summary', {}, ({ 'Trabajo diario': '🧺 ', 'Entregas y pedidos': '🚚 ', 'Pedidos y entregas': '🚚 ', 'Compras y mercancía': '🛒 ', 'Compras': '🛒 ', 'Clientes y productos': '👥 ', 'Clientes y ventas': '👥 ', 'Facturas y análisis': '🧾 ', 'Facturas': '🧾 ', 'Cobros y deudas': '💰 ', 'Dinero: cobros, banco y caja': '💰 ', 'Cifras de la empresa': '📊 ', 'Equipo y avisos': '💬 ', 'Copias y registros': '🗄️ ' }[t] || '') + t, h('span', { class: 'pend', style: 'display:none' }), h('span', { class: 'n' }, r.length + (r.length === 1 ? ' opción' : ' opciones'))), h('div', { class: 'rej' }, ...r))));
   }
   /* Harvey (lo usa solo quien hace de comercial): abajo, con lo comercial, no entre el trabajo de cada día */
   { const i = modoV === 'jorge' ? -1 : banners.findIndex(x => x && x.classList && x.classList.contains('h2ban')); if (i >= 0) resto.push(h('div', { class: 'grupo' }, 'Comercial'), banners.splice(i, 1)[0]); }
