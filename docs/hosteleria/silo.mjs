@@ -60,7 +60,7 @@ table{width:100%;border-collapse:collapse}td{padding:1.6mm 2mm;border-bottom:1px
 <h2>Quedo pendiente</h2>
 <p>Quedo pendiente de lo que me digas. Si queréis probar, os preparamos un primer pedido sin compromiso y <b>sin pedido mínimo</b>, con reparto refrigerado. Cualquier duda, escríbeme a este mismo WhatsApp.</p>
 <a class=btn href="${N}">Ver todas las novedades</a><a class=btn href="${W}/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/">Hostelería</a><a class=btn href="https://wa.me/34609100690">Pedidos por WhatsApp</a>
-<div class=pie><b>Tito (Fernando Sanz)</b> · FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. · Mercamadrid · Pedidos por WhatsApp 609 100 690 · <a href="${W}">www.ferjusanz-frutas-verduras.es</a></div>
+<div class=pie><b>Fernando Sanz</b> · FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L. · Mercamadrid · Pedidos por WhatsApp 609 100 690 · <a href="${W}">www.ferjusanz-frutas-verduras.es</a></div>
 </div>`;
 const b = await chromium.launch(); const p = await b.newPage({ deviceScaleFactor: 1 });
 await p.setContent(html); await p.pdf({ path: `${D}/Ferjusanz-Taberna-El-Silo.pdf`, format: 'A4', printBackground: true });
