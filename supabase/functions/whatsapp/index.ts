@@ -137,14 +137,15 @@ function sacarJSON(t: string): any {
 async function conGemini(partes: Parte[]) {
   const cuerpo = JSON.stringify({ contents: [{ role: "user", parts: partes.map((p) => p.medio ? { inline_data: { mime_type: p.medio.mime, data: p.medio.data } } : { text: p.texto }) }], generationConfig: { responseMimeType: "application/json", temperature: 0 } });
   let fallo = "";
-  // Gemini a veces dice «mucha demanda»: se reintenta y, si sigue, se prueba otro modelo.
-  for (const modelo of [env("GEMINI_MODEL") || "gemini-flash-latest", "gemini-flash-lite-latest"]) for (let i = 0; i < 2; i++) {
+  // Cuota gratis (26/11/2026): el ligero primero; 429 = cupo agotado, se pasa al otro sin reintentar; 503/500: un reintento.
+  for (const modelo of ["gemini-flash-lite-latest", env("GEMINI_MODEL") || "gemini-flash-latest"]) for (let i = 0; i < 2; i++) {
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`, { method: "POST", headers: { "x-goog-api-key": env("GEMINI_API_KEY"), "Content-Type": "application/json" }, body: cuerpo, signal: AbortSignal.timeout(25000) }).catch((e) => new Response(JSON.stringify({ error: { message: String(e?.message || e) } }), { status: 503 }));
     const d = await r.json().catch(() => ({}));
     if (r.ok) return sacarJSON((d.candidates?.[0]?.content?.parts || []).map((p: { text?: string }) => p.text || "").join(""));
     fallo = "Gemini: " + String(d?.error?.message || r.status).slice(0, 200);
     if (![429, 500, 503].includes(r.status)) throw new Error(fallo);
-    await new Promise((ok) => setTimeout(ok, 1500));
+    if (r.status === 429) break;
+    await new Promise((ok) => setTimeout(ok, 2000));
   }
   throw new Error(fallo);
 }
