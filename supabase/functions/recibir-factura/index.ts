@@ -39,6 +39,12 @@ Deno.serve(async (req)=>{
     if (!base64 || typeof base64 !== 'string' || base64.length > 14_000_000) return json({
       error: 'Archivo vacío o demasiado grande'
     }, 413);
+    // Lo que manda la propia empresa (correos comerciales, folletos, precios) no es factura de proveedor (Tito, 26/11/2026).
+    const remitente0 = String(remitente ?? '').toLowerCase().trim();
+    if (remitente0 === 'ferjusanzfacturas@gmail.com' || /^ferjusanz[-_ ]/i.test(String(nombre ?? ''))) return json({
+      ok: true,
+      descartado: 'propio'
+    });
     const bytes = Uint8Array.from(atob(base64), (c)=>c.charCodeAt(0));
     const dig = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
     const hash = Array.from(dig).map((b)=>b.toString(16).padStart(2, '0')).join('');
@@ -70,6 +76,11 @@ Deno.serve(async (req)=>{
         }
       }
     }
+    // Fotos de quien no es proveedor (p. ej. fotos de patatas de Verduyn): no son facturas.
+    if (ext !== 'pdf' && !proveedor_id) return json({
+      ok: true,
+      descartado: 'foto_sin_proveedor'
+    });
     const d = new Date();
     const ruta = `recibidas/${d.getUTCFullYear()}/${String(d.getUTCMonth() + 1).padStart(2, '0')}/${crypto.randomUUID()}.${ext}`;
     const up = await supa.storage.from('facturas').upload(ruta, bytes, {
