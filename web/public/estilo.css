@@ -546,6 +546,7 @@ a:active, button:active, summary:active { opacity: .75; }
 .ofertas li { display: flex; justify-content: space-between; gap: 12px; padding: 14px 4px; border-bottom: 1px solid var(--linea, var(--linea)); }
 .ofertas span { color: var(--granate); font-weight: 700; white-space: nowrap; }
 .ofertas-iva { margin: 16px 0 0; max-width: 60ch; font-size: .95em; }
+.ofertas-tarifa { margin: 20px 0 0; }
 .ofertas-caja { margin: 10px 0 0; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; opacity: .65; }
 
 /* ── Claro: capas y superficies ── */

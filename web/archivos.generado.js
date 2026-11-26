@@ -55,161 +55,162 @@ import f52 from "./public/blog/todo-sobre-los-frutos-rojos/index.html";
 import f53 from "./public/blog/verdura-para-cremas-y-pures-comedor-colegio-residencia/index.html";
 import f54 from "./public/blog/verduras-esenciales-para-una-dieta-equilibrada/index.html";
 import f55 from "./public/buscar/index.html";
-import f56 from "./public/contacto/index.html";
-import f57 from "./public/distribucion-y-venta-de-cebollas-madrid/index.html";
-import f58 from "./public/distribucion-y-venta-de-frutas-madrid/index.html";
-import f59 from "./public/distribucion-y-venta-de-hortalizas-madrid/index.html";
-import f60 from "./public/distribucion-y-venta-de-legumbres-madrid/index.html";
-import f61 from "./public/distribucion-y-venta-de-patatas-en-madrid/index.html";
-import f62 from "./public/distribucion-y-venta-de-productos-de-cuarta-gama-madrid/index.html";
-import f63 from "./public/distribucion-y-venta-de-verduras-madrid/index.html";
-import f64 from "./public/empresa-de-venta-y-distribucion-de-fruta-y-verdura/index.html";
-import f65 from "./public/estilo.css";
-import f66 from "./public/feed.xml";
-import f67 from "./public/fotos/champinon-y-portobello.jpg";
-import f68 from "./public/fotos/granada-mollar-de-elche.jpg";
-import f69 from "./public/fotos/grosellas-rojas.jpg";
-import f70 from "./public/fotos/mango-y-papaya.jpg";
-import f71 from "./public/fotos/niscalos.jpg";
-import f72 from "./public/fotos/pitahaya-amarilla.jpg";
-import f73 from "./public/fotos/setas-de-ostra.jpg";
-import f74 from "./public/fotos/tomate-asurcado.jpg";
-import f75 from "./public/fotos/tomate-de-temporada.jpg";
-import f76 from "./public/fotos/tomate-la-campechana.jpg";
-import f77 from "./public/fotos/tomate-rosa.jpg";
-import f78 from "./public/fotos/verduras-gourmet-hosteleria.jpg";
-import f79 from "./public/fruta-y-verdura-al-por-mayor-alcobendas-la-moraleja-san-sebastian-de-los-reyes/index.html";
-import f80 from "./public/fruta-y-verdura-al-por-mayor-chamartin-ciudad-lineal-tetuan-san-blas/index.html";
-import f81 from "./public/fruta-y-verdura-al-por-mayor-hortaleza-sanchinarro-las-tablas-valdebebas/index.html";
-import f82 from "./public/fruta-y-verdura-al-por-mayor-moratalaz-vicalvaro-coslada-san-fernando/index.html";
-import f83 from "./public/fruta-y-verdura-al-por-mayor-pozuelo-boadilla-las-rozas/index.html";
-import f84 from "./public/fruta-y-verdura-al-por-mayor-segovia/index.html";
-import f85 from "./public/fuentes/barlow-condensed-latin-600-normal.woff2";
-import f86 from "./public/fuentes/barlow-condensed-latin-700-normal.woff2";
-import f87 from "./public/fuentes/barlow-latin-400-normal.woff2";
-import f88 from "./public/fuentes/barlow-latin-500-normal.woff2";
-import f89 from "./public/fuentes/barlow-latin-600-normal.woff2";
-import f90 from "./public/fuentes/inter-latin-400-normal.woff2";
-import f91 from "./public/fuentes/inter-latin-500-normal.woff2";
-import f92 from "./public/fuentes/inter-latin-600-normal.woff2";
-import f93 from "./public/fuentes/inter-latin-700-normal.woff2";
-import f94 from "./public/index.html";
-import f95 from "./public/llms.txt";
-import f96 from "./public/marca/compartir.png";
-import f97 from "./public/marca/etiqueta.png";
-import f98 from "./public/marca/icono-180.png";
-import f99 from "./public/marca/icono-32.png";
-import f100 from "./public/marca/icono-512.png";
-import f101 from "./public/marca/logo-oscuro.png";
-import f102 from "./public/marca/logo.png";
-import f103 from "./public/marca/super9.png";
-import f104 from "./public/mayorista-de-frutas-y-verduras-madrid/index.html";
-import f105 from "./public/mayorista-de-frutas-y-verduras-para-colectividades-madrid/index.html";
-import f106 from "./public/novedades/index.html";
-import f107 from "./public/politica-de-cookies/index.html";
-import f108 from "./public/politica-de-privacidad/index.html";
-import f109 from "./public/productos/frutas-2/index.html";
-import f110 from "./public/productos/huevos/index.html";
-import f111 from "./public/productos/index.html";
-import f112 from "./public/productos/patata-pelada-para-hosteleria/index.html";
-import f113 from "./public/productos/patatas-2/index.html";
-import f114 from "./public/productos/setas-y-champinones-2/index.html";
-import f115 from "./public/productos/verduras-y-hortalizas/index.html";
-import f116 from "./public/proveedor-de-frutas-y-verduras-para-colegios-madrid/index.html";
-import f117 from "./public/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/index.html";
-import f118 from "./public/proveedor-de-frutas-y-verduras-para-hoteles-madrid/index.html";
-import f119 from "./public/proveedor-de-frutas-y-verduras-para-residencias-madrid/index.html";
-import f120 from "./public/reparto-y-venta-de-cebollas-madrid/index.html";
-import f121 from "./public/reparto-y-venta-de-hortalizas-madrid/index.html";
-import f122 from "./public/reparto-y-venta-de-patatas-madrid/index.html";
-import f123 from "./public/reparto-y-venta-de-verduras-madrid/index.html";
-import f124 from "./public/robots.txt";
-import f125 from "./public/servicios-de-distribucion-y-exportacion/distribucion-de-frutas-y-verduras-en-madrid-2/index.html";
-import f126 from "./public/servicios-de-distribucion-y-exportacion/exportacion-de-frutas-y-verduras/index.html";
-import f127 from "./public/servicios-de-distribucion-y-exportacion/index.html";
-import f128 from "./public/sitemap.xml";
-import f129 from "./public/super9/index.html";
-import f130 from "./public/tarjeta/index.html";
-import f131 from "./public/wp-content/uploads/2019/10/bg.jpg";
-import f132 from "./public/wp-content/uploads/2019/10/calendario-de-frutas-y-verduras.jpeg";
-import f133 from "./public/wp-content/uploads/2019/10/cropped-logo-144px-180x180.jpg";
-import f134 from "./public/wp-content/uploads/2019/10/cropped-logo-144px-192x192.jpg";
-import f135 from "./public/wp-content/uploads/2019/10/cropped-logo-144px-32x32.jpg";
-import f136 from "./public/wp-content/uploads/2019/10/distribucion-de-cebollas-en-madrid.jpg";
-import f137 from "./public/wp-content/uploads/2019/10/distribucion-de-frutas-y-verduras-en-madrid.jpg";
-import f138 from "./public/wp-content/uploads/2019/10/distribuidor-de-fruta-y-verdura-para-colectividades-en-madrid.jpg";
-import f139 from "./public/wp-content/uploads/2019/10/distribuidor-de-patatas.jpg";
-import f140 from "./public/wp-content/uploads/2019/10/ferjusanz.jpg";
-import f141 from "./public/wp-content/uploads/2019/10/frutas-de-invierno-300x150.jpg";
-import f142 from "./public/wp-content/uploads/2019/10/frutas-ferjusanz.jpg";
-import f143 from "./public/wp-content/uploads/2019/10/frutas.jpg";
-import f144 from "./public/wp-content/uploads/2019/10/logotipo.png";
-import f145 from "./public/wp-content/uploads/2019/10/patatas.png";
-import f146 from "./public/wp-content/uploads/2019/10/productos-HORTALIZA.jpg";
-import f147 from "./public/wp-content/uploads/2019/10/proveedores-distribucion_crs2.jpg";
-import f148 from "./public/wp-content/uploads/2019/10/setas-y-champis.jpeg";
-import f149 from "./public/wp-content/uploads/2019/10/slide01.jpg";
-import f150 from "./public/wp-content/uploads/2019/10/slider02.jpg";
-import f151 from "./public/wp-content/uploads/2019/10/venta-de-legumbres-en-madrid.jpg";
-import f152 from "./public/wp-content/uploads/2020/09/ajos-cebollas-propiedades-beneficios.jpg";
-import f153 from "./public/wp-content/uploads/2020/09/beneficios-patatas-distribuidor.jpg";
-import f154 from "./public/wp-content/uploads/2020/09/beneficios-riesgos-naranjas.jpg";
-import f155 from "./public/wp-content/uploads/2020/09/cultivar-recolectar-cosechar-patatas-.jpg";
-import f156 from "./public/wp-content/uploads/2020/09/cultivar-sembrar-cebollas-preparacion-terreno.jpg";
-import f157 from "./public/wp-content/uploads/2020/09/cultivar-sembrar-recolectar-cebollas.jpg";
-import f158 from "./public/wp-content/uploads/2020/09/cultivo-siembra-recolecion-patatas.jpg";
-import f159 from "./public/wp-content/uploads/2020/09/distribuidor-frutas-colegio.jpg";
-import f160 from "./public/wp-content/uploads/2020/09/distribuidor-frutas-residencias-ancianos.jpg";
-import f161 from "./public/wp-content/uploads/2020/09/distribuidor-frutas-verduras-colegio.jpg";
-import f162 from "./public/wp-content/uploads/2020/09/distribuidor-frutas-verduras-residencias-ancianos.jpg";
-import f163 from "./public/wp-content/uploads/2020/09/distribuidor-hortalizas-beneficios.jpg";
-import f164 from "./public/wp-content/uploads/2020/09/distribuidor-patatas-beneficios.jpg";
-import f165 from "./public/wp-content/uploads/2020/09/fruta-temporada-otono.jpg";
-import f166 from "./public/wp-content/uploads/2020/09/frutas-de-otono-temporada.jpg";
-import f167 from "./public/wp-content/uploads/2020/09/frutas-de-temportada-otono.jpg";
-import f168 from "./public/wp-content/uploads/2020/09/frutas-temporada-verano-beneficios.jpg";
-import f169 from "./public/wp-content/uploads/2020/09/frutas-temporada-verano-primavera.jpg";
-import f170 from "./public/wp-content/uploads/2020/09/frutas-temporada-verano.jpg";
-import f171 from "./public/wp-content/uploads/2020/09/frutas-verduras-comedor-colegio.jpg";
-import f172 from "./public/wp-content/uploads/2020/09/mejores-verduras-de-verano-distribuidor.jpg";
-import f173 from "./public/wp-content/uploads/2020/09/recoleccion-de-las-patatas.jpg";
-import f174 from "./public/wp-content/uploads/2020/09/riesgos-beneficios-consumo-naranjas.jpg";
-import f175 from "./public/wp-content/uploads/2020/09/riesgos-beneficios-naranjas.jpg";
-import f176 from "./public/wp-content/uploads/2020/09/terreno-sembrar-cultivar-cebollas.jpg";
-import f177 from "./public/wp-content/uploads/2020/09/verdura-invierno-beneficios.jpg";
-import f178 from "./public/wp-content/uploads/2020/09/verdura-temporada-invierno-beneficios.jpg";
-import f179 from "./public/wp-content/uploads/2020/09/verduras-de-temporada-de-invierno.jpg";
-import f180 from "./public/wp-content/uploads/2020/09/verduras-de-temporada-de-verano.jpg";
-import f181 from "./public/wp-content/uploads/2020/09/verduras-residencias-ancianos.jpg";
-import f182 from "./public/wp-content/uploads/2020/09/verduras-temporada-verano-distribuidor.jpg";
-import f183 from "./public/wp-content/uploads/2021/03/champinones-beneficios-salud.jpg";
-import f184 from "./public/wp-content/uploads/2021/03/setas-beneficios-salud.jpg";
-import f185 from "./public/wp-content/uploads/2021/03/setas-champinones-beneficios-salud.jpg";
-import f186 from "./public/wp-content/uploads/2021/04/Blog-24.jpg";
-import f187 from "./public/wp-content/uploads/2021/05/Conservacion_Frutas_Verdruas.jpg";
-import f188 from "./public/wp-content/uploads/2021/06/Frutas-y-verduras-de-temporada-en-verano.jpg";
-import f189 from "./public/wp-content/uploads/2021/07/Beneficios-de-comer-la-fruta-con-piel.jpg";
-import f190 from "./public/wp-content/uploads/2021/08/beneficios-de-las-frutas-y-verduras-en-verano.jpg";
-import f191 from "./public/wp-content/uploads/2021/09/Frutas-y-verduras-de-temporada-en-otono.jpg";
-import f192 from "./public/wp-content/uploads/2021/10/como-conservar-las-frutas-exoticas.jpg";
-import f193 from "./public/wp-content/uploads/2021/12/Tipos-de-frutas-de-invierno-y-sus-beneficios.jpg";
-import f194 from "./public/wp-content/uploads/2022/01/Todo-sobre-los-frutos-rojos.jpg";
-import f195 from "./public/wp-content/uploads/2022/02/Como-hacer-para-que-los-mas-pequenos-coman-frutas-y-verduras-1.jpg";
-import f196 from "./public/wp-content/uploads/2022/03/Que-es-el-plato-Harvard.jpg";
-import f197 from "./public/wp-content/uploads/2022/04/El-ajo-mucho-mas-que-un-alimento.jpg";
-import f198 from "./public/wp-content/uploads/2022/05/Cuida-tu-corazon-con-estas-frutas-y-verduras.jpg";
-import f199 from "./public/wp-content/uploads/2022/06/Frutas-y-verduras-en-una-barbacoa-por-que-no.jpg";
-import f200 from "./public/wp-content/uploads/2022/08/Gazpacho-aprende-la-verdadera-receta.jpg";
-import f201 from "./public/wp-content/uploads/2022/09/Que-hacer-con-la-piel-de-algunas-frutas-y-verduras.jpg";
-import f202 from "./public/wp-content/uploads/2022/10/Guiso-de-calabaza-con-garbanzos.jpg";
-import f203 from "./public/wp-content/uploads/2022/12/Frutas-y-verduras-en-el-embarazo.jpg";
-import f204 from "./public/wp-content/uploads/2022/12/Las-frutas-tambien-son-para-el-invierno.png";
-import f205 from "./public/wp-content/uploads/2023/01/Conoce-todos-los-tipos-de-pimientos.jpg";
-import f206 from "./public/wp-content/uploads/2023/03/Frutas-perfectas-para-el-invierno.jpg";
-import f207 from "./public/wp-content/uploads/2023/03/Tipos-de-guarniciones-de-verduras.jpg";
-import f208 from "./public/wp-content/uploads/2023/05/tipos-de-tomates.jpg";
-import f209 from "./public/wp-content/uploads/2023/06/5-formas-de-comer-sandia.jpg";
-import f210 from "./public/zonas-de-reparto/index.html";
+import f56 from "./public/calcular-tarifa/index.html";
+import f57 from "./public/contacto/index.html";
+import f58 from "./public/distribucion-y-venta-de-cebollas-madrid/index.html";
+import f59 from "./public/distribucion-y-venta-de-frutas-madrid/index.html";
+import f60 from "./public/distribucion-y-venta-de-hortalizas-madrid/index.html";
+import f61 from "./public/distribucion-y-venta-de-legumbres-madrid/index.html";
+import f62 from "./public/distribucion-y-venta-de-patatas-en-madrid/index.html";
+import f63 from "./public/distribucion-y-venta-de-productos-de-cuarta-gama-madrid/index.html";
+import f64 from "./public/distribucion-y-venta-de-verduras-madrid/index.html";
+import f65 from "./public/empresa-de-venta-y-distribucion-de-fruta-y-verdura/index.html";
+import f66 from "./public/estilo.css";
+import f67 from "./public/feed.xml";
+import f68 from "./public/fotos/champinon-y-portobello.jpg";
+import f69 from "./public/fotos/granada-mollar-de-elche.jpg";
+import f70 from "./public/fotos/grosellas-rojas.jpg";
+import f71 from "./public/fotos/mango-y-papaya.jpg";
+import f72 from "./public/fotos/niscalos.jpg";
+import f73 from "./public/fotos/pitahaya-amarilla.jpg";
+import f74 from "./public/fotos/setas-de-ostra.jpg";
+import f75 from "./public/fotos/tomate-asurcado.jpg";
+import f76 from "./public/fotos/tomate-de-temporada.jpg";
+import f77 from "./public/fotos/tomate-la-campechana.jpg";
+import f78 from "./public/fotos/tomate-rosa.jpg";
+import f79 from "./public/fotos/verduras-gourmet-hosteleria.jpg";
+import f80 from "./public/fruta-y-verdura-al-por-mayor-alcobendas-la-moraleja-san-sebastian-de-los-reyes/index.html";
+import f81 from "./public/fruta-y-verdura-al-por-mayor-chamartin-ciudad-lineal-tetuan-san-blas/index.html";
+import f82 from "./public/fruta-y-verdura-al-por-mayor-hortaleza-sanchinarro-las-tablas-valdebebas/index.html";
+import f83 from "./public/fruta-y-verdura-al-por-mayor-moratalaz-vicalvaro-coslada-san-fernando/index.html";
+import f84 from "./public/fruta-y-verdura-al-por-mayor-pozuelo-boadilla-las-rozas/index.html";
+import f85 from "./public/fruta-y-verdura-al-por-mayor-segovia/index.html";
+import f86 from "./public/fuentes/barlow-condensed-latin-600-normal.woff2";
+import f87 from "./public/fuentes/barlow-condensed-latin-700-normal.woff2";
+import f88 from "./public/fuentes/barlow-latin-400-normal.woff2";
+import f89 from "./public/fuentes/barlow-latin-500-normal.woff2";
+import f90 from "./public/fuentes/barlow-latin-600-normal.woff2";
+import f91 from "./public/fuentes/inter-latin-400-normal.woff2";
+import f92 from "./public/fuentes/inter-latin-500-normal.woff2";
+import f93 from "./public/fuentes/inter-latin-600-normal.woff2";
+import f94 from "./public/fuentes/inter-latin-700-normal.woff2";
+import f95 from "./public/index.html";
+import f96 from "./public/llms.txt";
+import f97 from "./public/marca/compartir.png";
+import f98 from "./public/marca/etiqueta.png";
+import f99 from "./public/marca/icono-180.png";
+import f100 from "./public/marca/icono-32.png";
+import f101 from "./public/marca/icono-512.png";
+import f102 from "./public/marca/logo-oscuro.png";
+import f103 from "./public/marca/logo.png";
+import f104 from "./public/marca/super9.png";
+import f105 from "./public/mayorista-de-frutas-y-verduras-madrid/index.html";
+import f106 from "./public/mayorista-de-frutas-y-verduras-para-colectividades-madrid/index.html";
+import f107 from "./public/novedades/index.html";
+import f108 from "./public/politica-de-cookies/index.html";
+import f109 from "./public/politica-de-privacidad/index.html";
+import f110 from "./public/productos/frutas-2/index.html";
+import f111 from "./public/productos/huevos/index.html";
+import f112 from "./public/productos/index.html";
+import f113 from "./public/productos/patata-pelada-para-hosteleria/index.html";
+import f114 from "./public/productos/patatas-2/index.html";
+import f115 from "./public/productos/setas-y-champinones-2/index.html";
+import f116 from "./public/productos/verduras-y-hortalizas/index.html";
+import f117 from "./public/proveedor-de-frutas-y-verduras-para-colegios-madrid/index.html";
+import f118 from "./public/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/index.html";
+import f119 from "./public/proveedor-de-frutas-y-verduras-para-hoteles-madrid/index.html";
+import f120 from "./public/proveedor-de-frutas-y-verduras-para-residencias-madrid/index.html";
+import f121 from "./public/reparto-y-venta-de-cebollas-madrid/index.html";
+import f122 from "./public/reparto-y-venta-de-hortalizas-madrid/index.html";
+import f123 from "./public/reparto-y-venta-de-patatas-madrid/index.html";
+import f124 from "./public/reparto-y-venta-de-verduras-madrid/index.html";
+import f125 from "./public/robots.txt";
+import f126 from "./public/servicios-de-distribucion-y-exportacion/distribucion-de-frutas-y-verduras-en-madrid-2/index.html";
+import f127 from "./public/servicios-de-distribucion-y-exportacion/exportacion-de-frutas-y-verduras/index.html";
+import f128 from "./public/servicios-de-distribucion-y-exportacion/index.html";
+import f129 from "./public/sitemap.xml";
+import f130 from "./public/super9/index.html";
+import f131 from "./public/tarjeta/index.html";
+import f132 from "./public/wp-content/uploads/2019/10/bg.jpg";
+import f133 from "./public/wp-content/uploads/2019/10/calendario-de-frutas-y-verduras.jpeg";
+import f134 from "./public/wp-content/uploads/2019/10/cropped-logo-144px-180x180.jpg";
+import f135 from "./public/wp-content/uploads/2019/10/cropped-logo-144px-192x192.jpg";
+import f136 from "./public/wp-content/uploads/2019/10/cropped-logo-144px-32x32.jpg";
+import f137 from "./public/wp-content/uploads/2019/10/distribucion-de-cebollas-en-madrid.jpg";
+import f138 from "./public/wp-content/uploads/2019/10/distribucion-de-frutas-y-verduras-en-madrid.jpg";
+import f139 from "./public/wp-content/uploads/2019/10/distribuidor-de-fruta-y-verdura-para-colectividades-en-madrid.jpg";
+import f140 from "./public/wp-content/uploads/2019/10/distribuidor-de-patatas.jpg";
+import f141 from "./public/wp-content/uploads/2019/10/ferjusanz.jpg";
+import f142 from "./public/wp-content/uploads/2019/10/frutas-de-invierno-300x150.jpg";
+import f143 from "./public/wp-content/uploads/2019/10/frutas-ferjusanz.jpg";
+import f144 from "./public/wp-content/uploads/2019/10/frutas.jpg";
+import f145 from "./public/wp-content/uploads/2019/10/logotipo.png";
+import f146 from "./public/wp-content/uploads/2019/10/patatas.png";
+import f147 from "./public/wp-content/uploads/2019/10/productos-HORTALIZA.jpg";
+import f148 from "./public/wp-content/uploads/2019/10/proveedores-distribucion_crs2.jpg";
+import f149 from "./public/wp-content/uploads/2019/10/setas-y-champis.jpeg";
+import f150 from "./public/wp-content/uploads/2019/10/slide01.jpg";
+import f151 from "./public/wp-content/uploads/2019/10/slider02.jpg";
+import f152 from "./public/wp-content/uploads/2019/10/venta-de-legumbres-en-madrid.jpg";
+import f153 from "./public/wp-content/uploads/2020/09/ajos-cebollas-propiedades-beneficios.jpg";
+import f154 from "./public/wp-content/uploads/2020/09/beneficios-patatas-distribuidor.jpg";
+import f155 from "./public/wp-content/uploads/2020/09/beneficios-riesgos-naranjas.jpg";
+import f156 from "./public/wp-content/uploads/2020/09/cultivar-recolectar-cosechar-patatas-.jpg";
+import f157 from "./public/wp-content/uploads/2020/09/cultivar-sembrar-cebollas-preparacion-terreno.jpg";
+import f158 from "./public/wp-content/uploads/2020/09/cultivar-sembrar-recolectar-cebollas.jpg";
+import f159 from "./public/wp-content/uploads/2020/09/cultivo-siembra-recolecion-patatas.jpg";
+import f160 from "./public/wp-content/uploads/2020/09/distribuidor-frutas-colegio.jpg";
+import f161 from "./public/wp-content/uploads/2020/09/distribuidor-frutas-residencias-ancianos.jpg";
+import f162 from "./public/wp-content/uploads/2020/09/distribuidor-frutas-verduras-colegio.jpg";
+import f163 from "./public/wp-content/uploads/2020/09/distribuidor-frutas-verduras-residencias-ancianos.jpg";
+import f164 from "./public/wp-content/uploads/2020/09/distribuidor-hortalizas-beneficios.jpg";
+import f165 from "./public/wp-content/uploads/2020/09/distribuidor-patatas-beneficios.jpg";
+import f166 from "./public/wp-content/uploads/2020/09/fruta-temporada-otono.jpg";
+import f167 from "./public/wp-content/uploads/2020/09/frutas-de-otono-temporada.jpg";
+import f168 from "./public/wp-content/uploads/2020/09/frutas-de-temportada-otono.jpg";
+import f169 from "./public/wp-content/uploads/2020/09/frutas-temporada-verano-beneficios.jpg";
+import f170 from "./public/wp-content/uploads/2020/09/frutas-temporada-verano-primavera.jpg";
+import f171 from "./public/wp-content/uploads/2020/09/frutas-temporada-verano.jpg";
+import f172 from "./public/wp-content/uploads/2020/09/frutas-verduras-comedor-colegio.jpg";
+import f173 from "./public/wp-content/uploads/2020/09/mejores-verduras-de-verano-distribuidor.jpg";
+import f174 from "./public/wp-content/uploads/2020/09/recoleccion-de-las-patatas.jpg";
+import f175 from "./public/wp-content/uploads/2020/09/riesgos-beneficios-consumo-naranjas.jpg";
+import f176 from "./public/wp-content/uploads/2020/09/riesgos-beneficios-naranjas.jpg";
+import f177 from "./public/wp-content/uploads/2020/09/terreno-sembrar-cultivar-cebollas.jpg";
+import f178 from "./public/wp-content/uploads/2020/09/verdura-invierno-beneficios.jpg";
+import f179 from "./public/wp-content/uploads/2020/09/verdura-temporada-invierno-beneficios.jpg";
+import f180 from "./public/wp-content/uploads/2020/09/verduras-de-temporada-de-invierno.jpg";
+import f181 from "./public/wp-content/uploads/2020/09/verduras-de-temporada-de-verano.jpg";
+import f182 from "./public/wp-content/uploads/2020/09/verduras-residencias-ancianos.jpg";
+import f183 from "./public/wp-content/uploads/2020/09/verduras-temporada-verano-distribuidor.jpg";
+import f184 from "./public/wp-content/uploads/2021/03/champinones-beneficios-salud.jpg";
+import f185 from "./public/wp-content/uploads/2021/03/setas-beneficios-salud.jpg";
+import f186 from "./public/wp-content/uploads/2021/03/setas-champinones-beneficios-salud.jpg";
+import f187 from "./public/wp-content/uploads/2021/04/Blog-24.jpg";
+import f188 from "./public/wp-content/uploads/2021/05/Conservacion_Frutas_Verdruas.jpg";
+import f189 from "./public/wp-content/uploads/2021/06/Frutas-y-verduras-de-temporada-en-verano.jpg";
+import f190 from "./public/wp-content/uploads/2021/07/Beneficios-de-comer-la-fruta-con-piel.jpg";
+import f191 from "./public/wp-content/uploads/2021/08/beneficios-de-las-frutas-y-verduras-en-verano.jpg";
+import f192 from "./public/wp-content/uploads/2021/09/Frutas-y-verduras-de-temporada-en-otono.jpg";
+import f193 from "./public/wp-content/uploads/2021/10/como-conservar-las-frutas-exoticas.jpg";
+import f194 from "./public/wp-content/uploads/2021/12/Tipos-de-frutas-de-invierno-y-sus-beneficios.jpg";
+import f195 from "./public/wp-content/uploads/2022/01/Todo-sobre-los-frutos-rojos.jpg";
+import f196 from "./public/wp-content/uploads/2022/02/Como-hacer-para-que-los-mas-pequenos-coman-frutas-y-verduras-1.jpg";
+import f197 from "./public/wp-content/uploads/2022/03/Que-es-el-plato-Harvard.jpg";
+import f198 from "./public/wp-content/uploads/2022/04/El-ajo-mucho-mas-que-un-alimento.jpg";
+import f199 from "./public/wp-content/uploads/2022/05/Cuida-tu-corazon-con-estas-frutas-y-verduras.jpg";
+import f200 from "./public/wp-content/uploads/2022/06/Frutas-y-verduras-en-una-barbacoa-por-que-no.jpg";
+import f201 from "./public/wp-content/uploads/2022/08/Gazpacho-aprende-la-verdadera-receta.jpg";
+import f202 from "./public/wp-content/uploads/2022/09/Que-hacer-con-la-piel-de-algunas-frutas-y-verduras.jpg";
+import f203 from "./public/wp-content/uploads/2022/10/Guiso-de-calabaza-con-garbanzos.jpg";
+import f204 from "./public/wp-content/uploads/2022/12/Frutas-y-verduras-en-el-embarazo.jpg";
+import f205 from "./public/wp-content/uploads/2022/12/Las-frutas-tambien-son-para-el-invierno.png";
+import f206 from "./public/wp-content/uploads/2023/01/Conoce-todos-los-tipos-de-pimientos.jpg";
+import f207 from "./public/wp-content/uploads/2023/03/Frutas-perfectas-para-el-invierno.jpg";
+import f208 from "./public/wp-content/uploads/2023/03/Tipos-de-guarniciones-de-verduras.jpg";
+import f209 from "./public/wp-content/uploads/2023/05/tipos-de-tomates.jpg";
+import f210 from "./public/wp-content/uploads/2023/06/5-formas-de-comer-sandia.jpg";
+import f211 from "./public/zonas-de-reparto/index.html";
 export default {
   "/404.html": [f0, "text/html; charset=utf-8"],
   "/aviso-legal/": [f1, "text/html; charset=utf-8"],
@@ -267,159 +268,160 @@ export default {
   "/blog/verdura-para-cremas-y-pures-comedor-colegio-residencia/": [f53, "text/html; charset=utf-8"],
   "/blog/verduras-esenciales-para-una-dieta-equilibrada/": [f54, "text/html; charset=utf-8"],
   "/buscar/": [f55, "text/html; charset=utf-8"],
-  "/contacto/": [f56, "text/html; charset=utf-8"],
-  "/distribucion-y-venta-de-cebollas-madrid/": [f57, "text/html; charset=utf-8"],
-  "/distribucion-y-venta-de-frutas-madrid/": [f58, "text/html; charset=utf-8"],
-  "/distribucion-y-venta-de-hortalizas-madrid/": [f59, "text/html; charset=utf-8"],
-  "/distribucion-y-venta-de-legumbres-madrid/": [f60, "text/html; charset=utf-8"],
-  "/distribucion-y-venta-de-patatas-en-madrid/": [f61, "text/html; charset=utf-8"],
-  "/distribucion-y-venta-de-productos-de-cuarta-gama-madrid/": [f62, "text/html; charset=utf-8"],
-  "/distribucion-y-venta-de-verduras-madrid/": [f63, "text/html; charset=utf-8"],
-  "/empresa-de-venta-y-distribucion-de-fruta-y-verdura/": [f64, "text/html; charset=utf-8"],
-  "/estilo.css": [f65, "text/css; charset=utf-8"],
-  "/feed.xml": [f66, "application/xml; charset=utf-8"],
-  "/fotos/champinon-y-portobello.jpg": [f67, "image/jpeg"],
-  "/fotos/granada-mollar-de-elche.jpg": [f68, "image/jpeg"],
-  "/fotos/grosellas-rojas.jpg": [f69, "image/jpeg"],
-  "/fotos/mango-y-papaya.jpg": [f70, "image/jpeg"],
-  "/fotos/niscalos.jpg": [f71, "image/jpeg"],
-  "/fotos/pitahaya-amarilla.jpg": [f72, "image/jpeg"],
-  "/fotos/setas-de-ostra.jpg": [f73, "image/jpeg"],
-  "/fotos/tomate-asurcado.jpg": [f74, "image/jpeg"],
-  "/fotos/tomate-de-temporada.jpg": [f75, "image/jpeg"],
-  "/fotos/tomate-la-campechana.jpg": [f76, "image/jpeg"],
-  "/fotos/tomate-rosa.jpg": [f77, "image/jpeg"],
-  "/fotos/verduras-gourmet-hosteleria.jpg": [f78, "image/jpeg"],
-  "/fruta-y-verdura-al-por-mayor-alcobendas-la-moraleja-san-sebastian-de-los-reyes/": [f79, "text/html; charset=utf-8"],
-  "/fruta-y-verdura-al-por-mayor-chamartin-ciudad-lineal-tetuan-san-blas/": [f80, "text/html; charset=utf-8"],
-  "/fruta-y-verdura-al-por-mayor-hortaleza-sanchinarro-las-tablas-valdebebas/": [f81, "text/html; charset=utf-8"],
-  "/fruta-y-verdura-al-por-mayor-moratalaz-vicalvaro-coslada-san-fernando/": [f82, "text/html; charset=utf-8"],
-  "/fruta-y-verdura-al-por-mayor-pozuelo-boadilla-las-rozas/": [f83, "text/html; charset=utf-8"],
-  "/fruta-y-verdura-al-por-mayor-segovia/": [f84, "text/html; charset=utf-8"],
-  "/fuentes/barlow-condensed-latin-600-normal.woff2": [f85, "font/woff2"],
-  "/fuentes/barlow-condensed-latin-700-normal.woff2": [f86, "font/woff2"],
-  "/fuentes/barlow-latin-400-normal.woff2": [f87, "font/woff2"],
-  "/fuentes/barlow-latin-500-normal.woff2": [f88, "font/woff2"],
-  "/fuentes/barlow-latin-600-normal.woff2": [f89, "font/woff2"],
-  "/fuentes/inter-latin-400-normal.woff2": [f90, "font/woff2"],
-  "/fuentes/inter-latin-500-normal.woff2": [f91, "font/woff2"],
-  "/fuentes/inter-latin-600-normal.woff2": [f92, "font/woff2"],
-  "/fuentes/inter-latin-700-normal.woff2": [f93, "font/woff2"],
-  "/": [f94, "text/html; charset=utf-8"],
-  "/llms.txt": [f95, "text/plain; charset=utf-8"],
-  "/marca/compartir.png": [f96, "image/png"],
-  "/marca/etiqueta.png": [f97, "image/png"],
-  "/marca/icono-180.png": [f98, "image/png"],
-  "/marca/icono-32.png": [f99, "image/png"],
-  "/marca/icono-512.png": [f100, "image/png"],
-  "/marca/logo-oscuro.png": [f101, "image/png"],
-  "/marca/logo.png": [f102, "image/png"],
-  "/marca/super9.png": [f103, "image/png"],
-  "/mayorista-de-frutas-y-verduras-madrid/": [f104, "text/html; charset=utf-8"],
-  "/mayorista-de-frutas-y-verduras-para-colectividades-madrid/": [f105, "text/html; charset=utf-8"],
-  "/novedades/": [f106, "text/html; charset=utf-8"],
-  "/politica-de-cookies/": [f107, "text/html; charset=utf-8"],
-  "/politica-de-privacidad/": [f108, "text/html; charset=utf-8"],
-  "/productos/frutas-2/": [f109, "text/html; charset=utf-8"],
-  "/productos/huevos/": [f110, "text/html; charset=utf-8"],
-  "/productos/": [f111, "text/html; charset=utf-8"],
-  "/productos/patata-pelada-para-hosteleria/": [f112, "text/html; charset=utf-8"],
-  "/productos/patatas-2/": [f113, "text/html; charset=utf-8"],
-  "/productos/setas-y-champinones-2/": [f114, "text/html; charset=utf-8"],
-  "/productos/verduras-y-hortalizas/": [f115, "text/html; charset=utf-8"],
-  "/proveedor-de-frutas-y-verduras-para-colegios-madrid/": [f116, "text/html; charset=utf-8"],
-  "/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/": [f117, "text/html; charset=utf-8"],
-  "/proveedor-de-frutas-y-verduras-para-hoteles-madrid/": [f118, "text/html; charset=utf-8"],
-  "/proveedor-de-frutas-y-verduras-para-residencias-madrid/": [f119, "text/html; charset=utf-8"],
-  "/reparto-y-venta-de-cebollas-madrid/": [f120, "text/html; charset=utf-8"],
-  "/reparto-y-venta-de-hortalizas-madrid/": [f121, "text/html; charset=utf-8"],
-  "/reparto-y-venta-de-patatas-madrid/": [f122, "text/html; charset=utf-8"],
-  "/reparto-y-venta-de-verduras-madrid/": [f123, "text/html; charset=utf-8"],
-  "/robots.txt": [f124, "text/plain; charset=utf-8"],
-  "/servicios-de-distribucion-y-exportacion/distribucion-de-frutas-y-verduras-en-madrid-2/": [f125, "text/html; charset=utf-8"],
-  "/servicios-de-distribucion-y-exportacion/exportacion-de-frutas-y-verduras/": [f126, "text/html; charset=utf-8"],
-  "/servicios-de-distribucion-y-exportacion/": [f127, "text/html; charset=utf-8"],
-  "/sitemap.xml": [f128, "application/xml; charset=utf-8"],
-  "/super9/": [f129, "text/html; charset=utf-8"],
-  "/tarjeta/": [f130, "text/html; charset=utf-8"],
-  "/wp-content/uploads/2019/10/bg.jpg": [f131, "image/jpeg"],
-  "/wp-content/uploads/2019/10/calendario-de-frutas-y-verduras.jpeg": [f132, "image/jpeg"],
-  "/wp-content/uploads/2019/10/cropped-logo-144px-180x180.jpg": [f133, "image/jpeg"],
-  "/wp-content/uploads/2019/10/cropped-logo-144px-192x192.jpg": [f134, "image/jpeg"],
-  "/wp-content/uploads/2019/10/cropped-logo-144px-32x32.jpg": [f135, "image/jpeg"],
-  "/wp-content/uploads/2019/10/distribucion-de-cebollas-en-madrid.jpg": [f136, "image/jpeg"],
-  "/wp-content/uploads/2019/10/distribucion-de-frutas-y-verduras-en-madrid.jpg": [f137, "image/jpeg"],
-  "/wp-content/uploads/2019/10/distribuidor-de-fruta-y-verdura-para-colectividades-en-madrid.jpg": [f138, "image/jpeg"],
-  "/wp-content/uploads/2019/10/distribuidor-de-patatas.jpg": [f139, "image/jpeg"],
-  "/wp-content/uploads/2019/10/ferjusanz.jpg": [f140, "image/jpeg"],
-  "/wp-content/uploads/2019/10/frutas-de-invierno-300x150.jpg": [f141, "image/jpeg"],
-  "/wp-content/uploads/2019/10/frutas-ferjusanz.jpg": [f142, "image/jpeg"],
-  "/wp-content/uploads/2019/10/frutas.jpg": [f143, "image/jpeg"],
-  "/wp-content/uploads/2019/10/logotipo.png": [f144, "image/png"],
-  "/wp-content/uploads/2019/10/patatas.png": [f145, "image/png"],
-  "/wp-content/uploads/2019/10/productos-HORTALIZA.jpg": [f146, "image/jpeg"],
-  "/wp-content/uploads/2019/10/proveedores-distribucion_crs2.jpg": [f147, "image/jpeg"],
-  "/wp-content/uploads/2019/10/setas-y-champis.jpeg": [f148, "image/jpeg"],
-  "/wp-content/uploads/2019/10/slide01.jpg": [f149, "image/jpeg"],
-  "/wp-content/uploads/2019/10/slider02.jpg": [f150, "image/jpeg"],
-  "/wp-content/uploads/2019/10/venta-de-legumbres-en-madrid.jpg": [f151, "image/jpeg"],
-  "/wp-content/uploads/2020/09/ajos-cebollas-propiedades-beneficios.jpg": [f152, "image/jpeg"],
-  "/wp-content/uploads/2020/09/beneficios-patatas-distribuidor.jpg": [f153, "image/jpeg"],
-  "/wp-content/uploads/2020/09/beneficios-riesgos-naranjas.jpg": [f154, "image/jpeg"],
-  "/wp-content/uploads/2020/09/cultivar-recolectar-cosechar-patatas-.jpg": [f155, "image/jpeg"],
-  "/wp-content/uploads/2020/09/cultivar-sembrar-cebollas-preparacion-terreno.jpg": [f156, "image/jpeg"],
-  "/wp-content/uploads/2020/09/cultivar-sembrar-recolectar-cebollas.jpg": [f157, "image/jpeg"],
-  "/wp-content/uploads/2020/09/cultivo-siembra-recolecion-patatas.jpg": [f158, "image/jpeg"],
-  "/wp-content/uploads/2020/09/distribuidor-frutas-colegio.jpg": [f159, "image/jpeg"],
-  "/wp-content/uploads/2020/09/distribuidor-frutas-residencias-ancianos.jpg": [f160, "image/jpeg"],
-  "/wp-content/uploads/2020/09/distribuidor-frutas-verduras-colegio.jpg": [f161, "image/jpeg"],
-  "/wp-content/uploads/2020/09/distribuidor-frutas-verduras-residencias-ancianos.jpg": [f162, "image/jpeg"],
-  "/wp-content/uploads/2020/09/distribuidor-hortalizas-beneficios.jpg": [f163, "image/jpeg"],
-  "/wp-content/uploads/2020/09/distribuidor-patatas-beneficios.jpg": [f164, "image/jpeg"],
-  "/wp-content/uploads/2020/09/fruta-temporada-otono.jpg": [f165, "image/jpeg"],
-  "/wp-content/uploads/2020/09/frutas-de-otono-temporada.jpg": [f166, "image/jpeg"],
-  "/wp-content/uploads/2020/09/frutas-de-temportada-otono.jpg": [f167, "image/jpeg"],
-  "/wp-content/uploads/2020/09/frutas-temporada-verano-beneficios.jpg": [f168, "image/jpeg"],
-  "/wp-content/uploads/2020/09/frutas-temporada-verano-primavera.jpg": [f169, "image/jpeg"],
-  "/wp-content/uploads/2020/09/frutas-temporada-verano.jpg": [f170, "image/jpeg"],
-  "/wp-content/uploads/2020/09/frutas-verduras-comedor-colegio.jpg": [f171, "image/jpeg"],
-  "/wp-content/uploads/2020/09/mejores-verduras-de-verano-distribuidor.jpg": [f172, "image/jpeg"],
-  "/wp-content/uploads/2020/09/recoleccion-de-las-patatas.jpg": [f173, "image/jpeg"],
-  "/wp-content/uploads/2020/09/riesgos-beneficios-consumo-naranjas.jpg": [f174, "image/jpeg"],
-  "/wp-content/uploads/2020/09/riesgos-beneficios-naranjas.jpg": [f175, "image/jpeg"],
-  "/wp-content/uploads/2020/09/terreno-sembrar-cultivar-cebollas.jpg": [f176, "image/jpeg"],
-  "/wp-content/uploads/2020/09/verdura-invierno-beneficios.jpg": [f177, "image/jpeg"],
-  "/wp-content/uploads/2020/09/verdura-temporada-invierno-beneficios.jpg": [f178, "image/jpeg"],
-  "/wp-content/uploads/2020/09/verduras-de-temporada-de-invierno.jpg": [f179, "image/jpeg"],
-  "/wp-content/uploads/2020/09/verduras-de-temporada-de-verano.jpg": [f180, "image/jpeg"],
-  "/wp-content/uploads/2020/09/verduras-residencias-ancianos.jpg": [f181, "image/jpeg"],
-  "/wp-content/uploads/2020/09/verduras-temporada-verano-distribuidor.jpg": [f182, "image/jpeg"],
-  "/wp-content/uploads/2021/03/champinones-beneficios-salud.jpg": [f183, "image/jpeg"],
-  "/wp-content/uploads/2021/03/setas-beneficios-salud.jpg": [f184, "image/jpeg"],
-  "/wp-content/uploads/2021/03/setas-champinones-beneficios-salud.jpg": [f185, "image/jpeg"],
-  "/wp-content/uploads/2021/04/Blog-24.jpg": [f186, "image/jpeg"],
-  "/wp-content/uploads/2021/05/Conservacion_Frutas_Verdruas.jpg": [f187, "image/jpeg"],
-  "/wp-content/uploads/2021/06/Frutas-y-verduras-de-temporada-en-verano.jpg": [f188, "image/jpeg"],
-  "/wp-content/uploads/2021/07/Beneficios-de-comer-la-fruta-con-piel.jpg": [f189, "image/jpeg"],
-  "/wp-content/uploads/2021/08/beneficios-de-las-frutas-y-verduras-en-verano.jpg": [f190, "image/jpeg"],
-  "/wp-content/uploads/2021/09/Frutas-y-verduras-de-temporada-en-otono.jpg": [f191, "image/jpeg"],
-  "/wp-content/uploads/2021/10/como-conservar-las-frutas-exoticas.jpg": [f192, "image/jpeg"],
-  "/wp-content/uploads/2021/12/Tipos-de-frutas-de-invierno-y-sus-beneficios.jpg": [f193, "image/jpeg"],
-  "/wp-content/uploads/2022/01/Todo-sobre-los-frutos-rojos.jpg": [f194, "image/jpeg"],
-  "/wp-content/uploads/2022/02/Como-hacer-para-que-los-mas-pequenos-coman-frutas-y-verduras-1.jpg": [f195, "image/jpeg"],
-  "/wp-content/uploads/2022/03/Que-es-el-plato-Harvard.jpg": [f196, "image/jpeg"],
-  "/wp-content/uploads/2022/04/El-ajo-mucho-mas-que-un-alimento.jpg": [f197, "image/jpeg"],
-  "/wp-content/uploads/2022/05/Cuida-tu-corazon-con-estas-frutas-y-verduras.jpg": [f198, "image/jpeg"],
-  "/wp-content/uploads/2022/06/Frutas-y-verduras-en-una-barbacoa-por-que-no.jpg": [f199, "image/jpeg"],
-  "/wp-content/uploads/2022/08/Gazpacho-aprende-la-verdadera-receta.jpg": [f200, "image/jpeg"],
-  "/wp-content/uploads/2022/09/Que-hacer-con-la-piel-de-algunas-frutas-y-verduras.jpg": [f201, "image/jpeg"],
-  "/wp-content/uploads/2022/10/Guiso-de-calabaza-con-garbanzos.jpg": [f202, "image/jpeg"],
-  "/wp-content/uploads/2022/12/Frutas-y-verduras-en-el-embarazo.jpg": [f203, "image/jpeg"],
-  "/wp-content/uploads/2022/12/Las-frutas-tambien-son-para-el-invierno.png": [f204, "image/png"],
-  "/wp-content/uploads/2023/01/Conoce-todos-los-tipos-de-pimientos.jpg": [f205, "image/jpeg"],
-  "/wp-content/uploads/2023/03/Frutas-perfectas-para-el-invierno.jpg": [f206, "image/jpeg"],
-  "/wp-content/uploads/2023/03/Tipos-de-guarniciones-de-verduras.jpg": [f207, "image/jpeg"],
-  "/wp-content/uploads/2023/05/tipos-de-tomates.jpg": [f208, "image/jpeg"],
-  "/wp-content/uploads/2023/06/5-formas-de-comer-sandia.jpg": [f209, "image/jpeg"],
-  "/zonas-de-reparto/": [f210, "text/html; charset=utf-8"],
+  "/calcular-tarifa/": [f56, "text/html; charset=utf-8"],
+  "/contacto/": [f57, "text/html; charset=utf-8"],
+  "/distribucion-y-venta-de-cebollas-madrid/": [f58, "text/html; charset=utf-8"],
+  "/distribucion-y-venta-de-frutas-madrid/": [f59, "text/html; charset=utf-8"],
+  "/distribucion-y-venta-de-hortalizas-madrid/": [f60, "text/html; charset=utf-8"],
+  "/distribucion-y-venta-de-legumbres-madrid/": [f61, "text/html; charset=utf-8"],
+  "/distribucion-y-venta-de-patatas-en-madrid/": [f62, "text/html; charset=utf-8"],
+  "/distribucion-y-venta-de-productos-de-cuarta-gama-madrid/": [f63, "text/html; charset=utf-8"],
+  "/distribucion-y-venta-de-verduras-madrid/": [f64, "text/html; charset=utf-8"],
+  "/empresa-de-venta-y-distribucion-de-fruta-y-verdura/": [f65, "text/html; charset=utf-8"],
+  "/estilo.css": [f66, "text/css; charset=utf-8"],
+  "/feed.xml": [f67, "application/xml; charset=utf-8"],
+  "/fotos/champinon-y-portobello.jpg": [f68, "image/jpeg"],
+  "/fotos/granada-mollar-de-elche.jpg": [f69, "image/jpeg"],
+  "/fotos/grosellas-rojas.jpg": [f70, "image/jpeg"],
+  "/fotos/mango-y-papaya.jpg": [f71, "image/jpeg"],
+  "/fotos/niscalos.jpg": [f72, "image/jpeg"],
+  "/fotos/pitahaya-amarilla.jpg": [f73, "image/jpeg"],
+  "/fotos/setas-de-ostra.jpg": [f74, "image/jpeg"],
+  "/fotos/tomate-asurcado.jpg": [f75, "image/jpeg"],
+  "/fotos/tomate-de-temporada.jpg": [f76, "image/jpeg"],
+  "/fotos/tomate-la-campechana.jpg": [f77, "image/jpeg"],
+  "/fotos/tomate-rosa.jpg": [f78, "image/jpeg"],
+  "/fotos/verduras-gourmet-hosteleria.jpg": [f79, "image/jpeg"],
+  "/fruta-y-verdura-al-por-mayor-alcobendas-la-moraleja-san-sebastian-de-los-reyes/": [f80, "text/html; charset=utf-8"],
+  "/fruta-y-verdura-al-por-mayor-chamartin-ciudad-lineal-tetuan-san-blas/": [f81, "text/html; charset=utf-8"],
+  "/fruta-y-verdura-al-por-mayor-hortaleza-sanchinarro-las-tablas-valdebebas/": [f82, "text/html; charset=utf-8"],
+  "/fruta-y-verdura-al-por-mayor-moratalaz-vicalvaro-coslada-san-fernando/": [f83, "text/html; charset=utf-8"],
+  "/fruta-y-verdura-al-por-mayor-pozuelo-boadilla-las-rozas/": [f84, "text/html; charset=utf-8"],
+  "/fruta-y-verdura-al-por-mayor-segovia/": [f85, "text/html; charset=utf-8"],
+  "/fuentes/barlow-condensed-latin-600-normal.woff2": [f86, "font/woff2"],
+  "/fuentes/barlow-condensed-latin-700-normal.woff2": [f87, "font/woff2"],
+  "/fuentes/barlow-latin-400-normal.woff2": [f88, "font/woff2"],
+  "/fuentes/barlow-latin-500-normal.woff2": [f89, "font/woff2"],
+  "/fuentes/barlow-latin-600-normal.woff2": [f90, "font/woff2"],
+  "/fuentes/inter-latin-400-normal.woff2": [f91, "font/woff2"],
+  "/fuentes/inter-latin-500-normal.woff2": [f92, "font/woff2"],
+  "/fuentes/inter-latin-600-normal.woff2": [f93, "font/woff2"],
+  "/fuentes/inter-latin-700-normal.woff2": [f94, "font/woff2"],
+  "/": [f95, "text/html; charset=utf-8"],
+  "/llms.txt": [f96, "text/plain; charset=utf-8"],
+  "/marca/compartir.png": [f97, "image/png"],
+  "/marca/etiqueta.png": [f98, "image/png"],
+  "/marca/icono-180.png": [f99, "image/png"],
+  "/marca/icono-32.png": [f100, "image/png"],
+  "/marca/icono-512.png": [f101, "image/png"],
+  "/marca/logo-oscuro.png": [f102, "image/png"],
+  "/marca/logo.png": [f103, "image/png"],
+  "/marca/super9.png": [f104, "image/png"],
+  "/mayorista-de-frutas-y-verduras-madrid/": [f105, "text/html; charset=utf-8"],
+  "/mayorista-de-frutas-y-verduras-para-colectividades-madrid/": [f106, "text/html; charset=utf-8"],
+  "/novedades/": [f107, "text/html; charset=utf-8"],
+  "/politica-de-cookies/": [f108, "text/html; charset=utf-8"],
+  "/politica-de-privacidad/": [f109, "text/html; charset=utf-8"],
+  "/productos/frutas-2/": [f110, "text/html; charset=utf-8"],
+  "/productos/huevos/": [f111, "text/html; charset=utf-8"],
+  "/productos/": [f112, "text/html; charset=utf-8"],
+  "/productos/patata-pelada-para-hosteleria/": [f113, "text/html; charset=utf-8"],
+  "/productos/patatas-2/": [f114, "text/html; charset=utf-8"],
+  "/productos/setas-y-champinones-2/": [f115, "text/html; charset=utf-8"],
+  "/productos/verduras-y-hortalizas/": [f116, "text/html; charset=utf-8"],
+  "/proveedor-de-frutas-y-verduras-para-colegios-madrid/": [f117, "text/html; charset=utf-8"],
+  "/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/": [f118, "text/html; charset=utf-8"],
+  "/proveedor-de-frutas-y-verduras-para-hoteles-madrid/": [f119, "text/html; charset=utf-8"],
+  "/proveedor-de-frutas-y-verduras-para-residencias-madrid/": [f120, "text/html; charset=utf-8"],
+  "/reparto-y-venta-de-cebollas-madrid/": [f121, "text/html; charset=utf-8"],
+  "/reparto-y-venta-de-hortalizas-madrid/": [f122, "text/html; charset=utf-8"],
+  "/reparto-y-venta-de-patatas-madrid/": [f123, "text/html; charset=utf-8"],
+  "/reparto-y-venta-de-verduras-madrid/": [f124, "text/html; charset=utf-8"],
+  "/robots.txt": [f125, "text/plain; charset=utf-8"],
+  "/servicios-de-distribucion-y-exportacion/distribucion-de-frutas-y-verduras-en-madrid-2/": [f126, "text/html; charset=utf-8"],
+  "/servicios-de-distribucion-y-exportacion/exportacion-de-frutas-y-verduras/": [f127, "text/html; charset=utf-8"],
+  "/servicios-de-distribucion-y-exportacion/": [f128, "text/html; charset=utf-8"],
+  "/sitemap.xml": [f129, "application/xml; charset=utf-8"],
+  "/super9/": [f130, "text/html; charset=utf-8"],
+  "/tarjeta/": [f131, "text/html; charset=utf-8"],
+  "/wp-content/uploads/2019/10/bg.jpg": [f132, "image/jpeg"],
+  "/wp-content/uploads/2019/10/calendario-de-frutas-y-verduras.jpeg": [f133, "image/jpeg"],
+  "/wp-content/uploads/2019/10/cropped-logo-144px-180x180.jpg": [f134, "image/jpeg"],
+  "/wp-content/uploads/2019/10/cropped-logo-144px-192x192.jpg": [f135, "image/jpeg"],
+  "/wp-content/uploads/2019/10/cropped-logo-144px-32x32.jpg": [f136, "image/jpeg"],
+  "/wp-content/uploads/2019/10/distribucion-de-cebollas-en-madrid.jpg": [f137, "image/jpeg"],
+  "/wp-content/uploads/2019/10/distribucion-de-frutas-y-verduras-en-madrid.jpg": [f138, "image/jpeg"],
+  "/wp-content/uploads/2019/10/distribuidor-de-fruta-y-verdura-para-colectividades-en-madrid.jpg": [f139, "image/jpeg"],
+  "/wp-content/uploads/2019/10/distribuidor-de-patatas.jpg": [f140, "image/jpeg"],
+  "/wp-content/uploads/2019/10/ferjusanz.jpg": [f141, "image/jpeg"],
+  "/wp-content/uploads/2019/10/frutas-de-invierno-300x150.jpg": [f142, "image/jpeg"],
+  "/wp-content/uploads/2019/10/frutas-ferjusanz.jpg": [f143, "image/jpeg"],
+  "/wp-content/uploads/2019/10/frutas.jpg": [f144, "image/jpeg"],
+  "/wp-content/uploads/2019/10/logotipo.png": [f145, "image/png"],
+  "/wp-content/uploads/2019/10/patatas.png": [f146, "image/png"],
+  "/wp-content/uploads/2019/10/productos-HORTALIZA.jpg": [f147, "image/jpeg"],
+  "/wp-content/uploads/2019/10/proveedores-distribucion_crs2.jpg": [f148, "image/jpeg"],
+  "/wp-content/uploads/2019/10/setas-y-champis.jpeg": [f149, "image/jpeg"],
+  "/wp-content/uploads/2019/10/slide01.jpg": [f150, "image/jpeg"],
+  "/wp-content/uploads/2019/10/slider02.jpg": [f151, "image/jpeg"],
+  "/wp-content/uploads/2019/10/venta-de-legumbres-en-madrid.jpg": [f152, "image/jpeg"],
+  "/wp-content/uploads/2020/09/ajos-cebollas-propiedades-beneficios.jpg": [f153, "image/jpeg"],
+  "/wp-content/uploads/2020/09/beneficios-patatas-distribuidor.jpg": [f154, "image/jpeg"],
+  "/wp-content/uploads/2020/09/beneficios-riesgos-naranjas.jpg": [f155, "image/jpeg"],
+  "/wp-content/uploads/2020/09/cultivar-recolectar-cosechar-patatas-.jpg": [f156, "image/jpeg"],
+  "/wp-content/uploads/2020/09/cultivar-sembrar-cebollas-preparacion-terreno.jpg": [f157, "image/jpeg"],
+  "/wp-content/uploads/2020/09/cultivar-sembrar-recolectar-cebollas.jpg": [f158, "image/jpeg"],
+  "/wp-content/uploads/2020/09/cultivo-siembra-recolecion-patatas.jpg": [f159, "image/jpeg"],
+  "/wp-content/uploads/2020/09/distribuidor-frutas-colegio.jpg": [f160, "image/jpeg"],
+  "/wp-content/uploads/2020/09/distribuidor-frutas-residencias-ancianos.jpg": [f161, "image/jpeg"],
+  "/wp-content/uploads/2020/09/distribuidor-frutas-verduras-colegio.jpg": [f162, "image/jpeg"],
+  "/wp-content/uploads/2020/09/distribuidor-frutas-verduras-residencias-ancianos.jpg": [f163, "image/jpeg"],
+  "/wp-content/uploads/2020/09/distribuidor-hortalizas-beneficios.jpg": [f164, "image/jpeg"],
+  "/wp-content/uploads/2020/09/distribuidor-patatas-beneficios.jpg": [f165, "image/jpeg"],
+  "/wp-content/uploads/2020/09/fruta-temporada-otono.jpg": [f166, "image/jpeg"],
+  "/wp-content/uploads/2020/09/frutas-de-otono-temporada.jpg": [f167, "image/jpeg"],
+  "/wp-content/uploads/2020/09/frutas-de-temportada-otono.jpg": [f168, "image/jpeg"],
+  "/wp-content/uploads/2020/09/frutas-temporada-verano-beneficios.jpg": [f169, "image/jpeg"],
+  "/wp-content/uploads/2020/09/frutas-temporada-verano-primavera.jpg": [f170, "image/jpeg"],
+  "/wp-content/uploads/2020/09/frutas-temporada-verano.jpg": [f171, "image/jpeg"],
+  "/wp-content/uploads/2020/09/frutas-verduras-comedor-colegio.jpg": [f172, "image/jpeg"],
+  "/wp-content/uploads/2020/09/mejores-verduras-de-verano-distribuidor.jpg": [f173, "image/jpeg"],
+  "/wp-content/uploads/2020/09/recoleccion-de-las-patatas.jpg": [f174, "image/jpeg"],
+  "/wp-content/uploads/2020/09/riesgos-beneficios-consumo-naranjas.jpg": [f175, "image/jpeg"],
+  "/wp-content/uploads/2020/09/riesgos-beneficios-naranjas.jpg": [f176, "image/jpeg"],
+  "/wp-content/uploads/2020/09/terreno-sembrar-cultivar-cebollas.jpg": [f177, "image/jpeg"],
+  "/wp-content/uploads/2020/09/verdura-invierno-beneficios.jpg": [f178, "image/jpeg"],
+  "/wp-content/uploads/2020/09/verdura-temporada-invierno-beneficios.jpg": [f179, "image/jpeg"],
+  "/wp-content/uploads/2020/09/verduras-de-temporada-de-invierno.jpg": [f180, "image/jpeg"],
+  "/wp-content/uploads/2020/09/verduras-de-temporada-de-verano.jpg": [f181, "image/jpeg"],
+  "/wp-content/uploads/2020/09/verduras-residencias-ancianos.jpg": [f182, "image/jpeg"],
+  "/wp-content/uploads/2020/09/verduras-temporada-verano-distribuidor.jpg": [f183, "image/jpeg"],
+  "/wp-content/uploads/2021/03/champinones-beneficios-salud.jpg": [f184, "image/jpeg"],
+  "/wp-content/uploads/2021/03/setas-beneficios-salud.jpg": [f185, "image/jpeg"],
+  "/wp-content/uploads/2021/03/setas-champinones-beneficios-salud.jpg": [f186, "image/jpeg"],
+  "/wp-content/uploads/2021/04/Blog-24.jpg": [f187, "image/jpeg"],
+  "/wp-content/uploads/2021/05/Conservacion_Frutas_Verdruas.jpg": [f188, "image/jpeg"],
+  "/wp-content/uploads/2021/06/Frutas-y-verduras-de-temporada-en-verano.jpg": [f189, "image/jpeg"],
+  "/wp-content/uploads/2021/07/Beneficios-de-comer-la-fruta-con-piel.jpg": [f190, "image/jpeg"],
+  "/wp-content/uploads/2021/08/beneficios-de-las-frutas-y-verduras-en-verano.jpg": [f191, "image/jpeg"],
+  "/wp-content/uploads/2021/09/Frutas-y-verduras-de-temporada-en-otono.jpg": [f192, "image/jpeg"],
+  "/wp-content/uploads/2021/10/como-conservar-las-frutas-exoticas.jpg": [f193, "image/jpeg"],
+  "/wp-content/uploads/2021/12/Tipos-de-frutas-de-invierno-y-sus-beneficios.jpg": [f194, "image/jpeg"],
+  "/wp-content/uploads/2022/01/Todo-sobre-los-frutos-rojos.jpg": [f195, "image/jpeg"],
+  "/wp-content/uploads/2022/02/Como-hacer-para-que-los-mas-pequenos-coman-frutas-y-verduras-1.jpg": [f196, "image/jpeg"],
+  "/wp-content/uploads/2022/03/Que-es-el-plato-Harvard.jpg": [f197, "image/jpeg"],
+  "/wp-content/uploads/2022/04/El-ajo-mucho-mas-que-un-alimento.jpg": [f198, "image/jpeg"],
+  "/wp-content/uploads/2022/05/Cuida-tu-corazon-con-estas-frutas-y-verduras.jpg": [f199, "image/jpeg"],
+  "/wp-content/uploads/2022/06/Frutas-y-verduras-en-una-barbacoa-por-que-no.jpg": [f200, "image/jpeg"],
+  "/wp-content/uploads/2022/08/Gazpacho-aprende-la-verdadera-receta.jpg": [f201, "image/jpeg"],
+  "/wp-content/uploads/2022/09/Que-hacer-con-la-piel-de-algunas-frutas-y-verduras.jpg": [f202, "image/jpeg"],
+  "/wp-content/uploads/2022/10/Guiso-de-calabaza-con-garbanzos.jpg": [f203, "image/jpeg"],
+  "/wp-content/uploads/2022/12/Frutas-y-verduras-en-el-embarazo.jpg": [f204, "image/jpeg"],
+  "/wp-content/uploads/2022/12/Las-frutas-tambien-son-para-el-invierno.png": [f205, "image/png"],
+  "/wp-content/uploads/2023/01/Conoce-todos-los-tipos-de-pimientos.jpg": [f206, "image/jpeg"],
+  "/wp-content/uploads/2023/03/Frutas-perfectas-para-el-invierno.jpg": [f207, "image/jpeg"],
+  "/wp-content/uploads/2023/03/Tipos-de-guarniciones-de-verduras.jpg": [f208, "image/jpeg"],
+  "/wp-content/uploads/2023/05/tipos-de-tomates.jpg": [f209, "image/jpeg"],
+  "/wp-content/uploads/2023/06/5-formas-de-comer-sandia.jpg": [f210, "image/jpeg"],
+  "/zonas-de-reparto/": [f211, "text/html; charset=utf-8"],
 };

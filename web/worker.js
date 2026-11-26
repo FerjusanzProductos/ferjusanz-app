@@ -88,7 +88,7 @@ export default {
     // Cabeceras básicas de seguridad.
     Object.assign(headers, { "x-content-type-options": "nosniff", "referrer-policy": "strict-origin-when-cross-origin", "x-frame-options": "SAMEORIGIN", "strict-transport-security": "max-age=31536000", "permissions-policy": "camera=(), microphone=(), geolocation=()" });
     if (ARCHIVOS[ruta] && archivo[1].startsWith("text/html")) { const v = apuntarVisita(request, ruta); if (v) ctx.waitUntil(v); }
-    if (ruta === "/tarjeta/") { headers["permissions-policy"] = "camera=(), microphone=(self), geolocation=()"; return new Response(await tarjetaConProductos(archivo[0], url, env), { status: 200, headers }); }
+    if (ruta === "/tarjeta/" || ruta === "/calcular-tarifa/") { headers["permissions-policy"] = "camera=(), microphone=(self), geolocation=()"; return new Response(await tarjetaConProductos(archivo[0], url, env), { status: 200, headers }); }
     return new Response(archivo[0], { status: ARCHIVOS[ruta] ? 200 : 404, headers });
   },
 };
@@ -144,7 +144,8 @@ async function tarjetaConProductos(html, url, env) {
 async function enviarPrimerPedido(request, url, env) {
   const f = request.method === "POST" ? await request.formData().catch(() => null) : null;
   const p = f && UUID.test(f.get("p") || "") ? f.get("p") : "";
-  const volver = (q) => Response.redirect(url.origin + "/tarjeta/?" + q + (p ? "&p=" + p : "") + "#primer-pedido", 303);
+  const pagina = f && f.get("volver") === "/calcular-tarifa/" ? "/calcular-tarifa/" : "/tarjeta/";
+  const volver = (q) => Response.redirect(url.origin + pagina + "?" + q + (p ? "&p=" + p : "") + "#primer-pedido", 303);
   if (!f) return volver("");
   const origen = request.headers.get("origin");
   if (origen && origen !== "null" && origen !== url.origin) return new Response("Origen no permitido", { status: 403 });
@@ -163,7 +164,7 @@ async function enviarPrimerPedido(request, url, env) {
   try {
     const r = await rpc(env, "web_primer_pedido", { p_negocio: t("negocio"), p_persona: t("persona"), p_tipo: t("tipo"), p_localidad: t("localidad"),
       p_telefono: t("telefono"), p_email: t("email"), p_productos: productos.slice(0, 100), p_otros: t("otros"), p_dias: f.getAll("dia").join(", "),
-      p_reunion: [t("reunion"), t("cuando")].filter(Boolean).join(" · "), p_notas: "", p_prospecto: p || null, p_trampa: t("web"), p_audio: audio });
+      p_reunion: [t("reunion"), t("cuando")].filter(Boolean).join(" · "), p_notas: pagina === "/tarjeta/" ? "" : "Desde la web: Calcule su tarifa", p_prospecto: p || null, p_trampa: t("web"), p_audio: audio });
     const j = await r.json().catch(() => ({}));
     console.log("primer pedido", r.status, JSON.stringify(j));
     return volver(j.ok ? "enviado=1" : "error=" + encodeURIComponent(j.error || "envio"));

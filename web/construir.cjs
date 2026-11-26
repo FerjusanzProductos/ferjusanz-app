@@ -31,6 +31,7 @@ const WHATSAPP = [ // los dos móviles de la familia
 ];
 const ANIOS = 'más de seis décadas'; // Fernando 16/11/2026: «más de 60 años» e «impacta más decir décadas»
 
+const TARIFA = '/calcular-tarifa/';
 const MENU = [
   ['/productos/', 'Productos'],
   ['/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', 'Hostelería'],
@@ -315,7 +316,7 @@ ${datos.map(d => `<script type="application/ld+json">${JSON.stringify(d)}</scrip
     <a href="/" class="logo" aria-label="Ferjusanz, inicio"><img src="/marca/logo-oscuro.png" alt="Ferjusanz · patatas, frutas, verduras, huevos, setas, champiñones y legumbres" width="600" height="134"></a>
     <nav class="menu-ancho" aria-label="Principal">${nav}</nav>
     <a class="btn btn-wa btn-cab" href="#pedir-precio">${I.wa}<span>Pedir precio</span></a>
-    <details class="menu"><summary aria-label="Abrir menú"><span></span><span></span><span></span></summary><nav aria-label="Menú">${nav}<a href="/novedades/"${actual('/novedades/') ? ' aria-current="page"' : ''}>Novedades</a><p class="menu-sub">Productos</p>${familiasMenu}<a href="#pedir-precio" class="btn btn-wa">${I.wa}<span>Pedir precio por WhatsApp</span></a></nav></details>
+    <details class="menu"><summary aria-label="Abrir menú"><span></span><span></span><span></span></summary><nav aria-label="Menú">${nav}<a href="/novedades/"${actual('/novedades/') ? ' aria-current="page"' : ''}>Novedades</a><a href="${TARIFA}"${actual(TARIFA) ? ' aria-current="page"' : ''}>Calcule su tarifa</a><p class="menu-sub">Productos</p>${familiasMenu}<a href="#pedir-precio" class="btn btn-wa">${I.wa}<span>Pedir precio por WhatsApp</span></a></nav></details>
   </div>
   <div class="buscar-fila"><form class="buscar" action="/buscar/" method="get" role="search"><input type="search" name="q" placeholder="Buscar producto o página" aria-label="Buscar producto o página" enterkeyhint="search"><button type="submit" aria-label="Buscar">${I.lupa}</button></form></div>
 </header>
@@ -451,6 +452,7 @@ ${OFERTAS && OFERTAS.items.length ? `<section class="bloque" id="ofertas">
     <ul class="ofertas">${OFERTAS.items.map(([n, p, u]) => `<li><strong>${esc(n)}</strong><span>${p.toFixed(2).replace('.', ',')} €/${esc(u)}</span></li>`).join('')}</ul>
     ${OFERTAS.ejemplo ? `<p class="ofertas-iva">${esc(OFERTAS.ejemplo)}</p>` : ''}
     <p class="ofertas-caja">Precios por caja entera · consultar formato</p>
+    <p class="ofertas-tarifa"><a class="btn btn-wa" href="${TARIFA}"><span>¿Y lo que usted compra? Calcule su tarifa</span>${I.flecha}</a></p>
   </div>
 </section>` : ''}
 
@@ -680,6 +682,7 @@ function contacto(p) {
   <div class="contacto-caja"><h2>Dónde estamos</h2><p>${DIRECCION}</p><p>${HORARIO}</p><p><strong>Zona de reparto</strong>: ${ZONAS.map(([z, l]) => `${z} (${l})`).join('; ')}.</p><p><a class="enlace" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Calle Carare 2, 28033 Madrid')}" rel="nofollow">Cómo llegar ${I.flecha}</a></p></div>
 </div>
 <div class="envoltura"><form id="formulario" class="formulario" method="post" action="/enviar-contacto">
+  <p class="ofertas-tarifa"><a class="btn btn-borde" href="${TARIFA}"><span>¿Quiere saber cuánto le saldría su pedido? Calcule su tarifa</span>${I.flecha}</a></p>
   <h2>O déjenos un mensaje</h2>
   <p>Le contestamos en horario de trabajo. Ponga un teléfono o un correo para poder responderle.</p>
   <p class="aviso-form ok" hidden data-si="enviado">✔ Mensaje enviado. Le contestamos lo antes posible.</p>
@@ -747,28 +750,14 @@ function paginaLegal(ruta, titulo, html) {
   return plantilla({ ruta, titulo: `${titulo} | Ferjusanz`, descripcion: `${titulo} de la web de ${EMPRESA}.`, cuerpo, datos: [m.datos] });
 }
 
-// Tarjeta virtual (14/11/2026). Tito 23/11/2026: aquí (la abre el QR de la app) sí sale también su 609 567 354.: lo que Fernando manda por WhatsApp o enseña en QR a quien pregunta quiénes somos.
-// Sin precios: el precio se lo pasa Fernando después por WhatsApp. La app la abre en /tarjeta (redirige aquí).
-function tarjeta() {
-  const m = miga('/tarjeta/', 'Tarjeta');
-  const vcf = ['BEGIN:VCARD', 'VERSION:3.0', 'FN:Fernando Sanz · Ferjusanz', 'ORG:' + EMPRESA, 'TEL;TYPE=CELL:+34609100690', 'TEL;TYPE=CELL:+34609567354', 'TEL;TYPE=WORK:+34917632186',
-    'EMAIL:' + EMAIL, 'ADR;TYPE=WORK:;;C/ Carare, 2;Madrid;;28033;España', 'URL:' + DOMINIO + '/', 'END:VCARD'].join('\r\n');
-  const fer = WHATSAPP.find(w => w.nombre === 'Fernando');
-  // Tarjeta de visita virtual arriba (Tito, 25/11/2026: «nada de papel… que se pueda enviar… enlace directo a la web»).
-  const cuerpo = `<section class="bloque"><div class="envoltura lectura">${m.html}
-  <figure class="tarjeta-virtual" style="margin:0 0 16px"><img src="/fotos/2026/11/tarjeta-visita.jpg" alt="Tarjeta de visita de Ferjusanz: pedidos y WhatsApp 609 100 690, Fernando Sanz 609 567 354, www.ferjusanz-frutas-verduras.es" width="1100" height="740" style="width:100%;height:auto;border-radius:14px;box-shadow:0 8px 30px rgb(0 0 0/.35)"></figure>
-  <div class="acciones apiladas" style="margin-top:0"><button type="button" class="btn btn-wa" id="enviar-tarjeta">📤 <span>Enviar esta tarjeta a otra persona</span></button>
-    <a class="btn btn-borde" href="${DOMINIO}/">🌐 <span>Ver la web de Ferjusanz</span></a></div>
-  <script>(function(){var b=document.getElementById('enviar-tarjeta');if(!b)return;var u=location.origin+'/tarjeta/',t='Ferjusanz: patatas, frutas, verduras, huevos, setas y legumbres para hostelería y colectividades. Tarjeta y contacto: ';b.addEventListener('click',function(){if(navigator.share){navigator.share({title:'Ferjusanz',text:t,url:u}).catch(function(){});}else{location.href='https://wa.me/?text='+encodeURIComponent(t+u);}});})();</script>
-  <h1>Ferjusanz: patatas, frutas, verduras, huevos, setas, champiñones y legumbres para su negocio</h1>
-  <p class="entradilla">${EMPRESA}: empresa familiar, tercera generación, ${ANIOS} sirviendo a restaurantes, bares, hoteles, colegios, residencias y fruterías de Madrid y Segovia.</p>
-  <form id="primer-pedido" class="formulario primer-pedido" method="post" action="/enviar-primer-pedido" enctype="multipart/form-data">
-  <h2>Imagine su primer pedido y le calculamos su tarifa</h2>
+// Formulario «¿cuánto le saldría su pedido?» (16/11/2026): en la tarjeta y en /calcular-tarifa/ (Tito 26/11/2026). El Worker pone los productos (__PP_PRODUCTOS__).
+const formTarifa = volver => `<form id="primer-pedido" class="formulario primer-pedido" method="post" action="/enviar-primer-pedido" enctype="multipart/form-data">
+  ${volver === '/tarjeta/' ? '<h2>Imagine su primer pedido y le calculamos su tarifa</h2>' : ''}
   <p><strong>Esto nos sirve para calcular los precios que le haríamos.</strong> Destacamos por la <strong>relación calidad-precio</strong>.</p>
   <p>Marque en un minuto qué productos usa y, si quiere, cuánto a la semana. Cuando lo envíe, queda pendiente de mandarle <strong>su tarifa según lo que gasta</strong>, por WhatsApp o por correo. Sin compromiso y <strong>sin pedido mínimo</strong>. Si quiere, quedamos para conocernos y que pruebe el género.</p>
   <p class="aviso-form ok" hidden data-si="enviado">✔ Recibido, ¡gracias! Queda pendiente de enviarle su tarifa con lo que gasta: se la mandamos muy pronto por WhatsApp o por correo.</p>
   <p class="aviso-form mal" hidden data-si="error">No se ha podido enviar. Revise el nombre del negocio y el móvil, o escríbanos por WhatsApp.</p>
-  <input type="hidden" name="p" value="__PP_CONTACTO__">
+  <input type="hidden" name="p" value="__PP_CONTACTO__"><input type="hidden" name="volver" value="${volver}">
   <label>Nombre del negocio *<input name="negocio" required maxlength="100" autocomplete="organization"></label>
   <label>Su nombre<input name="persona" maxlength="80" autocomplete="name"></label>
   <label>Tipo de negocio<select name="tipo"><option value="restaurante">Restaurante u hotel</option><option value="bar">Bar o cafetería</option><option value="colegio">Colegio</option><option value="residencia">Residencia</option><option value="escuela_infantil">Escuela infantil</option><option value="catering">Catering</option><option value="otro">Otro (frutería, tienda…)</option></select></label>
@@ -795,7 +784,35 @@ function tarjeta() {
   <p class="nota">Usamos estos datos solo para prepararle la tarifa y contactarle. Más información en la <a href="/politica-de-privacidad/">política de privacidad</a>.</p>
   <button class="btn btn-wa" type="submit">Calcular mi tarifa</button>
   </form>
-  <script>(function(){var q=location.search;document.querySelectorAll('[data-si]').forEach(function(e){if(q.indexOf(e.dataset.si+'=')>-1)e.hidden=false});var b=document.getElementById('pp-buscar');if(b)b.addEventListener('input',function(){var t=b.value.toLowerCase();document.querySelectorAll('.pp-fila').forEach(function(f){f.hidden=t&&f.textContent.toLowerCase().indexOf(t)<0});document.querySelectorAll('.pp-familia').forEach(function(d){d.open=!!t&&!!d.querySelector('.pp-fila:not([hidden])')});var td=document.getElementById('pp-todos');if(td)td.open=!!t});document.querySelectorAll('.pp-fila input[type=text]').forEach(function(c){c.addEventListener('input',function(){if(c.value.trim())c.parentNode.querySelector('input[type=checkbox]').checked=true})});var g=document.getElementById('pp-grabar'),es=document.getElementById('pp-estado'),oir=document.getElementById('pp-oir'),fi=document.querySelector('.pp-audio input[type=file]');if(g&&window.MediaRecorder&&navigator.mediaDevices&&window.DataTransfer){g.hidden=false;var rec=null,tr=[];g.addEventListener('click',function(){if(rec){rec.stop();return}navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){tr=[];rec=new MediaRecorder(st);rec.ondataavailable=function(e){if(e.data.size)tr.push(e.data)};rec.onstop=function(){st.getTracks().forEach(function(k){k.stop()});var ty=(rec.mimeType||'audio/webm').split(';')[0],b=new Blob(tr,{type:ty}),dt=new DataTransfer();dt.items.add(new File([b],'audio.'+(/mp4/.test(ty)?'m4a':/ogg/.test(ty)?'ogg':'webm'),{type:ty}));fi.files=dt.files;oir.src=URL.createObjectURL(b);oir.hidden=false;es.textContent='✔ Audio listo. Se enviará con el formulario.';g.textContent='🎙️ Grabar otra vez';rec=null};rec.start();g.textContent='⏹ Parar y guardar';es.textContent='🔴 Grabando…'}).catch(function(){es.textContent='No se pudo usar el micrófono. Elija un audio del móvil o escríbalo abajo.'})})}})()</script>
+  <script>(function(){var q=location.search;document.querySelectorAll('[data-si]').forEach(function(e){if(q.indexOf(e.dataset.si+'=')>-1)e.hidden=false});var b=document.getElementById('pp-buscar');if(b)b.addEventListener('input',function(){var t=b.value.toLowerCase();document.querySelectorAll('.pp-fila').forEach(function(f){f.hidden=t&&f.textContent.toLowerCase().indexOf(t)<0});document.querySelectorAll('.pp-familia').forEach(function(d){d.open=!!t&&!!d.querySelector('.pp-fila:not([hidden])')});var td=document.getElementById('pp-todos');if(td)td.open=!!t});document.querySelectorAll('.pp-fila input[type=text]').forEach(function(c){c.addEventListener('input',function(){if(c.value.trim())c.parentNode.querySelector('input[type=checkbox]').checked=true})});var g=document.getElementById('pp-grabar'),es=document.getElementById('pp-estado'),oir=document.getElementById('pp-oir'),fi=document.querySelector('.pp-audio input[type=file]');if(g&&window.MediaRecorder&&navigator.mediaDevices&&window.DataTransfer){g.hidden=false;var rec=null,tr=[];g.addEventListener('click',function(){if(rec){rec.stop();return}navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){tr=[];rec=new MediaRecorder(st);rec.ondataavailable=function(e){if(e.data.size)tr.push(e.data)};rec.onstop=function(){st.getTracks().forEach(function(k){k.stop()});var ty=(rec.mimeType||'audio/webm').split(';')[0],b=new Blob(tr,{type:ty}),dt=new DataTransfer();dt.items.add(new File([b],'audio.'+(/mp4/.test(ty)?'m4a':/ogg/.test(ty)?'ogg':'webm'),{type:ty}));fi.files=dt.files;oir.src=URL.createObjectURL(b);oir.hidden=false;es.textContent='✔ Audio listo. Se enviará con el formulario.';g.textContent='🎙️ Grabar otra vez';rec=null};rec.start();g.textContent='⏹ Parar y guardar';es.textContent='🔴 Grabando…'}).catch(function(){es.textContent='No se pudo usar el micrófono. Elija un audio del móvil o escríbalo abajo.'})})}})()</script>`;
+
+// Página propia para calcular la tarifa (Tito 26/11/2026: «que pruebe haciendo el pedido que haría y le decimos cómo son los precios»).
+function calcularTarifa() {
+  const m = miga(TARIFA, 'Calcule su tarifa');
+  const cuerpo = `<section class="bloque"><div class="envoltura lectura">${m.html}
+  <h1>¿Cuánto le saldría su pedido con Ferjusanz?</h1>
+  <p class="entradilla">Marque lo que compra ahora a su proveedor, como si nos hiciera el pedido, y le decimos qué precios le haríamos. Sin compromiso y sin pedido mínimo.</p>
+  ${formTarifa(TARIFA)}
+</div></section>`;
+  return plantilla({ ruta: TARIFA, titulo: 'Calcule su tarifa de fruta y verdura | Ferjusanz', descripcion: 'Marque los productos que compra ahora (fruta, verdura, patatas, huevos…) y le decimos qué precios le haríamos según lo que gasta. Sin compromiso y sin pedido mínimo.', cuerpo, datos: [m.datos, NEGOCIO] });
+}
+
+// Tarjeta virtual (14/11/2026). Tito 23/11/2026: aquí (la abre el QR de la app) sí sale también su 609 567 354.: lo que Fernando manda por WhatsApp o enseña en QR a quien pregunta quiénes somos.
+// Sin precios: el precio se lo pasa Fernando después por WhatsApp. La app la abre en /tarjeta (redirige aquí).
+function tarjeta() {
+  const m = miga('/tarjeta/', 'Tarjeta');
+  const vcf = ['BEGIN:VCARD', 'VERSION:3.0', 'FN:Fernando Sanz · Ferjusanz', 'ORG:' + EMPRESA, 'TEL;TYPE=CELL:+34609100690', 'TEL;TYPE=CELL:+34609567354', 'TEL;TYPE=WORK:+34917632186',
+    'EMAIL:' + EMAIL, 'ADR;TYPE=WORK:;;C/ Carare, 2;Madrid;;28033;España', 'URL:' + DOMINIO + '/', 'END:VCARD'].join('\r\n');
+  const fer = WHATSAPP.find(w => w.nombre === 'Fernando');
+  // Tarjeta de visita virtual arriba (Tito, 25/11/2026: «nada de papel… que se pueda enviar… enlace directo a la web»).
+  const cuerpo = `<section class="bloque"><div class="envoltura lectura">${m.html}
+  <figure class="tarjeta-virtual" style="margin:0 0 16px"><img src="/fotos/2026/11/tarjeta-visita.jpg" alt="Tarjeta de visita de Ferjusanz: pedidos y WhatsApp 609 100 690, Fernando Sanz 609 567 354, www.ferjusanz-frutas-verduras.es" width="1100" height="740" style="width:100%;height:auto;border-radius:14px;box-shadow:0 8px 30px rgb(0 0 0/.35)"></figure>
+  <div class="acciones apiladas" style="margin-top:0"><button type="button" class="btn btn-wa" id="enviar-tarjeta">📤 <span>Enviar esta tarjeta a otra persona</span></button>
+    <a class="btn btn-borde" href="${DOMINIO}/">🌐 <span>Ver la web de Ferjusanz</span></a></div>
+  <script>(function(){var b=document.getElementById('enviar-tarjeta');if(!b)return;var u=location.origin+'/tarjeta/',t='Ferjusanz: patatas, frutas, verduras, huevos, setas y legumbres para hostelería y colectividades. Tarjeta y contacto: ';b.addEventListener('click',function(){if(navigator.share){navigator.share({title:'Ferjusanz',text:t,url:u}).catch(function(){});}else{location.href='https://wa.me/?text='+encodeURIComponent(t+u);}});})();</script>
+  <h1>Ferjusanz: patatas, frutas, verduras, huevos, setas, champiñones y legumbres para su negocio</h1>
+  <p class="entradilla">${EMPRESA}: empresa familiar, tercera generación, ${ANIOS} sirviendo a restaurantes, bares, hoteles, colegios, residencias y fruterías de Madrid y Segovia.</p>
+  ${formTarifa('/tarjeta/')}
   <h2 class="pp-separa">Quiénes somos y cómo trabajamos</h2>
   <div class="acciones apiladas"><a class="btn btn-wa" href="${wa(fer.num, 'Hola Fernando, he visto la tarjeta de Ferjusanz y quería información de: ')}" rel="nofollow">${I.wa}<span>Escribir a Fernando por WhatsApp <small>(${fer.ver})</small></span></a>
     <a class="btn btn-wa" href="${wa('34609567354', 'Hola, he visto la tarjeta de Ferjusanz y quería información de: ')}" rel="nofollow">${I.wa}<span>O a Fernando hijo <small>(609 567 354)</small></span></a>
@@ -845,7 +862,7 @@ function super9() {
   <h2>Ferjusanz · patatas, frutas, verduras, huevos, setas, champiñones y legumbres</h2>
   <p>Empresa familiar, tercera generación, ${ANIOS} sirviendo a hostelería y colectividades de Madrid y Segovia. Agricultores de confianza y Mercamadrid, reparto de lunes a sábado y sin pedido mínimo.</p>
   <div class="acciones apiladas"><a class="btn btn-wa" href="${wa(fer.num, 'Hola Fernando, vengo de parte de Super 9 y quería información de: ')}" rel="nofollow">${I.wa}<span>WhatsApp de Fernando <small>(${fer.ver})</small></span></a></div>
-  ${qr('Imagine su primer pedido y le calculamos su tarifa', '/tarjeta/#primer-pedido')}
+  ${qr('Imagine su primer pedido y le calculamos su tarifa', TARIFA + '#primer-pedido')}
   ${qr('Ver las ofertas de la semana', '/')}
 </div></section>`;
   return plantilla({ ruta: '/super9/', titulo: 'Ferjusanz y Super 9 Carnicerías | Proveedores recomendados', descripcion: 'Ferjusanz (patatas, frutas, verduras, huevos, setas, champiñones y legumbres) y Super 9 Carnicerías (carne): dos proveedores de confianza para hostelería en Madrid.', cuerpo, datos: [NEGOCIO] });
@@ -1009,6 +1026,8 @@ for (const p of [...paginas, ...NUEVAS]) {
 }
 escribir('/buscar/', paginaBuscar());
 escribir('/tarjeta/', tarjeta());
+escribir(TARIFA, calcularTarifa());
+sitemap.push([TARIFA, '2026-11-26']);
 escribir('/super9/', super9()); // tarjeta de socios, fuera del mapa del sitio
 escribir('/novedades/', paginaNovedades());
 sitemap.push(['/novedades/', (ultimasNovedades[0]?.fecha || '').slice(0, 10)]);
