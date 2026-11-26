@@ -1,6 +1,6 @@
 # Correo a medios y periodistas del sector (26/11/2026)
 _Tito (26/11/2026): «Localízalos y le envías un correo dando la posibilidad de colaborar con nosotros. Enviamos los artículos que nos pida a lo largo de la semana»._
-Se manda uno a uno (no en copia oculta), desde ferjusanzfacturas@gmail.com. `[saludo]` = «Hola, [nombre]:» si hay nombre, si no «Buenos días:». `[tema]` = una frase según lo que publique el medio.
+Se manda uno a uno (no en copia oculta), desde ferjusanzfacturas@gmail.com. `[saludo]` = «Hola, [nombre]:» si hay nombre, si no «Buenos días:». `[tema]` = una frase según lo que publique el medio. Adjuntos: `Ferjusanz-articulo-granada.docx` y `Ferjusanz-granada-foto.jpg` (texto en `articulo-prensa-granada.md`).
 
 **Asunto:** Artículos de fruta, verdura y patata para [medio], desde Mercamadrid
 
@@ -15,6 +15,8 @@ He visto que en [medio] [tema], y me gustaría ofrecerles colaborar con artícul
 - Qué patata pedir para freír, para guisar o para puré, y cuándo compensa la patata pelada.
 - Fruta y verdura en comedores escolares y residencias con el nuevo Real Decreto de menús.
 - Los errores más comunes al comprar y guardar el género en una cocina.
+
+Les adjunto un ejemplo que no está publicado en ningún sitio: «La granada, la fruta roja que llega a la mesa de Navidad», con una foto nuestra del puesto. Si les encaja, pueden publicarlo tal cual o adaptarlo.
 
 Son gratuitos y los escribimos a la medida de su medio: si me dicen qué tema les interesa, se lo enviamos a lo largo de la semana. También podemos mandar fotos del mercado y del género.
 
