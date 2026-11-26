@@ -567,7 +567,7 @@ ${bandaResena()}
 </section>`;
   return plantilla({
     ruta: '/', precarga: '/fotos/verduras-gourmet-hosteleria.jpg',
-    titulo: 'Mayorista de fruta y verdura en Madrid para hostelería | Ferjusanz',
+    titulo: 'Proveedor y mayorista de fruta y verdura en Madrid | Ferjusanz',
     descripcion: `Proveedor mayorista de patatas, frutas, verduras, huevos, setas, champiñones y legumbres para restaurantes, hoteles, colegios, residencias y colectividades en Madrid. Solicite tarifa.`,
     cuerpo,
     datos: [NEGOCIO, { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Ferjusanz', url: DOMINIO + '/' },
