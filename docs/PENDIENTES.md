@@ -3,7 +3,7 @@ _Solo lo que **falta**. Regla de Fernando (14/11/2026): «Cada vez que hagamos a
 _Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda · ⏸ en espera._
 
 ## 🧾 FACTURAS DE PROVEEDOR
-- 🔴 **Tito: ¿se borran de «Facturas recibidas» los 17 archivos que no son facturas?** (26/11/2026: correos comerciales de Ferjusanz con sus PDF, 4 fotos de patatas de Verduyn, 2 papeles del despido de Evolution y un PDF de Tito). Ya no salen a nombre de Carlos Gómez; quedan «sin proveedor». Borrar necesita su «sí». Además, el Gmail de facturas no debería mandar a la bandeja los correos que envía la propia empresa ni las fotos sin factura (el filtro está en el Gmail, no en el repositorio).
+- 🟡 **El Gmail de facturas no debería mandar a «Facturas recibidas» los correos que envía la propia empresa ni fotos sin factura** (26/11/2026). El filtro está en el Gmail (no en el repositorio).
 
 ## 🤝 CLIENTES (Tito, 24/11/2026, dictado conduciendo)
 - 🔴 **Lista semanal automática de precios para Los Barriletes y Florencio** (Tito, 26/11/2026: se les ha prometido que cada semana les llega su lista actualizada). Falta decidir por dónde sale (WhatsApp o correo) y que Tito dé el visto bueno para mandar a clientes.
