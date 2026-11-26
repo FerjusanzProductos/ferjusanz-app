@@ -17,7 +17,7 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - La ganancia de cada patata se calcula con SU precio de compra.
 
 ### Cambio de temporada (09-F → 01-F) — solo cuando Fernando lo pida
-1. `public/index.html`: `const PATATA_GENERAL = '01-F';` (y subir la versión en `public/sw.js`), publicar.
+1. `public/index.html`: `const PATATA_GENERAL = '01-F';` (y subir la versión en `public/sw.js`), publicar. También en `supabase/functions/whatsapp/index.ts` (`afinar`, `"09-F"`) y volver a subir la función.
 2. Supabase: activar 01-F; en `lineas_habituales` cambiar producto 09-F → 01-F; en los previstos sin confirmar, igual;
    desactivar 09-F cuando ya no queden pedidos con ella. Copiar a 01-F el precio de compra vigente.
 3. Avisar a la secretaria para que use 01-F en Golden.

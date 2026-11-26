@@ -65,7 +65,7 @@ async function clientes(sb: SB) {
   if (CLIENTES) return CLIENTES;
   const todos = [];
   for (let desde = 0; desde < 20000; desde += 1000) {
-    const { data, error } = await sb.from("clientes").select("id,codigo,nombre,nombre_comercial,alias,telefono,activo").range(desde, desde + 999);
+    const { data, error } = await sb.from("clientes").select("id,codigo,nombre,nombre_comercial,alias,telefono,activo,notas").range(desde, desde + 999);
     if (error) throw error;
     todos.push(...(data || [])); if ((data || []).length < 1000) break;
   }
@@ -190,12 +190,15 @@ async function habitual(sb: SB, codigo: string) {
 }
 type Linea = { producto_id: string | null; producto: string; cantidad: number | null; unidad: string | null; dijo?: string };
 // Con el pedido ya leído y el cliente sabido, la IA elige de lo que suele comprar en Golden. No cambia cantidades.
-async function afinar(sb: SB, cliente: { codigo: string; nombre: string; nombre_comercial?: string }, lineas: Linea[], texto: string | null, idsValidos: Set<string>) {
+async function afinar(sb: SB, cliente: { codigo: string; nombre: string; nombre_comercial?: string; notas?: string | null }, lineas: Linea[], texto: string | null, idsValidos: Set<string>) {
   const hab = await habitual(sb, cliente.codigo);
   if (!hab.length) return null;
+  // La patata general (Yeli) va a todos aunque en Golden salga como agria. Cambio de temporada: 09-F → 01-F (REGLAS_INTERNAS).
+  const { data: pg } = await sb.from("productos").select("id,nombre,unidad_venta").eq("codigo", "09-F").maybeSingle();
+  if (pg && !hab.some((h) => h.id === pg.id)) hab.push({ id: pg.id, nombre: pg.nombre.replace(/\s+/g, " "), unidad: pg.unidad_venta || "", veces: 0, media: 0 });
   const prompt = `Eres de la oficina de FERJUSANZ (mayorista de fruta y verdura). Un cliente ha pedido por WhatsApp y ya está leído. Ayúdame a apuntarlo con lo que este cliente compra de verdad.
 Cliente: ${cliente.nombre_comercial || cliente.nombre} (${cliente.codigo}).
-Lo que compra en Golden el último año (id|producto|unidad|veces|cantidad media):
+${cliente.notas ? `Notas de la oficina sobre este cliente (mandan sobre lo de Golden): ${cliente.notas}\n` : ""}Lo que compra en Golden el último año (id|producto|unidad|veces|cantidad media):
 ${hab.map((h) => `${h.id}|${h.nombre}|${h.unidad}|${h.veces}|${h.media}`).join("\n")}
 Mensaje: ${texto || "(sin texto)"}
 Pedido leído (i|producto como lo dijo|cantidad|unidad|producto_id actual):
