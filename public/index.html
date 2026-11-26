@@ -6045,7 +6045,7 @@ async function vistaWhatsapp() {
         h('button', { class: 'ghost small', 'aria-label': 'Quitar línea', onclick: () => div.remove() }, '✖'));
       div._leer = () => { const n = prod.value.trim(); if (!n) return null; const c = parseFloat(cant.value.replace(',', '.'));
         // shortcut: si cambia el nombre se pierde el producto del catálogo (sale ❓); se elige al apuntarlo
-        return { cantidad: isNaN(c) ? null : c, unidad: uni.value.trim() || null, producto: n, producto_id: n === (o.producto || '') ? (o.producto_id || null) : null }; };
+        return { cantidad: isNaN(c) ? null : c, unidad: uni.value.trim() || null, producto: n, producto_id: n === (o.producto || '') ? (o.producto_id || null) : null, dijo: o.dijo || undefined }; };
       return div; };
     (Array.isArray(x.lineas) ? x.lineas : []).forEach(l => filas.append(fila(l)));
     const fecha = h('input', { type: 'date', value: x.fecha_entrega || '' });
@@ -6074,7 +6074,7 @@ async function vistaWhatsapp() {
         h('div', { class: 'fila' }, h('div', { class: 'nombre' }, c ? nombreCli(c) : '⚠️ Sin cliente' + (x.cliente_texto ? ' («' + x.cliente_texto + '»)' : '')), h('span', { class: 'badge' }, est)),
         h('div', { class: 'sub' }, fechaES(String(x.created_at).slice(0, 10)) + ' ' + fmtHora(x.created_at) + ' · ' + ({ audio: '🎤 audio', image: '📷 foto' }[x.tipo] || '✍️ texto') + ' · de ' + telES(x.telefono) + (x.nombre_contacto ? ' (' + x.nombre_contacto + ')' : '') + (x.reenviado ? ' · ↪️ reenviado por la casa' : '')),
         x.fecha_entrega ? h('div', { style: 'margin-top:6px;font-weight:700' }, '📅 Para el ' + fechaES(x.fecha_entrega)) : null,
-        lineas.length ? h('ul', { style: 'margin:6px 0 0 18px;padding:0;font-size:17px;line-height:1.5' }, lineas.map(l => h('li', {}, (l.cantidad != null ? l.cantidad + ' ' : '¿? ') + (l.unidad ? l.unidad + ' ' : '') + l.producto + (l.producto_id ? '' : ' ❓')))) : h('div', { class: 'sub', style: 'margin-top:6px' }, 'Sin productos leídos.'),
+        lineas.length ? h('ul', { style: 'margin:6px 0 0 18px;padding:0;font-size:17px;line-height:1.5' }, lineas.map(l => h('li', {}, (l.cantidad != null ? l.cantidad + ' ' : '¿? ') + (l.unidad ? l.unidad + ' ' : '') + l.producto + (l.producto_id ? '' : ' ❓') + (l.dijo ? ' · dijo «' + l.dijo + '»' : '')))) : h('div', { class: 'sub', style: 'margin-top:6px' }, 'Sin productos leídos.'),
         x.nota ? h('div', { class: 'aviso-card', style: 'margin-top:8px;white-space:pre-wrap' }, '📝 ' + x.nota) : null,
         x.error ? h('div', { class: 'sub', style: 'color:#b45309;margin-top:4px' }, '⚠️ ' + x.error) : null,
         (x.texto_original || x.transcripcion) ? h('details', { style: 'margin-top:6px' }, h('summary', { class: 'sub', style: 'cursor:pointer' }, 'Ver el mensaje original'),
