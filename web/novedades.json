@@ -466,5 +466,37 @@
   "texto": "El camión de Ferjusanz, preparado para salir con los pedidos del día.",
   "alt": "Listo para cargar",
   "driveId": "1PvCfGxtz8tL3vvxbzJxgxRgYeU-MKk66"
+ },
+ {
+  "fecha": "2026-11-26",
+  "foto": "/fotos/2026/11/novedad-2026-11-26-pimiento-verde-italiano.jpg",
+  "titulo": "Pimiento verde italiano",
+  "texto": "Pimiento verde largo y de carne fina: para freír, para guarnición y para pisto.",
+  "alt": "Pimiento verde italiano",
+  "driveId": "1OpbRIzs2BJUaGHytsuSvcfR7v0ewxjxN"
+ },
+ {
+  "fecha": "2026-11-26",
+  "foto": "/fotos/2026/11/novedad-2026-11-26-tomate-en-rama.jpg",
+  "titulo": "Tomate en rama",
+  "texto": "Tomate liso con su rama, rojo y firme: para ensalada, para asar entero o para servir en la mesa.",
+  "alt": "Tomate en rama",
+  "driveId": "1IHccGrqiUpqO27M4hxPkdP8hycj3cwUJ"
+ },
+ {
+  "fecha": "2026-11-26",
+  "foto": "/fotos/2026/11/novedad-2026-11-26-tomate-rosa-en-el-almacen.jpg",
+  "titulo": "Tomate rosa en el almacén",
+  "texto": "Cajas de tomate rosa recién llegadas: carne tierna y poca semilla, para ensaladas de temporada.",
+  "alt": "Tomate rosa en el almacén",
+  "driveId": "1eSXKKNwiOXTA4zntDxGZYXqkLlQyswSA"
+ },
+ {
+  "fecha": "2026-11-26",
+  "foto": "/fotos/2026/11/novedad-2026-11-26-alcachofas.jpg",
+  "titulo": "Alcachofas",
+  "texto": "Alcachofa de temporada en su caja: para guisos, a la plancha o como guarnición.",
+  "alt": "Alcachofas",
+  "driveId": "1AoQsRDlzbzn0Wrsv19a5jgglbY8c0FYb"
  }
 ]
