@@ -90,7 +90,7 @@ Públicos: 🏫 colegios · 👵 residencias · 🍽️ restaurantes y hoteles �
 | 27 | 07/01 | 🍽️ | Ensaladas de la carta en invierno: qué lechugas aguantan más | lechugas para restaurante |
 | 28 | 09/01 | 🏢 | Ley de desperdicio alimentario: qué cambia para comedores y bares ⚠️ | ley desperdicio alimentario hostelería |
 | 29 | 11/01 | 👵 | Fruta en la merienda de la residencia: ideas que se comen | merienda residencia de mayores |
-| 30 | 13/01 | 🏪 | Ferjusanz: tres generaciones en Mercamadrid (quiénes somos) | Ferjusanz Mercamadrid |
+| 30 | 13/01 | 🏪 | Ferjusanz: tres generaciones y más de 60 años de oficio (quiénes somos; no decir «60 años en Mercamadrid») | Ferjusanz Mercamadrid |
 | 31 | 15/01 | 🍽️ | Tomate todo el año en hostelería: para ensalada, salsa y tostada | tomate para hostelería |
 | 32 | 17/01 | 🏫 | Fruta para escuelas infantiles (0-3 años): tamaños y madurez | fruta para escuela infantil Madrid |
 | 33 | 19/01 | 🏢 | Presupuesto de fruta y verdura de un comedor: ahorrar sin bajar calidad | ahorrar fruta verdura comedor |

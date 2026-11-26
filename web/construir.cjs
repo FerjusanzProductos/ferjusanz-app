@@ -42,7 +42,7 @@ const bandaResena = () => `<section class="resena-banda" aria-label="Reseñas"><
 const bandaConfianza = () => `<section class="bloque" aria-label="Confianza"><div class="envoltura">
   <div class="bloque-cabeza"><div><p class="antetitulo">Confianza asegurada</p><h2>Confianza asegurada: por qué pueden fiarse de nosotros</h2></div></div>
   <ul class="ventajas">
-    <li>${I.familia}<strong>Más de 60 años en Mercamadrid</strong><span>Empresa familiar, ya en la tercera generación. Elegimos el género cada madrugada: la calidad manda.</span></li>
+    <li>${I.familia}<strong>Más de 60 años de experiencia</strong><span>Empresa familiar, ya en la tercera generación, y décadas en Mercamadrid eligiendo el género cada madrugada: la calidad manda.</span></li>
     <li>${I.hoja}<strong>Paga lo que recibe</strong><span>Cada albarán lleva el peso real, el precio y el IVA. Sin pedido mínimo.</span></li>
     <li>${I.camion}<strong>Reparto en frío, de lunes a sábado</strong><span>Camiones y furgonetas refrigerados propios en Madrid y Segovia.</span></li>
     <li>${I.wa}<strong>Trato directo con la familia</strong><span>Pedidos hasta la tarde anterior por WhatsApp o teléfono, y le contesta una persona.</span></li>
