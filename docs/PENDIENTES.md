@@ -69,6 +69,7 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - 🟡 **Descuadres de caja (1.477 €)**: empezar a apuntar la caja en la app para que no vuelva a pasar.
 - 🟡 **Comidas (4.000 €) y gestorías (Delolegal 484 €/mes + Peco Rojo 121 €/mes + Fisconsa)**: Tito: decir qué es cada gestoría y si alguna sobra; poner una norma de dietas.
 - 🟡 **Personal**: preguntar a Jorge por Ángel (de baja; cuesta unos 7.500 € en 10 meses) y por el contrato de Dani (tiempo parcial al 75 % aunque trabaja como Cristian).
+- 🔴 **Objetivo comercial para pagar el almacén y lo que falta** (Tito, 26/11/2026): **6 clientes nuevos «grandes»** (≥ 1.000 €/mes; hoy 28 así dejan de media 895 €/mes de margen) **+ recuperar 5 de los 24 que han dejado de pedir** (entre todos dejaban ~4.000 €/mes de margen). Plazo: 6 meses. Sale de los 395 posibles clientes que ya hay en Comercial (138 colegios, 65 residencias, 123 restaurantes, 26 bares); 1 llamada o visita buena al día. Claude: seguir el avance cada mes en el Panel.
 - 🟡 **Almacén en Mercamadrid** (ver HISTORIAL 26/11/2026): no alquilar nave todavía. Paso 1: pedir a Ibérica Patatas (y a 2 más) precio por tráiler completo de patata agria y cebolla con entrega en varias veces; paso 2: pedir precio por palé y mes en un frigorífico de servicio de Mercamadrid (Friologic) o compartir espacio con otro mayorista; paso 3: solo si el ahorro pasa de ~1.200 €/mes, nave pequeña (150-200 m², ~900-1.600 €/mes).
 
 ## 📱 LA APP
