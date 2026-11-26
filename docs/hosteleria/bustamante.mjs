@@ -10,7 +10,7 @@ const img = f => { const o = `${tmp}/${f.replace(/\W/g, '_')}.jpg`; // fotos red
 const e = n => n.toFixed(2).replace('.', ',') + ' €';
 // [nombre, precio, unidad, compra, foto]
 const tomates = [
-  ['Tomate RAF', 2.00, 'kg', 1.80, 'catalogo/09-tomate-raf.jpg'], ['Tomate de ensalada (asurcado)', 1.40, 'kg', 1.20, 'catalogo/45-tomate-asurcado.jpg'], ['Tomate rosa', 3.50, 'kg', 3.30, 'catalogo/10-tomate-rosa.jpg'],
+  ['Tomate RAF', 2.00, 'kg', 1.80, 'catalogo/09-tomate-raf.jpg'], ['Tomate de ensalada', 1.40, 'kg', 1.20, 'catalogo/45-tomate-asurcado.jpg'], ['Tomate rosa', 3.50, 'kg', 3.30, 'catalogo/10-tomate-rosa.jpg'],
   ['Tomate en rama', 1.70, 'kg', 1.50, '2026/11/novedad-2026-11-26-tomate-en-rama.jpg'], ['Cherry de colores', 4.95, 'kg', 4.75, 'catalogo/13-tomate-cherry-de-colores.jpg'],
 ];
 const setas = [
@@ -18,7 +18,7 @@ const setas = [
   ['Boletus y níscalos', null, 'según mercado', null, 'catalogo/27-boletus.jpg'],
 ];
 const resto = [
-  ['Tomate pera', 1.20, 'kg', 1.00], ['Tomate RAF extra', 4.70, 'kg', 4.50], ['Zanahoria', 0.80, 'kg', 0.60], ['Calabacín', 0.90, 'kg', 0.70], ['Berenjena', 0.80, 'kg', 0.60], ['Pimiento italiano', 2.00, 'kg', 1.80],
+  ['Zanahoria', 0.80, 'kg', 0.60], ['Calabacín', 0.90, 'kg', 0.70], ['Berenjena', 0.80, 'kg', 0.60], ['Pimiento italiano', 2.00, 'kg', 1.80],
   ['Pimiento rojo', 1.30, 'kg', 1.10], ['Limones', 1.20, 'kg', 1.00], ['Plátano', 1.90, 'kg', 1.70], ['Melón piel de sapo', 1.70, 'kg', 1.50],
   ['Piña', 1.70, 'kg', 1.50], ['Mezclum (ensalada gourmet)', 2.15, 'bolsa', 1.95], ['Repollo', 0.95, 'kg', 0.75], ['Cebolla morada', 1.40, 'kg', 1.20],
   ['Puerro', 1.45, 'kg', 1.25], ['Cebollino', 1.70, 'manojo', 1.50],
@@ -28,10 +28,12 @@ const marzo = [['Patata agria', 175, .46, .58], ['Tomate pera', 32, 1.50, 1.20],
   ['Calabacín', 10.8, 1.60, .90], ['Berenjena', 8.5, 2.20, .80], ['Pimiento italiano', 10.3, 2.25, 2.00], ['Limones', 10.5, 1.70, 1.20],
   ['Plátano', 10, 2.30, 1.90], ['Melón', 12, 2.30, 1.70], ['Piña', 9, 1.70, 1.70], ['Mezclum', 6, 2.90, 2.15], ['Zanahoria', 5, 1.00, .80],
   ['Repollo', 3, 1.00, .95], ['Cebollino', 1, 2.20, 1.70]];
+const lista = [tomates[1], ['Tomate pera', 1.20, 'kg', 1.00], tomates[0], ['Tomate RAF extra', 4.70, 'kg', 4.50], ...tomates.slice(2), ...setas.filter(x => x[1] != null), ...resto];
+console.assert(new Set(lista.map(x => x[0])).size === lista.length, 'sin repetidos');
 const mA = marzo.reduce((s, r) => s + r[1] * r[2], 0), mN = marzo.reduce((s, r) => s + r[1] * r[3], 0);
-console.assert([...tomates, ...setas, ...resto].every(([, p, , c]) => p == null || Math.abs(p - c - 0.20) < 0.001), 'todo a compra + 0,20');
+console.assert([...tomates, ...setas, ...resto, ['', 1.20, '', 1.00], ['', 4.70, '', 4.50]].every(([, p, , c]) => p == null || Math.abs(p - c - 0.20) < 0.001), 'todo a compra + 0,20');
 const pat = 0.58;
-const tarj = l => l.map(([n, p, u, , f]) => `<div class=c><img src="${img(f)}"><b>${n}</b><span>${p == null ? u : e(p) + ' / ' + u}</span></div>`).join('');
+const tarj = l => l.map(([n, , , , f]) => `<div class=c><img src="${img(f)}"><b>${n}</b></div>`).join(''); // fotos sin precio: cada precio sale una sola vez, en la lista
 const html = `<!doctype html><meta charset=utf-8><style>
 @page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;font:13px/1.45 Arial,sans-serif;color:#2a2320}a{color:inherit;text-decoration:none}
 .top{background:#7a1f1f;color:#fff;padding:8mm 13mm 6mm}.top h1{margin:0;font-size:28px;letter-spacing:1px}.top p{margin:2px 0 0;color:#f6dcc8;font-size:12px}
@@ -51,20 +53,16 @@ td.p{text-align:right;font-weight:bold;font-size:15px;white-space:nowrap;color:#
 <p>Hola, Bustamante, buenos días:</p>
 <p>Hace tiempo que no trabajamos juntos y me gustaría volver a hacerlo. Te paso tu lista nueva. <b>Ahora llevo yo las riendas</b>: los precios los manejo yo, y te los he puesto <b>muy ajustados</b>, casi a lo que nos cuesta a nosotros en Mercamadrid. Quiero que estés contento con nosotros y tratarte bien, para que no te haga falta mirar otras alternativas.</p>
 <div class=pat><img src="${img('catalogo/01-patata-en-saco.jpg')}"><b>Patata agria</b><span>${e(pat)} / kg</span><small>Saco de 25 kg: ${e(pat * 25)}</small></div>
-<h2>Tomates: muchas variedades, y bonitos</h2>
+<h2>Nuestro género: tomates de muchas variedades, y bonitos</h2>
 <div class=g>${tarj(tomates)}</div>
-<h2>Setas y champiñones</h2>
-<div class=g>${tarj(setas)}</div>
+<div class=g style="margin-top:3mm">${tarj(setas)}</div>
 </div>
 <div class=pg>
-<h2>Y el resto, igual de ajustado</h2>
-<table>${resto.map(([n, p, u]) => `<tr><td>${n}</td><td class=p>${e(p)}</td><td class=u>/ ${u}</td></tr>`).join('')}
-<tr><td>Ñoras</td><td class=p>según mercado</td><td class=u>ristra</td></tr><tr><td>Perejil</td><td class=p>de regalo</td><td class=u>con el pedido</td></tr></table>
+<h2>Tus precios</h2>
+<table>${lista.map(([n, p, u]) => `<tr><td>${n}</td><td class=p>${e(p)}</td><td class=u>/ ${u}</td></tr>`).join('')}
+<tr><td>Ñoras, boletus y níscalos</td><td class=p>según mercado</td><td class=u></td></tr><tr><td>Perejil</td><td class=p>de regalo</td><td class=u>con el pedido</td></tr></table>
 <p class=nota>Precios + 4 % de IVA. Lo que no esté aquí, pídeme precio: lo tengo todo. Las fotos son de nuestro propio género (más en <a href="${W}/#ofertas"><b>ferjusanz-frutas-verduras.es</b></a>, con las ofertas de la semana).</p>
-<h2>Tu pedido del 4 de marzo, a precios de hoy</h2>
-<table><tr><td></td><td class=u>Marzo</td><td class=p style="font-size:12px">Hoy</td></tr>${marzo.map(([n, q, a, b]) => `<tr><td>${n} · ${String(q).replace('.', ',')}</td><td class=u>${e(a)}</td><td class=p>${e(b)}</td></tr>`).join('')}
-<tr><td><b>Total</b> (ñoras y perejil aparte)</td><td class=u>${e(mA)}</td><td class=p>${e(mN)}</td></tr></table>
-<p class=nota>Kilos (o bolsas) de aquel pedido; precios sin IVA.</p>
+<div class=box><p style="margin:0">Tu último pedido (4 de marzo) te costó <b>${e(mA)}</b>. Con estos precios te habría salido por <b>${e(mN)}</b>.</p></div>
 <h2>Tú sabes siempre lo que vas a pagar</h2>
 <div class=box><p style="margin:0">Hazme el pedido <b>con tiempo, el día antes</b>, y yo mismo te apunto <b>a cuánto te sale cada cosa y el total</b> antes de llevártelo. Sin sorpresas en la factura.</p></div>
 <p>Pídeme lo que necesites a este mismo WhatsApp. Te voy a tratar bien.</p>
