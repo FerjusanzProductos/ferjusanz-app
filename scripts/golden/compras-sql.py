@@ -55,4 +55,6 @@ u as (insert into golden_tesoreria (contador,tipo,estado,vencimiento,total,serie
   where (golden_tesoreria.estado, golden_tesoreria.vencimiento, golden_tesoreria.total, golden_tesoreria.fecha_cobro_pago, golden_tesoreria.observacion, golden_tesoreria.observacion_partes, golden_tesoreria.observacion_aviso) is distinct from (excluded.estado, excluded.vencimiento, excluded.total, excluded.fecha_cobro_pago, excluded.observacion, excluded.observacion_partes, excluded.observacion_aviso)
   returning (xmax = 0) nuevo)
 select count(*) filter (where nuevo) vencimientos_nuevos, count(*) filter (where not nuevo) vencimientos_al_dia from u;""")
+    # Factura anulada por rectificativa (abono del mismo importe): Golden la deja PEN; aquí 'AN' para que no salga como deuda (Tito, 26/11/2026).
+    partes.append(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'supabase', 'migrations', '20261226a_tesoreria_anuladas_rectificativa.sql'), encoding='utf-8').read())
 print('\n'.join(partes))
