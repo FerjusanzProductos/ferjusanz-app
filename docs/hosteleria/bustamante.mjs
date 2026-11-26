@@ -46,9 +46,9 @@ td.p{text-align:right;font-weight:bold;font-size:15px;white-space:nowrap;color:#
 .box{background:#fff6ee;border-left:4px solid #e8742b;padding:3mm 5mm;margin:3mm 0}.nota{font-size:11.5px;color:#666}
 .pie{margin-top:5mm;padding-top:3mm;border-top:2px solid #e8742b;font-size:11.5px;color:#555}.brk{break-before:page}</style>
 <div class=top><h1>FERJUSANZ</h1><p>Patatas, frutas, verduras, huevos, setas, champiñones y legumbres · Mercamadrid</p>
-<div class=para>Para Restaurante Club de Tenis · 26 de noviembre de 2026</div></div>
+<div class=para>Para Bustamante · Restaurante Club de Tenis · 26 de noviembre de 2026</div></div>
 <div class=pg>
-<p>Hola, buenos días:</p>
+<p>Hola, Bustamante, buenos días:</p>
 <p>Hace tiempo que no trabajamos juntos y me gustaría volver a hacerlo. Te paso tu lista nueva. <b>Ahora llevo yo las riendas</b>: los precios los manejo yo, y te los he puesto <b>muy ajustados</b>, casi a lo que nos cuesta a nosotros en Mercamadrid. Quiero que estés contento con nosotros y tratarte bien, para que no te haga falta mirar otras alternativas.</p>
 <div class=pat><img src="${img('catalogo/01-patata-en-saco.jpg')}"><b>Patata agria</b><span>${e(pat)} / kg</span><small>Saco de 25 kg: ${e(pat * 25)}</small></div>
 <h2>Tomates: muchas variedades, y bonitos</h2>
