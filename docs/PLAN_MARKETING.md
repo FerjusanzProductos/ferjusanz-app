@@ -107,7 +107,55 @@ Públicos: 🏫 colegios · 👵 residencias · 🍽️ restaurantes y hoteles �
 | 44 | 09/02 | 🏢 | Cocinas de hospital y centros de día: fruta y verdura que piden | fruta para hospitales Madrid |
 | 45 | 11/02 | 🗓️ | Primavera en la carta: primeras fresas, espárragos y habas | fruta de temporada primavera restaurante |
 
-**Ya publicados o en la cola `web/cola/` (23/11/2026), saltarlos**: 1, 3, 5, 6, 7, 8, 10, 11, 12 y 14. Cuando se vacíe la cola, seguir por el 2, 4, 9, 13, 15…
+**Ya publicados o en la cola `web/cola/` (23/11/2026), saltarlos**: 1, 3, 5, 6, 7, 8, 10, 11, 12 y 14. Cuando se vacíe la cola, **primero la tanda P** (abajo) y después seguir por el 2, 4, 9, 13, 15…
+
+### Tanda P: una pregunta de cliente, un artículo (Tito, 26/11/2026: «las preguntas que hacen jefes, cocineros, colegios, residencias, cocinas grandes… un artículo para cada una»)
+Todas contestadas en corto en la guía grande **`/blog/preguntas-proveedor-fruta-verdura-madrid-restaurantes-colegios/`** (35 preguntas, publicada el 26/11/2026). Cada artículo de esta tanda desarrolla **una** pregunta a fondo. **Va antes que la tabla de arriba**: al vaciarse la cola, la tarea automática publica la siguiente P que no esté hecha. El título lleva la pregunta tal como la buscaría el cliente; dentro, un `<h2>` con la pregunta y la respuesta corta en el primer párrafo (es lo que copia la respuesta de IA de Google), y luego el detalle. Al publicar, **enlazar el artículo nuevo desde la guía grande** (al final de la respuesta que corresponda, «Más en …»). ⚠️ = comprobar la norma antes de escribir; sin cifras inventadas (en las de cantidades, dar el método de cálculo, no números de Ferjusanz).
+
+| Nº | Para | Título (idea) | Búsqueda que queremos ganar |
+|---|---|---|---|
+| P1 | 🍽️ | ¿Qué preguntar a un proveedor de fruta y verdura antes de empezar? | qué preguntar a un proveedor de fruta y verdura |
+| P2 | 🍽️ | Mayorista de Mercamadrid o cash and carry: qué le sale mejor a un restaurante | mayorista o cash and carry restaurante |
+| P3 | 🏢 | ¿Hay pedido mínimo con un mayorista de fruta? Y por qué pedir poco y a menudo | pedido mínimo mayorista fruta Madrid |
+| P4 | 🍽️ | ¿Hasta qué hora se puede pedir la fruta para mañana? Pedidos fijos y de última hora | pedido fruta y verdura para mañana Madrid |
+| P5 | 🏢 | Por qué tu proveedor de fruta no publica precios (y cómo pedir el del día) | precio fruta y verdura mayorista hoy |
+| P6 | 🏢 | Cómo comparar dos tarifas de fruta y verdura sin que te la cuelen | comparar proveedores de fruta y verdura |
+| P7 | 🏢 | Qué IVA lleva la fruta, la verdura, la patata, las legumbres y los huevos | IVA fruta y verdura hostelería |
+| P8 | 🏢 | El albarán de fruta: peso real, báscula y qué revisar al recibir | revisar albarán fruta recepción mercancía |
+| P9 | 🍽️ | Qué patata comprar para freír, guisar y tortilla si solo quieres una | mejor patata para freír hostelería |
+| P10 | 🍽️ | ¿Compensa la patata pelada? La cuenta con mano de obra, merma y agua | patata pelada hostelería precio compensa |
+| P11 | 🍽️ | Cortes de patata pelada: bastón, dados, panadera, ensaladilla y al vacío | patata pelada cortada al vacío Madrid |
+| P12 | 🍽️ | Cebolla y ajo pelados para cocinas: cuánto duran y cuándo compensan | ajo pelado y cebolla pelada hostelería |
+| P13 | 🏫 | ¿Qué calibre de manzana y pera para un comedor escolar? El 24 y el 26 explicados | calibre fruta comedor escolar |
+| P14 | 🏫 | Fruta para escuelas infantiles: qué pedir por edades y cómo prepararla | fruta escuela infantil 0-3 años |
+| P15 | 👵 | Fruta blanda para mayores con problemas para masticar: cuál y cómo servirla | fruta para mayores que no pueden masticar |
+| P16 | 👵 | Cuántos kilos de fruta y verdura gasta una residencia por residente y semana ⚠️ | cantidad fruta verdura residencia por persona |
+| P17 | 🏢 | Cuántos kilos de verdura pedir para 100 menús: cálculo por plato | cantidad verdura por ración comedor |
+| P18 | 🏢 | Gramaje por ración de fruta y verdura en comedores colectivos ⚠️ | gramaje ración fruta comedor colectivo |
+| P19 | 🍽️ | Fruta de postre barata para el menú del día, semana a semana | postre barato menú del día fruta |
+| P20 | 🍽️ | Qué fruta y verdura aguanta más en la cámara de un bar | fruta que aguanta más en nevera restaurante |
+| P21 | 🍽️ | A qué temperatura guardar cada fruta y verdura en hostelería | temperatura conservación fruta y verdura hostelería |
+| P22 | 🍽️ | Cómo madurar aguacate, mango y plátano en la cocina sin que se pasen | madurar aguacate rápido restaurante |
+| P23 | 🍽️ | Setas silvestres en la carta: níscalo, boletus y seta de cardo, cuándo y cómo pedirlas | setas para restaurantes Madrid |
+| P24 | 🍽️ | Tomate para ensalada, para salsa y para tostada: cuál pedir de cada | tipos de tomate para hostelería |
+| P25 | 🍽️ | Lechugas para hostelería: iceberg, romana, hoja de roble y cuál aguanta más | lechuga para restaurantes |
+| P26 | 🍽️ | Naranja de zumo para bares: calibre, rendimiento y cuántas por vaso | naranja de zumo para bares calibre |
+| P27 | 🏢 | Huevos de gallina y de codorniz para cocinas: tamaños y cuántos pedir | huevos para restaurantes Madrid proveedor |
+| P28 | 🏢 | Legumbres para cocinas grandes: cuáles, en qué formato y cómo guardarlas | legumbres para colectividades Madrid |
+| P29 | 🏢 | Fruta y verdura ecológica para comedores: qué hay y cuándo compensa | fruta ecológica comedor escolar Madrid |
+| P30 | 🏢 | Fruta para hospitales y centros de día: madurez, calibre y alérgenos ⚠️ | proveedor fruta hospital Madrid |
+| P31 | 🏢 | Comedores de empresa: cómo pedir fruta y verdura para un menú que se coma | fruta y verdura comedor de empresa Madrid |
+| P32 | 🍽️ | Proveedor de fruta para hoteles: desayuno buffet, room service y eventos | proveedor fruta hoteles Madrid |
+| P33 | 🍽️ | Fruta para el desayuno buffet: cuánta pedir por huésped y cómo no tirarla | fruta desayuno buffet hotel cantidad |
+| P34 | 🏢 | Concursos y licitaciones de comedores: qué piden al proveedor de fruta ⚠️ | licitación suministro fruta comedor |
+| P35 | 🏢 | Registro sanitario y papeles de un proveedor de fruta: qué pedirle ⚠️ | registro sanitario proveedor fruta |
+| P36 | 🍽️ | Qué hacer cuando llega una caja mal: cómo reclamar al proveedor de fruta | reclamar proveedor fruta mercancía en mal estado |
+| P37 | 🏪 | Mercamadrid por dentro: horarios, quién compra y por qué madruga tu proveedor | horario Mercamadrid |
+| P38 | 🏪 | Fruta nacional o de importación: cuándo compensa cada una en la carta | fruta nacional o importación hostelería |
+| P39 | 🍽️ | Cómo bajar el gasto de fruta y verdura de un restaurante sin bajar calidad | ahorrar en fruta y verdura restaurante |
+| P40 | 🏢 | Proveedor de fruta y verdura en Las Rozas, Pozuelo, Majadahonda y Aravaca | proveedor fruta verdura Las Rozas Pozuelo |
+| P41 | 🏢 | Proveedor de fruta y verdura en Alcobendas, San Sebastián de los Reyes y Tres Cantos | proveedor fruta verdura Alcobendas |
+| P42 | 🏢 | Proveedor de fruta y verdura para hostelería en Segovia | proveedor fruta verdura hostelería Segovia |
 
 Después del 45: Claude añade la siguiente tanda aquí (temporada del mes y lo que cuente Fernando en sus notas de voz).
 **Lo que más ayuda**: una **nota de voz a la semana** de Fernando con algo del mercado (qué ha subido, un error de un cliente, qué piden los colegios). Se apunta en `web/LO_QUE_CUENTA_FERNANDO.md` y hace que los artículos no se parezcan a ningún otro.

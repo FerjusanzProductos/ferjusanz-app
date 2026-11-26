@@ -681,7 +681,14 @@ ${bandaResena()}
   return plantilla({ ruta: p.path, titulo: p.title, descripcion: p.description, imagen: p.ogImage, tipo: 'article', cuerpo, datos: [m.datos, {
     '@context': 'https://schema.org', '@type': 'BlogPosting', headline: titulo, datePublished: p.date, dateModified: p.modified || p.date,
     image: p.ogImage ? DOMINIO + p.ogImage : undefined, mainEntityOfPage: DOMINIO + p.path, description: p.description,
-    author: { '@type': 'Organization', name: 'Ferjusanz' }, publisher: { '@id': DOMINIO + '/#empresa' } }] });
+    author: { '@type': 'Organization', name: 'Ferjusanz' }, publisher: { '@id': DOMINIO + '/#empresa' } }, ...faqDe(p.html)] });
+}
+
+// Artículos de preguntas (<h3>¿…?</h3><p>…</p>): datos FAQPage para Google y los asistentes de IA (Tito, 26/11/2026).
+function faqDe(html) {
+  const qs = [...String(html).matchAll(/<h3>(¿[^<]+\?)<\/h3>\s*<p>([\s\S]*?)<\/p>/g)]
+    .map(([, q, r]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: r.replace(/<[^>]+>/g, '') } }));
+  return qs.length >= 3 ? [{ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: qs }] : [];
 }
 
 function contacto(p) {
