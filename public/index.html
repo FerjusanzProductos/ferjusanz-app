@@ -6095,8 +6095,16 @@ async function vistaWhatsapp() {
       const cant = h('input', { type: 'text', inputmode: 'decimal', value: o.cantidad != null ? String(o.cantidad).replace('.', ',') : '', placeholder: 'Cant.', style: 'width:64px' });
       const uni = h('input', { type: 'text', value: o.unidad || '', placeholder: 'kg, saco…', style: 'width:80px' });
       const prod = h('input', { type: 'text', value: o.producto || '', placeholder: 'Producto y variedad', style: 'flex:1;min-width:0' });
-      const div = h('div', { style: 'display:flex;gap:6px;align-items:center;margin-bottom:6px' }, cant, uni, prod,
-        h('button', { class: 'ghost small', 'aria-label': 'Quitar línea', onclick: () => div.remove() }, '✖'));
+      /* Mientras se escribe, salen los productos del catálogo; al elegir uno queda enlazado (sin ❓) */
+      const sug = h('div', { class: 'res', style: 'margin:-2px 0 6px' });
+      prod.oninput = debounce(async () => {
+        const q = prod.value.trim(); if (q.length < 2) { sug.replaceChildren(); return; }
+        try { if (!productosCache) { const r = await sb.from('productos').select('*').range(0, 4999); if (r.error) throw r.error; productosCache = r.data.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')); } } catch (e) { return; }
+        const ps = filtraBusca(productosCache.filter(p => p.activo), q, p => p.nombre + ' ' + (p.codigo || '') + ' ' + (Array.isArray(p.alias) ? p.alias.join(' ') : '')).slice(0, 6);
+        sug.replaceChildren(...ps.map(p => h('button', { onclick: () => { prod.value = o.producto = p.nombre; o.producto_id = p.id; if (!uni.value.trim()) uni.value = p.unidad_venta || ''; sug.replaceChildren(); } }, p.nombre)));
+      }, 200);
+      const div = h('div', {}, h('div', { style: 'display:flex;gap:6px;align-items:center;margin-bottom:6px' }, cant, uni, prod,
+        h('button', { class: 'ghost small', 'aria-label': 'Quitar línea', onclick: () => div.remove() }, '✖')), sug);
       div._leer = () => { const n = prod.value.trim(); if (!n) return null; const c = parseFloat(cant.value.replace(',', '.'));
         // shortcut: si cambia el nombre se pierde el producto del catálogo (sale ❓); se elige al apuntarlo
         return { cantidad: isNaN(c) ? null : c, unidad: uni.value.trim() || null, producto: n, producto_id: n === (o.producto || '') ? (o.producto_id || null) : null, dijo: o.dijo || undefined }; };
