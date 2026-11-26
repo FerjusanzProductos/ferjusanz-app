@@ -17,7 +17,7 @@ const mes = f => new Date(f + 'T12:00:00').toLocaleDateString('es-ES', { month: 
 // «A cuenta» en la nota de Golden = ya pagado (Tito, 24/11/2026): «total» pasa a ser lo que de verdad queda por cobrar; «factura», el total de la factura.
 const COBROS = `(select tipo, estado, vencimiento, serie, numero, fecha_factura, nombre, codigo, total factura,
   greatest(0, total - coalesce((select sum((p->>'importe')::numeric) from jsonb_array_elements(t.observacion_partes) p), 0)) total from golden_tesoreria t) c`;
-const [[g], ventas, deudores, recibos, [cob], [pag], [prov], [cli], tareas] = await Promise.all([
+const [[g], ventas, deudores, recibos, [cob], [pag], [prov], [cli], tareas, perdidos] = await Promise.all([
   sql(`select max(fecha)::text hasta from golden_facturas where not borrador`),
   sql(`select date_trunc('month', fecha)::date::text m, sum(base) base,
          sum(base) filter (where coste > 0) base_c, sum(coste) filter (where coste > 0) coste
@@ -46,6 +46,13 @@ const [[g], ventas, deudores, recibos, [cob], [pag], [prov], [cli], tareas] = aw
   sql(`select count(*) filter (where activo) activos from clientes`),
   sql(`select 'Mercado' t, max(fecha)::text f from resumen_mercado union all select 'Comercial del día', max(fecha)::text from resumen_comercial
        union all select 'Posibles clientes', max(fecha)::text from resumen_leads union all select 'Plan de la semana', max(fecha)::text from resumen_semana`),
+  // Han dejado de pedir: compraron en 3+ meses y llevan 45+ días sin factura. Por nombre: un mismo cliente puede tener varios códigos en Golden.
+  sql(`select max(cliente_nombre) nombre, max(fecha)::text ultima, round(sum(base) / count(distinct date_trunc('month', fecha))) al_mes,
+         current_date - max(fecha) dias
+       from golden_facturas where not borrador and fecha >= current_date - interval '18 months'
+       group by upper(trim(cliente_nombre))
+       having count(distinct date_trunc('month', fecha)) >= 3 and max(fecha) < current_date - 45
+       order by 3 desc limit 15`),
 ]);
 
 /* 📅 Avisos de cobro (Tito, 24/11/2026): cuándo le toca pagar a cada cliente según su ficha (pago_frecuencia/pago_dia) o, si no está apuntado, supuesto
@@ -71,6 +78,9 @@ const filasVentas = ventas.map((v, i) => {
   return `<tr><th scope="row">${mes(v.m)}${ultimo ? '*' : ''}</th>
 <td class="barra"><span style="width:${Math.round(Number(v.base) / maxBase * 100)}%"></span></td><td>${eur(v.base)}</td><td>${margen}</td></tr>`;
 }).join('\n');
+const maxPerd = Math.max(...perdidos.map(p => Number(p.al_mes) || 0), 1);
+const filasPerdidos = perdidos.map(p => `<tr><th scope="row">${esc((p.nombre || '').trim())}<br><small>última: ${fecha(p.ultima)} (${p.dias} días)</small></th>
+<td class="barra"><span style="width:${Math.round(Number(p.al_mes) / maxPerd * 100)}%"></span></td><td>${eur(p.al_mes)}</td></tr>`).join('\n');
 const hoy = new Date(), mesNombre = d => d.toLocaleDateString('es-ES', { month: 'long' });
 const mesPasado = mesNombre(new Date(hoy.getFullYear(), hoy.getMonth() - 1, 15)), mesActual = mesNombre(hoy);
 const filasDeuda = deudores.map(d => {
@@ -101,6 +111,7 @@ h2{font-size:1.1rem;margin:12px 0 6px}
 table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
 th,td{padding:5px 4px;text-align:right;white-space:nowrap}
 th[scope=row]{text-align:left;font-weight:500}
+.perd th[scope=row]{white-space:normal;overflow-wrap:anywhere}.perd td.barra{min-width:30px;width:30%}
 thead th{font-size:.8rem;color:var(--muted);font-weight:500}
 td.barra{width:100%;min-width:40px}
 th,td{font-size:.95rem}
@@ -146,6 +157,12 @@ ${filasDeuda || '<p>Nada vencido.</p>'}</section>
 
 <section><h2>🎯 Clientes</h2>
 <p>Clientes activos: <b>${cli.activos}</b>. Posibles clientes, a quién llamar y web: en <a href="https://claude.ai/artifact/WomsAtCVCe1cqaQCwqd9Wh">Comercial Ferjusanz</a>.</p></section>
+
+<section class="perd"><h2>📉 Han dejado de pedir</h2>
+<p class="pie">Compraban (3 meses o más) y llevan más de 45 días sin factura en Golden. Ordenados por lo que gastaban al mes (sin IVA): los de arriba son los que más vale la pena llamar.</p>
+<table><thead><tr><th></th><th></th><th>Al mes</th></tr></thead><tbody>
+${filasPerdidos || '<tr><td>Ninguno.</td></tr>'}
+</tbody></table></section>
 
 <section><h2>🤖 Lo último de los ayudantes</h2>
 <ul>${tareas.map(t => `<li>${t.t}: ${t.f ? 'del ' + fecha(t.f) : 'todavía no hay'}</li>`).join('')}</ul>
