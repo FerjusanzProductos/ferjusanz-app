@@ -1018,6 +1018,8 @@ function isNetErr(e) {
 const esOficina = () => !!state.perfil && ['oficina', 'admin'].includes(state.perfil.rol);
 const veMargenes = () => !!state.perfil && !!state.perfil.ve_margenes;
 /* Cobros y pagos de Golden: los de márgenes y además los de la lista ver_cobros (Fernando, 18/11/2026: «Carmen tiene que ver deudas 100%») */
+/* Nóminas y Seguridad Social: solo la lista ver_sueldos (Tito, 26/11/2026: Jorge, su padre, Juli y él) */
+const veSueldos = () => !!state.perfil && !!state.perfil.ve_sueldos;
 const veCobros = () => veMargenes() || (!!state.perfil && !!state.perfil.ve_cobros);
 const ESTADO = { pendiente: 'Pendiente', en_preparacion: 'En preparación', terminado: 'Terminado', anulado: 'Anulado' };
 const CLASE_ESTADO = { pendiente: 'pend', en_preparacion: 'prep', terminado: 'fin', anulado: 'pend', previsto: 'prev' };
@@ -1397,7 +1399,7 @@ async function cargarPerfil(user) {
   const { data, error } = await sb.from('perfiles').select('id,nombre,rol,activo').eq('id', user.id).maybeSingle();
   if (error && isNetErr(error)) { const p = LS.get('fj_perfil', null); state.perfil = p && p.id === user.id ? p : null; return; }
   state.perfil = data && data.activo ? data : null;
-  if (state.perfil) { const vm = await sb.from('ver_margenes').select('user_id').eq('user_id', user.id).maybeSingle(); state.perfil.ve_margenes = !!(vm && vm.data); const vc = await sb.from('ver_cobros').select('user_id').eq('user_id', user.id).maybeSingle(); state.perfil.ve_cobros = !!(vc && vc.data); }  // margen y rentabilidad: solo los de la lista (Fernando, 18/11/2026)
+  if (state.perfil) { const vm = await sb.from('ver_margenes').select('user_id').eq('user_id', user.id).maybeSingle(); state.perfil.ve_margenes = !!(vm && vm.data); const vs = await sb.from('ver_sueldos').select('user_id').eq('user_id', user.id).maybeSingle(); state.perfil.ve_sueldos = !!(vs && vs.data); const vc = await sb.from('ver_cobros').select('user_id').eq('user_id', user.id).maybeSingle(); state.perfil.ve_cobros = !!(vc && vc.data); }  // margen y rentabilidad: solo los de la lista (Fernando, 18/11/2026)
   LS.set('fj_perfil', state.perfil);
 }
 function vistaLogin() {
@@ -6233,7 +6235,7 @@ function vistaMas() {
     ...g('Entregas y pedidos', c('🚦', 'Camino de los pedidos', () => go('camino'), '#2f7d4a'), c('✅', 'Entregas', () => go('entregas'), '#2f7d4a'), c('🧾', 'Albaranes', () => go('albaranes'), '#2f7d4a'), c('📑', 'Lista de pedidos', () => go('pedidos'), '#2f7d4a'), esOficina() ? c('📥', 'Pedidos entrantes', () => go('whatsapp'), '#2f7d4a') : null, c('🗺️', 'Ruta', () => go('ruta'), '#2f7d4a')),
     ...g('Compras y mercancía', puedeCompras() ? c('📥', 'Facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }, A) : null, puedeCompras() ? c('🛒', 'Compras', () => go('compras'), A) : null, c('🔎', 'A quién compramos hoy', () => go('quien'), A), puedeCompras() ? c('🔎', 'Trazabilidad', () => go('traza'), A) : null),
     ...g('Clientes y productos', c('👥', 'Clientes', () => { window.__cliFiscal = false; go('clientes'); }, Z), c('🥬', 'Productos', () => go('catalogo'), Z), esOficina() ? c('🔎', 'Productos sin reconocer', () => go('sinreconocer'), Z) : null, esOficina() ? c('📐', 'Formatos', () => go('formatos'), Z) : null, c('🌐', 'Portal de clientes', () => go('paginasclientes'), Z), c('📇', 'Tarjetas', () => go('comercial', { tab: 'tarjetas' }), Z)),
-    ...g('Facturas y análisis', esOficina() ? c('📊', 'Panel de la empresa', () => go('panel'), Z) : null, esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() && FACTURAR_APP ? c('🧾', 'Facturas (desde la app)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('facturasapp'), Z) : null, esOficina() ? c('🏢', 'Datos de la empresa', () => go('empresa'), Z) : null, esOficina() ? c('🧾', 'Clientes sin datos para facturar', () => { window.__cliFiscal = true; go('clientes'); }, Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen y correo', () => go('resumen'), Z) : null, veMargenes() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, veCobros() ? c('💶', veMargenes() ? 'Margen y cobros (Golden)' : 'Cobros y pagos (Golden)', () => go('goldenmargen'), Z) : null, esOficina() && CAJA_APP ? c('💵', 'Caja (efectivo)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('caja'), Z) : null, esOficina() ? c('⛽', 'Gastos de reparto', () => go('gastosreparto'), Z) : null, esOficina() && BANCO_APP ? c('🏦', 'Banco' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('banco'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
+    ...g('Facturas y análisis', esOficina() ? c('📊', 'Panel de la empresa', () => go('panel'), Z) : null, esOficina() ? c('📤', 'Facturas para Golden', () => go('prefacturas'), Z) : null, esOficina() ? c('📄', 'Facturas de clientes', () => go('facturascli'), Z) : null, esOficina() && FACTURAR_APP ? c('🧾', 'Facturas (desde la app)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('facturasapp'), Z) : null, esOficina() ? c('🏢', 'Datos de la empresa', () => go('empresa'), Z) : null, esOficina() ? c('🧾', 'Clientes sin datos para facturar', () => { window.__cliFiscal = true; go('clientes'); }, Z) : null, esOficina() ? c('🗂️', 'Histórico de Golden', () => go('golden'), Z) : null, esOficina() ? c('📊', 'Resumen y correo', () => go('resumen'), Z) : null, veMargenes() ? c('📈', 'Rentabilidad', () => go('rentabilidad'), Z) : null, veCobros() ? c('💶', veMargenes() ? 'Margen y cobros (Golden)' : 'Cobros y pagos (Golden)', () => go('goldenmargen'), Z) : null, esOficina() && CAJA_APP ? c('💵', 'Caja (efectivo)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('caja'), Z) : null, esOficina() ? c('⛽', 'Gastos de reparto', () => go('gastosreparto'), Z) : null, veSueldos() && veMargenes() ? c('📒', 'Cuenta de resultados', () => go('pyg'), Z) : null, veSueldos() ? c('💼', 'Gastos de personal', () => go('personal'), Z) : null, esOficina() && BANCO_APP ? c('🏦', 'Banco' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), () => go('banco'), Z) : null, esOficina() ? c('📤', 'Informes para Jorge', () => go('gestoria'), Z) : null, esOficina() ? c('🤝', 'Comercial', () => go('comercial'), Z) : null, esOficina() ? c('💶', 'Tarifas nuevas', () => go('tarifas'), Z) : null),
     ...g('Cobros y deudas', c('💰', 'Cobros', () => go('cobros'), '#b7791f'), c('🧮', 'Deudas', () => go('deudas'), '#b7791f')),
     ...g('Equipo y avisos', c('💬', 'Chat', () => go('chat'), M, state.chatNoLeidos ? String(state.chatNoLeidos) : ''), c('📢', 'Avisos y ofertas', () => go('avisos'), M), c('⚠️', 'Incidencias', () => go('incidencias'), R),
       esOficina() ? c('⏱️', 'Fichajes', () => go('fichajes'), T) : null, c('❓', 'Ayuda y guía', () => go('ayuda'), T), c('👤', 'Mi perfil', () => go('perfil'), T), esOficina() ? c('🗄️', 'Archivo', () => go('archivo'), T) : null, esOficina() ? c('📝', 'Registro de cambios', () => go('registro'), R, '') : null, state.perfil.rol === 'admin' ? c('💾', 'Copia de seguridad', () => go('copia'), T, copiaVieja() ? '!' : '') : null)];
@@ -6245,6 +6247,25 @@ function vistaMas() {
   if (esp) {
     const pool = {}; defs.forEach(([, it]) => it.forEach(n => { pool[lab(n)] = n; })); const sacados = esp[1].filter(x => pool[x]);
     lista = [[esp[0], sacados.map(x => pool[x])]].concat(defs.map(([t, it]) => [t, it.filter(n => !sacados.includes(lab(n)))]));
+  }
+  /* Menús ordenados por tema (Tito, 26/11/2026: «Mejora todos los menús»): «Facturas y análisis» tenía 18 cosas mezcladas y «Cobros y deudas» solo una.
+     Nada se quita: cada botón se MUEVE a su grupo. Lo que no está en la lista se queda donde estaba. Jorge tiene su propio menú. */
+  if (modoV !== 'jorge') {
+    const TEMAS = [
+      ['Pedidos y entregas', ['Camino de los pedidos', 'Entregas', 'Albaranes', 'Lista de pedidos', 'Pedidos entrantes']],
+      ['Compras', ['Facturas de proveedores', 'Compras', 'A quién compramos hoy', 'Trazabilidad']],
+      ['Clientes y ventas', ['Clientes', 'Productos', 'Comercial', 'Tarifas nuevas', 'Portal de clientes', 'Tarjetas', 'Clientes sin datos para facturar', 'Productos sin reconocer', 'Formatos']],
+      ['Facturas', ['Facturas de clientes', 'Facturas para Golden', 'Facturas (desde la app)', 'Histórico de Golden', 'Informes para Jorge', 'Datos de la empresa']],
+      ['Dinero: cobros, banco y caja', ['Cobros', 'Deudas', 'Margen y cobros (Golden)', 'Cobros y pagos (Golden)', 'Banco', 'Caja (efectivo)', 'Gastos de reparto']],
+      ['Cifras de la empresa', ['Panel de la empresa', 'Cuenta de resultados', 'Gastos de personal', 'Rentabilidad', 'Resumen y correo']],
+      ['Equipo y avisos', ['Chat', 'Avisos y ofertas', 'Incidencias', 'Fichajes', 'Mi perfil', 'Ayuda y guía']],
+      ['Copias y registros', ['Copia de seguridad', 'Registro de cambios', 'Archivo']]];
+    const base = n => lab(n).replace(/ · PRUEBAS$/, '');
+    const tema = {}; TEMAS.forEach(([t, xs]) => xs.forEach(x => { tema[x] = t; }));
+    const fijos = esp ? lista.slice(0, 1) : [], resto0 = esp ? lista.slice(1) : lista, nuevos = new Map(TEMAS.map(([t]) => [t, []])), otros = [];
+    resto0.forEach(([t, it]) => it.forEach(n => { const d = tema[base(n)]; if (d && t !== 'Trabajo diario') nuevos.get(d).push(n); else { let o = otros.find(x => x[0] === t); if (!o) otros.push(o = [t, []]); o[1].push(n); } }));
+    nuevos.forEach((it, t) => it.sort((x, y) => TEMAS.find(z => z[0] === t)[1].indexOf(base(x)) - TEMAS.find(z => z[0] === t)[1].indexOf(base(y))));
+    lista = fijos.concat(otros.filter(([t]) => t === 'Trabajo diario'), [...nuevos].filter(([, it]) => it.length), otros.filter(([t]) => t !== 'Trabajo diario'));
   }
   /* Menú nuevo (por defecto): arriba, en grande, lo de cada día; debajo, todo lo demás en una rejilla compacta. Nada se quita: los botones se MUEVEN.
      Quien prefiera los círculos de antes puede volver a ellos (se recuerda en cada móvil). */
@@ -6274,7 +6295,7 @@ function vistaMas() {
     const grupos = lista.map(([t, it]) => [t, it.filter(n => !grandes.includes(n))]).filter(([, r]) => r.length);
     if (grupos.length) resto.push(h('div', { class: 'ini-tit' }, 'Todo lo demás'), h('div', { class: 'sub', style: 'margin:0 2px 2px' }, 'Toca un grupo para abrirlo.'));
     grupos.forEach(([t, r]) => resto.push(h('details', { class: 'ini-grupo', open: !!abiertos[t], ontoggle: e => { const o = LS.get('fj_ini_abiertos', {}); o[t] = e.target.open; LS.set('fj_ini_abiertos', o); } },
-      h('summary', {}, ({ 'Trabajo diario': '🧺 ', 'Entregas y pedidos': '🚚 ', 'Compras y mercancía': '🛒 ', 'Clientes y productos': '👥 ', 'Facturas y análisis': '🧾 ', 'Cobros y deudas': '💰 ', 'Equipo y avisos': '💬 ' }[t] || '') + t, h('span', { class: 'pend', style: 'display:none' }), h('span', { class: 'n' }, r.length + (r.length === 1 ? ' opción' : ' opciones'))), h('div', { class: 'rej' }, ...r))));
+      h('summary', {}, ({ 'Trabajo diario': '🧺 ', 'Entregas y pedidos': '🚚 ', 'Pedidos y entregas': '🚚 ', 'Compras y mercancía': '🛒 ', 'Compras': '🛒 ', 'Clientes y productos': '👥 ', 'Clientes y ventas': '👥 ', 'Facturas y análisis': '🧾 ', 'Facturas': '🧾 ', 'Cobros y deudas': '💰 ', 'Dinero: cobros, banco y caja': '💰 ', 'Cifras de la empresa': '📊 ', 'Equipo y avisos': '💬 ', 'Copias y registros': '🗄️ ' }[t] || '') + t, h('span', { class: 'pend', style: 'display:none' }), h('span', { class: 'n' }, r.length + (r.length === 1 ? ' opción' : ' opciones'))), h('div', { class: 'rej' }, ...r))));
   }
   /* Harvey (lo usa solo quien hace de comercial): abajo, con lo comercial, no entre el trabajo de cada día */
   { const i = modoV === 'jorge' ? -1 : banners.findIndex(x => x && x.classList && x.classList.contains('h2ban')); if (i >= 0) resto.push(h('div', { class: 'grupo' }, 'Comercial'), banners.splice(i, 1)[0]); }
@@ -10284,6 +10305,67 @@ function antesDeSalida() {
   });
 }
 /* Oficina: lo apuntado por los repartidores, y marcar el ticket cuando llega en el sobre */
+/* 💼 Gastos de personal: nóminas y Seguridad Social por trabajador y mes (solo lectura; lo mete Claude desde las nóminas, el RLC y el RNT) */
+function vistaPersonal() {
+  state.view = 'personal'; if (!veSueldos()) { go('inicio'); return; }
+  const box = h('div', {}, h('p', { class: 'vacio' }, 'Cargando…'));
+  $app.replaceChildren(shell('💼 Gastos de personal', box));
+  (async () => {
+    try {
+      const r = await sb.from('gastos_personal').select('*').order('mes', { ascending: false }).order('trabajador'); if (r.error) throw r.error;
+      if (!r.data.length) { box.replaceChildren(h('p', { class: 'vacio' }, 'Todavía no hay nóminas apuntadas.')); return; }
+      const meses = {}; r.data.forEach(x => (meses[x.mes] = meses[x.mes] || []).push(x));
+      const n = v => Number(v || 0);
+      // Beneficio del mes con Golden (solo quien ve márgenes): margen bruto − personal; faltan los demás gastos fijos.
+      const margenMes = (m, pers) => { const el = h('div', { class: 'sub', style: 'margin-top:8px' }, 'Calculando con Golden…');
+        const fin = hoy(new Date(+m.slice(0, 4), +m.slice(5, 7), 0));
+        Promise.all([sb.from('golden_facturas').select('base,coste').gte('fecha', m).lte('fecha', fin).eq('borrador', false).limit(5000),
+          sb.from('gastos_fijos').select('importe_mes').lte('desde', m).or('hasta.is.null,hasta.gte.' + m).eq('en_resultado', true)]).then(([r, gf]) => {
+          if (r.error) { el.textContent = ''; return; }
+          const fij = gf.error ? 0 : gf.data.reduce((a, x) => a + n(x.importe_mes), 0);
+          const c = r.data.filter(x => n(x.coste) > 0), v = r.data.reduce((a, x) => a + n(x.base), 0), mg = c.reduce((a, x) => a + n(x.base) - n(x.coste), 0);
+          el.replaceChildren(h('div', { class: 'fila' }, h('span', {}, 'Ventas Golden (IVA aparte)'), h('span', {}, eur(v) + ' €')), h('div', { class: 'fila' }, h('span', {}, 'Margen bruto'), h('span', {}, eur(mg) + ' €')),
+            h('div', { class: 'fila' }, h('span', {}, 'Personal'), h('span', {}, '− ' + eur(pers) + ' €')),
+            h('div', { class: 'fila' }, h('span', {}, 'Gastos (furgonetas, gasoil, gestoría, seguros, oficina…)'), h('span', {}, '− ' + eur(fij) + ' €')),
+            h('div', { class: 'fila' }, h('b', {}, 'Queda'), h('b', { style: 'color:' + (mg - pers - fij < 0 ? 'var(--rojo,#b91c1c)' : 'var(--verde,#15803d)') }, eur(mg - pers - fij) + ' €')),
+            h('div', {}, 'Gastos sin IVA, del banco y las facturas (detalle en 📒 Cuenta de resultados). Falta: puesto de Mercamadrid y cuotas de autónomos.' + (fin >= hoy() ? ' Mes sin terminar.' : ''))); });
+        return el; };
+      box.replaceChildren(h('p', { class: 'sub' }, 'Solo lo ven Jorge, Fernando, Julián y Fernando hijo. Coste = sueldo bruto + Seguridad Social de la empresa.'),
+        ...Object.keys(meses).map(m => { const xs = meses[m], tb = xs.reduce((a, x) => a + n(x.bruto), 0), ts = xs.reduce((a, x) => a + n(x.ss_empresa), 0);
+          return h('div', { class: 'card' }, h('b', {}, new Date(m + 'T12:00').toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })),
+            ...xs.map(x => h('div', { style: 'border-top:1px solid var(--borde,#ddd);padding:6px 0' },
+              h('div', { class: 'fila' }, h('span', {}, x.trabajador + (x.dias != null ? ' · ' + x.dias + ' días' : '')), h('b', {}, eur(n(x.bruto) + n(x.ss_empresa)) + ' €')),
+              h('div', { class: 'sub' }, 'Bruto ' + eur(x.bruto) + ' € · S. Social empresa ' + eur(x.ss_empresa) + ' €' + (x.liquido != null ? ' · cobra ' + eur(x.liquido) + ' €' : '')),
+              x.nota ? h('div', { class: 'sub' }, x.nota) : null)),
+            h('div', { class: 'fila', style: 'border-top:2px solid currentColor;padding-top:6px' }, h('span', {}, 'Total personal'), h('b', {}, eur(tb + ts) + ' €')),
+            veMargenes() ? margenMes(m, tb + ts) : null); }));
+    } catch (e) { box.replaceChildren(h('p', { class: 'vacio' }, isNetErr(e) ? 'Necesitas conexión para verlo.' : 'No se ha podido cargar.')); }
+  })();
+}
+/* 📒 Cuenta de resultados (Tito, 26/11/2026). La página la genera scripts/pyg-html.mjs --guardar cada mañana; lleva su propio script (pestañas, simulador), por eso allow-scripts sin allow-same-origin. */
+function vistaPyG() {
+  state.view = 'pyg'; if (!veSueldos() || !veMargenes()) { go('inicio'); return; }
+  const box = h('div', {}, h('div', { class: 'card sub' }, 'Cargando…'));
+  $app.replaceChildren(shell('📒 Cuenta de resultados', box));
+  (async () => {
+    try {
+      const r = await sb.from('panel_pyg').select('fecha,html').order('fecha', { ascending: false }).limit(1); if (r.error) throw r.error;
+      const x = (r.data || [])[0]; if (!x) { box.replaceChildren(h('div', { class: 'card sub' }, 'Todavía no está. La prepara Claude cada mañana.')); return; }
+      // Descargar PDF o Excel (Tito, 26/11/2026): dentro del recuadro no se puede bajar nada, por eso los botones van fuera
+      const bajar = async (col, ext, tipo) => {
+        try { const q = await sb.from('panel_pyg').select(col).eq('fecha', x.fecha).maybeSingle(); if (q.error) throw q.error; if (!q.data || !q.data[col]) { toast('Todavía no está preparado. Lo prepara Claude cada mañana.', 'err'); return; }
+          const bin = atob(q.data[col]), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+          const nom = 'Ferjusanz-cuenta-de-resultados-' + x.fecha + '.' + ext, blob = new Blob([u8], { type: tipo });
+          try { const file = new File([blob], nom, { type: tipo }); if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Cuenta de resultados' }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+          const url = URL.createObjectURL(blob); const lk = h('a', { href: url, download: nom }); document.body.append(lk); lk.click(); lk.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); toast('Descargado: ' + nom, 'ok');
+        } catch (e) { toast(isNetErr(e) ? 'Necesitas conexión para descargarlo.' : 'No se ha podido descargar.', 'err'); } };
+      box.replaceChildren(h('div', { style: 'display:flex;gap:8px;margin:0 0 8px' },
+          h('button', { class: 'ghost', style: 'flex:1;min-height:48px', onclick: () => bajar('pdf', 'pdf', 'application/pdf') }, '⬇️ PDF (con gráficos)'),
+          h('button', { class: 'ghost', style: 'flex:1;min-height:48px', onclick: () => bajar('xlsx', 'xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') }, '⬇️ Excel')),
+        h('iframe', { title: 'Cuenta de resultados', sandbox: 'allow-scripts allow-popups allow-popups-to-escape-sandbox', style: 'width:100%;border:0;height:calc(100vh - 200px);display:block', srcdoc: '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base target="_blank">' + x.html }));
+    } catch (e) { box.replaceChildren(h('div', { class: 'card sub' }, isNetErr(e) ? 'Necesitas conexión para verla.' : 'Todavía no está disponible.')); }
+  })();
+}
 function vistaGastosReparto() {
   state.view = 'gastosreparto'; if (!esOficina()) { go('inicio'); return; }
   let mes = hoy().slice(0, 7), soloSin = false; const cont = h('div', {}), cab = h('div', {});
@@ -16339,6 +16421,8 @@ const BUSCA_PANTALLAS = [
   ['📊', 'Resumen del día y correo', 'resumen ventas totales numeros informe correo email gmail manana visitas web', () => go('resumen'), 'o'],
   ['📈', 'Mercado (precios de los Mercas y noticias)', 'mercado mercas mercamadrid noticias semanal precios mercado', () => go('resumen'), 'o'],
   ['📈', 'Rentabilidad', 'rentabilidad ganancia beneficio margen ganamos perdemos', () => go('rentabilidad'), 'm'],
+  ['📒', 'Cuenta de resultados', 'perdidas ganancias pyg beneficio resultado balance cuenta de resultados donde se gana donde se pierde', () => go('pyg'), 'r'],
+  ['💼', 'Gastos de personal', 'nominas nomina sueldos salarios seguridad social empleados trabajadores personal coste empresa', () => go('personal'), 's'],
   ['⛽', 'Gastos de reparto', 'gasolina gasoleo combustible repostar repostaje gastos reparto tickets sobre parking peaje', () => go('gastosreparto'), 'o'],
   ['💶', 'Margen y cobros (Golden)', 'margen beneficio coste golden compras proveedores cobros pagos pendientes deben debemos tesoreria', () => go('goldenmargen'), 'c'],
   ['🤝', 'Comercial', 'comercial listas precios recomendaciones guiones web seo', () => go('comercial'), 'o'],
@@ -16359,7 +16443,7 @@ const BUSCA_PANTALLAS = [
   ['📥', 'Importar pedido', 'importar pegar texto pedido', () => go('importar'), 'o']
 ];
 function buscaPantallas(t) {
-  const ok = x => !x[4] || (x[4] === 'o' ? esOficina() : x[4] === 'm' ? veMargenes() : x[4] === 'c' ? veCobros() : puedeCompras());
+  const ok = x => !x[4] || (x[4] === 'o' ? esOficina() : x[4] === 'm' ? veMargenes() : x[4] === 'c' ? veCobros() : x[4] === 's' ? veSueldos() : x[4] === 'r' ? veSueldos() && veMargenes() : puedeCompras());
   const ws = palabrasPantalla(t); if (!ws.length) return [];
   const pal = s => sinTilde(s.toLowerCase()).split(/[\s()·]+/).filter(Boolean);
   const raiz = w => w.replace(/(es|s)$/, '');
@@ -16769,7 +16853,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { proveedores: vistaProveedores, programasif: vistaProgramaSif, facturasapp: vistaFacturasApp, caja: vistaCaja, banco: vistaBanco, empresa: vistaEmpresa, modoreparto: vistaModoReparto, tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, whatsapp: vistaWhatsapp, ayudas: vistaAyudas, gestoria: vistaGestoria, panel: vistaPanel, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, camino: vistaCamino, rentabilidad: vistaRentabilidad, goldenmargen: vistaGoldenMargen, gastosreparto: vistaGastosReparto, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { proveedores: vistaProveedores, programasif: vistaProgramaSif, facturasapp: vistaFacturasApp, caja: vistaCaja, banco: vistaBanco, empresa: vistaEmpresa, modoreparto: vistaModoReparto, tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, whatsapp: vistaWhatsapp, ayudas: vistaAyudas, gestoria: vistaGestoria, panel: vistaPanel, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, camino: vistaCamino, rentabilidad: vistaRentabilidad, goldenmargen: vistaGoldenMargen, gastosreparto: vistaGastosReparto, personal: vistaPersonal, pyg: vistaPyG, deudas: vistaDeudas, importar: vistaImportar, buscar: vistaBuscar }[state.view] || vistaLista;
   if (MR.dentro() && state.view === 'inicio' && !state.mrMirado) { state.mrMirado = true; return vistaModoReparto(); }   /* vuelve al modo reparto si se cerró la app */
   v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); if (state.view === 'inicio') setTimeout(mrAuto, 300); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }

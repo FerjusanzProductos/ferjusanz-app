@@ -35,11 +35,11 @@ const MENU = [
   ['/productos/', 'Productos'],
   ['/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', 'Hostelería'],
   ['/mayorista-de-frutas-y-verduras-para-colectividades-madrid/', 'Colectividades'],
-  ['/empresa-de-venta-y-distribucion-de-fruta-y-verdura/', 'Quiénes somos'],
   ['/blog/', 'Guías'],
-  ['/novedades/', 'Novedades'],
+  ['/empresa-de-venta-y-distribucion-de-fruta-y-verdura/', 'Quiénes somos'],
   ['/contacto/', 'Contacto'],
 ];
+// Novedades sale en el pie y en la portada; la patata pelada va destacada a la derecha del menú (Tito 26/11/2026).
 
 const F = '/wp-content/uploads/';
 // Familias del catálogo (sacadas de los productos activos de la app, sin precios).
@@ -72,6 +72,26 @@ const FAMILIAS = [
     lema: 'El toque final del plato.',
     lista: ['Perejil', 'Cilantro', 'Albahaca', 'Hierbabuena y menta', 'Eneldo', 'Romero y tomillo', 'Laurel', 'Cebollino', 'Jengibre', 'Guindilla y habanero', 'Ñora', 'Piparras'] },
 ];
+
+// Patata pelada: todos los cortes, sin precio (Tito 26/11/2026: «que se vea bien claro… precio a consultar»).
+const PELADA = '/productos/patata-pelada-para-hosteleria/';
+const CORTES = [
+  ['Panadera', 'En rodajas, para horno y guarnición'],
+  ['Brava', 'En tacos irregulares, para bravas'],
+  ['Bastón', 'Para freír, la de toda la vida'],
+  ['Dados', 'Para guisos, tortilla y salteados'],
+  ['Gajo', 'Con forma de cuña, para horno o freidora'],
+  ['Paja', 'Muy fina, para freír crujiente'],
+  ['Chips', 'En láminas finas'],
+  ['Rodaja', 'Para tortilla y a lo pobre'],
+  ['Torneada', 'Para presentaciones de cocina'],
+  ['Ensaladilla', 'En dados pequeños, para ensaladilla rusa'],
+  ['Entera pelada', 'Pelada y lista, también envasada al vacío'],
+];
+const bloquePeladas = (titulo = 'h2') => `<section class="bloque peladas" id="patata-pelada"><div class="envoltura">
+  <div class="bloque-cabeza"><div><p class="antetitulo">Nuestra especialidad</p><${titulo}>Patata pelada en todos los cortes</${titulo}><p>Pelada, cortada y lista para la cocina. Si necesita otro corte, se lo preparamos.</p></div><a class="enlace" href="${PELADA}">Ver patata pelada ${I.flecha}</a></div>
+  <ul class="cortes">${CORTES.map(([n, d]) => `<li><a href="${wa(WHATSAPP[0].num, `Hola, quería precio de patata pelada corte ${n.toLowerCase()}.`)}" rel="nofollow"><strong>${n}</strong><span>${d}</span><em>Precio a consultar</em></a></li>`).join('')}</ul>
+</div></section>`;
 
 const SECTORES = [
   { nombre: 'Restaurantes y bares', ruta: '/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', foto: F + '2023/03/Tipos-de-guarniciones-de-verduras.jpg',
@@ -171,6 +191,7 @@ const I = {
   hoja: '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13c0-6 6-10 16-10 0 10-4 17-9 17Z"/><path d="M4 21c3-6 7-9 12-11"/></g></svg>',
   familia: '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 20c0-2.4 1-4.3 3-5 2 .7 3 2.6 3 5"/></g></svg>',
   reloj: '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></g></svg>',
+  lupa: '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></g></svg>',
   flecha: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>',
   huevo: '<svg viewBox="0 0 64 64" aria-hidden="true"><path fill="currentColor" d="M32 6c-10 0-20 17-20 31a20 20 0 0 0 40 0C52 23 42 6 32 6Z"/></svg>',
 };
@@ -255,7 +276,10 @@ const galeria = ruta => GALERIAS[ruta] ? `<section class="bloque bloque-crema"><
 
 // ───────── Plantilla ─────────
 function plantilla({ ruta, titulo, descripcion, imagen, cuerpo, datos = [], tipo = 'website', precarga = '' }) {
-  const nav = MENU.map(([h, t]) => `<a href="${h}"${ruta === h || (h !== '/' && ruta.startsWith(h)) ? ' aria-current="page"' : ''}>${t}</a>`).join('');
+  const actual = h => ruta === h || (h === '/productos/' ? ruta.startsWith(h) && ruta !== PELADA : h !== '/' && ruta.startsWith(h));
+  const nav = MENU.map(([h, t]) => `<a href="${h}"${actual(h) ? ' aria-current="page"' : ''}>${t}</a>`).join('')
+    + `<a class="destacado" href="${PELADA}"${ruta === PELADA ? ' aria-current="page"' : ''}>Patata pelada</a>`;
+  const familiasMenu = `<ul class="menu-familias">${FAMILIAS.filter(f => f.ruta).map(f => `<li><a href="${f.ruta}">${f.nombre}</a></li>`).join('')}</ul>`;
   const og = imagen || '/marca/compartir.png';
   return `<!doctype html>
 <html lang="es">
@@ -291,8 +315,9 @@ ${datos.map(d => `<script type="application/ld+json">${JSON.stringify(d)}</scrip
     <a href="/" class="logo" aria-label="Ferjusanz, inicio"><img src="/marca/logo-oscuro.png" alt="Ferjusanz · patatas, frutas, verduras, huevos, setas, champiñones y legumbres" width="600" height="134"></a>
     <nav class="menu-ancho" aria-label="Principal">${nav}</nav>
     <a class="btn btn-wa btn-cab" href="#pedir-precio">${I.wa}<span>Pedir precio</span></a>
-    <details class="menu"><summary aria-label="Abrir menú"><span></span><span></span><span></span></summary><nav aria-label="Menú">${nav}<a href="#pedir-precio" class="btn btn-wa">${I.wa}<span>Pedir precio por WhatsApp</span></a></nav></details>
+    <details class="menu"><summary aria-label="Abrir menú"><span></span><span></span><span></span></summary><nav aria-label="Menú">${nav}<p class="menu-sub">Productos</p>${familiasMenu}<a href="#pedir-precio" class="btn btn-wa">${I.wa}<span>Pedir precio por WhatsApp</span></a></nav></details>
   </div>
+  <div class="buscar-fila"><form class="buscar" action="/buscar/" method="get" role="search"><input type="search" name="q" placeholder="Buscar producto o página" aria-label="Buscar producto o página" enterkeyhint="search"><button type="submit" aria-label="Buscar">${I.lupa}</button></form></div>
 </header>
 <main id="contenido">
 ${cuerpo}
@@ -567,6 +592,7 @@ function paginaFamilia(p, f, textoHtml) {
     <ul class="garantias"><li>${I.camion} Reparto en camión refrigerado</li><li>${I.hoja} Agricultores de confianza y Mercamadrid</li><li>${I.reloj} ${HORARIO}</li></ul>
   </div>
 </div></section>
+${f.id === 'patatas' ? bloquePeladas() : ''}
 <section class="bloque"><div class="envoltura"><article class="texto">${resto}</article></div></section>
 ${galeria(p.path)}
 ${enlacesSectores()}
@@ -679,6 +705,32 @@ function empresa(p) {
 <h2>Como si nos sentáramos a su mesa</h2>
 <p>Seleccionamos nuestros productos con mucho cuidado, pieza a pieza. Cuando elegimos el género pensamos en que somos nosotros los que nos vamos a sentar a la mesa de su restaurante a disfrutar del menú. Por eso vamos de la mano con nuestros clientes.</p>`;
   return paginaTexto(p, { antes, entradilla: 'Tercera generación de mayoristas. Más de seis décadas alegrando la mesa de Madrid.', miga: 'Quiénes somos', foto: F + '2019/10/proveedores-distribucion_crs2.jpg' });
+}
+
+// Buscador: índice de productos, cortes y páginas dentro de la propia página (no hace falta servidor).
+function paginaBuscar() {
+  const ix = [
+    ...CORTES.map(([n, d]) => ['Patata pelada ' + n.toLowerCase(), d + '. Precio a consultar.', PELADA]),
+    ...FAMILIAS.flatMap(f => f.lista.map(x => [x, f.nombre, f.ruta || '/productos/'])),
+    ...[...paginas, ...NUEVAS].filter(p => p.title && !/^\/(aviso|politica)/.test(p.path)).map(p => [(p.h1 || p.title).replace(/\s*[|-]\s*Ferjusanz.*$/, ""), p.description || '', p.path]),
+    ...MENU.map(([h, t]) => [t, 'Menú de la web', h]),
+  ];
+  const cuerpo = `<section class="bloque"><div class="envoltura lectura buscador">
+  <h1>Buscar</h1>
+  <form action="/buscar/" method="get" role="search"><input id="bq" type="search" name="q" placeholder="Ej.: patata panadera, aguacate, colegios" aria-label="Buscar" autofocus enterkeyhint="search"></form>
+  <p id="bn" class="meta" aria-live="polite"></p>
+  <ul id="br" class="resultados"></ul>
+  <p>¿No lo encuentra? <a href="${wa(WHATSAPP[0].num, 'Hola, buscaba un producto que no veo en la web.')}" rel="nofollow">Pregúntenos por WhatsApp</a>: si no lo tenemos, se lo buscamos.</p>
+</div></section>
+<script>(()=>{const IX=${JSON.stringify(ix).replace(/</g, '\\u003c')};
+const n=s=>s.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();const e=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+const q=document.getElementById('bq'),r=document.getElementById('br'),b=document.getElementById('bn');
+function ir(){const t=n(q.value).split(/\\s+/).filter(Boolean);if(!t.length){r.innerHTML='';b.textContent='';return}
+const h=IX.map(x=>{const a=n(x[0]),d=n(x[1]);if(!t.every(w=>a.includes(w)||d.includes(w)))return null;return[t.filter(w=>a.includes(w)).length,x]}).filter(Boolean).sort((x,y)=>y[0]-x[0]).slice(0,40);
+b.textContent=h.length?h.length+' resultado'+(h.length>1?'s':''):'Sin resultados';
+r.innerHTML=h.map(([,x])=>'<li><a href="'+x[2]+'"><strong>'+e(x[0])+'</strong><span>'+e(x[1])+'</span></a></li>').join('')}
+q.value=new URLSearchParams(location.search).get('q')||'';q.addEventListener('input',ir);ir()})();</script>`;
+  return plantilla({ ruta: '/buscar/', titulo: 'Buscar productos | Ferjusanz', descripcion: 'Busque entre nuestras patatas, frutas, verduras, huevos, setas y legumbres.', cuerpo });
 }
 
 function paginaNovedades() {
@@ -850,11 +902,11 @@ const NUEVAS = [
 <h2>Tarifa sin compromiso</h2>
 <p>Indíquenos el número de plazas y el consumo aproximado y le enviamos precio según el mercado del día.</p>` },
   { path: '/productos/patata-pelada-para-hosteleria/', foto: F + '2020/09/distribuidor-patatas-beneficios.jpg', title: 'Patata pelada y cortada para hostelería en Madrid | Ferjusanz',
-    description: 'Patata pelada al por mayor para restaurantes, hoteles y colectividades de Madrid: en bastón, dados, panadera o envasada al vacío.',
+    description: 'Patata pelada al por mayor para hostelería y colectividades de Madrid: panadera, brava, bastón, dados, gajo y más cortes. Precio a consultar.',
     html: `<h1>Patata pelada y cortada para hostelería en Madrid</h1>
 <p>La patata es nuestra especialidad desde el primer día. Además de patata entera para todos los usos, servimos <strong>patata pelada y cortada</strong> lista para la cocina a restaurantes, hoteles, colegios, residencias y empresas de colectividades de Madrid.</p>
 <h2>Formatos de patata pelada</h2>
-<ul><li><strong>En bastón</strong>, para freír.</li><li><strong>En dados</strong>, para guisos, ensaladilla y salteados.</li><li><strong>Panadera</strong>, en rodajas para horno.</li><li><strong>Para ensaladilla</strong> y <strong>patata cocida</strong>.</li><li><strong>Patata pelada entera envasada al vacío</strong>.</li></ul>
+<p>La servimos en <strong>todos los cortes</strong>: ${CORTES.map(([n]) => n.toLowerCase()).join(', ')}. También patata cocida. Si necesita otro corte, se lo preparamos. <strong>Precio a consultar</strong> según el mercado del día.</p>
 <h2>Por qué patata pelada</h2>
 <p>Ahorra horas de trabajo en cocina, evita mermas y residuos y da un resultado uniforme en cada servicio. Llega en nuestro reparto refrigerado junto con el resto del pedido de fruta y verdura.</p>
 <h2>También patata entera</h2>
@@ -949,10 +1001,12 @@ for (const p of [...paginas, ...NUEVAS]) {
   else if (p.path === '/contacto/') html = contacto(p);
   else if (p.path === '/empresa-de-venta-y-distribucion-de-fruta-y-verdura/') html = empresa(p);
   else if (fam && p.path.startsWith('/productos/')) html = paginaFamilia(p, fam, p.html);
-  else html = paginaTexto(p, fam ? { foto: fam.foto, padre: ['/productos/', 'Productos'] } : { foto: p.foto });
+  else html = paginaTexto(p, { ...(fam ? { foto: fam.foto, padre: ['/productos/', 'Productos'] } : { foto: p.foto }),
+    despues: p.path === PELADA || fam?.id === 'cuarta' ? bloquePeladas() : '' });
   escribir(p.path, html);
   sitemap.push([p.path, (p.modified || p.date || '').slice(0, 10)]);
 }
+escribir('/buscar/', paginaBuscar());
 escribir('/tarjeta/', tarjeta());
 escribir('/super9/', super9()); // tarjeta de socios, fuera del mapa del sitio
 escribir('/novedades/', paginaNovedades());
