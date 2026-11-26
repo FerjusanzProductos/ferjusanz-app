@@ -28,3 +28,6 @@ revoke all on public.panel_pyg from anon, authenticated;
 grant select on public.panel_pyg to authenticated;
 drop policy if exists leer on public.panel_pyg;
 create policy leer on public.panel_pyg for select to authenticated using (puede_ver_sueldos() and puede_ver_margenes());
+
+-- Pagos del banco que no son gasto del año (deudas de 2025, pagos a socios, Hacienda…): se enseñan aparte, sin restar del resultado.
+alter table public.gastos_fijos add column if not exists en_resultado boolean not null default true;

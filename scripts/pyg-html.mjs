@@ -30,7 +30,7 @@ const [[g], lineas, abonos, extra, compras, personal, fijos, deudas, nombresPro]
   sql(`select to_char(fecha, 'YYYY-MM') m, proveedor_nombre p, round(sum(base), 2) v from golden_compras
        where fecha < date_trunc('month', current_date) and proveedor_nombre <> '' group by 1, 2`),
   sql(`select to_char(mes, 'YYYY-MM') m, trabajador t, dias, bruto, ss_empresa ss, liquido, nota from gastos_personal order by mes, trabajador`),
-  sql(`select concepto, grupo, importe_mes::float i, to_char(desde, 'YYYY-MM') d, to_char(hasta, 'YYYY-MM') h, nota from gastos_fijos`),
+  sql(`select concepto, grupo, importe_mes::float i, to_char(desde, 'YYYY-MM') d, to_char(hasta, 'YYYY-MM') h, nota, en_resultado r from gastos_fijos`),
   sql(`select nombre, round(sum(total), 2) total, min(vencimiento)::text desde from (
          select nombre, vencimiento, greatest(0, total - coalesce((select sum((p->>'importe')::numeric) from jsonb_array_elements(t.observacion_partes) p), 0)) total
          from golden_tesoreria t where tipo = 'C' and estado = 'PEN') c
@@ -53,7 +53,8 @@ for (const m of meses) {
   for (const x of personal.filter(y => y.m === base)) pers.push([mi[m], x.t, n(x.bruto), n(x.ss), base !== m ? 1 : 0, x.nota || '']);
 }
 const fij = [];
-for (const m of meses) for (const f of fijos) if (f.d <= m && (!f.h || f.h >= m)) fij.push([mi[m], f.grupo, f.concepto, n(f.i), f.nota || '', f.d === f.h ? 1 : 0]);
+const fuera = [];
+for (const m of meses) for (const f of fijos) if (f.d <= m && (!f.h || f.h >= m)) (f.r ? fij : fuera).push([mi[m], f.grupo, f.concepto, n(f.i), f.nota || '', f.d === f.h ? 1 : 0]);
 
 const D = {
   hasta: g.hasta, hoy: new Date().toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid' }), meses, cli,
@@ -62,7 +63,7 @@ const D = {
   ab: abonos.filter(x => mi[x.m] != null).map(x => [mi[x.m], x.c, x.n, n(x.v)]),
   ex: extra.map(x => [mi[x.m] ?? -1, x.fecha, x.numero, n(x.v), (x.d || '').replace(/\s+/g, ' ').trim()]),
   co: compras.filter(x => mi[x.m] != null).map(x => [mi[x.m], x.p, n(x.v)]),
-  pe: pers, fi: fij,
+  pe: pers, fi: fij, fu: fuera,
   de: deudas.map(x => [x.nombre, n(x.total), x.desde]),
 };
 const datos = JSON.stringify(D).replace(/</g, '\\u003c');
@@ -165,7 +166,7 @@ const N = D.meses.length, ult3 = D.meses.slice(-3).map((m, i) => N - 3 + i);
 const PERIODOS = [['ano', 'Año (' + NM(D.meses[0]) + '–' + NM(D.meses[N - 1]) + ')', D.meses.map((m, i) => i)], ['tri', 'Últimos 3 meses', ult3], ...D.meses.map((m, i) => ['m' + i, NM(m), [i]]).reverse()];
 let per = ls.get('pyg_per', 'ano'); if (!PERIODOS.some(p => p[0] === per)) per = 'ano';
 let tab = ls.get('pyg_tab', 'gana');
-const SIMS = [['puesto', 'Puesto o nave en Mercamadrid'], ['gasoil', 'Gasoil de las furgonetas'], ['seguros', 'Seguros (furgonetas, local, RC)'], ['gestoria', 'Gestoría (Jorge)'], ['autonomos', 'Cuotas de autónomos (tu padre y Juli)'], ['telefono', 'Teléfonos e internet'], ['golden', 'Golden Soft y programas'], ['taller', 'Taller, ITV y neumáticos'], ['otros', 'Otros (bolsas, cajas, banco…)']];
+const SIMS = [['puesto', 'Puesto o nave en Mercamadrid (no sale en el banco)'], ['autonomos', 'Cuotas de autónomos (tu padre y Juli)'], ['cb', 'Lo que se paga desde la cuenta de la C.B.'], ['seguros', 'Otros seguros (además de AXA)'], ['otros', 'Otros']];
 let sim = ls.get('pyg_sim', {});
 
 function calc(ms) {
@@ -295,8 +296,12 @@ function tabGastos(r) {
   out.push(h('div', { class: 'dos' },
     h('div', {}, h('h3', {}, 'Personal · ' + eur(r.pers)), h('span', { class: 'sub' }, 'Coste para la empresa: sueldo bruto + Seguridad Social.' + (est ? ' Los meses sin nómina se copian del más cercano.' : '')),
       h('div', { class: 'lista' }, ...pers.map(([t, x]) => fila(t, eur(x.b + x.ss), (r.n > 1 ? eur((x.b + x.ss) / x.meses.length) + ' al mes · ' : '') + 'bruto ' + eur(x.b) + ' + S. Social ' + eur(x.ss), () => [h('span', { class: 'sub' }, x.nota), ...x.meses.map(([m, v, e]) => l(NML(D.meses[m]) + (e ? ' (copiado)' : ''), eur(v)))], mini(x.b + x.ss, maxP, 'pierde'))))),
-    h('div', {}, h('h3', {}, 'Gastos fijos · ' + eur(r.fij)), h('span', { class: 'sub' }, 'Sacados de las facturas que han llegado. Falta lo que no llega por correo (mira el simulador).'),
+    h('div', {}, h('h3', {}, 'Gastos fijos · ' + eur(r.fij)), h('span', { class: 'sub' }, 'De las facturas y del banco (sin IVA). Pincha un grupo para ver cada gasto.'),
       h('div', { class: 'lista' }, ...Object.entries(r.fijL).sort((a, b) => b[1].t - a[1].t).map(([g, x]) => fila(g, eur(x.t), Object.keys(x.l).length + ' conceptos', () => Object.entries(x.l).map(([c, y]) => h('div', {}, l(c + (y.una ? ' (una vez)' : ' · ' + y.n + ' meses'), eur(y.t)), h('div', { class: 'sub' }, y.nota)))))))));
+  const fu = {}; for (const [m, g, c, i] of D.fu) if (periodo().includes(m)) fu[c] = (fu[c] || 0) + i;
+  const fuL = Object.entries(fu).sort((a, b) => b[1] - a[1]);
+  if (fuL.length) out.push(h('div', {}, h('h3', {}, 'Pagos del banco que no son gasto del año'), h('span', { class: 'sub' }, 'Salen de la cuenta, pero no restan en el resultado: deudas de 2025, pagos a los socios fuera de nómina, IVA a Hacienda…'),
+    h('div', { class: 'lista' }, ...fuL.map(([c, v]) => fila(c, eur(v), null, null)))));
   const comp = Object.entries(r.compras).sort((a, b) => b[1] - a[1]), totC = comp.reduce((a, x) => a + x[1], 0), maxC = comp[0]?.[1] || 1;
   out.push(h('div', {}, h('h3', {}, 'Coste de la mercancía · ' + eur(r.k)), h('span', { class: 'sub' }, 'A quién se le compra (compras de Golden del periodo: ' + eur(totC) + '; el coste de lo vendido sale de cada línea de venta).'),
     h('div', { class: 'lista' }, ...comp.slice(0, 15).map(([p, v]) => fila(p, eur(v), pct(v, totC) + ' de las compras', null, mini(v, maxC, 'barra'))))));
@@ -325,7 +330,7 @@ function tabSimulador(r) {
       h('div', { class: 'kpi' }, h('span', { class: 'eti' }, 'Al año'), h('span', { class: 'valor' }, eur(x.resSim / x.n * 12)), h('span', { class: 'sub' }, 'a este ritmo'))); };
   const campos = SIMS.map(([k, t]) => h('label', { for: 'sim-' + k }, t, h('input', { id: 'sim-' + k, type: 'number', inputmode: 'decimal', min: '0', step: '10', placeholder: '€ al mes', value: sim[k] ?? '', oninput: e => { sim[k] = e.target.value; ls.set('pyg_sim', sim); pintaRes(); kpis(calc(periodo())); cascada(calc(periodo())); mesAMes(); } })));
   pintaRes();
-  return [h('div', { class: 'aviso' }, 'Estos gastos no llegan en factura por correo y no están en ningún sitio todavía. Pon lo que pagáis al mes (sin IVA) y verás el beneficio de verdad. Se queda guardado solo en este móvil. Cuando sepas las cifras, díselas a Claude y las meto para todos.'), h('div', { class: 'sim' }, ...campos), res];
+  return [h('div', { class: 'aviso' }, 'Lo del banco y las facturas ya está restado. Aquí solo lo que no sale en la cuenta 4501. Pon lo que pagáis al mes (sin IVA) y verás el beneficio de verdad. Se queda guardado solo en este móvil. Cuando sepas las cifras, díselas a Claude y las meto para todos.'), h('div', { class: 'sim' }, ...campos), res];
 }
 const TABS = [['gana', 'Dónde se gana', tabGana], ['pierde', 'Dónde se pierde', tabPierde], ['gastos', 'Gastos', tabGastos], ['clientes', 'Clientes', tabClientes], ['productos', 'Productos', tabProductos], ['simulador', 'Simulador', tabSimulador]];
 function pintarTab(r) {
@@ -336,7 +341,7 @@ function pintarTab(r) {
 function todo() {
   const r = calc(periodo()); pintarPeriodos(); kpis(r); cascada(r); mesAMes(); pintarTab(r);
   const ex = D.ex.filter(x => x[0] >= 0);
-  $('#pie').textContent = 'Ventas y coste: Golden Soft (facturas hasta el ' + new Date(D.hasta).toLocaleDateString('es-ES') + '; solo meses cerrados, las facturas del mes en curso se hacen a fin de mes). Personal: nóminas de agosto a noviembre; los meses sin nómina copian la más cercana. Gastos fijos: facturas recibidas (alquiler, luz, furgoneta, parking). ' + (ex.length ? 'No se cuenta como venta: ' + ex.map(x => x[4] + ' (' + x[2] + ', ' + eur(x[3]) + ')').join('; ') + ', ingreso extraordinario. ' : '') + 'Faltan gastos que no llegan por correo: mira el simulador. Generado el ' + D.hoy + '.';
+  $('#pie').textContent = 'Ventas y coste: Golden Soft (facturas hasta el ' + new Date(D.hasta).toLocaleDateString('es-ES') + '; solo meses cerrados, las facturas del mes en curso se hacen a fin de mes). Personal: nóminas de agosto a noviembre; de enero a julio, la de agosto con las personas que cobraban según el banco. Gastos fijos: facturas recibidas (alquiler, luz, furgoneta) y movimientos de la cuenta CaixaBank 4501 (desde marzo; enero y febrero, media de marzo a octubre), sin IVA. ' + (ex.length ? 'No se cuenta como venta: ' + ex.map(x => x[4] + ' (' + x[2] + ', ' + eur(x[3]) + ')').join('; ') + ', ingreso extraordinario. ' : '') + 'Faltan gastos que no llegan por correo: mira el simulador. Generado el ' + D.hoy + '.';
   $('#fuente').textContent = 'Datos reales de Golden y nóminas · ' + NM(D.meses[0]) + '–' + NM(D.meses[N - 1]) + ' 2026';
 }
 todo();
