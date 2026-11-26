@@ -6088,6 +6088,33 @@ async function vistaWhatsapp() {
       .concat(!lineas.length ? [x.transcripcion || x.texto_original || ''] : []).join('\n');
     go('importar', { texto, desdeWa: x.id });
   }
+  /* ✏️ Corregir lo que leyó el asistente: cantidades, productos, variedad (en la nota) y día. Solo cambia esta tarjeta. */
+  function corregir(x) {
+    const filas = h('div', {}); let cerrar;
+    const fila = l => { const o = Object.assign({}, l);
+      const cant = h('input', { type: 'text', inputmode: 'decimal', value: o.cantidad != null ? String(o.cantidad).replace('.', ',') : '', placeholder: 'Cant.', style: 'width:64px' });
+      const uni = h('input', { type: 'text', value: o.unidad || '', placeholder: 'kg, saco…', style: 'width:80px' });
+      const prod = h('input', { type: 'text', value: o.producto || '', placeholder: 'Producto y variedad', style: 'flex:1;min-width:0' });
+      const div = h('div', { style: 'display:flex;gap:6px;align-items:center;margin-bottom:6px' }, cant, uni, prod,
+        h('button', { class: 'ghost small', 'aria-label': 'Quitar línea', onclick: () => div.remove() }, '✖'));
+      div._leer = () => { const n = prod.value.trim(); if (!n) return null; const c = parseFloat(cant.value.replace(',', '.'));
+        // shortcut: si cambia el nombre se pierde el producto del catálogo (sale ❓); se elige al apuntarlo
+        return { cantidad: isNaN(c) ? null : c, unidad: uni.value.trim() || null, producto: n, producto_id: n === (o.producto || '') ? (o.producto_id || null) : null }; };
+      return div; };
+    (Array.isArray(x.lineas) ? x.lineas : []).forEach(l => filas.append(fila(l)));
+    const fecha = h('input', { type: 'date', value: x.fecha_entrega || '' });
+    const nota = h('textarea', { rows: 4, style: 'width:100%;font-size:15px', placeholder: 'Variedad, calibre, cómo lo quiere…' }); nota.value = x.nota || '';
+    cerrar = hoja('✏️ Corregir el pedido', h('div', {},
+      h('p', { class: 'sub', style: 'margin:0 0 8px' }, 'Cambia lo que haga falta. La variedad se puede poner en el producto (p. ej. «Patata Agria») o en la nota.'),
+      filas,
+      h('button', { class: 'ghost small', style: 'margin:2px 0 10px', onclick: () => filas.append(fila({})) }, '➕ Añadir línea'),
+      h('label', { class: 'sub', style: 'display:block' }, '📅 Día de entrega'), fecha,
+      h('label', { class: 'sub', style: 'display:block;margin-top:8px' }, '📝 Nota'), nota,
+      h('button', { class: 'guardar', style: 'width:100%;position:static;margin-top:10px', onclick: async () => {
+        const lineas = [...filas.children].map(d => d._leer()).filter(Boolean);
+        try { await guardar(x, { lineas, nota: nota.value.trim() || null, fecha_entrega: fecha.value || null }); cerrar(); toast('Pedido corregido', 'ok'); cargar(); } catch (e) { toast(msgErr(e), 'err'); }
+      } }, '💾 Guardar')));
+  }
   function pintar(filas) {
     const kids = [h('div', { class: 'aviso-card' }, 'Todos los pedidos que llegan, en un sitio. Los del WhatsApp de Fernando (609 100 690) los apunta solo el asistente: no crea pedidos y solo contesta a números que no son de ningún cliente, para pedirles negocio, dirección y día. ' + (ES_PRUEBAS ? 'Revisa cada uno y pulsa «📝 Pasar a pedido».' : 'Revisa cada uno, apúntalo en Golden y márcalo «✔ Revisado».') + ' Los mensajes personales no se guardan.'),
       h('button', { class: 'guardar', style: 'width:100%;position:static;box-shadow:none;margin:6px 0', onclick: () => go('importar') }, '✍️ Apuntar uno que llega por otro sitio (texto, voz, foto, PDF o Excel)'),
@@ -6096,7 +6123,7 @@ async function vistaWhatsapp() {
     filas.forEach(x => {
       const c = uno(x.clientes); const lineas = Array.isArray(x.lineas) ? x.lineas : [];
       const est = { nuevo: 'Por revisar', revisado: '✔ Revisado', pasado: '📝 Pasado a pedido', descartado: 'Descartado' }[x.estado] || x.estado;
-      const accion = (txt, cls, cambios) => h('button', { class: cls + ' small', onclick: async () => { try { await guardar(x, Object.assign({ revisado_por: state.user.id, revisado_en: new Date().toISOString() }, cambios)); cargar(); } catch (e) { toast(msgErr(e), 'err'); } } }, txt);
+      const accion = (txt, cls, cambios) => h('button', { class: cls + ' small', onclick: async () => { try { await guardar(x, Object.assign({ revisado_por: state.user.id, revisado_en: new Date().toISOString() }, cambios)); if (cambios.estado !== 'nuevo') toast('Hecho. Lo ves arriba en «Todos»', 'ok'); cargar(); } catch (e) { toast(msgErr(e), 'err'); } } }, txt);
       kids.push(h('div', { class: 'card', style: 'border-left:6px solid ' + (c ? '#16a34a' : '#d97706') },
         h('div', { class: 'fila' }, h('div', { class: 'nombre' }, c ? nombreCli(c) : '⚠️ Sin cliente' + (x.cliente_texto ? ' («' + x.cliente_texto + '»)' : '')), h('span', { class: 'badge' }, est)),
         h('div', { class: 'sub' }, fechaES(String(x.created_at).slice(0, 10)) + ' ' + fmtHora(x.created_at) + ' · ' + ({ audio: '🎤 audio', image: '📷 foto' }[x.tipo] || '✍️ texto') + ' · de ' + telES(x.telefono) + (x.nombre_contacto ? ' (' + x.nombre_contacto + ')' : '') + (x.reenviado ? ' · ↪️ reenviado por la casa' : '')),
@@ -6109,6 +6136,7 @@ async function vistaWhatsapp() {
           x.transcripcion ? h('div', { style: 'white-space:pre-wrap;margin-top:4px' }, (x.tipo === 'audio' ? '🎤 Dice: ' : x.tipo === 'image' ? '📷 Pone: ' : '') + x.transcripcion) : null) : null,
         h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' },
           h('button', { class: 'ghost small', onclick: () => elegirCliente(x) }, c ? 'Cambiar cliente' : '👤 Elegir cliente'),
+          x.estado !== 'pasado' ? h('button', { class: 'ghost small', onclick: () => corregir(x) }, '✏️ Corregir') : null,
           /* Número que la app no conocía: guardarlo en la ficha para reconocerlo solo la próxima vez */
           c && !x.reenviado && movil9(x.telefono) && !String(c.telefono || '').split(/[\/,;]| y /).some(t => movil9(t) === movil9(x.telefono)) ? h('button', { class: 'ghost small', onclick: async () => {
             const n = telES(x.telefono); if (!await confirmar('¿Guardar el ' + n + ' en la ficha de ' + nombreCli(c) + '? Así sus próximos mensajes se reconocen solos.')) return;
