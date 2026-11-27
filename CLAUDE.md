@@ -7,6 +7,7 @@ Dueño y quien decide: **Fernando Sanz**.
 - **Quién es quién** (Fernando, 18/11/2026): quien escribe en el chat es **Fernando Sanz hijo, «Tito»**. «Fernando» o «Fer» en las hojas de caja, Golden u otros papeles es **Fernando Sanz padre**, salvo que ponga «Tito» o «hijo». No decirle «tú» a lo que hizo el padre.
 - En español, paso a paso, sin tecnicismos: **no es programador** y trabaja desde el **móvil** (Android, Chrome).
 - Respuestas cortas. Cuando haya que elegir, dar una recomendación clara.
+- **Correos a clientes o posibles clientes** (Tito, 27/11/2026): **uno por uno**, cada uno con su dirección en «Para», su nombre en el saludo y algún detalle suyo; **nunca en tandas ni con copia oculta** («resta credibilidad»). **Nunca de noche**: se dejan en borrador y salen solos a las **7:00** (hora de Madrid); el saludo, acorde a la hora en que llega (de noche nada de «Buenos días»).
 - **Nunca** pedir contraseñas, tokens ni claves por el chat. Si hace falta una, usar el formulario seguro de credenciales.
 
 ## Todo desde el móvil (instrucción permanente de Fernando, 13/11/2026)
