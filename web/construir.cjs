@@ -176,7 +176,7 @@ const PREGUNTAS = [
   ['¿Hasta qué hora puedo pedir?', 'Hasta la tarde anterior al reparto, por WhatsApp o por teléfono. También puede dejar pedidos fijos para ciertos días de la semana.'],
   ['¿Venden a particulares?', 'No. Trabajamos con hostelería, colegios, residencias, escuelas infantiles, catering, fruterías y otros negocios con cocina.'],
   ['¿Cómo se paga?', 'Al contado en la entrega o con factura, según lo que acordemos. Cada albarán lleva el peso real, el precio y el IVA: paga lo que recibe.'],
-  ['¿Venden también huevos?', 'Sí, huevos de gallina y de codorniz, que le llevamos en el mismo reparto que la fruta y la verdura.'],
+  ['¿Qué huevos tienen?', 'Huevos de gallina y de codorniz, por tamaños y categorías, para cocina, desayunos y repostería.'],
   ['¿Tienen patata pelada y producto cortado?', 'Sí: patata pelada en bastón, en dados, panadera, para ensaladilla o envasada al vacío, y cebolla y ajo pelados.'],
   ['¿De dónde viene el género?', 'Trabajamos con agricultores y productores que conocemos desde hace años; el resto lo elegimos cada mañana en Mercamadrid.'],
   ['¿Cuál es su horario?', HORARIO + '.'],
@@ -915,7 +915,7 @@ function super9() {
 // ───────── Páginas nuevas (no estaban en la web antigua) ─────────
 const NUEVAS = [
   { path: '/productos/huevos/', familia: 'huevos', title: 'Huevos al por mayor para hostelería en Madrid | Ferjusanz',
-    description: 'Huevos de gallina y de codorniz al por mayor para restaurantes, colegios, residencias y fruterías de Madrid, en el mismo reparto que la fruta y la verdura.',
+    description: 'Huevos de gallina y de codorniz al por mayor para restaurantes, colegios, residencias y fruterías de Madrid, por tamaños y categorías.',
     html: `<h1>Huevos al por mayor en Madrid</h1>
 <p>Además de fruta, verdura y patatas, llevamos <strong>huevos frescos</strong> a restaurantes, bares, colegios, residencias y fruterías de Madrid. Así recibes todo en un solo pedido y un solo reparto.</p>
 <h2>Huevos de gallina y de codorniz</h2>
