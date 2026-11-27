@@ -12,8 +12,10 @@
 // «x-ferjusanz-secreto» y aquí se comprueba. Se publica SIN comprobar JWT (--no-verify-jwt).
 // Secretos: WHATSAPP_WEBHOOK_SECRET (obligatorio), D360_API_KEY (para bajar audios y fotos),
 // ANTHROPIC_API_KEY o GEMINI_API_KEY (leer el pedido; el audio solo lo transcribe Gemini).
+// Aviso al móvil de admin y oficina por cada pedido nuevo o cambiado (VAPID_PUBLIC/VAPID_PRIVATE, como recibir-factura).
 // Opcionales: WHATSAPP_CASA (móviles de la casa, separados por comas), HARVEY_MODEL, GEMINI_MODEL, D360_BASE.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import webpush from "npm:web-push@3.6.7";
 
 const env = (k: string) => Deno.env.get(k) || "";
 const D360 = env("D360_BASE") || "https://waba-v2.360dialog.io";
@@ -324,6 +326,7 @@ async function procesar(sb: SB, m: any, nombre: string) {
       nota: [anterior.nota, `🔄 ${previo ? "Cambiado" : "Añadido"} a las ${hora}${anterior.estado === "revisado" ? " (después de revisarlo)" : ""}`, ia?.nota].filter(Boolean).join("\n").slice(0, 2000),
     }).eq("id", anterior.id);
     if (e3) throw e3;
+    await avisarPedido(sb, cliente?.nombre_comercial || cliente?.nombre || cliTexto || nombre || tel, previo ? "🔄 Pedido cambiado" : "➕ Añadido a un pedido", lineas.length);
     return "añadido";
   }
   const { error: e2 } = await sb.from("whatsapp_pedidos").insert({
@@ -332,8 +335,29 @@ async function procesar(sb: SB, m: any, nombre: string) {
     nota: nota ? String(nota).slice(0, 2000) : (ia ? null : "Sin leer: mira el mensaje original."), error: error ? error.slice(0, 500) : null,
   });
   if (e2 && !/duplicate/i.test(e2.message)) throw e2;
+  if (!e2) await avisarPedido(sb, cliente?.nombre_comercial || cliente?.nombre || cliTexto || nombre || tel, "📥 Pedido nuevo", lineas.length);
   if (!casa && !cli && ia?.es_pedido) return "pedido · " + await pedirDatos(sb, m.from, tel);
   return "pedido";
+}
+
+// Aviso al móvil (Tito, 27/11/2026: «notificaciones cada vez que entra un pedido… también mi padre»): a los
+// móviles de admin y oficina que activaron «🔔 Avisos al móvil» en la app. Si falla, el pedido ya está guardado.
+async function avisarPedido(sb: SB, quien: string, titulo: string, nLineas: number) {
+  try {
+    const pub = env("VAPID_PUBLIC"), priv = env("VAPID_PRIVATE");
+    if (!pub || !priv) return;
+    webpush.setVapidDetails(env("VAPID_SUBJECT") || "mailto:ferjusanzfacturas@gmail.com", pub, priv);
+    const { data: subs } = await sb.from("push_suscripciones").select("id,endpoint,p256dh,auth,usuario_id");
+    if (!subs?.length) return;
+    const { data: perf } = await sb.from("perfiles").select("id,rol,activo").in("id", [...new Set(subs.map((x) => x.usuario_id))]);
+    const ok = new Set((perf ?? []).filter((x) => x.activo !== false && ["admin", "oficina"].includes(x.rol)).map((x) => x.id));
+    const carga = JSON.stringify({ titulo, cuerpo: String(quien).slice(0, 80) + (nLineas ? ` · ${nLineas} producto${nLineas === 1 ? "" : "s"}` : ""), tag: "pedido-" + Date.now(), ir: "pedidos" });
+    for (const x of subs.filter((y) => ok.has(y.usuario_id))) {
+      try { await webpush.sendNotification({ endpoint: x.endpoint, keys: { p256dh: x.p256dh, auth: x.auth } }, carga, { TTL: 86400 }); }
+      // deno-lint-ignore no-explicit-any
+      catch (e: any) { if (e?.statusCode === 404 || e?.statusCode === 410) await sb.from("push_suscripciones").delete().eq("id", x.id); }
+    }
+  } catch (e) { console.error("avisarPedido", e); }
 }
 
 // Única respuesta automática (Tito, 26/11/2026: «Sí. Ese mismo mensaje»): a un número que no es de ningún cliente
