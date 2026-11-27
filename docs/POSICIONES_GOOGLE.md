@@ -42,3 +42,6 @@ _Casi todo es todavía de la web antigua de WordPress: la nueva está en el domi
 - Por temas: patata 618 veces vistas (puesto 41); hostelería 308 (43); colegios 151 (32); residencias 90 (37); fruterías 66 (38).
 - Arreglado el 27/11: el PDF viejo «LISTA-DE-PRECIOS-DE-VERDURAS.pdf» (366 veces visto, 2.º en clics) daba error; ahora lleva a `/calcular-tarifa/`. Las demás direcciones viejas que salen siguen funcionando.
 - Artículos que salen de aquí: **tanda S** en el punto 3 de `docs/PLAN_MARKETING.md`.
+
+## «venta de fruta Madrid» (27/11/2026)
+Search Console: 0 veces vistos en 3 meses. Maps: no salimos (1.ª Frutería Frutas Charito); «venta de fruta al por mayor Madrid» 15.º; «venta de fruta y verdura Madrid» no salimos; «venta de patatas Madrid» 26.º. Corregida la página `/distribucion-y-venta-de-frutas-madrid/` (título y H1 «Venta de fruta al por mayor en Madrid»). Volver a mirar con el Search Console del 15/12.
