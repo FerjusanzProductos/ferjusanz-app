@@ -45,3 +45,4 @@ Cada vez que Fernando cuente algo útil en una conversación con Claude (un truc
 
 ### 27/11/2026 (Tito, por el chat)
 - La patata **se parte para comprobarla** (foto de patatas partidas por la mitad del 27/11). Aunque sea **invierno**, si se escoge una buena patata **no da fallos por dentro**.
+- La familia **empezó con patatas, cebollas y ajos** (Tito, 27/11/2026).

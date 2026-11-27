@@ -80,7 +80,7 @@ const FAMILIAS = [
     lema: 'Nuestra especialidad desde el primer día.',
     lista: ['Patata Agria', 'Patata Monalisa', 'Patata nueva para freír', 'Patata roja', 'Patata violeta', 'Patata baby', 'Patata para bravas', 'Patata de tornear', 'Patata cocida', 'Patata prefrita', 'Patata pelada en bastón', 'Patata pelada en dados', 'Patata panadera', 'Patata para ensaladilla', 'Patata pelada envasada al vacío', 'Batata', 'Yuca'] },
   { id: 'cebollas', nombre: 'Cebollas y ajos', ruta: '/distribucion-y-venta-de-cebollas-madrid/', foto: F + '2019/10/distribucion-de-cebollas-en-madrid.jpg',
-    lema: 'Con lo que empezó la familia.',
+    lema: 'Junto a la patata, con lo que empezó la familia.',
     lista: ['Cebolla en varios calibres', 'Cebolla dulce', 'Cebolla morada', 'Cebolleta', 'Chalota', 'Calçot', 'Ajo', 'Ajetes', 'Cebolla pelada', 'Ajo pelado'] },
   { id: 'huevos', nombre: 'Huevos', ruta: '/productos/huevos/', foto: '/fotos/2026/11/huevos-ferjusanz.jpg',
     lema: 'De gallina y de codorniz, por tamaños y categorías.',

@@ -11,6 +11,7 @@ Web de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., sin WordPress, en Cloudflare (
 - **No decir «60 años en Mercamadrid»** (Tito, 26/11/2026: hace 60 años no se iba a Mercamadrid): «más de 60 años de experiencia» y «décadas en Mercamadrid».
 - Empresa familiar, **tercera generación**, **más de 60 años** (Fernando, 16/11/2026; antes ponía 40) en el sector («alegrando la vida / la mesa a mucha gente»).
 - Fruta, verdura, hortaliza, patatas (también peladas y cortadas), cebollas y ajos, setas, legumbres, hierbas y **huevos** (gallina y codorniz). Más de 200 productos activos.
+- La familia **empezó con patatas, cebollas y ajos** (Tito, 27/11/2026).
 - Clientes: hostelería, colectividades (colegios, residencias, comedores), fruterías. Género fresco cada día.
 - **NO hay cosecha propia** (Fernando, 15/11/2026): decir «agricultores de confianza» y Mercamadrid. Agricultura ecológica: «colaboramos con productores ecológicos siempre que tienen producto disponible». Reparto con camiones y furgonetas refrigerados (sí, confirmado).
 - Confirmado por Fernando (15/11/2026): más de 200 productos, reparto en Segovia, sin pedido mínimo, pedidos hasta la tarde anterior, exportación posible, pago al contado o con factura.
