@@ -64,3 +64,6 @@ Correos sacados del buscador leyendo la página oficial de cada medio (la sesió
 | Revista Restauradores | hostelería | — | No aparece en el buscador |
 | Infoperecederos | distribución | — | No aparece en el buscador |
 | Agronegocios, Agropopular, Agrodigital | agro | — | El buscador no dio su página de contacto. Habría que mirarlo a mano |
+
+## 27/11/2026: segundo correo con 5 ejemplos
+Respuesta en el mismo hilo con los 5 ejemplos de `prensa/` (granada, errores al guardar la fruta, madrugada en Mercamadrid, preguntas sobre la patata, fruta y verdura de diciembre). **Enviado solo a Revista Mercados, Mercamadrid y Valencia Fruits.** Tito paró el resto («Parar aquí»): a los demás, los ejemplos solo si contestan al primer correo.

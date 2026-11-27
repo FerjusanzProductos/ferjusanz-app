@@ -1,6 +1,6 @@
 # Correo a medios y periodistas del sector (26/11/2026)
 _Tito (26/11/2026): «Localízalos y le envías un correo dando la posibilidad de colaborar con nosotros. Enviamos los artículos que nos pida a lo largo de la semana»._
-Se manda uno a uno (no en copia oculta), desde ferjusanzfacturas@gmail.com. `[saludo]` = «Hola, [nombre]:» si hay nombre, si no «Buenos días:». `[tema]` = una frase según lo que publique el medio. Adjuntos: `Ferjusanz-articulo-granada.docx` y `Ferjusanz-granada-foto.jpg` (texto en `articulo-prensa-granada.md`).
+Se manda uno a uno (no en copia oculta), desde ferjusanzfacturas@gmail.com. `[saludo]` = «Hola, [nombre]:» si hay nombre, si no «Buenos días:». `[tema]` = una frase según lo que publique el medio. Adjuntos: los ejemplos de `prensa/` (Word con foto, cada uno marcado «EJEMPLO DE ARTÍCULO» y pidiendo citar a Ferjusanz; se rehacen con `bash hacer.sh` dentro de `prensa/`).
 
 **Asunto:** Artículos de fruta, verdura y patata para [medio], desde Mercamadrid
 

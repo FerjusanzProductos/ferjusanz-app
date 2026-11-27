@@ -1,10 +1,13 @@
+---
+foto: foto-granada.jpg
+pie: Granada mollar de Elche en el puesto de Ferjusanz en Mercamadrid (foto: Ferjusanz)
+tipo: Producto de temporada
+---
 # La granada, la fruta roja que llega a la mesa de Navidad: cómo elegirla, abrirla sin mancharse y guardarla
 
-_Artículo de ejemplo para medios (26/11/2026). No publicado en la web. Foto: `web/public/fotos/granada-mollar-de-elche.jpg` (granada mollar de Elche en el puesto de Mercamadrid)._
+**Por Ferjusanz, mayorista de frutas y verduras en Mercamadrid**
 
-**Por Fernando Sanz, Ferjusanz (mayorista de frutas y verduras en Mercamadrid)**
-
-En estas semanas, los puestos de fruta de Mercamadrid se llenan de cajas de granadas. Es una de las frutas que más se mueve entre noviembre y enero: se compra para comer en casa, para ensaladas, para decorar platos y, cada vez más, para la mesa de Navidad, donde sus granos rojos dan color a casi cualquier receta.
+En estas semanas, los puestos de fruta de Mercamadrid, como el de Ferjusanz, se llenan de cajas de granadas. Es una de las frutas que más se mueve entre noviembre y enero: se compra para comer en casa, para ensaladas, para decorar platos y, cada vez más, para la mesa de Navidad, donde sus granos rojos dan color a casi cualquier receta.
 
 La más conocida en España es la **granada mollar de Elche**, que tiene Denominación de Origen Protegida. Su nombre lo dice todo: «mollar» significa blando, y es que su semilla es tan tierna que se come sin notarla. Por eso gusta tanto a niños y mayores.
 
@@ -43,4 +46,4 @@ Otra forma rápida es partirla por la mitad y golpear la piel con una cuchara de
 Una fruta de temporada, de aquí y que aguanta bien es de lo mejor que se puede poner en la mesa estas semanas. Y si en el mercado le dicen que la granada «está en su mejor momento», en noviembre y diciembre es verdad.
 
 ---
-_Ferjusanz Productos Hortofrutícolas es una empresa familiar mayorista de frutas, verduras y patatas en Mercamadrid, en su tercera generación y con más de 60 años en el sector. www.ferjusanz-frutas-verduras.es_
+_Ferjusanz Productos Hortofrutícolas es una empresa familiar mayorista de frutas, verduras y patatas en Mercamadrid, en su tercera generación y con más de 60 años de experiencia en el sector. www.ferjusanz-frutas-verduras.es_
