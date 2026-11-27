@@ -107,6 +107,9 @@ Acordadas con Fernando Sanz. Cualquier sesión de Claude o persona que toque la 
 - Fijos: patata agria **0,66**, patata nueva esp. freír **0,60**, perejil **0**, lechuga iceberg **por pieza 1,00**.
 - Fuera lo que no se compra (ciruela, mix de frutos del bosque, aguacate repetido, canónigos, brote de lechuga, cebolla pequeña, naranjas de mesa, tomate bola).
 
+## Tarifa hostelería nueva zona Bernabéu: compra + 0,30 € (Tito, 27/11/2026)
+- Para captar restaurantes nuevos de la zona Bernabéu, Cuzco y Avda. de Brasil: **última compra + 0,30 €** (cajas + 0,30 € por kilo). Fijos: patata especial freír **0,60**, patata agria **0,65**, cebolla **0,70**. Generador en `docs/hosteleria/bernabeu/`. La lista «Hostelería» (+ 0,40 €) no cambia.
+
 ## Pedidos
 - Los pedidos fijos generan **previstos** (2 semanas por delante, cada madrugada). Se confirman el día antes (✅) o se quitan (❌).
   Los previstos ya cuentan en la hoja de compra. Más allá de 2 semanas, el calendario los calcula al momento.
