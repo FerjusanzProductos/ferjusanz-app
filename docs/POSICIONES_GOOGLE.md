@@ -30,5 +30,15 @@ _Ficha con 3 reseñas de 5,0. «No sale» = no está entre los resultados que en
 
 Cómo se repite: `cd scripts/seo && node pos.cjs terms.txt` (Playwright; deja `pos.json`).
 
-## Google normal (web)
-No se puede mirar desde Claude: Google pide captcha a las búsquedas automáticas, y Bing y DuckDuckGo están cerrados en la red del entorno. Lo bueno es **Search Console** (posición real de cada búsqueda): Tito lo exporta a una Hoja de Google y Claude la lee con el conector de Google Sheets.
+## Google normal (web) — Search Console, últimos 3 meses (exportado por Tito el 27/11/2026)
+Claude no puede buscar en Google (captcha; Bing y DuckDuckGo cerrados en la red). Tito exporta Search Console (Rendimiento → Exportar → Excel u Hojas, con «Sitio para ordenador») y lo manda por el chat.
+_Casi todo es todavía de la web antigua de WordPress: la nueva está en el dominio desde el 23/11/2026. Volver a exportar a mediados de diciembre para ver la nueva._
+
+- Total: 51 clics y 5.797 veces vistos; puesto medio 34. En el móvil, puesto 18; en ordenador, 38.
+- Salimos 1.º solo buscando «ferjusanz». En 1.ª página (puesto ≤ 8): catálogo de precios de frutas y verduras (5-7), distribuidor hortofrutícola Madrid reparto (4), reparto fruta y verdura restaurantes Madrid (5), mejor proveedor frutas y verduras restaurantes Madrid (5), mayorista de cebollas Madrid centro (3), venta de patatas Madrid centro (5).
+- Casi en 1.ª (8-20): frutas de invierno España (9-14), catálogo de verduras (11), mayorista frutas y verduras hostelería Madrid (11), proveedor verduras cocina profesional Madrid (14), patatas rojas (18).
+- Lejos (puesto 30-50) en las grandes: distribuidor/proveedor/mayorista de frutas y verduras (~100 veces vistas cada una), colegios, residencias, hostelería, tipos de patatas.
+- Huevos, setas, legumbres: casi nadie nos ve (menos de 20 veces). Segovia: nada.
+- Por temas: patata 618 veces vistas (puesto 41); hostelería 308 (43); colegios 151 (32); residencias 90 (37); fruterías 66 (38).
+- Arreglado el 27/11: el PDF viejo «LISTA-DE-PRECIOS-DE-VERDURAS.pdf» (366 veces visto, 2.º en clics) daba error; ahora lleva a `/calcular-tarifa/`. Las demás direcciones viejas que salen siguen funcionando.
+- Artículos que salen de aquí: **tanda S** en el punto 3 de `docs/PLAN_MARKETING.md`.

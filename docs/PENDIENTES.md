@@ -43,6 +43,7 @@ Detalle en `web/LEEME.md`, `docs/PLAN_WEB.md` y `docs/LISTA_PARA_ENVIAR.md` (lis
 - 🟡 **Anuncios de Meta** (Fernando eligió el 19/11/2026 los borradores **1 «Patata pelada»** y **2 «Un solo proveedor»**, `docs/redes/anuncios/`). Falta: **Fernando** crea la **página de Facebook** de la empresa con el WhatsApp de la empresa (Claude le guía desde el móvil); después dice cuánto dinero y cuántos días (propuesta: 5 € al día, 7 días cada uno). No se paga ni se publica nada sin su «sí» a eso.
 - ⚪ Decidir si se usa **Metricool** para que Claude deje programadas las publicaciones; **anuncios de Meta** más adelante (con 20-30 publicaciones y el dominio).
 - ⚪ **Claude**: al pasar el artículo 45 del plan (11/02/2027), añadir la siguiente tanda en `docs/PLAN_MARKETING.md`.
+- 🟡 **Tito: exportar otra vez Search Console hacia el 15/12/2026** (Rendimiento → Exportar, con «Sitio para ordenador»; enlace en `docs/POSICIONES_GOOGLE.md`) y mandarlo por el chat, para ver ya la web nueva. **Claude**: repetir también los puestos de Maps (`scripts/seo/pos.cjs`) y ajustar la tanda S.
 - 🟡 **Claude: volver a mirar «proveedor de verdura madrid» en Google hacia el 20/12/2026** (la IA de Google no nos sacaba el 26/11; web pública desde el 23/11 y ficha desde el 26/11). Si seguimos sin salir: más reseñas, directorios y Search Console.
 - ⚪ Otras ideas para subir en Google: reseñas, publicaciones semanales en la ficha, directorios, informe mensual. Plan: `docs/PLAN_MARKETING.md`; lista completa en `docs/LISTA_PARA_ENVIAR.md`.
 

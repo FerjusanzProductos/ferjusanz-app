@@ -107,7 +107,27 @@ Públicos: 🏫 colegios · 👵 residencias · 🍽️ restaurantes y hoteles �
 | 44 | 09/02 | 🏢 | Cocinas de hospital y centros de día: fruta y verdura que piden | fruta para hospitales Madrid |
 | 45 | 11/02 | 🗓️ | Primavera en la carta: primeras fresas, espárragos y habas | fruta de temporada primavera restaurante |
 
-**Ya publicados o en la cola `web/cola/` (23/11/2026), saltarlos**: 1, 3, 5, 6, 7, 8, 10, 11, 12 y 14. Cuando se vacíe la cola, **primero la tanda P** (abajo) y después seguir por el 2, 4, 9, 13, 15…
+**Ya publicados o en la cola `web/cola/` (23/11/2026), saltarlos**: 1, 3, 5, 6, 7, 8, 10, 11, 12 y 14. Cuando se vacíe la cola, **primero la tanda S y luego la tanda P** (abajo) y después seguir por el 2, 4, 9, 13, 15…
+
+### Tanda S: lo que la gente YA busca y nos encuentra (Search Console, 27/11/2026; Tito: «en qué salimos… por eso quiero seguir elaborando los artículos con las preguntas»)
+**Va antes que la tanda P.** Sale de las búsquedas reales de los últimos 3 meses (`docs/POSICIONES_GOOGLE.md`): Google ya nos enseña para ellas, pero lejos de la 1.ª página. Las que dicen «mejorar» no son artículo nuevo: se reescribe y amplía la página que ya existe (misma dirección). Mismo formato que la P (pregunta en `<h2>`, respuesta corta arriba, FAQ en `<h3>¿…?</h3><p>…</p>`), sin precios inventados.
+
+| Nº | Qué | Búsquedas (veces vistas · puesto) |
+|---|---|---|
+| S1 | Página nueva `/catalogo-precios-frutas-verduras/` «Catálogo y precios de frutas y verduras para hostelería»: cómo se ponen los precios en Mercamadrid, ofertas de la semana (`web/ofertas.json`), formatos y botón «Calcule su tarifa». Al publicarla, cambiar en `web/redirecciones.json` el PDF viejo `LISTA-DE-PRECIOS-DE-VERDURAS.pdf` para que lleve aquí. | catálogo precios frutas y verduras (17 · 5-7), catálogo de verduras (10 · 11); el PDF viejo: 366 · 14 |
+| S2 | «Patatas rojas: para qué sirven y qué variedades hay» | patata roja (31 · 23), patatas rojas (10 · 18), patata roja para qué sirve (· 1) |
+| S3 | Mejorar `/blog/tipos-de-patatas/` (hoy puesto 67): tabla de variedades y para qué plato va cada una en cocina profesional | tipos de patatas, tipo de patatas, clases de patatas, tipos de patatas nombres (~200 · 44-57) |
+| S4 | «Patata agria: usos y por qué es la de freír» | patata agria usos (26 · 37) |
+| S5 | «Frutas de invierno en España: cuáles son y cuándo están mejor» | frutas/fruta de invierno España (48 · 9-14) |
+| S6 | Mejorar `/proveedor-de-frutas-y-verduras-para-colegios-madrid/` | distribuidor de verduras para colegios (32 · 35), mayorista de frutas para colegios (27 · 32), proveedor frutas para colectividades (35 · 28) |
+| S7 | Mejorar `/proveedor-de-frutas-y-verduras-para-residencias-madrid/` | distribuidor/mayorista de verduras y frutas para residencias (90 · 29-39) |
+| S8 | «Suministro de fruta y verdura para fruterías y tiendas en Madrid» | suministro frutas y verduras para fruterías madrid (44 · 37), distribuidor para mercados y fruterías (· 9) |
+| S9 | «Venta y reparto de patatas en Madrid: por sacos, al almacén o a domicilio del negocio» | almacén de patatas (39 · 66), venta de patatas a domicilio (27 · 31), distribuidor patatas (45 · 24) |
+| S10 | «Proveedor de verduras para cocina profesional en Madrid» | proveedor verduras cocina profesional madrid (18 · 14) |
+| S11 | «Proveedor de fruta para cafeterías y hoteles en Madrid» | proveedor de frutas para cafeterías (· 14), distribuidor de verduras hoteles (· 16) |
+| S12 | Mejorar `/blog/huevos-para-hosteleria-tamanos-categorias-codigo/` | huevo para restaurante (· 19), uso de huevo en hostelería (· 22) |
+
+Las grandes («distribuidor de frutas y verduras», «proveedores de frutas y verduras», ~100 veces vistas cada una, puesto 37-50) las ganan la portada y `/mayorista-de-frutas-y-verduras-madrid/` con tiempo, reseñas, directorios y enlaces de medios; los artículos S ayudan llevando enlaces a esas dos páginas.
 
 ### Tanda P: una pregunta de cliente, un artículo (Tito, 26/11/2026: «las preguntas que hacen jefes, cocineros, colegios, residencias, cocinas grandes… un artículo para cada una»)
 Todas contestadas en corto en la guía grande **`/blog/preguntas-proveedor-fruta-verdura-madrid-restaurantes-colegios/`** (35 preguntas, publicada el 26/11/2026). Cada artículo de esta tanda desarrolla **una** pregunta a fondo. **Va antes que la tabla de arriba**: al vaciarse la cola, la tarea automática publica la siguiente P que no esté hecha. El título lleva la pregunta tal como la buscaría el cliente; dentro, un `<h2>` con la pregunta y la respuesta corta en el primer párrafo (es lo que copia la respuesta de IA de Google), y luego el detalle. Al publicar, **enlazar el artículo nuevo desde la guía grande** (al final de la respuesta que corresponda, «Más en …»). ⚠️ = comprobar la norma antes de escribir; sin cifras inventadas (en las de cantidades, dar el método de cálculo, no números de Ferjusanz).
