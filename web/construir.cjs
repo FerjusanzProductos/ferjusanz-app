@@ -140,6 +140,7 @@ const enlacesSectores = (ruta = '') => `<section class="bloque bloque-sectores">
 </div></section>`;
 
 const SERVICIOS = [
+  ['/servicios-de-distribucion-y-exportacion/distribucion-de-frutas-y-verduras-en-madrid-2/', 'Distribuidor de frutas y verduras en Madrid'],
   ['/mayorista-de-frutas-y-verduras-madrid/', 'Mayorista de frutas y verduras en Madrid'],
   ['/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', 'Proveedor para hostelería'],
   ['/mayorista-de-frutas-y-verduras-para-colectividades-madrid/', 'Mayorista para colectividades'],
@@ -154,9 +155,6 @@ const SERVICIOS = [
   ['/distribucion-y-venta-de-cebollas-madrid/', 'Distribución de cebollas'],
   ['/distribucion-y-venta-de-legumbres-madrid/', 'Distribución de legumbres'],
   ['/distribucion-y-venta-de-productos-de-cuarta-gama-madrid/', 'Productos de cuarta gama'],
-  ['/reparto-y-venta-de-cebollas-madrid/', 'Reparto de cebollas'],
-  ['/reparto-y-venta-de-verduras-madrid/', 'Reparto de verduras'],
-  ['/reparto-y-venta-de-hortalizas-madrid/', 'Reparto de hortalizas'],
   ['/servicios-de-distribucion-y-exportacion/', 'Distribución y exportación'],
 ];
 
@@ -313,7 +311,7 @@ function plantilla({ ruta, titulo, descripcion, imagen, cuerpo, datos = [], tipo
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${esc(tituloSeo(anios(titulo)))}</title>
 <meta name="description" content="${esc(anios(descripcion))}">
-<link rel="canonical" href="${DOMINIO}${ruta}">
+<link rel="canonical" href="${DOMINIO}${ruta}">${['/buscar/', '/tarjeta/', '/super9/'].includes(ruta) ? '\n<meta name="robots" content="noindex, follow">' : ''}
 <meta property="og:type" content="${tipo}">
 <meta property="og:site_name" content="Ferjusanz">
 <meta property="og:title" content="${esc(tituloSeo(anios(titulo)))}">
@@ -385,7 +383,7 @@ ${cuerpo}
     </div>
     <div>
       <h2>Ferjusanz</h2>
-      <ul><li><a href="/empresa-de-venta-y-distribucion-de-fruta-y-verdura/">Quiénes somos</a></li><li><a href="/zonas-de-reparto/">Zonas de reparto</a></li><li><a href="/novedades/">Novedades del almacén</a></li><li><a href="${RESENA}" rel="nofollow" target="_blank">★ Déjenos una reseña en Google</a></li><li><a href="/blog/">Guías para profesionales</a></li><li><a href="/contacto/">Contacto</a></li><li><a href="/aviso-legal/">Aviso legal</a></li><li><a href="/politica-de-privacidad/">Privacidad</a></li><li><a href="/politica-de-cookies/">Cookies</a></li></ul>
+      <ul><li><a href="/empresa-de-venta-y-distribucion-de-fruta-y-verdura/">Quiénes somos</a></li><li><a href="/zonas-de-reparto/">Zonas de reparto</a></li>${PAGINAS_ZONA.map(z => `<li><a href="/fruta-y-verdura-al-por-mayor-${z.slug}/">${z.tit}</a></li>`).join('')}<li><a href="/novedades/">Novedades del almacén</a></li><li><a href="${RESENA}" rel="nofollow" target="_blank">★ Déjenos una reseña en Google</a></li><li><a href="/blog/">Guías para profesionales</a></li><li><a href="/contacto/">Contacto</a></li><li><a href="/aviso-legal/">Aviso legal</a></li><li><a href="/politica-de-privacidad/">Privacidad</a></li><li><a href="/politica-de-cookies/">Cookies</a></li></ul>
     </div>
   </div>
   <div class="envoltura" style="margin-top:24px"><div id="proveedores-sello" style="width:180px; height:90px;"><a title="Empresa colaboradora de Proveedores.com" href="https://www.proveedores.com/proveedores/ferjusanz/" target="_blank" rel="noopener"><img src="https://www.proveedores.com/stamp.xpng?com=2338" alt="Ferjusanz en Proveedores.com" width="180" height="90" style="display:block; width:180px; height:90px; max-height:none; max-width:none;"></a></div></div>
@@ -494,7 +492,7 @@ ${(a => `<section class="guia-portada" aria-label="Última guía">
     <ul class="ventajas">
       <li>${I.hoja}<strong>Calidad homogénea, pedido tras pedido</strong><span>Trabajamos con agricultores de confianza y seleccionamos caja a caja a primera hora en Mercamadrid.</span></li>
       <li>${I.camion}<strong>Reparto puntual con cadena de frío</strong><span>Flota propia de camiones y furgonetas refrigerados. Entregamos a la hora que marca su servicio.</span></li>
-      <li>${I.reloj}<strong>Precio de mercado, cada día</strong><span>Tarifa según la lonja del día y el volumen de su consumo, sin intermediarios añadidos.</span></li>
+      <li>${I.reloj}<strong>Precio de mercado, cada día</strong><span>Tarifa según la lonja del día y el volumen de su consumo.</span></li>
       <li>${I.familia}<strong>Un interlocutor directo</strong><span>Pedidos, cambios e incidencias se resuelven con la familia, por WhatsApp o teléfono.</span></li>
     </ul>
   </div>
@@ -532,7 +530,7 @@ ${(a => `<section class="guia-portada" aria-label="Última guía">
       <h2>Tres generaciones alegrando la mesa de Madrid</h2>
       <p>Empezamos con las patatas y las cebollas hace ${ANIOS}. El abuelo, luego el padre y hoy el hijo: la misma familia, el mismo trato y la misma manera de elegir el género.</p>
       <p>Trabajamos con agricultores de confianza y escogemos el género a primera hora en Mercamadrid; de ahí sale en nuestros camiones refrigerados hacia su cocina.</p>
-      <blockquote class="firma">«Si no lo pondríamos en nuestra mesa, no lo llevamos a la tuya.»</blockquote>
+      <blockquote class="firma">«Elegimos cada caja como si fuéramos a sentarnos a la mesa de su restaurante.»</blockquote>
       <a class="enlace" href="/empresa-de-venta-y-distribucion-de-fruta-y-verdura/">Quiénes somos ${I.flecha}</a>
     </div>
   </div>
@@ -588,7 +586,7 @@ ${bandaResena()}
   return plantilla({
     ruta: '/', precarga: '/fotos/verduras-gourmet-hosteleria.jpg',
     titulo: 'Proveedor y mayorista de fruta y verdura en Madrid | Ferjusanz',
-    descripcion: `Proveedor mayorista de patatas, frutas, verduras, huevos, setas, champiñones y legumbres para restaurantes, hoteles, colegios, residencias y colectividades en Madrid. Solicite tarifa.`,
+    descripcion: `Patatas, frutas, verduras, huevos, setas y legumbres al por mayor para restaurantes, hoteles, colegios y residencias de Madrid y Segovia. Pida precio.`,
     cuerpo,
     datos: [NEGOCIO, { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Ferjusanz', url: DOMINIO + '/' },
       { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: PREGUNTAS.map(([q, r]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: r } })) }],
@@ -838,7 +836,7 @@ function calcularTarifa() {
   <p class="entradilla">Marque lo que compra ahora a su proveedor, como si nos hiciera el pedido, y le decimos qué precios le haríamos. Sin compromiso y sin pedido mínimo.</p>
   ${formTarifa(TARIFA)}
 </div></section>`;
-  return plantilla({ ruta: TARIFA, titulo: 'Calcule su tarifa de fruta y verdura | Ferjusanz', descripcion: 'Marque los productos que compra ahora (fruta, verdura, patatas, huevos…) y le decimos qué precios le haríamos según lo que gasta. Sin compromiso y sin pedido mínimo.', cuerpo, datos: [m.datos, NEGOCIO] });
+  return plantilla({ ruta: TARIFA, titulo: 'Calcule su tarifa de fruta y verdura | Ferjusanz', descripcion: 'Marque lo que compra ahora (fruta, verdura, patatas, huevos…) y le decimos qué precios le haríamos según lo que gasta. Sin compromiso.', cuerpo, datos: [m.datos, NEGOCIO] });
 }
 
 // Tarjeta virtual (14/11/2026). Tito 23/11/2026: aquí (la abre el QR de la app) sí sale también su 609 567 354.: lo que Fernando manda por WhatsApp o enseña en QR a quien pregunta quiénes somos.
@@ -917,14 +915,14 @@ const NUEVAS = [
   { path: '/productos/huevos/', familia: 'huevos', title: 'Huevos al por mayor para hostelería en Madrid | Ferjusanz',
     description: 'Huevos de gallina y de codorniz al por mayor para restaurantes, colegios, residencias y fruterías de Madrid, por tamaños y categorías.',
     html: `<h1>Huevos al por mayor en Madrid</h1>
-<p>Además de fruta, verdura y patatas, llevamos <strong>huevos frescos</strong> a restaurantes, bares, colegios, residencias y fruterías de Madrid. Así recibes todo en un solo pedido y un solo reparto.</p>
+<p>Además de fruta, verdura y patatas, llevamos <strong>huevos frescos</strong> a restaurantes, bares, colegios, residencias y fruterías de Madrid. Así recibe todo en un solo pedido y un solo reparto.</p>
 <h2>Huevos de gallina y de codorniz</h2>
 <p>Trabajamos huevo de gallina para cocina diaria (tortillas, rebozados, repostería, desayunos) y huevo de codorniz para tapas, ensaladas y presentaciones.</p>
 <h2>Por qué pedir los huevos con la fruta</h2>
 <ul><li><strong>Un solo proveedor</strong>: menos llamadas, menos albaranes y una sola entrega.</li><li><strong>Reparto refrigerado</strong> en nuestros camiones y furgonetas.</li><li><strong>Precio de mayorista</strong>, según cantidad y frecuencia.</li></ul>
 <p>Indíquenos cuántas docenas necesita a la semana y le pasamos precio.</p>` },
-  { path: '/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', foto: F + '2023/03/Tipos-de-guarniciones-de-verduras.jpg', title: 'Proveedor de fruta y verdura para restaurantes en Madrid | Ferjusanz',
-    description: 'Proveedor de patatas (también peladas), frutas, verduras, huevos, setas, champiñones y legumbres para restaurantes, bares y catering en Madrid. Reparto refrigerado diario y precio de mercado.',
+  { path: '/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', foto: F + '2023/03/Tipos-de-guarniciones-de-verduras.jpg', title: 'Proveedor de frutas y verduras para hostelería en Madrid | Ferjusanz',
+    description: 'Fruta, verdura, patatas, huevos y setas al por mayor para restaurantes, bares y hoteles de Madrid y Segovia. Reparto refrigerado y sin pedido mínimo.',
     html: `<h1>Proveedor de frutas y verduras para hostelería en Madrid</h1>
 <p>Un restaurante vive de su género. Por eso llevamos ${ANIOS} sirviendo a <strong>restaurantes, bares, hoteles y empresas de catering</strong> de Madrid con patatas, frutas, verduras, huevos, setas, champiñones y legumbres de agricultores de confianza, seleccionados cada mañana en Mercamadrid.</p>
 <h2>Todo lo que necesita una cocina, en un solo pedido</h2>
@@ -945,7 +943,7 @@ const NUEVAS = [
 <p>Ajustamos el pedido a la ocupación de cada semana y repartimos con camiones y furgonetas refrigerados los días que necesite. Su responsable de compras o su jefe de cocina hablan siempre con las mismas personas, por WhatsApp o por teléfono.</p>
 <h2>Tarifa según su consumo</h2>
 <p>No publicamos precios porque cambian con el mercado. Indíquenos el volumen aproximado y la frecuencia y le enviamos una tarifa ajustada, sin compromiso.</p>` },
-  { path: '/proveedor-de-frutas-y-verduras-para-colegios-madrid/', foto: '/fotos/2026/11/comedor-colegio.jpg', title: 'Fruta y verdura para comedores escolares en Madrid | Ferjusanz',
+  { path: '/proveedor-de-frutas-y-verduras-para-colegios-madrid/', foto: '/fotos/2026/11/comedor-colegio.jpg', title: 'Proveedor de fruta y verdura para colegios en Madrid | Ferjusanz',
     description: 'Fruta y verdura al por mayor para colegios y comedores escolares de Madrid. Calibres constantes, producto de temporada y reparto puntual.',
     html: `<h1>Proveedor de fruta y verdura para colegios en Madrid</h1>
 <p>Un comedor escolar no puede esperar. Necesita lo mismo cada día: <strong>producto fresco, cantidades exactas y que llegue a su hora</strong>. Ferjusanz sirve patatas, frutas, verduras, huevos, setas, champiñones y legumbres a colegios, escuelas infantiles y empresas que gestionan comedores escolares en Madrid.</p>
@@ -956,8 +954,8 @@ const NUEVAS = [
 <p>Trabajamos con la planificación del menú mensual para tener el producto a tiempo y mantener calibres y calidad semana tras semana. Repartimos con vehículos refrigerados y nos adaptamos al calendario escolar.</p>
 <h2>Producto de temporada</h2>
 <p>La fruta y la verdura de temporada están en su mejor momento. Y salen más baratas. Cuando un producto sube o escasea, le proponemos otro para que el menú no se resienta.</p>` },
-  { path: '/proveedor-de-frutas-y-verduras-para-residencias-madrid/', foto: F + '2020/09/verduras-residencias-ancianos.jpg', title: 'Fruta y verdura para residencias de mayores en Madrid | Ferjusanz',
-    description: 'Patatas, frutas, verduras, huevos, setas, champiñones y legumbres al por mayor para residencias de mayores de Madrid. Producto fresco, reparto regular y trato directo.',
+  { path: '/proveedor-de-frutas-y-verduras-para-residencias-madrid/', foto: F + '2020/09/verduras-residencias-ancianos.jpg', title: 'Proveedor de fruta y verdura para residencias en Madrid | Ferjusanz',
+    description: 'Fruta, verdura, patatas y huevos al por mayor para residencias de mayores de Madrid: producto fresco, reparto regular y trato directo.',
     html: `<h1>Proveedor de fruta y verdura para residencias en Madrid</h1>
 <p>En una residencia, comer bien es parte del cuidado. Ferjusanz abastece a <strong>residencias de mayores, centros de día y centros sociosanitarios</strong> de Madrid con fruta y verdura fresca, servida con la regularidad que pide una cocina que funciona todos los días del año.</p>
 <h2>Producto adaptado a la cocina de una residencia</h2>
@@ -1011,7 +1009,7 @@ const rutaZona = z => `/fruta-y-verdura-al-por-mayor-${z.slug}/`;
 for (const z of PAGINAS_ZONA) NUEVAS.push({
   path: rutaZona(z), foto: z.foto,
   title: `Fruta y verdura al por mayor en ${z.tit || z.corto} | Ferjusanz`, // tit: corto para que Google no lo corte (~60 letras)
-  description: `Patatas, frutas, verduras, huevos, setas, champiñones y legumbres para hostelería y colectividades de ${z.corto}. Sin pedido mínimo, reparto refrigerado.`,
+  description: `Fruta, verdura y patatas al por mayor para hostelería y colectividades de ${z.corto}. Sin pedido mínimo.`,
   html: `<h1>Fruta y verdura al por mayor en ${z.corto}</h1>
 <p>${z.intro}</p>
 <h2>Dónde repartimos</h2>
@@ -1024,7 +1022,7 @@ for (const z of PAGINAS_ZONA) NUEVAS.push({
 <p>Para su tipo de negocio: <a href="/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/">restaurantes</a>, <a href="/proveedor-de-frutas-y-verduras-para-hoteles-madrid/">hoteles</a>, <a href="/proveedor-de-frutas-y-verduras-para-colegios-madrid/">colegios</a> y <a href="/proveedor-de-frutas-y-verduras-para-residencias-madrid/">residencias</a>.</p>` });
 NUEVAS.push({ path: '/zonas-de-reparto/', foto: F + '2019/10/proveedores-distribucion_crs2.jpg',
   title: 'Zonas de reparto de fruta y verdura en Madrid y Segovia | Ferjusanz',
-  description: 'Dónde reparte Ferjusanz patatas, frutas, verduras, huevos, setas, champiñones y legumbres al por mayor: Madrid capital, zona norte, oeste, corredor del Henares y Segovia.',
+  description: 'Dónde reparte Ferjusanz fruta, verdura y patatas al por mayor: Madrid capital, zona norte, zona oeste, corredor del Henares y Segovia.',
   html: `<h1>Zonas de reparto en Madrid y Segovia</h1>
 <p>Repartimos patatas, frutas, verduras, huevos, setas, champiñones y legumbres a hostelería, colectividades y fruterías de <strong>Madrid y Segovia</strong>, en camiones y furgonetas refrigerados y sin pedido mínimo. Estas son las zonas donde más trabajamos:</p>
 <ul>${PAGINAS_ZONA.map(z => `<li><a href="${rutaZona(z)}">${z.corto}</a></li>`).join('')}</ul>

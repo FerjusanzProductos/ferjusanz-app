@@ -53,6 +53,8 @@ export default {
     const PRUEBAS = url.hostname.endsWith(".workers.dev");
     // Siempre con www (el día del traslado, el dominio sin www también apunta aquí).
     if (url.hostname === DOMINIO_SIN_WWW) return Response.redirect("https://www." + DOMINIO_SIN_WWW + url.pathname + url.search, 301);
+    // Siempre por https (auditoría SEO 27/11/2026: http://www… daba 200).
+    if (!PRUEBAS && url.protocol === "http:") return Response.redirect("https://" + url.hostname + url.pathname + url.search, 301);
     let ruta = decodeURI(url.pathname);
     if (ruta === "/favicon.ico") return Response.redirect(url.origin + "/marca/icono-32.png", 301); // el móvil lo pide aunque haya <link rel=icon>
     // Enlace fijo de reseñas (para la web y para un QR que no cambie): «Escribir una reseña» de la ficha de Google.
