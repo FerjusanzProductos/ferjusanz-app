@@ -1,0 +1,332 @@
+[
+ {
+  "nombre": "Acelgas",
+  "unidad": "manojo",
+  "precio": 1.01,
+  "dest": false
+ },
+ {
+  "nombre": "Aguacate Hass maduro (extra) (caja de 4 kg aprox.)",
+  "unidad": "caja",
+  "precio": 19.2,
+  "dest": false
+ },
+ {
+  "nombre": "Ajo pelado",
+  "unidad": "kg",
+  "precio": 3.6,
+  "dest": false
+ },
+ {
+  "nombre": "Ajos extra",
+  "unidad": "kg",
+  "precio": 3.2,
+  "dest": false
+ },
+ {
+  "nombre": "Apio",
+  "unidad": "kg",
+  "precio": 1.05,
+  "dest": false
+ },
+ {
+  "nombre": "Apio verde",
+  "unidad": "manojo",
+  "precio": 1.36,
+  "dest": false
+ },
+ {
+  "nombre": "Bananas / plátanos",
+  "unidad": "kg",
+  "precio": 1.4,
+  "dest": false
+ },
+ {
+  "nombre": "Berenjena",
+  "unidad": "kg",
+  "precio": 0.9,
+  "dest": false
+ },
+ {
+  "nombre": "Calabacín",
+  "unidad": "kg",
+  "precio": 0.9,
+  "dest": false
+ },
+ {
+  "nombre": "Calabaza",
+  "unidad": "kg",
+  "precio": 0.9,
+  "dest": false
+ },
+ {
+  "nombre": "Cebolla gorda",
+  "unidad": "kg",
+  "precio": 0.7,
+  "dest": true
+ },
+ {
+  "nombre": "Cebolla morada",
+  "unidad": "kg",
+  "precio": 1.5,
+  "dest": false
+ },
+ {
+  "nombre": "Cebolla nueva",
+  "unidad": "kg",
+  "precio": 0.7,
+  "dest": false
+ },
+ {
+  "nombre": "Cebollino",
+  "unidad": "manojo",
+  "precio": 1.8,
+  "dest": false
+ },
+ {
+  "nombre": "Champiñón (caja de 2,5 kg aprox.)",
+  "unidad": "caja",
+  "precio": 7.75,
+  "dest": false
+ },
+ {
+  "nombre": "Cilantro",
+  "unidad": "manojo",
+  "precio": 0.9,
+  "dest": false
+ },
+ {
+  "nombre": "Cogollo",
+  "unidad": "bandeja",
+  "precio": 1.4,
+  "dest": false
+ },
+ {
+  "nombre": "Coliflor",
+  "unidad": "pieza",
+  "precio": 1.97,
+  "dest": false
+ },
+ {
+  "nombre": "Huevos (tamaño L)",
+  "unidad": "docena",
+  "precio": 2.3,
+  "dest": false
+ },
+ {
+  "nombre": "Jengibre",
+  "unidad": "kg",
+  "precio": 2.8,
+  "dest": false
+ },
+ {
+  "nombre": "Kiwi",
+  "unidad": "kg",
+  "precio": 4.4,
+  "dest": false
+ },
+ {
+  "nombre": "Lechuga iceberg",
+  "unidad": "pieza",
+  "precio": 0.95,
+  "dest": false
+ },
+ {
+  "nombre": "Lechuga mézclum 500 g",
+  "unidad": "bolsa",
+  "precio": 2.2,
+  "dest": false
+ },
+ {
+  "nombre": "Lechuga romana (x2)",
+  "unidad": "bandeja",
+  "precio": 1.75,
+  "dest": false
+ },
+ {
+  "nombre": "Limas (caja de 4,3 kg aprox.)",
+  "unidad": "caja",
+  "precio": 17.29,
+  "dest": false
+ },
+ {
+  "nombre": "Limones",
+  "unidad": "kg",
+  "precio": 1.3,
+  "dest": false
+ },
+ {
+  "nombre": "Mandarinas",
+  "unidad": "kg",
+  "precio": 2.2,
+  "dest": false
+ },
+ {
+  "nombre": "Manzana (caja de 7 kg aprox.)",
+  "unidad": "caja",
+  "precio": 7,
+  "dest": false
+ },
+ {
+  "nombre": "Melón extra Brasil",
+  "unidad": "kg",
+  "precio": 1.8,
+  "dest": false
+ },
+ {
+  "nombre": "Melón piel de sapo",
+  "unidad": "pieza",
+  "precio": 6.3,
+  "dest": false
+ },
+ {
+  "nombre": "Naranjas de zumo",
+  "unidad": "kg",
+  "precio": 1,
+  "dest": false
+ },
+ {
+  "nombre": "Patata agria",
+  "unidad": "kg",
+  "precio": 0.65,
+  "dest": true
+ },
+ {
+  "nombre": "Patata especial freír",
+  "unidad": "kg",
+  "precio": 0.6,
+  "dest": true
+ },
+ {
+  "nombre": "Patata pelada",
+  "unidad": "kg",
+  "precio": 1.3,
+  "dest": false
+ },
+ {
+  "nombre": "Patata pelada corte casero freír",
+  "unidad": "kg",
+  "precio": 1.4,
+  "dest": false
+ },
+ {
+  "nombre": "Patatas peladas bastón",
+  "unidad": "kg",
+  "precio": 1.4,
+  "dest": false
+ },
+ {
+  "nombre": "Pepino",
+  "unidad": "kg",
+  "precio": 1.55,
+  "dest": false
+ },
+ {
+  "nombre": "Pera conferencia cal. 24",
+  "unidad": "kg",
+  "precio": 2.45,
+  "dest": false
+ },
+ {
+  "nombre": "Perejil",
+  "unidad": "manojo",
+  "precio": 0,
+  "dest": false
+ },
+ {
+  "nombre": "Pimiento Padrón gallego",
+  "unidad": "kg",
+  "precio": 2.8,
+  "dest": false
+ },
+ {
+  "nombre": "Pimiento rojo para asar",
+  "unidad": "kg",
+  "precio": 2.25,
+  "dest": false
+ },
+ {
+  "nombre": "Pimiento verde",
+  "unidad": "kg",
+  "precio": 1.1,
+  "dest": false
+ },
+ {
+  "nombre": "Pimiento verde italiano",
+  "unidad": "kg",
+  "precio": 2.1,
+  "dest": false
+ },
+ {
+  "nombre": "Piña extra",
+  "unidad": "kg",
+  "precio": 1.8,
+  "dest": false
+ },
+ {
+  "nombre": "Plátano canario",
+  "unidad": "kg",
+  "precio": 2,
+  "dest": false
+ },
+ {
+  "nombre": "Plátano macho",
+  "unidad": "kg",
+  "precio": 2.3,
+  "dest": false
+ },
+ {
+  "nombre": "Puerro",
+  "unidad": "kg",
+  "precio": 1.5,
+  "dest": false
+ },
+ {
+  "nombre": "Repollo",
+  "unidad": "kg",
+  "precio": 1.05,
+  "dest": false
+ },
+ {
+  "nombre": "Tomate ensalada",
+  "unidad": "kg",
+  "precio": 1.3,
+  "dest": true
+ },
+ {
+  "nombre": "Tomate maduro",
+  "unidad": "kg",
+  "precio": 2,
+  "dest": false
+ },
+ {
+  "nombre": "Tomate pera gordo",
+  "unidad": "kg",
+  "precio": 1.05,
+  "dest": true
+ },
+ {
+  "nombre": "Tomate raf (caja de 7,35 kg aprox.)",
+  "unidad": "caja",
+  "precio": 16.17,
+  "dest": true
+ },
+ {
+  "nombre": "Tomate rosa",
+  "unidad": "kg",
+  "precio": 3.9,
+  "dest": false
+ },
+ {
+  "nombre": "Yuca (caja de 18 kg aprox.)",
+  "unidad": "caja",
+  "precio": 48.6,
+  "dest": false
+ },
+ {
+  "nombre": "Zanahoria",
+  "unidad": "kg",
+  "precio": 0.9,
+  "dest": false
+ }
+]
