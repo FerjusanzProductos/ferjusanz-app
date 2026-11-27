@@ -32,7 +32,7 @@ Web de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., sin WordPress, en Cloudflare (
 - `public/estilo.css`: colores y aspecto. `public/fuentes/`: letra Inter (servida desde la propia web). Estilo «Amanecer en órbita» (20/11/2026, elegido por Tito): fondo azul noche con estrellas (CSS, sin animación), resplandor naranja de amanecer en la portada (el sol del logo), botones con degradado de fuego (`--sol-1/2/3`), cifras en dorado, tarjetas de cristal oscuro, logo claro (`logo-oscuro.png`). Revisado con Hallmark (`node .claude/skills/hallmark/scripts/sloplint.mjs web/public/index.html web/public/estilo.css --genre atmospheric`). Antes: «Claro» estilo Apple (20/11) y «Sobrio de mercado» (14/11).
 - `public/wp-content/`: fotos de la web antigua (mismas rutas). `fotos/`: copia de las fotos nuevas, que se sirven desde el almacén KV de Cloudflare `ferjusanz-web-fotos` en `/fotos/…` (así el Worker no crece).
 - `worker.js`: sirve la web; pasa el formulario de `/contacto/` a la función `web-contacto` de Supabase (correo a ferjusanz@hotmail.com y, además, lo apunta en Contactos/prospectos con fuente «Formulario de la web») y manda el dominio sin `www` a `www`. `PRUEBAS` = la dirección acaba en `.workers.dev` → esa copia no la ve Google; en el dominio sí.
-- `TAREA_AUTOMATICA.md`: lo que hace la tarea programada cada 2 días. `DIARIO.md`: lo que ha publicado.
+- `TAREA_AUTOMATICA.md`: lo que hace la tarea programada cada día. `DIARIO.md`: lo que ha publicado.
 - `copiar-web-antigua.cjs`: cómo se copiaron los textos de la web antigua (no hace falta volver a usarlo).
 
 ## Fotos de Fernando
