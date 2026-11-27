@@ -107,10 +107,10 @@ Públicos: 🏫 colegios · 👵 residencias · 🍽️ restaurantes y hoteles �
 | 44 | 09/02 | 🏢 | Cocinas de hospital y centros de día: fruta y verdura que piden | fruta para hospitales Madrid |
 | 45 | 11/02 | 🗓️ | Primavera en la carta: primeras fresas, espárragos y habas | fruta de temporada primavera restaurante |
 
-**Ya publicados o en la cola `web/cola/` (23/11/2026), saltarlos**: 1, 3, 5, 6, 7, 8, 10, 11, 12 y 14. Cuando se vacíe la cola, **primero la tanda S y luego la tanda P** (abajo) y después seguir por el 2, 4, 9, 13, 15…
+**Ya publicados o en la cola `web/cola/` (23/11/2026), saltarlos**: 1, 3, 5, 6, 7, 8, 10, 11, 12 y 14. **Primero la tanda S** (abajo), después la cola y luego la tanda P y después seguir por el 2, 4, 9, 13, 15…
 
 ### Tanda S: lo que la gente YA busca y nos encuentra (Search Console, 27/11/2026; Tito: «en qué salimos… por eso quiero seguir elaborando los artículos con las preguntas»)
-**Va antes que la tanda P.** Sale de las búsquedas reales de los últimos 3 meses (`docs/POSICIONES_GOOGLE.md`): Google ya nos enseña para ellas, pero lejos de la 1.ª página. Las que dicen «mejorar» no son artículo nuevo: se reescribe y amplía la página que ya existe (misma dirección). Mismo formato que la P (pregunta en `<h2>`, respuesta corta arriba, FAQ en `<h3>¿…?</h3><p>…</p>`), sin precios inventados.
+**Va antes que todo, también antes de la cola `web/cola/`** (Tito, 27/11/2026: «priorizar… los de Search Console antes que esos»). **Orden** (lo más cerca de la 1.ª página y lo que más se busca primero): S1 catálogo y precios (ya estamos 5.º-7.º) → S5 frutas de invierno (9.º-14.º, y es la temporada ahora) → S10 verduras para cocina profesional (14.º) → S2 patatas rojas (18.º) → S6 colegios → S7 residencias → S3 tipos de patatas → S9 venta de patatas → S8 fruterías → S11 cafeterías y hoteles → S4 patata agria → S12 huevos. Cuando se acaben, la cola y luego la tanda P. Sale de las búsquedas reales de los últimos 3 meses (`docs/POSICIONES_GOOGLE.md`): Google ya nos enseña para ellas, pero lejos de la 1.ª página. Las que dicen «mejorar» no son artículo nuevo: se reescribe y amplía la página que ya existe (misma dirección). Mismo formato que la P (pregunta en `<h2>`, respuesta corta arriba, FAQ en `<h3>¿…?</h3><p>…</p>`), sin precios inventados.
 
 | Nº | Qué | Búsquedas (veces vistas · puesto) |
 |---|---|---|
