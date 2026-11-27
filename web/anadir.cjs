@@ -43,6 +43,8 @@ if (tipo === 'novedad') {
   const ruta = `/blog/${slug(a.slug)}/`;
   if (paginas.some(p => p.path === ruta)) throw new Error('Ya existe un artículo con esa dirección: ' + ruta);
   if (a.descripcion.length > 160) throw new Error('La descripción pasa de 160 letras');
+  const fallos = require('./revisar-texto.cjs').revisar(a.html);
+  if (fallos.length) throw new Error('El texto suena a relleno, reescríbelo:\n - ' + fallos.join('\n - '));
   const foto = guardarFoto(a.foto, slug(a.slug));
   paginas.push({ path: ruta, isPost: true, title: `${a.titulo} - Ferjusanz`, description: a.descripcion,
     ogImage: foto, date: new Date().toISOString(), h1: a.titulo, html: a.html, imgs: [], bgs: [], nuevo: true });

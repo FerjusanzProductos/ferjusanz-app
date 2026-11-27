@@ -42,3 +42,6 @@ Cada vez que Fernando cuente algo útil en una conversación con Claude (un truc
 - Fernando **compite en boxeo**: ganó la **medalla de plata en el Campeonato de Madrid 2026** (confirmado por él). Se puede contar en los artículos de deporte y vida sana.
 - Las fotos del ring son de **Adrumor**, amigo suyo, **pagadas**: se pueden usar (poner «Fotos del ring: Adrumor»).
 - 17/11/2026 (fotos de Drive): naranja de zumo **calibre 5-6**, ideal para máquina de zumo; naranja de mesa, las gorditas de la caja azul; alcachofa ya entrando en temporada y bajando de precio; manzana Golden y pera Conferencia en calibre 26; aguacate Hass; patata pelada en corte bastón grueso.
+
+### 27/11/2026 (Tito, por el chat)
+- La patata **se parte para comprobarla** (foto de patatas partidas por la mitad del 27/11). Aunque sea **invierno**, si se escoge una buena patata **no da fallos por dentro**.
