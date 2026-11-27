@@ -29,7 +29,7 @@ const f = (n) => b64('web/public/fuentes/' + n, 'font/woff2');
 // Datos de contacto: iguales en todo (NAP de Google)
 const D = {
   nombre: 'FERJUSANZ', tel: '609 100 690', web: 'www.ferjusanz-frutas-verduras.es',
-  correo: 'ferjusanz@hotmail.com', horario: 'Lunes a viernes, de 8:00 a 18:00', zona: 'Madrid y Segovia',
+  correo: 'ferjusanz@hotmail.com', horario: 'Lunes a viernes de 4:30 a 14:00 · sábados de 4:30 a 13:00', zona: 'Madrid y Segovia',
 };
 // QR de la tarjeta: llama al móvil de Tito (en la tarjeta pone «Fernando Sanz», Tito 25/11/2026: «no pongas Tito») (Tito, 25/11/2026: «el QR con mi número de teléfono»). Librería qrcode-generator (MIT) guardada al lado.
 const qrcode = createRequire(import.meta.url)('./qrcode-generator.min.js');
