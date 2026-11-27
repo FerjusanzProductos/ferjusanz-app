@@ -12,6 +12,16 @@ const PROHIBIDAS = ['en el mundo de', 'descubre', 'no cabe duda', 'sin lugar a d
   'experiencia gastronomica', 'elevar tu', 'llevar tu negocio', 'al siguiente nivel', 'ademas de ello',
   'en la actualidad', 'hoy en dia', 'en un mundo', 'panorama', 'abanico de', 'amplia gama', 'garantizar la satisfaccion'];
 
+// Datos que la empresa NO puede decir (auditoría de la web, 27/11/2026; ver web/LEEME.md). En minúsculas y sin tildes.
+const DATOS_FALSOS = [['a domicilio', 'vendemos a negocios, no «a domicilio»'], ['particulares', 'no vendemos a particulares'],
+  ['24/48', 'el plazo es «pedidos hasta la tarde anterior»'], ['24-48', 'el plazo es «pedidos hasta la tarde anterior»'],
+  ['se lo cambiamos', 'no se prometen cambios ni devoluciones'], ['se cambia', 'no se prometen cambios ni devoluciones'],
+  ['cosecha propia', 'no hay cosecha propia: «agricultores de confianza»'], ['nuestros campos', 'no hay campos propios'],
+  ['bajo nuestra supervision', 'no hay cultivo propio'], ['anos en mercamadrid', '«más de 60 años de experiencia» y «décadas en Mercamadrid»'],
+  ['50 anos', 'son más de 60 años'], ['40 anos', 'son más de 60 años'], ['precios estan en la web', 'no se publican precios'],
+  ['pedido online', 'no hay pedidos por la web'], ['envio gratuito', 'no se prometen portes gratis'], ['empresa lider', 'sin superlativos que no se pueden probar'],
+  ['nivel nacional', 'repartimos en Madrid y Segovia'], ['distribuidores nacionales', 'repartimos en Madrid y Segovia']];
+
 const plano = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 function revisar(html) {
@@ -19,6 +29,15 @@ function revisar(html) {
   const texto = html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
   const t = plano(texto);
   for (const f of PROHIBIDAS) if (t.includes(f)) fallos.push(`coletilla «${f}»`);
+  // Se permite negándolo («No tenemos cosecha propia», «¿Venden a particulares? No»).
+  for (const [f, por] of DATOS_FALSOS) {
+    let i = t.indexOf(f);
+    while (i >= 0) {
+      const antes = t.slice(Math.max(0, i - 30), i);
+      if (!/\bno\b|¿|ni /.test(antes)) { fallos.push(`dato que no se puede decir «${f}»: ${por}`); break; }
+      i = t.indexOf(f, i + 1);
+    }
+  }
   if (/—/.test(texto)) fallos.push('raya larga «—» (en España se escribe con comas o paréntesis)');
   if (/\bno (es|son|se trata de) [^.;]{1,40}, (es|son|sino)\b/.test(t)) fallos.push('contraste «no es X, es Y»');
   if ((texto.match(/¡/g) || []).length > 1) fallos.push('exclamaciones de anuncio');
