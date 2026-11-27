@@ -26,7 +26,7 @@ Solo toca la web (`web/`). **Nunca**: la app, la base de datos (solo leer), prec
 - `node web/anadir.cjs novedad <archivo> "<título>" "<frase>" <driveId>` (la comprime, quita el GPS y la sube al almacén de Cloudflare).
 
 ## 2. Si no hay fotos nuevas
-Una novedad de temporada con una foto que ya esté en la web (`web/public/wp-content/uploads/…` o `/fotos/…`) que no salga en las 10 últimas novedades:
+Una novedad de temporada con una foto que ya esté en la web (`web/public/wp-content/uploads/…` o `/fotos/…`) que no salga en las 10 últimas novedades ni sea la portada de un artículo:
 `node web/anadir.cjs novedad /wp-content/uploads/AAAA/MM/foto.jpg "Temporada de …" "<frase>"`.
 Solo productos **activos** del catálogo (leer, nunca escribir):
 `SELECT nombre FROM productos WHERE activo` en la base real `hvydnjaswdexttogsyen` por la API de Supabase (ver `CLAUDE.md`).
@@ -55,6 +55,7 @@ La sección se llama **«Guías»** (Fernando, 15/11/2026: que no se llame «blo
 - **Nada inventado**: ni precios, ni cifras, ni clientes, ni premios; de salud, solo lo general y sabido. De Ferjusanz, solo lo de `web/LEEME.md`.
 - Último párrafo: invitar a pedir precio por WhatsApp.
 - Foto: una nueva de Drive si la hay (la mejor), si no una de la web que pegue con el tema.
+- **Fotos sin repetir** (Tito, 27/11/2026: «no repitas tanto las mismas fotos… las manzanas un montón»): la foto de portada (`ogImage`) de cada artículo tiene que ser **distinta de la de todos los demás** (comprobarlo en `web/paginas.json` y en `web/cola/`); dentro del artículo, tampoco poner fotos que ya salgan en otras 3 páginas o más. Primero las reales de `fotos/catalogo/` que aún no son portada de nada; nada de fotos de banco con fondo blanco. Si no queda ninguna que pegue, pedir fotos nuevas a Tito en el resumen final.
 - Guardar como JSON en el scratchpad y `node web/anadir.cjs articulo <archivo.json>`.
 
 Nota (26/11/2026): al publicar, la guía nueva sale sola en la ficha de Google (Zapier lee `/feed.xml`). No hay que hacer nada más.

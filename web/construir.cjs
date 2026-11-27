@@ -446,7 +446,8 @@ const sitemap = [];
 function inicio(p) {
   const textoWA = 'Hola, quería el precio de hoy para mi negocio.';
   const atajos = `<p class="atajos"><a class="enlace" href="${wa(WHATSAPP[0].num, 'Hola, quería hacer un pedido.')}" rel="nofollow">Hacer un pedido ${I.flecha}</a><a class="enlace" href="${TARIFA}">Calcule su tarifa ${I.flecha}</a><a class="enlace" href="#pedir-precio">Pedir presupuesto ${I.flecha}</a></p>`;
-  const mosaico = ['tomate-rosa', 'niscalos', 'granada-mollar-de-elche', 'tomate-asurcado', 'mango-y-papaya', 'champinon-y-portobello', 'tomate-la-campechana'];
+  // Sin repetir las fotos de las tarjetas de productos y sectores de esta misma portada (Tito, 27/11/2026: «no repitas tanto las mismas fotos»).
+  const mosaico = ['setas-de-ostra', 'niscalos', 'grosellas-rojas', 'tomate-asurcado', 'pitahaya-amarilla', ['/fotos/catalogo/09-tomate-raf.jpg', 'Tomate raf'], ['/fotos/catalogo/27-boletus.jpg', 'Boletus de temporada']];
   const cuerpo = `
 <section class="heroe" style="--foto:url(/fotos/verduras-gourmet-hosteleria.jpg)">
   <div class="envoltura heroe-in">
@@ -510,7 +511,7 @@ ${(a => `<section class="guia-portada" aria-label="Última guía">
 <section class="bloque">
   <div class="envoltura">
     <div class="bloque-cabeza"><div><p class="antetitulo">Producto real</p><h2>Género de esta semana en nuestro puesto de Mercamadrid</h2></div><a class="enlace" href="/novedades/">Ver más fotos ${I.flecha}</a></div>
-    <div class="mosaico">${mosaico.map((n, i) => `<a href="/novedades/" class="mosaico-${i}"><img src="/fotos/${n}.jpg" alt="${esc(FOTO[n])} en el puesto de Ferjusanz" loading="lazy" width="600" height="600"></a>`).join('')}</div>
+    <div class="mosaico">${mosaico.map((n, i) => `<a href="/novedades/" class="mosaico-${i}"><img src="${Array.isArray(n) ? n[0] : `/fotos/${n}.jpg`}" alt="${esc(Array.isArray(n) ? n[1] : FOTO[n])} en el puesto de Ferjusanz" loading="lazy" width="600" height="600"></a>`).join('')}</div>
   </div>
 </section>
 
