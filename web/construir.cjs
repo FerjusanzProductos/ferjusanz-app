@@ -83,7 +83,7 @@ const FAMILIAS = [
     lema: 'Con lo que empezó la familia.',
     lista: ['Cebolla en varios calibres', 'Cebolla dulce', 'Cebolla morada', 'Cebolleta', 'Chalota', 'Calçot', 'Ajo', 'Ajetes', 'Cebolla pelada', 'Ajo pelado'] },
   { id: 'huevos', nombre: 'Huevos', ruta: '/productos/huevos/', foto: '/fotos/2026/11/huevos-ferjusanz.jpg',
-    lema: 'Frescos, en el mismo reparto que la fruta.',
+    lema: 'De gallina y de codorniz, por tamaños y categorías.',
     lista: ['Huevos de gallina', 'Huevos de codorniz'] },
   { id: 'cuarta', nombre: 'Cuarta gama', ruta: '/distribucion-y-venta-de-productos-de-cuarta-gama-madrid/', foto: F + '2021/05/Conservacion_Frutas_Verdruas.jpg',
     lema: 'Pelado, cortado y listo para la cocina.',
