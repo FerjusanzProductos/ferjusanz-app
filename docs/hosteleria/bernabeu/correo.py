@@ -1,12 +1,15 @@
-# Correo a hostelería de la zona Bernabéu (Tito, 27/11/2026). Uso: python3 correo.py [comic] → correo.html
+# Correo a hostelería de la zona Bernabéu (Tito, 27/11/2026). Uno por restaurante, nunca en tanda (memoria «correos-a-las-7»).
+# Uso: python3 correo.py [comic] → correo.html · python3 correo.py --uno '<nombre>' '<barrio>' → correo-uno.html
 import sys
 W='https://www.ferjusanz-frutas-verduras.es'
-comic=len(sys.argv)>1
-saludo='Hola, equipo de Comic Planet:' if comic else 'Hola:'
+uno=sys.argv[1:2]==['--uno']; comic=sys.argv[1:2]==['comic']
+nom,barrio=(sys.argv[2],sys.argv[3]) if uno else ('','')
+saludo='Hola, equipo de Comic Planet:' if comic else (f'Hola, equipo de {nom}:' if uno else 'Hola:')
+zona=''  # el barrio de las fichas no siempre se lee bien en una frase
 intro=('<p>Soy Fernando Sanz, de Ferjusanz. A principios de año ya os servimos y nos gustaría volver a trabajar con vosotros. '
  'Estamos por Alberto Alcocer y el Bernabéu muchos días de la semana, así que os pilla de ruta.</p>') if comic else (
  '<p>Soy Fernando Sanz, de <b>Ferjusanz</b>, mayorista de patatas, frutas, verduras, huevos, setas, champiñones y legumbres en Mercamadrid desde hace más de seis décadas.</p>'
- '<p>Llevamos un tiempo estudiando cómo trabajar mejor con los restaurantes de la zona del Bernabéu, Cuzco y Castellana: ya servimos allí y estamos por la zona <b>muchos días de la semana</b>, así que os pilla de ruta. Os escribo porque creo que os podemos ayudar a comprar mejor.</p>')
+ f'<p>Llevamos un tiempo estudiando cómo trabajar mejor con los restaurantes de {zona}la zona del Bernabéu, Cuzco y Castellana: ya servimos allí y estamos por la zona <b>muchos días de la semana</b>, así que os pilla de ruta. Os escribo porque creo que os podemos ayudar a comprar mejor.</p>')
 btn=lambda t,u:f'<a href="{u}" style="display:inline-block;background:#e8742b;color:#ffffff;text-decoration:none;font-weight:bold;padding:10px 18px;border-radius:22px;margin:4px 6px 4px 0">{t}</a>'
 html=f'''<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#2a2320;max-width:600px">
 <div style="background:#7a1f1f;padding:18px 22px;border-radius:10px 10px 0 0"><img src="cid:att0" alt="Ferjusanz" width="240" style="display:block;width:240px;max-width:100%;background:#ffffff;border-radius:6px;padding:6px"></div>
@@ -24,4 +27,4 @@ html=f'''<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-
 <p>Cuando queráis nos vemos por allí y lo hablamos con calma, o si preferís os llevo una muestra sin compromiso.</p>
 <p style="margin-top:20px">Un saludo,<br><b>Fernando Sanz</b><br>Ferjusanz Productos Hortofrutícolas<br>Móvil y WhatsApp: <b>609 567 354</b> · Pedidos: 609 100 690<br><a href="{W}" style="color:#7a1f1f">www.ferjusanz-frutas-verduras.es</a></p>
 </div></div>'''
-open('correo-comic.html' if comic else 'correo.html','w').write(html)
+open('correo-comic.html' if comic else ('correo-uno.html' if uno else 'correo.html'),'w').write(html)
