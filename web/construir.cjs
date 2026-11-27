@@ -76,10 +76,10 @@ const FAMILIAS = [
   { id: 'verduras', nombre: 'Verduras y hortalizas', ruta: '/productos/verduras-y-hortalizas/', foto: '/fotos/tomate-la-campechana.jpg',
     lema: 'Elegidas cada mañana en Mercamadrid.',
     lista: ['Tomate (varias clases)', 'Lechuga y cogollos', 'Escarola y endivias', 'Canónigos, rúcula y kale', 'Espinaca y acelga', 'Brócoli y coliflor', 'Repollo, lombarda y berza', 'Calabacín y calabaza', 'Berenjena', 'Pimiento', 'Pepino', 'Judía verde', 'Alcachofa', 'Espárrago', 'Puerro y apio', 'Zanahoria', 'Remolacha, nabo y chirivía', 'Rabanitos', 'Cardo, borraja y grelos', 'Maíz', 'Brotes y germinados'] },
-  { id: 'patatas', nombre: 'Patatas', ruta: '/productos/patatas-2/', foto: F + '2020/09/distribuidor-patatas-beneficios.jpg',
+  { id: 'patatas', nombre: 'Patatas', ruta: '/productos/patatas-2/', foto: '/fotos/catalogo/01-patata-en-saco.jpg',
     lema: 'Nuestra especialidad desde el primer día.',
     lista: ['Patata Agria', 'Patata Monalisa', 'Patata nueva para freír', 'Patata roja', 'Patata violeta', 'Patata baby', 'Patata para bravas', 'Patata de tornear', 'Patata cocida', 'Patata prefrita', 'Patata pelada en bastón', 'Patata pelada en dados', 'Patata panadera', 'Patata para ensaladilla', 'Patata pelada envasada al vacío', 'Batata', 'Yuca'] },
-  { id: 'cebollas', nombre: 'Cebollas y ajos', ruta: '/distribucion-y-venta-de-cebollas-madrid/', foto: F + '2019/10/distribucion-de-cebollas-en-madrid.jpg',
+  { id: 'cebollas', nombre: 'Cebollas y ajos', ruta: '/distribucion-y-venta-de-cebollas-madrid/', foto: '/fotos/catalogo/49-cebolleta-fina-en-caja.jpg',
     lema: 'Junto a la patata, con lo que empezó la familia.',
     lista: ['Cebolla en varios calibres', 'Cebolla dulce', 'Cebolla morada', 'Cebolleta', 'Chalota', 'Calçot', 'Ajo', 'Ajetes', 'Cebolla pelada', 'Ajo pelado'] },
   { id: 'huevos', nombre: 'Huevos', ruta: '/productos/huevos/', foto: '/fotos/2026/11/huevos-ferjusanz.jpg',
@@ -120,13 +120,13 @@ const bloquePeladas = (titulo = 'h2') => `<section class="bloque peladas" id="pa
 </div></section>`;
 
 const SECTORES = [
-  { nombre: 'Restaurantes y bares', ruta: '/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', foto: F + '2023/03/Tipos-de-guarniciones-de-verduras.jpg',
+  { nombre: 'Restaurantes y bares', ruta: '/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', foto: '/fotos/catalogo/14-genero-gourmet-para-hosteleria.jpg',
     texto: 'Producto del día, gama gourmet y patata, cebolla y ajo pelados para agilizar la cocina.' },
   { nombre: 'Hoteles', ruta: '/proveedor-de-frutas-y-verduras-para-hoteles-madrid/', foto: '/fotos/mango-y-papaya.jpg',
     texto: 'Fruta para desayunos y bufé, verdura para cocina y eventos, con reparto los días que marque el hotel.' },
   { nombre: 'Colegios', ruta: '/proveedor-de-frutas-y-verduras-para-colegios-madrid/', foto: '/fotos/2026/11/comedor-colegio.jpg',
     texto: 'Fruta y verdura para menús escolares, con calibres y cantidades constantes durante todo el curso.' },
-  { nombre: 'Residencias', ruta: '/proveedor-de-frutas-y-verduras-para-residencias-madrid/', foto: F + '2020/09/verduras-residencias-ancianos.jpg',
+  { nombre: 'Residencias', ruta: '/proveedor-de-frutas-y-verduras-para-residencias-madrid/', foto: '/fotos/catalogo/35-granada-mollar-de-elche-d-o-p.jpg',
     texto: 'Producto de temporada, fácil de preparar y servido con la regularidad que exige una residencia.' },
   { nombre: 'Colectividades y catering', ruta: '/mayorista-de-frutas-y-verduras-para-colectividades-madrid/', foto: '/fotos/verduras-gourmet-hosteleria.jpg',
     texto: 'Grandes volúmenes para comedores de empresa y cocinas centrales, con reparto planificado.' },
@@ -292,9 +292,10 @@ const GALERIAS = {
   '/blog/todo-sobre-los-frutos-rojos/': ['grosellas-rojas', 'verduras-gourmet-hosteleria'],
   '/blog/frutas-de-temporada-otono/': ['granada-mollar-de-elche', 'niscalos'],
 };
-const galeria = ruta => GALERIAS[ruta] ? `<section class="bloque bloque-crema"><div class="envoltura">
+// Sin las fotos que ya salen en la misma página (diseño, 27/11/2026: la granada salía dos veces).
+const galeria = (ruta, ya = '') => (GALERIAS[ruta] || []).filter(n => !ya.includes(n)).length ? `<section class="bloque bloque-crema"><div class="envoltura">
   <div class="bloque-cabeza"><div><p class="antetitulo">Fotos reales</p><h2>Hoy en nuestro puesto de Mercamadrid</h2></div><a class="enlace" href="/novedades/">Más fotos ${I.flecha}</a></div>
-  <div class="novedades">${GALERIAS[ruta].map(n => `<figure class="novedad"><img src="/fotos/${n}.jpg" alt="${esc(FOTO[n])} en el puesto de Ferjusanz en Mercamadrid" loading="lazy" width="600" height="600"><figcaption><strong>${esc(FOTO[n])}</strong></figcaption></figure>`).join('')}</div>
+  <div class="novedades">${GALERIAS[ruta].filter(n => !ya.includes(n)).map(n => `<figure class="novedad"><img src="/fotos/${n}.jpg" alt="${esc(FOTO[n])} en el puesto de Ferjusanz en Mercamadrid" loading="lazy" width="600" height="600"><figcaption><strong>${esc(FOTO[n])}</strong></figcaption></figure>`).join('')}</div>
 </div></section>` : '';
 
 // ───────── Plantilla ─────────
@@ -430,7 +431,9 @@ const temaDe = a => TEMAS.find(t => t.re.test(a.path.replace('/blog/', '')));
 // Artículos que encajan con una página de producto o de sector (enlazado interno).
 function articulosPara(ruta) {
   const t = TEMAS.find(t => t.paginas.test(ruta));
-  const lista = t ? articulos.filter(a => temaDe(a) === t).slice(0, 3) : [];
+  const delTema = t ? articulos.filter(a => temaDe(a) === t) : [];
+  const giro = [...ruta].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % Math.max(1, delTema.length); // cada página, otros 3
+  const lista = [...delTema.slice(giro), ...delTema.slice(0, giro)].slice(0, 3);
   return lista.length ? `<section class="bloque"><div class="envoltura">
   <div class="bloque-cabeza"><div><h2>Para leer: ${t.nombre.toLowerCase()}</h2></div><a class="enlace" href="/blog/#${t.id}">Más de este tema ${I.flecha}</a></div>
   <div class="articulos">${lista.map(tarjetaArticulo).join('')}</div>
@@ -623,7 +626,7 @@ function paginaFamilia(p, f, textoHtml) {
 </div></section>
 ${f.id === 'patatas' ? bloquePeladas() : ''}
 <section class="bloque"><div class="envoltura"><article class="texto">${resto}</article></div></section>
-${galeria(p.path)}
+${galeria(p.path, (f.foto || '') + resto)}
 ${bandaTarifa()}
 ${bandaConfianza()}
 ${bandaResena()}
@@ -633,7 +636,9 @@ ${relacionados(p.path)}`;
 }
 
 function relacionados(ruta) {
-  const otras = FAMILIAS.filter(f => f.ruta && f.ruta !== ruta).slice(0, 4);
+  const todas = FAMILIAS.filter(f => f.ruta && f.ruta !== ruta);
+  const giro = [...ruta].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % todas.length; // cada página, otras 4 (Tito: «no repitas tanto las mismas fotos»)
+  const otras = [...todas.slice(giro), ...todas.slice(0, giro)].slice(0, 4);
   return `<section class="bloque bloque-crema"><div class="envoltura">
   <div class="bloque-cabeza"><div><h2>También le llevamos</h2></div><a class="enlace" href="/productos/">Todo el catálogo ${I.flecha}</a></div>
   <div class="productos">${otras.map(tarjetaFamilia).join('')}</div>
@@ -659,14 +664,14 @@ function paginaTexto(p, opciones = {}) {
     </div>
   </aside>
 </div></section>
-${galeria(p.path)}
+${galeria(p.path, (foto || '') + sinFotoRepetida)}
 ${opciones.despues || ''}
 ${bandaTarifa()}
 ${bandaConfianza()}
 ${bandaResena()}
 ${articulosPara(p.path)}
 ${enlacesSectores(p.path)}
-${relacionados('')}`;
+${relacionados(p.path)}`;
   return plantilla({ ruta: p.path, titulo: p.title, descripcion: p.description, imagen: foto, cuerpo, datos: [m.datos, ...(opciones.datos || [])] });
 }
 
@@ -678,7 +683,7 @@ function blog(p) {
   <div class="bloque-cabeza"><div><h2>Lo último</h2></div></div>
   <div class="articulos">${articulos.slice(0, 3).map(tarjetaArticulo).join('')}</div>
 </div></section>
-${TEMAS.map(t => { const l = articulos.filter(a => temaDe(a) === t); return l.length ? `<section class="bloque bloque-tema" id="${t.id}"><div class="envoltura">
+${TEMAS.map(t => { const l = articulos.filter(a => temaDe(a) === t && !articulos.slice(0, 3).includes(a)); return l.length ? `<section class="bloque bloque-tema" id="${t.id}"><div class="envoltura">
   <div class="bloque-cabeza"><div><h2>${t.nombre}</h2></div></div>
   <div class="articulos">${l.map(tarjetaArticulo).join('\n')}</div>
 </div></section>` : ''; }).join('\n')}`;
@@ -688,7 +693,9 @@ ${TEMAS.map(t => { const l = articulos.filter(a => temaDe(a) === t); return l.le
 function articulo(p) {
   const titulo = tituloCorto(p.h1 || p.title);
   const m = miga(p.path, titulo, ['/blog/', 'Guías']);
-  const otros = [...articulos.filter(a => a.path !== p.path && temaDe(a) === temaDe(p)), ...articulos.filter(a => temaDe(a) !== temaDe(p))].slice(0, 3);
+  const mismos = articulos.filter(a => a.path !== p.path && temaDe(a) === temaDe(p));
+  const giro = [...p.path].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % Math.max(1, mismos.length);
+  const otros = [...mismos.slice(giro), ...mismos.slice(0, giro), ...articulos.filter(a => temaDe(a) !== temaDe(p))].slice(0, 3);
   const cuerpo = `<article class="bloque"><div class="envoltura lectura">
   ${m.html}
   <h1>${esc(titulo)}</h1>
@@ -697,7 +704,7 @@ function articulo(p) {
   <div class="texto">${limpiar(p.html)}</div>
   <aside class="nota"><strong>¿Tiene un restaurante, un hotel, un colegio o una residencia?</strong><p>Le llevamos la fruta, la verdura, las patatas, los huevos, las setas, los champiñones y las legumbres cada día. Solicite su tarifa.</p>${botonesWA('Hola, he leído vuestro blog y quería información de precios.')}<p><a class="btn btn-borde" href="${TARIFA}"><span>Calcule su tarifa</span>${I.flecha}</a></p></aside>
 </div></article>
-${galeria(p.path)}
+${galeria(p.path, (p.ogImage || '') + p.html)}
 ${bandaTarifa()}
 ${bandaConfianza()}
 ${bandaResena()}
@@ -921,7 +928,7 @@ const NUEVAS = [
 <h2>Por qué pedir los huevos con la fruta</h2>
 <ul><li><strong>Un solo proveedor</strong>: menos llamadas, menos albaranes y una sola entrega.</li><li><strong>Reparto refrigerado</strong> en nuestros camiones y furgonetas.</li><li><strong>Precio de mayorista</strong>, según cantidad y frecuencia.</li></ul>
 <p>Indíquenos cuántas docenas necesita a la semana y le pasamos precio.</p>` },
-  { path: '/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', foto: F + '2023/03/Tipos-de-guarniciones-de-verduras.jpg', title: 'Proveedor de frutas y verduras para hostelería en Madrid | Ferjusanz',
+  { path: '/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', foto: '/fotos/catalogo/14-genero-gourmet-para-hosteleria.jpg', title: 'Proveedor de frutas y verduras para hostelería en Madrid | Ferjusanz',
     description: 'Fruta, verdura, patatas, huevos y setas al por mayor para restaurantes, bares y hoteles de Madrid y Segovia. Reparto refrigerado y sin pedido mínimo.',
     html: `<h1>Proveedor de frutas y verduras para hostelería en Madrid</h1>
 <p>Un restaurante vive de su género. Por eso llevamos ${ANIOS} sirviendo a <strong>restaurantes, bares, hoteles y empresas de catering</strong> de Madrid con patatas, frutas, verduras, huevos, setas, champiñones y legumbres de agricultores de confianza, seleccionados cada mañana en Mercamadrid.</p>
@@ -954,7 +961,7 @@ const NUEVAS = [
 <p>Trabajamos con la planificación del menú mensual para tener el producto a tiempo y mantener calibres y calidad semana tras semana. Repartimos con vehículos refrigerados y nos adaptamos al calendario escolar.</p>
 <h2>Producto de temporada</h2>
 <p>La fruta y la verdura de temporada están en su mejor momento. Y salen más baratas. Cuando un producto sube o escasea, le proponemos otro para que el menú no se resienta.</p>` },
-  { path: '/proveedor-de-frutas-y-verduras-para-residencias-madrid/', foto: F + '2020/09/verduras-residencias-ancianos.jpg', title: 'Proveedor de fruta y verdura para residencias en Madrid | Ferjusanz',
+  { path: '/proveedor-de-frutas-y-verduras-para-residencias-madrid/', foto: '/fotos/catalogo/35-granada-mollar-de-elche-d-o-p.jpg', title: 'Proveedor de fruta y verdura para residencias en Madrid | Ferjusanz',
     description: 'Fruta, verdura, patatas y huevos al por mayor para residencias de mayores de Madrid: producto fresco, reparto regular y trato directo.',
     html: `<h1>Proveedor de fruta y verdura para residencias en Madrid</h1>
 <p>En una residencia, comer bien es parte del cuidado. Ferjusanz abastece a <strong>residencias de mayores, centros de día y centros sociosanitarios</strong> de Madrid con fruta y verdura fresca, servida con la regularidad que pide una cocina que funciona todos los días del año.</p>
@@ -980,7 +987,7 @@ const NUEVAS = [
 // Zonas sacadas de dónde están los clientes reales (localidad y código postal en la base). Sin nombres de clientes.
 // Solo condiciones confirmadas por Fernando (REGLAS_INTERNAS): sin pedido mínimo, reparto en Madrid y Segovia, camiones y furgonetas refrigerados.
 const PAGINAS_ZONA = [
-  { slug: 'hortaleza-sanchinarro-las-tablas-valdebebas', tit: 'Hortaleza y Las Tablas', corto: 'Hortaleza, Sanchinarro, Las Tablas y Valdebebas', foto: F + '2023/03/Tipos-de-guarniciones-de-verduras.jpg',
+  { slug: 'hortaleza-sanchinarro-las-tablas-valdebebas', tit: 'Hortaleza y Las Tablas', corto: 'Hortaleza, Sanchinarro, Las Tablas y Valdebebas', foto: '/fotos/catalogo/05-cebolleta-fina-de-madrid.jpg',
     sitios: ['Hortaleza', 'Canillas', 'Pinar del Rey', 'Sanchinarro', 'Las Tablas', 'Valdebebas'],
     intro: 'Es nuestra zona de casa: la oficina está en la calle Carare (28033) y buena parte de nuestros clientes de hostelería están en Hortaleza, Sanchinarro, Las Tablas y Valdebebas.',
     extra: 'En los barrios nuevos del norte abren cada año restaurantes, cafeterías y escuelas infantiles. Si acaba de abrir, le ayudamos a montar el primer pedido con lo que de verdad va a gastar, sin pedido mínimo.' },
@@ -988,7 +995,7 @@ const PAGINAS_ZONA = [
     sitios: ['Chamartín', 'Prosperidad', 'Ciudad Lineal', 'Ventas', 'Tetuán', 'San Blas'],
     intro: 'Servimos a restaurantes, bares, cafeterías y comedores de Chamartín, Ciudad Lineal, Tetuán y San Blas, muy cerca de nuestra oficina de la calle Carare.',
     extra: 'Son barrios de menú del día y de mucho movimiento a mediodía: verdura para guarniciones y cremas, patata para freír, cebolla y ajo pelados, y fruta de postre, todo en un mismo pedido.' },
-  { slug: 'moratalaz-vicalvaro-coslada-san-fernando', tit: 'Moratalaz y Coslada', corto: 'Moratalaz, Vicálvaro, Coslada y San Fernando de Henares', foto: F + '2020/09/distribuidor-patatas-beneficios.jpg',
+  { slug: 'moratalaz-vicalvaro-coslada-san-fernando', tit: 'Moratalaz y Coslada', corto: 'Moratalaz, Vicálvaro, Coslada y San Fernando de Henares', foto: '/fotos/catalogo/02-patata-pelada-corte-baston-grueso.jpg',
     sitios: ['Moratalaz', 'Vicálvaro', 'Valdebernardo', 'Coslada', 'San Fernando de Henares'],
     intro: 'Llevamos patatas, frutas, verduras, huevos, setas, champiñones y legumbres a hostelería y colectividades de Moratalaz, Vicálvaro, Coslada y los polígonos de San Fernando de Henares.',
     extra: 'En los polígonos hay comedores de empresa y caterings que necesitan volumen y regularidad. Ajustamos el pedido a sus servicios de la semana.' },
@@ -996,11 +1003,11 @@ const PAGINAS_ZONA = [
     sitios: ['Pozuelo de Alarcón', 'Aravaca', 'Boadilla del Monte', 'Las Rozas'],
     intro: 'En la zona oeste servimos a restaurantes, colegios y residencias de Pozuelo de Alarcón, Aravaca, Boadilla del Monte y Las Rozas.',
     extra: 'Aquí trabajamos mucho con colegios y residencias: fruta de postre en calibres constantes, verdura para cremas y purés y patata pelada para ahorrar tiempo de cocina.' },
-  { slug: 'alcobendas-la-moraleja-san-sebastian-de-los-reyes', tit: 'Alcobendas y La Moraleja', corto: 'Alcobendas, La Moraleja y San Sebastián de los Reyes', foto: F + '2020/09/verduras-residencias-ancianos.jpg',
+  { slug: 'alcobendas-la-moraleja-san-sebastian-de-los-reyes', tit: 'Alcobendas y La Moraleja', corto: 'Alcobendas, La Moraleja y San Sebastián de los Reyes', foto: '/fotos/catalogo/04-chalotas-de-bretana.jpg',
     sitios: ['Alcobendas', 'La Moraleja', 'San Sebastián de los Reyes'],
     intro: 'Repartimos patatas, frutas, verduras, huevos, setas, champiñones y legumbres a hostelería y colectividades de Alcobendas, La Moraleja y San Sebastián de los Reyes.',
     extra: 'Restaurantes, hoteles de empresa y comedores: le llevamos el género que marque su carta y le avisamos cuando un producto sube o escasea, con una alternativa.' },
-  { slug: 'segovia', corto: 'Segovia', foto: F + '2019/10/proveedores-distribucion_crs2.jpg',
+  { slug: 'segovia', tit: 'Segovia', corto: 'Segovia', foto: F + '2019/10/proveedores-distribucion_crs2.jpg',
     sitios: ['Segovia capital', 'La Lastrilla', 'Otero de Herreros', 'la sierra de Guadarrama'],
     intro: 'Además de Madrid, repartimos en Segovia: a restaurantes, asadores, hoteles y colectividades de Segovia capital y alrededores, como La Lastrilla u Otero de Herreros.',
     extra: 'La hostelería segoviana vive del producto: verdura de temporada, patata para asados y guarniciones, setas y fruta. Se la llevamos desde Madrid en camiones y furgonetas refrigerados.' },
