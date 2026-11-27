@@ -83,10 +83,10 @@ ${tarjeta(c.sin_contestar, 'clientes a los que se pidió correo y teléfono y no
 ${tarjeta(c.pros, `posibles clientes (${c.sin_contactar} sin contactar · ${c.nuevos7} nuevos en 7 días)`)}
 ${tarjeta(c.web7, 'visitas a la web en 7 días')}
 </div>
-<nav><a class="a-dia" href="#hoy">📞 Hoy</a><a class="a-sem" href="#semana">🗓️ Esta semana</a><a class="a-ide" href="#ideas">🎬 Ideas para redes</a></nav>
+<nav><a class="a-dia" href="#hoy">📞 Hoy</a><a class="a-sem" href="#semana">🗓️ Esta semana</a><a class="a-ide" href="#ideas">🎬 Ideas redes y web</a></nav>
 ${bloque('hoy', '📞 Comercial del día', dia, 'Todavía no hay. Sale de lunes a sábado a las 8:27.')}
 ${bloque('semana', '🗓️ Plan de la semana', semana, 'Todavía no hay. Sale cada domingo a las 19:23.')}
-${bloque('ideas', '🎬 Ideas para redes', ideas, 'Todavía no hay. Sale cada lunes a las 8:53.')}
+${bloque('ideas', '🎬 Ideas para redes y web', ideas, 'Todavía no hay. Sale cada lunes a las 8:53.')}
 <p class="pie">Ventas, cobros y pagos: <a href="https://claude.ai/artifact/4k7wxTzvttkdBF6xU7AWak">Panel Ferjusanz</a>. También en la app: 📊 Resumen y correo, o Comercial → Avisos.</p>
 </main>
 `);
