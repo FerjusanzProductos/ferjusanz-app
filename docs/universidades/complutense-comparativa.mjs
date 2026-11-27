@@ -76,7 +76,7 @@ const precios = `<!doctype html><meta charset=utf-8><style>${css}</style>${cab('
 <p class=nota>Precios + IVA (4 %). Semana del 26/11/2026; el resto de productos, a precio de mercado. Con cada pedido os llega lo que os va a salir.</p>${pie}</div>`;
 const b = await chromium.launch(); const p = await b.newPage({ deviceScaleFactor: 2 });
 for (const [h, f] of [[comparativa, 'Ferjusanz-Complutense-lo-que-ahorrais'], [precios, 'Ferjusanz-Complutense-precios']]) {
-  await p.setContent(h); await p.pdf({ path: `${D}/${f}.pdf`, format: 'A4', printBackground: true });
+  await p.setContent(h); await p.pdf({ path: `${D}/${f}.pdf`, format: 'A4', printBackground: true, scale: 0.94 }); // 0,94: el pie no salta a una 2.ª hoja
   await p.setViewportSize({ width: 794, height: 1123 }); await p.screenshot({ path: `${D}/${f}.jpg`, type: 'jpeg', quality: 90, fullPage: true });
 }
 await b.close();
