@@ -1,9 +1,9 @@
-# Tarea automática: web viva (cada 2 días)
+# Tarea automática: web viva (cada día)
 
-Tarea programada `trig_01AXKhyzZyg7sMDufq37Ahuw` (cada 2 días a las 11:43, hora de Madrid, los días impares del mes; vuelto a cada 2 días el 15/11/2026 por Fernando: «Cada 2 dias un artículo»). ⚠️ Se creó **sin el conector de Google Drive** (la organización no deja guardarlo en la tarea): si Drive no está, se salta el paso 1. Para que lea la carpeta, Fernando tendría que crearla desde claude.ai → Rutinas con Google Drive; mientras, sus fotos se publican cuando las manda en una conversación con Claude.
+Tarea programada `trig_01AXKhyzZyg7sMDufq37Ahuw` (**cada día** a las 11:43, hora de Madrid, desde el 27/11/2026 por Tito: «uno cada día… como lo valore Google mejor»; antes, cada 2 días). ⚠️ Se creó **sin el conector de Google Drive** (la organización no deja guardarlo en la tarea): si Drive no está, se salta el paso 1. Para que lea la carpeta, Fernando tendría que crearla desde claude.ai → Rutinas con Google Drive; mientras, sus fotos se publican cuando las manda en una conversación con Claude.
 
 Pedido por Fernando el 13/11/2026: «que esté activa, que le pongas fotos cada 2 o 3 días, un artículo también».
-Una tarea programada abre una sesión nueva cada 2 días y sigue estos pasos **sin preguntar** (autorización de Fernando).
+Una tarea programada abre una sesión nueva cada día y sigue estos pasos **sin preguntar** (autorización de Fernando).
 Solo toca la web (`web/`). **Nunca**: la app, la base de datos (solo leer), precios, mensajes a clientes ni redes sociales.
 
 ## 0. Preparar
@@ -32,7 +32,7 @@ Solo productos **activos** del catálogo (leer, nunca escribir):
 `SELECT nombre FROM productos WHERE activo` en la base real `hvydnjaswdexttogsyen` por la API de Supabase (ver `CLAUDE.md`).
 
 ## 3. Un artículo nuevo para «Guías»
-**Primero, la cola** (Fernando, 16/11/2026: «pon varios artículos así y cada dos días sube uno»): si hay archivos `.json` en `web/cola/`, **no escribas uno nuevo**: publica el primero por orden de nombre (`ls web/cola/*.json | head -1`) con `node web/anadir.cjs articulo web/cola/<archivo>.json` (desde la raíz del repositorio: la foto es `web/cola/portada-….jpg`), y después `git rm` de ese `.json` y de su foto de `web/cola/`. Desde el 23/11/2026 (Tito: «que estemos líderes») la cola lleva 7 artículos de temas del plan, ya revisados (foto ya publicada en `/fotos/…`, el JSON la usa tal cual). Solo si la cola está vacía, sigue con lo de abajo.
+**Primero, la cola** (Fernando, 16/11/2026: «pon varios artículos así y cada dos días sube uno»; desde el 27/11, uno al día): si hay archivos `.json` en `web/cola/`, **no escribas uno nuevo**: publica el primero por orden de nombre (`ls web/cola/*.json | head -1`) con `node web/anadir.cjs articulo web/cola/<archivo>.json` (desde la raíz del repositorio: la foto es `web/cola/portada-….jpg`), y después `git rm` de ese `.json` y de su foto de `web/cola/`. Desde el 23/11/2026 (Tito: «que estemos líderes») la cola lleva 7 artículos de temas del plan, ya revisados (foto ya publicada en `/fotos/…`, el JSON la usa tal cual). Solo si la cola está vacía, sigue con lo de abajo.
 
 La sección se llama **«Guías»** (Fernando, 15/11/2026: que no se llame «blog»; las últimas salen en la portada). La dirección sigue siendo `/blog/…` para no perder lo que Google ya tiene: no cambiarla.
 **Posicionamiento (lo primero)**: cada artículo apunta a **una búsqueda concreta** de un cliente de negocio con lugar («proveedor de patata pelada para restaurantes en Madrid», «fruta para comedor escolar Madrid»…), que no tenga ya otro artículo nuestro. Esa búsqueda va en el título (al principio), en la dirección (`slug`, corta), en la descripción, en el primer párrafo y en un `<h2>`. Dentro del texto, **2 o 3 enlaces** a nuestras páginas de producto o de sector que pegan (`/productos/…`, `/proveedor-de-frutas-y-verduras-para-…`) y 1 a otra guía. Apuntar la búsqueda elegida en `web/DIARIO.md` para no repetirla.

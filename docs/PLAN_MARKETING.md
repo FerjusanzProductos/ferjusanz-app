@@ -50,13 +50,13 @@ Qué tienen en común: **compran todas las semanas, compran mucho y lo que más 
 
 ### Cada cuánto
 - **Una tanda de 5 a 10 fotos a la semana** (por ejemplo, el lunes en el mercado). Con eso hay para todo:
-  - **Web**: la tarea automática pone 1 a 3 fotos nuevas cada 2 días en «Novedades» y una en cada artículo.
+  - **Web**: la tarea automática pone 1 a 3 fotos nuevas en «Novedades» (cada día si hay fotos nuevas; si no, una de temporada cada 2 días) y una en cada artículo.
   - **Ficha de Google**: **3 a 5 fotos nuevas por semana**. Google valora que la ficha tenga fotos recientes y propias; mejor poco y seguido que 50 de golpe.
   - **Instagram**: 3 publicaciones por semana (ver punto 4).
 - La lista A y la B se hacen **una vez** (en el primer mes) y se repiten **cada temporada** (cada 3 meses), porque cambia el género. La C, **siempre**: son las que más valen.
 
-## 3. Artículos: uno cada 2 días (ya salen solos)
-La tarea automática (`trig_01AXKhyzZyg7sMDufq37Ahuw`) publica uno **cada 2 días a las 11:43, los días impares**, en la sección «Guías» de la web, **en este orden**. Cada uno apunta a una búsqueda concreta de un cliente de negocio. Los ⚠️ se escriben solo después de leer la norma oficial; si no se puede comprobar, se salta al siguiente.
+## 3. Artículos: uno cada día (ya salen solos; antes cada 2 días, Tito 27/11/2026)
+La tarea automática (`trig_01AXKhyzZyg7sMDufq37Ahuw`) publica uno **cada día a las 11:43**, en la sección «Guías» de la web, **en este orden**. Cada uno apunta a una búsqueda concreta de un cliente de negocio. Los ⚠️ se escriben solo después de leer la norma oficial; si no se puede comprobar, se salta al siguiente.
 Públicos: 🏫 colegios · 👵 residencias · 🍽️ restaurantes y hoteles · 🏢 catering, empresas y hospitales · 🗓️ temporada · 🏪 Ferjusanz y Mercamadrid.
 
 | Nº | Día aprox. | Para | Título (idea) | Búsqueda que queremos ganar |
@@ -216,7 +216,7 @@ Después del 45: Claude añade la siguiente tanda aquí (temporada del mes y lo 
 | Opción | Para qué | ¿Pagar? | Recomendación |
 |---|---|---|---|
 | **Ficha de Google (Perfil de Empresa)** | Es lo que más pesa en las búsquedas de Madrid: fotos, publicaciones semanales y reseñas | Gratis | **Lo primero.** En cuanto sea nuestra: 1 publicación y 3-5 fotos por semana, y pedir reseñas a 20-30 clientes |
-| **Web + artículos cada 2 días** | Salir en búsquedas largas («fruta para residencias Madrid») | Gratis (ya funciona sola) | Seguir. Dominio bueno puesto el 23/11/2026 |
+| **Web + un artículo cada día** | Salir en búsquedas largas («fruta para residencias Madrid») | Gratis (ya funciona sola) | Seguir. Dominio bueno puesto el 23/11/2026 |
 | **Meta Business Suite** (app de Android, de Meta) | Programar Instagram y Facebook a la vez, Reels incluidos, desde el móvil | **Gratis** | **Sí, para programar.** No hace falta pagar a Meta para publicar |
 | **Meta Verified** (insignia de pago) | Verificación y soporte | De pago mensual | **No**, no aporta clientes |
 | **Anuncios de Meta** | Llegar a hostelería y colectividades de Madrid que aún no nos conocen | Lo que se quiera (5-10 €/día) | **Más adelante**, cuando haya 20-30 publicaciones y el dominio puesto. Una prueba de 2 semanas que lleve a la página de nuevos clientes |
@@ -234,7 +234,7 @@ Después del 45: Claude añade la siguiente tanda aquí (temporada del mes y lo 
 | Martes | Publicación en la ficha de Google (foto + «qué está bueno») | Claude la prepara; Fernando la pega (hasta que haya forma automática) |
 | Miércoles | Reel (de la lista) | Fernando sube o programa |
 | Viernes | Foto o carrusel compartiendo el último artículo | Fernando sube o programa |
-| Cada 2 días | Artículo en la web y fotos en Novedades | Solo (tarea automática) |
+| Cada día | Artículo en la web (y fotos en Novedades si hay) | Solo (tarea automática) |
 | Cada mes | Informe: visitas a la web (en la app, «🌐 Visitas a la web»), búsquedas y contactos | Claude |
 
 ## 7. Lo que falta para arrancar
@@ -285,7 +285,7 @@ Fernando o Tito graban en bruto y lo mandan por el chat; Claude corta, subtitula
 ### Costes
 | Qué | Coste | ¿Hace falta? |
 |---|---|---|
-| Web, artículos cada 2 días, llms.txt, Search Console, Bing | 0 € (ya funciona) | Sí |
+| Web, un artículo cada día, llms.txt, Search Console, Bing | 0 € (ya funciona) | Sí |
 | Ficha de Google, reseñas, publicaciones en la ficha | 0 € | Sí, lo primero |
 | Directorios (proveedores.com, Páginas Amarillas, QDQ) en versión gratis | 0 € | Sí. Las versiones de pago, no |
 | Nota de prensa a medios del sector | 0 € | Sí, con el «sí» de Fernando |
