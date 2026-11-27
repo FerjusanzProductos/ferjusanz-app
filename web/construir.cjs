@@ -48,6 +48,11 @@ const bandaConfianza = () => `<section class="bloque" aria-label="Confianza"><di
     <li>${I.wa}<strong>Trato directo con la familia</strong><span>Pedidos hasta la tarde anterior por WhatsApp o teléfono, y le contesta una persona.</span></li>
   </ul>
 </div></section>`;
+// Franja «Calcule su tarifa» (Tito, 26/11/2026: «es importante, que salga muchas más veces por la web»).
+const bandaTarifa = () => `<section class="resena-banda" aria-label="Calcule su tarifa"><div class="envoltura resena-in">
+  <div><h2>¿Cuánto le saldría su pedido?</h2><p>Marque lo que compra ahora y le contestamos con lo que le costaría con nosotros. Sin compromiso y en dos minutos.</p></div>
+  <a class="btn btn-wa" href="${TARIFA}"><span>Calcule su tarifa</span>${I.flecha}</a>
+</div></section>`;
 const MENU = [
   ['/productos/', 'Productos'],
   ['/proveedor-de-frutas-y-verduras-para-hosteleria-madrid/', 'Hostelería'],
@@ -373,7 +378,7 @@ ${cuerpo}
     </div>
     <div>
       <h2>Servicios</h2>
-      <ul>${SERVICIOS.map(([h, t]) => `<li><a href="${h}">${t}</a></li>`).join('')}</ul>
+      <ul><li><a href="${TARIFA}"><strong>Calcule su tarifa</strong></a></li>${SERVICIOS.map(([h, t]) => `<li><a href="${h}">${t}</a></li>`).join('')}</ul>
     </div>
     <div>
       <h2>Ferjusanz</h2>
@@ -436,7 +441,7 @@ const sitemap = [];
 
 function inicio(p) {
   const textoWA = 'Hola, quería el precio de hoy para mi negocio.';
-  const atajos = `<p class="atajos"><a class="enlace" href="${wa(WHATSAPP[0].num, 'Hola, quería hacer un pedido.')}" rel="nofollow">Hacer un pedido ${I.flecha}</a><a class="enlace" href="#pedir-precio">Pedir presupuesto ${I.flecha}</a></p>`;
+  const atajos = `<p class="atajos"><a class="enlace" href="${wa(WHATSAPP[0].num, 'Hola, quería hacer un pedido.')}" rel="nofollow">Hacer un pedido ${I.flecha}</a><a class="enlace" href="${TARIFA}">Calcule su tarifa ${I.flecha}</a><a class="enlace" href="#pedir-precio">Pedir presupuesto ${I.flecha}</a></p>`;
   const mosaico = ['tomate-rosa', 'niscalos', 'granada-mollar-de-elche', 'tomate-asurcado', 'mango-y-papaya', 'champinon-y-portobello', 'tomate-la-campechana'];
   const cuerpo = `
 <section class="heroe" style="--foto:url(/fotos/verduras-gourmet-hosteleria.jpg)">
@@ -447,7 +452,7 @@ function inicio(p) {
     <p class="entradilla">Abastecemos a restaurantes, hoteles, colegios, residencias y empresas de restauración colectiva con producto fresco seleccionado cada mañana. Tercera generación y ${ANIOS} de oficio.</p>
     <div class="heroe-acciones">
       <a class="btn btn-wa btn-grande" href="${wa(WHATSAPP[0].num, textoWA)}" rel="nofollow">${I.wa}<span>Pedir precio por WhatsApp</span></a>
-      <a class="btn btn-transparente" href="${wa(WHATSAPP[0].num, 'Hola, quería recibir vuestra tarifa para mi negocio.')}" rel="nofollow"><span>Solicitar tarifa</span>${I.flecha}</a>
+      <a class="btn btn-transparente" href="${TARIFA}"><span>Calcule su tarifa</span>${I.flecha}</a>
     </div>
     <ul class="heroe-sellos"><li>Reparto refrigerado diario</li><li>Todo en un solo pedido</li><li>Trato directo con la familia</li></ul>
   </div>
@@ -481,7 +486,7 @@ ${(a => `<section class="guia-portada" aria-label="Última guía">
 
 <section class="bloque">
   <div class="envoltura">
-    <div class="bloque-cabeza"><div><p class="antetitulo">Confianza asegurada</p><h2>Un proveedor en el que su cocina puede confiar</h2></div><a class="enlace" href="#pedir-precio">Pedir presupuesto ${I.flecha}</a></div>
+    <div class="bloque-cabeza"><div><p class="antetitulo">Confianza asegurada</p><h2>Un proveedor en el que su cocina puede confiar</h2></div><a class="enlace" href="${TARIFA}">Calcule su tarifa ${I.flecha}</a></div>
     <ul class="ventajas">
       <li>${I.hoja}<strong>Calidad homogénea, pedido tras pedido</strong><span>Trabajamos con agricultores de confianza y seleccionamos caja a caja a primera hora en Mercamadrid.</span></li>
       <li>${I.camion}<strong>Reparto puntual con cadena de frío</strong><span>Flota propia de camiones y furgonetas refrigerados. Entregamos a la hora que marca su servicio.</span></li>
@@ -565,6 +570,7 @@ c.querySelectorAll('button').forEach(b=>b.onclick=()=>{parado=true;paso(+b.datas
 ['pointerdown','focusin','mouseenter'].forEach(e=>c.addEventListener(e,()=>parado=true));
 setInterval(()=>{if(!parado&&!document.hidden)paso(1)},4500)})();</script>
 
+${bandaTarifa()}
 ${bandaResena()}
 
 <section class="bloque">
@@ -616,6 +622,7 @@ function paginaFamilia(p, f, textoHtml) {
 ${f.id === 'patatas' ? bloquePeladas() : ''}
 <section class="bloque"><div class="envoltura"><article class="texto">${resto}</article></div></section>
 ${galeria(p.path)}
+${bandaTarifa()}
 ${bandaConfianza()}
 ${bandaResena()}
 ${enlacesSectores()}
@@ -652,6 +659,7 @@ function paginaTexto(p, opciones = {}) {
 </div></section>
 ${galeria(p.path)}
 ${opciones.despues || ''}
+${bandaTarifa()}
 ${bandaConfianza()}
 ${bandaResena()}
 ${articulosPara(p.path)}
@@ -685,9 +693,10 @@ function articulo(p) {
   <p class="meta"><time datetime="${(p.date || '').slice(0, 10)}">${fecha(p.date)}</time> · Ferjusanz</p>
   ${p.ogImage ? `<img class="destacada" src="${p.ogImage}" alt="${esc(titulo)}" width="1200" height="750" fetchpriority="high">` : ''}
   <div class="texto">${limpiar(p.html)}</div>
-  <aside class="nota"><strong>¿Tiene un restaurante, un hotel, un colegio o una residencia?</strong><p>Le llevamos la fruta, la verdura, las patatas, los huevos, las setas, los champiñones y las legumbres cada día. Solicite su tarifa.</p>${botonesWA('Hola, he leído vuestro blog y quería información de precios.')}</aside>
+  <aside class="nota"><strong>¿Tiene un restaurante, un hotel, un colegio o una residencia?</strong><p>Le llevamos la fruta, la verdura, las patatas, los huevos, las setas, los champiñones y las legumbres cada día. Solicite su tarifa.</p>${botonesWA('Hola, he leído vuestro blog y quería información de precios.')}<p><a class="btn btn-borde" href="${TARIFA}"><span>Calcule su tarifa</span>${I.flecha}</a></p></aside>
 </div></article>
 ${galeria(p.path)}
+${bandaTarifa()}
 ${bandaConfianza()}
 ${bandaResena()}
 <section class="bloque"><div class="envoltura"><div class="bloque-cabeza"><div><h2>Más artículos</h2></div><a class="enlace" href="/blog/#${temaDe(p).id}">Más de ${temaDe(p).nombre.toLowerCase()} ${I.flecha}</a></div><div class="articulos">${otros.map(tarjetaArticulo).join('')}</div></div></section>`;
