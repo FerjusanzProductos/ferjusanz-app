@@ -9,15 +9,16 @@ const sql = async q => { const r = await fetch('https://api.supabase.com/v1/proj
 const lista = (await sql(`select i.nombre, i.precio::float precio, i.unidad from listas_precios_items i join listas_precios l on l.id=i.lista_id
   where l.nombre='Universidades Complutense' order by i.orden`));
 const P = Object.fromEntries(lista.map(x => [x.nombre, x.precio]));
-// código Golden → nombre en su lista. Sin iceberg ni aguacate: en Golden van en otras unidades (piezas/cajas distintas) y no se comparan.
+// código Golden → nombre en su lista. Sin aguacate (en Golden va por piezas y aquí por kg). Iceberg: caja (94-C) y pieza (94); en Golden hay «piezas» a 8-16 €, que son cajas (Tito 27/11: no dejar la iceberg sin comparar).
 // La patata agria se compara con la de saco pequeño (0,40), que es la que se les ofrece.
 const cod = { '01': 'Patata en saco pequeño', '29': 'Huevos', '91-B': 'Tomate ensalada', '91-D': 'Tomate pera', '42': 'Naranja de zumo',
   '93': 'Melón piel de sapo', '150': 'Piña', '21': 'Cebolla gorda', '111': 'Pimiento rojo', '110': 'Pimiento verde', '118': 'Pimiento italiano',
-  '116': 'Pepino', '34': 'Ajo pelado', '105': 'Manzana golden', '40': 'Limones', '159': 'Zanahoria', '104': 'Plátano' };
+  '116': 'Pepino', '34': 'Ajo pelado', '105': 'Manzana golden', '40': 'Limones', '159': 'Zanahoria', '104': 'Plátano', '94-C': 'Lechuga iceberg (caja)', '94': 'Lechuga iceberg' };
 console.assert(Object.values(cod).every(n => P[n] > 0), 'todos los productos comparados están en la lista');
 const rows = (await sql(`select coalesce(l.albaran,'') alb, f.fecha::text fecha, f.cliente_codigo cli, l.producto_codigo cod, l.descripcion d, l.cantidad::float q, l.precio::float p
   from golden_lineas l join golden_facturas f on f.numero=l.factura_numero
   where f.cliente_nombre='SALNAYA SL' and not coalesce(l.repetida,false) and l.cantidad>0`))
+  .map(r => r.cod === '94' && r.p > 3 ? { ...r, cod: '94-C' } : r)
   .map(r => ({ ...r, n: cod[r.cod] || r.d, pn: cod[r.cod] ? Math.min(P[cod[r.cod]], r.p) : r.p })); // nunca «ahorro» negativo inventado: si ya pagaba menos, se deja
 const curso = rows.filter(r => r.fecha >= '2026-09-01'), meses = 2; // septiembre y octubre: meses de curso completos
 const sum = (rs, f) => rs.reduce((s, r) => s + f(r), 0), A = rs => sum(rs, r => r.q * r.p), N = rs => sum(rs, r => r.q * r.pn);
@@ -68,7 +69,7 @@ ${barras([[`Penúltimo · ${pen.dia}`, A(pen.rs), N(pen.rs)], [`Último · ${ult
 <div class=dos><div><h3>Penúltimo · ${pen.dia} · ${pen.fac}</h3>${tabla(pen.rs)}</div><div><h3>Último · ${ult.dia} · ${ult.fac}</h3>${tabla(ult.rs)}</div></div>
 <h2>En un mes de curso, producto a producto</h2>
 ${barras(porProd)}
-<p class=nota>Precios sin IVA (+4 %). «Un mes de curso» es la media de septiembre y octubre de 2026 en nuestros albaranes, las dos facultades juntas. La patata se compara con la de saco pequeño a 0,40 €/kg. Lo que no está en vuestra lista (lechuga, aguacate, sandía, hierbas…) se deja al mismo precio.</p>
+<p class=nota>Precios sin IVA (+4 %). «Un mes de curso» es la media de septiembre y octubre de 2026 en nuestros albaranes, las dos facultades juntas. La patata se compara con la de saco pequeño a 0,40 €/kg. Lo que no está en vuestra lista (lechuga en bandeja, aguacate, sandía, hierbas…) se deja al mismo precio.</p>
 ${pie}</div>`;
 const precios = `<!doctype html><meta charset=utf-8><style>${css}</style>${cab('Lista de precios · Informática y Documentación · UCM')}
 <div class=pg><h2>Vuestra tarifa</h2><div class=c><table class=lp>${lista.map(x => `<tr><td>${x.nombre}</td><td class=p>${e(x.precio)}</td><td class=u>/ ${x.unidad}</td></tr>`).join('')}</table></div>

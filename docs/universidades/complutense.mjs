@@ -11,7 +11,7 @@ const lista = [ // [producto, precio, unidad, coste de compra (Golden, 24/11 sal
   ['Patata en saco pequeño', 0.40, 'kg', 0.33], ['Patata agria', 0.50, 'kg', 0.42], ['Huevos', 2.20, 'docena', 2.00],
   ['Tomate ensalada', 1.10, 'kg', 1.00], ['Tomate pera', 1.10, 'kg', 1.00], ['Naranja de zumo', 0.90, 'kg', 0.70],
   ['Melón piel de sapo', 1.65, 'kg', 1.50], ['Piña', 1.65, 'kg', 1.50], ['Lechuga iceberg (caja)', 5.90, 'caja', 5.75],
-  ['Lechuga iceberg', 0.70, 'pieza', 0.55], ['Cebolla gorda', 0.70, 'kg', 0.45], ['Cebolla calibre pequeño', 0.62, 'kg', null], ['Pimiento rojo', 1.25, 'kg', 1.10],
+  ['Lechuga iceberg', 0.80, 'pieza', 0.55], ['Cebolla gorda', 0.70, 'kg', 0.45], ['Cebolla calibre pequeño', 0.62, 'kg', null], ['Pimiento rojo', 1.25, 'kg', 1.10],
   ['Pimiento verde', 1.20, 'kg', 1.00], ['Pimiento italiano', 1.95, 'kg', 1.80], ['Aguacate', 1.95, 'kg', 1.80],
   ['Pepino', 0.90, 'kg', 0.75], ['Ajo pelado', 3.60, 'kg', 3.30], ['Manzana golden', 1.00, 'kg', 0.85],
   ['Pera conferencia', 1.75, 'kg', 1.60], ['Plátano', 1.85, 'kg', 1.70], ['Limones', 1.35, 'kg', 1.00], ['Zanahoria', 0.75, 'kg', 0.60],
