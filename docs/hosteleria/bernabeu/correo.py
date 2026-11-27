@@ -2,7 +2,7 @@
 import sys
 W='https://www.ferjusanz-frutas-verduras.es'
 comic=len(sys.argv)>1
-saludo='Buenos días, equipo de Comic Planet:' if comic else 'Buenos días:'
+saludo='Hola, equipo de Comic Planet:' if comic else 'Hola:'
 intro=('<p>Soy Fernando Sanz, de Ferjusanz. A principios de año ya os servimos y nos gustaría volver a trabajar con vosotros. '
  'Estamos por Alberto Alcocer y el Bernabéu muchos días de la semana, así que os pilla de ruta.</p>') if comic else (
  '<p>Soy Fernando Sanz, de <b>Ferjusanz</b>, mayorista de patatas, frutas, verduras, huevos, setas, champiñones y legumbres en Mercamadrid desde hace más de seis décadas.</p>'
@@ -18,8 +18,8 @@ html=f'''<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-
 <tr><td style="padding:5px 0;border-bottom:1px solid #eee">Patata especial freír</td><td style="padding:5px 0;border-bottom:1px solid #eee;text-align:right"><b>0,60 €/kg</b></td></tr>
 <tr><td style="padding:5px 0;border-bottom:1px solid #eee">Patata agria</td><td style="padding:5px 0;border-bottom:1px solid #eee;text-align:right"><b>0,65 €/kg</b></td></tr>
 <tr><td style="padding:5px 0;border-bottom:1px solid #eee">Cebolla</td><td style="padding:5px 0;border-bottom:1px solid #eee;text-align:right"><b>0,70 €/kg</b></td></tr></table>
-<div style="background:#eef6ea;border-left:4px solid #2e7d32;padding:10px 14px;margin:16px 0;border-radius:4px"><b>Nuestra recomendación:</b> el tomate ha bajado mucho. Tomate pera gordo a 1,05 €/kg, tomate ensalada a 1,30 €/kg y el raf a menos de la mitad que hace un mes. Cada semana os puedo mandar aparte nuestras recomendaciones: lo que mejor está de precio y de calidad en Mercamadrid.</div>
-<p>Os adjunto la <b>lista completa de precios</b> para hostelería y nuestro <b>folleto</b>. Pensamos siempre en la cocina del cliente: género elegido cada mañana, agricultores de confianza, reparto refrigerado y <b>sin pedido mínimo</b>.</p>
+<div style="background:#eef6ea;border-left:4px solid #2e7d32;padding:10px 14px;margin:16px 0;border-radius:4px"><b>Nuestra recomendación:</b> el tomate ha bajado mucho. Tomate rambo a 1,00 €/kg, tomate pera a 1,10 €/kg, tomate ensalada a 1,30 €/kg y el raf a 2,20 €/kg, menos de la mitad que hace un mes. También en oferta esta semana: naranja de zumo 1,00 €/kg, clementinas 1,10 €/kg, limón 1,30 €/kg, pimiento de Padrón 2,60 €/kg y huevos 2,30 € la docena. Cada semana os puedo mandar aparte nuestras recomendaciones: lo que mejor está de precio y de calidad en Mercamadrid.</div>
+<p>Os adjunto la <b>lista completa de precios</b> para hostelería (más de 110 productos) y nuestro <b>folleto</b>. Pensamos siempre en la cocina del cliente: género elegido cada mañana, agricultores de confianza, reparto refrigerado y <b>sin pedido mínimo</b>.</p>
 <p>{btn('Ver nuestra web',W)}{btn('Ofertas de la semana',W+'/#ofertas')}{btn('Calcule su tarifa',W+'/calcular-tarifa/')}{btn('Mi tarjeta',W+'/tarjeta/')}</p>
 <p>Cuando queráis nos vemos por allí y lo hablamos con calma, o si preferís os llevo una muestra sin compromiso.</p>
 <p style="margin-top:20px">Un saludo,<br><b>Fernando Sanz</b><br>Ferjusanz Productos Hortofrutícolas<br>Móvil y WhatsApp: <b>609 567 354</b> · Pedidos: 609 100 690<br><a href="{W}" style="color:#7a1f1f">www.ferjusanz-frutas-verduras.es</a></p>
