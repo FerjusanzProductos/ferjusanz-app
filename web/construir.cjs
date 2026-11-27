@@ -11,6 +11,10 @@ const OUT = path.join(DIR, 'public');
 const DOMINIO = 'https://www.ferjusanz-frutas-verduras.es';
 // Artículos repetidos juntados en uno: no se generan y sus enlaces apuntan al nuevo (el Worker redirige con 301).
 const REDIRECCIONES = require('./redirecciones.json');
+// Ninguna guía sale si no pasa el revisor de textos (Tito, 27/11/2026: «emplea siempre los revisores»).
+{ const { revisar } = require('./revisar-texto.cjs');
+  const mal = require('./paginas.json').filter(p => p.isPost && revisar(p.html || '').length);
+  if (mal.length) throw new Error('Guías que no pasan el revisor (node web/revisar-texto.cjs --todas): ' + mal.map(p => p.path).join(', ')); }
 const paginas = require('./paginas.json').filter(p => !REDIRECCIONES[p.path])
   .map(p => p.html ? { ...p, html: p.html.replace(/\/blog\/[^"'#?\s]+\//g, r => REDIRECCIONES[r] || r) } : p);
 // Ofertas de la semana (las dicta Fernando; mismas que Comercial › Recomendaciones de la app). Se cambian en ofertas.json.

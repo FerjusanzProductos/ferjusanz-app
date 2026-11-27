@@ -44,9 +44,11 @@ if (require.main === module) {
   console.assert(revisar('<p>La patata nueva aguanta poco en cámara. Pídela para dos o tres días.</p>').length === 0);
   const arg = process.argv[2];
   if (!arg) { console.log('Uso: node web/revisar-texto.cjs <articulo.json> | --todas'); process.exit(1); }
+  // .json = artículo; cualquier otro archivo (.txt, .html, .md) = texto suelto (post, correo, nota de prensa…).
   const lista = arg === '--todas'
-    ? JSON.parse(fs.readFileSync(path.join(__dirname, 'paginas.json'), 'utf8')).filter(p => p.isPost && p.nuevo)
-    : [JSON.parse(fs.readFileSync(arg, 'utf8'))];
+    ? JSON.parse(fs.readFileSync(path.join(__dirname, 'paginas.json'), 'utf8')).filter(p => p.isPost)
+    : arg.endsWith('.json') ? [JSON.parse(fs.readFileSync(arg, 'utf8'))]
+    : [{ slug: arg, html: fs.readFileSync(arg, 'utf8').split(/\n\s*\n/).map(b => `<p>${b}</p>`).join('') }];
   let mal = 0;
   for (const a of lista) {
     const f = revisar(a.html || '');

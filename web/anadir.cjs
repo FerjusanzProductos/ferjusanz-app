@@ -30,6 +30,8 @@ const [, , tipo, ...args] = process.argv;
 if (tipo === 'novedad') {
   const [foto, titulo, texto = '', driveId = ''] = args;
   if (!foto || !titulo) throw new Error('Falta la foto o el título');
+  const fallosN = require('./revisar-texto.cjs').revisar(`<p>${titulo}. ${texto}</p>`);
+  if (fallosN.length) throw new Error('El texto suena a relleno, reescríbelo:\n - ' + fallosN.join('\n - '));
   const lista = JSON.parse(fs.readFileSync(path.join(DIR, 'novedades.json'), 'utf8'));
   if (driveId && lista.some(n => n.driveId === driveId)) { console.log('Esa foto ya estaba publicada:', driveId); process.exit(0); }
   const rel = guardarFoto(foto, `novedad-${hoy}-${slug(titulo).slice(0, 40)}`);
