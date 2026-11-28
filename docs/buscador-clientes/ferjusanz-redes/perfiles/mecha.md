@@ -28,5 +28,4 @@ Fernando Sanz
 Ferjusanz Productos Hortofrutícolas · Mercamadrid
 609 567 354 · www.ferjusanz-frutas-verduras.es
 
-Si no queréis que os vuelva a escribir, decídmelo y no lo hago.
-
+Si preferís no recibir más, decídmelo y os doy de baja.

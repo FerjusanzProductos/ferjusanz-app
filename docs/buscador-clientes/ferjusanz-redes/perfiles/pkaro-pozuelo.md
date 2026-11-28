@@ -19,7 +19,7 @@ Buenos días:
 
 Leí en Vaguada la reseña de Píkaro Pozuelo, con aquel «puerro a la brasa con beurre blanc». Para eso hace falta buena verdura cada día.
 
-Somos Ferjusanz, empresa familiar en Mercamadrid: verdura, setas, patata y huevos para hostelería, con reparto cada mañana y pedido hasta la tarde anterior.
+Somos Ferjusanz, empresa familiar en Mercamadrid: verdura, setas, patata y huevos para hostelería, con reparto cada mañana.
 
 ¿Las compras de verdura las lleváis desde Pozuelo? Si es así, ¿os puedo mandar nuestra lista?
 
@@ -28,5 +28,4 @@ Fernando Sanz
 Ferjusanz Productos Hortofrutícolas · Mercamadrid
 609 567 354 · www.ferjusanz-frutas-verduras.es
 
-Si no queréis que os vuelva a escribir, decídmelo y no lo hago.
-
+Si preferís no recibir más, decídmelo y os doy de baja.

@@ -20,7 +20,7 @@ Buenos días, Gonzalo:
 
 En vuestra web contáis que la mayoría de vuestros proveedores son de Madrid «because surroundings, tradition and closeness matter too». Vi que en la carta lleváis patatas chafadas, judías verdes, champiñones y tirabeques.
 
-Somos Ferjusanz, empresa familiar de tercera generación en Mercamadrid: fruta, verdura, setas, patata y huevos, con reparto cada mañana.
+Somos Ferjusanz, empresa familiar en Mercamadrid: fruta, verdura, setas, patata y huevos, con reparto cada mañana.
 
 ¿Tenéis ya cubierta la verdura o puedo mandaros nuestra lista?
 
@@ -29,5 +29,4 @@ Fernando Sanz
 Ferjusanz Productos Hortofrutícolas · Mercamadrid
 609 567 354 · www.ferjusanz-frutas-verduras.es
 
-Si no queréis que os vuelva a escribir, decídmelo y no lo hago.
-
+Si preferís no recibir más, decídmelo y os doy de baja.

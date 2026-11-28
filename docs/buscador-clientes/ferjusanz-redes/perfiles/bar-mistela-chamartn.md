@@ -19,7 +19,7 @@ Asunto: Verdura y patata para Bar Mistela Chamartín
 
 Buenos días:
 
-Leí en El Debate que Bar Mistela Chamartín es «una propuesta pensada para disfrutar desde primera hora, con buen producto». Con unas 200 plazas, eso es mucha verdura, patata y huevo cada día.
+Leí en El Debate que Bar Mistela Chamartín es «una propuesta pensada para disfrutar desde primera hora, con buen producto». Con unas 200 plazas, eso es mucha verdura cada día.
 
 Somos Ferjusanz, empresa familiar en Mercamadrid: repartimos cada mañana a hostelería, con pedido hasta la tarde anterior, y tenemos patata pelada y cortada.
 
@@ -30,5 +30,4 @@ Fernando Sanz
 Ferjusanz Productos Hortofrutícolas · Mercamadrid
 609 567 354 · www.ferjusanz-frutas-verduras.es
 
-Si no queréis que os vuelva a escribir, decídmelo y no lo hago.
-
+Si preferís no recibir más, decídmelo y os doy de baja.

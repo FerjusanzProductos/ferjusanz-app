@@ -18,16 +18,15 @@ Asunto: Verdura, patata y huevo para Casa Parole
 
 Buenos días:
 
-Leí en vuestra web lo de La Misión: «Ahora nuestra misión ha cambiado, y es la de que no quieras irte». Con las milanesas, las pizzas y las salas de José Silva, os tocará mover bastante patata, tomate, verdura y huevo.
+Leí en vuestra web lo de La Misión: «Ahora nuestra misión ha cambiado, y es la de que no quieras irte». Con milanesas y pizzas, os tocará mover mucha patata, verdura y huevo.
 
 Somos Ferjusanz, empresa familiar en Mercamadrid: repartimos cada mañana a hostelería, con pedido hasta la tarde anterior.
 
-¿Con quién puedo hablar de compras, para Casa Parole y también para Parole Ponzano?
+¿Con quién puedo hablar de compras en Casa Parole y Parole Ponzano?
 
 Un saludo,
 Fernando Sanz
 Ferjusanz Productos Hortofrutícolas · Mercamadrid
 609 567 354 · www.ferjusanz-frutas-verduras.es
 
-Si no queréis que os vuelva a escribir, decídmelo y no lo hago.
-
+Si preferís no recibir más, decídmelo y os doy de baja.

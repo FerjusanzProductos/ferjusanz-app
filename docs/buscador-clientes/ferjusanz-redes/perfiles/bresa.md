@@ -22,7 +22,7 @@ Buenos días, Javier y Paco:
 
 Leí en Mateo&Co que en Bresa la carta «se adapta a lo que el mercado y los proveedores pueden ofrecer en cada momento».
 
-Somos Ferjusanz, empresa familiar de tercera generación en Mercamadrid: elegimos cada mañana la verdura, la fruta y las setas y os las llevamos al restaurante, con pedido hasta la tarde anterior.
+Somos Ferjusanz, empresa familiar de tercera generación en Mercamadrid: elegimos cada mañana verdura, fruta y setas y os las llevamos al restaurante.
 
 ¿Os puedo llamar para contaros qué producto tenemos esta temporada?
 
@@ -31,5 +31,4 @@ Fernando Sanz
 Ferjusanz Productos Hortofrutícolas · Mercamadrid
 609 567 354 · www.ferjusanz-frutas-verduras.es
 
-Si no queréis que os vuelva a escribir, decídmelo y no lo hago.
-
+Si preferís no recibir más, decídmelo y os doy de baja.

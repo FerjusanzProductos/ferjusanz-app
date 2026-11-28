@@ -19,7 +19,7 @@ Buenos días, Sam:
 
 Leí en Neo2 tu frase: «Todo tiene que llevar técnica detrás, nada de simplemente saltear verduras y ya está». Para que esa técnica luzca, la verdura tiene que llegar fresca cada mañana.
 
-Somos Ferjusanz, empresa familiar en Mercamadrid: verdura, setas, hierbas, patata y huevos, con reparto diario y pedido hasta la tarde anterior.
+Somos Ferjusanz, empresa familiar en Mercamadrid: verdura, setas, hierbas, patata y huevos, con reparto cada mañana.
 
 ¿Te mando nuestra lista para ver qué te encaja?
 
@@ -28,5 +28,4 @@ Fernando Sanz
 Ferjusanz Productos Hortofrutícolas · Mercamadrid
 609 567 354 · www.ferjusanz-frutas-verduras.es
 
-Si no queréis que os vuelva a escribir, decídmelo y no lo hago.
-
+Si preferís no recibir más, decídmelo y os doy de baja.
