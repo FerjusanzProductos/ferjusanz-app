@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.DS_Store
+# nunca subas vídeos ni salidas de prueba
+*.mp4
+*.mov
+*.wav
+*.mp3
+*.m4a
+*.jpg
+*.png
+*.json
+!requirements.txt

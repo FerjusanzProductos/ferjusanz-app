@@ -1,0 +1,7 @@
+# Python 3.9+ · además necesitas ffmpeg y ffprobe en el PATH (brew install ffmpeg) y, para referencias/, yt-dlp
+numpy>=1.20
+faster-whisper>=1.0
+Pillow>=9.0
+# opcionales
+opencv-python-headless>=4.5   # detectar la cara (broll/, zooms/); sin él se supone la cara en el tercio superior
+yt-dlp>=2024.1.1              # bajar reels de referencia (también vale el yt-dlp de brew)
