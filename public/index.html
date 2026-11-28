@@ -10443,7 +10443,7 @@ function ofTablaActa(a, alPulsar) {
 function vistaOficina() {
   state.view = 'oficina'; if (!esOficina()) { go('inicio'); return; }
   const FN = ES_PRUEBAS ? 'jarvis-pruebas' : 'jarvis', CONV = 'fj_jarvis_conv';
-  let estado = null, parte = {}, conv = LS.get(CONV, []), ocupado = false, voz = LS.get('fj_jarvis_voz', true);
+  let estado = null, parte = {}, conv = LS.get(CONV, []), ocupado = false, voz = LS.get('fj_jarvis_voz', true), cargaEstado = Promise.resolve();
   const plano = h('div', {}, h('div', { class: 'card sub' }, 'Encendiendo la oficina…'));
   const lista = h('div', { class: 'card', style: 'padding:10px' });
   const estadoVisible = () => veCobros() || !estado ? estado : Object.fromEntries(Object.entries(estado).filter(([k]) => !OF_DINERO.includes(k)));
@@ -10469,6 +10469,7 @@ function vistaOficina() {
     if (!LS.get('fj_harvey_ok', false)) { if (!await confirmar('La reunión la hace Jarvis con un servicio de IA externo (Anthropic), con el estado de la oficina y las consultas que necesite. ¿Seguir?')) return; LS.set('fj_harvey_ok', true); }
     reunido = true; pintaPrio('🗣️ Los departamentos están reunidos. Jarvis está tomando nota…');
     try {
+      await cargaEstado; if (!estado) throw new Error('No se han podido cargar los datos de la oficina. Vuelve a entrar.');
       const r = await sb.functions.invoke(FN, { body: { mensajes: [{ rol: 'yo', texto: OF_REUNION }], contexto: 'Canal: app (🏢 Oficina, reunión de prioridades).\nESTADO DE LA OFICINA (datos reales): ' + JSON.stringify(estadoVisible()) } });
       let err = r.error && r.error.message; if (r.error) { try { const j = await r.error.context.json(); if (j && j.error) err = j.error; } catch (e) { } }
       if (err || (r.data && r.data.error)) throw new Error(err || r.data.error);
@@ -10507,6 +10508,7 @@ function vistaOficina() {
     if (voz && !LECTOR.hablando) decir('Vale, lo miro.');
     conv.push({ rol: 'yo', texto: t, t: Date.now() }); ta.value = ''; ocupado = true; btn.disabled = true; pintar(); chat.scrollIntoView({ behavior: 'smooth', block: 'end' });
     try {
+      await cargaEstado;
       const r = await sb.functions.invoke(FN, { body: { mensajes: conv.filter(m => !m.error).slice(-20).map(m => ({ rol: m.rol, texto: m.texto })), contexto: 'Canal: app (🏢 Oficina).\nESTADO DE LA OFICINA (datos reales): ' + JSON.stringify(estadoVisible()) + (acta ? '\nÚLTIMA REUNIÓN DE PRIORIDADES (' + acta.creado + '): ' + JSON.stringify({ filas: ofActaVisible(acta).filas, resumen: ofActaVisible(acta).resumen }) : '') } });
       let err = r.error && r.error.message; if (r.error) { try { const j = await r.error.context.json(); if (j && j.error) err = j.error; } catch (e) { } }
       if (err || (r.data && r.data.error)) throw new Error(/not found|404/i.test(err || '') ? 'Jarvis todavía no está activado en Supabase.' : (err || r.data.error));
@@ -10528,6 +10530,11 @@ function vistaOficina() {
         h('button', { class: 'ghost', style: 'min-height:52px', onclick: () => decir(d.n + '. ' + frase) }, '🔊 Escuchar'))));
   };
   btn.addEventListener('click', () => preguntar());
+  /* 🎤 Hablarle a Jarvis: el dictado del móvil; al callarse, se envía solo. */
+  let rec = null; const mic = h('button', { class: 'ghost', style: 'min-height:48px', 'aria-label': 'Hablar a Jarvis' }, '🎤 Hablar');
+  mic.addEventListener('click', async () => { if (rec) { try { rec.stop(); } catch (e) { } return; } if (ocupado) return; lectorParar();
+    rec = await escucharPregunta((t, fin, acabado) => { ta.value = t; if (acabado && t.trim()) preguntar(t); },
+      on => { mic.textContent = on ? '⏹️ Escuchando…' : '🎤 Hablar'; if (!on) rec = null; }); });
   /* Telegram: conectar el bot (admin, una vez) y vincular este móvil con un código de un solo uso. */
   const tgBox = h('div', { class: 'sub' }, 'Cargando…');
   const pintaTg = async () => {
@@ -10558,11 +10565,11 @@ function vistaOficina() {
     h('p', { class: 'sub', style: 'margin:0 0 6px' }, '👆 Toca cualquier departamento del plano (o de la lista de abajo) para ver su detalle.'),
     h('h3', {}, '📋 Prioridades de la empresa'), prioBox, h('h3', {}, 'Estado de los departamentos'), lista,
     h('h3', {}, '🤖 Jarvis, la ayuda de la oficina'), chat, ta,
-    h('div', { style: 'display:flex;gap:6px;margin-top:6px' }, btn, h('button', { class: 'ghost', style: 'min-height:48px', onclick: () => { conv = []; LS.set(CONV, conv); pintar(); } }, '🧹 Nueva')),
+    h('div', { style: 'display:flex;gap:6px;margin-top:6px;flex-wrap:wrap' }, btn, mic, h('button', { class: 'ghost', style: 'min-height:48px', onclick: () => { conv = []; LS.set(CONV, conv); pintar(); } }, '🧹 Nueva')),
     h('h3', {}, '📲 Jarvis en Telegram'), h('div', { class: 'card' }, tgBox),
     h('p', { class: 'sub' }, 'Las luces salen de datos reales (Golden, facturas de proveedor, contactos e informes). Los pedidos y cobros de la app aún son de prueba y no cuentan.'))));
   pintar(); pintaTg();
-  (async () => {
+  cargaEstado = (async () => {
     const r = await sb.rpc('oficina_estado');
     if (r.error) { plano.replaceChildren(h('div', { class: 'card sub' }, '⚠️ ' + (isNetErr(r.error) ? 'Necesitas conexión.' : r.error.message))); return; }
     estado = r.data; parte = ofParte(estado);
