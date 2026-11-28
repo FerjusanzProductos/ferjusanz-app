@@ -57,7 +57,7 @@ async function oirAudio(token: string, a: { file_id: string; mime_type?: string;
   throw new Error("no he podido escuchar el audio (" + fallo + ")");
 }
 // Cobros y pagos de Golden solo para quien tiene permiso (como en la app, veCobros): si no, ni las cifras ni el resumen de la reunión.
-const DINERO = ["cobros", "pagos"], DEP_DINERO = /^(cobro|pago)/i;
+const DINERO = ["cobros", "pagos"];
 async function veCobros(yo: any, perfil: string) {
   const [a, b] = await Promise.all([yo.from("ver_cobros").select("user_id").eq("user_id", perfil).maybeSingle(), yo.from("ver_margenes").select("user_id").eq("user_id", perfil).maybeSingle()]);
   return !!(a.data || b.data);
@@ -74,7 +74,7 @@ async function atender(token: string, msg: any) {
     await admin.from("jarvis_ajustes").delete().eq("clave", "codigo:" + cod[1]);
     await admin.from("jarvis_mensajes").delete().eq("chat_id", chat);
     await admin.from("jarvis_telegram").upsert({ chat_id: chat, perfil_id: a.valor, nombre: [msg.from?.first_name, msg.from?.last_name].filter(Boolean).join(" ") });
-    return decir(token, chat, "✅ Conectado. Soy Jarvis, de Ferjusanz. Pregúntame «¿cómo vamos?» o lo que necesites.\n\nAviso: lo que me escribas y los datos de la empresa que consulte pasan por un servicio de IA externo (Anthropic). Nunca mando nada a clientes; para cambiar datos te pido «sí». /nuevo empieza una conversación nueva.");
+    return decir(token, chat, "✅ Conectado. Soy Jarvis, de Ferjusanz. Pregúntame «¿cómo vamos?» o lo que necesites.\n\nAviso: lo que me escribas y los datos de la empresa que consulte pasan por un servicio de IA externo (Anthropic); las notas de voz las pasa a texto Google (Gemini). Nunca mando nada a clientes; para cambiar datos te pido «sí». /nuevo empieza una conversación nueva.");
   }
   const { data: v } = await admin.from("jarvis_telegram").select("perfil_id").eq("chat_id", chat).maybeSingle();
   if (!v) return decir(token, chat, "Este chat no está conectado. En la app: 🏢 Oficina › Telegram › «📲 Conectar mi Telegram».");
@@ -99,7 +99,7 @@ async function atender(token: string, msg: any) {
     let acta = reu.data?.[0], estado = est.data;
     if (!(await veCobros(yo, v.perfil_id))) {
       if (estado && typeof estado === "object") estado = Object.fromEntries(Object.entries(estado).filter(([k]) => !DINERO.includes(k)));
-      if (acta) acta = { ...acta, resumen: "", filas: (acta.filas || []).filter((f: any) => !DEP_DINERO.test(String(f.dep || ""))) };
+      if (acta) acta = { ...acta, resumen: "", filas: (acta.filas || []).filter((f: any) => { const d = String(f.dep || "").toLowerCase(); return DEPS.some(n => !/^(cobros|pagos)$/i.test(n) && d.startsWith(n.toLowerCase().slice(0, 5))); }) };   // como la app: solo departamentos conocidos y no de dinero
     }
     const contexto = "Canal: Telegram (texto plano, sin botones; para confirmar, la persona contesta «sí»).\nESTADO DE LA OFICINA (datos reales): " + JSON.stringify(estado ?? est.error?.message)
       + (acta ? "\nÚLTIMA REUNIÓN DE PRIORIDADES (" + acta.creado + "): " + JSON.stringify(acta) : "");
