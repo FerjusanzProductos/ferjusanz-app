@@ -10497,14 +10497,17 @@ function ofLeerActa(t) {
   const r = String(t).match(/\[RESUMEN\]\s*([^\n]+)/i);
   return { filas: filas.sort((a, b) => OF_URG[a.urgencia] - OF_URG[b.urgencia]), resumen: r ? r[1].replace(/\*/g, '').trim() : '' };
 }
+const ofDepDe = n => OF_DEP.find(d => String(n || '').toLowerCase().startsWith(d.n.toLowerCase().slice(0, 5))) || { ic: '🏢', c: '#64748b' };
+/* Sin permiso de cobros: solo filas de departamentos conocidos que no sean de dinero, y sin el resumen (puede llevar importes). */
+const ofActaVisible = a => !a || veCobros() ? a : Object.assign({}, a, { resumen: '', filas: (a.filas || []).filter(f => { const k = ofDepDe(f.dep).k; return k && !OF_DINERO.includes(k); }) });
 function ofTablaActa(a, alPulsar) {
-  const col = { alta: '#dc2626', media: '#d97706', baja: '#6b7280' }, depDe = n => OF_DEP.find(d => n.toLowerCase().startsWith(d.n.toLowerCase().slice(0, 5))) || { ic: '🏢', c: '#64748b' };
+  const col = { alta: '#dc2626', media: '#d97706', baja: '#6b7280' }, depDe = ofDepDe;
   return h('div', {},
     h('div', { class: 'sub', style: 'margin-bottom:6px' }, 'Reunión del ' + new Date(a.creado).toLocaleString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' · ' + a.filas.length + ' prioridades'),
     a.resumen ? h('div', { class: 'card', style: 'border-left:6px solid #0ea5e9' }, h('b', {}, '🗒️ En resumen: '), a.resumen) : null,
     h('table', { style: 'width:100%;border-collapse:collapse;font-size:14px' },
       h('thead', {}, h('tr', {}, ...['', 'Departamento', 'Prioridad'].map(t => h('th', { style: 'text-align:left;padding:6px 4px;border-bottom:2px solid var(--borde,#e5e7eb)' }, t)))),
-      h('tbody', {}, ...a.filas.filter(f => veCobros() || !OF_DINERO.includes(depDe(f.dep || '').k)).map(f => { const d = depDe(f.dep || ''); f.urgencia = col[f.urgencia] ? f.urgencia : 'media'; return h('tr', { style: 'border-bottom:1px solid var(--borde,#e5e7eb);vertical-align:top;cursor:pointer', onclick: () => alPulsar && alPulsar(f, d) },
+      h('tbody', {}, ...a.filas.map(f => { const d = depDe(f.dep || ''); f.urgencia = col[f.urgencia] ? f.urgencia : 'media'; return h('tr', { style: 'border-bottom:1px solid var(--borde,#e5e7eb);vertical-align:top;cursor:pointer', onclick: () => alPulsar && alPulsar(f, d) },
         h('td', { style: 'padding:8px 4px' }, h('span', { title: 'Urgencia ' + f.urgencia, style: `display:inline-block;padding:2px 6px;border-radius:8px;color:#fff;font-size:11px;font-weight:700;background:${col[f.urgencia]}` }, f.urgencia.toUpperCase())),
         h('td', { style: `padding:8px 4px;font-weight:700;border-left:4px solid ${d.c}` }, d.ic + ' ' + f.dep),
         h('td', { style: 'padding:8px 4px' }, f.prioridad, (f.quien || f.cuando) ? h('div', { class: 'sub' }, [f.quien && '👤 ' + f.quien, f.cuando && '📅 ' + f.cuando].filter(Boolean).join(' · ')) : null, h('div', { class: 'sub', style: 'color:#0284c7' }, 'Tocar para ver más ›'))); }))));
@@ -10520,10 +10523,10 @@ function vistaOficina() {
   let acta = null, reunido = false;
   const pintaPrio = (aviso) => prioBox.replaceChildren(
     aviso ? h('div', { class: 'sub', style: 'margin-bottom:6px' }, aviso) : null,
-    acta ? ofTablaActa(acta, verPrio) : h('p', { class: 'sub' }, 'Aún no ha habido reunión. Pulsa el botón y cada departamento dirá sus prioridades.'),
+    acta ? ofTablaActa(ofActaVisible(acta), verPrio) : h('p', { class: 'sub' }, 'Aún no ha habido reunión. Pulsa el botón y cada departamento dirá sus prioridades.'),
     h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' },
       h('button', { class: 'guardar', style: 'min-height:48px;flex:1', disabled: reunido, onclick: reunir }, reunido ? '🗣️ Reunidos… (1-2 minutos)' : '🗣️ Reunir a los departamentos'),
-      acta && acta.resumen ? h('button', { class: 'ghost', style: 'min-height:48px', onclick: () => decir('Resumen de la reunión. ' + acta.resumen) }, '🔊 Escuchar') : null));
+      acta && ofActaVisible(acta).resumen ? h('button', { class: 'ghost', style: 'min-height:48px', onclick: () => decir('Resumen de la reunión. ' + acta.resumen) }, '🔊 Escuchar') : null));
   const verPrio = (f, d) => { let cerrar; cerrar = hoja((d.ic || '🏢') + ' ' + f.dep, h('div', {},
     h('p', { style: 'font-size:17px;margin:4px 0 8px' }, f.prioridad),
     h('p', { class: 'sub' }, 'Urgencia: ' + f.urgencia + (f.quien ? ' · 👤 ' + f.quien : '') + (f.cuando ? ' · 📅 ' + f.cuando : '')),
@@ -10546,7 +10549,7 @@ function vistaOficina() {
       const g = await sb.from('oficina_reuniones').insert({ filas: a.filas, resumen: a.resumen, autor: state.user.id }).select().single();
       acta = g.data || Object.assign({ creado: new Date().toISOString() }, a);
       reunido = false; pintaPrio(g.error ? '⚠️ No se ha podido guardar (solo se ve aquí): ' + g.error.message : null);
-      if (acta.resumen) hablar('Resumen de la reunión. ' + acta.resumen);   /* suena si «con voz» está marcado */
+      if (ofActaVisible(acta).resumen) hablar('Resumen de la reunión. ' + acta.resumen);   /* suena si «con voz» está marcado */
     } catch (e) { reunido = false; pintaPrio('⚠️ ' + (isNetErr(e) ? 'Necesitas conexión.' : e.message)); }
   }
   sb.from('oficina_reuniones').select('*').order('id', { ascending: false }).limit(1).then(r => { acta = (r.data && r.data[0]) || null; pintaPrio(r.error ? '⚠️ ' + r.error.message : null); });
@@ -10576,7 +10579,7 @@ function vistaOficina() {
     if (voz && !LECTOR.hablando) decir('Vale, lo miro.');
     conv.push({ rol: 'yo', texto: t, t: Date.now() }); ta.value = ''; ocupado = true; btn.disabled = true; pintar(); chat.scrollIntoView({ behavior: 'smooth', block: 'end' });
     try {
-      const r = await sb.functions.invoke(FN, { body: { mensajes: conv.filter(m => !m.error).slice(-20).map(m => ({ rol: m.rol, texto: m.texto })), contexto: 'Canal: app (🏢 Oficina).\nESTADO DE LA OFICINA (datos reales): ' + JSON.stringify(estadoVisible()) + (acta ? '\nÚLTIMA REUNIÓN DE PRIORIDADES (' + acta.creado + '): ' + JSON.stringify({ filas: acta.filas, resumen: acta.resumen }) : '') } });
+      const r = await sb.functions.invoke(FN, { body: { mensajes: conv.filter(m => !m.error).slice(-20).map(m => ({ rol: m.rol, texto: m.texto })), contexto: 'Canal: app (🏢 Oficina).\nESTADO DE LA OFICINA (datos reales): ' + JSON.stringify(estadoVisible()) + (acta ? '\nÚLTIMA REUNIÓN DE PRIORIDADES (' + acta.creado + '): ' + JSON.stringify({ filas: ofActaVisible(acta).filas, resumen: ofActaVisible(acta).resumen }) : '') } });
       let err = r.error && r.error.message; if (r.error) { try { const j = await r.error.context.json(); if (j && j.error) err = j.error; } catch (e) { } }
       if (err || (r.data && r.data.error)) throw new Error(/not found|404/i.test(err || '') ? 'Jarvis todavía no está activado en Supabase.' : (err || r.data.error));
       const txt = String((r.data && r.data.texto) || '').trim(); if (!txt) throw new Error('Jarvis no ha contestado');
@@ -10587,7 +10590,7 @@ function vistaOficina() {
   const verDep = k => {
     if (k === 'jarvis') { ta.focus(); chat.scrollIntoView({ behavior: 'smooth' }); return; }
     const d = OF_DEP.find(x => x.k === k); if (!d) return; const [luz, frase] = parte[k] || ['v', 'Cargando…'], gris = luz === 'g';
-    const prios = (acta && acta.filas || []).filter(f => String(f.dep || '').toLowerCase().startsWith(d.n.toLowerCase().slice(0, 5)));
+    const prios = (acta && ofActaVisible(acta).filas || []).filter(f => String(f.dep || '').toLowerCase().startsWith(d.n.toLowerCase().slice(0, 5)));
     let cerrar; cerrar = hoja(`${d.ic} ${d.n}`, h('div', {},
       h('div', { class: 'card', style: `border-left:6px solid ${d.c};margin:0 0 8px` }, h('div', { style: `color:${OF_LUZ[luz]};font-weight:800` }, '● ' + OF_LUZ_T[luz]), h('p', { style: 'margin:6px 0;font-size:16px' }, frase)),
       !gris && prios.length ? h('div', { class: 'card', style: 'margin:0 0 8px' }, h('b', {}, '📋 Prioridades de la última reunión'), h('ul', { style: 'margin:6px 0 0;padding-left:20px' }, ...prios.map(f => h('li', {}, f.prioridad, f.quien ? h('span', { class: 'sub' }, ' · ' + f.quien) : null)))) : null,
