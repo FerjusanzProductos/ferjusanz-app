@@ -87,7 +87,7 @@ begin
     on conflict (clave) do update set valor = excluded.valor, actualizado = now();
 end $$;
 
--- Código de 6 cifras, válido 15 minutos, para escribir «/start CÓDIGO» al bot.
+-- Código largo (32 letras, aleatorio de verdad), válido 15 minutos: va dentro del enlace t.me/…?start=, nadie lo teclea ni lo puede adivinar.
 create or replace function public.jarvis_codigo() returns text
 language plpgsql security definer set search_path = public as $$
 declare c text;
@@ -96,13 +96,14 @@ begin
     raise exception 'Solo la oficina puede usar Jarvis';
   end if;
   delete from jarvis_ajustes where clave like 'codigo:%' and (actualizado < now() - interval '15 minutes' or valor = auth.uid()::text);
-  c := lpad((floor(random() * 1000000))::int::text, 6, '0');
+  c := replace(gen_random_uuid()::text, '-', '');
   insert into jarvis_ajustes (clave, valor) values ('codigo:' || c, auth.uid()::text);
   return c;
 end $$;
 
 create or replace function public.jarvis_desconectar() returns void
 language sql security definer set search_path = public as $$
+  delete from jarvis_mensajes where chat_id in (select chat_id from jarvis_telegram where perfil_id = auth.uid());
   delete from jarvis_telegram where perfil_id = auth.uid();
 $$;
 

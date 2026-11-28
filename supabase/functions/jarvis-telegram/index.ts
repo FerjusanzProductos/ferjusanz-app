@@ -40,16 +40,17 @@ async function sesionDe(perfil: string) {
 async function atender(token: string, msg: any) {
   const chat = msg.chat.id as number, texto = String(msg.text || "").trim();
   if (!texto) return decir(token, chat, "De momento solo entiendo mensajes de texto.");
-  const cod = texto.match(/^\/start\s+(\d{6})$/);
+  const cod = texto.match(/^\/start\s+([0-9a-f]{32})$/);
   if (cod) {
     const a = await ajuste("codigo:" + cod[1]);
-    if (!a || Date.now() - new Date(a.actualizado).getTime() > 15 * 60e3) return decir(token, chat, "Ese código no vale o ha caducado. Saca otro en la app: 🏢 Oficina › Telegram.");
+    if (!a || Date.now() - new Date(a.actualizado).getTime() > 15 * 60e3) return decir(token, chat, "Ese código no vale o ha caducado. Pulsa otra vez «📲 Conectar mi Telegram» en la app (🏢 Oficina).");
     await admin.from("jarvis_ajustes").delete().eq("clave", "codigo:" + cod[1]);
+    await admin.from("jarvis_mensajes").delete().eq("chat_id", chat);
     await admin.from("jarvis_telegram").upsert({ chat_id: chat, perfil_id: a.valor, nombre: [msg.from?.first_name, msg.from?.last_name].filter(Boolean).join(" ") });
-    return decir(token, chat, "✅ Conectado. Soy Jarvis, de Ferjusanz. Pregúntame «¿cómo vamos?» o lo que necesites.");
+    return decir(token, chat, "✅ Conectado. Soy Jarvis, de Ferjusanz. Pregúntame «¿cómo vamos?» o lo que necesites.\n\nAviso: lo que me escribas y los datos de la empresa que consulte pasan por un servicio de IA externo (Anthropic). Nunca mando nada a clientes; para cambiar datos te pido «sí». /nuevo empieza una conversación nueva.");
   }
   const { data: v } = await admin.from("jarvis_telegram").select("perfil_id").eq("chat_id", chat).maybeSingle();
-  if (!v) return decir(token, chat, "Este chat no está conectado. En la app: 🏢 Oficina › Telegram › «Sacar código», y escríbeme /start y el código.");
+  if (!v) return decir(token, chat, "Este chat no está conectado. En la app: 🏢 Oficina › Telegram › «📲 Conectar mi Telegram».");
   if (texto === "/nuevo") { await admin.from("jarvis_mensajes").delete().eq("chat_id", chat); return decir(token, chat, "Conversación nueva. ¿En qué te ayudo?"); }
 
   await tg(token, "sendChatAction", { chat_id: chat, action: "typing" });
