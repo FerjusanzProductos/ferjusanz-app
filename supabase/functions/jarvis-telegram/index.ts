@@ -37,9 +37,36 @@ async function sesionDe(perfil: string) {
   return s.session.access_token;
 }
 
+// Notas de voz (Tito, 28/11/2026): Telegram da el audio y Gemini (cuota gratis: el ligero primero, un 429 no se reintenta) lo pasa a texto.
+async function oirAudio(token: string, a: { file_id: string; mime_type?: string; file_size?: number }) {
+  const KEY = Deno.env.get("GEMINI_API_KEY");
+  if (!KEY) throw new Error("no tengo con qué escuchar audios; escríbemelo");
+  if ((a.file_size || 0) > 15e6) throw new Error("el audio es demasiado largo; mándalo más corto");
+  const f = await tg(token, "getFile", { file_id: a.file_id });
+  if (!f.ok) throw new Error("Telegram no me da el audio");
+  const bin = new Uint8Array(await (await fetch(`https://api.telegram.org/file/bot${token}/${f.result.file_path}`)).arrayBuffer());
+  let b = ""; for (let i = 0; i < bin.length; i += 32768) b += String.fromCharCode(...bin.subarray(i, i + 32768));
+  const cuerpo = JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Transcribe literalmente este audio en español de España. Devuelve solo lo que se dice, sin comentarios. Si no se entiende nada o solo es ruido o música, devuelve vacío." }, { inline_data: { mime_type: a.mime_type || "audio/ogg", data: btoa(b) } }] }], generationConfig: { temperature: 0 } });
+  let fallo = "";
+  for (const modelo of ["gemini-flash-lite-latest", "gemini-flash-latest"]) {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`, { method: "POST", headers: { "x-goog-api-key": KEY, "Content-Type": "application/json" }, body: cuerpo, signal: AbortSignal.timeout(50000) }).catch(e => new Response(JSON.stringify({ error: { message: String(e?.message || e) } }), { status: 503 }));
+    const d = await r.json().catch(() => ({}));
+    if (r.ok) return (d.candidates?.[0]?.content?.parts || []).map((p: { text?: string }) => p.text || "").join("").trim();
+    fallo = String(d?.error?.message || r.status).slice(0, 120);
+  }
+  throw new Error("no he podido escuchar el audio (" + fallo + ")");
+}
+// Cobros y pagos de Golden solo para quien tiene permiso (como en la app, veCobros): si no, ni las cifras ni el resumen de la reunión.
+const DINERO = ["cobros", "pagos"], DEP_DINERO = /^(cobro|pago)/i;
+async function veCobros(yo: any, perfil: string) {
+  const [a, b] = await Promise.all([yo.from("ver_cobros").select("user_id").eq("user_id", perfil).maybeSingle(), yo.from("ver_margenes").select("user_id").eq("user_id", perfil).maybeSingle()]);
+  return !!(a.data || b.data);
+}
+
 async function atender(token: string, msg: any) {
-  const chat = msg.chat.id as number, texto = String(msg.text || "").trim();
-  if (!texto) return decir(token, chat, "De momento solo entiendo mensajes de texto.");
+  const chat = msg.chat.id as number, audio = msg.voice || msg.audio;
+  let texto = String(msg.text || "").trim();
+  if (!texto && !audio) return decir(token, chat, "Entiendo mensajes de texto y notas de voz.");
   const cod = texto.match(/^\/start\s+([0-9a-f]{32})$/);
   if (cod) {
     const a = await ajuste("codigo:" + cod[1]);
@@ -53,7 +80,15 @@ async function atender(token: string, msg: any) {
   if (!v) return decir(token, chat, "Este chat no está conectado. En la app: 🏢 Oficina › Telegram › «📲 Conectar mi Telegram».");
   if (texto === "/nuevo") { await admin.from("jarvis_mensajes").delete().eq("chat_id", chat); return decir(token, chat, "Conversación nueva. ¿En qué te ayudo?"); }
 
+  // «Escribiendo…» dura 5 segundos en Telegram: se repite mientras Jarvis piensa.
   await tg(token, "sendChatAction", { chat_id: chat, action: "typing" });
+  const escribiendo = setInterval(() => tg(token, "sendChatAction", { chat_id: chat, action: "typing" }).catch(() => {}), 4500);
+  try {
+  if (audio) {
+    try { texto = await oirAudio(token, audio); } catch (e) { return decir(token, chat, "⚠️ " + String((e as Error)?.message || e)); }
+    if (!texto) return decir(token, chat, "🎙️ No he entendido el audio. Prueba otra vez, más cerca del móvil, o escríbemelo.");
+    await decir(token, chat, "🎙️ He entendido: «" + texto + "»");
+  }
   const { data: hist } = await admin.from("jarvis_mensajes").select("rol,texto").eq("chat_id", chat).order("id", { ascending: false }).limit(19);
   const mensajes = [...(hist || []).reverse(), { rol: "yo", texto }];
   let respuesta: string;
@@ -61,8 +96,12 @@ async function atender(token: string, msg: any) {
     const jwt = await sesionDe(v.perfil_id);
     const yo = createClient(URL_SB, ANON, { global: { headers: { Authorization: "Bearer " + jwt } }, auth: { persistSession: false } });
     const [est, reu] = await Promise.all([yo.rpc("oficina_estado"), yo.from("oficina_reuniones").select("creado,filas,resumen").order("id", { ascending: false }).limit(1)]);
-    const acta = reu.data?.[0];
-    const contexto = "Canal: Telegram (texto plano, sin botones; para confirmar, la persona contesta «sí»).\nESTADO DE LA OFICINA (datos reales): " + JSON.stringify(est.data ?? est.error?.message)
+    let acta = reu.data?.[0], estado = est.data;
+    if (!(await veCobros(yo, v.perfil_id))) {
+      if (estado && typeof estado === "object") estado = Object.fromEntries(Object.entries(estado).filter(([k]) => !DINERO.includes(k)));
+      if (acta) acta = { ...acta, resumen: "", filas: (acta.filas || []).filter((f: any) => !DEP_DINERO.test(String(f.dep || ""))) };
+    }
+    const contexto = "Canal: Telegram (texto plano, sin botones; para confirmar, la persona contesta «sí»).\nESTADO DE LA OFICINA (datos reales): " + JSON.stringify(estado ?? est.error?.message)
       + (acta ? "\nÚLTIMA REUNIÓN DE PRIORIDADES (" + acta.creado + "): " + JSON.stringify(acta) : "");
     const r = await fetch(`${URL_SB}/functions/v1/${CEREBRO}`, { method: "POST",
       headers: { Authorization: "Bearer " + jwt, apikey: ANON, "Content-Type": "application/json" }, body: JSON.stringify({ mensajes, contexto }) });
@@ -73,6 +112,7 @@ async function atender(token: string, msg: any) {
     respuesta = "⚠️ No he podido entrar en la app: " + String((e as Error)?.message || e);
   }
   await decir(token, chat, limpiar(respuesta));
+  } finally { clearInterval(escribiendo); }
 }
 
 // 📋 Reunión de las 7:00 (Tito, 28/11/2026). La lanza pg_cron (job «jarvis_reunion_7») con el secreto «cron_secreto».
