@@ -10352,6 +10352,11 @@ const OF_DEP = [
   { k: 'pagos', n: 'Pagos', ic: '🏦', c: '#ef4444', g: [2, 0] }, { k: 'comercial', n: 'Comercial', ic: '🤝', c: '#a855f7', g: [0, 1] },
   { k: 'facturas', n: 'Facturas prov.', ic: '📥', c: '#3b82f6', g: [2, 1] }, { k: 'clientes', n: 'Clientes', ic: '👥', c: '#ec4899', g: [0, 2] },
   { k: 'informes', n: 'Informes', ic: '📰', c: '#14b8a6', g: [1, 2] }, { k: 'golden', n: 'Datos Golden', ic: '🗄️', c: '#eab308', g: [2, 2] }];
+/* Pantalla de la app de cada departamento; cobros y pagos de Golden solo con permiso (veCobros, como «Cobros y pagos (Golden)»). */
+const OF_IR = { ventas: ['📊 Abrir el panel', () => go('panel')], cobros: ['💶 Abrir cobros y pagos', () => go('goldenmargen')], pagos: ['💶 Abrir cobros y pagos', () => go('goldenmargen')],
+  comercial: ['🤝 Abrir Comercial', () => go('comercial')], facturas: ['📥 Abrir facturas de proveedores', () => { LS.set('fj_compras_modo', 'recib'); go('compras'); }],
+  clientes: ['👥 Abrir Clientes', () => go('clientes')], informes: ['📊 Abrir el panel', () => go('panel')], golden: ['🗄️ Abrir Golden', () => go('golden')] };
+const OF_DINERO = ['cobros', 'pagos'];
 const ofE = n => Math.round(Number(n) || 0).toLocaleString('es-ES') + ' €';
 const ofDias = f => f ? Math.round((Date.now() - new Date(f + 'T12:00:00')) / 864e5) : 999;
 /* Luz (verde / ámbar / rojo) y una frase por departamento. */
@@ -10369,9 +10374,10 @@ function ofParte(e) {
     clientes: [cl.dejaron_de_pedir > 0 ? 'a' : 'v', `${cl.activos || 0} clientes activos · ${cl.dejaron_de_pedir || 0} han dejado de pedir (45+ días).`],
     informes: [viejos.length ? 'a' : 'v', viejos.length ? 'Sin actualizar: ' + viejos.join(', ') + '.' : 'Todos los informes del día están al día.'],
     golden: [dg > 3 ? 'r' : dg > 1 ? 'a' : 'v', e.golden_hasta ? `Facturas de Golden hasta el ${new Date(e.golden_hasta + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}.` : 'Sin datos de Golden.'],
+    ...Object.fromEntries(OF_DINERO.filter(k => !e[k] || !veCobros()).map(k => [k, ['g', 'Estas cifras solo las ve quien tiene permiso de cobros y pagos.']])),
   };
 }
-const OF_LUZ = { v: '#34d399', a: '#fbbf24', r: '#f87171' };
+const OF_LUZ = { v: '#34d399', a: '#fbbf24', r: '#f87171', g: '#94a3b8' }, OF_LUZ_T = { v: 'Todo en orden', a: 'Pide atención', r: 'Urgente', g: 'Sin permiso' };
 /* Plano isométrico en SVG: una sala por departamento con su gente; Jarvis en la sala del centro. */
 function ofPlano(parte, alPulsar) {
   const W = 120, H = 60, ox = 360, oy = 40, P = (x, y) => [ox + (x - y) * W, oy + (x + y) * H];
@@ -10399,13 +10405,15 @@ function ofPlano(parte, alPulsar) {
   }
   const box = h('div', { style: 'background:radial-gradient(ellipse at center,#1b2a6b 0%,#0b1230 70%);border-radius:14px;padding:6px;border:1px solid #1e3a8a' });
   box.innerHTML = s + '</svg>';
-  box.querySelectorAll('.of-sala').forEach(g => g.addEventListener('click', () => alPulsar(g.dataset.k)));
+  box.querySelectorAll('.of-sala').forEach(g => { g.style.touchAction = 'manipulation'; g.setAttribute('role', 'button'); g.setAttribute('tabindex', '0');
+    g.addEventListener('click', () => alPulsar(g.dataset.k)); g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); alPulsar(g.dataset.k); } }); });
   return box;
 }
-/* 📋 Reunión de prioridades (Tito, 28/11/2026): cada departamento dice sus prioridades y la secretaria (Jarvis) levanta el acta;
+/* 📋 Reunión de prioridades (Tito, 28/11/2026): cada departamento dice sus prioridades y Jarvis toma nota (nunca «secretaria»:
+   la secretaría es Carmen y Jarvis no sustituye a nadie, Tito 28/11/2026);
    se guarda en oficina_reuniones. Jarvis contesta con líneas «[PRIO] Departamento | Prioridad | urgencia | Quién | Cuándo». */
 const OF_URG = { alta: 0, media: 1, baja: 2 };
-const OF_REUNION = 'REUNIÓN DE DEPARTAMENTOS. Haces de secretaria: cada departamento (' + OF_DEP.map(d => d.n).join(', ') + ') dice sus prioridades (de 1 a 3 cada uno) para hoy y esta semana, sacadas del ESTADO DE LA OFICINA y de lo que consultes (deudas, contactos pendientes, quejas, ventas, clientes). Nada inventado: si un departamento no tiene datos, su prioridad es conseguirlos. Prioridades concretas, con cifras y nombres cuando los haya.\nContesta SOLO con líneas así, una por prioridad y sin nada más:\n[PRIO] Departamento | Prioridad (una frase) | alta o media o baja | Quién (Tito, su padre, Carmen, la oficina o Claude) | Para cuándo (hoy, esta semana o este mes)\nY al final una línea: [RESUMEN] las 3 cosas más importantes de toda la empresa, en una frase para leer en voz alta.';
+const OF_REUNION = 'REUNIÓN DE DEPARTAMENTOS. Tomas nota de la reunión (eres una herramienta de apoyo, no una persona del equipo): cada departamento (' + OF_DEP.map(d => d.n).join(', ') + ') dice sus prioridades (de 1 a 3 cada uno) para hoy y esta semana, sacadas del ESTADO DE LA OFICINA y de lo que consultes (deudas, contactos pendientes, quejas, ventas, clientes). Nada inventado: si un departamento no tiene datos, su prioridad es conseguirlos. Los pedidos, ventas y deudas que guarda la app son todavía de PRUEBA: no los uses ni los comentes; el dinero sale del ESTADO (Golden). Prioridades concretas, con cifras y nombres cuando los haya.\nContesta SOLO con líneas así, una por prioridad y sin nada más:\n[PRIO] Departamento | Prioridad (una frase) | alta o media o baja | Quién (Tito, su padre, Carmen, la oficina o Claude) | Para cuándo (hoy, esta semana o este mes)\nY al final una línea: [RESUMEN] las 3 cosas más importantes de toda la empresa, en una frase para leer en voz alta.';
 function ofLeerActa(t) {
   const filas = [];
   for (const l of String(t).split('\n')) { const m = l.match(/\[PRIO\]\s*(.+)/i); if (!m) continue;
@@ -10415,17 +10423,20 @@ function ofLeerActa(t) {
   const r = String(t).match(/\[RESUMEN\]\s*([^\n]+)/i);
   return { filas: filas.sort((a, b) => OF_URG[a.urgencia] - OF_URG[b.urgencia]), resumen: r ? r[1].replace(/\*/g, '').trim() : '' };
 }
-function ofTablaActa(a) {
-  const col = { alta: '#dc2626', media: '#d97706', baja: '#6b7280' }, depDe = n => OF_DEP.find(d => n.toLowerCase().startsWith(d.n.toLowerCase().slice(0, 5))) || { ic: '🏢', c: '#64748b' };
+const ofDepDe = n => OF_DEP.find(d => String(n || '').toLowerCase().startsWith(d.n.toLowerCase().slice(0, 5))) || { ic: '🏢', c: '#64748b' };
+/* Sin permiso de cobros: solo filas de departamentos conocidos que no sean de dinero, y sin el resumen (puede llevar importes). */
+const ofActaVisible = a => !a || veCobros() ? a : Object.assign({}, a, { resumen: '', filas: (a.filas || []).filter(f => { const k = ofDepDe(f.dep).k; return k && !OF_DINERO.includes(k); }) });
+function ofTablaActa(a, alPulsar) {
+  const col = { alta: '#dc2626', media: '#d97706', baja: '#6b7280' }, depDe = ofDepDe;
   return h('div', {},
     h('div', { class: 'sub', style: 'margin-bottom:6px' }, 'Reunión del ' + new Date(a.creado).toLocaleString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' · ' + a.filas.length + ' prioridades'),
-    a.resumen ? h('div', { class: 'card', style: 'border-left:6px solid #0ea5e9' }, h('b', {}, '🗒️ La secretaria resume: '), a.resumen) : null,
+    a.resumen ? h('div', { class: 'card', style: 'border-left:6px solid #0ea5e9' }, h('b', {}, '🗒️ En resumen: '), a.resumen) : null,
     h('table', { style: 'width:100%;border-collapse:collapse;font-size:14px' },
       h('thead', {}, h('tr', {}, ...['', 'Departamento', 'Prioridad'].map(t => h('th', { style: 'text-align:left;padding:6px 4px;border-bottom:2px solid var(--borde,#e5e7eb)' }, t)))),
-      h('tbody', {}, ...a.filas.map(f => { const d = depDe(f.dep || ''); f.urgencia = col[f.urgencia] ? f.urgencia : 'media'; return h('tr', { style: 'border-bottom:1px solid var(--borde,#e5e7eb);vertical-align:top' },
+      h('tbody', {}, ...a.filas.map(f => { const d = depDe(f.dep || ''); f.urgencia = col[f.urgencia] ? f.urgencia : 'media'; return h('tr', { style: 'border-bottom:1px solid var(--borde,#e5e7eb);vertical-align:top;cursor:pointer', onclick: () => alPulsar && alPulsar(f, d) },
         h('td', { style: 'padding:8px 4px' }, h('span', { title: 'Urgencia ' + f.urgencia, style: `display:inline-block;padding:2px 6px;border-radius:8px;color:#fff;font-size:11px;font-weight:700;background:${col[f.urgencia]}` }, f.urgencia.toUpperCase())),
         h('td', { style: `padding:8px 4px;font-weight:700;border-left:4px solid ${d.c}` }, d.ic + ' ' + f.dep),
-        h('td', { style: 'padding:8px 4px' }, f.prioridad, (f.quien || f.cuando) ? h('div', { class: 'sub' }, [f.quien && '👤 ' + f.quien, f.cuando && '📅 ' + f.cuando].filter(Boolean).join(' · ')) : null)); }))));
+        h('td', { style: 'padding:8px 4px' }, f.prioridad, (f.quien || f.cuando) ? h('div', { class: 'sub' }, [f.quien && '👤 ' + f.quien, f.cuando && '📅 ' + f.cuando].filter(Boolean).join(' · ')) : null, h('div', { class: 'sub', style: 'color:#0284c7' }, 'Tocar para ver más ›'))); }))));
 }
 function vistaOficina() {
   state.view = 'oficina'; if (!esOficina()) { go('inicio'); return; }
@@ -10433,58 +10444,68 @@ function vistaOficina() {
   let estado = null, parte = {}, conv = LS.get(CONV, []), ocupado = false, voz = LS.get('fj_jarvis_voz', true);
   const plano = h('div', {}, h('div', { class: 'card sub' }, 'Encendiendo la oficina…'));
   const lista = h('div', { class: 'card', style: 'padding:10px' });
-  const detalle = h('div');
+  const estadoVisible = () => veCobros() || !estado ? estado : Object.fromEntries(Object.entries(estado).filter(([k]) => !OF_DINERO.includes(k)));
   const prioBox = h('div', { class: 'card' }, h('div', { class: 'sub' }, 'Cargando la última reunión…'));
   let acta = null, reunido = false;
   const pintaPrio = (aviso) => prioBox.replaceChildren(
     aviso ? h('div', { class: 'sub', style: 'margin-bottom:6px' }, aviso) : null,
-    acta ? ofTablaActa(acta) : h('p', { class: 'sub' }, 'Aún no ha habido reunión. Pulsa el botón y cada departamento dirá sus prioridades.'),
+    acta ? ofTablaActa(ofActaVisible(acta), verPrio) : h('p', { class: 'sub' }, 'Aún no ha habido reunión. Pulsa el botón y cada departamento dirá sus prioridades.'),
     h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' },
       h('button', { class: 'guardar', style: 'min-height:48px;flex:1', disabled: reunido, onclick: reunir }, reunido ? '🗣️ Reunidos… (1-2 minutos)' : '🗣️ Reunir a los departamentos'),
-      acta && acta.resumen ? h('button', { class: 'ghost', style: 'min-height:48px', onclick: () => { const v0 = voz; voz = true; hablar('Resumen de la reunión. ' + acta.resumen); voz = v0; } }, '🔊 Escuchar') : null));
+      acta && ofActaVisible(acta).resumen ? h('button', { class: 'ghost', style: 'min-height:48px', onclick: () => decir('Resumen de la reunión. ' + acta.resumen) }, '🔊 Escuchar') : null));
+  const verPrio = (f, d) => { let cerrar; cerrar = hoja((d.ic || '🏢') + ' ' + f.dep, h('div', {},
+    h('p', { style: 'font-size:17px;margin:4px 0 8px' }, f.prioridad),
+    h('p', { class: 'sub' }, 'Urgencia: ' + f.urgencia + (f.quien ? ' · 👤 ' + f.quien : '') + (f.cuando ? ' · 📅 ' + f.cuando : '')),
+    h('div', { style: 'display:flex;flex-direction:column;gap:8px;margin:10px 0' },
+      d.k && OF_IR[d.k] ? h('button', { class: 'guardar', style: 'min-height:52px', onclick: () => { cerrar(); OF_IR[d.k][1](); } }, OF_IR[d.k][0]) : null,
+      h('button', { class: 'ghost', style: 'min-height:52px', onclick: () => { cerrar(); preguntar(`Prioridad de ${f.dep}: «${f.prioridad}». Explícame en pasos cortos cómo hacerlo hoy y qué datos lo justifican.`); } }, '🤖 ¿Cómo lo hago? (pregunta a Jarvis)'),
+      h('button', { class: 'ghost', style: 'min-height:52px', onclick: () => decir(f.dep + '. ' + f.prioridad) }, '🔊 Escuchar')))); };
   async function reunir() {
     if (reunido) return;
     if (PRACTICA) { toast('No funciona en modo prácticas.', 'err'); return; }
     if (!navigator.onLine) { toast('Sin conexión', 'err'); return; }
     if (!LS.get('fj_harvey_ok', false)) { if (!await confirmar('La reunión la hace Jarvis con un servicio de IA externo (Anthropic), con el estado de la oficina y las consultas que necesite. ¿Seguir?')) return; LS.set('fj_harvey_ok', true); }
-    reunido = true; pintaPrio('🗣️ Los departamentos están reunidos. La secretaria está tomando nota…');
+    reunido = true; pintaPrio('🗣️ Los departamentos están reunidos. Jarvis está tomando nota…');
     try {
-      const r = await sb.functions.invoke(FN, { body: { mensajes: [{ rol: 'yo', texto: OF_REUNION }], contexto: 'Canal: app (🏢 Oficina, reunión de prioridades).\nESTADO DE LA OFICINA (datos reales): ' + JSON.stringify(estado) } });
+      const r = await sb.functions.invoke(FN, { body: { mensajes: [{ rol: 'yo', texto: OF_REUNION }], contexto: 'Canal: app (🏢 Oficina, reunión de prioridades).\nESTADO DE LA OFICINA (datos reales): ' + JSON.stringify(estadoVisible()) } });
       let err = r.error && r.error.message; if (r.error) { try { const j = await r.error.context.json(); if (j && j.error) err = j.error; } catch (e) { } }
       if (err || (r.data && r.data.error)) throw new Error(err || r.data.error);
       const a = ofLeerActa((r.data && r.data.texto) || '');
-      if (!a.filas.length) throw new Error('La secretaria no ha sacado prioridades claras. Prueba otra vez.');
+      if (!a.filas.length) throw new Error('No han salido prioridades claras. Prueba otra vez.');
       const g = await sb.from('oficina_reuniones').insert({ filas: a.filas, resumen: a.resumen, autor: state.user.id }).select().single();
       acta = g.data || Object.assign({ creado: new Date().toISOString() }, a);
       reunido = false; pintaPrio(g.error ? '⚠️ No se ha podido guardar (solo se ve aquí): ' + g.error.message : null);
-      if (acta.resumen) hablar('Resumen de la reunión. ' + acta.resumen);
+      if (ofActaVisible(acta).resumen) hablar('Resumen de la reunión. ' + acta.resumen);   /* suena si «con voz» está marcado */
     } catch (e) { reunido = false; pintaPrio('⚠️ ' + (isNetErr(e) ? 'Necesitas conexión.' : e.message)); }
   }
   sb.from('oficina_reuniones').select('*').order('id', { ascending: false }).limit(1).then(r => { acta = (r.data && r.data[0]) || null; pintaPrio(r.error ? '⚠️ ' + r.error.message : null); });
   const chat = h('div', { class: 'chat', style: 'max-height:55vh;overflow:auto' });
   const ta = h('textarea', { rows: 2, placeholder: 'Pregunta a Jarvis… (p. ej. «¿Cómo vamos?»)', style: 'width:100%' });
   const btn = h('button', { class: 'guardar', style: 'min-height:48px;flex:1' }, '📨 Enviar a Jarvis');
-  const hablar = t => { try { if (!voz || !window.speechSynthesis) return; speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(String(t).replace(/\[[A-Z]+[^\]]*\]/g, '').replace(/[*_#]/g, '')); u.lang = 'es-ES'; speechSynthesis.speak(u); } catch (e) { } };
+  /* Voz con el lector de la app: speak() a pelo tras cancel() se pierde en Chrome de Android y corta los textos largos. */
+  function decir(t) { try { lectorDecir(limpiaVoz(String(t).replace(/\[[A-ZÁÉÍÓÚ]+[^\]]*\]/g, ' ').replace(/[#•]/g, ' ').replace(/✉️/g, 'Mensaje: '))); } catch (e) { } }
+  const hablar = t => { if (voz) decir(t); };
   const burbuja = m => {
     const mio = m.rol !== 'harvey', pide = !mio && !m.error && /\[CONFIRMAR\]/i.test(m.texto);
     const txt = mio ? m.texto : m.texto.replace(/\s*\[CONFIRMAR\]\s*/gi, '\n').replace(/\[MENSAJE[^\]]*\]\s*/gi, '✉️ ').replace(/\s*\[FIN\]/gi, '').replace(/\[OFERTA[^\]]*\]/gi, '').trim();
     const ult = m === conv[conv.length - 1];
     return h('div', { class: 'msg' + (mio ? ' mio' : '') }, h('div', { class: 'burbuja', style: m.error ? 'border-color:#b91c1c;color:#b91c1c' : 'white-space:pre-wrap' }, h('span', { class: 'quien2' }, mio ? 'Tú' : '🤖 Jarvis'), txt,
       !mio && !m.error ? h('div', { style: 'display:flex;gap:6px;margin-top:6px;flex-wrap:wrap' },
-        h('button', { class: 'ghost small', onclick: () => { const v0 = voz; voz = true; hablar(txt); voz = v0; } }, '🔊 Escuchar'),
+        h('button', { class: 'ghost small', style: 'min-height:44px', onclick: () => decir(txt) }, '🔊 Escuchar'),
         pide && ult && !ocupado ? h('button', { class: 'guardar small', onclick: () => preguntar('Sí, hazlo.') }, '✅ Sí, hazlo') : null,
         pide && ult && !ocupado ? h('button', { class: 'ghost small', onclick: () => preguntar('No.') }, '❌ No') : null) : null));
   };
-  const pintar = () => { chat.replaceChildren(...(conv.length ? conv.map(burbuja) : [h('div', { class: 'sub' }, '🤖 Soy Jarvis. Pulsa «Escuchar el parte» o pregúntame lo que quieras de la empresa.')]),
+  const pintar = () => { chat.replaceChildren(...(conv.length ? conv.map(burbuja) : [h('div', { class: 'sub' }, '🤖 Soy Jarvis, una herramienta para echar una mano a la oficina: preparo datos y borradores, y las personas deciden. Pulsa «Escuchar el parte» o pregúntame lo que quieras de la empresa.')]),
     ...(ocupado ? [h('div', { class: 'msg' }, h('div', { class: 'burbuja' }, h('span', { class: 'quien2' }, '🤖 Jarvis'), '✍️ Pensando…'))] : [])); chat.scrollTop = chat.scrollHeight; };
   async function preguntar(t) {
     t = String(t || ta.value).trim(); if (!t || ocupado) return;
     if (PRACTICA) { toast('Jarvis no funciona en modo prácticas.', 'err'); return; }
     if (!navigator.onLine) { toast('Sin conexión: Jarvis necesita internet', 'err'); return; }
     if (!LS.get('fj_harvey_ok', false)) { if (!await confirmar('Jarvis usa un servicio de IA externo (Anthropic). Se envían tu mensaje y el estado de la oficina (cifras de Golden), sin teléfonos ni correos. ¿Seguir?')) return; LS.set('fj_harvey_ok', true); }
-    conv.push({ rol: 'yo', texto: t, t: Date.now() }); ta.value = ''; ocupado = true; btn.disabled = true; pintar();
+    if (voz && !LECTOR.hablando) decir('Vale, lo miro.');
+    conv.push({ rol: 'yo', texto: t, t: Date.now() }); ta.value = ''; ocupado = true; btn.disabled = true; pintar(); chat.scrollIntoView({ behavior: 'smooth', block: 'end' });
     try {
-      const r = await sb.functions.invoke(FN, { body: { mensajes: conv.filter(m => !m.error).slice(-20).map(m => ({ rol: m.rol, texto: m.texto })), contexto: 'Canal: app (🏢 Oficina).\nESTADO DE LA OFICINA (datos reales): ' + JSON.stringify(estado) + (acta ? '\nÚLTIMA REUNIÓN DE PRIORIDADES (' + acta.creado + '): ' + JSON.stringify({ filas: acta.filas, resumen: acta.resumen }) : '') } });
+      const r = await sb.functions.invoke(FN, { body: { mensajes: conv.filter(m => !m.error).slice(-20).map(m => ({ rol: m.rol, texto: m.texto })), contexto: 'Canal: app (🏢 Oficina).\nESTADO DE LA OFICINA (datos reales): ' + JSON.stringify(estadoVisible()) + (acta ? '\nÚLTIMA REUNIÓN DE PRIORIDADES (' + acta.creado + '): ' + JSON.stringify({ filas: ofActaVisible(acta).filas, resumen: ofActaVisible(acta).resumen }) : '') } });
       let err = r.error && r.error.message; if (r.error) { try { const j = await r.error.context.json(); if (j && j.error) err = j.error; } catch (e) { } }
       if (err || (r.data && r.data.error)) throw new Error(/not found|404/i.test(err || '') ? 'Jarvis todavía no está activado en Supabase.' : (err || r.data.error));
       const txt = String((r.data && r.data.texto) || '').trim(); if (!txt) throw new Error('Jarvis no ha contestado');
@@ -10494,10 +10515,15 @@ function vistaOficina() {
   }
   const verDep = k => {
     if (k === 'jarvis') { ta.focus(); chat.scrollIntoView({ behavior: 'smooth' }); return; }
-    const d = OF_DEP.find(x => x.k === k), [luz, frase] = parte[k] || ['v', ''];
-    detalle.replaceChildren(h('div', { class: 'card', style: `border-left:6px solid ${d.c}` }, h('b', {}, `${d.ic} ${d.n}`), h('p', { style: 'margin:6px 0' }, h('span', { style: `color:${OF_LUZ[luz]}` }, '● '), frase),
-      h('button', { class: 'ghost small', onclick: () => preguntar(`Departamento ${d.n}: ${frase} ¿Qué me recomiendas hacer hoy? Mira los datos si hace falta.`) }, '🤖 Preguntar a Jarvis')));
-    detalle.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const d = OF_DEP.find(x => x.k === k); if (!d) return; const [luz, frase] = parte[k] || ['v', 'Cargando…'], gris = luz === 'g';
+    const prios = (acta && ofActaVisible(acta).filas || []).filter(f => String(f.dep || '').toLowerCase().startsWith(d.n.toLowerCase().slice(0, 5)));
+    let cerrar; cerrar = hoja(`${d.ic} ${d.n}`, h('div', {},
+      h('div', { class: 'card', style: `border-left:6px solid ${d.c};margin:0 0 8px` }, h('div', { style: `color:${OF_LUZ[luz]};font-weight:800` }, '● ' + OF_LUZ_T[luz]), h('p', { style: 'margin:6px 0;font-size:16px' }, frase)),
+      !gris && prios.length ? h('div', { class: 'card', style: 'margin:0 0 8px' }, h('b', {}, '📋 Prioridades de la última reunión'), h('ul', { style: 'margin:6px 0 0;padding-left:20px' }, ...prios.map(f => h('li', {}, f.prioridad, f.quien ? h('span', { class: 'sub' }, ' · ' + f.quien) : null)))) : null,
+      h('div', { style: 'display:flex;flex-direction:column;gap:8px;margin:4px 0 10px' },
+        !gris && OF_IR[k] ? h('button', { class: 'guardar', style: 'min-height:52px', onclick: () => { cerrar(); OF_IR[k][1](); } }, OF_IR[k][0]) : null,
+        gris ? null : h('button', { class: 'ghost', style: 'min-height:52px', onclick: () => { cerrar(); preguntar(`Departamento ${d.n}: ${frase} Busca qué está fallando o se está quedando atrás aquí (mira los datos que haga falta) y dime qué hacer hoy, en pasos cortos.`); } }, '🔎 ¿Qué falla aquí? (pregunta a Jarvis)'),
+        h('button', { class: 'ghost', style: 'min-height:52px', onclick: () => decir(d.n + '. ' + frase) }, '🔊 Escuchar'))));
   };
   btn.addEventListener('click', () => preguntar());
   /* Telegram: conectar el bot (admin, una vez) y vincular este móvil con un código de un solo uso. */
@@ -10522,13 +10548,14 @@ function vistaOficina() {
         tokIn, h('button', { class: 'guardar', style: 'min-height:48px;margin-top:6px;width:100%', onclick: conectar }, '🔗 Conectar el bot')) : null);
   };
   $app.replaceChildren(shell('🏢 Oficina', h('div', {},
-    h('style', {}, '.of-trab{animation:ofbob 1.6s ease-in-out infinite}@keyframes ofbob{50%{transform:translateY(-3px)}}@media (prefers-reduced-motion:reduce){.of-trab{animation:none}}'),
+    h('style', {}, '.of-sala:focus{outline:none}.of-sala:focus-visible>polygon{stroke-width:4}.of-trab{animation:ofbob 1.6s ease-in-out infinite}@keyframes ofbob{50%{transform:translateY(-3px)}}@media (prefers-reduced-motion:reduce){.of-trab{animation:none}}'),
     plano,
     h('div', { style: 'display:flex;gap:6px;margin:8px 0;flex-wrap:wrap' },
       h('button', { class: 'guardar', style: 'min-height:48px;flex:1', onclick: () => preguntar('Dame el parte de hoy de todos los departamentos, empezando por lo que pide atención. Corto, para escucharlo.') }, '▶ Escuchar el parte'),
-      h('label', { style: 'display:flex;align-items:center;gap:6px' }, h('input', { type: 'checkbox', checked: voz, onchange: e => { voz = e.target.checked; LS.set('fj_jarvis_voz', voz); if (!voz) try { speechSynthesis.cancel(); } catch (x) { } } }), 'con voz')),
-    detalle, h('h3', {}, '📋 Prioridades de la empresa'), prioBox, h('h3', {}, 'Estado de los departamentos'), lista,
-    h('h3', {}, '🤖 Jarvis'), chat, ta,
+      h('label', { style: 'display:flex;align-items:center;gap:8px;min-height:48px;padding:0 6px' }, h('input', { type: 'checkbox', checked: voz, style: 'width:26px;height:26px', onchange: e => { voz = e.target.checked; LS.set('fj_jarvis_voz', voz); if (voz) decir('Voz activada.'); else lectorParar(); } }), 'con voz')),
+    h('p', { class: 'sub', style: 'margin:0 0 6px' }, '👆 Toca cualquier departamento del plano (o de la lista de abajo) para ver su detalle.'),
+    h('h3', {}, '📋 Prioridades de la empresa'), prioBox, h('h3', {}, 'Estado de los departamentos'), lista,
+    h('h3', {}, '🤖 Jarvis, la ayuda de la oficina'), chat, ta,
     h('div', { style: 'display:flex;gap:6px;margin-top:6px' }, btn, h('button', { class: 'ghost', style: 'min-height:48px', onclick: () => { conv = []; LS.set(CONV, conv); pintar(); } }, '🧹 Nueva')),
     h('h3', {}, '📲 Jarvis en Telegram'), h('div', { class: 'card' }, tgBox),
     h('p', { class: 'sub' }, 'Las luces salen de datos reales (Golden, facturas de proveedor, contactos e informes). Los pedidos y cobros de la app aún son de prueba y no cuentan.'))));
@@ -10538,8 +10565,8 @@ function vistaOficina() {
     if (r.error) { plano.replaceChildren(h('div', { class: 'card sub' }, '⚠️ ' + (isNetErr(r.error) ? 'Necesitas conexión.' : r.error.message))); return; }
     estado = r.data; parte = ofParte(estado);
     plano.replaceChildren(ofPlano(parte, verDep));
-    lista.replaceChildren(...OF_DEP.map(d => { const [luz, frase] = parte[d.k]; return h('div', { style: 'display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--borde,#e5e7eb);cursor:pointer', onclick: () => verDep(d.k) },
-      h('span', { style: `color:${OF_LUZ[luz]};font-size:18px` }, '●'), h('div', {}, h('b', {}, d.ic + ' ' + d.n), h('div', { class: 'sub' }, frase))); }));
+    lista.replaceChildren(...OF_DEP.map(d => { const [luz, frase] = parte[d.k]; return h('button', { type: 'button', style: 'display:flex;gap:8px;align-items:center;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--borde,#e5e7eb);padding:10px 2px;min-height:56px;color:inherit;font:inherit;cursor:pointer', onclick: () => verDep(d.k) },
+      h('span', { style: `color:${OF_LUZ[luz]};font-size:18px` }, '●'), h('div', { style: 'flex:1' }, h('b', {}, d.ic + ' ' + d.n), h('div', { class: 'sub' }, frase)), h('span', { style: 'font-size:22px;opacity:.5' }, '›')); }));
   })();
 }
 /* 📒 Cuenta de resultados (Tito, 26/11/2026). La página la genera scripts/pyg-html.mjs --guardar cada mañana; lleva su propio script (pestañas, simulador), por eso allow-scripts sin allow-same-origin. */
