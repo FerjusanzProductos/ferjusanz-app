@@ -472,15 +472,7 @@ function inicio(p) {
   </div>
 </section>
 
-${OFERTAS && OFERTAS.items.length ? `<section class="bloque" id="ofertas">
-  <div class="envoltura">
-    <div class="bloque-cabeza"><div><h2>Ofertas de la semana</h2><p>Del ${diaMes(OFERTAS.desde)} al ${diaMes(OFERTAS.hasta)} · ${esc(OFERTAS.nota).replace(/ /g, "\u00a0")}</p></div><a class="enlace" href="${wa(WHATSAPP[0].num, 'Hola, quería pedir de las ofertas de esta semana.')}" rel="nofollow">Pedir por WhatsApp ${I.flecha}</a></div>
-    <ul class="ofertas">${OFERTAS.items.map(([n, p, u]) => `<li><strong>${esc(n)}</strong><span>${p.toFixed(2).replace('.', ',')} €/${esc(u)}</span></li>`).join('')}</ul>
-    ${OFERTAS.ejemplo ? `<p class="ofertas-iva">${esc(OFERTAS.ejemplo)}</p>` : ''}
-    <p class="ofertas-caja">Precios por caja entera · consultar formato</p>
-    <p class="ofertas-tarifa"><a class="btn btn-wa" href="${TARIFA}"><span>¿Y lo que usted compra? Calcule su tarifa</span>${I.flecha}</a></p>
-  </div>
-</section>` : ''}
+${bloqueOfertas()}
 
 ${(a => `<section class="guia-portada" aria-label="Última guía">
   <a class="envoltura guia-portada-in" href="${a.path}">
@@ -596,16 +588,32 @@ ${bandaResena()}
   });
 }
 
+// Ofertas de la semana: portada y /productos/.
+function bloqueOfertas() {
+  return OFERTAS && OFERTAS.items.length ? `<section class="bloque" id="ofertas">
+  <div class="envoltura">
+    <div class="bloque-cabeza"><div><h2>Ofertas de la semana</h2><p>Del ${diaMes(OFERTAS.desde)} al ${diaMes(OFERTAS.hasta)} · ${esc(OFERTAS.nota).replace(/ /g, "\u00a0")}</p></div><a class="enlace" href="${wa(WHATSAPP[0].num, 'Hola, quería pedir de las ofertas de esta semana.')}" rel="nofollow">Pedir por WhatsApp ${I.flecha}</a></div>
+    <ul class="ofertas">${OFERTAS.items.map(([n, p, u]) => `<li><strong>${esc(n)}</strong><span>${p.toFixed(2).replace('.', ',')} €/${esc(u)}</span></li>`).join('')}</ul>
+    ${OFERTAS.ejemplo ? `<p class="ofertas-iva">${esc(OFERTAS.ejemplo)}</p>` : ''}
+    <p class="ofertas-caja">Precios por caja entera · consultar formato</p>
+    <p class="ofertas-tarifa"><a class="btn btn-wa" href="${TARIFA}"><span>¿Y lo que usted compra? Calcule su tarifa</span>${I.flecha}</a></p>
+  </div>
+</section>` : '';
+}
+
 function catalogo(p) {
   const m = miga('/productos/', 'Productos');
-  const cuerpo = `${cabeceraPagina(m, 'Catálogo de patatas, frutas, verduras, huevos, setas, champiñones y legumbres al por mayor', 'Más de 200 productos frescos cada día. No publicamos precios porque cambian con el mercado: solicite el de hoy por WhatsApp.')}
+  const cuerpo = `${cabeceraPagina(m, p.h1, 'Más de 200 productos frescos cada día. Los precios cambian con el mercado: aquí tiene las ofertas de la semana y cómo pedir el de hoy por WhatsApp.')}
+${bloqueOfertas()}
 <section class="bloque"><div class="envoltura">
   <div class="productos">${FAMILIAS.map(tarjetaFamilia).join('\n')}</div>
   <div class="familias">${FAMILIAS.map(f => `<div class="familia"><h2>${f.nombre}</h2><ul class="chips">${f.lista.map(x => `<li>${x}</li>`).join('')}</ul>${f.ruta ? `<a class="enlace" href="${f.ruta}">Ver ${f.nombre.toLowerCase()} ${I.flecha}</a>` : ''}</div>`).join('')}</div>
 </div></section>
+<section class="bloque"><div class="envoltura lectura"><div class="texto">${p.html}</div>
+  <p class="ofertas-tarifa"><a class="btn btn-wa" href="${TARIFA}"><span>Calcule su tarifa</span>${I.flecha}</a></p></div></section>
 ${galeria('/productos/')}`;
   return plantilla({ ruta: '/productos/', titulo: p.title, descripcion: p.description, cuerpo,
-    datos: [m.datos, { '@context': 'https://schema.org', '@type': 'ItemList', itemListElement: FAMILIAS.filter(f => f.ruta).map((f, i) => ({ '@type': 'ListItem', position: i + 1, name: f.nombre, url: DOMINIO + f.ruta })) }] });
+    datos: [m.datos, { '@context': 'https://schema.org', '@type': 'ItemList', itemListElement: FAMILIAS.filter(f => f.ruta).map((f, i) => ({ '@type': 'ListItem', position: i + 1, name: f.nombre, url: DOMINIO + f.ruta })) }, ...faqDe(p.html)] });
 }
 
 // Página de una familia de productos: foto + variedades + pedir precio, y debajo el texto de siempre.

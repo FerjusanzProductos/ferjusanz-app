@@ -114,7 +114,7 @@ Públicos: 🏫 colegios · 👵 residencias · 🍽️ restaurantes y hoteles �
 
 | Nº | Qué | Búsquedas (veces vistas · puesto) |
 |---|---|---|
-| S1 | **Mejorar `/productos/`** (hoy «Catálogo mayorista», 223 veces vista y solo 96 palabras; es la plantilla `paginaProductos` de `web/construir.cjs`) para que sea **catálogo y precios**: cómo se ponen los precios en Mercamadrid, ofertas de la semana (`web/ofertas.json`), familias con enlace y botón «Calcule su tarifa». **No crear página nueva** (competiría). Al hacerlo, cambiar en `web/redirecciones.json` el PDF viejo para que lleve a `/productos/`. | catálogo precios frutas y verduras (17 · 5-7), catálogo de verduras (10 · 11); el PDF viejo: 366 · 14 |
+| S1 | ✅ Hecho el 28/11/2026: `/productos/` es «Catálogo y precios de frutas y verduras al por mayor» (cómo se ponen los precios en Mercamadrid, ofertas de la semana, preguntas FAQ, «Calcule su tarifa»; el PDF viejo lleva a `/productos/`). Saltar. | catálogo precios frutas y verduras (17 · 5-7), catálogo de verduras (10 · 11); el PDF viejo: 366 · 14 |
 | S2 | «Patatas rojas: para qué sirven y qué variedades hay» | patata roja (31 · 23), patatas rojas (10 · 18), patata roja para qué sirve (· 1) |
 | S3 | **Mejorar `/blog/patatas-variedades-y-usos-en-la-cocina/`** (318 vistas · puesto 36): variedades y para qué plato va cada una en cocina profesional; y **redirigir `/blog/tipos-de-patatas/` ahí** (301 en `web/redirecciones.json`; hoy compiten las dos). | tipos de patatas, tipo de patatas, clases de patatas, tipos de patatas nombres (~200 · 44-57) |
 | S4 | «Patata agria: usos y por qué es la de freír» | patata agria usos (26 · 37) |
