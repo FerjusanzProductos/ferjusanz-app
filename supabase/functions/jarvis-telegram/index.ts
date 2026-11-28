@@ -95,8 +95,8 @@ async function atender(token: string, msg: any) {
   try {
     const jwt = await sesionDe(v.perfil_id);
     const yo = createClient(URL_SB, ANON, { global: { headers: { Authorization: "Bearer " + jwt } }, auth: { persistSession: false } });
-    const [est, reu] = await Promise.all([yo.rpc("oficina_estado"), yo.from("oficina_reuniones").select("creado,filas,resumen").order("id", { ascending: false }).limit(1)]);
-    let acta = reu.data?.[0], estado = est.data;
+    const [est, reu] = await Promise.all([yo.rpc("oficina_estado"), yo.rpc("oficina_ultima_reunion")]);
+    let acta = reu.data, estado = est.data;
     if (!(await veCobros(yo, v.perfil_id))) {
       if (estado && typeof estado === "object") estado = Object.fromEntries(Object.entries(estado).filter(([k]) => !DINERO.includes(k)));
       if (acta) acta = { ...acta, resumen: "", filas: (acta.filas || []).filter((f: any) => { const d = String(f.dep || "").toLowerCase(); return DEPS.some(n => !/^(cobros|pagos)$/i.test(n) && d.startsWith(n.toLowerCase().slice(0, 5))); }) };   // como la app: solo departamentos conocidos y no de dinero

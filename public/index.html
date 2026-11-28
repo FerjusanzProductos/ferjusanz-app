@@ -10549,13 +10549,14 @@ function vistaOficina() {
       if (err || (r.data && r.data.error)) throw new Error(err || r.data.error);
       const a = ofLeerActa((r.data && r.data.texto) || '');
       if (!a.filas.length) throw new Error('No han salido prioridades claras. Prueba otra vez.');
-      const g = await sb.from('oficina_reuniones').insert({ filas: a.filas, resumen: a.resumen, autor: state.user.id }).select().single();
-      acta = g.data || Object.assign({ creado: new Date().toISOString() }, a);
+      /* Sin .select(): quien no ve cobros no puede leer la tabla (solo oficina_ultima_reunion), aunque sí guardar. */
+      const g = await sb.from('oficina_reuniones').insert({ filas: a.filas, resumen: a.resumen, autor: state.user.id });
+      acta = Object.assign({ creado: new Date().toISOString() }, a);
       reunido = false; pintaPrio(g.error ? '⚠️ No se ha podido guardar (solo se ve aquí): ' + g.error.message : null);
       if (ofActaVisible(acta).resumen) hablar('Resumen de la reunión. ' + acta.resumen);   /* suena si «con voz» está marcado */
     } catch (e) { reunido = false; pintaPrio('⚠️ ' + (isNetErr(e) ? 'Necesitas conexión.' : e.message)); }
   }
-  sb.from('oficina_reuniones').select('*').order('id', { ascending: false }).limit(1).then(r => { acta = (r.data && r.data[0]) || null; pintaPrio(r.error ? '⚠️ ' + r.error.message : null); });
+  sb.rpc('oficina_ultima_reunion').then(r => { acta = r.data || null; pintaPrio(r.error ? '⚠️ ' + r.error.message : null); });
   const chat = h('div', { class: 'chat', style: 'max-height:55vh;overflow:auto' });
   const ta = h('textarea', { rows: 2, placeholder: 'Pregunta a Jarvis… (p. ej. «¿Cómo vamos?»)', style: 'width:100%' });
   const btn = h('button', { class: 'guardar', style: 'min-height:48px;flex:1' }, '📨 Enviar a Jarvis');
