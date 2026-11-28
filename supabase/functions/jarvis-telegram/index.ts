@@ -75,7 +75,64 @@ async function atender(token: string, msg: any) {
   await decir(token, chat, limpiar(respuesta));
 }
 
+// 📋 Reunión de las 7:00 (Tito, 28/11/2026). La lanza pg_cron (job «jarvis_reunion_7») con el secreto «cron_secreto».
+// Mismo encargo y mismo formato que el botón «🗣️ Reunir a los departamentos» de la app (OF_REUNION / ofLeerActa en public/index.html).
+const DEPS = ["Ventas", "Cobros", "Pagos", "Comercial", "Facturas prov.", "Clientes", "Informes", "Datos Golden"];
+const REUNION = "REUNIÓN DE DEPARTAMENTOS. Haces de secretaria: cada departamento (" + DEPS.join(", ") + ") dice sus prioridades (de 1 a 3 cada uno) para hoy y esta semana, sacadas del ESTADO DE LA OFICINA y de lo que consultes (deudas, contactos pendientes, quejas, ventas, clientes). Nada inventado: si un departamento no tiene datos, su prioridad es conseguirlos. Prioridades concretas, con cifras y nombres cuando los haya.\nContesta SOLO con líneas así, una por prioridad y sin nada más:\n[PRIO] Departamento | Prioridad (una frase) | alta o media o baja | Quién (Tito, su padre, Carmen, la oficina o Claude) | Para cuándo (hoy, esta semana o este mes)\nY al final una línea: [RESUMEN] las 3 cosas más importantes de toda la empresa, en una frase para leer en voz alta.";
+function leerActa(t: string) {
+  const URG: Record<string, number> = { alta: 0, media: 1, baja: 2 }, filas: any[] = [];
+  for (const l of t.split("\n")) {
+    const m = l.match(/\[PRIO\]\s*(.+)/i); if (!m) continue;
+    const c = m[1].split("|").map(x => x.replace(/\*/g, "").trim()); if (c.length < 2 || !c[1]) continue;
+    const u = (c[2] || "").toLowerCase();
+    filas.push({ dep: c[0], prioridad: c[1], urgencia: /alta/.test(u) ? "alta" : /baja/.test(u) ? "baja" : "media", quien: c[3] || "", cuando: c[4] || "" });
+  }
+  const r = t.match(/\[RESUMEN\]\s*([^\n]+)/i);
+  return { filas: filas.sort((a, b) => URG[a.urgencia] - URG[b.urgencia]), resumen: r ? r[1].replace(/\*/g, "").trim() : "" };
+}
+async function reunionDeLas7() {
+  const quien = (await ajuste("reunion_perfil"))?.valor;
+  if (!quien) throw new Error("falta reunion_perfil en jarvis_ajustes");
+  const jwt = await sesionDe(quien);
+  const yo = createClient(URL_SB, ANON, { global: { headers: { Authorization: "Bearer " + jwt } }, auth: { persistSession: false } });
+  const est = await yo.rpc("oficina_estado");
+  const r = await fetch(`${URL_SB}/functions/v1/${CEREBRO}`, { method: "POST", headers: { Authorization: "Bearer " + jwt, apikey: ANON, "Content-Type": "application/json" },
+    body: JSON.stringify({ mensajes: [{ rol: "yo", texto: REUNION }], contexto: "Canal: reunión automática de las 7:00.\nESTADO DE LA OFICINA (datos reales): " + JSON.stringify(est.data ?? est.error?.message) }) });
+  const d = await r.json().catch(() => ({}));
+  const acta = leerActa(String(d.texto || ""));
+  if (!acta.filas.length) throw new Error("la reunión no ha dado prioridades: " + (d.error || String(d.texto || "").slice(0, 200)));
+  const g = await yo.from("oficina_reuniones").insert({ filas: acta.filas, resumen: acta.resumen, autor: quien });
+  if (g.error) throw g.error;
+  // Si Tito tiene Telegram conectado, le llega el acta.
+  const tok = (await ajuste("telegram_token"))?.valor;
+  const { data: chats } = await admin.from("jarvis_telegram").select("chat_id").eq("perfil_id", quien);
+  if (tok && chats?.length) {
+    const ic: Record<string, string> = { alta: "🔴", media: "🟠", baja: "⚪" };
+    const txt = "📋 Reunión de las 7:00 · prioridades de hoy\n\n" + (acta.resumen ? "🗒️ " + acta.resumen + "\n\n" : "")
+      + acta.filas.map(f => `${ic[f.urgencia]} ${f.dep}: ${f.prioridad}${f.quien || f.cuando ? ` (${[f.quien, f.cuando].filter(Boolean).join(", ")})` : ""}`).join("\n")
+      + "\n\nLa tabla completa, en la app: 🏢 Oficina.";
+    for (const c of chats) await decir(tok, c.chat_id, txt);
+  }
+  console.log("reunión de las 7 guardada:", acta.filas.length, "prioridades");
+}
+
 Deno.serve(async (req) => {
+  // 0) pg_cron: a las 5 y a las 6 UTC; solo se reúne cuando en Madrid son las 7 (vale en invierno y en verano).
+  const cron = req.headers.get("x-jarvis-cron");
+  if (cron !== null) {
+    const sec = await ajuste("cron_secreto");
+    if (!sec || cron !== sec.valor) return new Response("no", { status: 401 });
+    const hora = Number(new Date().toLocaleString("en-GB", { timeZone: "Europe/Madrid", hour: "2-digit", hour12: false }));
+    const forzar = new URL(req.url).searchParams.get("forzar") === "1";
+    if (hora !== 7 && !forzar) return new Response("no es la hora (" + hora + ")");
+    // ?esperar=1: para probarla a mano y ver cómo ha ido.
+    if (new URL(req.url).searchParams.get("esperar") === "1") {
+      try { await reunionDeLas7(); return new Response("hecha"); } catch (e) { return new Response("fallo: " + ((e as Error)?.message || e), { status: 500 }); }
+    }
+    (globalThis as any).EdgeRuntime.waitUntil(reunionDeLas7().catch(e => console.error("reunión de las 7:", e?.message || e)));
+    return new Response("reunión en marcha");
+  }
+
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "Método no permitido" }, 405);
   const tok = await ajuste("telegram_token");
