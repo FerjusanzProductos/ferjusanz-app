@@ -3,6 +3,8 @@ _Solo lo que **falta**. Regla de Fernando (14/11/2026): «Cada vez que hagamos a
 _Prioridad: 🔴 alta · 🟡 media · ⚪ cuando se pueda · ⏸ en espera._
 
 ## 🤝 CLIENTES (Tito, 24/11/2026, dictado conduciendo)
+- 🟡 **Aperturas del buscador de clientes (28/11/2026)**: el 3/12, segundo intento a los 9 que recibieron correo si no contestan (Mada, Bar Mistela, Ultramarinos Marín, Casa Parole, 5 Gallos, MECHA, Nero, Píkaro, MalaFlama). Llamar o visitar los que no publican correo: Caja de Huevos (Pelayo 35), El Clavao (Carabanchel), La Mesa de Jade (914 341 275) y El Principado (Alcorcón; antes, ¿El Asturiano era cliente?). Bresa: ¿se le escribe? (mismo grupo que Cachivache). Fichas en `docs/buscador-clientes/ferjusanz-redes/`.
+- ⚪ **Pegar 13 webs en la red del entorno** (la herramienta solo deja 120): levaduramadre.es, restaurantelasmoreras.com, alright.es, panem.es, restaurantelatrasiega.com, elcaldero.com, www.telecinco.es, www.timeout.es, www.elespanol.com, www.gastroeconomy.com, www.mateoandco.es, www.revistavinosyrestaurantes.com, www.vinetur.com.
 - 🔴 **Lista semanal automática de precios para Los Barriletes y Florencio** (Tito, 26/11/2026: se les ha prometido que cada semana les llega su lista actualizada). Falta decidir por dónde sale (WhatsApp o correo) y que Tito dé el visto bueno para mandar a clientes.
 - 🔴 **Ir detrás de**: **Restaurante Duarte** y **Florencio** (que salgan en «Comercial del día» hasta que se cierre algo).
 - 🔴 **Recuperar varios clientes perdidos**, entre ellos las **facultades de Informática y de Documentación** (SALNAYA SL, perdidas; ver su punto en «👤 Fernando»). Tito dirá cuáles más.
