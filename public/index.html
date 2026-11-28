@@ -6345,9 +6345,11 @@ function vistaMas() {
     const PRINC = modoV === 'jorge' ? ['📗 Facturas de clientes', '📕 Facturas de proveedores', 'Facturas (desde la app)' + (ES_PRUEBAS ? ' · PRUEBAS' : ''), 'Informes para Jorge', 'Clientes', '🏭 Proveedores', 'Productos', 'Clientes sin datos para facturar', 'Rentabilidad', 'Margen y cobros (Golden)', 'Cobros y pagos (Golden)', 'Chat', 'Ayuda y guía', 'Mi perfil']
       : modoV === 'reparto' ? ['Preparar', 'Hoja de carga', 'Reparto', 'Ruta', 'Entregas', 'Sobrante', 'Poner precios', 'Cobros', 'Camino de los pedidos', 'Albaranes', 'Calendario']
       : modoV === 'compra' ? ['Hoja de compra para hoy', 'Precios de compra del día', 'A quién compramos hoy', 'Sobrante', 'Facturas de proveedores', 'Compras', 'Calendario']
-      : ['Apuntar pedido', 'Preparar', 'Hoja de carga', 'Reparto', 'Ruta', 'Hoja de compra para hoy', 'Precios de compra del día', 'Sobrante', 'Poner precios', 'Cobros', 'Calendario'];
+      : ['Apuntar pedido', 'Pedidos entrantes', 'Preparar', 'Hoja de carga', 'Reparto', 'Ruta', 'Hoja de compra para hoy', 'Precios de compra del día', 'Sobrante', 'Poner precios', 'Cobros', 'Calendario'];
     const GRANDE_TXT = { 'Hoja de compra para hoy': 'Compra de hoy', 'Precios de compra del día': 'Precios de compra', 'Camino de los pedidos': 'Camino pedidos', 'Facturas de proveedores': 'Facturas proveedor', 'A quién compramos hoy': 'A quién compramos' };
     const grandes = PRINC.filter(x => pool[x]).map(x => pool[x]);
+    /* Tito, 28/11/2026: «Pedidos entrantes» arriba, a la vista, con cuántos quedan por revisar (sigue también en «Entregas y pedidos»). */
+    if (pool['Pedidos entrantes'] && navigator.onLine) sb.from('whatsapp_pedidos').select('id', { count: 'exact', head: true }).eq('estado', 'nuevo').then(r => { const cc = pool['Pedidos entrantes'].querySelector('.c'); if (!r.error && r.count && cc) cc.append(h('span', { class: 'insig' }, r.count > 99 ? '99+' : String(r.count))); });
     grandes.forEach(n => { const l = n.querySelector('.l'); const t = lab(n); if (l && GRANDE_TXT[t]) { n.title = t; l.textContent = GRANDE_TXT[t]; } });
     if (grandes.length % 2) grandes[grandes.length - 1].classList.add('ancho');
     bloqueGrande = h('div', { class: 'rej grande' }, ...grandes);
