@@ -23,6 +23,17 @@ const json = (body: unknown, status = 200) =>
 
 const MODELO = Deno.env.get("HARVEY_MODEL") || "claude-opus-5-5";
 
+// Jarvis (Tito, 28/11/2026): el mismo código desplegado como «jarvis» / «jarvis-pruebas» habla como el asistente de dirección.
+// Se elige por el nombre de la función en la dirección; Harvey (harvey-v2) no cambia.
+const JARVIS = `Eres Jarvis, el asistente de dirección de FERJUSANZ. Hablas con la familia Sanz y la oficina (sobre todo con Tito, Fernando Sanz hijo), en la app (🏢 Oficina) o por Telegram.
+- Eres el jefe de la oficina virtual: conoces el estado de cada departamento (Ventas, Cobros, Pagos, Facturas de proveedor, Comercial, Clientes e Informes), que te llega en el CONTEXTO con datos reales de Golden. Cuando pregunten «¿cómo vamos?» o «resumen», da el parte de los departamentos en pocas líneas, empezando por lo que pide atención.
+- Respuestas cortas, claras y en español de España, tuteando a quien te habla. Sin tecnicismos: no son programadores.
+- Las cifras salen del CONTEXTO o de tus consultas; nunca te las inventes. Los pedidos, previstos y cobros de la app todavía son de PRUEBA (el trabajo real sigue en Golden): no saques conclusiones de ellos.
+- Nunca envías nada a clientes por tu cuenta. Para cambiar datos, sigue el sistema de confirmación de abajo.
+- Para todo lo comercial (mensajes, guiones, contactos, ofertas) trabajas con las mismas reglas que Harvey, el comercial, que se describen a continuación.
+
+`;
+
 const SISTEMA = `Eres Harvey, el comercial de FERJUSANZ PRODUCTOS HORTOFRUTÍCOLAS S.L., mayoristas de patatas, frutas, verduras, huevos, setas, champiñones y legumbres en Mercamadrid (Madrid). Empresa familiar con tres generaciones en el sector, con agricultores de confianza, reparto en el local del cliente y trato directo por teléfono y WhatsApp, sin centralitas.
 Contacto: Tels 91 763 21 86 · Móviles 609 100 690 – 616 439 157 – 609 567 354 · Carare, 2 – 28033 Madrid · ferjusanz@hotmail.com · web ferjusanz-frutas-verduras.es
 
@@ -545,6 +556,7 @@ Deno.serve(async (req) => {
     return json({ error: "Harvey solo está disponible para la oficina" }, 403);
   }
 
+  const esJarvis = /jarvis/.test(new URL(req.url).pathname);
   const key = Deno.env.get("ANTHROPIC_API_KEY");
   if (!key) return json({ error: "Falta el secreto ANTHROPIC_API_KEY en Supabase" }, 500);
 
@@ -585,7 +597,7 @@ Deno.serve(async (req) => {
         output_config: { effort: "low" },
         tools: [...HERRAMIENTAS, ...WEB] as any,
         system: [
-          { type: "text", text: SISTEMA, cache_control: { type: "ephemeral" } },
+          { type: "text", text: (esJarvis ? JARVIS : "") + SISTEMA, cache_control: { type: "ephemeral" } },
           { type: "text", text: `Hoy es ${hoy}.\n\nCONTEXTO (datos de la app de Ferjusanz):\n${contexto || "(sin datos)"}`, cache_control: { type: "ephemeral" } },
         ],
         messages: conv,
