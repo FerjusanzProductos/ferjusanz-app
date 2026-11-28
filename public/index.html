@@ -6223,6 +6223,7 @@ function vistaMas() {
   const V = '#2f7d4a', A = '#d97706', Z = '#2563eb', M = '#7c3aed', R = '#dc2626', T = '#0d9488';
   const k = [
     h('div', { class: 'saludo' }, h('div', { style: 'font-size:20px;font-weight:800' }, 'Hola, ' + (state.perfil.nombre || '').split(' ')[0]), h('div', { class: 'sub' }, (d => d.charAt(0).toUpperCase() + d.slice(1))(fmtDiaLargo(new Date().toISOString())))),
+    esOficina() ? h('button', { class: 'bandeja-fac', onclick: () => go('oficina') }, h('span', { class: 'ic' }, '🏢'), h('span', { class: 'tt' }, 'Oficina · Jarvis', h('small', {}, 'Cómo va cada departamento y tu asistente (también en Telegram)'))) : null,
     esOficina() ? h('button', { class: 'bandeja-fac', onclick: () => go('secretaria') }, h('span', { class: 'ic' }, '🗂️'), h('span', { class: 'tt' }, 'Secretaría hoy', h('small', {}, 'Todas las tareas de oficina en una pantalla'))) : null,
     esOficina() ? (() => { const num = h('span', { class: 'num cero' }, HARVEY2 ? '…' : ''); const b = h('button', { class: 'bandeja-fac h2ban', onclick: () => { LS.set('fj_h2_sub', 'hoy'); go('comercial', { tab: 'harvey' }); } }, h('span', { class: 'ic' }, '🤵'), h('span', { class: 'tt' }, 'Harvey · a quién escribir hoy', h('small', {}, HARVEY2 ? 'Clientes para el pedido de mañana · mensajes listos para revisar' : 'Vuestro comercial con IA: mensajes, guiones y ofertas')), num);
       if (HARVEY2 && navigator.onLine) (window.__H2HOY && Date.now() - window.__H2HOY.t < 600000 ? Promise.resolve(window.__H2HOY.d) : h2('hoy').then(d => { window.__H2HOY = { t: Date.now(), d }; return d; })).then(d => { const n = (d.clientes || []).filter(x => !x.contactado_hoy).length + (d.leads || []).length; num.textContent = String(n); num.className = 'num' + (n ? '' : ' cero'); }).catch(() => { num.textContent = ''; });
@@ -10341,6 +10342,152 @@ function vistaPersonal() {
             h('div', { class: 'fila', style: 'border-top:2px solid currentColor;padding-top:6px' }, h('span', {}, 'Total personal'), h('b', {}, eur(tb + ts) + ' €')),
             veMargenes() ? margenMes(m, tb + ts) : null); }));
     } catch (e) { box.replaceChildren(h('p', { class: 'vacio' }, isNetErr(e) ? 'Necesitas conexión para verlo.' : 'No se ha podido cargar.')); }
+  })();
+}
+/* 🏢 Oficina y 🤖 Jarvis (Tito, 28/11/2026): la empresa como una oficina vista desde arriba. Cada departamento enciende su luz con
+   datos REALES (rpc oficina_estado: Golden, facturas de proveedor, prospectos, informes); Jarvis, en el centro, da el parte y
+   contesta (función jarvis / jarvis-pruebas, el mismo cerebro que Harvey). También por Telegram (función jarvis-telegram). */
+const OF_DEP = [
+  { k: 'ventas', n: 'Ventas', ic: '📈', c: '#22c55e', g: [0, 0] }, { k: 'cobros', n: 'Cobros', ic: '💶', c: '#f59e0b', g: [1, 0] },
+  { k: 'pagos', n: 'Pagos', ic: '🏦', c: '#ef4444', g: [2, 0] }, { k: 'comercial', n: 'Comercial', ic: '🤝', c: '#a855f7', g: [0, 1] },
+  { k: 'facturas', n: 'Facturas prov.', ic: '📥', c: '#3b82f6', g: [2, 1] }, { k: 'clientes', n: 'Clientes', ic: '👥', c: '#ec4899', g: [0, 2] },
+  { k: 'informes', n: 'Informes', ic: '📰', c: '#14b8a6', g: [1, 2] }, { k: 'golden', n: 'Datos Golden', ic: '🗄️', c: '#eab308', g: [2, 2] }];
+const ofE = n => Math.round(Number(n) || 0).toLocaleString('es-ES') + ' €';
+const ofDias = f => f ? Math.round((Date.now() - new Date(f + 'T12:00:00')) / 864e5) : 999;
+/* Luz (verde / ámbar / rojo) y una frase por departamento. */
+function ofParte(e) {
+  const v = e.ventas || {}, c = e.cobros || {}, p = e.pagos || {}, f = e.facturas || {}, co = e.comercial || {}, cl = e.clientes || {}, inf = e.informes || {};
+  const dif = v.mes_antes > 0 ? (v.ultimo_mes - v.mes_antes) / v.mes_antes : 0, mesN = m => new Date(m + '-15').toLocaleDateString('es-ES', { month: 'long' });
+  const viejos = Object.entries(inf).filter(([, d]) => ofDias(d) > 2).map(([k]) => k.replace(/_/g, ' '));
+  const dg = ofDias(e.golden_hasta);
+  return {
+    ventas: [dif >= -0.05 ? 'v' : dif >= -0.2 ? 'a' : 'r', `${mesN(v.mes_cerrado || '2026-01')}: ${ofE(v.ultimo_mes)} sin IVA (${dif >= 0 ? '+' : ''}${Math.round(dif * 100)} % que el mes anterior). Este mes van ${ofE(v.mes_en_curso)} al contado; las de fin de mes se hacen el último día.`],
+    cobros: [c.antiguo > 0 ? 'r' : c.vencido > 0 ? 'a' : 'v', c.vencido > 0 ? `${ofE(c.vencido)} vencidos por cobrar${c.antiguo > 0 ? `, ${ofE(c.antiguo)} de hace más de un mes` : ''}.` : 'Nada vencido por cobrar.'],
+    pagos: [p.vencido > 0 ? 'a' : 'v', `${p.vencido > 0 ? ofE(p.vencido) + ' pendientes ya vencidos según Golden' : 'Nada vencido por pagar'}; esta semana vencen ${ofE(p.semana)}.`],
+    comercial: [co.llamar_hoy > 0 ? 'a' : 'v', `${co.llamar_hoy || 0} contactos para llamar hoy o atrasados · ${co.interesados || 0} interesados · ${co.nuevos || 0} sin tocar.`],
+    facturas: [f.por_revisar > 0 ? 'a' : 'v', `${f.por_revisar || 0} facturas de proveedor por revisar · ${f.semana || 0} recibidas esta semana.`],
+    clientes: [cl.dejaron_de_pedir > 0 ? 'a' : 'v', `${cl.activos || 0} clientes activos · ${cl.dejaron_de_pedir || 0} han dejado de pedir (45+ días).`],
+    informes: [viejos.length ? 'a' : 'v', viejos.length ? 'Sin actualizar: ' + viejos.join(', ') + '.' : 'Todos los informes del día están al día.'],
+    golden: [dg > 3 ? 'r' : dg > 1 ? 'a' : 'v', e.golden_hasta ? `Facturas de Golden hasta el ${new Date(e.golden_hasta + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}.` : 'Sin datos de Golden.'],
+  };
+}
+const OF_LUZ = { v: '#34d399', a: '#fbbf24', r: '#f87171' };
+/* Plano isométrico en SVG: una sala por departamento con su gente; Jarvis en la sala del centro. */
+function ofPlano(parte, alPulsar) {
+  const W = 120, H = 60, ox = 360, oy = 40, P = (x, y) => [ox + (x - y) * W, oy + (x + y) * H];
+  const rombo = (x, y, w, h) => { const a = P(x, y), b = P(x + w, y), c = P(x + w, y + h), d = P(x, y + h); return [a, b, c, d].map(q => q.join(',')).join(' '); };
+  let s = `<svg viewBox="-30 -40 780 460" style="width:100%;height:auto;display:block" role="img" aria-label="Plano de la oficina">
+<defs><filter id="ofbr"><feGaussianBlur stdDeviation="3"/></filter></defs>
+<polygon points="${rombo(-0.15, -0.15, 3.3, 3.3)}" fill="#111a3a" stroke="#38bdf8" stroke-opacity=".5"/>`;
+  const salas = OF_DEP.map(d => ({ d, x: d.g[0] * 1.1, y: d.g[1] * 1.1 })).concat([{ jarvis: 1, x: 1.1, y: 1.1 }]);
+  salas.sort((a, b) => (a.x + a.y) - (b.x + b.y));
+  for (const o of salas) {
+    if (o.jarvis) { const [cx, cy] = P(o.x + 0.5, o.y + 0.5);
+      s += `<g class="of-sala" data-k="jarvis" style="cursor:pointer"><polygon points="${rombo(o.x, o.y, 1, 1)}" fill="#0b1230" stroke="#38bdf8" stroke-dasharray="6 4"/>
+<ellipse cx="${cx}" cy="${cy}" rx="46" ry="23" fill="none" stroke="#38bdf8" stroke-width="5" filter="url(#ofbr)"/><ellipse cx="${cx}" cy="${cy}" rx="46" ry="23" fill="#0f1d4a" stroke="#7dd3fc" stroke-width="2"/>
+<text x="${cx}" y="${cy + 5}" text-anchor="middle" fill="#e0f2fe" font-size="18" font-weight="800" font-family="system-ui">JARVIS</text></g>`; continue; }
+    const d = o.d, [luz] = parte[d.k] || ['v'];
+    s += `<g class="of-sala" data-k="${d.k}" style="cursor:pointer"><polygon points="${rombo(o.x, o.y, 1, 1)}" fill="${d.c}" fill-opacity=".14" stroke="${d.c}" stroke-opacity=".8"/>`;
+    for (const [i, j] of [[0.25, 0.25], [0.65, 0.25], [0.25, 0.65], [0.65, 0.65]]) {   /* 4 mesas con su persona */
+      const [mx, my] = P(o.x + i, o.y + j);
+      s += `<polygon points="${rombo(o.x + i - 0.12, o.y + j - 0.08, 0.24, 0.16)}" fill="#1e293b" stroke="#475569"/>
+<g class="of-pers${luz === 'v' ? '' : ' of-trab'}" style="animation-delay:${((i + j) * 0.7).toFixed(2)}s"><rect x="${mx - 5}" y="${my - 18}" width="10" height="12" rx="4" fill="${d.c}"/><circle cx="${mx}" cy="${my - 23}" r="5" fill="#fcd34d"/></g>`;
+    }
+    const [lx, ly] = P(o.x + 0.5, o.y + 0.5), nom = esc(d.n), w = nom.length * 9.5 + 40;
+    s += `<g transform="translate(${lx},${ly - 62})"><rect x="${-w / 2}" y="-16" width="${w}" height="32" rx="16" fill="#0b1230" stroke="${d.c}"/>
+<circle cx="${-w / 2 + 16}" cy="0" r="7" fill="${OF_LUZ[luz]}"/><text x="${-w / 2 + 29}" y="6" fill="#e2e8f0" font-size="17" font-weight="700" font-family="system-ui">${nom}</text></g></g>`;
+  }
+  const box = h('div', { style: 'background:radial-gradient(ellipse at center,#1b2a6b 0%,#0b1230 70%);border-radius:14px;padding:6px;border:1px solid #1e3a8a' });
+  box.innerHTML = s + '</svg>';
+  box.querySelectorAll('.of-sala').forEach(g => g.addEventListener('click', () => alPulsar(g.dataset.k)));
+  return box;
+}
+function vistaOficina() {
+  state.view = 'oficina'; if (!esOficina()) { go('inicio'); return; }
+  const FN = ES_PRUEBAS ? 'jarvis-pruebas' : 'jarvis', CONV = 'fj_jarvis_conv';
+  let estado = null, parte = {}, conv = LS.get(CONV, []), ocupado = false, voz = LS.get('fj_jarvis_voz', true);
+  const plano = h('div', {}, h('div', { class: 'card sub' }, 'Encendiendo la oficina…'));
+  const lista = h('div', { class: 'card', style: 'padding:10px' });
+  const detalle = h('div');
+  const chat = h('div', { class: 'chat', style: 'max-height:55vh;overflow:auto' });
+  const ta = h('textarea', { rows: 2, placeholder: 'Pregunta a Jarvis… (p. ej. «¿Cómo vamos?»)', style: 'width:100%' });
+  const btn = h('button', { class: 'guardar', style: 'min-height:48px;flex:1' }, '📨 Enviar a Jarvis');
+  const hablar = t => { try { if (!voz || !window.speechSynthesis) return; speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(String(t).replace(/\[[A-Z]+[^\]]*\]/g, '').replace(/[*_#]/g, '')); u.lang = 'es-ES'; speechSynthesis.speak(u); } catch (e) { } };
+  const burbuja = m => {
+    const mio = m.rol !== 'harvey', pide = !mio && !m.error && /\[CONFIRMAR\]/i.test(m.texto);
+    const txt = mio ? m.texto : m.texto.replace(/\s*\[CONFIRMAR\]\s*/gi, '\n').replace(/\[MENSAJE[^\]]*\]\s*/gi, '✉️ ').replace(/\s*\[FIN\]/gi, '').replace(/\[OFERTA[^\]]*\]/gi, '').trim();
+    const ult = m === conv[conv.length - 1];
+    return h('div', { class: 'msg' + (mio ? ' mio' : '') }, h('div', { class: 'burbuja', style: m.error ? 'border-color:#b91c1c;color:#b91c1c' : 'white-space:pre-wrap' }, h('span', { class: 'quien2' }, mio ? 'Tú' : '🤖 Jarvis'), txt,
+      !mio && !m.error ? h('div', { style: 'display:flex;gap:6px;margin-top:6px;flex-wrap:wrap' },
+        h('button', { class: 'ghost small', onclick: () => { const v0 = voz; voz = true; hablar(txt); voz = v0; } }, '🔊 Escuchar'),
+        pide && ult && !ocupado ? h('button', { class: 'guardar small', onclick: () => preguntar('Sí, hazlo.') }, '✅ Sí, hazlo') : null,
+        pide && ult && !ocupado ? h('button', { class: 'ghost small', onclick: () => preguntar('No.') }, '❌ No') : null) : null));
+  };
+  const pintar = () => { chat.replaceChildren(...(conv.length ? conv.map(burbuja) : [h('div', { class: 'sub' }, '🤖 Soy Jarvis. Pulsa «Escuchar el parte» o pregúntame lo que quieras de la empresa.')]),
+    ...(ocupado ? [h('div', { class: 'msg' }, h('div', { class: 'burbuja' }, h('span', { class: 'quien2' }, '🤖 Jarvis'), '✍️ Pensando…'))] : [])); chat.scrollTop = chat.scrollHeight; };
+  async function preguntar(t) {
+    t = String(t || ta.value).trim(); if (!t || ocupado) return;
+    if (PRACTICA) { toast('Jarvis no funciona en modo prácticas.', 'err'); return; }
+    if (!navigator.onLine) { toast('Sin conexión: Jarvis necesita internet', 'err'); return; }
+    if (!LS.get('fj_harvey_ok', false)) { if (!await confirmar('Jarvis usa un servicio de IA externo (Anthropic). Se envían tu mensaje y el estado de la oficina (cifras de Golden), sin teléfonos ni correos. ¿Seguir?')) return; LS.set('fj_harvey_ok', true); }
+    conv.push({ rol: 'yo', texto: t, t: Date.now() }); ta.value = ''; ocupado = true; btn.disabled = true; pintar();
+    try {
+      const r = await sb.functions.invoke(FN, { body: { mensajes: conv.filter(m => !m.error).slice(-20).map(m => ({ rol: m.rol, texto: m.texto })), contexto: 'Canal: app (🏢 Oficina).\nESTADO DE LA OFICINA (datos reales): ' + JSON.stringify(estado) } });
+      let err = r.error && r.error.message; if (r.error) { try { const j = await r.error.context.json(); if (j && j.error) err = j.error; } catch (e) { } }
+      if (err || (r.data && r.data.error)) throw new Error(/not found|404/i.test(err || '') ? 'Jarvis todavía no está activado en Supabase.' : (err || r.data.error));
+      const txt = String((r.data && r.data.texto) || '').trim(); if (!txt) throw new Error('Jarvis no ha contestado');
+      conv.push({ rol: 'harvey', texto: txt, t: Date.now() }); hablar(txt);
+    } catch (e) { conv.push({ rol: 'harvey', texto: '⚠️ ' + (isNetErr(e) ? 'Necesitas conexión.' : e.message), error: true, t: Date.now() }); }
+    ocupado = false; btn.disabled = false; conv = conv.slice(-40); LS.set(CONV, conv); pintar();
+  }
+  const verDep = k => {
+    if (k === 'jarvis') { ta.focus(); chat.scrollIntoView({ behavior: 'smooth' }); return; }
+    const d = OF_DEP.find(x => x.k === k), [luz, frase] = parte[k] || ['v', ''];
+    detalle.replaceChildren(h('div', { class: 'card', style: `border-left:6px solid ${d.c}` }, h('b', {}, `${d.ic} ${d.n}`), h('p', { style: 'margin:6px 0' }, h('span', { style: `color:${OF_LUZ[luz]}` }, '● '), frase),
+      h('button', { class: 'ghost small', onclick: () => preguntar(`Departamento ${d.n}: ${frase} ¿Qué me recomiendas hacer hoy? Mira los datos si hace falta.`) }, '🤖 Preguntar a Jarvis')));
+    detalle.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+  btn.addEventListener('click', () => preguntar());
+  /* Telegram: conectar el bot (admin, una vez) y vincular este móvil con un código de un solo uso. */
+  const tgBox = h('div', { class: 'sub' }, 'Cargando…');
+  const pintaTg = async () => {
+    let bot = null, mio = false;
+    try { const [b, v] = await Promise.all([sb.functions.invoke('jarvis-telegram', { body: { accion: 'bot' } }), sb.from('jarvis_telegram').select('chat_id').limit(1)]); bot = b.data && b.data.bot; mio = !!(v.data && v.data.length); } catch (e) { }
+    const tokIn = h('input', { type: 'password', placeholder: 'Pega aquí el token de BotFather', autocomplete: 'off', style: 'width:100%' });
+    const conectar = async () => { try { const t = tokIn.value.trim(); if (!t) return; const g = await sb.rpc('jarvis_guardar_token', { p_token: t }); if (g.error) throw new Error(g.error.message);
+      const r = await sb.functions.invoke('jarvis-telegram', { body: { accion: 'conectar' } }); let m = r.error && r.error.message; if (r.error) { try { m = (await r.error.context.json()).error || m; } catch (e) { } } if (m) throw new Error(m);
+      toast('✅ Bot @' + r.data.bot + ' conectado', 'ok'); pintaTg(); } catch (e) { toast(e.message, 'err'); } };
+    const codigo = async () => { const r = await sb.rpc('jarvis_codigo'); if (r.error) { toast(r.error.message, 'err'); return; }
+      abrirEnlace('https://t.me/' + bot + '?start=' + r.data); toast('Se abre Telegram: pulsa «Iniciar» y listo', 'ok'); };
+    tgBox.replaceChildren(
+      bot ? h('p', {}, mio ? '✅ Tu Telegram ya está conectado con ' : 'Bot listo: ', h('b', {}, '@' + bot), mio ? '. Escríbele allí lo mismo que aquí.' : '.') : h('p', {}, 'Telegram aún no está conectado.'),
+      bot ? h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap' }, h('button', { class: 'guardar', style: 'min-height:48px', onclick: codigo }, mio ? '📲 Conectar otro móvil' : '📲 Conectar mi Telegram'),
+        mio ? h('button', { class: 'ghost small', onclick: async () => { await sb.rpc('jarvis_desconectar'); pintaTg(); } }, 'Desconectar') : null) : null,
+      state.perfil.rol === 'admin' ? h('details', { style: 'margin-top:8px' }, h('summary', {}, bot ? 'Cambiar el bot' : '1.ª vez: crear el bot (2 minutos)'),
+        h('ol', {}, h('li', {}, 'Abre ', h('a', { href: 'https://t.me/BotFather', target: '_blank', rel: 'noopener' }, 'BotFather en Telegram'), ' y pulsa «Iniciar».'),
+          h('li', {}, 'Escribe /newbot, ponle de nombre «Jarvis Ferjusanz» y un usuario que acabe en «bot» (p. ej. jarvis_ferjusanz_bot).'),
+          h('li', {}, 'Te da un token (números, dos puntos y letras). Mantén el dedo encima, «Copiar», y pégalo aquí:')),
+        tokIn, h('button', { class: 'guardar', style: 'min-height:48px;margin-top:6px;width:100%', onclick: conectar }, '🔗 Conectar el bot')) : null);
+  };
+  $app.replaceChildren(shell('🏢 Oficina', h('div', {},
+    h('style', {}, '.of-trab{animation:ofbob 1.6s ease-in-out infinite}@keyframes ofbob{50%{transform:translateY(-3px)}}@media (prefers-reduced-motion:reduce){.of-trab{animation:none}}'),
+    plano,
+    h('div', { style: 'display:flex;gap:6px;margin:8px 0;flex-wrap:wrap' },
+      h('button', { class: 'guardar', style: 'min-height:48px;flex:1', onclick: () => preguntar('Dame el parte de hoy de todos los departamentos, empezando por lo que pide atención. Corto, para escucharlo.') }, '▶ Escuchar el parte'),
+      h('label', { style: 'display:flex;align-items:center;gap:6px' }, h('input', { type: 'checkbox', checked: voz, onchange: e => { voz = e.target.checked; LS.set('fj_jarvis_voz', voz); if (!voz) try { speechSynthesis.cancel(); } catch (x) { } } }), 'con voz')),
+    detalle, h('h3', {}, 'Estado de los departamentos'), lista,
+    h('h3', {}, '🤖 Jarvis'), chat, ta,
+    h('div', { style: 'display:flex;gap:6px;margin-top:6px' }, btn, h('button', { class: 'ghost', style: 'min-height:48px', onclick: () => { conv = []; LS.set(CONV, conv); pintar(); } }, '🧹 Nueva')),
+    h('h3', {}, '📲 Jarvis en Telegram'), h('div', { class: 'card' }, tgBox),
+    h('p', { class: 'sub' }, 'Las luces salen de datos reales (Golden, facturas de proveedor, contactos e informes). Los pedidos y cobros de la app aún son de prueba y no cuentan.'))));
+  pintar(); pintaTg();
+  (async () => {
+    const r = await sb.rpc('oficina_estado');
+    if (r.error) { plano.replaceChildren(h('div', { class: 'card sub' }, '⚠️ ' + (isNetErr(r.error) ? 'Necesitas conexión.' : r.error.message))); return; }
+    estado = r.data; parte = ofParte(estado);
+    plano.replaceChildren(ofPlano(parte, verDep));
+    lista.replaceChildren(...OF_DEP.map(d => { const [luz, frase] = parte[d.k]; return h('div', { style: 'display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--borde,#e5e7eb);cursor:pointer', onclick: () => verDep(d.k) },
+      h('span', { style: `color:${OF_LUZ[luz]};font-size:18px` }, '●'), h('div', {}, h('b', {}, d.ic + ' ' + d.n), h('div', { class: 'sub' }, frase))); }));
   })();
 }
 /* 📒 Cuenta de resultados (Tito, 26/11/2026). La página la genera scripts/pyg-html.mjs --guardar cada mañana; lleva su propio script (pestañas, simulador), por eso allow-scripts sin allow-same-origin. */
@@ -16408,6 +16555,7 @@ const BUSCA_PANTALLAS = [
   ['📊', 'Resumen del día y correo', 'resumen ventas totales numeros informe correo email gmail manana visitas web', () => go('resumen'), 'o'],
   ['📈', 'Mercado (precios de los Mercas y noticias)', 'mercado mercas mercamadrid noticias semanal precios mercado', () => go('resumen'), 'o'],
   ['📈', 'Rentabilidad', 'rentabilidad ganancia beneficio margen ganamos perdemos', () => go('rentabilidad'), 'm'],
+  ['🏢', 'Oficina · Jarvis', 'oficina jarvis asistente departamentos parte resumen telegram como vamos estado empresa', () => go('oficina'), 'o'],
   ['📒', 'Cuenta de resultados', 'perdidas ganancias pyg beneficio resultado balance cuenta de resultados donde se gana donde se pierde', () => go('pyg'), 'r'],
   ['💼', 'Gastos de personal', 'nominas nomina sueldos salarios seguridad social empleados trabajadores personal coste empresa', () => go('personal'), 's'],
   ['⛽', 'Gastos de reparto', 'gasolina gasoleo combustible repostar repostaje gastos reparto tickets sobre parking peaje', () => go('gastosreparto'), 'o'],
@@ -16843,7 +16991,7 @@ function render() {
   clearInterval(state.chatTimer); state.chatTimer = null;
   if (!state.user) return vistaLogin();
   if (!state.perfil) return vistaSinPerfil();
-  const v = { facturasapp: vistaFacturasApp, caja: vistaCaja, banco: vistaBanco, empresa: vistaEmpresa, modoreparto: vistaModoReparto, tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, panel: vistaPanel, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, camino: vistaCamino, rentabilidad: vistaRentabilidad, goldenmargen: vistaGoldenMargen, gastosreparto: vistaGastosReparto, personal: vistaPersonal, pyg: vistaPyG, deudas: vistaDeudas, importar: vistaImportar, whatsapp: vistaWhatsapp, buscar: vistaBuscar }[state.view] || vistaLista;
+  const v = { facturasapp: vistaFacturasApp, caja: vistaCaja, banco: vistaBanco, empresa: vistaEmpresa, modoreparto: vistaModoReparto, tarifas: vistaTarifas, formatoscv: () => { LS.set('fj_formatos_tab', 'cv'); vistaFormatos(); }, contactosportal: vistaContactosPortal, ayudas: vistaAyudas, gestoria: vistaGestoria, panel: vistaPanel, reglasprod: vistaReglasProd, semana: vistaSemana, secretaria: vistaSecretaria, sinreconocer: vistaSinReconocer, rapido: vistaRapido, paginasclientes: vistaPaginasClientes, presentaciones: vistaPresentaciones, preciosdia: vistaPreciosDia, sobrante: vistaSobrante, comercial: vistaComercial, preciosp: vistaPreciosPend, formatos: vistaFormatos, copia: vistaCopia, lista: vistaLista, pedido: vistaPedido, nuevo: vistaNuevo, catalogo: vistaCatalogo, albaran: vistaAlbaran, carga: vistaCarga, clientes: vistaClientes, cliente: vistaCliente, chat: vistaChat, perfil: vistaPerfil, fichajes: vistaFichajes, mas: vistaMas, inicio: vistaMas, cobros: vistaCobros, compras: vistaCompras, traza: vistaTraza, quien: vistaQuien, registro: vistaRegistro, albaranes: vistaAlbaranes, entregas: vistaEntregas, calendario: vistaCalendario, incidencias: vistaIncidencias, precios: vistaPrecios, facturascli: vistaFacturasCli, ayuda: vistaAyuda, golden: vistaGolden, pedidos: vistaPedidos, hojacompra: vistaHojaCompra, resumen: vistaResumen, archivo: vistaArchivo, avisos: vistaAvisos, ruta: vistaRuta, reparto: vistaReparto, prefacturas: vistaPrefacturas, camino: vistaCamino, rentabilidad: vistaRentabilidad, goldenmargen: vistaGoldenMargen, gastosreparto: vistaGastosReparto, personal: vistaPersonal, pyg: vistaPyG, oficina: vistaOficina, deudas: vistaDeudas, importar: vistaImportar, whatsapp: vistaWhatsapp, buscar: vistaBuscar }[state.view] || vistaLista;
   if (MR.dentro() && state.view === 'inicio' && !state.mrMirado) { state.mrMirado = true; return vistaModoReparto(); }   /* vuelve al modo reparto si se cerró la app */
   v(); pintaFlot(); setTimeout(refrescaPortalPend, 1200); if (state.view === 'inicio') setTimeout(mrAuto, 300); try { conectarSala();  } catch (e) { }
   try { if (state.view === 'inicio' && !sinTours() && !LS.get(tourClave(), 0)) mostrarTour(); else mostrarTip(); } catch (e) { }
