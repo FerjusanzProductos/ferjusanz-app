@@ -14,4 +14,4 @@
 - Email: — · aparece en: No publican email. Las únicas direcciones que salen en alcorconhoy son las del propio periódico.
 - Otro canal: Visita en persona en Calle Zamora, 5 y preguntar por Anderson o Jose. 
 
-**Ojo:** Ocupa el antiguo El Asturiano; «Asturiano Leones S.L» está en clientes: comprobar con Tito antes.
+**Ojo:** Ocupa el antiguo El Asturiano; no es cliente nuestro (Tito, 28/11).
