@@ -162,8 +162,9 @@ Deno.serve(async (req) => {
   if (p.rol !== "admin") return json({ error: "Solo un administrador puede conectar Telegram" }, 403);
   if (!yoBot.ok) return json({ error: "Telegram no acepta ese token. Cópialo otra vez de BotFather." }, 400);
   const secreto = crypto.randomUUID().replace(/-/g, "");
-  await admin.from("jarvis_ajustes").upsert({ clave: "telegram_secreto", valor: secreto, actualizado: new Date().toISOString() });
+  // Primero Telegram y luego guardar el secreto: si Telegram dice que no (p. ej. dos pulsaciones seguidas), queda el anterior, que sigue valiendo.
   const w = await tg(tok.valor, "setWebhook", { url: `${URL_SB}/functions/v1/jarvis-telegram`, secret_token: secreto, allowed_updates: ["message"], drop_pending_updates: true });
-  if (!w.ok) return json({ error: "Telegram no ha aceptado la conexión: " + (w.description || "") }, 502);
+  if (!w.ok) return json({ error: /too many/i.test(w.description || "") ? "Ya estaba conectándose: espera un momento, no hace falta pulsar otra vez." : "Telegram no ha aceptado la conexión: " + (w.description || "") }, 502);
+  await admin.from("jarvis_ajustes").upsert({ clave: "telegram_secreto", valor: secreto, actualizado: new Date().toISOString() });
   return json({ ok: true, bot: yoBot.result.username });
 });
