@@ -10476,6 +10476,31 @@ function ofPlano(parte, alPulsar) {
   box.querySelectorAll('.of-sala').forEach(g => g.addEventListener('click', () => alPulsar(g.dataset.k)));
   return box;
 }
+/* 📋 Reunión de prioridades (Tito, 28/11/2026): cada departamento dice sus prioridades y la secretaria (Jarvis) levanta el acta;
+   se guarda en oficina_reuniones. Jarvis contesta con líneas «[PRIO] Departamento | Prioridad | urgencia | Quién | Cuándo». */
+const OF_URG = { alta: 0, media: 1, baja: 2 };
+const OF_REUNION = 'REUNIÓN DE DEPARTAMENTOS. Haces de secretaria: cada departamento (' + OF_DEP.map(d => d.n).join(', ') + ') dice sus prioridades (de 1 a 3 cada uno) para hoy y esta semana, sacadas del ESTADO DE LA OFICINA y de lo que consultes (deudas, contactos pendientes, quejas, ventas, clientes). Nada inventado: si un departamento no tiene datos, su prioridad es conseguirlos. Prioridades concretas, con cifras y nombres cuando los haya.\nContesta SOLO con líneas así, una por prioridad y sin nada más:\n[PRIO] Departamento | Prioridad (una frase) | alta o media o baja | Quién (Tito, su padre, Carmen, la oficina o Claude) | Para cuándo (hoy, esta semana o este mes)\nY al final una línea: [RESUMEN] las 3 cosas más importantes de toda la empresa, en una frase para leer en voz alta.';
+function ofLeerActa(t) {
+  const filas = [];
+  for (const l of String(t).split('\n')) { const m = l.match(/\[PRIO\]\s*(.+)/i); if (!m) continue;
+    const c = m[1].split('|').map(x => x.replace(/\*/g, '').trim()); if (c.length < 2 || !c[1]) continue;
+    const u = String(c[2] || '').toLowerCase(), urg = /alta/.test(u) ? 'alta' : /baja/.test(u) ? 'baja' : 'media';
+    filas.push({ dep: c[0], prioridad: c[1], urgencia: urg, quien: c[3] || '', cuando: c[4] || '' }); }
+  const r = String(t).match(/\[RESUMEN\]\s*([^\n]+)/i);
+  return { filas: filas.sort((a, b) => OF_URG[a.urgencia] - OF_URG[b.urgencia]), resumen: r ? r[1].replace(/\*/g, '').trim() : '' };
+}
+function ofTablaActa(a) {
+  const col = { alta: '#dc2626', media: '#d97706', baja: '#6b7280' }, depDe = n => OF_DEP.find(d => n.toLowerCase().startsWith(d.n.toLowerCase().slice(0, 5))) || { ic: '🏢', c: '#64748b' };
+  return h('div', {},
+    h('div', { class: 'sub', style: 'margin-bottom:6px' }, 'Reunión del ' + new Date(a.creado).toLocaleString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' · ' + a.filas.length + ' prioridades'),
+    a.resumen ? h('div', { class: 'card', style: 'border-left:6px solid #0ea5e9' }, h('b', {}, '🗒️ La secretaria resume: '), a.resumen) : null,
+    h('table', { style: 'width:100%;border-collapse:collapse;font-size:14px' },
+      h('thead', {}, h('tr', {}, ...['', 'Departamento', 'Prioridad'].map(t => h('th', { style: 'text-align:left;padding:6px 4px;border-bottom:2px solid var(--borde,#e5e7eb)' }, t)))),
+      h('tbody', {}, ...a.filas.map(f => { const d = depDe(f.dep || ''); f.urgencia = col[f.urgencia] ? f.urgencia : 'media'; return h('tr', { style: 'border-bottom:1px solid var(--borde,#e5e7eb);vertical-align:top' },
+        h('td', { style: 'padding:8px 4px' }, h('span', { title: 'Urgencia ' + f.urgencia, style: `display:inline-block;padding:2px 6px;border-radius:8px;color:#fff;font-size:11px;font-weight:700;background:${col[f.urgencia]}` }, f.urgencia.toUpperCase())),
+        h('td', { style: `padding:8px 4px;font-weight:700;border-left:4px solid ${d.c}` }, d.ic + ' ' + f.dep),
+        h('td', { style: 'padding:8px 4px' }, f.prioridad, (f.quien || f.cuando) ? h('div', { class: 'sub' }, [f.quien && '👤 ' + f.quien, f.cuando && '📅 ' + f.cuando].filter(Boolean).join(' · ')) : null)); }))));
+}
 function vistaOficina() {
   state.view = 'oficina'; if (!esOficina()) { go('inicio'); return; }
   const FN = ES_PRUEBAS ? 'jarvis-pruebas' : 'jarvis', CONV = 'fj_jarvis_conv';
@@ -10483,6 +10508,33 @@ function vistaOficina() {
   const plano = h('div', {}, h('div', { class: 'card sub' }, 'Encendiendo la oficina…'));
   const lista = h('div', { class: 'card', style: 'padding:10px' });
   const detalle = h('div');
+  const prioBox = h('div', { class: 'card' }, h('div', { class: 'sub' }, 'Cargando la última reunión…'));
+  let acta = null, reunido = false;
+  const pintaPrio = (aviso) => prioBox.replaceChildren(
+    aviso ? h('div', { class: 'sub', style: 'margin-bottom:6px' }, aviso) : null,
+    acta ? ofTablaActa(acta) : h('p', { class: 'sub' }, 'Aún no ha habido reunión. Pulsa el botón y cada departamento dirá sus prioridades.'),
+    h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px' },
+      h('button', { class: 'guardar', style: 'min-height:48px;flex:1', disabled: reunido, onclick: reunir }, reunido ? '🗣️ Reunidos… (1-2 minutos)' : '🗣️ Reunir a los departamentos'),
+      acta && acta.resumen ? h('button', { class: 'ghost', style: 'min-height:48px', onclick: () => { const v0 = voz; voz = true; hablar('Resumen de la reunión. ' + acta.resumen); voz = v0; } }, '🔊 Escuchar') : null));
+  async function reunir() {
+    if (reunido) return;
+    if (PRACTICA) { toast('No funciona en modo prácticas.', 'err'); return; }
+    if (!navigator.onLine) { toast('Sin conexión', 'err'); return; }
+    if (!LS.get('fj_harvey_ok', false)) { if (!await confirmar('La reunión la hace Jarvis con un servicio de IA externo (Anthropic), con el estado de la oficina y las consultas que necesite. ¿Seguir?')) return; LS.set('fj_harvey_ok', true); }
+    reunido = true; pintaPrio('🗣️ Los departamentos están reunidos. La secretaria está tomando nota…');
+    try {
+      const r = await sb.functions.invoke(FN, { body: { mensajes: [{ rol: 'yo', texto: OF_REUNION }], contexto: 'Canal: app (🏢 Oficina, reunión de prioridades).\nESTADO DE LA OFICINA (datos reales): ' + JSON.stringify(estado) } });
+      let err = r.error && r.error.message; if (r.error) { try { const j = await r.error.context.json(); if (j && j.error) err = j.error; } catch (e) { } }
+      if (err || (r.data && r.data.error)) throw new Error(err || r.data.error);
+      const a = ofLeerActa((r.data && r.data.texto) || '');
+      if (!a.filas.length) throw new Error('La secretaria no ha sacado prioridades claras. Prueba otra vez.');
+      const g = await sb.from('oficina_reuniones').insert({ filas: a.filas, resumen: a.resumen, autor: state.user.id }).select().single();
+      acta = g.data || Object.assign({ creado: new Date().toISOString() }, a);
+      reunido = false; pintaPrio(g.error ? '⚠️ No se ha podido guardar (solo se ve aquí): ' + g.error.message : null);
+      if (acta.resumen) hablar('Resumen de la reunión. ' + acta.resumen);
+    } catch (e) { reunido = false; pintaPrio('⚠️ ' + (isNetErr(e) ? 'Necesitas conexión.' : e.message)); }
+  }
+  sb.from('oficina_reuniones').select('*').order('id', { ascending: false }).limit(1).then(r => { acta = (r.data && r.data[0]) || null; pintaPrio(r.error ? '⚠️ ' + r.error.message : null); });
   const chat = h('div', { class: 'chat', style: 'max-height:55vh;overflow:auto' });
   const ta = h('textarea', { rows: 2, placeholder: 'Pregunta a Jarvis… (p. ej. «¿Cómo vamos?»)', style: 'width:100%' });
   const btn = h('button', { class: 'guardar', style: 'min-height:48px;flex:1' }, '📨 Enviar a Jarvis');
@@ -10506,7 +10558,7 @@ function vistaOficina() {
     if (!LS.get('fj_harvey_ok', false)) { if (!await confirmar('Jarvis usa un servicio de IA externo (Anthropic). Se envían tu mensaje y el estado de la oficina (cifras de Golden), sin teléfonos ni correos. ¿Seguir?')) return; LS.set('fj_harvey_ok', true); }
     conv.push({ rol: 'yo', texto: t, t: Date.now() }); ta.value = ''; ocupado = true; btn.disabled = true; pintar();
     try {
-      const r = await sb.functions.invoke(FN, { body: { mensajes: conv.filter(m => !m.error).slice(-20).map(m => ({ rol: m.rol, texto: m.texto })), contexto: 'Canal: app (🏢 Oficina).\nESTADO DE LA OFICINA (datos reales): ' + JSON.stringify(estado) } });
+      const r = await sb.functions.invoke(FN, { body: { mensajes: conv.filter(m => !m.error).slice(-20).map(m => ({ rol: m.rol, texto: m.texto })), contexto: 'Canal: app (🏢 Oficina).\nESTADO DE LA OFICINA (datos reales): ' + JSON.stringify(estado) + (acta ? '\nÚLTIMA REUNIÓN DE PRIORIDADES (' + acta.creado + '): ' + JSON.stringify({ filas: acta.filas, resumen: acta.resumen }) : '') } });
       let err = r.error && r.error.message; if (r.error) { try { const j = await r.error.context.json(); if (j && j.error) err = j.error; } catch (e) { } }
       if (err || (r.data && r.data.error)) throw new Error(/not found|404/i.test(err || '') ? 'Jarvis todavía no está activado en Supabase.' : (err || r.data.error));
       const txt = String((r.data && r.data.texto) || '').trim(); if (!txt) throw new Error('Jarvis no ha contestado');
@@ -10549,7 +10601,7 @@ function vistaOficina() {
     h('div', { style: 'display:flex;gap:6px;margin:8px 0;flex-wrap:wrap' },
       h('button', { class: 'guardar', style: 'min-height:48px;flex:1', onclick: () => preguntar('Dame el parte de hoy de todos los departamentos, empezando por lo que pide atención. Corto, para escucharlo.') }, '▶ Escuchar el parte'),
       h('label', { style: 'display:flex;align-items:center;gap:6px' }, h('input', { type: 'checkbox', checked: voz, onchange: e => { voz = e.target.checked; LS.set('fj_jarvis_voz', voz); if (!voz) try { speechSynthesis.cancel(); } catch (x) { } } }), 'con voz')),
-    detalle, h('h3', {}, 'Estado de los departamentos'), lista,
+    detalle, h('h3', {}, '📋 Prioridades de la empresa'), prioBox, h('h3', {}, 'Estado de los departamentos'), lista,
     h('h3', {}, '🤖 Jarvis'), chat, ta,
     h('div', { style: 'display:flex;gap:6px;margin-top:6px' }, btn, h('button', { class: 'ghost', style: 'min-height:48px', onclick: () => { conv = []; LS.set(CONV, conv); pintar(); } }, '🧹 Nueva')),
     h('h3', {}, '📲 Jarvis en Telegram'), h('div', { class: 'card' }, tgBox),

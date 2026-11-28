@@ -60,8 +60,10 @@ async function atender(token: string, msg: any) {
   try {
     const jwt = await sesionDe(v.perfil_id);
     const yo = createClient(URL_SB, ANON, { global: { headers: { Authorization: "Bearer " + jwt } }, auth: { persistSession: false } });
-    const est = await yo.rpc("oficina_estado");
-    const contexto = "Canal: Telegram (texto plano, sin botones; para confirmar, la persona contesta «sí»).\nESTADO DE LA OFICINA (datos reales): " + JSON.stringify(est.data ?? est.error?.message);
+    const [est, reu] = await Promise.all([yo.rpc("oficina_estado"), yo.from("oficina_reuniones").select("creado,filas,resumen").order("id", { ascending: false }).limit(1)]);
+    const acta = reu.data?.[0];
+    const contexto = "Canal: Telegram (texto plano, sin botones; para confirmar, la persona contesta «sí»).\nESTADO DE LA OFICINA (datos reales): " + JSON.stringify(est.data ?? est.error?.message)
+      + (acta ? "\nÚLTIMA REUNIÓN DE PRIORIDADES (" + acta.creado + "): " + JSON.stringify(acta) : "");
     const r = await fetch(`${URL_SB}/functions/v1/${CEREBRO}`, { method: "POST",
       headers: { Authorization: "Bearer " + jwt, apikey: ANON, "Content-Type": "application/json" }, body: JSON.stringify({ mensajes, contexto }) });
     const d = await r.json().catch(() => ({}));
